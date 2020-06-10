@@ -1,0 +1,6 @@
+include README.md pyproject.toml setup.py LICENSE mkdocs.yml tox.ini
+
+graft docs
+graft tests
+
+global-exclude __pycache__ *.py[co] .ipynb_checkpoints

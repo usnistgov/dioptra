@@ -1,0 +1,22 @@
+[general]
+contrib = contrib-title-conventional-commits
+ignore = body-is-missing
+verbosity = 3
+ignore-merge-commits = true
+ignore-fixup-commits = true
+ignore-squash-commits = false
+ignore-stdin = true
+debug = false
+
+[title-max-length]
+line-length = 70
+
+[body-max-line-length]
+line-length = 100
+
+[ignore-by-title]
+regex = ^release
+ignore = all
+
+[contrib-title-conventional-commits]
+types = build,ci,chore,docs,feat,fix,perf,refactor,revert,style,test

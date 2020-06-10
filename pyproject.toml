@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools == 46.1.3", "setuptools_scm == 3.5.0", "wheel == 0.34.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+target-version = ['py37','py38']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.0.0"
+files = [
+    "Makefile:PROJECT_VERSION =",
+    "pyproject.toml:version",
+    "README.md:securing-ai/tensorflow2-cpu-py37:",
+    "README.md:securing-ai/tensorflow2-gpu-py37:",
+    "src/securingai/ml_model_endpoint/app.py:version=",
+    "setup.py:RELEASE =",
+]
+style = [
+    ["qmark", "fg:#ff9d00 bold"],
+    ["question", "bold"],
+    ["answer", "fg:#ff9d00 bold"],
+    ["pointer", "fg:#ff9d00 bold"],
+    ["highlighted", "fg:#ff9d00 bold"],
+    ["selected", "fg:#cc5454"],
+    ["separator", "fg:#cc5454"],
+    ["instruction", ""],
+    ["text", ""],
+    ["disabled", "fg:#858585 italic"]
+]
+tag_format = "v$major.$minor.$patch"
+bump_message = "release $current_version → $new_version"

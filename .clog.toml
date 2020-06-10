@@ -1,0 +1,9 @@
+[clog]
+repository = "https://gitlab.mitre.org/secure-ai/securing-ai-lab-components"
+link-style = "Gitlab"
+changelog = "CHANGELOG.md"
+output-format = "markdown"
+from-latest-tag = true
+
+[sections]
+Examples = ["examples"]
