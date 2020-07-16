@@ -75,6 +75,7 @@ ARG PYTZ_VERSION=2020.1
 ARG PYYAML_VERSION=5.3.1
 ARG QUERYSTRING_PARSER_VERSION=1.2.4
 ARG REQUESTS_VERSION=2.24.0
+ARG RICH_VERSION=3.3.1
 ARG SCIPY_VERSION=1.4.1
 ARG SIMPLEJSON_VERSION=3.17.0
 ARG SIX_VERSION=1.15.0
@@ -135,6 +136,7 @@ RUN echo "===> Installing testbed dependencies into base conda environment...." 
     pyarrow==${PYARROW} \
     python-json-logger==${PYTHON_JSON_LOGGER_VERSION} \
     querystring-parser==${QUERYSTRING_PARSER_VERSION} \
+    rich==${RICH_VERSION} \
     structlog==${STRUCTLOG_VERSION} \
     typing-extensions==${TYPING_EXTENSIONS_VERSION} && \
     echo "===> Cleaning/pruning directories...." && \
