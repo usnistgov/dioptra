@@ -1,0 +1,40 @@
+name: tensorflow-mnist-classifier
+
+entry_points:
+  fgm:
+    parameters:
+      data_dir: {type: path, default: "/nfs/data"}
+      model: {type: string, default: "mnist_le_net/1"}
+      model_architecture: {type: string, default: "le_net"}
+      batch_size: {type: float, default: 32}
+      eps: {type: float, default: 0.3}
+      eps_step: {type: float, default: 0.1}
+      minimal: {type: float, default: 0}
+    command: >
+      python src/fgm.py
+      --data-dir {data_dir}
+      --model {model}
+      --model-architecture {model_architecture}
+      --batch-size {batch_size}
+      --eps {eps}
+      --eps-step {eps_step}
+      --minimal {minimal}
+
+  train:
+    parameters:
+      data_dir: {type: path, default: "/nfs/data"}
+      model_architecture: {type: string, default: "le_net"}
+      epochs: {type: float, default: 30}
+      batch_size: {type: float, default: 32}
+      learning_rate: {type: float, default: 0.001}
+      optimizer: {type: string, default: "adam"}
+      validation_split: {type: float, default: 0.2}
+    command: >
+      python src/train.py
+      --data-dir {data_dir}
+      --model-architecture {model_architecture}
+      --epochs {epochs}
+      --batch-size {batch_size}
+      --learning-rate {learning_rate}
+      --optimizer {optimizer}
+      --validation-split {validation_split}
