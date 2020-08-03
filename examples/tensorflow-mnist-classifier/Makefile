@@ -18,10 +18,16 @@ endif
 
 ifeq ($(DETECTED_OS),Darwin)
     CORES = $(shell sysctl -n hw.physicalcpu_max)
+    CHOWN_PERM =
+    IMAGE_SUFFIX =
 else ifeq ($(DETECTED_OS),Linux)
     CORES = $(shell lscpu -p | egrep -v '^\#' | sort -u -t, -k 2,4 | wc -l)
+    CHOWN_PERM = :users
+    IMAGE_SUFFIX = -username
 else
     CORES = 1
+    CHOWN_PERM =
+    IMAGE_SUFFIX =
 endif
 
 EXAMPLE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -57,13 +63,39 @@ WORKFLOWS_UPLOAD_SENTINEL = .workflows-upload.sentinel
 # FUNCTIONS                                                                     #
 #################################################################################
 
+define chmod
+    chmod $(1) $(2)
+endef
+
 define cleanup
     $(FIND) $(1) -name "__pycache__" -type d -exec $(RM) -rf {} +
     $(FIND) $(1) -name "*.py[co]" -type f -exec $(RM) -rf {} +
 endef
 
 define download_data
-    $(PY) $(DATA_DOWNLOAD_FILE) --data-dir $(1) $(2)
+    $(call run_docker_compose,\
+        run\
+        --rm\
+        --entrypoint ""\
+        -v $(strip $(1)):/work:cached\
+        tfcpu\
+        bash -c "\
+            source /opt/conda/etc/profile.d/conda.sh &&\
+            conda activate base &&\
+            $(PY) $(DATA_DOWNLOAD_FILE) --data-dir $(2) $(3)")
+endef
+
+define fix_access_permissions
+    chown $(CHOWN_PERM) $(1)/data
+    chown $(CHOWN_PERM) $(1)/mlruns
+    chown $(CHOWN_PERM) $(1)/s3
+endef
+
+define fix_mode_permissions
+    $(call chmod,2775,$(1)/data)
+    $(call chmod,2775,$(1)/mlruns)
+    $(call chmod,2775,$(1)/s3)
+    $(call chmod,0755,$(1)/docker-gpu.sh)
 endef
 
 define make_subdirectory
@@ -89,7 +121,7 @@ define s3_cp
         --entrypoint ""\
         -v $(strip $(1))/$(strip $(2)):/work/$(strip $(2))\
         tfcpu\
-        s3-cp.sh --endpoint-url http://minio:9000\
+        s3-cp.sh --endpoint-url http://minio$(strip $(IMAGE_SUFFIX)):9000\
         /work/$(strip $(2)) s3://$(strip $(3))/$(strip $(2)))
 endef
 
@@ -98,8 +130,8 @@ define s3_mb
         run\
         --rm\
         --entrypoint ""\
-        mlflow-tracking\
-        s3-mb.sh --endpoint-url http://minio:9000 $(strip $(1)))
+        mlflow-tracking$(strip $(IMAGE_SUFFIX))\
+        s3-mb.sh --endpoint-url http://minio$(strip $(IMAGE_SUFFIX)):9000 $(strip $(1)))
 endef
 
 define save_sentinel_file
@@ -139,24 +171,29 @@ upload-job: services $(WORKFLOWS_UPLOAD_SENTINEL)
 #################################################################################
 
 $(DOCKER_COMPOSE_SENTINEL):
-	$(call make_subdirectory,$(EXAMPLE_DATA_DIR)/s3)
-	$(call make_subdirectory,$(EXAMPLE_DATA_DIR)/mlruns)
-	$(call run_docker_compose,up -d mlflow-tracking)
+	$(call make_subdirectory,s3)
+	$(call make_subdirectory,mlruns)
+ifdef CHOWN_PERM
+	$(call fix_access_permissions,.)
+endif
+	$(call fix_mode_permissions,.)
+	$(call run_docker_compose,up -d mlflow-tracking$(strip $(IMAGE_SUFFIX)))
 	$(call s3_mb,$(S3_WORKFLOW_BUCKET))
 	$(call save_sentinel_file,$@)
 
 $(TRAINING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
-	$(call make_subdirectory,$(EXAMPLE_DATA_DIR)/training)
-	$(call download_data,$(EXAMPLE_DATA_DIR),--training)
+	$(call chmod,777,$(EXAMPLE_DATA_DIR))
+	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--training)
 	$(call save_sentinel_file,$(TRAINING_DATASET_SENTINEL))
 
 $(TESTING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
-	$(call make_subdirectory,$(EXAMPLE_DATA_DIR)/testing)
-	$(call download_data,$(EXAMPLE_DATA_DIR),--testing)
+	$(call chmod,777,$(EXAMPLE_DATA_DIR))
+	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--testing)
 	$(call save_sentinel_file,$(TESTING_DATASET_SENTINEL))
 
 $(WORKFLOWS_TARBALL_FILE): $(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE)
 	$(call make_tarball,$@,$(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE))
+	$(call chmod,644,$(WORKFLOWS_TARBALL_FILE))
 
 $(WORKFLOWS_UPLOAD_SENTINEL): $(WORKFLOWS_TARBALL_FILE)
 	$(call s3_cp,$(EXAMPLE_DIR),$(WORKFLOWS_TARBALL_FILE),$(S3_WORKFLOW_BUCKET))

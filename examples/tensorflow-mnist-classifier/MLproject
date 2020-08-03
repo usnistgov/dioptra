@@ -10,6 +10,7 @@ entry_points:
       eps: {type: float, default: 0.3}
       eps_step: {type: float, default: 0.1}
       minimal: {type: float, default: 0}
+      norm: {type: string, default: "inf"}
     command: >
       python src/fgm.py
       --data-dir {data_dir}
@@ -19,6 +20,7 @@ entry_points:
       --eps {eps}
       --eps-step {eps_step}
       --minimal {minimal}
+      --norm {norm}
 
   train:
     parameters:

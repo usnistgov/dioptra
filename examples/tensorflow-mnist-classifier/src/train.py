@@ -35,10 +35,6 @@ from models import le_net, alex_net
 
 LOGGER = structlog.get_logger()
 METRICS = [
-    TruePositives(name="tp"),
-    FalsePositives(name="fp"),
-    TrueNegatives(name="tn"),
-    FalseNegatives(name="fn"),
     CategoricalAccuracy(name="accuracy"),
     Precision(name="precision"),
     Recall(name="recall"),
@@ -151,7 +147,7 @@ def fit(model, training_ds, validation_ds, epochs):
     total_seconds = (time_end - time_start).total_seconds()
     total_minutes = total_seconds / 60
 
-    mlflow.log_param("time_minutes", str(total_minutes))
+    mlflow.log_metric("training_time_in_minutes", total_minutes)
     LOGGER.info(
         "tensorflow model training complete",
         timestamp=time_end.isoformat(),
@@ -162,9 +158,13 @@ def fit(model, training_ds, validation_ds, epochs):
 
 
 def evaluate_metrics(model, testing_ds):
-    result = model.evaluate(testing_ds)
+    LOGGER.info("evaluating classification metrics using testing images")
+    result = model.evaluate(testing_ds, verbose=0)
     testing_metrics = dict(zip(model.metrics_names, result))
-    LOGGER.info("testing dataset metrics", **testing_metrics)
+    LOGGER.info(
+        "computation of classification metrics for testing images complete",
+        **testing_metrics,
+    )
     for metric_name, metric_value in testing_metrics.items():
         mlflow.log_metric(key=metric_name, value=metric_value)
 

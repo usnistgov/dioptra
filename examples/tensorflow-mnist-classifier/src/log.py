@@ -21,6 +21,9 @@ def configure_stdlib_logger(level, log_filepath):
     root_logger.addHandler(handler)
     root_logger.setLevel(level)
 
+    logging.getLogger("art").setLevel(logging.WARNING)
+    logging.getLogger("tensorflow").setLevel(logging.WARNING)
+
 
 def configure_structlog_logger(fmt):
     processors = _set_structlog_processors(fmt=fmt)
