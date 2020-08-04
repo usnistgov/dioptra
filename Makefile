@@ -1,4 +1,4 @@
-.PHONY: beautify build-all build-miniconda build-mlflow-tracking build-nginx build-postgres build-pytorch build-restapi build-sklearn build-tensorflow clean code-check code-pkg code-publish conda-create conda-update docs docs-publish help hooks pull-mitre push-mitre tests tests-integration tests-unit tox
+.PHONY: beautify build-all build-miniconda build-mlflow-tracking build-nginx build-postgres build-pytorch build-redis build-restapi build-sklearn build-tensorflow clean code-check code-pkg code-publish conda-create conda-update docs docs-publish help hooks pull-mitre push-mitre tests tests-integration tests-unit tox
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
@@ -182,6 +182,15 @@ CONTAINER_POSTGRES_INCLUDE_FILES =
 CONTAINER_POSTGRES_SCRIPTS =
 CONTAINER_POSTGRES_SHELLSCRIPTS_EXT = $(CONTAINER_POSTGRES_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
 
+CONTAINER_REDIS_COMPONENT_NAME = redis
+CONTAINER_REDIS_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_REDIS_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
+CONTAINER_REDIS_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_REDIS_COMPONENT_NAME)
+CONTAINER_REDIS_INCLUDE_DIR = $(CONTAINER_REDIS_DIR)/include/etc/$(PROJECT_PREFIX)/docker
+CONTAINER_REDIS_DOCKERFILE = $(CONTAINER_REDIS_DIR)/Dockerfile
+CONTAINER_REDIS_INCLUDE_FILES =
+CONTAINER_REDIS_SCRIPTS =
+CONTAINER_REDIS_SHELLSCRIPTS_EXT = $(CONTAINER_REDIS_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
+
 CONTAINER_RESTAPI_COMPONENT_NAME = restapi
 CONTAINER_RESTAPI_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_RESTAPI_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
 CONTAINER_RESTAPI_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_RESTAPI_COMPONENT_NAME)
@@ -266,6 +275,9 @@ CONTAINER_NGINX_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_N
 CONTAINER_POSTGRES_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_POSTGRES_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_POSTGRES_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_POSTGRES_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_POSTGRES_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_POSTGRES_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
+CONTAINER_REDIS_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_REDIS_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
+CONTAINER_REDIS_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_REDIS_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
+CONTAINER_REDIS_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_REDIS_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_RESTAPI_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_RESTAPI_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_RESTAPI_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_RESTAPI_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_RESTAPI_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_RESTAPI_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
@@ -450,7 +462,7 @@ endef
 beautify: $(BEAUTIFY_SENTINEL)
 
 ## Build all Docker images in project
-build-all: build-miniconda build-mlflow-tracking build-nginx build-postgres build-restapi build-sklearn build-pytorch build-tensorflow
+build-all: build-miniconda build-mlflow-tracking build-nginx build-postgres build-redis build-restapi build-sklearn build-pytorch build-tensorflow
 
 ## Build the base Miniconda Docker image
 build-miniconda: $(CONTAINER_MINICONDA_BASE_BUILD_SENTINEL)
@@ -466,6 +478,9 @@ build-postgres: $(CONTAINER_POSTGRES_BUILD_SENTINEL)
 
 ## Build the PyTorch Docker images
 build-pytorch: build-sklearn $(CONTAINER_PYTORCH_CPU_BUILD_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_SENTINEL)
+
+## Build the Redis Docker image
+build-redis: $(CONTAINER_REDIS_BUILD_SENTINEL)
 
 ## Build the restapi Docker image
 build-restapi: code-pkg build-miniconda $(CONTAINER_RESTAPI_BUILD_SENTINEL)
@@ -688,6 +703,36 @@ $(CONTAINER_POSTGRES_SCRIPTS): $(CONTAINER_POSTGRES_SHELLSCRIPTS_EXT) | $(CONTAI
 	$(call run_argbash,\
 		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
 		$(PROJECT_DIR)/$(CONTAINER_POSTGRES_INCLUDE_DIR),\
+		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
+
+$(CONTAINER_REDIS_BUILD_SENTINEL): $(CONTAINER_REDIS_DOCKERFILE) $(CONTAINER_REDIS_INCLUDE_FILES) $(CONTAINER_REDIS_SCRIPTS)
+	$(call make_subdirectory,$(@D))
+	$(call run_build_script,$(CONTAINER_REDIS_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
+	$(call save_sentinel_file,$(CONTAINER_REDIS_PULL_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_REDIS_PULL_SENTINEL):
+ifndef ARTIFACTORY_PREFIX
+	$(error ARTIFACTORY_PREFIX must be defined.)
+endif
+	$(call make_subdirectory,$(@D))
+	$(call pull_docker_images,$(CONTAINER_REDIS_IMAGE))
+	$(call save_sentinel_file,$(CONTAINER_REDIS_BUILD_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_REDIS_PUSH_SENTINEL):
+ifndef ARTIFACTORY_PREFIX
+	$(error ARTIFACTORY_PREFIX must be defined.)
+endif
+	$(call make_subdirectory,$(@D))
+	$(call push_docker_images,$(CONTAINER_REDIS_IMAGE))
+	$(call save_sentinel_file,$(CONTAINER_REDIS_PULL_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_REDIS_SCRIPTS): $(CONTAINER_REDIS_SHELLSCRIPTS_EXT) | $(CONTAINER_REDIS_INCLUDE_DIR)
+	$(call run_argbash,\
+		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
+		$(PROJECT_DIR)/$(CONTAINER_REDIS_INCLUDE_DIR),\
 		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
 
 $(CONTAINER_RESTAPI_BUILD_SENTINEL): $(CONTAINER_RESTAPI_DOCKERFILE) $(CONTAINER_RESTAPI_INCLUDE_FILES) $(CONTAINER_RESTAPI_SCRIPTS)
