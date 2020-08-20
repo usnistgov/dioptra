@@ -4,6 +4,8 @@
 # BEGIN ignore project files
 # ---------------------------
 
+examples/**/redis
+examples/**/restapi
 examples/**/mlruns
 examples/**/s3
 
