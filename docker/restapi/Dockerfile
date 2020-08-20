@@ -53,6 +53,7 @@ ARG GITPYTHON_VERSION=3.1.1
 ARG GORILLA_VERSION=0.3.0
 ARG GUNICORN_VERSION=20.0.4
 ARG JINJA2_VERSION=2.11.2
+ARG LIBICONV_VERSION=1.15
 ARG MARSHMALLOW_VERSION=3.6.1
 ARG NOMKL=3.0
 ARG NUMPY_VERSION=1.18.5
@@ -113,6 +114,7 @@ RUN echo "===> Installing dependencies into base conda environment...." && \
     werkzeug=${WERKZEUG_VERSION} && \
     echo "===> Installing uWSGI using conda (conda-forge channel)...." && \
     ${CONDA_DIR}/condabin/conda install -n base -c defaults -c conda-forge -q -y \
+    libiconv=${LIBICONV_VERSION} \
     uwsgi=${UWSGI_VERSION} && \
     echo "===> Installing dependencies using pip...." && \
     ${CONDA_DIR}/condabin/conda run -n base \
@@ -154,6 +156,8 @@ USER root
 RUN mkdir -p /etc/uwsgi && \
     chown -R ${AI_UID}:${AI_GID} /etc/uwsgi && \
     chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/uwsgi.ini && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh /usr/local/bin/entrypoint.sh && \
@@ -180,7 +184,7 @@ RUN echo "===> Installing Securing AI code module...." && \
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["--help"]
+CMD []
 
 ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
 
