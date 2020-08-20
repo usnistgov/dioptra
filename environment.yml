@@ -75,6 +75,8 @@ dependencies:
       - flask-accepts
       - Flask-Injector
       - flask-restx
+      - Flask-SQLAlchemy
+      - freezegun
       - ghp-import
       - gorilla
       - markdown

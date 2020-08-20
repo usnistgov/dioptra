@@ -5,8 +5,12 @@ import structlog
 from flask import Flask, jsonify
 from flask_injector import FlaskInjector
 from flask_restx import Api
+from flask_sqlalchemy import SQLAlchemy
+
 
 LOGGER = structlog.get_logger()
+
+db = SQLAlchemy()
 
 
 def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
@@ -19,6 +23,7 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
 
     app: Flask = Flask(__name__)
     app.config.from_object(config_by_name[env])
+
     api: Api = Api(
         app, title="Securing AI Machine Learning Model Endpoint", version="0.0.0"
     )
@@ -26,6 +31,7 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
 
     register_routes(api, app)
     register_providers(modules)
+    db.init_app(app)
 
     @app.route("/health")
     def health():

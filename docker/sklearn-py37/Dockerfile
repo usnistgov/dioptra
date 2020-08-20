@@ -48,6 +48,10 @@ ARG CYTHON_VERSION=0.29.20
 ARG DATABRICKS_CLI_VERSION=0.11.0
 ARG DOCKER_PY_VERSION=4.2.1
 ARG ENTRYPOINTS_VERSION=0.3
+ARG FLASK_ACCEPTS_VERSION=0.17.3
+ARG FLASK_INJECTOR_VERSION=0.12.3
+ARG FLASK_RESTX_VERSION=0.2.0
+ARG FLASK_SQLALCHEMY_VERSION=2.4.4
 ARG FLASK_VERSION=1.1.2
 ARG GITPYTHON_VERSION=3.1.1
 ARG GORILLA_VERSION=0.3.0
@@ -131,6 +135,10 @@ RUN echo "===> Installing testbed dependencies into base conda environment...." 
     adversarial-robustness-toolbox==${IBM_ART_VERSION} \
     boto3==${BOTO3_VERSION} \
     databricks-cli==${DATABRICKS_CLI_VERSION} \
+    flask-accepts==${FLASK_ACCEPTS_VERSION} \
+    Flask-Injector==${FLASK_INJECTOR_VERSION} \
+    flask-restx==${FLASK_RESTX_VERSION} \
+    Flask-SQLAlchemy==${FLASK_SQLALCHEMY_VERSION} \
     Flask==${FLASK_VERSION} \
     gorilla==${GORILLA_VERSION} \
     mlflow==${MLFLOW_VERSION} \
@@ -143,6 +151,22 @@ RUN echo "===> Installing testbed dependencies into base conda environment...." 
     rq==${RQ_VERSION} \
     structlog==${STRUCTLOG_VERSION} \
     typing-extensions==${TYPING_EXTENSIONS_VERSION} && \
+    echo "===> Cleaning/pruning directories...." && \
+    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+    find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
+    ${CONDA_DIR}/condabin/conda clean -afy && \
+    rm -rf /home/${AI_USER}/.cache/yarn && \
+    echo "===> Fixing directory permissions...." && \
+    fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+
+ARG PROJECT_VERSION
+
+COPY build/dist/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl /etc/${PROJECT_PREFIX}/docker/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl
+
+RUN echo "===> Installing Securing AI code module...." && \
+    ${CONDA_DIR}/condabin/conda run -n base \
+    pip install --no-cache-dir --no-deps \
+    /etc/${PROJECT_PREFIX}/docker/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl && \
     echo "===> Cleaning/pruning directories...." && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \

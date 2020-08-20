@@ -91,6 +91,7 @@ EXTRAS_DEPENDENCIES = {
     "restapi": [
         "flask-accepts>=0.17.0",
         "Flask-Injector>=0.12.0",
+        "Flask-SQLAlchemy>=2.4.0",
         "flask-restx>=0.2.0",
         "marshmallow>=3.5.0",
         "psycopg2>=2.8.0",
@@ -118,6 +119,7 @@ EXTRAS_DEPENDENCIES = {
         "entrypoints",
         "flake8-bugbear",
         "flake8",
+        "freezegun",
         "ghp-import",
         "ipython",
         "mypy",
