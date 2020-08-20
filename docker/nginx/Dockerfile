@@ -67,49 +67,57 @@ ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates-plus-mitre.pem
 ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
 ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates-plus-mitre.pem
 
-ARG AI_USER=securingai
-ARG AI_UID=39000
-ARG AI_GID=100
-ARG AI_WORKDIR=/work
 ARG PROJECT_COMPONENT
 ARG PROJECT_PREFIX
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/fix-permissions.sh /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
 
-RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh && \
-    chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh && \
+ARG AI_USER=securingai
+ARG AI_UID=39000
+ARG AI_GID=100
+
+RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh /usr/local/bin/fix-permissions.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh /usr/local/bin/entrypoint.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh && \
     sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
-    useradd -u ${AI_UID} -N -m -s /bin/bash -c "Securing AI Lab user" ${AI_USER} && \
-    chown -R ${AI_UID}:${AI_GID} /home/${AI_USER} && \
-    chmod g+w /etc/passwd && \
-    fix-permissions.sh /home/${AI_USER}
+    useradd -u ${AI_UID} -N -M -s /bin/bash -c "Securing AI Lab user" ${AI_USER} && \
+    chmod g+w /etc/passwd
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/nginx.conf /etc/${PROJECT_PREFIX}/docker/nginx.conf
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/default.conf /etc/${PROJECT_PREFIX}/docker/default.conf
 
 RUN mkdir -p /etc/nginx/conf.d && \
     mkdir -p /var/cache/nginx && \
+    mkdir -p /var/lib/nginx && \
     mkdir -p /var/log/nginx && \
     touch /var/run/nginx.pid && \
     rm /etc/nginx/nginx.conf && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/nginx.conf && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/default.conf && \
+    chmod 0755 /etc/nginx/conf.d && \
+    chmod 0755 /var/cache/nginx && \
+    chmod 0755 /var/lib/nginx && \
+    chmod 0755 /var/log/nginx && \
+    chmod 0644 /var/run/nginx.pid && \
+    chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/nginx.conf && \
+    chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/default.conf && \
     chown -R ${AI_UID}:${AI_GID} /etc/nginx/conf.d && \
     chown -R ${AI_UID}:${AI_GID} /var/cache/nginx && \
+    chown -R ${AI_UID}:${AI_GID} /var/lib/nginx && \
     chown -R ${AI_UID}:${AI_GID} /var/log/nginx && \
     chown -R ${AI_UID}:${AI_GID} /var/run/nginx.pid && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/nginx.conf /etc/nginx/nginx.conf
+    ln -s /etc/${PROJECT_PREFIX}/docker/nginx.conf /etc/nginx/nginx.conf && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/default.conf /etc/nginx/conf.d/default.conf
 
 USER ${AI_UID}
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 ENV AI_USER ${AI_USER}
 ENV AI_UID ${AI_UID}
 ENV AI_GID ${AI_GID}
-
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 ARG OS_NAME=ubuntu
 ARG OS_VERSION

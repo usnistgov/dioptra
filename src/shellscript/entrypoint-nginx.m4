@@ -33,13 +33,15 @@
 # m4_ignore(
 echo "This is just a script template, not the script (yet) - pass it to 'argbash' to fix this." >&2
 exit 11 #)Created by argbash-init v2.8.1
-# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[base])
-# ARG_OPTIONAL_SINGLE([entry-point],[],[MLproject entry point to invoke],[main])
-# ARG_OPTIONAL_SINGLE([s3-workflow],[],[S3 URI to a tarball or zip archive containing scripts and a MLproject file defining a workflow].[])
-# ARG_LEFTOVERS([Entry point keyword arguments (optional)])
+# ARG_OPTIONAL_SINGLE([ai-lab-host],[],[AI Lab Service host],[restapi])
+# ARG_OPTIONAL_SINGLE([ai-lab-port],[],[AI Lab Service port],[5000])
+# ARG_OPTIONAL_SINGLE([mlflow-tracking-host],[],[AI Lab Service host],[mlflow-tracking])
+# ARG_OPTIONAL_SINGLE([mlflow-tracking-port],[],[AI Lab Service port],[5000])
+# ARG_OPTIONAL_SINGLE([nginx-lab-port],[],[Nginx listening port],[30080])
+# ARG_OPTIONAL_SINGLE([nginx-mlflow-port],[],[Nginx listening port],[35000])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
-# ARG_HELP([Securing AI Lab Entry Point\n])"
+# ARG_HELP([Container Entry Point\n])"
 # ARGBASH_GO
 
 # [ <-- needed because of Argbash
@@ -50,16 +52,13 @@ set -euo pipefail
 # Global parameters
 ###########################################################################################
 
-readonly ai_workdir="${AI_WORKDIR}"
-readonly conda_dir="${CONDA_DIR}"
-readonly conda_env="${_arg_conda_env}"
-readonly entry_point_kwargs="${_arg_leftovers[*]}"
-readonly entry_point="${_arg_entry_point}"
+readonly ai_lab_host="${_arg_ai_lab_host}"
+readonly ai_lab_port="${_arg_ai_lab_port}"
+readonly mlflow_tracking_host="${_arg_mlflow_tracking_host}"
+readonly mlflow_tracking_port="${_arg_mlflow_tracking_port}"
+readonly nginx_lab_port="${_arg_nginx_lab_port}"
+readonly nginx_mlflow_port="${_arg_nginx_mlflow_port}"
 readonly logname="Container Entry Point"
-readonly mlflow_s3_endpoint_url="${MLFLOW_S3_ENDPOINT_URL-}"
-readonly s3_workflow_uri="${_arg_s3_workflow}"
-
-readonly workflow_filename="$(basename ${s3_workflow_uri} 2>/dev/null)"
 
 ###########################################################################################
 # Secure the container at runtime
@@ -82,6 +81,44 @@ secure_container() {
 }
 
 ###########################################################################################
+# Set nginx configuration variables
+#
+# Globals:
+#   ai_lab_host
+#   ai_lab_port
+#   mlflow_tracking_host
+#   mlflow_tracking_port
+#   nginx_lab_port
+#   nginx_mlflow_port
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+set_nginx_variables() {
+  echo "${logname}: INFO - Set nginx variables  |  \
+  AI_LAB_HOST=${ai_lab_host} \
+  AI_LAB_PORT=${ai_lab_port} \
+  MLFLOW_TRACKING_HOST=${mlflow_tracking_host} \
+  MLFLOW_TRACKING_PORT=${mlflow_tracking_port} \
+  NGINX_LAB_PORT=${nginx_lab_port}\
+  NGINX_MLFLOW_PORT=${nginx_mlflow_port}"
+  sed -i -e 's/$AI_LAB_HOST/'"${ai_lab_host}"'/g' /etc/nginx/conf.d/default.conf
+  sed -i -e 's/$AI_LAB_PORT/'"${ai_lab_port}"'/g' /etc/nginx/conf.d/default.conf
+  sed -i -e 's/$MLFLOW_TRACKING_HOST/'"${mlflow_tracking_host}"'/g' \
+    /etc/nginx/conf.d/default.conf
+  sed -i -e 's/$MLFLOW_TRACKING_PORT/'"${mlflow_tracking_port}"'/g' \
+    /etc/nginx/conf.d/default.conf
+  sed -i -e 's/$NGINX_LAB_PORT/'"${nginx_lab_port}"'/g' /etc/nginx/conf.d/default.conf
+  sed -i -e 's/$NGINX_MLFLOW_PORT/'"${nginx_mlflow_port}"'/g' /etc/nginx/conf.d/default.conf
+
+  local default_conf=$(cat /etc/nginx/conf.d/default.conf)
+  echo "${logname}: INFO - Updated contents of /etc/nginx/conf.d/default.conf"
+  echo "${default_conf}"
+}
+
+###########################################################################################
 # Start nginx server
 #
 # Globals:
@@ -93,7 +130,8 @@ secure_container() {
 ###########################################################################################
 
 start_nginx() {
-  /usr/bin/nginx
+  echo "${logname}: INFO - Starting Nginx process"
+  /usr/sbin/nginx
 }
 
 ###########################################################################################
@@ -101,5 +139,6 @@ start_nginx() {
 ###########################################################################################
 
 secure_container
+set_nginx_variables
 start_nginx
 # ] <-- needed because of Argbash
