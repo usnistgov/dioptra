@@ -161,7 +161,8 @@ COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/install-py
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-cp.sh /etc/${PROJECT_PREFIX}/docker/s3-cp.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh
 
-RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/install-python-modules.sh && \
+RUN chmod 0644 /etc/${PROJECT_PREFIX}/docker/bash.bashrc && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/install-python-modules.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-cp.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh && \
     rm /etc/bash.bashrc && \
