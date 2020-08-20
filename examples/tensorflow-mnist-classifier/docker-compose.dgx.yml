@@ -5,6 +5,20 @@ networks:
   username:
 
 services:
+  redis-username:
+    image: securing-ai/redis:0.0.0-1
+    init: true
+    restart: always
+    hostname: redis-username
+    container_name: redis-username
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+    networks:
+      - username
+
   minio-username:
     image: minio/minio:RELEASE.2020-07-12T19-14-17Z
     init: true
@@ -36,15 +50,10 @@ services:
     depends_on:
       - minio-username
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      test: ["CMD", "curl", "-f", "http://nginx-username:35000"]
       interval: 30s
-      timeout: 20s
+      timeout: 10s
       retries: 3
-    ports:
-      - target: 5000
-        published: 35000
-        protocol: tcp
-        mode: host
     command:
       - --host
       - "0.0.0.0"
@@ -61,13 +70,89 @@ services:
         source: ./mlruns
         target: /work/mlruns
 
+  nginx-username:
+    image: securing-ai/nginx:0.0.0-1
+    init: true
+    restart: always
+    hostname: nginx-username
+    container_name: nginx-username
+    depends_on:
+      - mlflow-tracking-username
+      - restapi-username
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:35000",
+          "&&",
+          "curl",
+          "-f",
+          "http://localhost:30080",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command:
+      - --ai-lab-host
+      - restapi-username
+      - --mlflow-tracking-host
+      - mlflow-tracking-username
+    ports:
+      - target: 35000
+        published: 35000
+        protocol: tcp
+        mode: host
+      - target: 30080
+        published: 30080
+        protocol: tcp
+        mode: host
+    networks:
+      - username
+
+  restapi-username:
+    image: securing-ai/restapi:0.0.0-1
+    init: true
+    restart: always
+    hostname: restapi-username
+    container_name: restapi-username
+    depends_on:
+      - minio-username
+      - mlflow-tracking-username
+      - redis-username
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://nginx-username:30080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
+      AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
+      AI_RESTAPI_ENV: prod
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_EXPERIMENT_NAME: mnist
+      MLFLOW_TRACKING_URI: http://mlflow-tracking-username:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio-username:9000
+      RQ_REDIS_URI: redis://redis-username:6379/0
+    networks:
+      - username
+    volumes:
+      - type: bind
+        source: ./restapi
+        target: /work/data
+
   tfcpu-username:
     image: securing-ai/tensorflow2-cpu-py37:0.0.0-1
     init: true
-    restart: "no"
-    hostname: tfcpu
-    container_name: tfcpu
+    restart: always
+    hostname: tfcpu-username
+    container_name: tfcpu-username
     environment:
+      AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
+      AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
+      AI_RESTAPI_ENV: prod
       AWS_ACCESS_KEY_ID: minio
       AWS_SECRET_ACCESS_KEY: minio123
       MLFLOW_EXPERIMENT_NAME: mnist
@@ -77,11 +162,17 @@ services:
       KMP_BLOCKTIME: "1"
       OMP_NUM_THREADS: "6"
       KMP_SETTINGS: "FALSE"
+      RQ_REDIS_URI: redis://redis-username:6379/0
       TF_CPP_MIN_LOG_LEVEL: "2"
       USE_DAAL4PY_SKLEARN: "YES"
+    command:
+      - tensorflow_cpu
     networks:
       - username
     volumes:
       - type: bind
         source: ./data
         target: /nfs/data
+      - type: bind
+        source: ./restapi
+        target: /work/data

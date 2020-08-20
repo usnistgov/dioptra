@@ -1,4 +1,4 @@
-.PHONY: clean data help
+.PHONY: clean data help services teardown upload-job
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
@@ -88,12 +88,14 @@ endef
 define fix_access_permissions
     chown $(CHOWN_PERM) $(1)/data
     chown $(CHOWN_PERM) $(1)/mlruns
+    chown $(CHOWN_PERM) $(1)/restapi
     chown $(CHOWN_PERM) $(1)/s3
 endef
 
 define fix_mode_permissions
     $(call chmod,2775,$(1)/data)
     $(call chmod,2775,$(1)/mlruns)
+    $(call chmod,2775,$(1)/restapi)
     $(call chmod,2775,$(1)/s3)
     $(call chmod,0755,$(1)/docker-gpu.sh)
 endef
@@ -173,12 +175,19 @@ upload-job: services $(WORKFLOWS_UPLOAD_SENTINEL)
 $(DOCKER_COMPOSE_SENTINEL):
 	$(call make_subdirectory,s3)
 	$(call make_subdirectory,mlruns)
+	$(call make_subdirectory,restapi)
 ifdef CHOWN_PERM
 	$(call fix_access_permissions,.)
 endif
 	$(call fix_mode_permissions,.)
-	$(call run_docker_compose,up -d mlflow-tracking$(strip $(IMAGE_SUFFIX)))
+	$(call run_docker_compose,up -d\
+		mlflow-tracking$(strip $(IMAGE_SUFFIX))\
+		nginx$(strip $(IMAGE_SUFFIX))\
+		redis$(strip $(IMAGE_SUFFIX))\
+		restapi$(strip $(IMAGE_SUFFIX)))
 	$(call s3_mb,$(S3_WORKFLOW_BUCKET))
+	$(call run_docker_compose,up -d\
+		tfcpu$(strip $(IMAGE_SUFFIX)))
 	$(call save_sentinel_file,$@)
 
 $(TRAINING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
