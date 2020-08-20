@@ -28,6 +28,7 @@ dependencies:
   - protobuf
   - pycodestyle
   - pydocstyle
+  - redis-py
   - pytables
   - python=3.7.7
   - pytz
@@ -52,6 +53,7 @@ dependencies:
       - pyarrow
       - python-json-logger
       - rich
+      - rq
       - structlog
       - tabulate
       - tensorflow==2.1.0

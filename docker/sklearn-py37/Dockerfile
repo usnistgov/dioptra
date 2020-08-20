@@ -76,6 +76,8 @@ ARG PYYAML_VERSION=5.3.1
 ARG QUERYSTRING_PARSER_VERSION=1.2.4
 ARG REQUESTS_VERSION=2.24.0
 ARG RICH_VERSION=3.3.1
+ARG REDIS_PY_VERSION=3.5.3
+ARG RQ_VERSION=1.5.0
 ARG SCIPY_VERSION=1.4.1
 ARG SIMPLEJSON_VERSION=3.17.0
 ARG SIX_VERSION=1.15.0
@@ -114,6 +116,7 @@ RUN echo "===> Installing testbed dependencies into base conda environment...." 
     python-dateutil=${PYTHON_DATEUTIL_VERSION} \
     pytz=${PYTZ_VERSION} \
     pyyaml=${PYYAML_VERSION} \
+    redis-py=${REDIS_PY_VERSION} \
     requests=${REQUESTS_VERSION} \
     scikit-learn=${SKLEARN_VERSION} \
     scipy=${SCIPY_VERSION} \
@@ -137,6 +140,7 @@ RUN echo "===> Installing testbed dependencies into base conda environment...." 
     python-json-logger==${PYTHON_JSON_LOGGER_VERSION} \
     querystring-parser==${QUERYSTRING_PARSER_VERSION} \
     rich==${RICH_VERSION} \
+    rq==${RQ_VERSION} \
     structlog==${STRUCTLOG_VERSION} \
     typing-extensions==${TYPING_EXTENSIONS_VERSION} && \
     echo "===> Cleaning/pruning directories...." && \
@@ -172,13 +176,16 @@ ARG PROJECT_PREFIX
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-sklearn.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-sklearn.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh /etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
 
 RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-sklearn.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-sklearn.sh /usr/local/bin/entrypoint.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh /usr/local/bin/restrict-network-access.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh /usr/local/bin/run-mlflow-job.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh
 
 USER ${AI_UID}

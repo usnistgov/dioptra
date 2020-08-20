@@ -69,6 +69,8 @@ ARG PYYAML_VERSION=5.3.1
 ARG PYZMQ_VERSION=18.1.1
 ARG QUERYSTRING_PARSER_VERSION=1.2.4
 ARG REQUESTS_VERSION=2.24.0
+ARG REDIS_PY_VERSION=3.5.3
+ARG RQ_VERSION=1.5.0
 ARG SCIPY_VERSION=1.4.1
 ARG SIMPLEJSON_VERSION=3.17.0
 ARG SIX_VERSION=1.15.0
@@ -100,6 +102,7 @@ RUN echo "===> Installing dependencies into base conda environment...." && \
     python-dateutil=${PYTHON_DATEUTIL_VERSION} \
     pytz=${PYTZ_VERSION} \
     pyyaml=${PYYAML_VERSION} \
+    redis-py=${REDIS_PY_VERSION} \
     pyzmq=${PYZMQ_VERSION} \
     requests=${REQUESTS_VERSION} \
     scipy=${SCIPY_VERSION} \
@@ -127,6 +130,7 @@ RUN echo "===> Installing dependencies into base conda environment...." && \
     pyarrow==${PYARROW} \
     python-json-logger==${PYTHON_JSON_LOGGER_VERSION} \
     querystring-parser==${QUERYSTRING_PARSER_VERSION} \
+    rq==${RQ_VERSION} \
     structlog==${STRUCTLOG_VERSION} \
     typing-extensions==${TYPING_EXTENSIONS_VERSION} && \
     echo "===> Cleaning/pruning directories...." && \

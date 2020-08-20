@@ -50,6 +50,7 @@ dependencies:
   - pytz
   - pyyaml=5.3.0
   - pyzmq
+  - redis-py
   - requests
   - scikit-learn=0.22.1
   - scipy
@@ -95,6 +96,7 @@ dependencies:
       - querystring-parser
       - recommonmark
       - rich
+      - rq
       - seed-isort-config
       - sqlalchemy
       - sqlparse
