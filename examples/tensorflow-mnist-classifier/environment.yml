@@ -1,6 +1,6 @@
 name: tensorflow-mnist-classifier
 channels:
-  - defaults
+  - https://artifacts.mitre.org/artifactory/api/conda/conda
   - conda-forge
 dependencies:
   - autopep8
