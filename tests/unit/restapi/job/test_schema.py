@@ -5,7 +5,6 @@ import pytest
 import structlog
 from structlog._config import BoundLoggerLazyProxy
 
-from mitre.securingai.restapi.job.interface import JobInterface, JobSubmitInterface
 from mitre.securingai.restapi.job.model import Job
 from mitre.securingai.restapi.job.schema import (
     JobSchema,
