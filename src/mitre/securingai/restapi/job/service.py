@@ -31,6 +31,8 @@ class JobService(object):
             workflow_uri=new_job.workflow_uri,
             entry_point=new_job.entry_point,
             entry_point_kwargs=new_job.entry_point_kwargs,
+            depends_on=new_job.depends_on,
+            timeout=new_job.timeout,
         )
 
         new_job.job_id = rq_job.get_id()

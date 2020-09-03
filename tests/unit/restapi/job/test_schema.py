@@ -45,9 +45,11 @@ def test_JobSchema_load_works(
         "createdOn": "2020-08-17T18:46:28.717559",
         "lastModified": "2020-08-17T18:46:28.717559",
         "queue": "tensorflow_cpu",
+        "timeout": "12h",
         "workflowUri": "s3://workflow/workflows.tar.gz",
         "entryPoint": "main",
         "entryPointKwargs": "-P var1=testing",
+        "dependsOn": None,
         "status": "finished",
     })
 
@@ -55,9 +57,11 @@ def test_JobSchema_load_works(
     assert job.created_on == datetime.datetime(2020, 8, 17, 18, 46, 28, 717559)
     assert job.last_modified == datetime.datetime(2020, 8, 17, 18, 46, 28, 717559)
     assert job.queue == JobQueue.tensorflow_cpu
+    assert job.timeout == "12h"
     assert job.workflow_uri == "s3://workflow/workflows.tar.gz"
     assert job.entry_point == "main"
     assert job.entry_point_kwargs == "-P var1=testing"
+    assert job.depends_on is None
     assert job.status == JobStatus.finished
 
 
@@ -66,15 +70,19 @@ def test_JobSubmitSchema_load_works(
 ) -> None:
     job: Job = job_submit_schema.load({
         "queue": "tensorflow_gpu",
+        "timeout": "12h",
         "workflowUri": "s3://workflow/workflows.tar.gz",
         "entryPoint": "main",
         "entryPointKwargs": "-P var1=testing",
+        "dependsOn": "0c30644b-df51-4a8b-b745-9db07ce57f72",
     })
 
     assert job.queue == JobQueue.tensorflow_gpu
+    assert job.timeout == "12h"
     assert job.workflow_uri == "s3://workflow/workflows.tar.gz"
     assert job.entry_point == "main"
     assert job.entry_point_kwargs == "-P var1=testing"
+    assert job.depends_on == "0c30644b-df51-4a8b-b745-9db07ce57f72"
 
 
 def test_JobSchema_dump_works(
@@ -85,9 +93,11 @@ def test_JobSchema_dump_works(
         created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
         last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
         queue=JobQueue.tensorflow_cpu,
+        timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         entry_point="main",
         entry_point_kwargs="-P var1=testing",
+        depends_on="0c30644b-df51-4a8b-b745-9db07ce57f72",
         status=JobStatus.finished,
     )
     job_serialized: Dict[str, Any] = job_schema.dump(job)
@@ -96,9 +106,11 @@ def test_JobSchema_dump_works(
     assert job_serialized["createdOn"] == "2020-08-17T18:46:28.717559"
     assert job_serialized["lastModified"] == "2020-08-17T18:46:28.717559"
     assert job_serialized["queue"] == "tensorflow_cpu"
+    assert job_serialized["timeout"] == "12h"
     assert job_serialized["workflowUri"] == "s3://workflow/workflows.tar.gz"
     assert job_serialized["entryPoint"] == "main"
     assert job_serialized["entryPointKwargs"] == "-P var1=testing"
+    assert job_serialized["dependsOn"] == "0c30644b-df51-4a8b-b745-9db07ce57f72"
 
 
 def test_JobSubmitSchema_dump_works(
@@ -106,13 +118,17 @@ def test_JobSubmitSchema_dump_works(
 ) -> None:
     job: Job = Job(
         queue=JobQueue.tensorflow_cpu,
+        timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         entry_point="main",
         entry_point_kwargs="-P var1=testing",
+        depends_on="0c30644b-df51-4a8b-b745-9db07ce57f72",
     )
     job_serialized: Dict[str, Any] = job_submit_schema.dump(job)
 
     assert job_serialized["queue"] == "tensorflow_cpu"
+    assert job_serialized["timeout"] == "12h"
     assert job_serialized["workflowUri"] == "s3://workflow/workflows.tar.gz"
     assert job_serialized["entryPoint"] == "main"
     assert job_serialized["entryPointKwargs"] == "-P var1=testing"
+    assert job_serialized["dependsOn"] == "0c30644b-df51-4a8b-b745-9db07ce57f72"

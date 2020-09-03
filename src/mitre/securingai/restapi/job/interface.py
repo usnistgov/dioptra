@@ -11,17 +11,21 @@ class JobInterface(TypedDict, total=False):
     created_on: datetime.datetime
     last_modified: datetime.datetime
     queue: JobQueue
+    timeout: Optional[str]
     workflow_uri: str
     entry_point: str
     entry_point_kwargs: Optional[str]
+    depends_on: Optional[str]
     status: JobStatus
 
 
 class JobSubmitInterface(TypedDict, total=False):
     queue: JobQueue
+    timeout: Optional[str]
     workflow_uri: str
     entry_point: str
     entry_point_kwargs: Optional[str]
+    depends_on: Optional[str]
 
 
 class JobUpdateInterface(TypedDict, total=False):

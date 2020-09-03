@@ -12,9 +12,11 @@ class Job(db.Model):  # type: ignore
     created_on = db.Column(db.DateTime())
     last_modified = db.Column(db.DateTime())
     queue = db.Column(db.Enum(JobQueue), index=True)
+    timeout = db.Column(db.Text())
     workflow_uri = db.Column(db.Text())
     entry_point = db.Column(db.Text())
     entry_point_kwargs = db.Column(db.Text())
+    depends_on = db.Column(db.String(36))
     status = db.Column(db.Enum(JobStatus), default=JobStatus.queued)
 
     def update(self, changes: JobUpdateInterface):

@@ -30,9 +30,11 @@ class MockRQJob(object):
 def new_job() -> Job:
     return Job(
         queue=JobQueue.tensorflow_cpu,
+        timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         entry_point="main",
         entry_point_kwargs="-P var1=testing",
+        depends_on=None,
     )
 
 
@@ -50,9 +52,11 @@ def test_get_all(db: SQLAlchemy, job_service: JobService):  # noqa
         created_on=timestamp,
         last_modified=timestamp,
         queue=JobQueue.tensorflow_cpu,
+        timeout="2d",
         workflow_uri="s3://workflow/workflows.tar.gz",
         entry_point="main",
         entry_point_kwargs="-P var1=testing",
+        depends_on=None,
     )
 
     new_job2 = Job(
@@ -60,8 +64,10 @@ def test_get_all(db: SQLAlchemy, job_service: JobService):  # noqa
         created_on=timestamp,
         last_modified=timestamp,
         queue=JobQueue.tensorflow_gpu,
+        timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         entry_point="second",
+        depends_on="4520511d-678b-4966-953e-af2d0edcea32",
     )
 
     db.session.add(new_job1)
@@ -95,7 +101,9 @@ def test_submit(
    assert results[0].created_on == datetime.datetime(2020, 8, 17, 18, 46, 28, 717559)
    assert results[0].last_modified == datetime.datetime(2020, 8, 17, 18, 46, 28, 717559)
    assert results[0].queue == JobQueue.tensorflow_cpu
+   assert results[0].timeout == "12h"
    assert results[0].workflow_uri == "s3://workflow/workflows.tar.gz"
    assert results[0].entry_point == "main"
    assert results[0].entry_point_kwargs == "-P var1=testing"
+   assert results[0].depends_on is None
    assert results[0].status == JobStatus.queued

@@ -1,5 +1,5 @@
 
-from typing import Optional
+from typing import Optional, Union
 
 import rq
 from redis import Redis
@@ -24,9 +24,11 @@ class RQService(object):
 
         return JobStatus[job.get_status()]
 
-    def get_rq_job(self, job: Job) -> Optional[rq.job.Job]:
+    def get_rq_job(self, job: Union[Job, str]) -> Optional[rq.job.Job]:
+        job_id: str = job.job_id if isinstance(job, Job) else job
+
         try:
-            rq_job: rq.job.Job = rq.job.Job.fetch(job.job_id, connection=self._redis)
+            rq_job: rq.job.Job = rq.job.Job.fetch(job_id, connection=self._redis)
 
         except (RedisError, NoSuchJobError):
             return None
@@ -38,17 +40,25 @@ class RQService(object):
         queue: JobQueue,
         workflow_uri: str,
         entry_point: str,
-        entry_point_kwargs=None,
+        entry_point_kwargs: Optional[str] = None,
+        depends_on: Optional[str] = None,
+        timeout: Optional[str] = None,
     ) -> rq.job.Job:
         cmd_kwargs = {
             "workflow_uri": workflow_uri,
             "entry_point": entry_point,
         }
+        job_dependency: Optional[rq.job.Job] = None
 
         if entry_point_kwargs is not None:
             cmd_kwargs["entry_point_kwargs"] = entry_point_kwargs
 
-        q: rq.Queue = rq.Queue(queue.name, connection=self._redis)
-        result: rq.job.Job = q.enqueue(self._run_mlflow, kwargs=cmd_kwargs)
+        if depends_on is not None:
+            job_dependency = self.get_rq_job(depends_on)
+
+        q: rq.Queue = rq.Queue(queue.name, default_timeout="24h", connection=self._redis)
+        result: rq.job.Job = q.enqueue(
+            self._run_mlflow, kwargs=cmd_kwargs, timeout=timeout, depends_on=job_dependency
+        )
 
         return result

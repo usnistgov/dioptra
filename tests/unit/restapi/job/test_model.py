@@ -17,9 +17,11 @@ def job() -> Job:
         created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
         last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
         queue=JobQueue.tensorflow_cpu,
+        timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         entry_point="main",
         entry_point_kwargs="-P var1=testing",
+        depends_on=None,
         status=JobStatus.queued,
     )
 

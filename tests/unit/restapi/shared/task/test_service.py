@@ -51,9 +51,11 @@ def job(db: SQLAlchemy) -> Job:
         created_on=timestamp,
         last_modified=timestamp,
         queue=JobQueue.tensorflow_cpu,
+        timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         entry_point="main",
         entry_point_kwargs="-P var1=testing",
+        depends_on=None,
         status=JobStatus.queued,
     )
 
