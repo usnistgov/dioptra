@@ -12,14 +12,18 @@ dependencies:
   - flake8
   - flake8-bugbear
   - h5py
+  - ipywidgets
   - ipython
   - isort
   - jinja2
   - joblib
   - jupyter
+  - jupyterlab
+  - jupyterlab_code_formatter
   - markupsafe
   - matplotlib
   - mypy
+  - nodejs
   - numexpr
   - numpy
   - pandas
