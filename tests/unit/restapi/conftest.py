@@ -1,6 +1,10 @@
+import io
+import tarfile
 from typing import Any, List
 
 import pytest
+from boto3.session import Session
+from botocore.client import BaseClient
 from flask import Flask
 from flask_injector import FlaskInjector, request
 from flask_sqlalchemy import SQLAlchemy
@@ -9,11 +13,30 @@ from redis import Redis
 
 
 @pytest.fixture
+def workflow_tar_gz():
+    with io.BytesIO() as workflow_tar_gz_fileobj, tarfile.open(
+        fileobj=workflow_tar_gz_fileobj, mode="w:gz"
+    ) as f, io.BytesIO(initial_bytes=b"data") as data:
+        tarinfo = tarfile.TarInfo(name="MLproject")
+        tarinfo.size = len(data.getbuffer())
+        f.addfile(tarinfo=tarinfo, fileobj=data)
+        workflow_tar_gz_fileobj.seek(0)
+        yield workflow_tar_gz_fileobj
+
+
+@pytest.fixture
 def dependency_modules() -> List[Any]:
     from mitre.securingai.restapi.job.dependencies import (
         RQServiceConfiguration,
         RQServiceModule,
     )
+
+    def _bind_s3_service_configuration(binder: Binder) -> None:
+        s3_session: Session = Session()
+        s3_client: BaseClient = s3_session.client("s3")
+
+        binder.bind(Session, to=s3_session, scope=request)
+        binder.bind(BaseClient, to=s3_client, scope=request)
 
     def configure(binder: Binder) -> None:
         binder.bind(
@@ -24,6 +47,7 @@ def dependency_modules() -> List[Any]:
             ),
             scope=request,
         )
+        _bind_s3_service_configuration(binder)
 
     return [configure, RQServiceModule()]
 
