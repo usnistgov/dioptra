@@ -6,7 +6,7 @@ FROM securing-ai/miniconda-base:${PROJECT_VERSION}-${PROJECT_BUILD_NUMBER}
 
 ARG MLFLOW_VERSION
 
-ARG ALEMBIC_VERSION=1.4.2
+ARG ALEMBIC_VERSION=1.4.1
 ARG BOTO3_VERSION=1.14.41
 ARG CLICK_VERSION=7.1.2
 ARG CLOUDPICKLE_VERSION=1.4.1
@@ -39,7 +39,6 @@ ARG WERKZEUG_VERSION=1.0.1
 
 RUN echo "===> Installing dependencies using conda (defaults channel)...." && \
     ${CONDA_DIR}/condabin/conda install -n base -q -y \
-    alembic=${ALEMBIC_VERSION} \
     click=${CLICK_VERSION} \
     cloudpickle=${CLOUDPICKLE_VERSION} \
     cython=${CYTHON_VERSION} \
@@ -66,6 +65,7 @@ RUN echo "===> Installing dependencies using conda (defaults channel)...." && \
     echo "===> Installing dependencies using pip...." && \
     ${CONDA_DIR}/condabin/conda run -n base \
     pip install --no-cache-dir \
+    alembic==${ALEMBIC_VERSION} \
     boto3==${BOTO3_VERSION} \
     databricks-cli==${DATABRICKS_CLI_VERSION} \
     Flask==${FLASK_VERSION} \

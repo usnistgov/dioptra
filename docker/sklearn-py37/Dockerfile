@@ -39,7 +39,7 @@ ARG IBM_ART_VERSION
 ARG MLFLOW_VERSION
 ARG SKLEARN_VERSION
 
-ARG ALEMBIC_VERSION=1.4.2
+ARG ALEMBIC_VERSION=1.4.1
 ARG BOTO3_VERSION=1.14.41
 ARG BOTTLENECK_VERSION=1.3.2
 ARG CLICK_VERSION=7.1.2
@@ -94,7 +94,6 @@ ARG WERKZEUG_VERSION=1.0.1
 RUN echo "===> Installing testbed dependencies into base conda environment...." && \
     echo "===> Installing dependencies using conda (defaults channel)...." && \
     ${CONDA_DIR}/condabin/conda install -n base -q -y \
-    alembic=${ALEMBIC_VERSION} \
     bottleneck=${BOTTLENECK_VERSION} \
     click=${CLICK_VERSION} \
     cloudpickle=${CLOUDPICKLE_VERSION} \
@@ -133,6 +132,7 @@ RUN echo "===> Installing testbed dependencies into base conda environment...." 
     ${CONDA_DIR}/condabin/conda run -n base \
     pip install --no-cache-dir \
     adversarial-robustness-toolbox==${IBM_ART_VERSION} \
+    alembic==${ALEMBIC_VERSION} \
     boto3==${BOTO3_VERSION} \
     databricks-cli==${DATABRICKS_CLI_VERSION} \
     flask-accepts==${FLASK_ACCEPTS_VERSION} \
