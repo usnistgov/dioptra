@@ -76,6 +76,7 @@ dependencies:
       - Flask-Injector
       - flask-restx
       - Flask-SQLAlchemy
+      - Flask-WTF
       - freezegun
       - ghp-import
       - gorilla
