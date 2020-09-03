@@ -20,7 +20,7 @@ services:
       - username
 
   minio-username:
-    image: minio/minio:RELEASE.2020-07-12T19-14-17Z
+    image: minio/minio:RELEASE.2020-09-02T18-19-50Z
     init: true
     restart: always
     hostname: minio-username
@@ -160,11 +160,10 @@ services:
       MLFLOW_S3_ENDPOINT_URL: http://minio-username:9000
       KMP_AFFINITY: "none"
       KMP_BLOCKTIME: "1"
-      OMP_NUM_THREADS: "6"
       KMP_SETTINGS: "FALSE"
+      OMP_PROC_BIND: "false"
       RQ_REDIS_URI: redis://redis-username:6379/0
       TF_CPP_MIN_LOG_LEVEL: "2"
-      USE_DAAL4PY_SKLEARN: "YES"
     command:
       - tensorflow_cpu
     networks:
