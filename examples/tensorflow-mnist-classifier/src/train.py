@@ -1,37 +1,34 @@
 #!/usr/bin/env python
 
 import datetime
+import os
 import warnings
 from pathlib import Path
+from typing import Optional
 
 warnings.filterwarnings("ignore")
 
 import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
-tf.config.threading.set_intra_op_parallelism_threads(0)
-tf.config.threading.set_inter_op_parallelism_threads(0)
 
 import click
 import mlflow
 import mlflow.tensorflow
+import numpy as np
 import structlog
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.metrics import (
-    TruePositives,
-    FalsePositives,
-    TrueNegatives,
-    FalseNegatives,
     CategoricalAccuracy,
     Precision,
     Recall,
     AUC,
 )
-from tensorflow.keras.optimizers import Adam, Adagrad, RMSprop
+from tensorflow.keras.optimizers import Adam, Adagrad, RMSprop, SGD
 
 from data import create_image_dataset
 from log import configure_stdlib_logger, configure_structlog_logger
-from models import le_net, alex_net
+from models import shallow_net, le_net, alex_net, make_model_register
 
 LOGGER = structlog.get_logger()
 METRICS = [
@@ -47,6 +44,7 @@ def get_optimizer(optimizer, learning_rate):
         "rmsprop": RMSprop(learning_rate),
         "adam": Adam(learning_rate),
         "adagrad": Adagrad(learning_rate),
+        "sgd": SGD(learning_rate)
     }
 
     return optimizer_collection.get(optimizer)
@@ -56,6 +54,7 @@ def get_model(
     model_architecture: str, n_classes: int = 10,
 ):
     model_collection = {
+        "shallow_net": shallow_net(input_shape=(28, 28, 1), n_classes=n_classes),
         "le_net": le_net(input_shape=(28, 28, 1), n_classes=n_classes),
         "alex_net": alex_net(input_shape=(224, 224, 1), n_classes=n_classes),
     }
@@ -86,7 +85,7 @@ def prepare_data(
     batch_size: int,
     validation_split: float,
     model_architecture: str,
-    seed: int = 8237131,
+    seed: int,
 ):
     training_dir = Path(data_dir) / "training"
     testing_dir = Path(data_dir) / "testing"
@@ -179,7 +178,7 @@ def evaluate_metrics(model, testing_ds):
 )
 @click.option(
     "--model-architecture",
-    type=click.Choice(["le_net", "alex_net"], case_sensitive=False),
+    type=click.Choice(["shallow_net", "le_net", "alex_net"], case_sensitive=False),
     default="le_net",
     help="Model architecture",
 )
@@ -193,11 +192,17 @@ def evaluate_metrics(model, testing_ds):
     default=32,
 )
 @click.option(
+    "--register-model",
+    type=click.Choice(["True", "False"], case_sensitive=True),
+    default="False",
+    help="Add trained model to registry",
+)
+@click.option(
     "--learning-rate", type=click.FLOAT, help="Model learning rate", default=0.001
 )
 @click.option(
     "--optimizer",
-    type=click.STRING,
+    type=click.Choice(["adam", "adagrad", "rmsprop", "sgd"], case_sensitive=False),
     help="Optimizer to use to train the model",
     default="adam",
 )
@@ -207,15 +212,28 @@ def evaluate_metrics(model, testing_ds):
     help="Fraction of training dataset to use for validation",
     default=0.2,
 )
+@click.option(
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
+)
 def train(
     data_dir,
     model_architecture,
     epochs,
     batch_size,
+    register_model,
     learning_rate,
     optimizer,
     validation_split,
+    seed,
 ):
+    register_model = True if register_model == "True" else False
+    rng = np.random.default_rng(seed if seed >= 0 else None)
+
+    if seed < 0:
+        seed = rng.bit_generator._seed_seq.entropy
 
     LOGGER.info(
         "Execute MLFlow entry point",
@@ -224,18 +242,37 @@ def train(
         model_architecture=model_architecture,
         epochs=epochs,
         batch_size=batch_size,
+        register_model=register_model,
         learning_rate=learning_rate,
         optimizer=optimizer,
         validation_split=validation_split,
+        seed=seed,
     )
+
+    experiment_name: Optional[str] = os.getenv("MLFLOW_EXPERIMENT_NAME")
+    model_name: str = f"{experiment_name}_{model_architecture}" if experiment_name else f"{model_architecture}"
+    tensorflow_global_seed: int = rng.integers(low=0, high=2**31 - 1)
+    dataset_seed: int = rng.integers(low=0, high=2**31 - 1)
+
+    tf.random.set_seed(tensorflow_global_seed)
+
     mlflow.tensorflow.autolog()
 
-    with mlflow.start_run() as _:
+    with mlflow.start_run() as active_run:
+        mlflow.log_param("entry_point_seed", seed)
+        mlflow.log_param("tensorflow_global_seed", tensorflow_global_seed)
+        mlflow.log_param("dataset_seed", dataset_seed)
+
+        register_mnist_model = make_model_register(
+            active_run=active_run, name=model_name,
+        )
+
         training_ds, validation_ds, testing_ds = prepare_data(
             data_dir=data_dir,
             validation_split=validation_split,
             batch_size=batch_size,
             model_architecture=model_architecture,
+            seed=dataset_seed,
         )
         model = init_model(
             learning_rate=learning_rate,
@@ -249,6 +286,9 @@ def train(
             epochs=epochs,
         )
         evaluate_metrics(model=model, testing_ds=testing_ds)
+
+        if register_model:
+            register_mnist_model(model_dir="model")
 
 
 if __name__ == "__main__":

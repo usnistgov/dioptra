@@ -1,5 +1,5 @@
 import warnings
-from typing import Tuple
+from typing import Callable, Tuple
 
 warnings.filterwarnings("ignore")
 
@@ -8,6 +8,10 @@ import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 
 import mlflow.keras
+import structlog
+from mlflow.entities import Run as MlflowRun
+from mlflow.entities.model_registry import ModelVersion
+from mlflow.tracking import MlflowClient
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import (
     BatchNormalization,
@@ -19,8 +23,48 @@ from tensorflow.keras.layers import (
 )
 
 
+LOGGER = structlog.get_logger()
+
+
 def load_model_in_registry(model: str):
+    model_uri: str = f"models:/{model}"
+    LOGGER.info("load registered model", model_uri=model_uri)
     return mlflow.keras.load_model(model_uri=f"models:/{model}")
+
+
+def make_model_register(active_run: MlflowRun, name: str) -> Callable[[str], ModelVersion]:
+    LOGGER.info("create model register")
+    run_id: str = active_run.info.run_id
+    artifact_uri: str = active_run.info.artifact_uri
+
+    def inner_func(model_dir: str) -> ModelVersion:
+        client = MlflowClient()
+        source: str = f"{artifact_uri}/{model_dir}"
+        LOGGER.info("register model", name=name, source=source, run_id=run_id)
+        return client.create_model_version(
+            name=name,
+            source=source,
+            run_id=run_id,
+        )
+
+    return inner_func
+
+
+def shallow_net(
+    input_shape: Tuple[int, int, int] = (28, 28, 1), n_classes: int = 10
+) -> Sequential:
+    model = Sequential()
+
+    # Flatten inputs
+    model.add(Flatten(input_shape=input_shape))
+
+    # single hidden layer:
+    model.add(Dense(32, activation="sigmoid"))
+
+    # output layer:
+    model.add(Dense(n_classes, activation="softmax"))
+
+    return model
 
 
 def le_net(

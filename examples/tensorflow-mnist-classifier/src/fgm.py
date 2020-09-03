@@ -8,8 +8,6 @@ warnings.filterwarnings("ignore")
 import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
-tf.config.threading.set_intra_op_parallelism_threads(0)
-tf.config.threading.set_inter_op_parallelism_threads(0)
 
 import click
 import mlflow
@@ -51,7 +49,7 @@ def evaluate_classification_metrics(classifier, adv_ds):
 )
 @click.option(
     "--model-architecture",
-    type=click.Choice(["le_net", "alex_net"], case_sensitive=False),
+    type=click.Choice(["shallow_net", "le_net", "alex_net"], case_sensitive=False),
     default="le_net",
     help="Model architecture",
 )
@@ -86,17 +84,41 @@ def evaluate_classification_metrics(classifier, adv_ds):
     help="FGM attack norm of adversarial perturbation",
     default="inf",
 )
+@click.option(
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
+)
 def fgm_attack(
-    data_dir, model, model_architecture, batch_size, eps, eps_step, minimal, norm
+    data_dir, model, model_architecture, batch_size, eps, eps_step, minimal, norm, seed
 ):
     norm_mapping = {"inf": np.inf, "1": 1, "2": 2}
+    rng = np.random.default_rng(seed if seed >= 0 else None)
+
+    if seed < 0:
+        seed = rng.bit_generator._seed_seq.entropy
 
     LOGGER.info(
-        "Execute MLFlow entry point", entry_point="fgm_attack", data_dir=data_dir,
+        "Execute MLFlow entry point",
+        entry_point="fgm_attack",
+        data_dir=data_dir,
+        model=model,
+        model_architecture=model_architecture,
+        batch_size=batch_size,
+        eps=eps,
+        eps_step=eps_step,
+        minimal=minimal,
+        norm=norm,
+        seed=seed,
     )
 
     minimal = bool(int(minimal))
     norm = norm_mapping[norm]
+    tensorflow_global_seed: int = rng.integers(low=0, high=2**31 - 1)
+    dataset_seed: int = rng.integers(low=0, high=2**31 - 1)
+
+    tf.random.set_seed(tensorflow_global_seed)
 
     with mlflow.start_run() as _:
         testing_dir = Path(data_dir) / "testing"
@@ -125,6 +147,7 @@ def fgm_attack(
             subset=None,
             validation_split=None,
             image_size=image_size,
+            seed=dataset_seed,
         )
         evaluate_classification_metrics(classifier=classifier, adv_ds=adv_ds)
 
