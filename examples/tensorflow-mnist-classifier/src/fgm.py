@@ -85,10 +85,7 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default="inf",
 )
 @click.option(
-    "--seed",
-    type=click.INT,
-    help="Set the entry point rng seed",
-    default=-1,
+    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
 )
 def fgm_attack(
     data_dir, model, model_architecture, batch_size, eps, eps_step, minimal, norm, seed
@@ -115,8 +112,8 @@ def fgm_attack(
 
     minimal = bool(int(minimal))
     norm = norm_mapping[norm]
-    tensorflow_global_seed: int = rng.integers(low=0, high=2**31 - 1)
-    dataset_seed: int = rng.integers(low=0, high=2**31 - 1)
+    tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
+    dataset_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
 
     tf.random.set_seed(tensorflow_global_seed)
 

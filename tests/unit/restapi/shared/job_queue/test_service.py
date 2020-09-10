@@ -28,7 +28,14 @@ class MockRQJob(object):
         cmd_kwargs: Optional[Dict[str, Any]] = None,
         depends_on: Optional[Union[str, MockRQJob]] = None,
     ) -> None:
-        LOGGER.info("Mocking rq.job.Job instance", id=id, queue=queue, timeout=timeout, cmd_kwargs=cmd_kwargs, depends_on=depends_on)
+        LOGGER.info(
+            "Mocking rq.job.Job instance",
+            id=id,
+            queue=queue,
+            timeout=timeout,
+            cmd_kwargs=cmd_kwargs,
+            depends_on=depends_on,
+        )
         self.queue = queue
         self.timeout = timeout
         self.cmd_kwargs = cmd_kwargs
@@ -36,11 +43,15 @@ class MockRQJob(object):
         self._dependency_ids = None
 
         if depends_on is not None:
-            self._dependency_ids = [depends_on.id if isinstance(depends_on, MockRQJob) else depends_on]
+            self._dependency_ids = [
+                depends_on.id if isinstance(depends_on, MockRQJob) else depends_on
+            ]
 
     @classmethod
     def fetch(cls, id: str, *args, **kwargs) -> MockRQJob:
-        LOGGER.info("Mocking rq.job.Job.fetch() function", id=id, args=args, kwargs=kwargs)
+        LOGGER.info(
+            "Mocking rq.job.Job.fetch() function", id=id, args=args, kwargs=kwargs
+        )
         return cls(id=id)
 
     def get_id(self) -> str:
@@ -81,7 +92,12 @@ class MockRQQueue(object):
         cmd_kwargs = kwargs.get("kwargs")
         depends_on = kwargs.get("depends_on")
         timeout = kwargs.get("timeout")
-        return MockRQJob(queue=self.name, timeout=timeout, cmd_kwargs=cmd_kwargs, depends_on=depends_on)
+        return MockRQJob(
+            queue=self.name,
+            timeout=timeout,
+            cmd_kwargs=cmd_kwargs,
+            depends_on=depends_on,
+        )
 
 
 @pytest.fixture
@@ -133,6 +149,7 @@ def test_submit_mlflow_job(rq_service: RQService):  # noqa
         "entry_point": "main",
         "entry_point_kwargs": "-P var1=test",
     }
+
 
 @freeze_time("2020-08-17T18:46:28.717559")
 def test_submit_dependent_mlflow_jobs(rq_service: RQService):  # noqa

@@ -44,7 +44,7 @@ def get_optimizer(optimizer, learning_rate):
         "rmsprop": RMSprop(learning_rate),
         "adam": Adam(learning_rate),
         "adagrad": Adagrad(learning_rate),
-        "sgd": SGD(learning_rate)
+        "sgd": SGD(learning_rate),
     }
 
     return optimizer_collection.get(optimizer)
@@ -213,10 +213,7 @@ def evaluate_metrics(model, testing_ds):
     default=0.2,
 )
 @click.option(
-    "--seed",
-    type=click.INT,
-    help="Set the entry point rng seed",
-    default=-1,
+    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
 )
 def train(
     data_dir,
@@ -251,8 +248,8 @@ def train(
 
     experiment_name: Optional[str] = os.getenv("MLFLOW_EXPERIMENT_NAME")
     model_name: str = f"{experiment_name}_{model_architecture}" if experiment_name else f"{model_architecture}"
-    tensorflow_global_seed: int = rng.integers(low=0, high=2**31 - 1)
-    dataset_seed: int = rng.integers(low=0, high=2**31 - 1)
+    tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
+    dataset_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
 
     tf.random.set_seed(tensorflow_global_seed)
 

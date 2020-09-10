@@ -3,7 +3,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import numpy as np
-from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, precision_score, recall_score
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    roc_auc_score,
+    precision_score,
+    recall_score,
+)
 from sklearn.metrics.pairwise import paired_distances
 from scipy.stats import wasserstein_distance
 
@@ -50,7 +56,9 @@ def paired_wasserstein_distances(y_true, y_pred, **kwargs):
     def wrapped_metric(X, Y):
         return wasserstein_distance(u_values=X, v_values=Y, **kwargs)
 
-    return paired_distances(X=_flatten_batch(y_true), Y=_flatten_batch(y_pred), metric=wrapped_metric)
+    return paired_distances(
+        X=_flatten_batch(y_true), Y=_flatten_batch(y_pred), metric=wrapped_metric
+    )
 
 
 def precision(y_true, y_pred, **kwargs):

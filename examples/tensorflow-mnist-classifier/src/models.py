@@ -32,7 +32,9 @@ def load_model_in_registry(model: str):
     return mlflow.keras.load_model(model_uri=f"models:/{model}")
 
 
-def make_model_register(active_run: MlflowRun, name: str) -> Callable[[str], ModelVersion]:
+def make_model_register(
+    active_run: MlflowRun, name: str
+) -> Callable[[str], ModelVersion]:
     LOGGER.info("create model register")
     run_id: str = active_run.info.run_id
     artifact_uri: str = active_run.info.artifact_uri
@@ -41,11 +43,7 @@ def make_model_register(active_run: MlflowRun, name: str) -> Callable[[str], Mod
         client = MlflowClient()
         source: str = f"{artifact_uri}/{model_dir}"
         LOGGER.info("register model", name=name, source=source, run_id=run_id)
-        return client.create_model_version(
-            name=name,
-            source=source,
-            run_id=run_id,
-        )
+        return client.create_model_version(name=name, source=source, run_id=run_id,)
 
     return inner_func
 
