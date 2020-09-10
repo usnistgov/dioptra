@@ -10,10 +10,11 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([host],[],[The network address to listen on. Use 0.0.0.0 to bind to all addresses if you want to access the tracking server from other machines.],[0.0.0.0])
 # ARG_OPTIONAL_SINGLE([port],[],[The port to listen on.],[5000])
 # ARG_OPTIONAL_SINGLE([workers],[],[Number of gunicorn worker processes to handle requests.],[4])
+# ARG_OPTIONAL_ACTION([upgrade-db],[],[Upgrade the database schema],[upgrade_database])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
 # ARG_HELP([MLFlow Tracking Server Entry Point\n])"
-# ARGBASH_GO
+# ARGBASH_PREPARE
 
 # [ <-- needed because of Argbash
 shopt -s extglob
@@ -23,16 +24,19 @@ set -euo pipefail
 # Global parameters
 ###########################################################################################
 
-readonly backend_store_uri="${_arg_backend_store_uri}"
 readonly conda_dir="${CONDA_DIR}"
-readonly conda_env="${_arg_conda_env}"
-readonly default_artifact_root="${_arg_default_artifact_root}"
-readonly gunicorn_opts="${_arg_gunicorn_opts}"
-readonly host_address="${_arg_host}"
 readonly mlflow_s3_endpoint_url="${MLFLOW_S3_ENDPOINT_URL-}"
 readonly logname="Container Entry Point"
-readonly port="${_arg_port}"
-readonly workers="${_arg_workers}"
+
+set_parsed_globals() {
+  readonly backend_store_uri="${_arg_backend_store_uri}"
+  readonly conda_env="${_arg_conda_env}"
+  readonly default_artifact_root="${_arg_default_artifact_root}"
+  readonly gunicorn_opts="${_arg_gunicorn_opts}"
+  readonly host_address="${_arg_host}"
+  readonly port="${_arg_port}"
+  readonly workers="${_arg_workers}"
+}
 
 ###########################################################################################
 # Create bucket on S3 storage
@@ -66,6 +70,30 @@ s3_mb() {
   else
     echo "${logname}: artifacts storage path is ${default_artifact_root}"
   fi
+}
+
+###########################################################################################
+# Upgrade the MLFlow Tracking database
+#
+# Globals:
+#   backend_store_uri
+#   conda_dir
+#   conda_env
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+upgrade_database() {
+  echo "${logname}: INFO - Upgrading the MLFlow Tracking database"
+
+  set_parsed_globals
+
+  bash -c "\
+  source ${conda_dir}/etc/profile.d/conda.sh &&\
+  conda activate ${conda_env} &&\
+  mlflow db upgrade ${backend_store_uri}"
 }
 
 ###########################################################################################
@@ -119,6 +147,8 @@ start_mlflow_server() {
 # Main script
 ###########################################################################################
 
+parse_commandline "$@"
+set_parsed_globals
 s3_mb
 start_mlflow_server
 # ] <-- needed because of Argbash

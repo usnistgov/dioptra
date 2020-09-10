@@ -230,6 +230,8 @@ USER ${AI_UID}
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
+ENV AI_RESTAPI_ENV prod
+
 ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
 
 LABEL securingai.docker.project.component=${PROJECT_COMPONENT}

@@ -158,17 +158,21 @@ ARG PROJECT_PREFIX
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/uwsgi.ini /etc/${PROJECT_PREFIX}/docker/uwsgi.ini
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/wsgi.py /etc/${PROJECT_PREFIX}/docker/wsgi.py
 COPY src/migrations /etc/${PROJECT_PREFIX}/docker/migrations
+COPY wsgi.py /etc/${PROJECT_PREFIX}/docker/wsgi.py
 
 USER root
 
 RUN mkdir -p /etc/uwsgi && \
+    mkdir -p /etc/gunicorn && \
+    chown -R ${AI_UID}:${AI_GID} /etc/gunicorn && \
     chown -R ${AI_UID}:${AI_GID} /etc/uwsgi && \
     chown -R ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/migrations && \
     chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/uwsgi.ini && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
@@ -178,6 +182,7 @@ RUN mkdir -p /etc/uwsgi && \
     ln -s /etc/${PROJECT_PREFIX}/docker/migrations ${AI_WORKDIR}/migrations && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh /usr/local/bin/entrypoint.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/gunicorn/gunicorn.conf.py && \
     ln -s /etc/${PROJECT_PREFIX}/docker/uwsgi.ini /etc/uwsgi/uwsgi.ini && \
     ln -s /etc/${PROJECT_PREFIX}/docker/wsgi.py ${AI_WORKDIR}/wsgi.py
 
@@ -201,6 +206,8 @@ RUN echo "===> Installing Securing AI code module...." && \
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD []
+
+ENV AI_RESTAPI_ENV prod
 
 ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
 
