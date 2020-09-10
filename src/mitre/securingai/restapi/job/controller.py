@@ -1,15 +1,16 @@
 import uuid
 
 import structlog
-from flask import request
 from flask_accepts import accepts, responds
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog import BoundLogger
 from structlog._config import BoundLoggerLazyProxy
 
-from .model import Job
-from .schema import JobSchema, JobSubmitSchema
+from mitre.securingai.restapi.shared.job_queue.model import JobStatus
+
+from .model import Job, JobForm, JobFormData
+from .schema import JobSchema, JobFormSchema, job_submit_form_schema
 from .service import JobService
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
@@ -26,12 +27,25 @@ class JobResource(Resource):
         self._job_service = job_service
         super().__init__(*args, **kwargs)
 
-    @accepts(schema=JobSubmitSchema, api=api)
+    @accepts(job_submit_form_schema, api=api)
     @responds(schema=JobSchema, api=api)
     def post(self) -> Job:
-        log: BoundLogger = LOGGER.new(request_id=str(uuid.uuid4()))  # noqa: F841
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="job", request_type="POST"
+        )  # noqa: F841
+        schema: JobFormSchema = JobFormSchema()
+        job_form: JobForm = JobForm()
 
-        return self._job_service.submit(request.parsed_obj)
+        log.info("Request received")
+
+        if job_form.validate_on_submit():
+            log.info("Form validation successful")
+            return self._job_service.submit(
+                job_form_data=schema.dump(job_form), log=log
+            )
+
+        log.warning("Form validation failed")
+        return Job(status=JobStatus.failed)
 
 
 @api.route("/<string:jobId>")
@@ -44,4 +58,8 @@ class JobIdResource(Resource):
 
     @responds(schema=JobSchema, api=api)
     def get(self, jobId: str) -> Job:
-        return self._job_service.get_by_id(jobId)
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="jobId", request_type="GET"
+        )  # noqa: F841
+        log.info("Request received", job_id=jobId)
+        return self._job_service.get_by_id(jobId, log=log)

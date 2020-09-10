@@ -7,8 +7,12 @@ from tempfile import TemporaryDirectory
 from typing import List, Optional
 
 import rq
+import structlog
+from structlog import BoundLogger
+from structlog._config import BoundLoggerLazyProxy
 
 
+LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
 
 def run_mlflow_task(
@@ -33,13 +37,18 @@ def run_mlflow_task(
     if rq_job is not None:
         env["AI_RQ_JOB_ID"] = rq_job.get_id()
 
+    log: BoundLogger = LOGGER.new(rq_job_id=env.get("AI_RQ_JOB_ID"))
+
     if entry_point_kwargs is not None:
         cmd.extend(shlex.split(entry_point_kwargs))
 
     with TemporaryDirectory(dir=os.getenv("AI_WORKDIR")) as tmpdir:
+        log.info("Executing MLFlow job", cmd=" ".join(cmd))
         p = subprocess.run(args=cmd, cwd=tmpdir, env=env)
 
     if p.returncode > 0:
-        return p
+        log.warning(
+            "MLFlow job stopped unexpectedly", returncode=p.returncode, stderr=p.stderr
+        )
 
     return p

@@ -5,10 +5,10 @@ from typing import Any, Callable, List
 from boto3.session import Session
 from botocore.client import BaseClient
 from flask_injector import request
-from injector import Binder, Module, provider, singleton
+from injector import Binder, Module, provider
 from redis import Redis
 
-from .service import RQService
+from mitre.securingai.restapi.shared.job_queue.service import RQService
 
 
 @dataclass
@@ -18,7 +18,7 @@ class RQServiceConfiguration(object):
 
 
 class RQServiceModule(Module):
-    @singleton
+    @request
     @provider
     def provide_rq_service_module(
         self, configuration: RQServiceConfiguration
@@ -31,11 +31,10 @@ def _bind_rq_service_configuration(binder: Binder):
     run_mlflow: str = "mitre.securingai.restapi.shared.task.run_mlflow_task"
 
     configuration: RQServiceConfiguration = RQServiceConfiguration(
-        redis=redis_conn,
-        run_mlflow=run_mlflow,
+        redis=redis_conn, run_mlflow=run_mlflow,
     )
 
-    binder.bind(RQServiceConfiguration, to=configuration, scope=singleton)
+    binder.bind(RQServiceConfiguration, to=configuration, scope=request)
 
 
 def _bind_s3_service_configuration(binder: Binder) -> None:

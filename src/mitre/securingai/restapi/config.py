@@ -7,6 +7,7 @@ class BaseConfig(object):
     USE_MOCK_EQUIVALENCY = False
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    WTF_CSRF_ENABLED = False
 
 
 class DevelopmentConfig(BaseConfig):
@@ -27,6 +28,7 @@ class TestingConfig(BaseConfig):
     DEBUG = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TESTING = True
+    WTF_CSRF_ENABLED = False
     SQLALCHEMY_DATABASE_URI = os.getenv("AI_RESTAPI_TEST_DATABASE_URI", "sqlite://")
 
 

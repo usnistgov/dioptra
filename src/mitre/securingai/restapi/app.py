@@ -6,10 +6,12 @@ from flask import Flask, jsonify
 from flask_injector import FlaskInjector
 from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import CSRFProtect
 
 
 LOGGER = structlog.get_logger()
 
+csrf = CSRFProtect()
 db = SQLAlchemy()
 
 
@@ -25,12 +27,13 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
     app.config.from_object(config_by_name[env])
 
     api: Api = Api(
-        app, title="Securing AI Machine Learning Model Endpoint", version="0.0.0"
+        app, title="Securing AI Machine Learning Model Endpoint", version="0.0.0",
     )
     modules: List[Callable[..., Any]] = [bind_dependencies]
 
     register_routes(api, app)
     register_providers(modules)
+    csrf.init_app(app)
     db.init_app(app)
 
     @app.route("/health")

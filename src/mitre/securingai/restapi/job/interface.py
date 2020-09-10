@@ -19,14 +19,5 @@ class JobInterface(TypedDict, total=False):
     status: JobStatus
 
 
-class JobSubmitInterface(TypedDict, total=False):
-    queue: JobQueue
-    timeout: Optional[str]
-    workflow_uri: str
-    entry_point: str
-    entry_point_kwargs: Optional[str]
-    depends_on: Optional[str]
-
-
 class JobUpdateInterface(TypedDict, total=False):
     status: JobStatus

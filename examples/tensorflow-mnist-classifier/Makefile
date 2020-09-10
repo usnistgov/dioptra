@@ -1,4 +1,4 @@
-.PHONY: clean data help services teardown upload-job
+.PHONY: clean data help services teardown workflows
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
@@ -165,8 +165,8 @@ ifneq ("$(wildcard $(DOCKER_COMPOSE_SENTINEL))","")
 	$(RM) -f $(DOCKER_COMPOSE_SENTINEL)
 endif
 
-## Create job tarball and upload to Minio S3 storage
-upload-job: services $(WORKFLOWS_UPLOAD_SENTINEL)
+## Create workflows tarball
+workflows: $(WORKFLOWS_TARBALL_FILE)
 
 #################################################################################
 # PROJECT SUPPORT RULES                                                         #

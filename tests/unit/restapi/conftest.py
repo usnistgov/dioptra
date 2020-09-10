@@ -1,6 +1,6 @@
 import io
 import tarfile
-from typing import Any, List
+from typing import Any, BinaryIO, List
 
 import pytest
 from boto3.session import Session
@@ -14,14 +14,18 @@ from redis import Redis
 
 @pytest.fixture
 def workflow_tar_gz():
-    with io.BytesIO() as workflow_tar_gz_fileobj, tarfile.open(
-        fileobj=workflow_tar_gz_fileobj, mode="w:gz"
-    ) as f, io.BytesIO(initial_bytes=b"data") as data:
+    workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
+
+    with tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f, io.BytesIO(
+        initial_bytes=b"data"
+    ) as data:
         tarinfo = tarfile.TarInfo(name="MLproject")
         tarinfo.size = len(data.getbuffer())
         f.addfile(tarinfo=tarinfo, fileobj=data)
-        workflow_tar_gz_fileobj.seek(0)
-        yield workflow_tar_gz_fileobj
+
+    workflow_tar_gz_fileobj.seek(0)
+    yield workflow_tar_gz_fileobj
+    workflow_tar_gz_fileobj.close()
 
 
 @pytest.fixture
