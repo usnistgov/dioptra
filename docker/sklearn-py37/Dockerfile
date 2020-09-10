@@ -50,6 +50,8 @@ ARG DOCKER_PY_VERSION=4.2.1
 ARG ENTRYPOINTS_VERSION=0.3
 ARG FLASK_ACCEPTS_VERSION=0.17.3
 ARG FLASK_INJECTOR_VERSION=0.12.3
+ARG FLASK_JWT_EXTENDED_VERSION=3.24.1
+ARG FLASK_MIGRATE_VERSION=2.5.3
 ARG FLASK_RESTX_VERSION=0.2.0
 ARG FLASK_SQLALCHEMY_VERSION=2.4.4
 ARG FLASK_WTF_VERSION=0.14.3
@@ -67,6 +69,7 @@ ARG NOSE_VERSION=1.3.7
 ARG NUMEXPR_VERSION=2.7.1
 ARG NUMPY_VERSION=1.19.1
 ARG PANDAS_VERSION=1.1.1
+ARG PASSLIB_VERSION=1.7.2
 ARG PILLOW_VERSION=7.1.2
 ARG PROMETHEUS_FLASK_EXPORTER_VERSION=0.15.4
 ARG PROTOBUF_VERSION=3.12.3
@@ -112,6 +115,7 @@ RUN echo "===> Installing testbed dependencies into base conda environment...." 
     numexpr=${NUMEXPR_VERSION} \
     numpy=${NUMPY_VERSION} \
     pandas=${PANDAS_VERSION} \
+    passlib=${PASSLIB_VERSION} \
     pillow=${PILLOW_VERSION} \
     protobuf=${PROTOBUF_VERSION} \
     psycopg2=${PSYCOPG2_VERSION} \
@@ -138,6 +142,8 @@ RUN echo "===> Installing testbed dependencies into base conda environment...." 
     databricks-cli==${DATABRICKS_CLI_VERSION} \
     flask-accepts==${FLASK_ACCEPTS_VERSION} \
     Flask-Injector==${FLASK_INJECTOR_VERSION} \
+    Flask-JWT-Extended==${FLASK_JWT_EXTENDED_VERSION} \
+    Flask-Migrate==${FLASK_MIGRATE_VERSION} \
     flask-restx==${FLASK_RESTX_VERSION} \
     Flask-SQLAlchemy==${FLASK_SQLALCHEMY_VERSION} \
     Flask-WTF==${FLASK_WTF_VERSION} \
@@ -204,11 +210,17 @@ COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh /etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
+COPY src/migrations /etc/${PROJECT_PREFIX}/docker/migrations
 
-RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-sklearn.sh && \
+RUN chown -R ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/migrations && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-sklearn.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations/versions && \
+    find /etc/${PROJECT_PREFIX}/docker/migrations -follow -type f -exec chmod 0644 {} \; && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/migrations ${AI_WORKDIR}/migrations && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-sklearn.sh /usr/local/bin/entrypoint.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh /usr/local/bin/restrict-network-access.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh /usr/local/bin/run-mlflow-job.sh && \

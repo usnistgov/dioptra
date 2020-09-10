@@ -4,6 +4,7 @@ from typing import Any, Callable, List, Optional
 import structlog
 from flask import Flask, jsonify
 from flask_injector import FlaskInjector
+from flask_migrate import Migrate
 from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
@@ -13,6 +14,7 @@ LOGGER = structlog.get_logger()
 
 csrf = CSRFProtect()
 db = SQLAlchemy()
+migrate = Migrate()
 
 
 def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
@@ -35,6 +37,7 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
     register_providers(modules)
     csrf.init_app(app)
     db.init_app(app)
+    migrate.init_app(app, db)
 
     @app.route("/health")
     def health():

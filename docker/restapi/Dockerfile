@@ -47,6 +47,8 @@ ARG DOCKER_PY_VERSION=4.2.1
 ARG ENTRYPOINTS_VERSION=0.3
 ARG FLASK_ACCEPTS_VERSION=0.17.3
 ARG FLASK_INJECTOR_VERSION=0.12.3
+ARG FLASK_JWT_EXTENDED_VERSION=3.24.1
+ARG FLASK_MIGRATE_VERSION=2.5.3
 ARG FLASK_RESTX_VERSION=0.2.0
 ARG FLASK_SQLALCHEMY_VERSION=2.4.4
 ARG FLASK_WTF_VERSION=0.14.3
@@ -60,6 +62,7 @@ ARG MARSHMALLOW_VERSION=3.6.1
 ARG NOMKL=3.0
 ARG NUMPY_VERSION=1.19.1
 ARG PANDAS_VERSION=1.1.1
+ARG PASSLIB_VERSION=1.7.2
 ARG PILLOW_VERSION=7.1.2
 ARG PROMETHEUS_FLASK_EXPORTER_VERSION=0.15.4
 ARG PROTOBUF_VERSION=3.12.3
@@ -98,6 +101,7 @@ RUN echo "===> Installing dependencies into base conda environment...." && \
     nomkl=${NOMKL} \
     numpy=${NUMPY_VERSION} \
     pandas=${PANDAS_VERSION} \
+    passlib=${PASSLIB_VERSION} \
     pillow=${PILLOW_VERSION} \
     protobuf=${PROTOBUF_VERSION} \
     psycopg2=${PSYCOPG2_VERSION} \
@@ -125,6 +129,8 @@ RUN echo "===> Installing dependencies into base conda environment...." && \
     databricks-cli==${DATABRICKS_CLI_VERSION} \
     flask-accepts==${FLASK_ACCEPTS_VERSION} \
     Flask-Injector==${FLASK_INJECTOR_VERSION} \
+    Flask-JWT-Extended==${FLASK_JWT_EXTENDED_VERSION} \
+    Flask-Migrate==${FLASK_MIGRATE_VERSION} \
     flask-restx==${FLASK_RESTX_VERSION} \
     Flask-SQLAlchemy==${FLASK_SQLALCHEMY_VERSION} \
     Flask-WTF==${FLASK_WTF_VERSION} \
@@ -154,16 +160,22 @@ COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/uwsgi.ini /etc/${PROJECT_PREFIX}/docker/uwsgi.ini
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/wsgi.py /etc/${PROJECT_PREFIX}/docker/wsgi.py
+COPY src/migrations /etc/${PROJECT_PREFIX}/docker/migrations
 
 USER root
 
 RUN mkdir -p /etc/uwsgi && \
     chown -R ${AI_UID}:${AI_GID} /etc/uwsgi && \
+    chown -R ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/migrations && \
     chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/uwsgi.ini && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations/versions && \
+    find /etc/${PROJECT_PREFIX}/docker/migrations -follow -type f -exec chmod 0644 {} \; && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/migrations ${AI_WORKDIR}/migrations && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh /usr/local/bin/entrypoint.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/uwsgi.ini /etc/uwsgi/uwsgi.ini && \

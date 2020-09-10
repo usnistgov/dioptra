@@ -52,12 +52,15 @@ dependencies:
       - Flask
       - flask-accepts
       - Flask-Injector
+      - Flask-JWT-Extended
+      - Flask-Migrate
       - flask-restx
       - Flask-SQLAlchemy
       - gorilla
       - markdown
       - mlflow
       - mnist
+      - passlib
       - prometheus-flask-exporter
       - pyarrow
       - python-json-logger

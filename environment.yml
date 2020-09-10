@@ -1,6 +1,6 @@
 name: securing-ai-lab-components
 channels:
-  - https://artifacts.mitre.org/artifactory/api/conda/conda
+  - defaults
   - conda-forge
 dependencies:
   - alembic
@@ -32,6 +32,7 @@ dependencies:
   - numexpr
   - numpy
   - pandas
+  - passlib
   - pillow
   - pip=20.0.2
   - pre-commit
@@ -74,6 +75,8 @@ dependencies:
       - Flask
       - flask-accepts
       - Flask-Injector
+      - Flask-JWT-Extended
+      - Flask-Migrate
       - flask-restx
       - Flask-SQLAlchemy
       - Flask-WTF
