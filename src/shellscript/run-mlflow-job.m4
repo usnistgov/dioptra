@@ -33,9 +33,10 @@
 # m4_ignore(
 echo "This is just a script template, not the script (yet) - pass it to 'argbash' to fix this." >&2
 exit 11 #)Created by argbash-init v2.8.1
+# ARG_OPTIONAL_SINGLE([backend],[],[[securingai|local] Execution backend for MLFlow],[securingai])
 # ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[base])
 # ARG_OPTIONAL_SINGLE([entry-point],[],[MLproject entry point to invoke],[main])
-# ARG_OPTIONAL_SINGLE([s3-workflow],[],[S3 URI to a tarball or zip archive containing scripts and a MLproject file defining a workflow].[])
+# ARG_OPTIONAL_SINGLE([s3-workflow],[],[S3 URI to a tarball or zip archive containing scripts and a MLproject file defining a workflow],[])
 # ARG_LEFTOVERS([Entry point keyword arguments (optional)])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
@@ -56,10 +57,38 @@ readonly conda_env="${_arg_conda_env}"
 readonly entry_point_kwargs="${_arg_leftovers[*]}"
 readonly entry_point="${_arg_entry_point}"
 readonly logname="Container Entry Point"
+readonly mlflow_backend="${_arg_backend}"
 readonly mlflow_s3_endpoint_url="${MLFLOW_S3_ENDPOINT_URL-}"
 readonly s3_workflow_uri="${_arg_s3_workflow}"
 
 readonly workflow_filename="$(basename ${s3_workflow_uri} 2>/dev/null)"
+
+###########################################################################################
+# Validate MLFlow-related option flags
+#
+# Globals:
+#   logname
+#   mlflow_backend
+#   mlflow_s3_endpoint_url
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+validate_mlflow_inputs() {
+  [[ ! -z ${mlflow_s3_endpoint_url} ]] ||
+    echo "${logname}: ERROR - MLFLOW_S3_ENDPOINT_URL environment variable not set" ||
+    exit 1
+
+  case ${mlflow_backend} in
+    securingai | local) ;;
+    *)
+      echo "${logname}: ERROR - --backend option must be \"securingai\" or \"local\""
+      exit 1
+      ;;
+  esac
+}
 
 ###########################################################################################
 # Unpack an archive
@@ -77,7 +106,7 @@ unpack_archive() {
   local filepath="$(pwd)/${workflow_filename}"
 
   if [[ -f ${filepath} && -f /usr/local/bin/unpack-archive.sh ]]; then
-    /usr/local/bin/unpack-archive.sh --delete ${filepath}
+    /usr/local/bin/unpack-archive.sh ${filepath}
   elif [[ ! -f /usr/local/bin/unpack-archive.sh ]]; then
     echo "${logname}: ERROR - /usr/local/bin/unpack-archive.sh script missing"
     exit 1
@@ -124,6 +153,7 @@ s3_cp() {
 #   conda_env
 #   entry_point
 #   entry_point_kwargs
+#   mlflow_backend
 # Arguments:
 #   None
 # Returns:
@@ -131,6 +161,9 @@ s3_cp() {
 ###########################################################################################
 
 start_mlflow() {
+  local workflow_filepath="$(pwd)/${workflow_filename}"
+  local mlflow_backend_opts="--backend ${mlflow_backend}\
+  --backend-config {\"workflow_filepath\":\"${workflow_filepath}\"}"
   local mlproject_file=$(find ${ai_workdir} -name MLproject -type f -print)
 
   if [[ -z ${mlproject_file} ]]; then
@@ -142,9 +175,12 @@ start_mlflow() {
 
   echo "${logname}: mlproject file found - ${mlproject_file}"
   echo "${logname}: starting mlflow pipeline"
-  echo "${logname}: mlflow run options - --no-conda -e ${entry_point} ${entry_point_kwargs}"
+  echo "${logname}: mlflow run options - --no-conda ${mlflow_backend_opts}\
+  -e ${entry_point} ${entry_point_kwargs}"
 
-  mlflow run --no-conda -e ${entry_point} \
+  mlflow run --no-conda \
+    ${mlflow_backend_opts} \
+    -e ${entry_point} \
     ${entry_point_kwargs} \
     ${mlproject_dir}
 }
@@ -153,6 +189,7 @@ start_mlflow() {
 # Main script
 ###########################################################################################
 
+validate_mlflow_inputs
 s3_cp
 unpack_archive
 start_mlflow

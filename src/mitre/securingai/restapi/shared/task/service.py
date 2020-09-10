@@ -7,27 +7,8 @@ from tempfile import TemporaryDirectory
 from typing import List, Optional
 
 import rq
-from flask import Flask
-
-from mitre.securingai.restapi import create_app
-from mitre.securingai.restapi.app import db
-from mitre.securingai.restapi.job.model import Job
-from mitre.securingai.restapi.shared.job_queue.model import JobStatus
 
 
-def _update_task_status(status: JobStatus) -> None:
-    app: Flask = create_app(env=os.getenv("AI_RESTAPI_ENV"))
-    rq_job: Optional[rq.job.Job] = rq.get_current_job()
-
-    if rq_job is None:
-        return None
-
-    with app.app_context():
-        job = Job.query.get(rq_job.get_id())
-
-        if job.status != status:
-            job.update(changes={"status": status})
-            db.session.commit()
 
 
 def run_mlflow_task(
@@ -46,16 +27,19 @@ def run_mlflow_task(
         conda_env,
     ]
 
+    env = os.environ.copy()
+    rq_job: Optional[rq.job.Job] = rq.get_current_job()
+
+    if rq_job is not None:
+        env["AI_RQ_JOB_ID"] = rq_job.get_id()
+
     if entry_point_kwargs is not None:
         cmd.extend(shlex.split(entry_point_kwargs))
 
     with TemporaryDirectory(dir=os.getenv("AI_WORKDIR")) as tmpdir:
-        _update_task_status(status=JobStatus.started)
-        p = subprocess.run(args=cmd, cwd=tmpdir)
+        p = subprocess.run(args=cmd, cwd=tmpdir, env=env)
 
     if p.returncode > 0:
-        _update_task_status(status=JobStatus.failed)
         return p
 
-    _update_task_status(status=JobStatus.finished)
     return p

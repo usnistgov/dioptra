@@ -68,6 +68,7 @@ DEPENDENCIES = [
     "Click>=7.1.0",
     "Flask>=1.1.0",
     "injector>=0.18.0",
+    "mlflow>=1.11.0",
     "numpy>=1.18.0",
     "pandas>=1.0.0",
     "pyarrow>=1.0.0",
@@ -80,11 +81,20 @@ DEPENDENCIES = [
     "werkzeug>=1.0.0",
 ]
 PACKAGE_DIR = {"": "src"}
-PACKAGES = [Path("mitre") / "securingai" / "restapi"]
+PACKAGES = [
+    Path("mitre") / "securingai" / "restapi",
+    Path("mitre") / "securingai" / "plugins" / "mlflow_plugins",
+]
 PY_MODULES = [
     pypath.stem for pypath in (Path("src") / "mitre" / "securingai").glob("*.py")
 ]
-ENTRY_POINTS = {}
+ENTRY_POINTS = {
+    "mlflow.project_backend": (
+        "securingai=mitre.securingai.plugins.mlflow_plugins.securingai_backend"
+        ":SecuringAIProjectBackend"
+    )
+}
+
 CMDCLASS = {"clean": Clean}
 COMMAND_OPTIONS = {}
 EXTRAS_DEPENDENCIES = {

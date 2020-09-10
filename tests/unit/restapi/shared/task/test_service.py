@@ -67,12 +67,12 @@ def job(db: SQLAlchemy) -> Job:
 
 @freeze_time("2020-08-17T19:46:28.717559")
 def test_run_mlflow_task(
-    job: Job, app: Flask, db: SQLAlchemy, monkeypatch: MonkeyPatch, tmp_path: Path  # noqa
+    job: Job,
+    app: Flask,
+    db: SQLAlchemy,
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,  # noqa
 ) -> None:
-    def mockcreateapp(*args, **kwargs) -> Flask:
-        LOGGER.info("Mocking rq.get_current_job() function", args=args, kwargs=kwargs)
-        return app
-
     def mockgetcurrentjob(*args, **kwargs) -> MockRQJob:
         LOGGER.info("Mocking rq.get_current_job() function", args=args, kwargs=kwargs)
         return MockRQJob()
@@ -87,7 +87,6 @@ def test_run_mlflow_task(
     d.mkdir(parents=True)
 
     monkeypatch.setenv("AI_WORKDIR", str(d))
-    monkeypatch.setattr(mitre.securingai.restapi.shared.task.service, "create_app", mockcreateapp)
     monkeypatch.setattr(rq, "get_current_job", mockgetcurrentjob)
 
     with monkeypatch.context() as m:
@@ -114,6 +113,4 @@ def test_run_mlflow_task(
         "var1=testing",
     ]
     assert Path(p.cwd).parent == d
-    assert result.status != job_initial_status
-    assert result.status == JobStatus.finished
-    assert result.last_modified == datetime.datetime(2020, 8, 17, 19, 46, 28, 717559)
+    assert result.status == job_initial_status
