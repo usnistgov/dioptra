@@ -1,4 +1,5 @@
 import uuid
+from typing import List
 
 import structlog
 from flask_accepts import accepts, responds
@@ -26,6 +27,14 @@ class JobResource(Resource):
     def __init__(self, *args, job_service: JobService, **kwargs) -> None:
         self._job_service = job_service
         super().__init__(*args, **kwargs)
+
+    @responds(schema=JobSchema(many=True), api=api)
+    def get(self) -> List[Job]:
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="job", request_type="GET"
+        )  # noqa: F841
+        log.info("Request received")
+        return self._job_service.get_all(log=log)
 
     @accepts(job_submit_form_schema, api=api)
     @responds(schema=JobSchema, api=api)
