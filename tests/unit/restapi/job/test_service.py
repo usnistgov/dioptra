@@ -76,6 +76,7 @@ def test_get_all(db: SQLAlchemy, job_service: JobService):  # noqa
 
     new_job1 = Job(
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
+        mlflow_run_id=None,
         created_on=timestamp,
         last_modified=timestamp,
         queue=JobQueue.tensorflow_cpu,
@@ -88,6 +89,7 @@ def test_get_all(db: SQLAlchemy, job_service: JobService):  # noqa
 
     new_job2 = Job(
         job_id="0c30644b-df51-4a8b-b745-9db07ce57f72",
+        mlflow_run_id=None,
         created_on=timestamp,
         last_modified=timestamp,
         queue=JobQueue.tensorflow_gpu,
@@ -137,6 +139,7 @@ def test_submit(
 
     assert len(results) == 1
     assert results[0].job_id == "4520511d-678b-4966-953e-af2d0edcea32"
+    assert results[0].mlflow_run_id is None
     assert results[0].created_on == datetime.datetime(2020, 8, 17, 18, 46, 28, 717559)
     assert results[0].last_modified == datetime.datetime(
         2020, 8, 17, 18, 46, 28, 717559

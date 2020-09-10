@@ -34,6 +34,7 @@ def test_job_resource_get(app: Flask, monkeypatch: MonkeyPatch) -> None:
         LOGGER.info("Mocking JobService.get_all()")
         job: Job = Job(
             job_id="4520511d-678b-4966-953e-af2d0edcea32",
+            mlflow_run_id="a82982a795824afb926e646277eda152",
             created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
             last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
             queue=JobQueue.tensorflow_cpu,
@@ -54,6 +55,7 @@ def test_job_resource_get(app: Flask, monkeypatch: MonkeyPatch) -> None:
 
         expected: List[Dict[str, Any]] = [{
             "jobId": "4520511d-678b-4966-953e-af2d0edcea32",
+            "mlflowRunId": "a82982a795824afb926e646277eda152",
             "createdOn": "2020-08-17T18:46:28.717559",
             "lastModified": "2020-08-17T18:46:28.717559",
             "queue": "tensorflow_cpu",
@@ -80,6 +82,7 @@ def test_job_resource_post(
         timestamp = datetime.datetime.now()
         return Job(
             job_id="4520511d-678b-4966-953e-af2d0edcea32",
+            mlflow_run_id=None,
             created_on=timestamp,
             last_modified=timestamp,
             queue=JobQueue.tensorflow_cpu,
@@ -112,6 +115,7 @@ def test_job_resource_post(
 
         expected: Dict[str, Any] = {
             "jobId": "4520511d-678b-4966-953e-af2d0edcea32",
+            "mlflowRunId": None,
             "createdOn": "2020-08-17T18:46:28.717559",
             "lastModified": "2020-08-17T18:46:28.717559",
             "queue": "tensorflow_cpu",
@@ -131,6 +135,7 @@ def test_job_id_resource_get(app: Flask, monkeypatch: MonkeyPatch,) -> None:
         LOGGER.info("Mocking JobService.get_by_id()")
         job: Job = Job(
             job_id=jobId,
+            mlflow_run_id="a82982a795824afb926e646277eda152",
             created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
             last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
             queue=JobQueue.tensorflow_cpu,
@@ -152,6 +157,7 @@ def test_job_id_resource_get(app: Flask, monkeypatch: MonkeyPatch,) -> None:
 
         expected: Dict[str, Any] = {
             "jobId": "4520511d-678b-4966-953e-af2d0edcea32",
+            "mlflowRunId": "a82982a795824afb926e646277eda152",
             "createdOn": "2020-08-17T18:46:28.717559",
             "lastModified": "2020-08-17T18:46:28.717559",
             "queue": "tensorflow_cpu",

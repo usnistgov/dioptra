@@ -8,6 +8,7 @@ from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
 
 class JobInterface(TypedDict, total=False):
     job_id: str
+    mlflow_run_id: Optional[str]
     created_on: datetime.datetime
     last_modified: datetime.datetime
     queue: JobQueue

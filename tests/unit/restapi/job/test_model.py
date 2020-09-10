@@ -15,6 +15,7 @@ LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 def job() -> Job:
     return Job(
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
+        mlflow_run_id=None,
         created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
         last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
         queue=JobQueue.tensorflow_cpu,

@@ -13,6 +13,7 @@ class JobSchema(Schema):
     __model__ = Job
 
     jobId = fields.String(attribute="job_id")
+    mlflowRunId = fields.String(attribute="mlflow_run_id", allow_none=True)
     createdOn = fields.DateTime(attribute="created_on")
     lastModified = fields.DateTime(attribute="last_modified")
     queue = fields.String(validate=validate.OneOf(["tensorflow_cpu", "tensorflow_gpu"]))
