@@ -33,6 +33,7 @@
 # Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([backend],[],[[securingai|local] Execution backend for MLFlow],[securingai])
 # ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[base])
+# ARG_OPTIONAL_SINGLE([experiment-id],[],[ID of the experiment under which to launch the run],[])
 # ARG_OPTIONAL_SINGLE([entry-point],[],[MLproject entry point to invoke],[main])
 # ARG_OPTIONAL_SINGLE([s3-workflow],[],[S3 URI to a tarball or zip archive containing scripts and a MLproject file defining a workflow],[])
 # ARG_LEFTOVERS([Entry point keyword arguments (optional)])
@@ -68,6 +69,7 @@ _arg_leftovers=()
 # THE DEFAULTS INITIALIZATION - OPTIONALS
 _arg_backend="securingai"
 _arg_conda_env="base"
+_arg_experiment_id=
 _arg_entry_point="main"
 _arg_s3_workflow=
 
@@ -76,10 +78,11 @@ print_help()
 {
   printf '%s\n' "Execute a job defined in a MLproject file.
 "
-  printf 'Usage: %s [--backend <arg>] [--conda-env <arg>] [--entry-point <arg>] [--s3-workflow <arg>] [-h|--help] ... \n' "$0"
+  printf 'Usage: %s [--backend <arg>] [--conda-env <arg>] [--experiment-id <arg>] [--entry-point <arg>] [--s3-workflow <arg>] [-h|--help] ... \n' "$0"
   printf '\t%s\n' "... : Entry point keyword arguments (optional)"
   printf '\t%s\n' "--backend: [securingai|local] Execution backend for MLFlow (default: 'securingai')"
   printf '\t%s\n' "--conda-env: Conda environment (default: 'base')"
+  printf '\t%s\n' "--experiment-id: ID of the experiment under which to launch the run (no default)"
   printf '\t%s\n' "--entry-point: MLproject entry point to invoke (default: 'main')"
   printf '\t%s\n' "--s3-workflow: S3 URI to a tarball or zip archive containing scripts and a MLproject file defining a workflow (no default)"
   printf '\t%s\n' "-h, --help: Prints help"
@@ -108,6 +111,14 @@ parse_commandline()
         ;;
       --conda-env=*)
         _arg_conda_env="${_key##--conda-env=}"
+        ;;
+      --experiment-id)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_experiment_id="$2"
+        shift
+        ;;
+      --experiment-id=*)
+        _arg_experiment_id="${_key##--experiment-id=}"
         ;;
       --entry-point)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
@@ -185,6 +196,7 @@ readonly entry_point_kwargs="${_arg_leftovers[*]}"
 readonly entry_point="${_arg_entry_point}"
 readonly logname="Container Entry Point"
 readonly mlflow_backend="${_arg_backend}"
+readonly mlflow_experiment_id="${_arg_experiment_id}"
 readonly mlflow_s3_endpoint_url="${MLFLOW_S3_ENDPOINT_URL-}"
 readonly s3_workflow_uri="${_arg_s3_workflow}"
 
@@ -196,6 +208,7 @@ readonly workflow_filename="$(basename ${s3_workflow_uri} 2>/dev/null)"
 # Globals:
 #   logname
 #   mlflow_backend
+#   mlflow_experiment_id
 #   mlflow_s3_endpoint_url
 # Arguments:
 #   None
@@ -204,6 +217,10 @@ readonly workflow_filename="$(basename ${s3_workflow_uri} 2>/dev/null)"
 ###########################################################################################
 
 validate_mlflow_inputs() {
+  [[ ! -z ${mlflow_experiment_id} ]] ||
+    echo "${logname}: ERROR - --experiment-id option not set" ||
+    exit 1
+
   [[ ! -z ${mlflow_s3_endpoint_url} ]] ||
     echo "${logname}: ERROR - MLFLOW_S3_ENDPOINT_URL environment variable not set" ||
     exit 1
@@ -281,6 +298,7 @@ s3_cp() {
 #   entry_point
 #   entry_point_kwargs
 #   mlflow_backend
+#   mlflow_experiment_id
 # Arguments:
 #   None
 # Returns:
@@ -303,10 +321,11 @@ start_mlflow() {
   echo "${logname}: mlproject file found - ${mlproject_file}"
   echo "${logname}: starting mlflow pipeline"
   echo "${logname}: mlflow run options - --no-conda ${mlflow_backend_opts}\
-  -e ${entry_point} ${entry_point_kwargs}"
+  --experiment-id ${mlflow_experiment_id} -e ${entry_point} ${entry_point_kwargs}"
 
   mlflow run --no-conda \
     ${mlflow_backend_opts} \
+    --experiment-id ${mlflow_experiment_id} \
     -e ${entry_point} \
     ${entry_point_kwargs} \
     ${mlproject_dir}

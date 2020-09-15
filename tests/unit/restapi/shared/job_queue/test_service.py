@@ -11,7 +11,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 
-from mitre.securingai.restapi.job.model import Job
+from mitre.securingai.restapi.models import Job
 from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
 from mitre.securingai.restapi.shared.job_queue.service import RQService
 
@@ -114,6 +114,7 @@ def test_get_rq_job(rq_service: RQService):  # noqa
 
     job: Job = Job(
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
+        experiment_id=1,
         created_on=timestamp,
         last_modified=timestamp,
         queue=JobQueue.tensorflow_cpu,
@@ -137,6 +138,7 @@ def test_submit_mlflow_job(rq_service: RQService):  # noqa
         queue=JobQueue.tensorflow_cpu,
         timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
+        experiment_id=1,
         entry_point="main",
         entry_point_kwargs="-P var1=test",
         depends_on=None,
@@ -146,6 +148,7 @@ def test_submit_mlflow_job(rq_service: RQService):  # noqa
     assert rq_job.timeout == "12h"
     assert rq_job.cmd_kwargs == {
         "workflow_uri": "s3://workflow/workflows.tar.gz",
+        "experiment_id": "1",
         "entry_point": "main",
         "entry_point_kwargs": "-P var1=test",
     }
@@ -160,6 +163,7 @@ def test_submit_dependent_mlflow_jobs(rq_service: RQService):  # noqa
         queue=JobQueue.tensorflow_cpu,
         timeout="2d",
         workflow_uri="s3://workflow/workflows.tar.gz",
+        experiment_id=1,
         entry_point="train",
         entry_point_kwargs=None,
         depends_on=None,
@@ -170,6 +174,7 @@ def test_submit_dependent_mlflow_jobs(rq_service: RQService):  # noqa
         queue=JobQueue.tensorflow_cpu,
         timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
+        experiment_id=1,
         entry_point="fgm",
         entry_point_kwargs=None,
         depends_on=rq_train_job.get_id(),
@@ -180,6 +185,7 @@ def test_submit_dependent_mlflow_jobs(rq_service: RQService):  # noqa
     assert rq_train_job.timeout == "2d"
     assert rq_train_job.cmd_kwargs == {
         "workflow_uri": "s3://workflow/workflows.tar.gz",
+        "experiment_id": "1",
         "entry_point": "train",
     }
     assert rq_train_job.dependency is None
@@ -188,6 +194,7 @@ def test_submit_dependent_mlflow_jobs(rq_service: RQService):  # noqa
     assert rq_fgm_job.timeout == "12h"
     assert rq_fgm_job.cmd_kwargs == {
         "workflow_uri": "s3://workflow/workflows.tar.gz",
+        "experiment_id": "1",
         "entry_point": "fgm",
     }
     assert isinstance(rq_fgm_job.dependency, MockRQJob)

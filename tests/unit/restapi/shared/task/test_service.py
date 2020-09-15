@@ -11,9 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 
-import mitre.securingai.restapi
-import mitre.securingai.restapi.app
-from mitre.securingai.restapi.job.model import Job
+from mitre.securingai.restapi.models import Job
 from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
 from mitre.securingai.restapi.shared.task.service import run_mlflow_task
 
@@ -48,6 +46,7 @@ def job(db: SQLAlchemy) -> Job:
 
     job: Job = Job(
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
+        experiment_id=0,
         created_on=timestamp,
         last_modified=timestamp,
         queue=JobQueue.tensorflow_cpu,
@@ -94,6 +93,7 @@ def test_run_mlflow_task(
         p = run_mlflow_task(
             workflow_uri=job.workflow_uri,
             entry_point=job.entry_point,
+            experiment_id="0",
             conda_env="base",
             entry_point_kwargs=job.entry_point_kwargs,
         )
@@ -109,6 +109,8 @@ def test_run_mlflow_task(
         "main",
         "--conda-env",
         "base",
+        "--experiment-id",
+        "0",
         "-P",
         "var1=testing",
     ]

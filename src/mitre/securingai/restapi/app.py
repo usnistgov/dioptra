@@ -20,6 +20,7 @@ migrate = Migrate()
 def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
     from .config import config_by_name
     from .dependencies import bind_dependencies, register_providers
+    from .errors import register_error_handlers
     from .routes import register_routes
 
     if env is None:
@@ -34,6 +35,7 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
     modules: List[Callable[..., Any]] = [bind_dependencies]
 
     register_routes(api, app)
+    register_error_handlers(api)
     register_providers(modules)
     csrf.init_app(app)
     db.init_app(app)

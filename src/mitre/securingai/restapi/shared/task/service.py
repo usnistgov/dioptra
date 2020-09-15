@@ -18,6 +18,7 @@ LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 def run_mlflow_task(
     workflow_uri: str,
     entry_point: str,
+    experiment_id: str,
     conda_env: str = "base",
     entry_point_kwargs: Optional[str] = None,
 ) -> CompletedProcess:
@@ -29,6 +30,8 @@ def run_mlflow_task(
         entry_point,
         "--conda-env",
         conda_env,
+        "--experiment-id",
+        experiment_id,
     ]
 
     env = os.environ.copy()

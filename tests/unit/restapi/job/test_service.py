@@ -11,7 +11,7 @@ from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 from werkzeug.datastructures import FileStorage
 
-from mitre.securingai.restapi.job.model import Job, JobForm, JobFormData
+from mitre.securingai.restapi.models import Job, JobForm, JobFormData
 from mitre.securingai.restapi.job.service import JobService
 from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
 from mitre.securingai.restapi.shared.job_queue.service import RQService
@@ -32,6 +32,7 @@ class MockRQJob(object):
 @pytest.fixture
 def new_job() -> Job:
     return Job(
+        experiment_id=1,
         queue=JobQueue.tensorflow_cpu,
         timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
@@ -44,6 +45,8 @@ def new_job() -> Job:
 @pytest.fixture
 def job_form_data(app: Flask, workflow_tar_gz: BinaryIO) -> JobFormData:
     return JobFormData(
+        experiment_name="mnist",
+        experiment_id=1,
         queue=JobQueue.tensorflow_cpu,
         timeout="12h",
         entry_point="main",
@@ -63,6 +66,7 @@ def job_service(dependency_injector) -> JobService:
 def test_create(job_service: JobService, job_form_data: JobFormData):  # noqa
     job: Job = job_service.create(job_form_data=job_form_data)
 
+    assert job.experiment_id == 1
     assert job.queue == JobQueue.tensorflow_cpu
     assert job.timeout == "12h"
     assert job.entry_point == "main"
@@ -77,6 +81,7 @@ def test_get_all(db: SQLAlchemy, job_service: JobService):  # noqa
     new_job1 = Job(
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
         mlflow_run_id=None,
+        experiment_id=1,
         created_on=timestamp,
         last_modified=timestamp,
         queue=JobQueue.tensorflow_cpu,
@@ -90,6 +95,7 @@ def test_get_all(db: SQLAlchemy, job_service: JobService):  # noqa
     new_job2 = Job(
         job_id="0c30644b-df51-4a8b-b745-9db07ce57f72",
         mlflow_run_id=None,
+        experiment_id=1,
         created_on=timestamp,
         last_modified=timestamp,
         queue=JobQueue.tensorflow_gpu,
@@ -140,6 +146,7 @@ def test_submit(
     assert len(results) == 1
     assert results[0].job_id == "4520511d-678b-4966-953e-af2d0edcea32"
     assert results[0].mlflow_run_id is None
+    assert results[0].experiment_id == 1
     assert results[0].created_on == datetime.datetime(2020, 8, 17, 18, 46, 28, 717559)
     assert results[0].last_modified == datetime.datetime(
         2020, 8, 17, 18, 46, 28, 717559

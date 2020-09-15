@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 import structlog
 from flask_accepts import accepts, responds
@@ -8,10 +8,9 @@ from injector import inject
 from structlog import BoundLogger
 from structlog._config import BoundLoggerLazyProxy
 
-from mitre.securingai.restapi.shared.job_queue.model import JobStatus
-
+from .errors import JobDoesNotExistError, JobSubmissionError
 from .model import Job, JobForm, JobFormData
-from .schema import JobSchema, JobFormSchema, job_submit_form_schema
+from .schema import JobSchema, job_submit_form_schema
 from .service import JobService
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
@@ -24,7 +23,7 @@ api: Namespace = Namespace(
 @api.route("/")
 class JobResource(Resource):
     @inject
-    def __init__(self, *args, job_service: JobService, **kwargs) -> None:
+    def __init__(self, *args, job_service: JobService, **kwargs,) -> None:
         self._job_service = job_service
         super().__init__(*args, **kwargs)
 
@@ -42,19 +41,19 @@ class JobResource(Resource):
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="job", request_type="POST"
         )  # noqa: F841
-        schema: JobFormSchema = JobFormSchema()
         job_form: JobForm = JobForm()
 
         log.info("Request received")
 
-        if job_form.validate_on_submit():
-            log.info("Form validation successful")
-            return self._job_service.submit(
-                job_form_data=schema.dump(job_form), log=log
-            )
+        if not job_form.validate_on_submit():
+            log.error("Form validation failed")
+            raise JobSubmissionError
 
-        log.warning("Form validation failed")
-        return Job(status=JobStatus.failed)
+        log.info("Form validation successful")
+        job_form_data: JobFormData = self._job_service.extract_data_from_form(
+            job_form=job_form, log=log,
+        )
+        return self._job_service.submit(job_form_data=job_form_data, log=log)
 
 
 @api.route("/<string:jobId>")
@@ -71,4 +70,10 @@ class JobIdResource(Resource):
             request_id=str(uuid.uuid4()), resource="jobId", request_type="GET"
         )  # noqa: F841
         log.info("Request received", job_id=jobId)
-        return self._job_service.get_by_id(jobId, log=log)
+        job: Optional[Job] = self._job_service.get_by_id(jobId, log=log)
+
+        if job is None:
+            log.error("Job not found", job_id=jobId)
+            raise JobDoesNotExistError
+
+        return job

@@ -14,6 +14,7 @@ class JobSchema(Schema):
 
     jobId = fields.String(attribute="job_id")
     mlflowRunId = fields.String(attribute="mlflow_run_id", allow_none=True)
+    experimentId = fields.Integer(attribute="experiment_id")
     createdOn = fields.DateTime(attribute="created_on")
     lastModified = fields.DateTime(attribute="last_modified")
     queue = fields.String(validate=validate.OneOf(["tensorflow_cpu", "tensorflow_gpu"]))
@@ -56,16 +57,25 @@ class JobSchema(Schema):
 class JobFormSchema(Schema):
     __model__ = JobFormData
 
-    queue = fields.String(validate=validate.OneOf(["tensorflow_cpu", "tensorflow_gpu"]))
+    experiment_name = fields.String(required=True)
+    queue = fields.String(
+        validate=validate.OneOf(["tensorflow_cpu", "tensorflow_gpu"]), required=True
+    )
     timeout = fields.String(allow_none=True)
-    entry_point = fields.String()
+    entry_point = fields.String(required=True)
     entry_point_kwargs = fields.String(allow_none=True)
     depends_on = fields.String(allow_none=True)
     workflow = fields.Raw()
 
     @pre_dump
-    def serialize_object(self, data: JobForm, many: bool, **kwargs) -> Dict[str, Any]:
+    def extract_data_from_form(
+        self, data: JobForm, many: bool, **kwargs
+    ) -> Dict[str, Any]:
+        def slugify(text: str) -> str:
+            return text.lower().strip().replace(" ", "-")
+
         return {
+            "experiment_name": slugify(data.experiment_name.data),
             "queue": data.queue.data,
             "timeout": data.timeout.data or None,
             "entry_point": data.entry_point.data,
@@ -75,7 +85,7 @@ class JobFormSchema(Schema):
         }
 
     @post_dump
-    def convert_enum_types(
+    def serialize_object(
         self, data: Dict[str, Any], many: bool, **kwargs
     ) -> JobFormData:
         def convert_enum_type(key: str, value: Any) -> Any:
@@ -88,6 +98,7 @@ class JobFormSchema(Schema):
 
 
 job_submit_form_schema = [
+    dict(name="experiment_name", type=str, location="form"),
     dict(name="queue", type=JobQueue, location="form"),
     dict(name="timeout", type=str, location="form"),
     dict(name="entry_point", type=str, location="form"),

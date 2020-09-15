@@ -21,7 +21,7 @@ from mlflow.projects.utils import (
 
 from mitre.securingai.restapi import create_app
 from mitre.securingai.restapi.app import db
-from mitre.securingai.restapi.job.model import Job
+from mitre.securingai.restapi.models import Job
 from mitre.securingai.restapi.shared.job_queue.model import JobStatus
 
 from .securingai_tags import SECURINGAI_DEPENDS_ON, SECURINGAI_JOB_ID, SECURINGAI_QUEUE

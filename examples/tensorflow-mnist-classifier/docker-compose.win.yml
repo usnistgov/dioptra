@@ -1,6 +1,5 @@
 
 version: "3.7"
-
 services:
   redis:
     image: securing-ai/redis:0.0.0-1
@@ -116,7 +115,6 @@ services:
       AI_RESTAPI_ENV: prod
       AWS_ACCESS_KEY_ID: minio
       AWS_SECRET_ACCESS_KEY: minio123
-      MLFLOW_EXPERIMENT_NAME: mnist
       MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
       RQ_REDIS_URI: redis://redis:6379/0
@@ -137,7 +135,6 @@ services:
       AI_RESTAPI_ENV: prod
       AWS_ACCESS_KEY_ID: minio
       AWS_SECRET_ACCESS_KEY: minio123
-      MLFLOW_EXPERIMENT_NAME: mnist
       MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
       KMP_AFFINITY: "none"

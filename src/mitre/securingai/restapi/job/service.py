@@ -11,11 +11,12 @@ from structlog._config import BoundLoggerLazyProxy
 from werkzeug.utils import secure_filename
 
 from mitre.securingai.restapi.app import db
-from mitre.securingai.restapi.shared.job_queue.model import JobStatus
 from mitre.securingai.restapi.shared.job_queue.service import RQService
 from mitre.securingai.restapi.shared.s3.service import S3Service
 
-from .model import Job, JobFormData
+from .errors import JobWorkflowUploadError
+from .model import Job, JobForm, JobFormData
+from .schema import JobFormSchema
 
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
@@ -23,15 +24,25 @@ LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
 class JobService(object):
     @inject
-    def __init__(self, rq_service: RQService, s3_service: S3Service) -> None:
+    def __init__(
+        self,
+        job_form_schema: JobFormSchema,
+        rq_service: RQService,
+        s3_service: S3Service,
+    ) -> None:
+        self._job_form_schema = job_form_schema
         self._rq_service = rq_service
         self._s3_service = s3_service
 
     @staticmethod
     def create(job_form_data: JobFormData, **kwargs) -> Job:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
+        timestamp = datetime.datetime.now()
 
         return Job(
+            experiment_id=job_form_data["experiment_id"],
+            created_on=timestamp,
+            last_modified=timestamp,
             queue=job_form_data["queue"],
             timeout=job_form_data.get("timeout"),
             entry_point=job_form_data["entry_point"],
@@ -51,27 +62,37 @@ class JobService(object):
 
         return Job.query.get(job_id)
 
+    def extract_data_from_form(self, job_form: JobForm, **kwargs) -> JobFormData:
+        from mitre.securingai.restapi.models import Experiment
+
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        job_form_data: JobFormData = self._job_form_schema.dump(job_form)
+        experiment: Experiment = Experiment.query.filter_by(
+            name=job_form_data["experiment_name"]
+        ).first()
+        job_form_data["experiment_id"] = experiment.experiment_id
+        return job_form_data
+
     def submit(self, job_form_data: JobFormData, **kwargs) -> Job:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        timestamp = datetime.datetime.now()
-
         workflow_uri: Optional[str] = self._upload_workflow(job_form_data, log=log)
 
-        new_job: Job = self.create(job_form_data, log=log)
-        new_job.created_on = timestamp
-        new_job.last_modified = timestamp
-
         if workflow_uri is None:
-            new_job.status = JobStatus.failed
-            log.warning("Job submission failed")
-            return new_job
+            log.error(
+                "Failed to upload workflow to backend storage",
+                workflow_filename=secure_filename(job_form_data["workflow"].filename),
+            )
+            raise JobWorkflowUploadError
 
+        new_job: Job = self.create(job_form_data, log=log)
         new_job.workflow_uri = workflow_uri
 
         rq_job: rq.job.Job = self._rq_service.submit_mlflow_job(
             queue=new_job.queue,
             workflow_uri=new_job.workflow_uri,
+            experiment_id=new_job.experiment_id,
             entry_point=new_job.entry_point,
             entry_point_kwargs=new_job.entry_point_kwargs,
             depends_on=new_job.depends_on,

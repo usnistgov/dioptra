@@ -8,7 +8,7 @@ from mitre.securingai.restapi.job.interface import (
     JobInterface,
     JobUpdateInterface,
 )
-from mitre.securingai.restapi.job.model import Job
+from mitre.securingai.restapi.models import Job
 from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
@@ -19,6 +19,7 @@ def job_interface() -> JobInterface:
     return JobInterface(
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
         mlflow_run_id="a82982a795824afb926e646277eda152",
+        experiment_id=1,
         created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
         last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
         queue=JobQueue.tensorflow_cpu,

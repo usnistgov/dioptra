@@ -4,14 +4,18 @@ from injector import Binder
 
 
 def bind_dependencies(binder: Binder) -> None:
+    from .experiment import bind_dependencies as attach_experiment_dependencies
     from .job import bind_dependencies as attach_job_dependencies
 
     # Bind configurations
+    attach_experiment_dependencies(binder)
     attach_job_dependencies(binder)
 
 
 def register_providers(modules: List[Callable[..., Any]]) -> None:
+    from .experiment import register_providers as attach_experiment_providers
     from .job import register_providers as attach_job_providers
 
     # Append modules to list
+    attach_experiment_providers(modules)
     attach_job_providers(modules)

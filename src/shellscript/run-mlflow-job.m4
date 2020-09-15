@@ -35,6 +35,7 @@ echo "This is just a script template, not the script (yet) - pass it to 'argbash
 exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([backend],[],[[securingai|local] Execution backend for MLFlow],[securingai])
 # ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[base])
+# ARG_OPTIONAL_SINGLE([experiment-id],[],[ID of the experiment under which to launch the run],[])
 # ARG_OPTIONAL_SINGLE([entry-point],[],[MLproject entry point to invoke],[main])
 # ARG_OPTIONAL_SINGLE([s3-workflow],[],[S3 URI to a tarball or zip archive containing scripts and a MLproject file defining a workflow],[])
 # ARG_LEFTOVERS([Entry point keyword arguments (optional)])
@@ -58,6 +59,7 @@ readonly entry_point_kwargs="${_arg_leftovers[*]}"
 readonly entry_point="${_arg_entry_point}"
 readonly logname="Container Entry Point"
 readonly mlflow_backend="${_arg_backend}"
+readonly mlflow_experiment_id="${_arg_experiment_id}"
 readonly mlflow_s3_endpoint_url="${MLFLOW_S3_ENDPOINT_URL-}"
 readonly s3_workflow_uri="${_arg_s3_workflow}"
 
@@ -69,6 +71,7 @@ readonly workflow_filename="$(basename ${s3_workflow_uri} 2>/dev/null)"
 # Globals:
 #   logname
 #   mlflow_backend
+#   mlflow_experiment_id
 #   mlflow_s3_endpoint_url
 # Arguments:
 #   None
@@ -77,6 +80,10 @@ readonly workflow_filename="$(basename ${s3_workflow_uri} 2>/dev/null)"
 ###########################################################################################
 
 validate_mlflow_inputs() {
+  [[ ! -z ${mlflow_experiment_id} ]] ||
+    echo "${logname}: ERROR - --experiment-id option not set" ||
+    exit 1
+
   [[ ! -z ${mlflow_s3_endpoint_url} ]] ||
     echo "${logname}: ERROR - MLFLOW_S3_ENDPOINT_URL environment variable not set" ||
     exit 1
@@ -154,6 +161,7 @@ s3_cp() {
 #   entry_point
 #   entry_point_kwargs
 #   mlflow_backend
+#   mlflow_experiment_id
 # Arguments:
 #   None
 # Returns:
@@ -176,10 +184,11 @@ start_mlflow() {
   echo "${logname}: mlproject file found - ${mlproject_file}"
   echo "${logname}: starting mlflow pipeline"
   echo "${logname}: mlflow run options - --no-conda ${mlflow_backend_opts}\
-  -e ${entry_point} ${entry_point_kwargs}"
+  --experiment-id ${mlflow_experiment_id} -e ${entry_point} ${entry_point_kwargs}"
 
   mlflow run --no-conda \
     ${mlflow_backend_opts} \
+    --experiment-id ${mlflow_experiment_id} \
     -e ${entry_point} \
     ${entry_point_kwargs} \
     ${mlproject_dir}

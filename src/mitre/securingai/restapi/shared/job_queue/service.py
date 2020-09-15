@@ -52,6 +52,7 @@ class RQService(object):
         self,
         queue: JobQueue,
         workflow_uri: str,
+        experiment_id: int,
         entry_point: str,
         entry_point_kwargs: Optional[str] = None,
         depends_on: Optional[str] = None,
@@ -65,6 +66,7 @@ class RQService(object):
         )
         cmd_kwargs = {
             "workflow_uri": workflow_uri,
+            "experiment_id": str(experiment_id),
             "entry_point": entry_point,
         }
         job_dependency: Optional[rq.job.Job] = None
