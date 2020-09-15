@@ -77,7 +77,8 @@ define download_data
         run\
         --rm\
         --entrypoint ""\
-        -v $(strip $(1)):/work:cached\
+        -v $(strip $(1)):/work/demo:cached\
+        -w /work/demo\
         tfcpu\
         bash -c "\
             source /opt/conda/etc/profile.d/conda.sh &&\
