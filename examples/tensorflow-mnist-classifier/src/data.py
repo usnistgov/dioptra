@@ -1,5 +1,5 @@
 import warnings
-from typing import Tuple
+from typing import Optional, Tuple
 
 warnings.filterwarnings("ignore")
 
@@ -7,7 +7,28 @@ import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
 
+import structlog
+from mlflow.tracking import MlflowClient
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+
+LOGGER = structlog.get_logger()
+
+
+def download_image_archive(
+    run_id: str, archive_path: str, destination_path: Optional[str] = None
+) -> str:
+    client: MlflowClient = MlflowClient()
+    image_archive_path: str = client.download_artifacts(
+        run_id=run_id, path=archive_path, dst_path=destination_path
+    )
+    LOGGER.info(
+        "Image archive downloaded",
+        run_id=run_id,
+        storage_path=archive_path,
+        dst_path=image_archive_path,
+    )
+    return image_archive_path
 
 
 def create_image_dataset(

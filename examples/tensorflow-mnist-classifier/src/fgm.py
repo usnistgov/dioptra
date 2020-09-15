@@ -98,7 +98,7 @@ def fgm_attack(
 
     LOGGER.info(
         "Execute MLFlow entry point",
-        entry_point="fgm_attack",
+        entry_point="fgm",
         data_dir=data_dir,
         model=model,
         model_architecture=model_architecture,
@@ -113,7 +113,6 @@ def fgm_attack(
     minimal = bool(int(minimal))
     norm = norm_mapping[norm]
     tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
-    dataset_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
 
     tf.random.set_seed(tensorflow_global_seed)
 
@@ -127,7 +126,7 @@ def fgm_attack(
         if model_architecture == "alex_net":
             image_size = (224, 224)
 
-        classifier, distance_metrics = create_adversarial_fgm_dataset(
+        distance_metrics = create_adversarial_fgm_dataset(
             data_dir=testing_dir,
             model=model,
             adv_data_dir=adv_data_dir.resolve(),
@@ -138,15 +137,6 @@ def fgm_attack(
             minimal=minimal,
             norm=norm,
         )
-
-        adv_ds = create_image_dataset(
-            data_dir=str(adv_data_dir.resolve()),
-            subset=None,
-            validation_split=None,
-            image_size=image_size,
-            seed=dataset_seed,
-        )
-        evaluate_classification_metrics(classifier=classifier, adv_ds=adv_ds)
 
         adv_testing_tar = Path().cwd() / "testing_adversarial_fgm.tar.gz"
         image_perturbation_csv = Path().cwd() / "distance_metrics.csv.gz"

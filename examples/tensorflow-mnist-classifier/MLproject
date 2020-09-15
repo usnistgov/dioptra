@@ -24,6 +24,21 @@ entry_points:
       --norm {norm}
       --seed {seed}
 
+  infer:
+    parameters:
+      run_id: {type: string}
+      model: {type: string, default: "mnist_le_net/1"}
+      model_architecture: {type: string, default: "le_net"}
+      batch_size: {type: float, default: 32}
+      seed: {type: float, default: -1}
+    command: >
+      python src/infer.py
+      --run-id {run_id}
+      --model {model}
+      --model-architecture {model_architecture}
+      --batch-size {batch_size}
+      --seed {seed}
+
   train:
     parameters:
       data_dir: {type: path, default: "/nfs/data"}

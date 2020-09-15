@@ -164,4 +164,4 @@ def create_adversarial_fgm_dataset(
     LOGGER.info("Adversarial image generation complete", attack="fgm")
     log_distance_metrics(distance_metrics_)
 
-    return classifier, pd.DataFrame(distance_metrics_)
+    return pd.DataFrame(distance_metrics_)
