@@ -142,12 +142,44 @@ services:
         source: ./restapi
         target: /work/data
 
-  tfcpu-username:
+  tfcpu-01-username:
     image: securing-ai/tensorflow2-cpu-py37:0.0.0-1
     init: true
     restart: always
-    hostname: tfcpu-username
-    container_name: tfcpu-username
+    hostname: tfcpu-01-username
+    container_name: tfcpu-01-username
+    environment:
+      AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
+      AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
+      AI_RESTAPI_ENV: prod
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_TRACKING_URI: http://mlflow-tracking-username:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio-username:9000
+      KMP_AFFINITY: "none"
+      KMP_BLOCKTIME: "1"
+      KMP_SETTINGS: "FALSE"
+      OMP_PROC_BIND: "false"
+      RQ_REDIS_URI: redis://redis-username:6379/0
+      TF_CPP_MIN_LOG_LEVEL: "2"
+    command:
+      - tensorflow_cpu
+    networks:
+      - username
+    volumes:
+      - type: bind
+        source: ./data
+        target: /nfs/data
+      - type: bind
+        source: ./restapi
+        target: /work/data
+
+  tfcpu-02-username:
+    image: securing-ai/tensorflow2-cpu-py37:0.0.0-1
+    init: true
+    restart: always
+    hostname: tfcpu-02-username
+    container_name: tfcpu-02-username
     environment:
       AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
       AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db

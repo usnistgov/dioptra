@@ -188,7 +188,8 @@ endif
 		restapi$(strip $(IMAGE_SUFFIX)))
 	$(call s3_mb,$(S3_WORKFLOW_BUCKET))
 	$(call run_docker_compose,up -d\
-		tfcpu$(strip $(IMAGE_SUFFIX)))
+		tfcpu-01$(strip $(IMAGE_SUFFIX))\
+		tfcpu-02$(strip $(IMAGE_SUFFIX)))
 	$(call save_sentinel_file,$@)
 
 $(TRAINING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
