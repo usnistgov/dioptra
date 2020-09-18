@@ -1,0 +1,117 @@
+
+version: "3.7"
+networks:
+  jtsexton:
+services:
+  minio:
+    image: minio/minio:RELEASE.2020-07-12T19-14-17Z
+    init: true
+    restart: always
+    hostname: minio-jtsexton
+    container_name: minio-jtsexton
+    command: server /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - target: 9000
+        published: 39023
+        protocol: tcp
+        mode: host
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    volumes:
+      - type: bind
+        source: ./s3
+        target: /data
+    networks:
+      - jtsexton
+  mlflow-tracking:
+    image: securing-ai/mlflow-tracking:0.0.0-1
+    init: true
+    restart: always
+    hostname: mlflow-tracking
+    container_name: mlflow-tracking-jtsexton
+    depends_on:
+      - minio
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - target: 5000
+        published: 35023
+        protocol: tcp
+        mode: host
+    command:
+      - --host
+      - "0.0.0.0"
+      - --default-artifact-root
+      - "s3://mlflow-tracking/artifacts"
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    volumes:
+      - type: bind
+        source: ./mlruns
+        target: /work/mlruns
+    networks:
+      - jtsexton
+  tfcpu:
+    image: securing-ai/tensorflow2-cpu-py37:0.0.0-1
+    init: true
+    restart: "no"
+    hostname: tfcpu
+    container_name: tfcpu-jtsexton
+    depends_on:
+      - minio
+      - mlflow-tracking
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_EXPERIMENT_NAME: patch-defended-pt
+      MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      KMP_AFFINITY: "none"
+      KMP_BLOCKTIME: "1"
+      OMP_NUM_THREADS: "6"
+      KMP_SETTINGS: "FALSE"
+      USE_DAAL4PY_SKLEARN: "YES"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /nfs/data
+    networks:
+      - jtsexton
+  tfgpu:
+    image: securing-ai/tensorflow2-gpu-py37:0.0.0-1
+    init: true
+    restart: "no"
+    hostname: tfgpu
+    container_name: tfgpu-jtsexton
+    depends_on:
+      - minio
+      - mlflow-tracking
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_EXPERIMENT_NAME: patch-defended-pt
+      MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    volumes:
+      - type: bind
+        source: ./data
+        target: /nfs/data
+      - type: bind
+        source: /home/hhuang/For_Julian
+        target: /nfs2/data
+
+    networks:
+      - jtsexton
+
+
