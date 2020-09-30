@@ -76,7 +76,10 @@ class JobForm(FlaskForm):
 
         standardized_name: str = slugify(field.data)
 
-        if Experiment.query.filter_by(name=standardized_name).first() is None:
+        if (
+            Experiment.query.filter_by(name=standardized_name, is_deleted=False).first()
+            is None
+        ):
             raise ValidationError(
                 f"Bad Request - The experiment {standardized_name} does not exist. "
                 "Please check spelling and resubmit."

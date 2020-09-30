@@ -18,6 +18,12 @@ class ExperimentSchema(Schema):
     name = fields.String(attribute="name")
 
 
+class ExperimentUpdateSchema(Schema):
+    __model__ = Experiment
+
+    name = fields.String(attribute="name")
+
+
 class ExperimentRegistrationFormSchema(Schema):
     __model__ = ExperimentRegistrationFormData
 

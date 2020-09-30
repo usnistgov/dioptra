@@ -43,7 +43,20 @@ def test_create(
     db: SQLAlchemy,
     experiment_service: ExperimentService,
     experiment_registration_form_data: ExperimentRegistrationFormData,
+    monkeypatch,
 ):  # noqa
+    def mockcreatemlflowexperiment(self, experiment_name: str, *args, **kwargs) -> int:
+        LOGGER.info(
+            "Mocking ExperimentService.create_mlflow_experiment()",
+            experiment_name=experiment_name,
+            args=args,
+            kwargs=kwargs,
+        )
+        return 1
+
+    monkeypatch.setattr(
+        ExperimentService, "create_mlflow_experiment", mockcreatemlflowexperiment
+    )
     experiment: Experiment = experiment_service.create(
         experiment_registration_form_data=experiment_registration_form_data
     )

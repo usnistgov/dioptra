@@ -12,3 +12,4 @@ class ExperimentInterface(TypedDict, total=False):
 
 class ExperimentUpdateInterface(TypedDict, total=False):
     name: str
+    is_deleted: bool

@@ -69,7 +69,7 @@ class JobService(object):
 
         job_form_data: JobFormData = self._job_form_schema.dump(job_form)
         experiment: Experiment = Experiment.query.filter_by(
-            name=job_form_data["experiment_name"]
+            name=job_form_data["experiment_name"], is_deleted=False
         ).first()
         job_form_data["experiment_id"] = experiment.experiment_id
         return job_form_data

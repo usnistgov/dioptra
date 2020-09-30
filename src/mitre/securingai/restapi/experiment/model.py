@@ -19,6 +19,7 @@ class Experiment(db.Model):  # type: ignore
     created_on = db.Column(db.DateTime())
     last_modified = db.Column(db.DateTime())
     name = db.Column(db.Text(), index=True, nullable=False, unique=True)
+    is_deleted = db.Column(db.Boolean(), default=False)
 
     jobs = db.relationship("Job", back_populates="experiment")
 
@@ -40,7 +41,10 @@ class ExperimentRegistrationForm(FlaskForm):
 
         standardized_name: str = slugify(field.data)
 
-        if Experiment.query.filter_by(name=standardized_name).first() is not None:
+        if (
+            Experiment.query.filter_by(name=standardized_name, is_deleted=False).first()
+            is not None
+        ):
             raise ValidationError(
                 "Bad Request - An experiment is already registered under "
                 f"the name {standardized_name}. Please select another and resubmit."

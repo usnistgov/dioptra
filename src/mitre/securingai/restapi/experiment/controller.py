@@ -2,6 +2,8 @@ import uuid
 from typing import List, Optional
 
 import structlog
+from flask import jsonify, request
+from flask.wrappers import Response
 from flask_accepts import accepts, responds
 from flask_restx import Namespace, Resource
 from injector import inject
@@ -9,12 +11,17 @@ from structlog import BoundLogger
 from structlog._config import BoundLoggerLazyProxy
 
 from .errors import ExperimentRegistrationError, ExperimentDoesNotExistError
+from .interface import ExperimentUpdateInterface
 from .model import (
     Experiment,
     ExperimentRegistrationForm,
     ExperimentRegistrationFormData,
 )
-from .schema import ExperimentSchema, ExperimentRegistrationSchema
+from .schema import (
+    ExperimentSchema,
+    ExperimentUpdateSchema,
+    ExperimentRegistrationSchema,
+)
 from .service import ExperimentService
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
@@ -88,6 +95,38 @@ class ExperimentIdResource(Resource):
 
         return experiment
 
+    def delete(self, experimentId: int) -> Response:
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="experimentId", request_type="DELETE"
+        )  # noqa: F841
+        log.info("Request received", experiment_id=experimentId)
+        id: List[int] = self._experiment_service.delete_experiment(
+            experiment_id=experimentId
+        )
+
+        return jsonify(dict(status="Success", id=id))
+
+    @accepts(schema=ExperimentUpdateSchema, api=api)
+    @responds(schema=ExperimentSchema, api=api)
+    def put(self, experimentId: int) -> Experiment:
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="experimentId", request_type="PUT"
+        )  # noqa: F841
+        changes: ExperimentUpdateInterface = request.parsed_obj
+        experiment: Optional[Experiment] = self._experiment_service.get_by_id(
+            experimentId, log=log
+        )
+
+        if experiment is None:
+            log.error("Experiment not found", experiment_id=experimentId)
+            raise ExperimentDoesNotExistError
+
+        experiment: Experiment = self._experiment_service.rename_experiment(
+            experiment=experiment, new_name=changes["name"], log=log
+        )
+
+        return experiment
+
 
 @api.route("/name/<string:experimentName>")
 @api.param("experimentName", "Unique experiment name")
@@ -110,5 +149,47 @@ class ExperimentNameResource(Resource):
         if experiment is None:
             log.error("Experiment not found", experiment_name=experimentName)
             raise ExperimentDoesNotExistError
+
+        return experiment
+
+    def delete(self, experimentName: str) -> Response:
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="experimentName",
+            experiment_name=experimentName,
+            request_type="DELETE",
+        )  # noqa: F841
+        log.info("Request received")
+        experiment: Optional[Experiment] = self._experiment_service.get_by_name(
+            experiment_name=experimentName, log=log
+        )
+
+        if experiment is None:
+            return jsonify(dict(status="Success", id=[]))
+
+        id: List[int] = self._experiment_service.delete_experiment(
+            experiment_id=experiment.experiment_id
+        )
+
+        return jsonify(dict(status="Success", id=id))
+
+    @accepts(schema=ExperimentUpdateSchema, api=api)
+    @responds(schema=ExperimentSchema, api=api)
+    def put(self, experimentName: str) -> Experiment:
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="experimentName", request_type="PUT"
+        )  # noqa: F841
+        changes: ExperimentUpdateInterface = request.parsed_obj
+        experiment: Optional[Experiment] = self._experiment_service.get_by_name(
+            experiment_name=experimentName, log=log
+        )
+
+        if experiment is None:
+            log.error("Experiment not found", experiment_name=experimentName)
+            raise ExperimentDoesNotExistError
+
+        experiment: Experiment = self._experiment_service.rename_experiment(
+            experiment=experiment, new_name=changes["name"], log=log
+        )
 
         return experiment
