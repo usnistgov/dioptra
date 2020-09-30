@@ -44,7 +44,6 @@ dependencies:
   - setuptools-scm=3.5.0
   - wheel=0.34.2
   - pip:
-      - ../../build/dist/mitre_securing_ai-0.0.0-py3-none-any.whl
       - adversarial-robustness-toolbox
       - boto3
       - databricks-cli

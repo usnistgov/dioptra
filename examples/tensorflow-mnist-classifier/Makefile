@@ -32,8 +32,9 @@ endif
 
 EXAMPLE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 EXAMPLE_NAME = tensorflow-mnist-classifier
-EXAMPLE_CONDA_ENV_NAME = securing-ai-lab-components
+EXAMPLE_CONDA_ENV_NAME = tensorflow-mnist-classifier
 EXAMPLE_DATA_DIR = data
+EXAMPLE_RESTAPI_DIR = restapi
 EXAMPLE_SRC_DIR = src
 
 CONDA = conda
@@ -47,6 +48,9 @@ TAR = tar
 
 CODE_SRC_FILES := $(wildcard $(EXAMPLE_SRC_DIR)/*.py)
 CODE_WORKFLOW_FILE = MLproject
+
+RESTAPI_DATABASE = $(EXAMPLE_RESTAPI_DIR)/securingai.db
+RESTAPI_DATABASE_INIT_SCRIPT_FILE = initdb.py
 
 S3_WORKFLOW_BUCKET = workflow
 
@@ -101,6 +105,16 @@ define fix_mode_permissions
     $(call chmod,0755,$(1)/docker-gpu.sh)
 endef
 
+define init_database
+    $(call run_docker_compose,\
+        run\
+        --rm\
+        --entrypoint ""\
+        -v $(strip $(1))/$(strip $(2)):/work/$(strip $(2))\
+        restapi\
+        /opt/conda/condabin/conda run -n base python /work/$(strip $(2)))
+endef
+
 define make_subdirectory
     mkdir -p "$(strip $(1))"
 endef
@@ -123,7 +137,7 @@ define s3_cp
         --rm\
         --entrypoint ""\
         -v $(strip $(1))/$(strip $(2)):/work/$(strip $(2))\
-        tfcpu\
+        tfcpu-01\
         s3-cp.sh --endpoint-url http://minio$(strip $(IMAGE_SUFFIX)):9000\
         /work/$(strip $(2)) s3://$(strip $(3))/$(strip $(2)))
 endef
@@ -155,6 +169,9 @@ clean:
 
 ## Download and prepare MNIST dataset
 data: $(TRAINING_DATASET_SENTINEL) $(TESTING_DATASET_SENTINEL)
+
+## Initialize the RESTful API database
+initdb: $(RESTAPI_DATABASE)
 
 ## Launch the Minio S3 and MLFlow Tracking services
 services: $(DOCKER_COMPOSE_SENTINEL)
@@ -191,6 +208,12 @@ endif
 		tfcpu-01$(strip $(IMAGE_SUFFIX))\
 		tfcpu-02$(strip $(IMAGE_SUFFIX)))
 	$(call save_sentinel_file,$@)
+
+$(RESTAPI_DATABASE): $(RESTAPI_DATABASE_INIT_SCRIPT_FILE)
+	$(call make_subdirectory,$(@D))
+	$(call init_database,$(EXAMPLE_DIR),$(RESTAPI_DATABASE_INIT_SCRIPT_FILE))
+	$(call run_docker_compose, down)
+	$(RM) -f $(DOCKER_COMPOSE_SENTINEL)
 
 $(TRAINING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
 	$(call chmod,777,$(EXAMPLE_DATA_DIR))
