@@ -4,11 +4,10 @@ from typing import Optional
 
 import mlflow.tracking as tracking
 import structlog
-from flask import Flask
 from mlflow.entities import RunStatus
 from mlflow.exceptions import ExecutionException
-from mlflow.projects.submitted_run import LocalSubmittedRun
 from mlflow.projects.backend.abstract_backend import AbstractBackend
+from mlflow.projects.submitted_run import LocalSubmittedRun
 from mlflow.projects.utils import (
     fetch_and_validate_project,
     get_or_create_run,
@@ -19,11 +18,10 @@ from mlflow.projects.utils import (
     PROJECT_STORAGE_DIR,
 )
 
-from mitre.securingai.restapi import create_app
-from mitre.securingai.restapi.app import db
 from mitre.securingai.restapi.models import Job
 from mitre.securingai.restapi.shared.job_queue.model import JobStatus
 
+from .securingai_clients import SecuringAIDatabaseClient
 from .securingai_tags import SECURINGAI_DEPENDS_ON, SECURINGAI_JOB_ID, SECURINGAI_QUEUE
 
 
@@ -67,7 +65,9 @@ class SecuringAIProjectBackend(AbstractBackend):
         active_run = get_or_create_run(
             run_id, project_uri, experiment_id, work_dir, version, entry_point, params
         )
-        _set_mlflow_run_id_in_db(run_id=active_run.info.run_id)
+        SecuringAIDatabaseClient().set_mlflow_run_id_in_db(
+            run_id=active_run.info.run_id
+        )
         _set_securingai_tags(run_id=active_run.info.run_id)
         _log_workflow_artifact(
             run_id=active_run.info.run_id, workflow_filepath=workflow_filepath
@@ -113,7 +113,7 @@ def _run_entry_point(command, work_dir, experiment_id, run_id):
             ["cmd", "/c", command], close_fds=True, cwd=work_dir, env=env
         )
 
-    _update_task_status(status=JobStatus.started)
+    SecuringAIDatabaseClient().update_active_job_status(status=JobStatus.started)
     return LocalSubmittedRun(run_id, process)
 
 
@@ -131,18 +131,20 @@ def _wait_for(submitted_run_obj):
 
         if submitted_run_obj.wait():
             _logger.info(f"=== Run (ID '{run_id}') succeeded ===")
-            _update_task_status(status=JobStatus.finished)
+            SecuringAIDatabaseClient().update_active_job_status(
+                status=JobStatus.finished
+            )
             _maybe_set_run_terminated(active_run, "FINISHED")
 
         else:
-            _update_task_status(status=JobStatus.failed)
+            SecuringAIDatabaseClient().update_active_job_status(status=JobStatus.failed)
             _maybe_set_run_terminated(active_run, "FAILED")
             raise ExecutionException("Run (ID '%s') failed" % run_id)
 
     except KeyboardInterrupt:
         _logger.error(f"=== Run (ID '{run_id}') interrupted, cancelling run ===")
         submitted_run_obj.cancel()
-        _update_task_status(status=JobStatus.failed)
+        SecuringAIDatabaseClient().update_active_job_status(status=JobStatus.failed)
         _maybe_set_run_terminated(active_run, "FAILED")
         raise
 
@@ -170,50 +172,12 @@ def _log_workflow_artifact(run_id, workflow_filepath):
 
 
 def _set_securingai_tags(run_id):
-    app: Flask = create_app(env=os.getenv("AI_RESTAPI_ENV"))
-    rq_job_id: Optional[str] = os.getenv("AI_RQ_JOB_ID")
+    job: Optional[Job] = SecuringAIDatabaseClient().get_active_job()
 
-    if rq_job_id is None:
+    if job is None:
         return None
 
     client = tracking.MlflowClient()
-
-    with app.app_context():
-        job: Job = Job.query.get(rq_job_id)
-        client.set_tag(run_id=run_id, key=SECURINGAI_JOB_ID, value=job.job_id)
-        client.set_tag(run_id=run_id, key=SECURINGAI_QUEUE, value=job.queue.name)
-        client.set_tag(run_id=run_id, key=SECURINGAI_DEPENDS_ON, value=job.depends_on)
-
-
-def _update_task_status(status: JobStatus) -> None:
-    app: Flask = create_app(env=os.getenv("AI_RESTAPI_ENV"))
-    rq_job_id: Optional[str] = os.getenv("AI_RQ_JOB_ID")
-
-    if rq_job_id is None:
-        return None
-
-    _logger.info(
-        f"=== Updating task status for job with ID '{rq_job_id}' to {status.name} ==="
-    )
-
-    with app.app_context():
-        job = Job.query.get(rq_job_id)
-
-        if job.status != status:
-            job.update(changes={"status": status})
-            db.session.commit()
-
-
-def _set_mlflow_run_id_in_db(run_id) -> None:
-    app: Flask = create_app(env=os.getenv("AI_RESTAPI_ENV"))
-    rq_job_id: Optional[str] = os.getenv("AI_RQ_JOB_ID")
-
-    if rq_job_id is None:
-        return None
-
-    _logger.info("=== Setting MLFlow run ID in Securing AI database ===")
-
-    with app.app_context():
-        job = Job.query.get(rq_job_id)
-        job.update(changes={"mlflow_run_id": run_id})
-        db.session.commit()
+    client.set_tag(run_id=run_id, key=SECURINGAI_JOB_ID, value=job.job_id)
+    client.set_tag(run_id=run_id, key=SECURINGAI_QUEUE, value=job.queue.name)
+    client.set_tag(run_id=run_id, key=SECURINGAI_DEPENDS_ON, value=job.depends_on)
