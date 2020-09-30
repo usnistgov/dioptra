@@ -1,0 +1,123 @@
+name: tensorflow-fruits360-imagenet-patches
+
+entry_points:
+  deploy_patch:
+    parameters:
+      data_dir: {type: path, default: "/nfs/data/Fruits360-Kaggle-2019/fruits-360/Training"}
+      model: {type: string, default: "fruits360_vgg16/None"}
+      out_dir: {type: string, default: "/out/data/adv_training"}
+      patch_dir: {type: path, default: "/out/data/adv_patches"}
+      patch_deployment_method: {type: string, default: "augment"}
+      patch_application_rate: {type: float, default: 1.0}
+      patch_scale: {type: float, default: 0.4}
+      batch_size: {type: int, default: 32}
+      rotation_max: {type: float, default: 22.5}
+      scale_min:  {type: float, default: 0.1}
+      scale_max: {type: float, default: 1.0}
+    command: >
+      python src/deploy_patches.py
+      --data-dir {data_dir}
+      --model {model}
+      --out-dir {out_dir}
+      --patch-dir {patch_dir}
+      --patch-deployment-method {patch_deployment_method}
+      --patch-application-rate {patch_application_rate}
+      --patch-scale {patch_scale}
+      --batch-size {batch_size}
+      --rotation-max {rotation_max}
+      --scale-min {scale_min}
+      --scale-max {scale_max}
+  patch:
+    parameters:
+      data_dir: {type: path, default: "/nfs/data/Fruits360-Kaggle-2019/fruits-360/Test"}
+      out_dir: {type: path, default: "/out/data"}
+      model: {type: string, default: "fruits360_vgg16/None"}
+      imagenet_preprocessing: {type: string, default: "False"}
+      rotation_max: {type: float, default: 22.5}
+      scale_min:  {type: float, default: 0.1}
+      scale_max: {type: float, default: 1.0}
+      learning_rate: {type: float, default: 200000.0}
+      max_iter: {type: int, default: 550}
+      patch_target: {type: int, default: -1}
+      num_patch: {type: int, default: 1}
+      num_patch_gen_samples: {type: int, default: 10}
+    command: >
+      python src/patch.py
+      --data-dir {data_dir}
+      --out-dir {out_dir}
+      --model {model}
+      --imagenet-preprocessing {imagenet_preprocessing}
+      --rotation-max {rotation_max}
+      --scale-min {scale_min}
+      --scale-max {scale_max}
+      --learning-rate {learning_rate}
+      --max-iter {max_iter}
+      --patch-target {patch_target}
+      --num-patch {num_patch}
+      --num-patch-gen-samples {num_patch_gen_samples}
+  train:
+    parameters:
+      data_dir_training: {type: path, default: "/nfs/data/Fruits360-Kaggle-2019/fruits-360/Training"}
+      data_dir_testing: {type: path, default: "/nfs/data/Fruits360-Kaggle-2019/fruits-360/Test"}
+      model_architecture: {type: string, default: "vgg16"}
+      model_tag: {type: string, default: "fruits360_"}
+      epochs: {type: float, default: 2}
+      batch_size: {type: float, default: 32}
+      learning_rate: {type: float, default: 0.001}
+      optimizer: {type: string, default: "adam"}
+      validation_split: {type: float, default: 0.2}
+    command: >
+      python src/train.py
+      --data-dir-training {data_dir_training}
+      --data-dir-testing {data_dir_testing}
+      --model-architecture {model_architecture}
+      --epochs {epochs}
+      --batch-size {batch_size}
+      --learning-rate {learning_rate}
+      --optimizer {optimizer}
+      --validation-split {validation_split}
+
+  train-patches:
+    parameters:
+      data_dir_training: {type: path, default: "/out/data/adv_training"}
+      data_dir_testing: {type: path, default: "/out/data/adv_testing"}
+      model_architecture: {type: string, default: "vgg16"}
+      model_tag: {type: string, default: "fruits360_patches_"}
+      epochs: {type: float, default: 5}
+      batch_size: {type: float, default: 32}
+      learning_rate: {type: float, default: 0.001}
+      optimizer: {type: string, default: "adam"}
+      validation_split: {type: float, default: 0.2}
+    command: >
+      python src/train.py
+      --data-dir-training {data_dir_training}
+      --data-dir-testing {data_dir_testing}
+      --model-architecture {model_architecture}
+      --model-tag {model_tag}
+      --epochs {epochs}
+      --batch-size {batch_size}
+      --learning-rate {learning_rate}
+      --optimizer {optimizer}
+      --validation-split {validation_split}
+
+  init-imagenet-model:
+    parameters:
+      data_dir: {type: path, default: "/nfs/data/ImageNet-Kaggle-2017/images/ILSVRC/Data/CLS-LOC"}
+      dataset_name: {type: string, default: "val-sorted-5000"}
+    command: >
+      python src/init_model.py
+      --data-dir {data_dir}
+      --dataset-name {dataset_name}
+
+  test:
+    parameters:
+      data_dir: {type: path, default: "/out/data/adv_testing"}
+      model_name:  {type: string, default: "keras-model-imagenet-resnet50/None"}
+      imagenet_preprocessing: {type: string, default: "False"}
+      batch_size: {type: float, default: 32}
+    command: >
+      python src/test.py
+      --data-dir {data_dir}
+      --imagenet-preprocessing {imagenet_preprocessing}
+      --batch-size {batch_size}
+      --model-name {model_name}
