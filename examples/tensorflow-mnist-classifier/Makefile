@@ -83,7 +83,7 @@ define download_data
         --entrypoint ""\
         -v $(strip $(1)):/work/demo:cached\
         -w /work/demo\
-        tfcpu\
+        tfcpu-01\
         bash -c "\
             source /opt/conda/etc/profile.d/conda.sh &&\
             conda activate base &&\
@@ -216,11 +216,25 @@ $(RESTAPI_DATABASE): $(RESTAPI_DATABASE_INIT_SCRIPT_FILE)
 	$(RM) -f $(DOCKER_COMPOSE_SENTINEL)
 
 $(TRAINING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
+	$(call make_subdirectory,s3)
+	$(call make_subdirectory,mlruns)
+	$(call make_subdirectory,restapi)
+ifdef CHOWN_PERM
+	$(call fix_access_permissions,.)
+endif
+	$(call fix_mode_permissions,.)
 	$(call chmod,777,$(EXAMPLE_DATA_DIR))
 	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--training)
 	$(call save_sentinel_file,$(TRAINING_DATASET_SENTINEL))
 
 $(TESTING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
+	$(call make_subdirectory,s3)
+	$(call make_subdirectory,mlruns)
+	$(call make_subdirectory,restapi)
+ifdef CHOWN_PERM
+	$(call fix_access_permissions,.)
+endif
+	$(call fix_mode_permissions,.)
 	$(call chmod,777,$(EXAMPLE_DATA_DIR))
 	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--testing)
 	$(call save_sentinel_file,$(TESTING_DATASET_SENTINEL))

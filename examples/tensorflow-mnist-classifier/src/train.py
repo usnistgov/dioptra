@@ -17,6 +17,7 @@ import mlflow
 import mlflow.tensorflow
 import numpy as np
 import structlog
+from mlflow.tracking.client import MlflowClient
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.metrics import (
     CategoricalAccuracy,
@@ -246,8 +247,6 @@ def train(
         seed=seed,
     )
 
-    experiment_name: Optional[str] = os.getenv("MLFLOW_EXPERIMENT_NAME")
-    model_name: str = f"{experiment_name}_{model_architecture}" if experiment_name else f"{model_architecture}"
     tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
     dataset_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
 
@@ -259,6 +258,11 @@ def train(
         mlflow.log_param("entry_point_seed", seed)
         mlflow.log_param("tensorflow_global_seed", tensorflow_global_seed)
         mlflow.log_param("dataset_seed", dataset_seed)
+
+        experiment_name: str = MlflowClient().get_experiment(
+            active_run.info.experiment_id
+        ).name
+        model_name: str = f"{experiment_name}_{model_architecture}"
 
         register_mnist_model = make_model_register(
             active_run=active_run, name=model_name,
