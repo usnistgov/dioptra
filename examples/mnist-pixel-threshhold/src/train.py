@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 
 import datetime
+import os
 import warnings
 from pathlib import Path
+from typing import Optional
 
 warnings.filterwarnings("ignore")
 
 import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
-tf.config.threading.set_intra_op_parallelism_threads(0)
-tf.config.threading.set_inter_op_parallelism_threads(0)
 
 import click
 import mlflow
 import mlflow.tensorflow
 import structlog
+from mlflow.tracking.client import MlflowClient
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.metrics import (
     TruePositives,
@@ -31,7 +32,7 @@ from tensorflow.keras.optimizers import Adam, Adagrad, RMSprop
 
 from data import create_image_dataset
 from log import configure_stdlib_logger, configure_structlog_logger
-from models import le_net, alex_net
+from models import le_net, alex_net, make_model_register
 
 LOGGER = structlog.get_logger()
 METRICS = [
@@ -193,6 +194,12 @@ def evaluate_metrics(model, testing_ds):
     default=32,
 )
 @click.option(
+    "--register-model",
+    type=click.Choice(["True", "False"], case_sensitive=True),
+    default="False",
+    help="Add trained model to registry",
+)
+@click.option(
     "--learning-rate", type=click.FLOAT, help="Model learning rate", default=0.001
 )
 @click.option(
@@ -212,10 +219,12 @@ def train(
     model_architecture,
     epochs,
     batch_size,
+    register_model,
     learning_rate,
     optimizer,
     validation_split,
 ):
+    register_model = True if register_model == "True" else False
 
     LOGGER.info(
         "Execute MLFlow entry point",
@@ -228,9 +237,19 @@ def train(
         optimizer=optimizer,
         validation_split=validation_split,
     )
+
     mlflow.tensorflow.autolog()
 
-    with mlflow.start_run() as _:
+    with mlflow.start_run() as active_run:
+        experiment_name: str = MlflowClient().get_experiment(
+            active_run.info.experiment_id
+        ).name
+        model_name: str = f"{experiment_name}_{model_architecture}"
+
+        register_mnist_model = make_model_register(
+            active_run=active_run, name=model_name,
+        )
+
         training_ds, validation_ds, testing_ds = prepare_data(
             data_dir=data_dir,
             validation_split=validation_split,
@@ -249,6 +268,9 @@ def train(
             epochs=epochs,
         )
         evaluate_metrics(model=model, testing_ds=testing_ds)
+
+        if register_model:
+            register_mnist_model(model_dir="model")
 
 
 if __name__ == "__main__":

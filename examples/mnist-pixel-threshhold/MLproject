@@ -15,14 +15,15 @@ entry_points:
       --model {model}
       --model-architecture {model_architecture}
       --batch-size {batch_size}
-      --th 1
-      --es 0
+      --th {th}
+      --es {es}
   train:
     parameters:
       data_dir: {type: path, default: "/nfs/data"}
       model_architecture: {type: string, default: "le_net"}
       epochs: {type: float, default: 30}
       batch_size: {type: float, default: 32}
+      register_model: {type: string, default: "False"}
       learning_rate: {type: float, default: 0.001}
       optimizer: {type: string, default: "adam"}
       validation_split: {type: float, default: 0.2}
@@ -32,6 +33,7 @@ entry_points:
       --model-architecture {model_architecture}
       --epochs {epochs}
       --batch-size {batch_size}
+      --register-model {register_model}
       --learning-rate {learning_rate}
       --optimizer {optimizer}
       --validation-split {validation_split}

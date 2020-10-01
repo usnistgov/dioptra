@@ -8,8 +8,6 @@ warnings.filterwarnings("ignore")
 import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
-tf.config.threading.set_intra_op_parallelism_threads(0)
-tf.config.threading.set_inter_op_parallelism_threads(0)
 
 import click
 import mlflow

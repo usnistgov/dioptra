@@ -1,5 +1,5 @@
 import warnings
-from typing import Tuple
+from typing import Callable, Tuple
 
 warnings.filterwarnings("ignore")
 
@@ -8,6 +8,9 @@ import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 
 import mlflow.keras
+from mlflow.entities import Run as MlflowRun
+from mlflow.entities.model_registry import ModelVersion
+from mlflow.tracking import MlflowClient
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import (
     BatchNormalization,
@@ -21,6 +24,20 @@ from tensorflow.keras.layers import (
 
 def load_model_in_registry(model: str):
     return mlflow.keras.load_model(model_uri=f"models:/{model}")
+
+
+def make_model_register(
+    active_run: MlflowRun, name: str
+) -> Callable[[str], ModelVersion]:
+    run_id: str = active_run.info.run_id
+    artifact_uri: str = active_run.info.artifact_uri
+
+    def inner_func(model_dir: str) -> ModelVersion:
+        client = MlflowClient()
+        source: str = f"{artifact_uri}/{model_dir}"
+        return client.create_model_version(name=name, source=source, run_id=run_id)
+
+    return inner_func
 
 
 def le_net(
