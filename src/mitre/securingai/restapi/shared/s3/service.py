@@ -31,7 +31,7 @@ class S3Service(object):
             self._client.upload_fileobj(Fileobj=fileobj, Bucket=bucket, Key=key)
 
         except ClientError:
-            log.error("S3 upload failed", fileobj=fileobj, bucket=bucket, key=key)
+            log.exception("S3 upload failed", fileobj=fileobj, bucket=bucket, key=key)
             return None
 
         uri: str = self.as_uri(bucket=bucket, key=key)

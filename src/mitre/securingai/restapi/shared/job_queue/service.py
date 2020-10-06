@@ -43,7 +43,7 @@ class RQService(object):
             rq_job: rq.job.Job = rq.job.Job.fetch(job_id, connection=self._redis)
 
         except (RedisError, NoSuchJobError):
-            log.warning("RQ job not found", job_id=job_id)
+            log.exception("RQ job not found", job_id=job_id)
             return None
 
         return rq_job
