@@ -38,12 +38,16 @@ def make_model_register(
     LOGGER.info("create model register")
     run_id: str = active_run.info.run_id
     artifact_uri: str = active_run.info.artifact_uri
+    registered_models = [x.name for x in MlflowClient().list_registered_models()]
+
+    if name not in registered_models:
+        LOGGER.info("create registered model", name=name)
+        MlflowClient().create_registered_model(name=name)
 
     def inner_func(model_dir: str) -> ModelVersion:
-        client = MlflowClient()
         source: str = f"{artifact_uri}/{model_dir}"
-        LOGGER.info("register model", name=name, source=source, run_id=run_id)
-        return client.create_model_version(name=name, source=source, run_id=run_id,)
+        LOGGER.info("create model version", name=name, source=source, run_id=run_id)
+        return MlflowClient().create_model_version(name=name, source=source, run_id=run_id)
 
     return inner_func
 
