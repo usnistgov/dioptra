@@ -210,7 +210,13 @@ endif
 	$(call save_sentinel_file,$@)
 
 $(RESTAPI_DATABASE): $(RESTAPI_DATABASE_INIT_SCRIPT_FILE)
+	$(call make_subdirectory,mlruns)
+	$(call make_subdirectory,s3)
 	$(call make_subdirectory,$(@D))
+ifdef CHOWN_PERM
+	$(call fix_access_permissions,.)
+endif
+	$(call fix_mode_permissions,.)
 	$(call init_database,$(EXAMPLE_DIR),$(RESTAPI_DATABASE_INIT_SCRIPT_FILE))
 	$(call run_docker_compose, down)
 	$(RM) -f $(DOCKER_COMPOSE_SENTINEL)
