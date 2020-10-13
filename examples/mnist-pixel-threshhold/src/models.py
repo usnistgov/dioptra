@@ -31,11 +31,14 @@ def make_model_register(
 ) -> Callable[[str], ModelVersion]:
     run_id: str = active_run.info.run_id
     artifact_uri: str = active_run.info.artifact_uri
+    registered_models = [x.name for x in MlflowClient().list_registered_models()]
+
+    if name not in registered_models:
+        MlflowClient().create_registered_model(name=name)
 
     def inner_func(model_dir: str) -> ModelVersion:
-        client = MlflowClient()
         source: str = f"{artifact_uri}/{model_dir}"
-        return client.create_model_version(name=name, source=source, run_id=run_id)
+        return MlflowClient().create_model_version(name=name, source=source, run_id=run_id)
 
     return inner_func
 
