@@ -138,7 +138,7 @@ EXTRAS_DEPENDENCIES = {
         "pydocstyle",
         "pytest",
         "pytest-cov",
-        "pytest-datadirs",
+        "pytest-datadir",
         "pytoml",
         "seed-isort-config",
         "setuptools-scm",
