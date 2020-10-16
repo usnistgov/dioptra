@@ -116,6 +116,8 @@ CONTAINER_MLFLOW_VERSION = 1.11.0
 CONTAINER_PYTORCH_VERSION = 1.5.1
 CONTAINER_SKLEARN_VERSION = 0.22.1
 CONTAINER_TENSORFLOW2_VERSION = 2.1.0
+CONTAINER_TOX_PY37_IMAGE_TAG = latest
+CONTAINER_TOX_PY38_IMAGE_TAG = latest
 
 DOCS_FILES := $(wildcard $(PROJECT_DOCS_DIR)/**/*.md)
 DOCS_BUILD_DIR = $(PROJECT_BUILD_DIR)/docs
@@ -142,7 +144,7 @@ GITLAB_PAGES_IMPORT_OPTS =\
     -m "docs: publish ($(shell date '+%Y-%m-%dT%H:%M:%S%z'))"
 
 ARTIFACTORY_PREFIX = artifacts.mitre.org:8200
-ARTIFACTORY_IMAGES_LATEST := $(foreach image,$(PROJECT_IMAGES_LATEST),$(ARTIFACTORY_PREFIX)/$(image))
+ARTIFACTORY_UNTRUSTED_PREFIX = $(ARTIFACTORY_PREFIX)/untrusted-mitrewide-overwritable
 
 CONTAINER_MINICONDA_BASE_COMPONENT_NAME = miniconda-base
 CONTAINER_MINICONDA_BASE_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_MINICONDA_BASE_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
@@ -269,6 +271,24 @@ CONTAINER_TENSORFLOW2_GPU_INCLUDE_FILES =
 CONTAINER_TENSORFLOW2_GPU_SCRIPTS =
 CONTAINER_TENSORFLOW2_GPU_SHELLSCRIPTS_EXT = $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
 
+CONTAINER_TOX_PY37_COMPONENT_NAME = tox-py37
+CONTAINER_TOX_PY37_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_TOX_PY37_COMPONENT_NAME):$(CONTAINER_TOX_PY37_IMAGE_TAG)
+CONTAINER_TOX_PY37_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_TOX_PY37_COMPONENT_NAME)
+CONTAINER_TOX_PY37_INCLUDE_DIR = $(CONTAINER_TOX_PY37_DIR)/include/etc/$(PROJECT_PREFIX)/docker
+CONTAINER_TOX_PY37_DOCKERFILE = $(CONTAINER_TOX_PY37_DIR)/Dockerfile
+CONTAINER_TOX_PY37_INCLUDE_FILES =
+CONTAINER_TOX_PY37_SCRIPTS =
+CONTAINER_TOX_PY37_SHELLSCRIPTS_EXT = $(CONTAINER_TOX_PY37_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
+
+CONTAINER_TOX_PY38_COMPONENT_NAME = tox-py38
+CONTAINER_TOX_PY38_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_TOX_PY38_COMPONENT_NAME):$(CONTAINER_TOX_PY38_IMAGE_TAG)
+CONTAINER_TOX_PY38_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_TOX_PY38_COMPONENT_NAME)
+CONTAINER_TOX_PY38_INCLUDE_DIR = $(CONTAINER_TOX_PY38_DIR)/include/etc/$(PROJECT_PREFIX)/docker
+CONTAINER_TOX_PY38_DOCKERFILE = $(CONTAINER_TOX_PY38_DIR)/Dockerfile
+CONTAINER_TOX_PY38_INCLUDE_FILES =
+CONTAINER_TOX_PY38_SCRIPTS =
+CONTAINER_TOX_PY38_SHELLSCRIPTS_EXT = $(CONTAINER_TOX_PY38_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
+
 EXAMPLES_TENSORFLOW_MNIST_DIR = $(PROJECT_EXAMPLES_DIR)/tensorflow-mnist-classifier
 EXAMPLES_TENSORFLOW_MNIST_SCRIPTS =\
     $(EXAMPLES_TENSORFLOW_MNIST_DIR)/docker-gpu.sh
@@ -313,6 +333,12 @@ CONTAINER_TENSORFLOW2_CPU_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(C
 CONTAINER_TENSORFLOW2_GPU_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TENSORFLOW2_GPU_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_TENSORFLOW2_GPU_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TENSORFLOW2_GPU_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_TENSORFLOW2_GPU_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TENSORFLOW2_GPU_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
+CONTAINER_TOX_PY37_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY37_COMPONENT_NAME)-tag-$(CONTAINER_TOX_PY37_IMAGE_TAG).sentinel
+CONTAINER_TOX_PY37_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY37_COMPONENT_NAME)-pulled-tag-$(CONTAINER_TOX_PY37_IMAGE_TAG).sentinel
+CONTAINER_TOX_PY37_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY37_COMPONENT_NAME)-pushed-tag-$(CONTAINER_TOX_PY37_IMAGE_TAG).sentinel
+CONTAINER_TOX_PY38_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY38_COMPONENT_NAME)-tag-$(CONTAINER_TOX_PY38_IMAGE_TAG).sentinel
+CONTAINER_TOX_PY38_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY38_COMPONENT_NAME)-pulled-tag-$(CONTAINER_TOX_PY38_IMAGE_TAG).sentinel
+CONTAINER_TOX_PY38_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY38_COMPONENT_NAME)-pushed-tag-$(CONTAINER_TOX_PY38_IMAGE_TAG).sentinel
 DOCS_SENTINEL = $(PROJECT_BUILD_DIR)/.docs.sentinel
 GITLAB_PAGES_SENTINEL = $(PROJECT_BUILD_DIR)/.gitlab-pages-push.sentinel
 LINTING_SENTINEL = $(PROJECT_BUILD_DIR)/.linting.sentinel
@@ -348,9 +374,9 @@ define pull_docker_images
     @$(foreach image,$(1),\
         echo "Pulling image $(image)";\
         echo "==========================================";\
-        $(DOCKER) pull $(ARTIFACTORY_PREFIX)/$(image) || exit 1;\
-        $(DOCKER) tag $(ARTIFACTORY_PREFIX)/$(image) $(image) || exit 1;\
-        $(DOCKER) rmi $(ARTIFACTORY_PREFIX)/$(image) || exit 1;\
+        $(DOCKER) pull $(strip $(2))/$(image) || exit 1;\
+        $(DOCKER) tag $(strip $(2))/$(image) $(image) || exit 1;\
+        $(DOCKER) rmi $(strip $(2))/$(image) || exit 1;\
         echo "";)
 endef
 
@@ -358,9 +384,9 @@ define push_docker_images
     @$(foreach image,$(1),\
         echo "Pushing image $(image)";\
 		echo "==========================================";\
-        $(DOCKER) tag $(image) $(ARTIFACTORY_PREFIX)/$(image) || exit 1;\
-        $(DOCKER) push $(ARTIFACTORY_PREFIX)/$(image) || exit 1;\
-        $(DOCKER) rmi $(ARTIFACTORY_PREFIX)/$(image) || exit 1;\
+        $(DOCKER) tag $(image) $(strip $(2))/$(image) || exit 1;\
+        $(DOCKER) push $(strip $(2))/$(image) || exit 1;\
+        $(DOCKER) rmi $(strip $(2))/$(image) || exit 1;\
         echo "";)
 endef
 
@@ -479,7 +505,7 @@ endef
 beautify: $(BEAUTIFY_SENTINEL)
 
 ## Build all Docker images in project
-build-all: build-miniconda build-mlflow-tracking build-nginx build-postgres build-redis build-restapi build-sklearn build-pytorch build-tensorflow
+build-all: build-miniconda build-mlflow-tracking build-nginx build-postgres build-redis build-restapi build-sklearn build-pytorch build-tensorflow build-tox
 
 ## Build the base Miniconda Docker image
 build-miniconda: $(CONTAINER_MINICONDA_BASE_BUILD_SENTINEL)
@@ -507,6 +533,9 @@ build-sklearn: build-miniconda $(CONTAINER_SKLEARN_BUILD_SENTINEL)
 
 ## Build the Tensorflow Docker image
 build-tensorflow: build-sklearn $(CONTAINER_TENSORFLOW2_CPU_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_SENTINEL)
+
+## Build the Tox Docker images
+build-tox: $(CONTAINER_TOX_PY37_BUILD_SENTINEL) $(CONTAINER_TOX_PY38_BUILD_SENTINEL)
 
 ## Remove temporary files
 clean:
@@ -541,10 +570,10 @@ examples: $(EXAMPLES_TENSORFLOW_MNIST_SCRIPTS)
 hooks: $(PRE_COMMIT_HOOKS_SENTINEL)
 
 ## Pull latest docker images from the MITRE artifactory and retag
-pull-mitre: $(CONTAINER_PULL_SENTINEL)
+pull-mitre: $(CONTAINER_TOX_PY37_PULL_SENTINEL) $(CONTAINER_TOX_PY38_PULL_SENTINEL)
 
 ## Push docker images to the MITRE artifactory
-push-mitre: $(CONTAINER_PUSH_SENTINEL)
+push-mitre: $(CONTAINER_TOX_PY37_PUSH_SENTINEL) $(CONTAINER_TOX_PY38_PUSH_SENTINEL)
 
 ## Run all tests
 tests: tests-unit tests-integration
@@ -613,7 +642,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_MINICONDA_BASE_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_MINICONDA_BASE_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_MINICONDA_BASE_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -622,7 +651,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_MINICONDA_BASE_IMAGE))
+	$(call push_docker_images,$(CONTAINER_MINICONDA_BASE_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_MINICONDA_BASE_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -643,7 +672,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_MLFLOW_TRACKING_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_MLFLOW_TRACKING_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -652,7 +681,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_MLFLOW_TRACKING_IMAGE))
+	$(call push_docker_images,$(CONTAINER_MLFLOW_TRACKING_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_MLFLOW_TRACKING_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -673,7 +702,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_NGINX_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_NGINX_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_NGINX_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -682,7 +711,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_NGINX_IMAGE))
+	$(call push_docker_images,$(CONTAINER_NGINX_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_NGINX_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -703,7 +732,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_POSTGRES_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_POSTGRES_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_POSTGRES_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -712,7 +741,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_POSTGRES_IMAGE))
+	$(call push_docker_images,$(CONTAINER_POSTGRES_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_POSTGRES_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -733,7 +762,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_REDIS_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_REDIS_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_REDIS_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -742,7 +771,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_REDIS_IMAGE))
+	$(call push_docker_images,$(CONTAINER_REDIS_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_REDIS_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -763,7 +792,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_RESTAPI_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_RESTAPI_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_RESTAPI_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -772,7 +801,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_RESTAPI_IMAGE))
+	$(call push_docker_images,$(CONTAINER_RESTAPI_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_RESTAPI_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -793,7 +822,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_SKLEARN_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_SKLEARN_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_SKLEARN_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -802,7 +831,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_SKLEARN_IMAGE))
+	$(call push_docker_images,$(CONTAINER_SKLEARN_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_SKLEARN_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -823,7 +852,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_PYTORCH_CPU_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_PYTORCH_CPU_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_PYTORCH_CPU_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -832,7 +861,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_PYTORCH_CPU_IMAGE))
+	$(call push_docker_images,$(CONTAINER_PYTORCH_CPU_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_PYTORCH_CPU_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -853,7 +882,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_PYTORCH_GPU_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_PYTORCH_GPU_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_PYTORCH_GPU_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -862,7 +891,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_PYTORCH_GPU_IMAGE))
+	$(call push_docker_images,$(CONTAINER_PYTORCH_GPU_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_PYTORCH_GPU_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -883,7 +912,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_TENSORFLOW2_CPU_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_TENSORFLOW2_CPU_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_TENSORFLOW2_CPU_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -892,7 +921,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_TENSORFLOW2_CPU_IMAGE))
+	$(call push_docker_images,$(CONTAINER_TENSORFLOW2_CPU_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_TENSORFLOW2_CPU_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -913,7 +942,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_TENSORFLOW2_GPU_IMAGE))
+	$(call pull_docker_images,$(CONTAINER_TENSORFLOW2_GPU_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_TENSORFLOW2_GPU_BUILD_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -922,7 +951,7 @@ ifndef ARTIFACTORY_PREFIX
 	$(error ARTIFACTORY_PREFIX must be defined.)
 endif
 	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_TENSORFLOW2_GPU_IMAGE))
+	$(call push_docker_images,$(CONTAINER_TENSORFLOW2_GPU_IMAGE),$(ARTIFACTORY_PREFIX))
 	$(call save_sentinel_file,$(CONTAINER_TENSORFLOW2_GPU_PULL_SENTINEL))
 	$(call save_sentinel_file,$@)
 
@@ -930,6 +959,66 @@ $(CONTAINER_TENSORFLOW2_GPU_SCRIPTS): $(CONTAINER_TENSORFLOW2_GPU_SHELLSCRIPTS_E
 	$(call run_argbash,\
 		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
 		$(PROJECT_DIR)/$(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR),\
+		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
+
+$(CONTAINER_TOX_PY37_BUILD_SENTINEL): $(CONTAINER_TOX_PY37_DOCKERFILE) $(CONTAINER_TOX_PY37_INCLUDE_FILES) $(CONTAINER_TOX_PY37_SCRIPTS)
+	$(call make_subdirectory,$(@D))
+	$(call run_build_script,$(CONTAINER_TOX_PY37_COMPONENT_NAME),$(CONTAINER_TOX_PY37_IMAGE_TAG),)
+	$(call save_sentinel_file,$(CONTAINER_TOX_PY37_PULL_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_TOX_PY37_PULL_SENTINEL):
+ifndef ARTIFACTORY_PREFIX
+	$(error ARTIFACTORY_PREFIX must be defined.)
+endif
+	$(call make_subdirectory,$(@D))
+	$(call pull_docker_images,$(CONTAINER_TOX_PY37_IMAGE),$(ARTIFACTORY_UNTRUSTED_PREFIX))
+	$(call save_sentinel_file,$(CONTAINER_TOX_PY37_BUILD_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_TOX_PY37_PUSH_SENTINEL):
+ifndef ARTIFACTORY_PREFIX
+	$(error ARTIFACTORY_PREFIX must be defined.)
+endif
+	$(call make_subdirectory,$(@D))
+	$(call push_docker_images,$(CONTAINER_TOX_PY37_IMAGE),$(ARTIFACTORY_UNTRUSTED_PREFIX))
+	$(call save_sentinel_file,$(CONTAINER_TOX_PY37_PULL_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_TOX_PY37_SCRIPTS): $(CONTAINER_TOX_PY37_SHELLSCRIPTS_EXT) | $(CONTAINER_TOX_PY37_INCLUDE_DIR)
+	$(call run_argbash,\
+		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
+		$(PROJECT_DIR)/$(CONTAINER_TOX_PY37_INCLUDE_DIR),\
+		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
+
+$(CONTAINER_TOX_PY38_BUILD_SENTINEL): $(CONTAINER_TOX_PY38_DOCKERFILE) $(CONTAINER_TOX_PY38_INCLUDE_FILES) $(CONTAINER_TOX_PY38_SCRIPTS)
+	$(call make_subdirectory,$(@D))
+	$(call run_build_script,$(CONTAINER_TOX_PY38_COMPONENT_NAME),$(CONTAINER_TOX_PY38_IMAGE_TAG),)
+	$(call save_sentinel_file,$(CONTAINER_TOX_PY38_PULL_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_TOX_PY38_PULL_SENTINEL):
+ifndef ARTIFACTORY_PREFIX
+	$(error ARTIFACTORY_PREFIX must be defined.)
+endif
+	$(call make_subdirectory,$(@D))
+	$(call pull_docker_images,$(CONTAINER_TOX_PY38_IMAGE),$(ARTIFACTORY_UNTRUSTED_PREFIX))
+	$(call save_sentinel_file,$(CONTAINER_TOX_PY38_BUILD_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_TOX_PY38_PUSH_SENTINEL):
+ifndef ARTIFACTORY_PREFIX
+	$(error ARTIFACTORY_PREFIX must be defined.)
+endif
+	$(call make_subdirectory,$(@D))
+	$(call push_docker_images,$(CONTAINER_TOX_PY38_IMAGE),$(ARTIFACTORY_UNTRUSTED_PREFIX))
+	$(call save_sentinel_file,$(CONTAINER_TOX_PY38_PULL_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_TOX_PY38_SCRIPTS): $(CONTAINER_TOX_PY38_SHELLSCRIPTS_EXT) | $(CONTAINER_TOX_PY38_INCLUDE_DIR)
+	$(call run_argbash,\
+		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
+		$(PROJECT_DIR)/$(CONTAINER_TOX_PY38_INCLUDE_DIR),\
 		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
 
 $(EXAMPLES_TENSORFLOW_MNIST_SCRIPTS): $(EXAMPLES_TENSORFLOW_MNIST_SHELLSCRIPTS_EXT) | $(EXAMPLES_TENSORFLOW_MNIST_DIR)
