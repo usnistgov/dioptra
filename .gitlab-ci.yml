@@ -1,0 +1,29 @@
+variables:
+  PROJECT_BUILD_DIR: "${CI_PROJECT_DIR}/.tox/dist"
+
+cache:
+  key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+  paths:
+    - .tox
+
+test-unit-py37:
+  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py37:latest
+  script:
+    - tox -e py37
+    - mv .tox/dist dist
+  tags:
+    - test-unit
+  artifacts:
+    paths:
+      - dist
+
+test-unit-py38:
+  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
+  script:
+    - tox -e py38
+    - mv .tox/dist dist
+  tags:
+    - test-unit
+  artifacts:
+    paths:
+      - dist
