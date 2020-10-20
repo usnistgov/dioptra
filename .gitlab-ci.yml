@@ -1,13 +1,24 @@
 variables:
   PROJECT_BUILD_DIR: "${CI_PROJECT_DIR}/.tox/dist"
 
-cache:
-  key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
-  paths:
-    - .tox
+stages:
+  - build
+  - test
+  - deploy
+
+docs-build:
+  stage: build
+  script:
+    - sphinx-build -b html docs/source docs/build
+  tags:
+    - sphinx
+  artifacts:
+    paths:
+      - docs/build
 
 test-unit-py37:
   image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py37:latest
+  stage: test
   script:
     - tox -e py37
     - mv .tox/dist dist
@@ -17,9 +28,14 @@ test-unit-py37:
     paths:
       - coverage
       - dist
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
 
 test-unit-py38:
   image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
+  stage: test
   script:
     - tox -e py38
     - mv .tox/dist dist
@@ -29,3 +45,21 @@ test-unit-py38:
     paths:
       - coverage
       - dist
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+
+pages:
+  stage: deploy
+  needs:
+    - docs-build
+  script:
+    - mv docs/build public
+  tags:
+    - sphinx
+  artifacts:
+    paths:
+      - public
+  only:
+    - master

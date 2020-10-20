@@ -419,12 +419,6 @@ define push_docker_images
         echo "";)
 endef
 
-define push_gitlab_pages
-    $(COPY) $(GITLAB_CI_FILE) $(3)
-    $(GHP_IMPORT) $(1) -b $(2) $(3)
-    $(GIT) push origin $(2)
-endef
-
 define pre_commit_cmd
     $(PRE_COMMIT) $(1)
 endef
@@ -601,9 +595,6 @@ conda-update: $(CONDA_CREATE_SENTINEL) $(CONDA_UPDATE_SENTINEL) $(CONDA_ENV_PIP_
 
 ## Build project documentation
 docs: $(DOCS_SENTINEL)
-
-## Publish documentation to gl-pages branch
-docs-publish: $(GITLAB_PAGES_SENTINEL)
 
 ## Generate support files needed for running the examples
 examples: $(EXAMPLES_TENSORFLOW_MNIST_SCRIPTS)
@@ -1123,14 +1114,6 @@ $(EXAMPLES_TENSORFLOW_MNIST_SCRIPTS): $(EXAMPLES_TENSORFLOW_MNIST_SHELLSCRIPTS_E
 		$(PROJECT_DIR)/$(EXAMPLES_TENSORFLOW_MNIST_DIR),\
 		$(PROJECT_DIR)/$(EXAMPLES_TENSORFLOW_MNIST_DIR),\
 		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(GITLAB_PAGES_SENTINEL): $(GITLAB_PAGES_CI_FILE)
-	$(call make_subdirectory,$(@D))
-	$(call push_gitlab_pages,\
-		$(GITLAB_PAGES_IMPORT_OPTS),\
-		$(GITLAB_PAGES_BRANCH),\
-		$(GITLAB_PAGES_BUILD_DIR))
-	$(call save_sentinel_file,$@)
 
 $(ISORT_CONFIG_FILE): $(CODE_SRC_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES)
 	$(call run_seed_isort_config,)
