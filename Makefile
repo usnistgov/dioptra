@@ -1,4 +1,4 @@
-.PHONY: beautify build-all build-miniconda build-mlflow-tracking build-nginx build-postgres build-pytorch build-redis build-restapi build-sklearn build-tensorflow clean code-check code-pkg code-publish conda-create conda-update docs docs-publish help hooks pull-mitre push-mitre tests tests-integration tests-unit tox
+.PHONY: beautify build-all build-miniconda build-mlflow-tracking build-nginx build-postgres build-pytorch build-redis build-restapi build-sklearn build-sphinx build-tensorflow build-tox clean code-check code-pkg code-publish conda-create conda-update docs docs-publish help hooks pull-mitre push-mitre tests tests-integration tests-unit tox
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -O extglob -o pipefail -c
@@ -112,6 +112,7 @@ CONTAINER_BUILD_NUMBER = 1
 CONTAINER_IMAGE_TAG = $(PROJECT_VERSION)-$(CONTAINER_BUILD_NUMBER)
 CONTAINER_IBM_ART_VERSION = 1.3.3
 CONTAINER_MINICONDA_VERSION = 4.8.3
+CONTAINER_SPHINX_VERSION = 3.2.1
 CONTAINER_MLFLOW_VERSION = 1.11.0
 CONTAINER_PYTORCH_VERSION = 1.5.1
 CONTAINER_SKLEARN_VERSION = 0.22.1
@@ -170,6 +171,16 @@ CONTAINER_MINICONDA_BASE_SCRIPTS =\
     $(CONTAINER_MINICONDA_BASE_INCLUDE_DIR)/s3-cp.sh\
     $(CONTAINER_MINICONDA_BASE_INCLUDE_DIR)/unpack-archive.sh
 CONTAINER_MINICONDA_BASE_SHELLSCRIPTS_EXT = $(CONTAINER_MINICONDA_BASE_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
+
+CONTAINER_SPHINX_COMPONENT_NAME = sphinx
+CONTAINER_SPHINX_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_SPHINX_COMPONENT_NAME):$(CONTAINER_SPHINX_VERSION)
+CONTAINER_SPHINX_IMAGE_LATEST = $(PROJECT_PREFIX)/$(CONTAINER_SPHINX_COMPONENT_NAME):latest
+CONTAINER_SPHINX_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_SPHINX_COMPONENT_NAME)
+CONTAINER_SPHINX_INCLUDE_DIR = $(CONTAINER_SPHINX_DIR)/include/etc/$(PROJECT_PREFIX)/docker
+CONTAINER_SPHINX_DOCKERFILE = $(CONTAINER_SPHINX_DIR)/Dockerfile
+CONTAINER_SPHINX_INCLUDE_FILES =
+CONTAINER_SPHINX_SCRIPTS =
+CONTAINER_SPHINX_SHELLSCRIPTS_EXT = $(CONTAINER_SPHINX_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
 
 CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME = mlflow-tracking
 CONTAINER_MLFLOW_TRACKING_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
@@ -312,6 +323,11 @@ CONDA_ENV_PIP_INSTALL_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-env-pip-install.sen
 CONTAINER_MINICONDA_BASE_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MINICONDA_BASE_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_MINICONDA_BASE_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MINICONDA_BASE_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_MINICONDA_BASE_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MINICONDA_BASE_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
+CONTAINER_SPHINX_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SPHINX_COMPONENT_NAME)-tag-$(CONTAINER_SPHINX_VERSION).sentinel
+CONTAINER_SPHINX_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SPHINX_COMPONENT_NAME)-pulled-tag-$(CONTAINER_SPHINX_VERSION).sentinel
+CONTAINER_SPHINX_PULL_LATEST_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SPHINX_COMPONENT_NAME)-pulled-tag-latest.sentinel
+CONTAINER_SPHINX_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SPHINX_COMPONENT_NAME)-pushed-tag-$(CONTAINER_SPHINX_VERSION).sentinel
+CONTAINER_SPHINX_PUSH_LATEST_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SPHINX_COMPONENT_NAME)-pushed-tag-latest.sentinel
 CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_MLFLOW_TRACKING_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
 CONTAINER_MLFLOW_TRACKING_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
@@ -368,6 +384,10 @@ define create_conda_env
     bash -lc "\
     $(CONDA) create -n $(CONDA_ENV_NAME) $(CONDA_CHANNELS) -y $(CONDA_ENV_BASE)\
     "
+endef
+
+define docker_image_tag
+    $(call run_docker,tag $(strip $(1)) $(strip $(2)))
 endef
 
 define make_subdirectory
@@ -436,6 +456,7 @@ define run_build_script
     MLFLOW_VERSION=$(CONTAINER_MLFLOW_VERSION)\
     PYTORCH_VERSION=$(CONTAINER_PYTORCH_VERSION)\
     SKLEARN_VERSION=$(CONTAINER_SKLEARN_VERSION)\
+    SPHINX_VERSION=$(CONTAINER_SPHINX_VERSION)\
     TENSORFLOW2_VERSION=$(CONTAINER_TENSORFLOW2_VERSION)\
     docker/build.sh
 endef
@@ -480,6 +501,19 @@ define run_seed_isort_config
     $(SEED_ISORT_CONFIG) $(1)
 endef
 
+define run_sphinx_build
+    $(call run_docker,\
+        run\
+        -it\
+        --rm\
+        -v $(PROJECT_DIR):/docs\
+        securing-ai/sphinx:$(CONTAINER_SPHINX_VERSION)\
+        sphinx-build\
+        -b html\
+        $(strip $(1))\
+        $(strip $(2)))
+endef
+
 define run_tox
     $(TOX) $(1)
 endef
@@ -510,7 +544,7 @@ endef
 beautify: $(BEAUTIFY_SENTINEL)
 
 ## Build all Docker images in project
-build-all: build-miniconda build-mlflow-tracking build-nginx build-postgres build-redis build-restapi build-sklearn build-pytorch build-tensorflow build-tox
+build-all: build-miniconda build-mlflow-tracking build-nginx build-postgres build-redis build-restapi build-sklearn build-pytorch build-sphinx build-tensorflow build-tox
 
 ## Build the base Miniconda Docker image
 build-miniconda: $(CONTAINER_MINICONDA_BASE_BUILD_SENTINEL)
@@ -535,6 +569,9 @@ build-restapi: code-pkg build-miniconda $(CONTAINER_RESTAPI_BUILD_SENTINEL)
 
 ## Build the scikit-learn Docker image
 build-sklearn: build-miniconda $(CONTAINER_SKLEARN_BUILD_SENTINEL)
+
+## Build the Sphinx image
+build-sphinx: $(CONTAINER_SPHINX_BUILD_SENTINEL)
 
 ## Build the Tensorflow Docker image
 build-tensorflow: build-sklearn $(CONTAINER_TENSORFLOW2_CPU_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_SENTINEL)
@@ -575,10 +612,10 @@ examples: $(EXAMPLES_TENSORFLOW_MNIST_SCRIPTS)
 hooks: $(PRE_COMMIT_HOOKS_SENTINEL)
 
 ## Pull latest docker images from the MITRE artifactory and retag
-pull-mitre: $(CONTAINER_TOX_PY37_PULL_SENTINEL) $(CONTAINER_TOX_PY38_PULL_SENTINEL)
+pull-mitre: $(CONTAINER_TOX_PY37_PULL_SENTINEL) $(CONTAINER_TOX_PY38_PULL_SENTINEL) $(CONTAINER_SPHINX_PULL_SENTINEL) $(CONTAINER_SPHINX_PULL_LATEST_SENTINEL)
 
 ## Push docker images to the MITRE artifactory
-push-mitre: $(CONTAINER_TOX_PY37_PUSH_SENTINEL) $(CONTAINER_TOX_PY38_PUSH_SENTINEL)
+push-mitre: $(CONTAINER_TOX_PY37_PUSH_SENTINEL) $(CONTAINER_TOX_PY38_PUSH_SENTINEL) $(CONTAINER_SPHINX_PUSH_SENTINEL) $(CONTAINER_SPHINX_PUSH_LATEST_SENTINEL)
 
 ## Run all tests
 tests: tests-unit tests-integration
@@ -664,6 +701,54 @@ $(CONTAINER_MINICONDA_BASE_SCRIPTS): $(CONTAINER_MINICONDA_BASE_SHELLSCRIPTS_EXT
 	$(call run_argbash,\
 		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
 		$(PROJECT_DIR)/$(CONTAINER_MINICONDA_BASE_INCLUDE_DIR),\
+		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
+
+$(CONTAINER_SPHINX_BUILD_SENTINEL): $(CONTAINER_SPHINX_DOCKERFILE) $(CONTAINER_SPHINX_INCLUDE_FILES) $(CONTAINER_SPHINX_SCRIPTS)
+	$(call make_subdirectory,$(@D))
+	$(call run_build_script,$(CONTAINER_SPHINX_COMPONENT_NAME),$(CONTAINER_SPHINX_VERSION),)
+	$(call save_sentinel_file,$(CONTAINER_SPHINX_PULL_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_SPHINX_PULL_SENTINEL):
+ifndef ARTIFACTORY_PREFIX
+	$(error ARTIFACTORY_PREFIX must be defined.)
+endif
+	$(call make_subdirectory,$(@D))
+	$(call pull_docker_images,$(CONTAINER_SPHINX_IMAGE),$(ARTIFACTORY_PREFIX))
+	$(call save_sentinel_file,$(CONTAINER_SPHINX_BUILD_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_SPHINX_PULL_LATEST_SENTINEL):
+ifndef ARTIFACTORY_PREFIX
+	$(error ARTIFACTORY_PREFIX must be defined.)
+endif
+	$(call make_subdirectory,$(@D))
+	$(call pull_docker_images,$(CONTAINER_SPHINX_IMAGE_LATEST),$(ARTIFACTORY_UNTRUSTED_PREFIX))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_SPHINX_PUSH_SENTINEL):
+ifndef ARTIFACTORY_PREFIX
+	$(error ARTIFACTORY_PREFIX must be defined.)
+endif
+	$(call make_subdirectory,$(@D))
+	$(call push_docker_images,$(CONTAINER_SPHINX_IMAGE),$(ARTIFACTORY_PREFIX))
+	$(call save_sentinel_file,$(CONTAINER_SPHINX_PULL_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_SPHINX_PUSH_LATEST_SENTINEL): $(CONTAINER_SPHINX_PUSH_SENTINEL)
+ifndef ARTIFACTORY_PREFIX
+	$(error ARTIFACTORY_PREFIX must be defined.)
+endif
+	$(call make_subdirectory,$(@D))
+	$(call docker_image_tag,$(CONTAINER_SPHINX_IMAGE),$(CONTAINER_SPHINX_IMAGE_LATEST))
+	$(call push_docker_images,$(CONTAINER_SPHINX_IMAGE_LATEST),$(ARTIFACTORY_UNTRUSTED_PREFIX))
+	$(call save_sentinel_file,$(CONTAINER_SPHINX_PULL_LATEST_SENTINEL))
+	$(call save_sentinel_file,$@)
+
+$(CONTAINER_SPHINX_SCRIPTS): $(CONTAINER_SPHINX_SHELLSCRIPTS_EXT) | $(CONTAINER_SPHINX_INCLUDE_DIR)
+	$(call run_argbash,\
+		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
+		$(PROJECT_DIR)/$(CONTAINER_SPHINX_INCLUDE_DIR),\
 		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
 
 $(CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL): $(CONTAINER_MINICONDA_BASE_DOCKERFILE) $(CONTAINER_MLFLOW_TRACKING_DOCKERFILE) $(CONTAINER_MLFLOW_TRACKING_INCLUDE_FILES) $(CONTAINER_MLFLOW_TRACKING_SCRIPTS)
