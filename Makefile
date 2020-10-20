@@ -130,7 +130,7 @@ else
 endif
 CONDA = conda
 CONDA_CHANNELS = -c defaults -c conda-forge
-CONDA_ENV_BASE := python=3.7.7 pip=20.0.2 setuptools=46.1.3 setuptools-scm=3.5.0 wheel=0.34.2
+CONDA_ENV_BASE := python=3.7 pip setuptools setuptools-scm wheel
 ifeq ($(DETECTED_OS),Darwin)
     CONDA_ENV_BASE +=
 endif
