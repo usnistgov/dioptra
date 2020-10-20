@@ -59,6 +59,7 @@ dependencies:
   - setuptools-scm
   - simplejson
   - six
+  - sphinx
   - testinfra
   - tox
   - tox-conda
@@ -85,13 +86,6 @@ dependencies:
       - gorilla
       - markdown
       - marshmallow
-      - md-tooltips
-      - mdx_include
-      - mkdocs
-      - mkdocs-build-plantuml-plugin
-      - mkdocs-git-revision-date-localized-plugin
-      - mkdocs-material
-      - mkdocs-minify-plugin
       - mlflow
       - mnist
       - plantuml-markdown
@@ -104,6 +98,9 @@ dependencies:
       - rich
       - rq
       - seed-isort-config
+      - sphinx-rtd-theme
+      - sphinx-autodoc-typehints
+      - sphinx-book-theme
       - sqlalchemy
       - sqlparse
       - structlog

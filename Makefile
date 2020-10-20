@@ -119,8 +119,13 @@ CONTAINER_TENSORFLOW2_VERSION = 2.1.0
 CONTAINER_TOX_PY37_IMAGE_TAG = latest
 CONTAINER_TOX_PY38_IMAGE_TAG = latest
 
-DOCS_FILES := $(wildcard $(PROJECT_DOCS_DIR)/**/*.md)
-DOCS_BUILD_DIR = $(PROJECT_BUILD_DIR)/docs
+DOCS_BUILD_DIR = $(PROJECT_DOCS_DIR)/build
+DOCS_SOURCE_DIR = $(PROJECT_DOCS_DIR)/source
+DOCS_FILES := $(wildcard $(DOCS_SOURCE_DIR)/*.py)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/api/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/_static/*)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/_templates/*)
 
 PIP :=
 ifeq ($(DETECTED_OS),Darwin)
@@ -445,10 +450,6 @@ endef
 
 define run_isort
     $(FIND) $(1) -name "*.py" -type f -exec $(ISORT) {} +
-endef
-
-define run_mkdocs
-    $(MKDOCS) $(1)
 endef
 
 define run_mypy
@@ -1021,16 +1022,18 @@ $(CONTAINER_TOX_PY38_SCRIPTS): $(CONTAINER_TOX_PY38_SHELLSCRIPTS_EXT) | $(CONTAI
 		$(PROJECT_DIR)/$(CONTAINER_TOX_PY38_INCLUDE_DIR),\
 		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
 
+$(DOCS_SENTINEL): $(DOCS_FILES)
+	$(call make_subdirectory,$(@D))
+	@rm -rf $(DOCS_BUILD_DIR)
+	$(call run_sphinx_build,$(DOCS_SOURCE_DIR),$(DOCS_BUILD_DIR))
+	@rm -rf $(PROJECT_DOCS_DIR)/mlruns
+	$(call save_sentinel_file,$@)
+
 $(EXAMPLES_TENSORFLOW_MNIST_SCRIPTS): $(EXAMPLES_TENSORFLOW_MNIST_SHELLSCRIPTS_EXT) | $(EXAMPLES_TENSORFLOW_MNIST_DIR)
 	$(call run_argbash,\
 		$(PROJECT_DIR)/$(EXAMPLES_TENSORFLOW_MNIST_DIR),\
 		$(PROJECT_DIR)/$(EXAMPLES_TENSORFLOW_MNIST_DIR),\
 		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(DOCS_SENTINEL): $(DOCS_FILES)
-	$(call make_subdirectory,$(@D))
-	$(call run_mkdocs,build -d $(DOCS_BUILD_DIR))
-	$(call save_sentinel_file,$@)
 
 $(GITLAB_PAGES_SENTINEL): $(GITLAB_PAGES_CI_FILE)
 	$(call make_subdirectory,$(@D))
