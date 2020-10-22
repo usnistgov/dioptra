@@ -1,6 +1,17 @@
-include README.md pyproject.toml setup.py LICENSE mkdocs.yml tox.ini
+include README.md pyproject.toml setup.py LICENSE tox.ini
 
-graft docs
 graft tests
 
-global-exclude __pycache__ *.py[co] .ipynb_checkpoints
+prune .gitlab
+prune docker
+prune examples
+prune src/mitre/securingai/core
+prune src/mitre/securingai/endpoint
+prune src/shellscript
+prune tests/integration
+prune tests/unit/endpoint
+
+global-exclude __pycache__ .DS_Store *.py[co] .ipynb_checkpoints .gitlab* .github* .clog.toml .cz-config.js .dockerignore .editorconfig .flake8 .gitignore .gitlint .markdownlint.json .pre-commit-config.yaml CHANGELOG.md CONTRIBUTING.md environment.yml Makefile mypy.ini
+
+graft docs
+prune docs/build
