@@ -12,6 +12,7 @@
 #
 import os
 import sys
+from datetime import datetime
 
 sys.path.insert(0, os.path.abspath("../../src"))
 
@@ -64,19 +65,28 @@ add_module_names = False
 # a list of builtin themes.
 #
 on_rtd = os.environ.get("READTHEDOCS") == "True"
-if on_rtd:
-    html_theme = "default"
+html_theme = "sphinx_book_theme"
+# if on_rtd:
+#     html_theme = "default"
 
-else:
-    html_theme = "sphinx_rtd_theme"
+# else:
+#     html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-html_context = {
-    "css_files": ["_static/theme_overrides.css"]  # override wide tables in RTD theme
+# html_context = {
+#     "css_files": ["_static/theme_overrides.css"]  # override wide tables in RTD theme
+# }
+
+html_theme_options = {
+    "repository_url": "https://gitlab.mitre.org/secure-ai/securing-ai-lab-components",
+    "repository_branch": "master",
+    "use_repository_button": True,
+    "home_page_in_toc": True,
+    "path_to_docs": "docs/source",
 }
 
 # -- Extension configuration -------------------------------------------------

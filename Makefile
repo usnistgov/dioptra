@@ -123,7 +123,11 @@ DOCS_BUILD_DIR = $(PROJECT_DOCS_DIR)/build
 DOCS_SOURCE_DIR = $(PROJECT_DOCS_DIR)/source
 DOCS_FILES := $(wildcard $(DOCS_SOURCE_DIR)/*.py)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/*.rst)
-DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/api/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/architecture/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/dev-guide/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/overview/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/restapi/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/sdk/*.rst)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/_static/*)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/_templates/*)
 
