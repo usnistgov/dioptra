@@ -15,6 +15,7 @@ test-unit-py37:
     - test-unit
   artifacts:
     paths:
+      - coverage
       - dist
 
 test-unit-py38:
@@ -26,4 +27,5 @@ test-unit-py38:
     - test-unit
   artifacts:
     paths:
+      - coverage
       - dist
