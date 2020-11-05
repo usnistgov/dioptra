@@ -415,6 +415,7 @@ vignettes/*.pdf
 !.mdlrc
 !.pre-commit-config.yaml
 !.readthedocs.yml
+!.rstcheck.cfg
 !.style.yapf
 !.travis.yml
 !docker/**/etc
