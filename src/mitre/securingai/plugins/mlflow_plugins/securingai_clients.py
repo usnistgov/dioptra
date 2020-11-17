@@ -1,7 +1,6 @@
 import datetime
 import os
-import uuid
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import structlog
 from flask import Flask
@@ -10,7 +9,6 @@ from sqlalchemy.exc import IntegrityError
 from mitre.securingai.restapi import create_app
 from mitre.securingai.restapi.app import db
 from mitre.securingai.restapi.models import Experiment, Job
-from mitre.securingai.restapi.shared.job_queue.model import JobStatus
 
 
 ENVVAR_RESTAPI_ENV = "AI_RESTAPI_ENV"
@@ -32,23 +30,29 @@ class SecuringAIDatabaseClient(object):
     def restapi_env(self) -> Optional[str]:
         return os.getenv(ENVVAR_RESTAPI_ENV)
 
-    def get_active_job(self) -> Optional[Job]:
+    def get_active_job(self) -> Optional[Dict[str, Any]]:
         if self.job_id is None:
             return None
 
         with self.app.app_context():
-            return Job.query.get(self.job_id)
+            job: Job = Job.query.get(self.job_id)
+            return {
+                "job_id": job.job_id,
+                "queue": job.queue.name,
+                "depends_on": job.depends_on,
+                "timeout": job.timeout,
+            }
 
-    def update_active_job_status(self, status: JobStatus) -> None:
+    def update_active_job_status(self, status: str) -> None:
         if self.job_id is None:
             return None
 
         self.update_job_status(job_id=self.job_id, status=status)
 
-    def update_job_status(self, job_id: str, status: JobStatus) -> None:
+    def update_job_status(self, job_id: str, status: str) -> None:
         LOGGER.info(
             f"=== Updating job status for job with ID '{self.job_id}' to "
-            f"{status.name} ==="
+            f"{status} ==="
         )
 
         with self.app.app_context():

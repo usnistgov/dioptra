@@ -47,15 +47,15 @@ def job(db: SQLAlchemy) -> Job:
     job: Job = Job(
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
         experiment_id=0,
+        queue_id=1,
         created_on=timestamp,
         last_modified=timestamp,
-        queue=JobQueue.tensorflow_cpu,
         timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         entry_point="main",
         entry_point_kwargs="-P var1=testing",
         depends_on=None,
-        status=JobStatus.queued,
+        status="queued",
     )
 
     db.session.add(job)

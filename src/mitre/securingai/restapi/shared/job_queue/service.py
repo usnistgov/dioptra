@@ -11,8 +11,6 @@ from structlog._config import BoundLoggerLazyProxy
 
 from mitre.securingai.restapi.job.model import Job
 
-from .model import JobStatus, JobQueue
-
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -22,16 +20,16 @@ class RQService(object):
         self._redis = redis
         self._run_mlflow = run_mlflow
 
-    def get_job_status(self, job: Job, **kwargs) -> JobStatus:
+    def get_job_status(self, job: Job, **kwargs) -> str:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         job: Optional[rq.job.Job] = self.get_rq_job(job=job, log=log)
         log.info("Fetching RQ job status", job_id=job.get_id())
 
         if job is None:
-            return JobStatus.finished
+            return "finished"
 
-        return JobStatus[job.get_status()]
+        return job.get_status()
 
     def get_rq_job(self, job: Union[Job, str], **kwargs) -> Optional[rq.job.Job]:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -50,7 +48,7 @@ class RQService(object):
 
     def submit_mlflow_job(
         self,
-        queue: JobQueue,
+        queue: str,
         workflow_uri: str,
         experiment_id: int,
         entry_point: str,
@@ -61,9 +59,7 @@ class RQService(object):
     ) -> rq.job.Job:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        q: rq.Queue = rq.Queue(
-            queue.name, default_timeout="24h", connection=self._redis
-        )
+        q: rq.Queue = rq.Queue(queue, default_timeout="24h", connection=self._redis)
         cmd_kwargs = {
             "workflow_uri": workflow_uri,
             "experiment_id": str(experiment_id),

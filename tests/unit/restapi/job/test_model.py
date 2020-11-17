@@ -5,8 +5,7 @@ import pytest
 import structlog
 from structlog._config import BoundLoggerLazyProxy
 
-from mitre.securingai.restapi.models import Experiment, Job, JobForm, JobFormData
-from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
+from mitre.securingai.restapi.models import Job, JobFormData
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -17,15 +16,15 @@ def job() -> Job:
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
         mlflow_run_id=None,
         experiment_id=1,
+        queue_id=1,
         created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
         last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
-        queue=JobQueue.tensorflow_cpu,
         timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         entry_point="main",
         entry_point_kwargs="-P var1=testing",
         depends_on=None,
-        status=JobStatus.queued,
+        status="queued",
     )
 
 
@@ -34,7 +33,7 @@ def job_form_data(workflow_tar_gz: BinaryIO) -> JobFormData:
     return JobFormData(
         experiment_id=1,
         experiment_name="mnist",
-        queue=JobQueue.tensorflow_cpu,
+        queue="tensorflow_cpu",
         timeout="12h",
         entry_point="main",
         entry_point_kwargs="-P var1=testing",

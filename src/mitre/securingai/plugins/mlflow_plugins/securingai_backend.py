@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import mlflow.tracking as tracking
 import structlog
@@ -17,9 +17,6 @@ from mlflow.projects.utils import (
     MLFLOW_LOCAL_BACKEND_RUN_ID_CONFIG,
     PROJECT_STORAGE_DIR,
 )
-
-from mitre.securingai.restapi.models import Job
-from mitre.securingai.restapi.shared.job_queue.model import JobStatus
 
 from .securingai_clients import SecuringAIDatabaseClient
 from .securingai_tags import SECURINGAI_DEPENDS_ON, SECURINGAI_JOB_ID, SECURINGAI_QUEUE
@@ -113,7 +110,7 @@ def _run_entry_point(command, work_dir, experiment_id, run_id):
             ["cmd", "/c", command], close_fds=True, cwd=work_dir, env=env
         )
 
-    SecuringAIDatabaseClient().update_active_job_status(status=JobStatus.started)
+    SecuringAIDatabaseClient().update_active_job_status(status="started")
     return LocalSubmittedRun(run_id, process)
 
 
@@ -131,20 +128,18 @@ def _wait_for(submitted_run_obj):
 
         if submitted_run_obj.wait():
             _logger.info(f"=== Run (ID '{run_id}') succeeded ===")
-            SecuringAIDatabaseClient().update_active_job_status(
-                status=JobStatus.finished
-            )
+            SecuringAIDatabaseClient().update_active_job_status(status="finished")
             _maybe_set_run_terminated(active_run, "FINISHED")
 
         else:
-            SecuringAIDatabaseClient().update_active_job_status(status=JobStatus.failed)
+            SecuringAIDatabaseClient().update_active_job_status(status="failed")
             _maybe_set_run_terminated(active_run, "FAILED")
             raise ExecutionException("Run (ID '%s') failed" % run_id)
 
     except KeyboardInterrupt:
         _logger.error(f"=== Run (ID '{run_id}') interrupted, cancelling run ===")
         submitted_run_obj.cancel()
-        SecuringAIDatabaseClient().update_active_job_status(status=JobStatus.failed)
+        SecuringAIDatabaseClient().update_active_job_status(status="failed")
         _maybe_set_run_terminated(active_run, "FAILED")
         raise
 
@@ -172,12 +167,14 @@ def _log_workflow_artifact(run_id, workflow_filepath):
 
 
 def _set_securingai_tags(run_id):
-    job: Optional[Job] = SecuringAIDatabaseClient().get_active_job()
+    job: Optional[Dict[str, Any]] = SecuringAIDatabaseClient().get_active_job()
 
     if job is None:
         return None
 
     client = tracking.MlflowClient()
-    client.set_tag(run_id=run_id, key=SECURINGAI_JOB_ID, value=job.job_id)
-    client.set_tag(run_id=run_id, key=SECURINGAI_QUEUE, value=job.queue.name)
-    client.set_tag(run_id=run_id, key=SECURINGAI_DEPENDS_ON, value=job.depends_on)
+    client.set_tag(run_id=run_id, key=SECURINGAI_JOB_ID, value=job.get("job_id", ""))
+    client.set_tag(run_id=run_id, key=SECURINGAI_QUEUE, value=job.get("queue", ""))
+    client.set_tag(
+        run_id=run_id, key=SECURINGAI_DEPENDS_ON, value=job.get("depends_on", "")
+    )

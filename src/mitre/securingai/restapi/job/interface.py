@@ -3,8 +3,6 @@ from typing import Optional
 
 from typing_extensions import TypedDict
 
-from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
-
 
 class JobInterface(TypedDict, total=False):
     job_id: str
@@ -12,14 +10,14 @@ class JobInterface(TypedDict, total=False):
     experiment_id: int
     created_on: datetime.datetime
     last_modified: datetime.datetime
-    queue: JobQueue
+    queue: str
     timeout: Optional[str]
     workflow_uri: str
     entry_point: str
     entry_point_kwargs: Optional[str]
     depends_on: Optional[str]
-    status: JobStatus
+    status: str
 
 
 class JobUpdateInterface(TypedDict, total=False):
-    status: JobStatus
+    status: str

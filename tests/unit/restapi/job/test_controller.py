@@ -13,7 +13,6 @@ from structlog._config import BoundLoggerLazyProxy
 from mitre.securingai.restapi.models import Experiment, Job
 from mitre.securingai.restapi.job.routes import BASE_ROUTE as JOB_BASE_ROUTE
 from mitre.securingai.restapi.job.service import JobService
-from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
 from mitre.securingai.restapi.shared.s3.service import S3Service
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
@@ -48,14 +47,14 @@ def test_job_resource_get(app: Flask, monkeypatch: MonkeyPatch) -> None:
             job_id="4520511d-678b-4966-953e-af2d0edcea32",
             mlflow_run_id="a82982a795824afb926e646277eda152",
             experiment_id=1,
+            queue_id=1,
             created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
             last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
-            queue=JobQueue.tensorflow_cpu,
             timeout="12h",
             workflow_uri="s3://workflow/workflows.tar.gz",
             entry_point="main",
             depends_on=None,
-            status=JobStatus.finished,
+            status="finished",
         )
         return [job]
 
@@ -71,9 +70,9 @@ def test_job_resource_get(app: Flask, monkeypatch: MonkeyPatch) -> None:
                 "jobId": "4520511d-678b-4966-953e-af2d0edcea32",
                 "mlflowRunId": "a82982a795824afb926e646277eda152",
                 "experimentId": 1,
+                "queueId": 1,
                 "createdOn": "2020-08-17T18:46:28.717559",
                 "lastModified": "2020-08-17T18:46:28.717559",
-                "queue": "tensorflow_cpu",
                 "timeout": "12h",
                 "workflowUri": "s3://workflow/workflows.tar.gz",
                 "entryPoint": "main",
@@ -104,15 +103,15 @@ def test_job_resource_post(
             job_id="4520511d-678b-4966-953e-af2d0edcea32",
             mlflow_run_id=None,
             experiment_id=1,
+            queue_id=1,
             created_on=timestamp,
             last_modified=timestamp,
-            queue=JobQueue.tensorflow_cpu,
             timeout="12h",
             workflow_uri="s3://workflow/3db4050001b145a4ae1864e7d1bc7e9a/workflows.tar.gz",
             entry_point="main",
             entry_point_kwargs="-P var1=testing",
             depends_on=None,
-            status=JobStatus.queued,
+            status="queued",
         )
 
     def mockupload(fileobj, bucket, key, *args, **kwargs):
@@ -141,9 +140,9 @@ def test_job_resource_post(
             "jobId": "4520511d-678b-4966-953e-af2d0edcea32",
             "mlflowRunId": None,
             "experimentId": 1,
+            "queueId": 1,
             "createdOn": "2020-08-17T18:46:28.717559",
             "lastModified": "2020-08-17T18:46:28.717559",
-            "queue": "tensorflow_cpu",
             "timeout": "12h",
             "workflowUri": "s3://workflow/3db4050001b145a4ae1864e7d1bc7e9a/workflows.tar.gz",
             "entryPoint": "main",
@@ -162,14 +161,14 @@ def test_job_id_resource_get(app: Flask, monkeypatch: MonkeyPatch,) -> None:
             job_id=job_id,
             mlflow_run_id="a82982a795824afb926e646277eda152",
             experiment_id=1,
+            queue_id=1,
             created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
             last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
-            queue=JobQueue.tensorflow_cpu,
             timeout="12h",
             workflow_uri="s3://workflow/workflows.tar.gz",
             entry_point="main",
             depends_on=None,
-            status=JobStatus.started,
+            status="started",
         )
         return job
 
@@ -185,9 +184,9 @@ def test_job_id_resource_get(app: Flask, monkeypatch: MonkeyPatch,) -> None:
             "jobId": "4520511d-678b-4966-953e-af2d0edcea32",
             "mlflowRunId": "a82982a795824afb926e646277eda152",
             "experimentId": 1,
+            "queueId": 1,
             "createdOn": "2020-08-17T18:46:28.717559",
             "lastModified": "2020-08-17T18:46:28.717559",
-            "queue": "tensorflow_cpu",
             "timeout": "12h",
             "workflowUri": "s3://workflow/workflows.tar.gz",
             "entryPoint": "main",

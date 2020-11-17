@@ -115,15 +115,15 @@ def test_get_rq_job(rq_service: RQService):  # noqa
     job: Job = Job(
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
         experiment_id=1,
+        queue_id=1,
         created_on=timestamp,
         last_modified=timestamp,
-        queue=JobQueue.tensorflow_cpu,
         timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         entry_point="main",
         entry_point_kwargs="-P var1=testing",
         depends_on=None,
-        status=JobStatus.started,
+        status="started",
     )
 
     rq_job = rq_service.get_rq_job(job=job)
@@ -135,7 +135,7 @@ def test_get_rq_job(rq_service: RQService):  # noqa
 @freeze_time("2020-08-17T18:46:28.717559")
 def test_submit_mlflow_job(rq_service: RQService):  # noqa
     rq_job = rq_service.submit_mlflow_job(
-        queue=JobQueue.tensorflow_cpu,
+        queue="tensorflow_cpu",
         timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         experiment_id=1,
@@ -144,7 +144,7 @@ def test_submit_mlflow_job(rq_service: RQService):  # noqa
         depends_on=None,
     )
 
-    assert rq_job.queue == JobQueue.tensorflow_cpu.name
+    assert rq_job.queue == "tensorflow_cpu"
     assert rq_job.timeout == "12h"
     assert rq_job.cmd_kwargs == {
         "workflow_uri": "s3://workflow/workflows.tar.gz",

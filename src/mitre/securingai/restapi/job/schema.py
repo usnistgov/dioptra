@@ -3,9 +3,6 @@ from typing import Any, Dict
 from marshmallow import Schema, fields, post_dump, post_load, pre_dump, validate
 from werkzeug.datastructures import FileStorage
 
-from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
-
-from .interface import JobInterface
 from .model import Job, JobForm, JobFormData
 
 
@@ -15,9 +12,9 @@ class JobSchema(Schema):
     jobId = fields.String(attribute="job_id")
     mlflowRunId = fields.String(attribute="mlflow_run_id", allow_none=True)
     experimentId = fields.Integer(attribute="experiment_id")
+    queueId = fields.Integer(attribute="queue_id")
     createdOn = fields.DateTime(attribute="created_on")
     lastModified = fields.DateTime(attribute="last_modified")
-    queue = fields.String(validate=validate.OneOf(["tensorflow_cpu", "tensorflow_gpu"]))
     timeout = fields.String(attribute="timeout", allow_none=True)
     workflowUri = fields.String(attribute="workflow_uri")
     entryPoint = fields.String(attribute="entry_point")
@@ -29,38 +26,14 @@ class JobSchema(Schema):
 
     @post_load
     def deserialize_object(self, data: Dict[str, Any], many: bool, **kwargs) -> Job:
-        def convert_enum_type(key: str, value: Any) -> Any:
-            if key == "queue":
-                return JobQueue[value]
-
-            if key == "status":
-                return JobStatus[value]
-
-            return value
-
-        job_interface: JobInterface = {
-            k: convert_enum_type(k, v) for k, v in data.items()
-        }
-        return self.__model__(**job_interface)
-
-    @pre_dump
-    def stringify_enum_type(self, data: Job, many: bool, **kwargs) -> Job:
-        if isinstance(data.queue, JobQueue):
-            data.queue = data.queue.name
-
-        if isinstance(data.status, JobStatus):
-            data.status = data.status.name
-
-        return data
+        return self.__model__(**data)
 
 
 class JobFormSchema(Schema):
     __model__ = JobFormData
 
     experiment_name = fields.String(required=True)
-    queue = fields.String(
-        validate=validate.OneOf(["tensorflow_cpu", "tensorflow_gpu"]), required=True
-    )
+    queue = fields.String(required=True)
     timeout = fields.String(allow_none=True)
     entry_point = fields.String(required=True)
     entry_point_kwargs = fields.String(allow_none=True)
@@ -76,7 +49,7 @@ class JobFormSchema(Schema):
 
         return {
             "experiment_name": slugify(data.experiment_name.data),
-            "queue": data.queue.data,
+            "queue": slugify(data.queue.data),
             "timeout": data.timeout.data or None,
             "entry_point": data.entry_point.data,
             "entry_point_kwargs": data.entry_point_kwargs.data or None,
@@ -88,18 +61,12 @@ class JobFormSchema(Schema):
     def serialize_object(
         self, data: Dict[str, Any], many: bool, **kwargs
     ) -> JobFormData:
-        def convert_enum_type(key: str, value: Any) -> Any:
-            if key == "queue":
-                return JobQueue[value]
-
-            return value
-
-        return self.__model__({k: convert_enum_type(k, v) for k, v in data.items()})
+        return self.__model__(**data)
 
 
 job_submit_form_schema = [
     dict(name="experiment_name", type=str, location="form"),
-    dict(name="queue", type=JobQueue, location="form"),
+    dict(name="queue", type=str, location="form"),
     dict(name="timeout", type=str, location="form"),
     dict(name="entry_point", type=str, location="form"),
     dict(name="entry_point_kwargs", type=str, location="form"),

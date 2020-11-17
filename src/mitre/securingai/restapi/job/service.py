@@ -11,6 +11,8 @@ from structlog._config import BoundLoggerLazyProxy
 from werkzeug.utils import secure_filename
 
 from mitre.securingai.restapi.app import db
+from mitre.securingai.restapi.experiment.service import ExperimentService
+from mitre.securingai.restapi.queue.service import QueueService
 from mitre.securingai.restapi.shared.job_queue.service import RQService
 from mitre.securingai.restapi.shared.s3.service import S3Service
 
@@ -29,10 +31,14 @@ class JobService(object):
         job_form_schema: JobFormSchema,
         rq_service: RQService,
         s3_service: S3Service,
+        experiment_service: ExperimentService,
+        queue_service: QueueService,
     ) -> None:
         self._job_form_schema = job_form_schema
         self._rq_service = rq_service
         self._s3_service = s3_service
+        self._experiment_service = experiment_service
+        self._queue_service = queue_service
 
     @staticmethod
     def create(job_form_data: JobFormData, **kwargs) -> Job:
@@ -41,9 +47,9 @@ class JobService(object):
 
         return Job(
             experiment_id=job_form_data["experiment_id"],
+            queue_id=job_form_data["queue_id"],
             created_on=timestamp,
             last_modified=timestamp,
-            queue=job_form_data["queue"],
             timeout=job_form_data.get("timeout"),
             entry_point=job_form_data["entry_point"],
             entry_point_kwargs=job_form_data.get("entry_point_kwargs"),
@@ -63,15 +69,22 @@ class JobService(object):
         return Job.query.get(job_id)
 
     def extract_data_from_form(self, job_form: JobForm, **kwargs) -> JobFormData:
-        from mitre.securingai.restapi.models import Experiment
+        from mitre.securingai.restapi.models import Experiment, Queue
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         job_form_data: JobFormData = self._job_form_schema.dump(job_form)
-        experiment: Experiment = Experiment.query.filter_by(
-            name=job_form_data["experiment_name"], is_deleted=False
-        ).first()
+
+        experiment: Experiment = self._experiment_service.get_by_name(
+            job_form_data["experiment_name"], log=log
+        )
+        queue: Queue = self._queue_service.get_unlocked_by_name(
+            job_form_data["queue"], log=log
+        )
+
         job_form_data["experiment_id"] = experiment.experiment_id
+        job_form_data["queue_id"] = queue.queue_id
+
         return job_form_data
 
     def submit(self, job_form_data: JobFormData, **kwargs) -> Job:
@@ -90,7 +103,7 @@ class JobService(object):
         new_job.workflow_uri = workflow_uri
 
         rq_job: rq.job.Job = self._rq_service.submit_mlflow_job(
-            queue=new_job.queue,
+            queue=job_form_data["queue"],
             workflow_uri=new_job.workflow_uri,
             experiment_id=new_job.experiment_id,
             entry_point=new_job.entry_point,

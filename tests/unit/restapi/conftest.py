@@ -81,3 +81,20 @@ def db(app: Flask) -> SQLAlchemy:
         yield db
         db.drop_all()
         db.session.commit()
+
+
+@pytest.fixture(autouse=True)
+def seed_database(db):
+    from mitre.securingai.restapi.job.model import job_statuses
+
+    db.session.execute(
+        job_statuses.insert(),
+        [
+            {"status": "queued"},
+            {"status": "started"},
+            {"status": "deferred"},
+            {"status": "finished"},
+            {"status": "failed"},
+        ],
+    )
+    db.session.commit()
