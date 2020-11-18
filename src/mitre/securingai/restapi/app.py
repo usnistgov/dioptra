@@ -8,12 +8,23 @@ from flask_migrate import Migrate
 from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
+from sqlalchemy import MetaData
 
 
 LOGGER = structlog.get_logger()
 
 csrf = CSRFProtect()
-db = SQLAlchemy()
+db = SQLAlchemy(
+    metadata=MetaData(
+        naming_convention={
+            "ix": "ix_%(column_0_label)s",
+            "uq": "uq_%(table_name)s_%(column_0_name)s",
+            "ck": "ck_%(table_name)s_%(column_0_name)s",
+            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+            "pk": "pk_%(table_name)s",
+        }
+    )
+)
 migrate = Migrate()
 
 
@@ -41,11 +52,7 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
     db.init_app(app)
 
     with app.app_context():
-        if db.engine.url.drivername == "sqlite":
-            migrate.init_app(app, db, render_as_batch=True)
-
-        else:
-            migrate.init_app(app, db)
+        migrate.init_app(app, db, render_as_batch=True)
 
     @app.route("/health")
     def health():
