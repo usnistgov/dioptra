@@ -1,5 +1,5 @@
 
-FROM postgres:12.3
+FROM postgres:13.0
 
 ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
 ARG PROJECT_COMPONENT

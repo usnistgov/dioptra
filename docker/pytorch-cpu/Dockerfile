@@ -2,10 +2,10 @@
 ARG PROJECT_VERSION
 ARG PROJECT_BUILD_NUMBER
 
-FROM securing-ai/sklearn-py37:${PROJECT_VERSION}-${PROJECT_BUILD_NUMBER}
+FROM securing-ai/sklearn:${PROJECT_VERSION}-${PROJECT_BUILD_NUMBER}
 
-ARG PYTORCH_CPUONLY_VERSION=1.0.0
-ARG PYTORCH_TORCHVISION_VERSION=0.6.1
+ARG PYTORCH_CPUONLY_VERSION=1.0
+ARG PYTORCH_TORCHVISION_VERSION=0.8.1
 
 RUN echo "===> Installing PyTorch environment...." && \
     ${CONDA_DIR}/condabin/conda install -n base -c defaults -c pytorch -q -y \

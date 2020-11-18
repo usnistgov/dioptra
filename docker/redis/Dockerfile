@@ -1,5 +1,5 @@
 
-FROM redis:6.0.6-buster
+FROM redis:6.0.9-buster
 
 ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
 ARG PROJECT_COMPONENT

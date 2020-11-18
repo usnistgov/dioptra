@@ -86,7 +86,7 @@ RUN cd /tmp && \
     rm -rf /tmp/aws
 
 ARG YQ_DIR=/opt/yq
-ARG YQ_VERSION=3.3.2
+ARG YQ_VERSION=3.4.1
 
 RUN echo "===> Installing yq ${YQ_VERSION} to ${YQ_DIR}...." && \
     mkdir -p ${YQ_DIR}/bin && \
@@ -136,18 +136,20 @@ USER ${AI_UID}
 ARG MINICONDA_VERSION
 ARG MINICONDA3_PREFIX=Miniconda3-py37_
 ARG PYTHON_VERSION=default
+ARG SIX_VERSION=1.13.0
 
 RUN echo "===> Installing Miniconda3 version ${MINICONDA_VERSION} to ${CONDA_DIR}...." && \
     cd /tmp && \
     wget -qO "/tmp/${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" "https://repo.continuum.io/miniconda/${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" && \
     bash ${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p ${CONDA_DIR} && \
     rm ${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh && \
-    echo "conda ==${MINICONDA_VERSION}" >> ${CONDA_DIR}/conda-meta/pinned && \
     if [ ! ${PYTHON_VERSION} = 'default' ]; then ${CONDA_DIR}/condabin/conda install -y python=$PYTHON_VERSION; fi && \
-    ${CONDA_DIR}/condabin/conda list python | grep '^python ' | tr -s ' ' | cut -d '.' -f 1,2 | sed 's/$/.*/' >> ${CONDA_DIR}/conda-meta/pinned && \
     ${CONDA_DIR}/condabin/conda install -q -y conda && \
     ${CONDA_DIR}/condabin/conda install -q -y pip && \
     ${CONDA_DIR}/condabin/conda update -q -y --all && \
+    ${CONDA_DIR}/condabin/conda list python | grep '^python ' | tr -s ' ' | cut -d '.' -f 1,2 | sed 's/$/.*/' >> ${CONDA_DIR}/conda-meta/pinned && \
+    ${CONDA_DIR}/condabin/conda install -q -y six=${SIX_VERSION} && \
+    echo "six ${SIX_VERSION}" >> ${CONDA_DIR}/conda-meta/pinned && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
     ${CONDA_DIR}/condabin/conda clean -a -f -y && \

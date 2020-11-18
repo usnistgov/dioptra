@@ -2,16 +2,14 @@
 ARG PROJECT_VERSION
 ARG PROJECT_BUILD_NUMBER
 
-FROM securing-ai/sklearn-py37:${PROJECT_VERSION}-${PROJECT_BUILD_NUMBER}
+FROM securing-ai/sklearn:${PROJECT_VERSION}-${PROJECT_BUILD_NUMBER}
 
-ARG PYTORCH_CUDATOOLKIT_VERSION=10.2
-ARG PYTORCH_TORCHVISION_VERSION=0.6.1
+ARG TENSORFLOW2_VERSION
+ARG TENSORFLOW2_BUILD=h0d30ee6_0
 
-RUN echo "===> Installing PyTorch (GPU) environment...." && \
-    ${CONDA_DIR}/condabin/conda install -n base -c defaults -c pytorch -q -y \
-    cudatoolkit=${PYTORCH_CUDATOOLKIT_VERSION} \
-    pytorch=${PYTORCH_VERSION} \
-    torchvision=${PYTORCH_TORCHVISION_VERSION} && \
+RUN echo "===> Installing Tensorflow (GPU) environment...."; \
+    ${CONDA_DIR}/condabin/conda install -n base -q -y \
+    tensorflow-gpu=${TENSORFLOW2_VERSION}=${TENSORFLOW2_BUILD} && \
     echo "===> Cleaning/pruning directories...." && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
