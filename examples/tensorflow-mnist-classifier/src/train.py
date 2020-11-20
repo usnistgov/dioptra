@@ -252,7 +252,7 @@ def train(
 
     tf.random.set_seed(tensorflow_global_seed)
 
-    mlflow.tensorflow.autolog()
+    mlflow.autolog()
 
     with mlflow.start_run() as active_run:
         mlflow.log_param("entry_point_seed", seed)
