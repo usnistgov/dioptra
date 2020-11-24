@@ -16,6 +16,7 @@ Endpoints
 
    api-endpoint-experiment
    api-endpoint-job
+   api-endpoint-queue
 
 Shared Services
 ---------------
