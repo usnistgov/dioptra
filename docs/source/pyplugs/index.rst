@@ -1,0 +1,4 @@
+.. _pyplugs-index:
+
+Overview
+========
