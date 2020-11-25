@@ -82,6 +82,7 @@ DEPENDENCIES = [
 ]
 PACKAGE_DIR = {"": "src"}
 PACKAGES = [
+    Path("mitre") / "securingai" / "pyplugs",
     Path("mitre") / "securingai" / "restapi",
     Path("mitre") / "securingai" / "plugins" / "mlflow_plugins",
 ]

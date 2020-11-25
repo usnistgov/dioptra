@@ -83,6 +83,7 @@ CODE_BUILD_DIR = $(PROJECT_BUILD_DIR)/dist
 CODE_INTEGRATION_TESTS_DIR = $(PROJECT_TESTS_DIR)/integration
 CODE_UNIT_TESTS_DIR = $(PROJECT_TESTS_DIR)/unit
 CODE_SRC_FILES := $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/pyplugs/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/plugins/*/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*/*/*.py)
@@ -92,8 +93,14 @@ CODE_DB_MIGRATIONS_FILES :=\
     $(PROJECT_SRC_MIGRATIONS_DIR)/README\
     $(PROJECT_SRC_MIGRATIONS_DIR)/script.py.mako
 CODE_DB_MIGRATIONS_FILES += $(wildcard $(PROJECT_SRC_MIGRATIONS_DIR)/versions/*.py)
-CODE_INTEGRATION_TESTS_FILES := $(wildcard $(CODE_INTEGRATION_TESTS_DIR)/**/*.py)
-CODE_UNIT_TESTS_FILES := $(wildcard $(CODE_UNIT_TESTS_DIR)/**/*.py)
+CODE_INTEGRATION_TESTS_FILES := $(wildcard $(CODE_INTEGRATION_TESTS_DIR)/*.py)
+CODE_INTEGRATION_TESTS_FILES += $(wildcard $(CODE_INTEGRATION_TESTS_DIR)/*/*.py)
+CODE_INTEGRATION_TESTS_FILES += $(wildcard $(CODE_INTEGRATION_TESTS_DIR)/*/*/*.py)
+CODE_INTEGRATION_TESTS_FILES += $(wildcard $(CODE_INTEGRATION_TESTS_DIR)/*/*/*/*.py)
+CODE_UNIT_TESTS_FILES := $(wildcard $(CODE_UNIT_TESTS_DIR)/*.py)
+CODE_UNIT_TESTS_FILES += $(wildcard $(CODE_UNIT_TESTS_DIR)/*/*.py)
+CODE_UNIT_TESTS_FILES += $(wildcard $(CODE_UNIT_TESTS_DIR)/*/*/*.py)
+CODE_UNIT_TESTS_FILES += $(wildcard $(CODE_UNIT_TESTS_DIR)/*/*/*/*.py)
 CODE_PACKAGING_FILES := $(DOCS_FILES)
 CODE_PACKAGING_FILES +=\
     $(SETUP_PY_FILE)\
