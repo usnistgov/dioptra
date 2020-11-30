@@ -13,7 +13,7 @@ from werkzeug.utils import secure_filename
 from mitre.securingai.restapi.app import db
 from mitre.securingai.restapi.experiment.service import ExperimentService
 from mitre.securingai.restapi.queue.service import QueueService
-from mitre.securingai.restapi.shared.job_queue.service import RQService
+from mitre.securingai.restapi.shared.rq.service import RQService
 from mitre.securingai.restapi.shared.s3.service import S3Service
 
 from .errors import JobWorkflowUploadError

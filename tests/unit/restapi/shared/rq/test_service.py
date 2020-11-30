@@ -12,7 +12,7 @@ from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 
 from mitre.securingai.restapi.models import Job
-from mitre.securingai.restapi.shared.job_queue.service import RQService
+from mitre.securingai.restapi.shared.rq.service import RQService
 
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()

@@ -8,7 +8,7 @@ from flask_injector import request
 from injector import Binder, Module, provider
 from redis import Redis
 
-from mitre.securingai.restapi.shared.job_queue.service import RQService
+from mitre.securingai.restapi.shared.rq.service import RQService
 
 
 @dataclass
@@ -28,7 +28,7 @@ class RQServiceModule(Module):
 
 def _bind_rq_service_configuration(binder: Binder):
     redis_conn: Redis = Redis.from_url(os.getenv("RQ_REDIS_URI", "redis://"))
-    run_mlflow: str = "mitre.securingai.restapi.shared.task.run_mlflow_task"
+    run_mlflow: str = "mitre.securingai.rq.tasks.run_mlflow_task"
 
     configuration: RQServiceConfiguration = RQServiceConfiguration(
         redis=redis_conn, run_mlflow=run_mlflow,

@@ -47,7 +47,7 @@ def dependency_modules() -> List[Any]:
             interface=RQServiceConfiguration,
             to=RQServiceConfiguration(
                 redis=Redis.from_url("redis://"),
-                run_mlflow="mitre.securingai.restapi.shared.task.service.run_mlflow_task",
+                run_mlflow="mitre.securingai.rq.tasks.run_mlflow_task",
             ),
             scope=request,
         )
