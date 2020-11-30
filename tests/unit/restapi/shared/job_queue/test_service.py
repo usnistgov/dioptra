@@ -12,7 +12,6 @@ from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 
 from mitre.securingai.restapi.models import Job
-from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
 from mitre.securingai.restapi.shared.job_queue.service import RQService
 
 
@@ -160,7 +159,7 @@ def test_submit_dependent_mlflow_jobs(rq_service: RQService):  # noqa
     fgm_job_id: str = str(uuid.uuid4())
 
     rq_train_job = rq_service.submit_mlflow_job(
-        queue=JobQueue.tensorflow_cpu,
+        queue="tensorflow_cpu",
         timeout="2d",
         workflow_uri="s3://workflow/workflows.tar.gz",
         experiment_id=1,
@@ -171,7 +170,7 @@ def test_submit_dependent_mlflow_jobs(rq_service: RQService):  # noqa
     rq_train_job.id = train_job_id
 
     rq_fgm_job = rq_service.submit_mlflow_job(
-        queue=JobQueue.tensorflow_cpu,
+        queue="tensorflow_cpu",
         timeout="12h",
         workflow_uri="s3://workflow/workflows.tar.gz",
         experiment_id=1,

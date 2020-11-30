@@ -13,7 +13,6 @@ from werkzeug.datastructures import FileStorage
 
 from mitre.securingai.restapi.models import Job, JobForm, JobFormData
 from mitre.securingai.restapi.job.service import JobService
-from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
 from mitre.securingai.restapi.shared.job_queue.service import RQService
 from mitre.securingai.restapi.shared.s3.service import S3Service
 

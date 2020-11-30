@@ -12,7 +12,6 @@ from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 
 from mitre.securingai.restapi.models import Job
-from mitre.securingai.restapi.shared.job_queue.model import JobQueue, JobStatus
 from mitre.securingai.restapi.shared.task.service import run_mlflow_task
 
 
@@ -81,7 +80,7 @@ def test_run_mlflow_task(
         return MockCompletedProcess(*args, **kwargs)
 
     job_id: str = job.job_id
-    job_initial_status: JobStatus = job.status
+    job_initial_status: str = job.status
     d: Path = tmp_path / "run_mlflow_task"
     d.mkdir(parents=True)
 
