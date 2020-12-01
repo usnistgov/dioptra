@@ -85,7 +85,6 @@ ARG PYTHON_JSON_LOGGER_VERSION=2.0.1
 ARG PYTZ_VERSION=2020.1
 ARG PYYAML_VERSION=5.3.1
 ARG QUERYSTRING_PARSER_VERSION=1.2.4
-ARG REQUESTS_VERSION=2.24.0
 ARG RICH_VERSION=9.1.0
 ARG REDIS_PY_VERSION=3.5.3
 ARG RQ_VERSION=1.5.2
@@ -129,7 +128,6 @@ RUN echo "===> Installing testbed dependencies into base conda environment...." 
     pytz=${PYTZ_VERSION} \
     pyyaml=${PYYAML_VERSION} \
     redis-py=${REDIS_PY_VERSION} \
-    requests=${REQUESTS_VERSION} \
     scipy=${SCIPY_VERSION} \
     simplejson=${SIMPLEJSON_VERSION} \
     sqlalchemy=${SQLALCHEMY_VERSION} \
@@ -171,22 +169,6 @@ RUN echo "===> Installing testbed dependencies into base conda environment...." 
     echo "===> Fixing directory permissions...." && \
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
-ARG PROJECT_VERSION
-
-COPY build/dist/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl /etc/${PROJECT_PREFIX}/docker/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl
-
-RUN echo "===> Installing Securing AI code module...." && \
-    ${CONDA_DIR}/condabin/conda run -n base \
-    pip install --no-cache-dir --no-deps \
-    /etc/${PROJECT_PREFIX}/docker/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl && \
-    echo "===> Cleaning/pruning directories...." && \
-    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
-    find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
-    ${CONDA_DIR}/condabin/conda clean -afy && \
-    rm -rf /home/${AI_USER}/.cache/yarn && \
-    echo "===> Fixing directory permissions...." && \
-    fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
-
 RUN ${CONDA_DIR}/condabin/conda config --set channel_priority flexible
 
 USER root
@@ -214,17 +196,11 @@ COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh /etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
-COPY src/migrations /etc/${PROJECT_PREFIX}/docker/migrations
 
-RUN chown -R ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/migrations && \
-    chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-sklearn.sh && \
+RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-sklearn.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
-    chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations && \
-    chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations/versions && \
-    find /etc/${PROJECT_PREFIX}/docker/migrations -follow -type f -exec chmod 0644 {} \; && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/migrations ${AI_WORKDIR}/migrations && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-sklearn.sh /usr/local/bin/entrypoint.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/restrict-network-access.sh /usr/local/bin/restrict-network-access.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh /usr/local/bin/run-mlflow-job.sh && \

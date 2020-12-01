@@ -136,6 +136,8 @@ USER ${AI_UID}
 ARG MINICONDA_VERSION
 ARG MINICONDA3_PREFIX=Miniconda3-py37_
 ARG PYTHON_VERSION=default
+ARG BUILD_VERSION=0.1.0
+ARG REQUESTS_VERSION=2.25.0
 ARG SIX_VERSION=1.13.0
 
 RUN echo "===> Installing Miniconda3 version ${MINICONDA_VERSION} to ${CONDA_DIR}...." && \
@@ -150,6 +152,8 @@ RUN echo "===> Installing Miniconda3 version ${MINICONDA_VERSION} to ${CONDA_DIR
     ${CONDA_DIR}/condabin/conda list python | grep '^python ' | tr -s ' ' | cut -d '.' -f 1,2 | sed 's/$/.*/' >> ${CONDA_DIR}/conda-meta/pinned && \
     ${CONDA_DIR}/condabin/conda install -q -y six=${SIX_VERSION} && \
     echo "six ${SIX_VERSION}" >> ${CONDA_DIR}/conda-meta/pinned && \
+    ${CONDA_DIR}/condabin/conda install -q -y packaging pyparsing requests=${REQUESTS_VERSION} setuptools wheel toml twine && \
+    ${CONDA_DIR}/condabin/conda run -n base pip install --no-cache-dir build==${BUILD_VERSION} && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
     ${CONDA_DIR}/condabin/conda clean -a -f -y && \

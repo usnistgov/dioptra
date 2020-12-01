@@ -73,7 +73,6 @@ ARG PYTZ_VERSION=2020.1
 ARG PYYAML_VERSION=5.3.1
 ARG PYZMQ_VERSION=19.0.2
 ARG QUERYSTRING_PARSER_VERSION=1.2.4
-ARG REQUESTS_VERSION=2.24.0
 ARG REDIS_PY_VERSION=3.5.3
 ARG RQ_VERSION=1.5.2
 ARG SCIPY_VERSION=1.4.1
@@ -107,7 +106,6 @@ RUN echo "===> Installing dependencies into base conda environment...." && \
     pyyaml=${PYYAML_VERSION} \
     redis-py=${REDIS_PY_VERSION} \
     pyzmq=${PYZMQ_VERSION} \
-    requests=${REQUESTS_VERSION} \
     scipy=${SCIPY_VERSION} \
     simplejson=${SIMPLEJSON_VERSION} \
     sqlalchemy=${SQLALCHEMY_VERSION} \
@@ -182,7 +180,7 @@ USER ${AI_UID}
 
 ARG PROJECT_VERSION
 
-COPY build/dist/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl /etc/${PROJECT_PREFIX}/docker/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl
+COPY dist/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl /etc/${PROJECT_PREFIX}/docker/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl
 
 RUN echo "===> Installing Securing AI code module...." && \
     ${CONDA_DIR}/condabin/conda run -n base \
