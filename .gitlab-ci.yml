@@ -1,6 +1,3 @@
-variables:
-  PROJECT_BUILD_DIR: "${CI_PROJECT_DIR}/.tox/dist"
-
 stages:
   - build
   - test
@@ -20,14 +17,9 @@ test-unit-py37:
   image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py37:latest
   stage: test
   script:
-    - tox -e py37
-    - mv .tox/dist dist
+    - tox -e clean,pytest
   tags:
     - test-unit
-  artifacts:
-    paths:
-      - coverage
-      - dist
   cache:
     key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
     paths:
@@ -37,14 +29,72 @@ test-unit-py38:
   image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
   stage: test
   script:
-    - tox -e py38
-    - mv .tox/dist dist
+    - tox -e clean,pytest
   tags:
     - test-unit
   artifacts:
     paths:
       - coverage
-      - dist
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+
+test-black:
+  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
+  stage: test
+  script:
+    - tox -e black
+  tags:
+    - test-unit
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+
+test-isort:
+  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
+  stage: test
+  script:
+    - tox -e isort
+  tags:
+    - test-unit
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+
+test-flake8:
+  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
+  stage: test
+  script:
+    - tox -e flake8
+  tags:
+    - test-unit
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+
+test-mypy:
+  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
+  stage: test
+  script:
+    - tox -e mypy
+  tags:
+    - test-unit
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+
+test-gitlint:
+  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
+  stage: test
+  script:
+    - tox -e gitlint
+  tags:
+    - test-unit
   cache:
     key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
     paths:
