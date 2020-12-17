@@ -19,4 +19,4 @@ regex = ^release
 ignore = all
 
 [contrib-title-conventional-commits]
-types = build,ci,chore,docs,feat,fix,perf,refactor,revert,style,test
+types = build,ci,chore,docs,examples,feat,fix,perf,refactor,revert,style,test

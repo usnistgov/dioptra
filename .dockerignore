@@ -1,14 +1,18 @@
 .clog.toml
 .cz-config.js
 .envrc
+.flake8
 .gitlab-ci.yml
 .gitlint
 .isort.cfg
+.markdownlint.json
 .pre-commit-config.yaml
+.rstcheck.cfg
 app-data
 bin
 build
 ci
+coverage
 data
 docs
 examples
@@ -41,6 +45,7 @@ wheels
 **/.tox
 **/.virtual_documents
 **/.vscode
+**/.vscode-cache
 **/*.egg-info
 **/*.m4
 **/*.md
@@ -48,4 +53,3 @@ wheels
 **/*.pyo
 
 !README*.md
-!build/dist/*.whl

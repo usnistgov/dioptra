@@ -13,23 +13,27 @@ dependencies:
   - cython
   - dask
   - docker-py
+  - docopt=0.6.*
+  - docutils=0.16
   - entrypoints
-  - flake8
+  - flake8>=3.8.0
   - gitpython
   - gunicorn
   - h5py
   - ipython
-  - isort
+  - isort>=5.6.0
   - jinja2
   - joblib
   - jupyter
   - markupsafe
   - matplotlib
   - mypy
+  - networkx=2.4
   - nose
   - numexpr
   - numpy
   - pandas
+  - parso>=0.8.0
   - passlib
   - pillow
   - pip
@@ -38,33 +42,41 @@ dependencies:
   - psycopg2
   - pycodestyle
   - pydocstyle
+  - pymongo=3.11.*
   - pymysql
   - pyodbc
   - pytables
   - python-dateutil
+  - python-jsonrpc-server=0.3.*
   - python=3.8
   - pytz
-  - pyyaml=5.3.0
+  - pyyaml=5.3.*
   - pyzmq
   - redis-py
-  - requests
+  - requests=2.24.*
   - scipy=1.4.1
   - setuptools
-  - setuptools-scm
   - simplejson
   - six
   - sphinx
+  - toml=0.10.*
   - twine
+  - ujson=1.35
+  - watchdog=0.10.*
   - werkzeug
   - wheel
   - pip:
-      - -e .
       - adversarial-robustness-toolbox
       - alembic==1.4.1
+      - black>=20.8b1
+      - black[d]
       - boto3
+      - build
       - commitizen
       - databricks-cli
       - docformatter
+      - fett~=0.3.2
+      - flake8-bugbear
       - Flask
       - flask-accepts
       - Flask-Injector
@@ -73,9 +85,7 @@ dependencies:
       - flask-restx
       - Flask-SQLAlchemy
       - Flask-WTF
-      - flake8-bugbear
       - freezegun
-      - ghp-import
       - gorilla
       - markdown
       - marshmallow
@@ -87,9 +97,10 @@ dependencies:
       - prometheus-flask-exporter
       - pyarrow
       - pymdown-extensions
-      - pytest
       - pytest-cov
       - pytest-datadir
+      - pytest-testinfra
+      - pytest>=5.*,<6
       - python-json-logger
       - querystring-parser
       - recommonmark
@@ -98,15 +109,15 @@ dependencies:
       - rstcheck
       - scikit-learn==0.22.2
       - seed-isort-config
-      - sphinx-rtd-theme
+      - snooty
       - sphinx-autobuild
       - sphinx-autodoc-typehints
       - sphinx-book-theme
+      - sphinx-rtd-theme
+      - sqlalchemy-stubs
       - sqlalchemy==1.3.13
       - sqlparse
       - structlog
       - tabulate
-      - testinfra
       - tox
-      - tox-conda
-      - typing-extensions
+      - typing-extensions~=3.7.4.1

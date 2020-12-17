@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 88
-target-version = ['py37','py38']
+target-version = ['py37', 'py38']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -24,13 +24,18 @@ exclude = '''
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.0.0"
-files = [
-    "Makefile:PROJECT_VERSION =",
+changelog_file = "CHANGELOG.md"
+changelog_incremental = true
+changelog_start_rev = "v0.0.0"
+version_files = [
+    "src/mitre/securingai/mlflow_plugins/__version__.py",
+    "src/mitre/securingai/pyplugs/__version__.py",
+    "src/mitre/securingai/restapi/__version__.py",
+    "src/mitre/securingai/rq/__version__.py",
+    "docs/source/conf.py:release",
+    "Makefile:PROJECT_VERSION",
     "pyproject.toml:version",
-    "README.md:securing-ai/tensorflow2-cpu-py37:",
-    "README.md:securing-ai/tensorflow2-gpu-py37:",
-    "src/securingai/ml_model_endpoint/app.py:version=",
-    "setup.py:RELEASE =",
+    "setup.cfg:version",
 ]
 style = [
     ["qmark", "fg:#ff9d00 bold"],
@@ -42,7 +47,10 @@ style = [
     ["separator", "fg:#cc5454"],
     ["instruction", ""],
     ["text", ""],
-    ["disabled", "fg:#858585 italic"]
+    ["disabled", "fg:#858585 italic"],
 ]
 tag_format = "v$major.$minor.$patch"
 bump_message = "release $current_version → $new_version"
+
+[tool.isort]
+profile = "black"

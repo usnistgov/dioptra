@@ -13,6 +13,7 @@
     "MD024": {
         "allow_different_nesting": true
     },
+    "MD025": false,
     "MD030": {
         "ul_single": 3,
         "ol_single": 2,
@@ -24,5 +25,6 @@
         "style": "---"
     },
     "MD036": false,
+    "MD041": false,
     "MD046": false
 }
