@@ -1,4 +1,4 @@
-.PHONY: beautify build-all build-miniconda build-mlflow-tracking build-nginx build-postgres build-pytorch build-redis build-restapi build-sklearn build-sphinx build-tensorflow build-tox clean code-check code-pkg code-publish conda-create conda-update docs docs-publish help hooks pull-mitre push-mitre tests tests-integration tests-unit tox
+.PHONY: beautify build-all build-miniconda build-mlflow-tracking build-nginx build-postgres build-pytorch build-pytorch-cpu build-pytorch-gpu build-redis build-restapi build-sklearn build-sphinx build-tensorflow build-tensorflow-cpu build-tensorflow-gpu build-tox clean code-check code-pkg conda-env docs help hooks pull-mitre push-mitre tests tests-integration tests-unit tox
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -O extglob -o pipefail -c
@@ -11,18 +11,20 @@ MAKEFLAGS += --no-builtin-rules
 #################################################################################
 
 ifeq ($(OS),Windows_NT)
-    DETECTED_OS := Windows
+DETECTED_OS := Windows
 else
-    DETECTED_OS := $(shell sh -c "uname 2>/dev/null || echo Unknown")
+DETECTED_OS := $(shell sh -c "uname 2>/dev/null || echo Unknown")
 endif
 
 ifeq ($(DETECTED_OS),Darwin)
-    CORES = $(shell sysctl -n hw.physicalcpu_max)
+CORES = $(shell sysctl -n hw.physicalcpu_max)
 else ifeq ($(DETECTED_OS),Linux)
-    CORES = $(shell lscpu -p | egrep -v '^\#' | sort -u -t, -k 2,4 | wc -l)
+CORES = $(shell lscpu -p | egrep -v '^\#' | sort -u -t, -k 2,4 | wc -l)
 else
-    CORES = 1
+CORES = 1
 endif
+
+COMMA := ,
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = securing-ai-lab-components
@@ -31,62 +33,51 @@ PROJECT_PREFIX = securing-ai
 PROJECT_BUILD_DIR = build
 PROJECT_DOCS_DIR = docs
 PROJECT_DOCKER_DIR = docker
-PROJECT_EXAMPLES_DIR = examples
-PROJECT_IMAGES_LATEST :=\
-    $(CONTAINER_MINICONDA_BASE_IMAGE)\
-	$(CONTAINER_MLFLOW_TRACKING_IMAGE)\
-	$(CONTAINER_NGINX_IMAGE)\
-	$(CONTAINER_POSTGRES_IMAGE)\
-	$(CONTAINER_RESTAPI_IMAGE)\
-	$(CONTAINER_SKLEARN_IMAGE)\
-	$(CONTAINER_PYTORCH_CPU_IMAGE)\
-	$(CONTAINER_PYTORCH_GPU_IMAGE)\
-	$(CONTAINER_TENSORFLOW2_CPU_IMAGE)\
-	$(CONTAINER_TENSORFLOW2_GPU_IMAGE)
 PROJECT_SRC_DIR = src
 PROJECT_SRC_MIGRATIONS_DIR = $(PROJECT_SRC_DIR)/migrations
 PROJECT_SRC_MITRE_DIR = $(PROJECT_SRC_DIR)/mitre
 PROJECT_SRC_SECURINGAI_DIR = $(PROJECT_SRC_MITRE_DIR)/securingai
-PROJECT_SRC_ENDPOINT_DIR = $(PROJECT_SRC_SECURINGAI_DIR)/endpoint
 PROJECT_SRC_SHELLSCRIPTS_DIR = $(PROJECT_SRC_DIR)/shellscript
 PROJECT_TESTS_DIR = tests
 
 BLACK = black
 COPY = cp
 DOCKER = docker
-DOCKER_COMPOSE = docker-compose
 FIND = find
 FLAKE8 = flake8
 FLASK = flask
-GHP_IMPORT = ghp-import
 GIT = git
 ISORT = isort
-MKDOCS = mkdocs
 MV = mv
+MYPY = mypy
 PRE_COMMIT = pre-commit
 PY ?= python3.8
 PYTEST = pytest
 RM = rm
-SEED_ISORT_CONFIG = seed-isort-config
 TOX = tox
 
 GITLAB_CI_FILE = .gitlab-ci.yml
-ISORT_CONFIG_FILE = .isort.cfg
 MAKEFILE_FILE = Makefile
 PRE_COMMIT_CONFIG_FILE = .pre-commit-config.yaml
-SETUP_PY_FILE = setup.py
+SETUP_CFG_FILE = setup.cfg
 TOX_CONFIG_FILE = tox.ini
 
 CODE_PKG_NAME = mitre-securing-ai
 CODE_PKG_VERSION = $(PROJECT_VERSION)
-CODE_BUILD_DIR = $(PROJECT_BUILD_DIR)/dist
+CODE_BUILD_DIR = dist
+CODE_DOT_TOX_DIR = .tox
+CODE_PIP_CACHE_DIR = .pip-cache
 CODE_INTEGRATION_TESTS_DIR = $(PROJECT_TESTS_DIR)/integration
 CODE_UNIT_TESTS_DIR = $(PROJECT_TESTS_DIR)/unit
-CODE_SRC_FILES := $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*.py)
+CODE_TOX_PY37_PIP_CACHE_DIR = $(CODE_DOT_TOX_DIR)/pip-cache-py37
+CODE_TOX_PY38_PIP_CACHE_DIR = $(CODE_DOT_TOX_DIR)/pip-cache-py38
+CODE_SRC_FILES := $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/mlflow_plugins/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/pyplugs/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/plugins/*/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*/*/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/rq/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/rq/*/*.py)
 CODE_DB_MIGRATIONS_FILES :=\
     $(PROJECT_SRC_MIGRATIONS_DIR)/alembic.ini\
     $(PROJECT_SRC_MIGRATIONS_DIR)/env.py\
@@ -101,32 +92,30 @@ CODE_UNIT_TESTS_FILES := $(wildcard $(CODE_UNIT_TESTS_DIR)/*.py)
 CODE_UNIT_TESTS_FILES += $(wildcard $(CODE_UNIT_TESTS_DIR)/*/*.py)
 CODE_UNIT_TESTS_FILES += $(wildcard $(CODE_UNIT_TESTS_DIR)/*/*/*.py)
 CODE_UNIT_TESTS_FILES += $(wildcard $(CODE_UNIT_TESTS_DIR)/*/*/*/*.py)
-CODE_PACKAGING_FILES := $(DOCS_FILES)
-CODE_PACKAGING_FILES +=\
-    $(SETUP_PY_FILE)\
+CODE_PACKAGING_FILES =\
+    $(DOCS_FILES)\
+    $(SETUP_CFG_FILE)\
     $(TOX_CONFIG_FILE)\
     LICENSE\
     MANIFEST.in\
     pyproject.toml
-CODE_DISTRIBUTION_FILES :=\
+CODE_DISTRIBUTION_FILES =\
     $(CODE_BUILD_DIR)/$(CODE_PKG_NAME)-$(CODE_PKG_VERSION).tar.gz\
     $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
 
 CONTAINER_OS_VERSION = focal
 CONTAINER_OS_VERSION_NUMBER = 20.04
-CONTAINER_OS_BUILD_NUMBER = 20201008
-CONTAINER_BUILD_NUMBER = 2
+CONTAINER_OS_BUILD_NUMBER = 20201106
+CONTAINER_BUILD_NUMBER = 3
 CONTAINER_IMAGE_TAG = $(PROJECT_VERSION)-$(CONTAINER_BUILD_NUMBER)
-CONTAINER_IBM_ART_VERSION = 1.4.2
-CONTAINER_MINICONDA_VERSION = 4.8.3
+CONTAINER_IBM_ART_VERSION = 1.5.0
+CONTAINER_MINICONDA_VERSION = 4.9.2
 CONTAINER_SPHINX_VERSION = 3.3.1
 CONTAINER_MLFLOW_VERSION = 1.12.1
-CONTAINER_PREFECT_VERSION = 0.13.16
-CONTAINER_PYTORCH_VERSION = 1.7.0
+CONTAINER_PREFECT_VERSION = 0.13.19
+CONTAINER_PYTORCH_VERSION = 1.7.1
 CONTAINER_SKLEARN_VERSION = 0.22.2
 CONTAINER_TENSORFLOW2_VERSION = 2.1.0
-CONTAINER_TOX_PY37_IMAGE_TAG = latest
-CONTAINER_TOX_PY38_IMAGE_TAG = latest
 
 DOCS_BUILD_DIR = $(PROJECT_DOCS_DIR)/build
 DOCS_SOURCE_DIR = $(PROJECT_DOCS_DIR)/source
@@ -148,8 +137,8 @@ else
     PIP += pip
 endif
 CONDA = conda
-CONDA_CHANNELS = -c defaults -c conda-forge
-CONDA_ENV_BASE := python=3.8 pip setuptools setuptools-scm wheel
+CONDA_CHANNELS = -c defaults
+CONDA_ENV_BASE := python=3.8 pip setuptools wheel
 ifeq ($(DETECTED_OS),Darwin)
     CONDA_ENV_BASE +=
 endif
@@ -157,19 +146,9 @@ CONDA_ENV_FILE = environment.yml
 CONDA_ENV_NAME = $(PROJECT_NAME)
 CONDA_ENV_PIP =
 
-GITLAB_PAGES_BRANCH = gl-pages
-GITLAB_PAGES_BUILD_DIR = $(PROJECT_BUILD_DIR)/site
-GITLAB_PAGES_IMPORT_OPTS =\
-    -m "docs: publish ($(shell date '+%Y-%m-%dT%H:%M:%S%z'))"
-
 ARTIFACTORY_PREFIX = artifacts.mitre.org:8200
 ARTIFACTORY_UNTRUSTED_PREFIX = $(ARTIFACTORY_PREFIX)/untrusted-mitrewide-overwritable
 
-CONTAINER_MINICONDA_BASE_COMPONENT_NAME = miniconda-base
-CONTAINER_MINICONDA_BASE_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_MINICONDA_BASE_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_MINICONDA_BASE_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_MINICONDA_BASE_COMPONENT_NAME)
-CONTAINER_MINICONDA_BASE_INCLUDE_DIR = $(CONTAINER_MINICONDA_BASE_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_MINICONDA_BASE_DOCKERFILE = $(CONTAINER_MINICONDA_BASE_DIR)/Dockerfile
 CONTAINER_MINICONDA_BASE_INCLUDE_FILES =\
     $(CONTAINER_MINICONDA_BASE_INCLUDE_DIR)/aws-config\
     $(CONTAINER_MINICONDA_BASE_INCLUDE_DIR)/bash.bashrc\
@@ -179,205 +158,68 @@ CONTAINER_MINICONDA_BASE_SCRIPTS =\
     $(CONTAINER_MINICONDA_BASE_INCLUDE_DIR)/install-python-modules.sh\
     $(CONTAINER_MINICONDA_BASE_INCLUDE_DIR)/s3-cp.sh\
     $(CONTAINER_MINICONDA_BASE_INCLUDE_DIR)/unpack-archive.sh
-CONTAINER_MINICONDA_BASE_SHELLSCRIPTS_EXT = $(CONTAINER_MINICONDA_BASE_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_SPHINX_COMPONENT_NAME = sphinx
-CONTAINER_SPHINX_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_SPHINX_COMPONENT_NAME):$(CONTAINER_SPHINX_VERSION)
-CONTAINER_SPHINX_IMAGE_LATEST = $(PROJECT_PREFIX)/$(CONTAINER_SPHINX_COMPONENT_NAME):latest
-CONTAINER_SPHINX_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_SPHINX_COMPONENT_NAME)
-CONTAINER_SPHINX_INCLUDE_DIR = $(CONTAINER_SPHINX_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_SPHINX_DOCKERFILE = $(CONTAINER_SPHINX_DIR)/Dockerfile
-CONTAINER_SPHINX_INCLUDE_FILES =
-CONTAINER_SPHINX_SCRIPTS =
-CONTAINER_SPHINX_SHELLSCRIPTS_EXT = $(CONTAINER_SPHINX_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME = mlflow-tracking
-CONTAINER_MLFLOW_TRACKING_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_MLFLOW_TRACKING_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME)
-CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR = $(CONTAINER_MLFLOW_TRACKING_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_MLFLOW_TRACKING_DOCKERFILE = $(CONTAINER_MLFLOW_TRACKING_DIR)/Dockerfile
 CONTAINER_MLFLOW_TRACKING_INCLUDE_FILES =
 CONTAINER_MLFLOW_TRACKING_SCRIPTS =\
     $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/entrypoint-mlflow-tracking.sh\
     $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/s3-mb.sh
-CONTAINER_MLFLOW_TRACKING_SHELLSCRIPTS_EXT = $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_NGINX_COMPONENT_NAME = nginx
-CONTAINER_NGINX_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_NGINX_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_NGINX_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_NGINX_COMPONENT_NAME)
-CONTAINER_NGINX_INCLUDE_DIR = $(CONTAINER_NGINX_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_NGINX_DOCKERFILE = $(CONTAINER_NGINX_DIR)/Dockerfile
 CONTAINER_NGINX_INCLUDE_FILES =\
     $(CONTAINER_NGINX_INCLUDE_DIR)/default.conf\
     $(CONTAINER_NGINX_INCLUDE_DIR)/nginx.conf
 CONTAINER_NGINX_SCRIPTS =\
     $(CONTAINER_NGINX_INCLUDE_DIR)/entrypoint-nginx.sh\
     $(CONTAINER_NGINX_INCLUDE_DIR)/secure-container.sh
-CONTAINER_NGINX_SHELLSCRIPTS_EXT = $(CONTAINER_NGINX_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_POSTGRES_COMPONENT_NAME = postgres
-CONTAINER_POSTGRES_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_POSTGRES_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_POSTGRES_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_POSTGRES_COMPONENT_NAME)
-CONTAINER_POSTGRES_INCLUDE_DIR = $(CONTAINER_POSTGRES_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_POSTGRES_DOCKERFILE = $(CONTAINER_POSTGRES_DIR)/Dockerfile
-CONTAINER_POSTGRES_INCLUDE_FILES =
-CONTAINER_POSTGRES_SCRIPTS =
-CONTAINER_POSTGRES_SHELLSCRIPTS_EXT = $(CONTAINER_POSTGRES_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_REDIS_COMPONENT_NAME = redis
-CONTAINER_REDIS_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_REDIS_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_REDIS_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_REDIS_COMPONENT_NAME)
-CONTAINER_REDIS_INCLUDE_DIR = $(CONTAINER_REDIS_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_REDIS_DOCKERFILE = $(CONTAINER_REDIS_DIR)/Dockerfile
-CONTAINER_REDIS_INCLUDE_FILES =
-CONTAINER_REDIS_SCRIPTS =
-CONTAINER_REDIS_SHELLSCRIPTS_EXT = $(CONTAINER_REDIS_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_RESTAPI_COMPONENT_NAME = restapi
-CONTAINER_RESTAPI_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_RESTAPI_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_RESTAPI_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_RESTAPI_COMPONENT_NAME)
-CONTAINER_RESTAPI_INCLUDE_DIR = $(CONTAINER_RESTAPI_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_RESTAPI_DOCKERFILE = $(CONTAINER_RESTAPI_DIR)/Dockerfile
-CONTAINER_RESTAPI_INCLUDE_FILES :=\
-    $(PROJECT_BUILD_DIR)/dist/mitre_securing_ai-$(PROJECT_VERSION)-py3-none-any.whl\
+CONTAINER_RESTAPI_INCLUDE_FILES =\
+    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl\
     $(CONTAINER_RESTAPI_INCLUDE_DIR)/gunicorn.conf.py\
     $(CONTAINER_RESTAPI_INCLUDE_DIR)/uwsgi.ini\
+    $(CODE_DB_MIGRATIONS_FILES)\
     wsgi.py
-CONTAINER_RESTAPI_INCLUDE_FILES += $(CODE_DB_MIGRATIONS_FILES)
 CONTAINER_RESTAPI_SCRIPTS =\
     $(CONTAINER_RESTAPI_INCLUDE_DIR)/entrypoint-restapi.sh\
     $(CONTAINER_RESTAPI_INCLUDE_DIR)/secure-container.sh
-CONTAINER_RESTAPI_SHELLSCRIPTS_EXT = $(CONTAINER_RESTAPI_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_SKLEARN_COMPONENT_NAME = sklearn
-CONTAINER_SKLEARN_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_SKLEARN_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_SKLEARN_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_SKLEARN_COMPONENT_NAME)
-CONTAINER_SKLEARN_INCLUDE_DIR = $(CONTAINER_SKLEARN_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_SKLEARN_DOCKERFILE = $(CONTAINER_SKLEARN_DIR)/Dockerfile
-CONTAINER_SKLEARN_INCLUDE_FILES :=\
-    $(PROJECT_BUILD_DIR)/dist/mitre_securing_ai-$(PROJECT_VERSION)-py3-none-any.whl
-CONTAINER_SKLEARN_INCLUDE_FILES += $(CODE_DB_MIGRATIONS_FILES)
+CONTAINER_SKLEARN_INCLUDE_FILES :=
 CONTAINER_SKLEARN_SCRIPTS =\
     $(CONTAINER_SKLEARN_INCLUDE_DIR)/entrypoint-sklearn.sh\
     $(CONTAINER_SKLEARN_INCLUDE_DIR)/restrict-network-access.sh\
     $(CONTAINER_SKLEARN_INCLUDE_DIR)/run-mlflow-job.sh\
     $(CONTAINER_SKLEARN_INCLUDE_DIR)/secure-container.sh
-CONTAINER_SKLEARN_SHELLSCRIPTS_EXT = $(CONTAINER_SKLEARN_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_PYTORCH_CPU_COMPONENT_NAME = pytorch-cpu
-CONTAINER_PYTORCH_CPU_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_PYTORCH_CPU_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_PYTORCH_CPU_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_PYTORCH_CPU_COMPONENT_NAME)
-CONTAINER_PYTORCH_CPU_INCLUDE_DIR = $(CONTAINER_PYTORCH_CPU_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_PYTORCH_CPU_DOCKERFILE = $(CONTAINER_PYTORCH_CPU_DIR)/Dockerfile
-CONTAINER_PYTORCH_CPU_INCLUDE_FILES =
+CONTAINER_SPHINX_INCLUDE_FILES =
+CONTAINER_SPHINX_SCRIPTS =
+CONTAINER_POSTGRES_INCLUDE_FILES =
+CONTAINER_POSTGRES_SCRIPTS =
+CONTAINER_REDIS_INCLUDE_FILES =
+CONTAINER_REDIS_SCRIPTS =
+CONTAINER_PYTORCH_CPU_INCLUDE_FILES =\
+    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
 CONTAINER_PYTORCH_CPU_SCRIPTS =
-CONTAINER_PYTORCH_CPU_SHELLSCRIPTS_EXT = $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_PYTORCH_GPU_COMPONENT_NAME = pytorch-gpu
-CONTAINER_PYTORCH_GPU_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_PYTORCH_GPU_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_PYTORCH_GPU_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_PYTORCH_GPU_COMPONENT_NAME)
-CONTAINER_PYTORCH_GPU_INCLUDE_DIR = $(CONTAINER_PYTORCH_GPU_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_PYTORCH_GPU_DOCKERFILE = $(CONTAINER_PYTORCH_GPU_DIR)/Dockerfile
-CONTAINER_PYTORCH_GPU_INCLUDE_FILES =
+CONTAINER_PYTORCH_GPU_INCLUDE_FILES =\
+    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
 CONTAINER_PYTORCH_GPU_SCRIPTS =
-CONTAINER_PYTORCH_GPU_SHELLSCRIPTS_EXT = $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_TENSORFLOW2_CPU_COMPONENT_NAME = tensorflow2-cpu
-CONTAINER_TENSORFLOW2_CPU_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_TENSORFLOW2_CPU_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_TENSORFLOW2_CPU_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_TENSORFLOW2_CPU_COMPONENT_NAME)
-CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR = $(CONTAINER_TENSORFLOW2_CPU_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_TENSORFLOW2_CPU_DOCKERFILE = $(CONTAINER_TENSORFLOW2_CPU_DIR)/Dockerfile
-CONTAINER_TENSORFLOW2_CPU_INCLUDE_FILES =
+CONTAINER_TENSORFLOW2_CPU_INCLUDE_FILES =\
+    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
 CONTAINER_TENSORFLOW2_CPU_SCRIPTS =
-CONTAINER_TENSORFLOW2_CPU_SHELLSCRIPTS_EXT = $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_TENSORFLOW2_GPU_COMPONENT_NAME = tensorflow2-gpu
-CONTAINER_TENSORFLOW2_GPU_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_TENSORFLOW2_GPU_COMPONENT_NAME):$(CONTAINER_IMAGE_TAG)
-CONTAINER_TENSORFLOW2_GPU_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_TENSORFLOW2_GPU_COMPONENT_NAME)
-CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR = $(CONTAINER_TENSORFLOW2_GPU_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_TENSORFLOW2_GPU_DOCKERFILE = $(CONTAINER_TENSORFLOW2_GPU_DIR)/Dockerfile
-CONTAINER_TENSORFLOW2_GPU_INCLUDE_FILES =
+CONTAINER_TENSORFLOW2_GPU_INCLUDE_FILES =\
+    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
 CONTAINER_TENSORFLOW2_GPU_SCRIPTS =
-CONTAINER_TENSORFLOW2_GPU_SHELLSCRIPTS_EXT = $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_TOX_PY37_COMPONENT_NAME = tox-py37
-CONTAINER_TOX_PY37_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_TOX_PY37_COMPONENT_NAME):$(CONTAINER_TOX_PY37_IMAGE_TAG)
-CONTAINER_TOX_PY37_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_TOX_PY37_COMPONENT_NAME)
-CONTAINER_TOX_PY37_INCLUDE_DIR = $(CONTAINER_TOX_PY37_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_TOX_PY37_DOCKERFILE = $(CONTAINER_TOX_PY37_DIR)/Dockerfile
 CONTAINER_TOX_PY37_INCLUDE_FILES =
 CONTAINER_TOX_PY37_SCRIPTS =
-CONTAINER_TOX_PY37_SHELLSCRIPTS_EXT = $(CONTAINER_TOX_PY37_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-CONTAINER_TOX_PY38_COMPONENT_NAME = tox-py38
-CONTAINER_TOX_PY38_IMAGE = $(PROJECT_PREFIX)/$(CONTAINER_TOX_PY38_COMPONENT_NAME):$(CONTAINER_TOX_PY38_IMAGE_TAG)
-CONTAINER_TOX_PY38_DIR = $(PROJECT_DOCKER_DIR)/$(CONTAINER_TOX_PY38_COMPONENT_NAME)
-CONTAINER_TOX_PY38_INCLUDE_DIR = $(CONTAINER_TOX_PY38_DIR)/include/etc/$(PROJECT_PREFIX)/docker
-CONTAINER_TOX_PY38_DOCKERFILE = $(CONTAINER_TOX_PY38_DIR)/Dockerfile
 CONTAINER_TOX_PY38_INCLUDE_FILES =
 CONTAINER_TOX_PY38_SCRIPTS =
-CONTAINER_TOX_PY38_SHELLSCRIPTS_EXT = $(CONTAINER_TOX_PY38_INCLUDE_DIR)/%.sh : $(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
-
-EXAMPLES_TENSORFLOW_MNIST_DIR = $(PROJECT_EXAMPLES_DIR)/tensorflow-mnist-classifier
-EXAMPLES_TENSORFLOW_MNIST_SCRIPTS =\
-    $(EXAMPLES_TENSORFLOW_MNIST_DIR)/docker-gpu.sh
-EXAMPLES_TENSORFLOW_MNIST_SHELLSCRIPTS_EXT = $(EXAMPLES_TENSORFLOW_MNIST_DIR)/%.sh : $(EXAMPLES_TENSORFLOW_MNIST_DIR)/%.m4
 
 BEAUTIFY_SENTINEL = $(PROJECT_BUILD_DIR)/.beautify.sentinel
 CODE_INTEGRATION_TESTS_SENTINEL = $(PROJECT_BUILD_DIR)/.integration-tests.sentinel
 CODE_UNIT_TESTS_SENTINEL = $(PROJECT_BUILD_DIR)/.unit-tests.sentinel
 CONDA_CREATE_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-create.sentinel
 CONDA_UPDATE_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-update.sentinel
+CONDA_ENV_DEV_INSTALL_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-env-dev-install.sentinel
 CONDA_ENV_PIP_INSTALL_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-env-pip-install.sentinel
-CONTAINER_MINICONDA_BASE_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MINICONDA_BASE_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_MINICONDA_BASE_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MINICONDA_BASE_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_MINICONDA_BASE_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MINICONDA_BASE_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_SPHINX_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SPHINX_COMPONENT_NAME)-tag-$(CONTAINER_SPHINX_VERSION).sentinel
-CONTAINER_SPHINX_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SPHINX_COMPONENT_NAME)-pulled-tag-$(CONTAINER_SPHINX_VERSION).sentinel
-CONTAINER_SPHINX_PULL_LATEST_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SPHINX_COMPONENT_NAME)-pulled-tag-latest.sentinel
-CONTAINER_SPHINX_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SPHINX_COMPONENT_NAME)-pushed-tag-$(CONTAINER_SPHINX_VERSION).sentinel
-CONTAINER_SPHINX_PUSH_LATEST_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SPHINX_COMPONENT_NAME)-pushed-tag-latest.sentinel
-CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_MLFLOW_TRACKING_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_MLFLOW_TRACKING_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_NGINX_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_NGINX_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_NGINX_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_NGINX_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_NGINX_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_NGINX_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_POSTGRES_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_POSTGRES_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_POSTGRES_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_POSTGRES_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_POSTGRES_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_POSTGRES_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_REDIS_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_REDIS_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_REDIS_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_REDIS_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_REDIS_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_REDIS_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_RESTAPI_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_RESTAPI_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_RESTAPI_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_RESTAPI_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_RESTAPI_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_RESTAPI_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_SKLEARN_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SKLEARN_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_SKLEARN_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SKLEARN_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_SKLEARN_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_SKLEARN_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_PYTORCH_CPU_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_PYTORCH_CPU_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_PYTORCH_CPU_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_PYTORCH_CPU_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_PYTORCH_CPU_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_PYTORCH_CPU_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_PYTORCH_GPU_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_PYTORCH_GPU_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_PYTORCH_GPU_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_PYTORCH_GPU_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_PYTORCH_GPU_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_PYTORCH_GPU_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_TENSORFLOW2_CPU_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TENSORFLOW2_CPU_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_TENSORFLOW2_CPU_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TENSORFLOW2_CPU_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_TENSORFLOW2_CPU_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TENSORFLOW2_CPU_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_TENSORFLOW2_GPU_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TENSORFLOW2_GPU_COMPONENT_NAME)-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_TENSORFLOW2_GPU_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TENSORFLOW2_GPU_COMPONENT_NAME)-pulled-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_TENSORFLOW2_GPU_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TENSORFLOW2_GPU_COMPONENT_NAME)-pushed-tag-$(CONTAINER_IMAGE_TAG).sentinel
-CONTAINER_TOX_PY37_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY37_COMPONENT_NAME)-tag-$(CONTAINER_TOX_PY37_IMAGE_TAG).sentinel
-CONTAINER_TOX_PY37_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY37_COMPONENT_NAME)-pulled-tag-$(CONTAINER_TOX_PY37_IMAGE_TAG).sentinel
-CONTAINER_TOX_PY37_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY37_COMPONENT_NAME)-pushed-tag-$(CONTAINER_TOX_PY37_IMAGE_TAG).sentinel
-CONTAINER_TOX_PY38_BUILD_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY38_COMPONENT_NAME)-tag-$(CONTAINER_TOX_PY38_IMAGE_TAG).sentinel
-CONTAINER_TOX_PY38_PULL_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY38_COMPONENT_NAME)-pulled-tag-$(CONTAINER_TOX_PY38_IMAGE_TAG).sentinel
-CONTAINER_TOX_PY38_PUSH_SENTINEL = $(PROJECT_BUILD_DIR)/.docker-image-$(CONTAINER_TOX_PY38_COMPONENT_NAME)-pushed-tag-$(CONTAINER_TOX_PY38_IMAGE_TAG).sentinel
+CONTAINER_PULL_SENTINELS =
+CONTAINER_PUSH_SENTINELS =
 DOCS_SENTINEL = $(PROJECT_BUILD_DIR)/.docs.sentinel
-GITLAB_PAGES_SENTINEL = $(PROJECT_BUILD_DIR)/.gitlab-pages-push.sentinel
 LINTING_SENTINEL = $(PROJECT_BUILD_DIR)/.linting.sentinel
 PRE_COMMIT_HOOKS_SENTINEL = $(PROJECT_BUILD_DIR)/.pre-commit-hooks.sentinel
-TOX_SENTINEL = $(PROJECT_BUILD_DIR)/.tox.sentinel
+TOX_PY37_SENTINEL = $(PROJECT_BUILD_DIR)/.tox-py37.sentinel
+TOX_PY38_SENTINEL = $(PROJECT_BUILD_DIR)/.tox-py38.sentinel
 TYPE_CHECK_SENTINEL = $(PROJECT_BUILD_DIR)/.type-check.sentinel
 
 #################################################################################
@@ -385,160 +227,321 @@ TYPE_CHECK_SENTINEL = $(PROJECT_BUILD_DIR)/.type-check.sentinel
 #################################################################################
 
 define cleanup
-    $(FIND) $(1) -name "__pycache__" -type d -exec $(RM) -rf {} +
-    $(FIND) $(1) -name "*.py[co]" -type f -exec $(RM) -rf {} +
+$(FIND) . \( -name "__pycache__" -and -not -path "./.tox*" \) -type d -exec $(RM) -rf {} +
+$(FIND) . \( -name "*.py[co]" -and -not -path "./.tox*" \) -type f -exec $(RM) -rf {} +
+$(FIND) . -name ".ipynb_checkpoints" -type d -exec $(RM) -rf {} +
+$(RM) -rf $(PROJECT_DIR)/.coverage
+$(RM) -rf $(PROJECT_DIR)/.pip-cache
+$(RM) -rf $(PROJECT_DIR)/coverage
+$(RM) -rf $(PROJECT_DIR)/dist
+$(RM) -rf $(PROJECT_DIR)/htmlcov
+$(RM) -rf $(PROJECT_DIR)/mlruns
+$(RM) -rf $(PROJECT_BUILD_DIR)/bdist*
+$(RM) -rf $(PROJECT_BUILD_DIR)/docs
+$(RM) -rf $(PROJECT_BUILD_DIR)/lib
+$(RM) -rf $(PROJECT_DOCS_DIR)/build/*
 endef
 
 define create_conda_env
-    bash -lc "\
-    $(CONDA) create -n $(CONDA_ENV_NAME) $(CONDA_CHANNELS) -y $(CONDA_ENV_BASE)\
-    "
+bash -lc "\
+$(CONDA) create -n $(CONDA_ENV_NAME) $(CONDA_CHANNELS) -y $(CONDA_ENV_BASE)"
 endef
 
 define docker_image_tag
-    $(call run_docker,tag $(strip $(1)) $(strip $(2)))
+$(call run_docker,tag $(strip $(1)) $(strip $(2)))
 endef
 
 define make_subdirectory
-    mkdir -p "$(strip $(1))"
+mkdir -p "$(strip $(1))"
+endef
+
+define get_host_user_id
+$(shell id -u)
 endef
 
 define package_code
-    $(PY) $(SETUP_PY_FILE) sdist -d $(1)
-    $(PY) $(SETUP_PY_FILE) bdist_wheel -d $(1)
+$(call run_docker,\
+    run\
+    -t\
+    --rm\
+    -e PIP_CACHE_DIR=/work/.pip-cache\
+    -u $(strip $(call get_host_user_id)):100\
+    -v $(PROJECT_DIR):/work\
+    --entrypoint ""\
+    $(CONTAINER_MINICONDA_BASE_IMAGE)\
+    bash -ic "python -m build -sw")
 endef
 
 define pull_docker_images
-    @$(foreach image,$(1),\
-        echo "Pulling image $(image)";\
-        echo "==========================================";\
-        $(DOCKER) pull $(strip $(2))/$(image) || exit 1;\
-        $(DOCKER) tag $(strip $(2))/$(image) $(image) || exit 1;\
-        $(DOCKER) rmi $(strip $(2))/$(image) || exit 1;\
-        echo "";)
+@$(foreach image,$(1),\
+    echo "Pulling image $(image)";\
+    echo "==========================================";\
+    $(DOCKER) pull $(strip $(2))/$(image) || exit 1;\
+    $(DOCKER) tag $(strip $(2))/$(image) $(image) || exit 1;\
+    $(DOCKER) rmi $(strip $(2))/$(image) || exit 1;\
+    echo "";)
 endef
 
 define push_docker_images
-    @$(foreach image,$(1),\
-        echo "Pushing image $(image)";\
-		echo "==========================================";\
-        $(DOCKER) tag $(image) $(strip $(2))/$(image) || exit 1;\
-        $(DOCKER) push $(strip $(2))/$(image) || exit 1;\
-        $(DOCKER) rmi $(strip $(2))/$(image) || exit 1;\
-        echo "";)
+@$(foreach image,$(1),\
+    echo "Pushing image $(image)";\
+    echo "==========================================";\
+    $(DOCKER) tag $(image) $(strip $(2))/$(image) || exit 1;\
+    $(DOCKER) push $(strip $(2))/$(image) || exit 1;\
+    $(DOCKER) rmi $(strip $(2))/$(image) || exit 1;\
+    echo "";)
 endef
 
 define pre_commit_cmd
-    $(PRE_COMMIT) $(1)
+$(PRE_COMMIT) $(1)
 endef
 
 define run_argbash
-    $(call run_docker,\
-        run\
-        -it\
-        --rm\
-        -e PROGRAM=argbash\
-        -v $(strip $(1)):/work\
-        -v $(strip $(2)):/output\
-        matejak/argbash:latest\
-        $(strip $(3)))
+$(call run_docker,\
+    run\
+    -t\
+    --rm\
+    -e PROGRAM=argbash\
+    -v $(strip $(1)):/work\
+    -v $(strip $(2)):/output\
+    matejak/argbash:latest\
+    $(strip $(3)))
 endef
 
 define run_build_script
-    CORES=$(CORES)\
-    IMAGE_TAG=$(strip $(2))\
-    OS_VERSION=$(CONTAINER_OS_VERSION) \
-    OS_VERSION_NUMBER=$(CONTAINER_OS_VERSION_NUMBER) \
-    OS_BUILD_NUMBER=$(CONTAINER_OS_BUILD_NUMBER) \
-    PROJECT_PREFIX=$(PROJECT_PREFIX)\
-    PROJECT_VERSION=$(PROJECT_VERSION)\
-    PROJECT_COMPONENT=$(strip $(1))\
-    PROJECT_BUILD_NUMBER=$(strip $(3))\
-    IBM_ART_VERSION=$(CONTAINER_IBM_ART_VERSION)\
-    MINICONDA_VERSION=$(CONTAINER_MINICONDA_VERSION)\
-    MLFLOW_VERSION=$(CONTAINER_MLFLOW_VERSION)\
-    PREFECT_VERSION=$(CONTAINER_PREFECT_VERSION)\
-    PYTORCH_VERSION=$(CONTAINER_PYTORCH_VERSION)\
-    SKLEARN_VERSION=$(CONTAINER_SKLEARN_VERSION)\
-    SPHINX_VERSION=$(CONTAINER_SPHINX_VERSION)\
-    TENSORFLOW2_VERSION=$(CONTAINER_TENSORFLOW2_VERSION)\
-    docker/build.sh
+CORES=$(CORES)\
+IMAGE_TAG=$(strip $(2))\
+OS_VERSION=$(CONTAINER_OS_VERSION) \
+OS_VERSION_NUMBER=$(CONTAINER_OS_VERSION_NUMBER) \
+OS_BUILD_NUMBER=$(CONTAINER_OS_BUILD_NUMBER) \
+PROJECT_PREFIX=$(PROJECT_PREFIX)\
+PROJECT_VERSION=$(PROJECT_VERSION)\
+PROJECT_COMPONENT=$(strip $(1))\
+PROJECT_BUILD_NUMBER=$(strip $(3))\
+IBM_ART_VERSION=$(CONTAINER_IBM_ART_VERSION)\
+MINICONDA_VERSION=$(CONTAINER_MINICONDA_VERSION)\
+MLFLOW_VERSION=$(CONTAINER_MLFLOW_VERSION)\
+PREFECT_VERSION=$(CONTAINER_PREFECT_VERSION)\
+PYTORCH_VERSION=$(CONTAINER_PYTORCH_VERSION)\
+SKLEARN_VERSION=$(CONTAINER_SKLEARN_VERSION)\
+SPHINX_VERSION=$(CONTAINER_SPHINX_VERSION)\
+TENSORFLOW2_VERSION=$(CONTAINER_TENSORFLOW2_VERSION)\
+docker/build.sh
 endef
 
 define run_docker
-    $(DOCKER) $(1)
-endef
-
-define run_docker_compose
-    $(DOCKER_COMPOSE) $(1)
+$(DOCKER) $(1)
 endef
 
 define run_flake8
-    $(FLAKE8) $(1)
+$(FLAKE8) $(1)
 endef
 
 define run_isort
-    $(FIND) $(1) -name "*.py" -type f -exec $(ISORT) {} +
+$(ISORT) $(1)
 endef
 
 define run_mypy
-    $(MYPY) $(1)
+$(MYPY) $(1)
 endef
 
 define run_pip_install
-    bash -lc "\
-	$(CONDA) activate $(CONDA_ENV_NAME);\
-    $(PIP) install $(1);\
-	$(CONDA) deactivate\
-	"
+bash -lc "\
+$(CONDA) activate $(CONDA_ENV_NAME) &&\
+$(PIP) install $(1) &&\
+$(CONDA) deactivate"
 endef
 
 define run_pytest
-    $(PYTEST) $(1)
+$(PYTEST) $(1)
 endef
 
 define run_python_black
-    $(BLACK) $(1)
-endef
-
-define run_seed_isort_config
-    $(SEED_ISORT_CONFIG) $(1)
+$(BLACK) $(1)
 endef
 
 define run_sphinx_build
-    $(call run_docker,\
-        run\
-        -it\
-        --rm\
-        -v $(PROJECT_DIR):/docs\
-        securing-ai/sphinx:$(CONTAINER_SPHINX_VERSION)\
-        sphinx-build\
-        -b html\
-        $(strip $(1))\
-        $(strip $(2)))
+$(call run_docker,\
+    run\
+    -t\
+    --rm\
+    -v $(PROJECT_DIR):/docs\
+    $(CONTAINER_SPHINX_IMAGE)\
+    sphinx-build\
+    -b html\
+    $(strip $(1))\
+    $(strip $(2)))
 endef
 
-define run_tox
-    $(TOX) $(1)
+define run_tox_py37
+$(call run_docker,\
+    run\
+    -t\
+    --rm\
+    -e PIP_CACHE_DIR=/work/.tox/pip-cache-py37\
+    -u $(strip $(call get_host_user_id)):100\
+    -v $(PROJECT_DIR):/work\
+    --entrypoint ""\
+    --workdir /work\
+    $(CONTAINER_TOX_PY37_IMAGE)\
+    $(TOX))
 endef
 
-define save_image_id_file
-    @echo "$(PROJECT_PREFIX)/$(1):$(2)" > $(3)
+define run_tox_py38
+$(call run_docker,\
+    run\
+    -t\
+    --rm\
+    -e PIP_CACHE_DIR=/work/.tox/pip-cache-py38\
+    -u $(strip $(call get_host_user_id)):100\
+    -v $(PROJECT_DIR):/work\
+    --entrypoint ""\
+    --workdir /work\
+    $(CONTAINER_TOX_PY38_IMAGE)\
+    $(TOX))
 endef
 
 define save_sentinel_file
-	@touch $(1)
+@touch $(1)
 endef
 
 define split_string_and_get_word
-    $(word $3,$(subst $2, ,$1))
+$(word $3,$(subst $2, ,$1))
+endef
+
+define string_to_lower
+$(shell echo $(1) | tr '[:upper:]' '[:lower:]')
+endef
+
+define string_to_upper
+$(shell echo $(1) | tr '[:lower:]' '[:upper:]')
 endef
 
 define update_conda_env
-    bash -lc "\
-    $(CONDA) env update --file $(CONDA_ENV_FILE)\
-    "
+bash -lc "\
+$(CONDA) env update --file $(CONDA_ENV_FILE)"
 endef
+
+define build_docker_image_recipe
+$(strip $(1)): $(strip $(2)) | $$(PROJECT_BUILD_DIR)
+	$(call run_build_script,$(3),$(4),$(5))
+	$(call save_sentinel_file,$(6))
+	$(call save_sentinel_file,$$@)
+endef
+
+define set_latest_tag_docker_image_recipe
+$(strip $(1)): $(strip $(2)) | $$(PROJECT_BUILD_DIR)
+	$(call docker_image_tag,$(3),$(4))
+	$(call save_sentinel_file,$$@)
+endef
+
+define pull_docker_image_recipe
+$(strip $(1)): | $$(PROJECT_BUILD_DIR)
+	$(call pull_docker_images,$(2),$(ARTIFACTORY_PREFIX))
+	$(call save_sentinel_file,$(3))
+	$(call save_sentinel_file,$$@)
+endef
+
+define pull_latest_docker_image_recipe
+$(strip $(1)): | $$(PROJECT_BUILD_DIR)
+	$(call pull_docker_images,$(2),$(ARTIFACTORY_UNTRUSTED_PREFIX))
+	$(call save_sentinel_file,$(3))
+	$(call save_sentinel_file,$$@)
+endef
+
+define push_docker_image_recipe
+$(strip $(1)): | $$(PROJECT_BUILD_DIR)
+	$(call push_docker_images,$(2),$(ARTIFACTORY_PREFIX))
+	$(call save_sentinel_file,$(3))
+	$(call save_sentinel_file,$$@)
+endef
+
+define push_latest_docker_image_recipe
+$(strip $(1)): | $$(PROJECT_BUILD_DIR)
+	$(call push_docker_images,$(2),$(ARTIFACTORY_UNTRUSTED_PREFIX))
+	$(call save_sentinel_file,$(3))
+	$(call save_sentinel_file,$$@)
+endef
+
+define generate_docker_image_shellscripts_recipe
+$(strip $(1)):
+
+$(strip $(2))/%.sh: $$(PROJECT_SRC_SHELLSCRIPTS_DIR)/%.m4
+	$(call run_argbash,\
+		$$(PROJECT_DIR)/$$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
+		$$(PROJECT_DIR)/$(strip $(2)),\
+		-o /output/$$(shell basename '$$@') /work/$$(shell basename '$$<'))
+endef
+
+define define_docker_image_sentinel_vars
+CONTAINER_$(strip $(1))_COMPONENT_NAME = $(strip $(3))
+CONTAINER_$(strip $(1))_IMAGE = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):$$($(strip $(2)))
+CONTAINER_$(strip $(1))_IMAGE_LATEST = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):latest
+CONTAINER_$(strip $(1))_DIR = $$(PROJECT_DOCKER_DIR)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)
+CONTAINER_$(strip $(1))_INCLUDE_DIR = $$(CONTAINER_$(strip $(1))_DIR)/include/etc/$$(PROJECT_PREFIX)/docker
+CONTAINER_$(strip $(1))_DOCKERFILE = $$(CONTAINER_$(strip $(1))_DIR)/Dockerfile
+CONTAINER_$(strip $(1))_BUILD_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-$$($(strip $(2))).sentinel
+CONTAINER_$(strip $(1))_BUILD_LATEST_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-latest.sentinel
+CONTAINER_$(strip $(1))_PULL_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-pulled-tag-$$($(strip $(2))).sentinel
+CONTAINER_$(strip $(1))_PULL_LATEST_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-pulled-tag-latest.sentinel
+CONTAINER_$(strip $(1))_PUSH_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-pushed-tag-$$($(strip $(2))).sentinel
+CONTAINER_$(strip $(1))_PUSH_LATEST_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-pushed-tag-latest.sentinel
+CONTAINER_PULL_SENTINELS += $$(CONTAINER_$(strip $(1))_PULL_SENTINEL)
+CONTAINER_PULL_SENTINELS += $$(CONTAINER_$(strip $(1))_PULL_LATEST_SENTINEL)
+CONTAINER_PUSH_SENTINELS += $$(CONTAINER_$(strip $(1))_PUSH_SENTINEL)
+CONTAINER_PUSH_SENTINELS += $$(CONTAINER_$(strip $(1))_PUSH_LATEST_SENTINEL)
+endef
+
+define generate_docker_image_pipeline
+$(eval $(call build_docker_image_recipe,$(1),$(strip $(2) $(12)),$(5),$(6),$(7),$(8)))
+$(eval $(call pull_docker_image_recipe,$(8),$(3),$(1)))
+$(eval $(call pull_latest_docker_image_recipe,$(9),$(4),$(14)))
+$(eval $(call push_docker_image_recipe,$(10),$(3),$(8)))
+$(eval $(call push_latest_docker_image_recipe,$(11),$(4),$(9)))
+$(eval $(call set_latest_tag_docker_image_recipe,$(14),$(1),$(3),$(4)))
+$(eval $(call generate_docker_image_shellscripts_recipe,$(12),$(13)))
+endef
+
+define generate_full_docker_image_vars
+$(eval $(call define_docker_image_sentinel_vars,$(1),$(2),$(3)))
+endef
+
+define generate_full_docker_image_recipe
+$(eval $(call generate_docker_image_pipeline,\
+	$$(CONTAINER_$(1)_BUILD_SENTINEL),\
+	$$($(2)) $$(CONTAINER_$(1)_DOCKERFILE) $$(CONTAINER_$(1)_INCLUDE_FILES),\
+	$$(CONTAINER_$(1)_IMAGE),\
+	$$(CONTAINER_$(1)_IMAGE_LATEST),\
+	$$(CONTAINER_$(1)_COMPONENT_NAME),\
+	$$($(3)),\
+	$$($(4)),\
+	$$(CONTAINER_$(1)_PULL_SENTINEL),\
+	$$(CONTAINER_$(1)_PULL_LATEST_SENTINEL),\
+	$$(CONTAINER_$(1)_PUSH_SENTINEL),\
+	$$(CONTAINER_$(1)_PUSH_LATEST_SENTINEL),\
+	$$(CONTAINER_$(1)_SCRIPTS),\
+	$$(CONTAINER_$(1)_INCLUDE_DIR),\
+	$$(CONTAINER_$(1)_BUILD_LATEST_SENTINEL)))
+endef
+
+#################################################################################
+# AUTO-GENERATED GLOBALS                                                        #
+#################################################################################
+
+$(call generate_full_docker_image_vars,MINICONDA_BASE,CONTAINER_IMAGE_TAG,miniconda-base)
+$(call generate_full_docker_image_vars,SPHINX,CONTAINER_IMAGE_TAG,sphinx)
+$(call generate_full_docker_image_vars,MLFLOW_TRACKING,CONTAINER_IMAGE_TAG,mlflow-tracking)
+$(call generate_full_docker_image_vars,NGINX,CONTAINER_IMAGE_TAG,nginx)
+$(call generate_full_docker_image_vars,POSTGRES,CONTAINER_IMAGE_TAG,postgres)
+$(call generate_full_docker_image_vars,REDIS,CONTAINER_IMAGE_TAG,redis)
+$(call generate_full_docker_image_vars,RESTAPI,CONTAINER_IMAGE_TAG,restapi)
+$(call generate_full_docker_image_vars,SKLEARN,CONTAINER_IMAGE_TAG,sklearn)
+$(call generate_full_docker_image_vars,PYTORCH_CPU,CONTAINER_IMAGE_TAG,pytorch-cpu)
+$(call generate_full_docker_image_vars,PYTORCH_GPU,CONTAINER_IMAGE_TAG,pytorch-gpu)
+$(call generate_full_docker_image_vars,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG,tensorflow2-cpu)
+$(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tensorflow2-gpu)
+$(call generate_full_docker_image_vars,TOX_PY37,CONTAINER_IMAGE_TAG,tox-py37)
+$(call generate_full_docker_image_vars,TOX_PY38,CONTAINER_IMAGE_TAG,tox-py38)
 
 #################################################################################
 # PROJECT RULES                                                                 #
@@ -548,45 +551,55 @@ endef
 beautify: $(BEAUTIFY_SENTINEL)
 
 ## Build all Docker images in project
-build-all: build-miniconda build-mlflow-tracking build-nginx build-postgres build-redis build-restapi build-sklearn build-pytorch build-sphinx build-tensorflow build-tox
+build-all: build-sphinx build-tox build-nginx build-postgres build-redis build-miniconda build-mlflow-tracking build-restapi build-sklearn build-pytorch build-tensorflow
 
 ## Build the base Miniconda Docker image
-build-miniconda: $(CONTAINER_MINICONDA_BASE_BUILD_SENTINEL)
+build-miniconda: $(CONTAINER_MINICONDA_BASE_BUILD_LATEST_SENTINEL)
 
 ## Build the MLFlow Tracking Docker image
-build-mlflow-tracking: build-miniconda $(CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL)
+build-mlflow-tracking: $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL)
 
 ## Build the nginx Docker image
-build-nginx: $(CONTAINER_NGINX_BUILD_SENTINEL)
+build-nginx: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL)
 
 ## Build the postgres Docker image
-build-postgres: $(CONTAINER_POSTGRES_BUILD_SENTINEL)
+build-postgres: $(CONTAINER_POSTGRES_BUILD_LATEST_SENTINEL)
 
 ## Build the PyTorch Docker images
-build-pytorch: build-sklearn $(CONTAINER_PYTORCH_CPU_BUILD_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_SENTINEL)
+build-pytorch: build-pytorch-cpu build-pytorch-gpu
+
+## Build the PyTorch (CPU) Docker image
+build-pytorch-cpu: $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL)
+
+## Build the PyTorch (GPU) Docker image
+build-pytorch-gpu: $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL)
 
 ## Build the Redis Docker image
-build-redis: $(CONTAINER_REDIS_BUILD_SENTINEL)
+build-redis: $(CONTAINER_REDIS_BUILD_LATEST_SENTINEL)
 
 ## Build the restapi Docker image
-build-restapi: code-pkg build-miniconda $(CONTAINER_RESTAPI_BUILD_SENTINEL)
+build-restapi: $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL)
 
 ## Build the scikit-learn Docker image
-build-sklearn: build-miniconda $(CONTAINER_SKLEARN_BUILD_SENTINEL)
+build-sklearn: $(CONTAINER_SKLEARN_BUILD_LATEST_SENTINEL)
 
 ## Build the Sphinx image
-build-sphinx: $(CONTAINER_SPHINX_BUILD_SENTINEL)
+build-sphinx: $(CONTAINER_SPHINX_BUILD_LATEST_SENTINEL)
 
-## Build the Tensorflow Docker image
-build-tensorflow: build-sklearn $(CONTAINER_TENSORFLOW2_CPU_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_SENTINEL)
+## Build the Tensorflow Docker images
+build-tensorflow: build-tensorflow-cpu build-tensorflow-gpu
+
+## Build the Tensorflow (CPU) Docker image
+build-tensorflow-cpu: $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL)
+
+## Build the Tensorflow (GPU) Docker image
+build-tensorflow-gpu: $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL)
 
 ## Build the Tox Docker images
-build-tox: $(CONTAINER_TOX_PY37_BUILD_SENTINEL) $(CONTAINER_TOX_PY38_BUILD_SENTINEL)
+build-tox: $(CONTAINER_TOX_PY37_BUILD_LATEST_SENTINEL) $(CONTAINER_TOX_PY38_BUILD_LATEST_SENTINEL)
 
 ## Remove temporary files
-clean:
-	$(call cleanup,$(PROJECT_SRC_DIR))
-	$(call cleanup,$(PROJECT_TESTS_DIR))
+clean: ; $(call cleanup)
 
 ## Lint and type check the source code
 code-check: $(LINTING_SENTINEL) $(TYPE_CHECK_SENTINEL)
@@ -594,29 +607,20 @@ code-check: $(LINTING_SENTINEL) $(TYPE_CHECK_SENTINEL)
 ## Package source code for distribution
 code-pkg: $(CODE_DISTRIBUTION_FILES)
 
-## Publish source code to the MITRE artifactory
-code-publish: code-pkg
-
-## Create conda-based virtual environment
-conda-create: $(CONDA_CREATE_SENTINEL)
-
 ## Update conda-based virtual environment
-conda-update: $(CONDA_CREATE_SENTINEL) $(CONDA_UPDATE_SENTINEL) $(CONDA_ENV_PIP_INSTALL_SENTINEL)
+conda-env: $(CONDA_CREATE_SENTINEL) $(CONDA_UPDATE_SENTINEL) $(CONDA_ENV_PIP_INSTALL_SENTINEL) $(CONDA_ENV_DEV_INSTALL_SENTINEL)
 
 ## Build project documentation
 docs: $(DOCS_SENTINEL)
-
-## Generate support files needed for running the examples
-examples: $(EXAMPLES_TENSORFLOW_MNIST_SCRIPTS)
 
 ## Install pre-commit hooks
 hooks: $(PRE_COMMIT_HOOKS_SENTINEL)
 
 ## Pull latest docker images from the MITRE artifactory and retag
-pull-mitre: $(CONTAINER_TOX_PY37_PULL_SENTINEL) $(CONTAINER_TOX_PY38_PULL_SENTINEL) $(CONTAINER_SPHINX_PULL_SENTINEL) $(CONTAINER_SPHINX_PULL_LATEST_SENTINEL)
+pull-mitre: $(CONTAINER_PULL_SENTINELS)
 
 ## Push docker images to the MITRE artifactory
-push-mitre: $(CONTAINER_TOX_PY37_PUSH_SENTINEL) $(CONTAINER_TOX_PY38_PUSH_SENTINEL) $(CONTAINER_SPHINX_PUSH_SENTINEL) $(CONTAINER_SPHINX_PUSH_LATEST_SENTINEL)
+push-mitre: $(CONTAINER_PUSH_SENTINELS)
 
 ## Run all tests
 tests: tests-unit tests-integration
@@ -628,526 +632,103 @@ tests-integration: $(CODE_INTEGRATION_TESTS_SENTINEL)
 tests-unit: $(CODE_UNIT_TESTS_SENTINEL)
 
 ## Run all tests using tox
-tox: $(TOX_SENTINEL)
+tox: $(TOX_PY38_SENTINEL)
 
 #################################################################################
-# PROJECT SUPPORT RULES                                                         #
+# PROJECT BUILD RECIPES                                                         #
 #################################################################################
 
-$(BEAUTIFY_SENTINEL): $(CODE_SRC_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) $(ISORT_CONFIG_FILE)
-	$(call make_subdirectory,$(@D))
-	$(call run_python_black,$(PROJECT_SRC_ENDPOINT_DIR) $(PROJECT_TESTS_DIR))
-	$(call run_isort,$(PROJECT_SRC_ENDPOINT_DIR))
+$(PROJECT_BUILD_DIR): ; $(call make_subdirectory,$@)
+$(CODE_PIP_CACHE_DIR): ; $(call make_subdirectory,$@)
+$(CODE_TOX_PY37_PIP_CACHE_DIR): ; $(call make_subdirectory,$@)
+$(CODE_TOX_PY38_PIP_CACHE_DIR): ; $(call make_subdirectory,$@)
+
+$(BEAUTIFY_SENTINEL): $(CODE_SRC_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_python_black,$(PROJECT_SRC_SECURINGAI_DIR) $(PROJECT_TESTS_DIR))
+	$(call run_isort,$(PROJECT_SRC_SECURINGAI_DIR))
 	$(call run_isort,$(PROJECT_TESTS_DIR))
 	$(call save_sentinel_file,$@)
 
-$(CODE_INTEGRATION_TESTS_SENTINEL): $(CODE_INTEGRATION_TESTS_FILES)
-	$(call make_subdirectory,$(@D))
+$(CODE_INTEGRATION_TESTS_SENTINEL): $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+ifneq ($(strip $(CODE_INTEGRATION_TESTS_FILES)),)
 	$(call run_pytest,$(CODE_INTEGRATION_TESTS_DIR))
+endif
 	$(call save_sentinel_file,$@)
 
-$(CODE_UNIT_TESTS_SENTINEL): $(CODE_UNIT_TESTS_FILES)
-	$(call make_subdirectory,$(@D))
-	$(call run_pytest,--cov=mitre --cov-report=html $(CODE_UNIT_TESTS_DIR))
+$(CODE_UNIT_TESTS_SENTINEL): $(CODE_UNIT_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+ifneq ($(strip $(CODE_UNIT_TESTS_FILES)),)
+	$(call run_pytest, $(CODE_UNIT_TESTS_DIR))
+endif
 	$(call save_sentinel_file,$@)
 
-$(CODE_DISTRIBUTION_FILES): $(CODE_PACKAGING_FILES) $(CODE_SRC_FILES) $(DOCS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES)
-	$(call make_subdirectory,$(@D))
+$(CODE_DISTRIBUTION_FILES): $(CONTAINER_MINICONDA_BASE_BUILD_SENTINEL) $(CODE_PACKAGING_FILES) $(CODE_SRC_FILES) $(DOCS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR) $(CODE_PIP_CACHE_DIR)
 	$(call package_code,$(CODE_BUILD_DIR))
 	@echo ""
 	@echo "$(CODE_PKG_NAME) packaged for distribution in $(CODE_BUILD_DIR)"
 
-$(CONDA_CREATE_SENTINEL):
-	$(call make_subdirectory,$(@D))
+$(CONDA_CREATE_SENTINEL): | $(PROJECT_BUILD_DIR)
 	$(call create_conda_env)
 	$(call save_sentinel_file,$@)
 
-$(CONDA_UPDATE_SENTINEL): $(CONDA_ENV_FILE)
-	$(call make_subdirectory,$(@D))
+$(CONDA_UPDATE_SENTINEL): $(CONDA_ENV_FILE) | $(PROJECT_BUILD_DIR)
 	$(call update_conda_env)
 	$(call save_sentinel_file,$@)
 
-$(CONDA_ENV_PIP_INSTALL_SENTINEL): $(MAKEFILE_FILE)
-	$(call make_subdirectory,$(@D))
-ifdef $(CONDA_ENV_PIP)
+$(CONDA_ENV_PIP_INSTALL_SENTINEL): $(MAKEFILE_FILE) | $(PROJECT_BUILD_DIR)
+ifdef CONDA_ENV_PIP
 	$(call run_pip_install,$(subst ",,$(CONDA_ENV_PIP)))
 endif
 	$(call save_sentinel_file,$@)
 
-$(CONTAINER_MINICONDA_BASE_BUILD_SENTINEL): $(CONTAINER_MINICONDA_BASE_DOCKERFILE) $(CONTAINER_MINICONDA_BASE_INCLUDE_FILES) $(CONTAINER_MINICONDA_BASE_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_MINICONDA_BASE_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_MINICONDA_BASE_PULL_SENTINEL))
+$(CONDA_ENV_DEV_INSTALL_SENTINEL): $(MAKEFILE_FILE) | $(PROJECT_BUILD_DIR)
+	$(call run_pip_install,-e .)
 	$(call save_sentinel_file,$@)
 
-$(CONTAINER_MINICONDA_BASE_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_MINICONDA_BASE_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_MINICONDA_BASE_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_MINICONDA_BASE_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_MINICONDA_BASE_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_MINICONDA_BASE_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_MINICONDA_BASE_SCRIPTS): $(CONTAINER_MINICONDA_BASE_SHELLSCRIPTS_EXT) | $(CONTAINER_MINICONDA_BASE_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_MINICONDA_BASE_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_SPHINX_BUILD_SENTINEL): $(CONTAINER_SPHINX_DOCKERFILE) $(CONTAINER_SPHINX_INCLUDE_FILES) $(CONTAINER_SPHINX_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_SPHINX_COMPONENT_NAME),$(CONTAINER_SPHINX_VERSION),)
-	$(call save_sentinel_file,$(CONTAINER_SPHINX_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_SPHINX_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_SPHINX_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_SPHINX_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_SPHINX_PULL_LATEST_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_SPHINX_IMAGE_LATEST),$(ARTIFACTORY_UNTRUSTED_PREFIX))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_SPHINX_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_SPHINX_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_SPHINX_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_SPHINX_PUSH_LATEST_SENTINEL): $(CONTAINER_SPHINX_PUSH_SENTINEL)
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call docker_image_tag,$(CONTAINER_SPHINX_IMAGE),$(CONTAINER_SPHINX_IMAGE_LATEST))
-	$(call push_docker_images,$(CONTAINER_SPHINX_IMAGE_LATEST),$(ARTIFACTORY_UNTRUSTED_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_SPHINX_PULL_LATEST_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_SPHINX_SCRIPTS): $(CONTAINER_SPHINX_SHELLSCRIPTS_EXT) | $(CONTAINER_SPHINX_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_SPHINX_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL): $(CONTAINER_MINICONDA_BASE_DOCKERFILE) $(CONTAINER_MLFLOW_TRACKING_DOCKERFILE) $(CONTAINER_MLFLOW_TRACKING_INCLUDE_FILES) $(CONTAINER_MLFLOW_TRACKING_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_MLFLOW_TRACKING_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_MLFLOW_TRACKING_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_MLFLOW_TRACKING_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_MLFLOW_TRACKING_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_MLFLOW_TRACKING_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_MLFLOW_TRACKING_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_MLFLOW_TRACKING_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_MLFLOW_TRACKING_SCRIPTS): $(CONTAINER_MLFLOW_TRACKING_SHELLSCRIPTS_EXT) | $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_NGINX_BUILD_SENTINEL): $(CONTAINER_NGINX_DOCKERFILE) $(CONTAINER_NGINX_INCLUDE_FILES) $(CONTAINER_NGINX_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_NGINX_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_NGINX_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_NGINX_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_NGINX_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_NGINX_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_NGINX_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_NGINX_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_NGINX_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_NGINX_SCRIPTS): $(CONTAINER_NGINX_SHELLSCRIPTS_EXT) | $(CONTAINER_NGINX_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_NGINX_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_POSTGRES_BUILD_SENTINEL): $(CONTAINER_POSTGRES_DOCKERFILE) $(CONTAINER_POSTGRES_INCLUDE_FILES) $(CONTAINER_POSTGRES_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_POSTGRES_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_POSTGRES_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_POSTGRES_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_POSTGRES_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_POSTGRES_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_POSTGRES_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_POSTGRES_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_POSTGRES_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_POSTGRES_SCRIPTS): $(CONTAINER_POSTGRES_SHELLSCRIPTS_EXT) | $(CONTAINER_POSTGRES_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_POSTGRES_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_REDIS_BUILD_SENTINEL): $(CONTAINER_REDIS_DOCKERFILE) $(CONTAINER_REDIS_INCLUDE_FILES) $(CONTAINER_REDIS_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_REDIS_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_REDIS_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_REDIS_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_REDIS_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_REDIS_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_REDIS_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_REDIS_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_REDIS_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_REDIS_SCRIPTS): $(CONTAINER_REDIS_SHELLSCRIPTS_EXT) | $(CONTAINER_REDIS_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_REDIS_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_RESTAPI_BUILD_SENTINEL): $(CONTAINER_MINICONDA_BASE_DOCKERFILE) $(CONTAINER_RESTAPI_DOCKERFILE) $(CONTAINER_RESTAPI_INCLUDE_FILES) $(CONTAINER_RESTAPI_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_RESTAPI_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_RESTAPI_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_RESTAPI_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_RESTAPI_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_RESTAPI_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_RESTAPI_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_RESTAPI_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_RESTAPI_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_RESTAPI_SCRIPTS): $(CONTAINER_RESTAPI_SHELLSCRIPTS_EXT) | $(CONTAINER_RESTAPI_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_RESTAPI_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_SKLEARN_BUILD_SENTINEL): $(CONTAINER_MINICONDA_BASE_DOCKERFILE) $(CONTAINER_SKLEARN_DOCKERFILE) $(CONTAINER_SKLEARN_INCLUDE_FILES) $(CONTAINER_SKLEARN_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_SKLEARN_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_SKLEARN_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_SKLEARN_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_SKLEARN_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_SKLEARN_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_SKLEARN_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_SKLEARN_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_SKLEARN_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_SKLEARN_SCRIPTS): $(CONTAINER_SKLEARN_SHELLSCRIPTS_EXT) | $(CONTAINER_SKLEARN_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_SKLEARN_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_PYTORCH_CPU_BUILD_SENTINEL): $(CONTAINER_SKLEARN_BUILD_SENTINEL) $(CONTAINER_PYTORCH_CPU_DOCKERFILE) $(CONTAINER_PYTORCH_CPU_INCLUDE_FILES) $(CONTAINER_PYTORCH_CPU_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_PYTORCH_CPU_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_PYTORCH_CPU_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_PYTORCH_CPU_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_PYTORCH_CPU_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_PYTORCH_CPU_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_PYTORCH_CPU_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_PYTORCH_CPU_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_PYTORCH_CPU_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_PYTORCH_CPU_SCRIPTS): $(CONTAINER_PYTORCH_CPU_SHELLSCRIPTS_EXT) | $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_PYTORCH_CPU_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_PYTORCH_GPU_BUILD_SENTINEL): $(CONTAINER_SKLEARN_BUILD_SENTINEL) $(CONTAINER_PYTORCH_GPU_DOCKERFILE) $(CONTAINER_PYTORCH_GPU_INCLUDE_FILES) $(CONTAINER_PYTORCH_GPU_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_PYTORCH_GPU_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_PYTORCH_GPU_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_PYTORCH_GPU_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_PYTORCH_GPU_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_PYTORCH_GPU_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_PYTORCH_GPU_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_PYTORCH_GPU_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_PYTORCH_GPU_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_PYTORCH_GPU_SCRIPTS): $(CONTAINER_PYTORCH_GPU_SHELLSCRIPTS_EXT) | $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_PYTORCH_GPU_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_TENSORFLOW2_CPU_BUILD_SENTINEL): $(CONTAINER_SKLEARN_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_DOCKERFILE) $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_FILES) $(CONTAINER_TENSORFLOW2_CPU_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_TENSORFLOW2_CPU_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_TENSORFLOW2_CPU_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TENSORFLOW2_CPU_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_TENSORFLOW2_CPU_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_TENSORFLOW2_CPU_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TENSORFLOW2_CPU_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_TENSORFLOW2_CPU_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_TENSORFLOW2_CPU_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TENSORFLOW2_CPU_SCRIPTS): $(CONTAINER_TENSORFLOW2_CPU_SHELLSCRIPTS_EXT) | $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_TENSORFLOW2_GPU_BUILD_SENTINEL): $(CONTAINER_SKLEARN_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_DOCKERFILE) $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_FILES) $(CONTAINER_TENSORFLOW2_GPU_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_TENSORFLOW2_GPU_COMPONENT_NAME),$(CONTAINER_IMAGE_TAG),$(CONTAINER_BUILD_NUMBER))
-	$(call save_sentinel_file,$(CONTAINER_TENSORFLOW2_GPU_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TENSORFLOW2_GPU_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_TENSORFLOW2_GPU_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_TENSORFLOW2_GPU_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TENSORFLOW2_GPU_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_TENSORFLOW2_GPU_IMAGE),$(ARTIFACTORY_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_TENSORFLOW2_GPU_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TENSORFLOW2_GPU_SCRIPTS): $(CONTAINER_TENSORFLOW2_GPU_SHELLSCRIPTS_EXT) | $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_TOX_PY37_BUILD_SENTINEL): $(CONTAINER_TOX_PY37_DOCKERFILE) $(CONTAINER_TOX_PY37_INCLUDE_FILES) $(CONTAINER_TOX_PY37_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_TOX_PY37_COMPONENT_NAME),$(CONTAINER_TOX_PY37_IMAGE_TAG),)
-	$(call save_sentinel_file,$(CONTAINER_TOX_PY37_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TOX_PY37_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_TOX_PY37_IMAGE),$(ARTIFACTORY_UNTRUSTED_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_TOX_PY37_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TOX_PY37_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_TOX_PY37_IMAGE),$(ARTIFACTORY_UNTRUSTED_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_TOX_PY37_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TOX_PY37_SCRIPTS): $(CONTAINER_TOX_PY37_SHELLSCRIPTS_EXT) | $(CONTAINER_TOX_PY37_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_TOX_PY37_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(CONTAINER_TOX_PY38_BUILD_SENTINEL): $(CONTAINER_TOX_PY38_DOCKERFILE) $(CONTAINER_TOX_PY38_INCLUDE_FILES) $(CONTAINER_TOX_PY38_SCRIPTS)
-	$(call make_subdirectory,$(@D))
-	$(call run_build_script,$(CONTAINER_TOX_PY38_COMPONENT_NAME),$(CONTAINER_TOX_PY38_IMAGE_TAG),)
-	$(call save_sentinel_file,$(CONTAINER_TOX_PY38_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TOX_PY38_PULL_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call pull_docker_images,$(CONTAINER_TOX_PY38_IMAGE),$(ARTIFACTORY_UNTRUSTED_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_TOX_PY38_BUILD_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TOX_PY38_PUSH_SENTINEL):
-ifndef ARTIFACTORY_PREFIX
-	$(error ARTIFACTORY_PREFIX must be defined.)
-endif
-	$(call make_subdirectory,$(@D))
-	$(call push_docker_images,$(CONTAINER_TOX_PY38_IMAGE),$(ARTIFACTORY_UNTRUSTED_PREFIX))
-	$(call save_sentinel_file,$(CONTAINER_TOX_PY38_PULL_SENTINEL))
-	$(call save_sentinel_file,$@)
-
-$(CONTAINER_TOX_PY38_SCRIPTS): $(CONTAINER_TOX_PY38_SHELLSCRIPTS_EXT) | $(CONTAINER_TOX_PY38_INCLUDE_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(PROJECT_SRC_SHELLSCRIPTS_DIR),\
-		$(PROJECT_DIR)/$(CONTAINER_TOX_PY38_INCLUDE_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(DOCS_SENTINEL): $(DOCS_FILES)
-	$(call make_subdirectory,$(@D))
-	@rm -rf $(DOCS_BUILD_DIR)
+$(DOCS_SENTINEL): $(CONTAINER_SPHINX_BUILD_LATEST_SENTINEL) $(DOCS_FILES) | $(PROJECT_BUILD_DIR)
+	@$(RM) -rf $(DOCS_BUILD_DIR)
 	$(call run_sphinx_build,$(DOCS_SOURCE_DIR),$(DOCS_BUILD_DIR))
-	@rm -rf $(PROJECT_DOCS_DIR)/mlruns
+	@$(RM) -rf $(PROJECT_DOCS_DIR)/mlruns
 	$(call save_sentinel_file,$@)
 
-$(EXAMPLES_TENSORFLOW_MNIST_SCRIPTS): $(EXAMPLES_TENSORFLOW_MNIST_SHELLSCRIPTS_EXT) | $(EXAMPLES_TENSORFLOW_MNIST_DIR)
-	$(call run_argbash,\
-		$(PROJECT_DIR)/$(EXAMPLES_TENSORFLOW_MNIST_DIR),\
-		$(PROJECT_DIR)/$(EXAMPLES_TENSORFLOW_MNIST_DIR),\
-		-o /output/$(shell basename '$@') /work/$(shell basename '$<'))
-
-$(ISORT_CONFIG_FILE): $(CODE_SRC_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES)
-	$(call run_seed_isort_config,)
-
-$(LINTING_SENTINEL): $(CODE_SRC_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES)
-	$(call make_subdirectory,$(@D))
-	$(call run_flake8,)
+$(LINTING_SENTINEL): $(CODE_SRC_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_flake8,$(PROJECT_SRC_SECURINGAI_DIR) $(PROJECT_TESTS_DIR))
 	$(call save_sentinel_file,$@)
 
-$(PRE_COMMIT_HOOKS_SENTINEL): $(PRE_COMMIT_CONFIG_FILE)
-	$(call make_subdirectory,$(@D))
+$(PRE_COMMIT_HOOKS_SENTINEL): $(PRE_COMMIT_CONFIG_FILE) | $(PROJECT_BUILD_DIR)
 	$(call pre_commit_cmd,install --install-hooks)
 	$(call pre_commit_cmd,install --hook-type commit-msg)
 	$(call save_sentinel_file,$@)
 
-$(TYPE_CHECK_SENTINEL): $(CODE_SRC_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES)
-	$(call make_subdirectory,$(@D))
-	$(call run_mypy,)
+$(TYPE_CHECK_SENTINEL): $(CODE_SRC_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_mypy,$(PROJECT_SRC_SECURINGAI_DIR) $(PROJECT_TESTS_DIR))
 	$(call save_sentinel_file,$@)
 
-$(TOX_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES)
-	$(call make_subdirectory,$(@D))
-	$(call run_tox,)
+$(TOX_PY37_SENTINEL): $(CONTAINER_TOX_PY37_BUILD_LATEST_SENTINEL) $(TOX_CONFIG_FILE) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR) $(CODE_TOX_PY37_PIP_CACHE_DIR)
+	$(call run_tox_py37)
 	$(call save_sentinel_file,$@)
+
+$(TOX_PY38_SENTINEL): $(CONTAINER_TOX_PY38_BUILD_LATEST_SENTINEL) $(TOX_CONFIG_FILE) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR) $(CODE_TOX_PY38_PIP_CACHE_DIR)
+	$(call run_tox_py38)
+	$(call save_sentinel_file,$@)
+
+#################################################################################
+# AUTO-GENERATED PROJECT BUILD RECEIPES                                         #
+#################################################################################
+
+$(call generate_full_docker_image_recipe,MINICONDA_BASE,,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,SPHINX,,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,MLFLOW_TRACKING,CONTAINER_MINICONDA_BASE_BUILD_SENTINEL,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,NGINX,,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,POSTGRES,,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,REDIS,,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,RESTAPI,CONTAINER_MINICONDA_BASE_BUILD_SENTINEL,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,SKLEARN,CONTAINER_MINICONDA_BASE_BUILD_SENTINEL,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,PYTORCH_CPU,CONTAINER_SKLEARN_BUILD_SENTINEL,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,PYTORCH_GPU,CONTAINER_SKLEARN_BUILD_SENTINEL,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,TENSORFLOW2_CPU,CONTAINER_SKLEARN_BUILD_SENTINEL,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,TENSORFLOW2_GPU,CONTAINER_SKLEARN_BUILD_SENTINEL,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,TOX_PY37,,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
+$(call generate_full_docker_image_recipe,TOX_PY38,,CONTAINER_IMAGE_TAG,CONTAINER_BUILD_NUMBER)
 
 #################################################################################
 # Self Documenting Commands                                                     #
