@@ -10,6 +10,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from sqlalchemy import MetaData
 
+from .__version__ import __version__ as API_VERSION
+
 LOGGER = structlog.get_logger()
 
 csrf: CSRFProtect = CSRFProtect()
@@ -42,7 +44,7 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
     api: Api = Api(
         app,
         title="Securing AI Machine Learning Model Endpoint",
-        version="0.0.0",
+        version=API_VERSION,
     )
     modules: List[Callable[..., Any]] = [bind_dependencies]
 
