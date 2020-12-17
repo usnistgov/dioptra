@@ -41,7 +41,8 @@ def default_queues(db):
 @pytest.fixture
 def default_queues_with_locks(db, default_queues):
     queue_lock: QueueLock = QueueLock(
-        queue_id=4, created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
+        queue_id=4,
+        created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
     )
     db.session.add(queue_lock)
     db.session.commit()

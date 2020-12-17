@@ -1,5 +1,5 @@
 # This is a fork of the work
-# https://github.com/gahjelle/pyplugs/blob/90e635777672f75080291c737f08453a26ea380d/tests/plugin_directory/no_plugins.py
+# https://github.com/gahjelle/pyplugs/blob/90e635777672f75080291c737f08453a26ea380d/tests/plugin_directory/no_plugins.py  # noqa: B950
 # See copyright below.
 #
 # Copyright (c) 2019 Geir Arne Hjelle

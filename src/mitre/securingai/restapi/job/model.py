@@ -1,13 +1,14 @@
 import datetime
-from typing import BinaryIO, Optional, Union
+from typing import Optional
 
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed, FileRequired
+from flask_wtf.file import FileAllowed, FileField, FileRequired
 from typing_extensions import TypedDict
 from werkzeug.datastructures import FileStorage
 from wtforms.fields import StringField
-from wtforms.validators import InputRequired, Regexp, UUID, ValidationError
+from wtforms.validators import UUID, InputRequired
 from wtforms.validators import Optional as OptionalField
+from wtforms.validators import Regexp, ValidationError
 
 from mitre.securingai.restapi.app import db
 
@@ -18,7 +19,7 @@ job_statuses = db.Table(
 )
 
 
-class Job(db.Model):  # type: ignore
+class Job(db.Model):
     __tablename__ = "jobs"
 
     job_id = db.Column(db.String(36), primary_key=True)
@@ -95,17 +96,17 @@ class JobForm(FlaskForm):
             return text.lower().strip().replace(" ", "-")
 
         standardized_name: str = slugify(field.data)
-
-        if (
+        queue: Optional[Queue] = (
             Queue.query.outerjoin(QueueLock, Queue.queue_id == QueueLock.queue_id)
             .filter(
                 Queue.name == standardized_name,
-                QueueLock.queue_id == None,
+                QueueLock.queue_id == None,  # noqa: E711
                 Queue.is_deleted == False,
             )
             .first()
-            is None
-        ):
+        )
+
+        if queue is None:
             raise ValidationError(
                 f"Bad Request - The queue {standardized_name} is not valid. "
                 "Please check spelling and resubmit."
@@ -121,4 +122,4 @@ class JobFormData(TypedDict, total=False):
     entry_point: str
     entry_point_kwargs: Optional[str]
     depends_on: Optional[str]
-    workflow: Union[BinaryIO, FileStorage]
+    workflow: FileStorage

@@ -4,11 +4,7 @@ import pytest
 import structlog
 from structlog._config import BoundLoggerLazyProxy
 
-from mitre.securingai.restapi.models import (
-    Queue,
-    QueueRegistrationFormData,
-    QueueLock,
-)
+from mitre.securingai.restapi.models import Queue, QueueLock, QueueRegistrationFormData
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -16,7 +12,8 @@ LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 @pytest.fixture
 def queue_lock() -> QueueLock:
     return QueueLock(
-        queue_id=1, created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
+        queue_id=1,
+        created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
     )
 
 

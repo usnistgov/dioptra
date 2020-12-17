@@ -6,9 +6,9 @@ from .experiment.model import (
 from .job.model import Job, JobForm, JobFormData
 from .queue.model import (
     Queue,
+    QueueLock,
     QueueRegistrationForm,
     QueueRegistrationFormData,
-    QueueLock,
 )
 
 __all__ = [

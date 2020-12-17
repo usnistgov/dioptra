@@ -2,12 +2,7 @@ from typing import Any, Dict
 
 from marshmallow import Schema, fields, post_dump, pre_dump
 
-from .model import (
-    Queue,
-    QueueRegistrationForm,
-    QueueRegistrationFormData,
-    QueueLock,
-)
+from .model import Queue, QueueLock, QueueRegistrationForm, QueueRegistrationFormData
 
 
 class QueueLockSchema(Schema):
@@ -50,7 +45,7 @@ class QueueRegistrationFormSchema(Schema):
     def serialize_object(
         self, data: Dict[str, Any], many: bool, **kwargs
     ) -> QueueRegistrationFormData:
-        return self.__model__(**data)
+        return self.__model__(**data)  # type: ignore
 
 
 QueueRegistrationSchema = [dict(name="name", type=str, location="form")]

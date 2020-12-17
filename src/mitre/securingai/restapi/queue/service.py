@@ -9,14 +9,8 @@ from structlog._config import BoundLoggerLazyProxy
 from mitre.securingai.restapi.app import db
 
 from .errors import QueueAlreadyExistsError
-from .model import (
-    Queue,
-    QueueRegistrationForm,
-    QueueRegistrationFormData,
-    QueueLock,
-)
+from .model import Queue, QueueLock, QueueRegistrationForm, QueueRegistrationFormData
 from .schema import QueueRegistrationFormSchema
-
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -24,12 +18,15 @@ LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 class QueueService(object):
     @inject
     def __init__(
-        self, queue_registration_form_schema: QueueRegistrationFormSchema,
+        self,
+        queue_registration_form_schema: QueueRegistrationFormSchema,
     ) -> None:
         self._queue_registration_form_schema = queue_registration_form_schema
 
     def create(
-        self, queue_registration_form_data: QueueRegistrationFormData, **kwargs,
+        self,
+        queue_registration_form_data: QueueRegistrationFormData,
+        **kwargs,
     ) -> Queue:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         queue_name: str = queue_registration_form_data["name"]
@@ -113,7 +110,7 @@ class QueueService(object):
 
         log.info("Get full list of queues")
 
-        return Queue.query.filter_by(is_deleted=False).all()
+        return Queue.query.filter_by(is_deleted=False).all()  # type: ignore
 
     @staticmethod
     def get_all_unlocked(**kwargs) -> List[Queue]:
@@ -121,9 +118,9 @@ class QueueService(object):
 
         log.info("Get full list of unlocked queues")
 
-        return (
+        return (  # type: ignore
             Queue.query.outerjoin(QueueLock, Queue.queue_id == QueueLock.queue_id)
-            .filter(QueueLock.queue_id == None, Queue.is_deleted == False)
+            .filter(QueueLock.queue_id == None, Queue.is_deleted == False)  # noqa: E711
             .all()
         )
 
@@ -133,7 +130,11 @@ class QueueService(object):
 
         log.info("Get full list of locked queues")
 
-        return Queue.query.join(QueueLock).filter(Queue.is_deleted == False).all()
+        return (  # type: ignore
+            Queue.query.join(QueueLock)
+            .filter(Queue.is_deleted == False)  # noqa: E712
+            .all()
+        )
 
     @staticmethod
     def get_by_id(queue_id: int, **kwargs) -> Optional[Queue]:
@@ -141,7 +142,9 @@ class QueueService(object):
 
         log.info("Get queue by id", queue_id=queue_id)
 
-        return Queue.query.filter_by(queue_id=queue_id, is_deleted=False).first()
+        return Queue.query.filter_by(  # type: ignore
+            queue_id=queue_id, is_deleted=False
+        ).first()
 
     @staticmethod
     def get_by_name(queue_name: str, **kwargs) -> Optional[Queue]:
@@ -149,7 +152,9 @@ class QueueService(object):
 
         log.info("Get queue by name", queue_name=queue_name)
 
-        return Queue.query.filter_by(name=queue_name, is_deleted=False).first()
+        return Queue.query.filter_by(  # type: ignore
+            name=queue_name, is_deleted=False
+        ).first()
 
     @staticmethod
     def get_unlocked_by_id(queue_id: int, **kwargs) -> Optional[Queue]:
@@ -157,11 +162,11 @@ class QueueService(object):
 
         log.info("Get unlocked queue by id", queue_id=queue_id)
 
-        return (
+        return (  # type: ignore
             Queue.query.outerjoin(QueueLock, Queue.queue_id == QueueLock.queue_id)
             .filter(
                 Queue.queue_id == queue_id,
-                QueueLock.queue_id == None,
+                QueueLock.queue_id == None,  # noqa: E711
                 Queue.is_deleted == False,
             )
             .first()
@@ -173,11 +178,11 @@ class QueueService(object):
 
         log.info("Get unlocked queue by name", queue_name=queue_name)
 
-        return (
+        return (  # type: ignore
             Queue.query.outerjoin(QueueLock, Queue.queue_id == QueueLock.queue_id)
             .filter(
                 Queue.name == queue_name,
-                QueueLock.queue_id == None,
+                QueueLock.queue_id == None,  # noqa: E711
                 Queue.is_deleted == False,
             )
             .first()
@@ -189,5 +194,8 @@ class QueueService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         log.info("Extract data from queue registration form")
+        data: QueueRegistrationFormData = self._queue_registration_form_schema.dump(
+            queue_registration_form
+        )
 
-        return self._queue_registration_form_schema.dump(queue_registration_form)
+        return data

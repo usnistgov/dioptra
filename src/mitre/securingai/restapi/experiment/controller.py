@@ -10,7 +10,7 @@ from injector import inject
 from structlog import BoundLogger
 from structlog._config import BoundLoggerLazyProxy
 
-from .errors import ExperimentRegistrationError, ExperimentDoesNotExistError
+from .errors import ExperimentDoesNotExistError, ExperimentRegistrationError
 from .interface import ExperimentUpdateInterface
 from .model import (
     Experiment,
@@ -18,16 +18,17 @@ from .model import (
     ExperimentRegistrationFormData,
 )
 from .schema import (
+    ExperimentRegistrationSchema,
     ExperimentSchema,
     ExperimentUpdateSchema,
-    ExperimentRegistrationSchema,
 )
 from .service import ExperimentService
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
 api: Namespace = Namespace(
-    "Experiment", description="Endpoint for registering experiments.",
+    "Experiment",
+    description="Endpoint for registering experiments.",
 )
 
 
@@ -52,7 +53,9 @@ class ExperimentResource(Resource):
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="POST"
         )  # noqa: F841
-        experiment_registration_form: ExperimentRegistrationForm = ExperimentRegistrationForm()
+        experiment_registration_form: ExperimentRegistrationForm = (
+            ExperimentRegistrationForm()
+        )
 
         log.info("Request received")
 
@@ -104,7 +107,7 @@ class ExperimentIdResource(Resource):
             experiment_id=experimentId
         )
 
-        return jsonify(dict(status="Success", id=id))
+        return jsonify(dict(status="Success", id=id))  # type: ignore
 
     @accepts(schema=ExperimentUpdateSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
@@ -112,7 +115,7 @@ class ExperimentIdResource(Resource):
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentId", request_type="PUT"
         )  # noqa: F841
-        changes: ExperimentUpdateInterface = request.parsed_obj
+        changes: ExperimentUpdateInterface = request.parsed_obj  # type: ignore
         experiment: Optional[Experiment] = self._experiment_service.get_by_id(
             experimentId, log=log
         )
@@ -121,7 +124,7 @@ class ExperimentIdResource(Resource):
             log.error("Experiment not found", experiment_id=experimentId)
             raise ExperimentDoesNotExistError
 
-        experiment: Experiment = self._experiment_service.rename_experiment(
+        experiment = self._experiment_service.rename_experiment(
             experiment=experiment, new_name=changes["name"], log=log
         )
 
@@ -165,13 +168,13 @@ class ExperimentNameResource(Resource):
         )
 
         if experiment is None:
-            return jsonify(dict(status="Success", id=[]))
+            return jsonify(dict(status="Success", id=[]))  # type: ignore
 
         id: List[int] = self._experiment_service.delete_experiment(
             experiment_id=experiment.experiment_id
         )
 
-        return jsonify(dict(status="Success", id=id))
+        return jsonify(dict(status="Success", id=id))  # type: ignore
 
     @accepts(schema=ExperimentUpdateSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
@@ -179,7 +182,7 @@ class ExperimentNameResource(Resource):
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentName", request_type="PUT"
         )  # noqa: F841
-        changes: ExperimentUpdateInterface = request.parsed_obj
+        changes: ExperimentUpdateInterface = request.parsed_obj  # type: ignore
         experiment: Optional[Experiment] = self._experiment_service.get_by_name(
             experiment_name=experimentName, log=log
         )
@@ -188,7 +191,7 @@ class ExperimentNameResource(Resource):
             log.error("Experiment not found", experiment_name=experimentName)
             raise ExperimentDoesNotExistError
 
-        experiment: Experiment = self._experiment_service.rename_experiment(
+        experiment = self._experiment_service.rename_experiment(
             experiment=experiment, new_name=changes["name"], log=log
         )
 

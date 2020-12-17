@@ -11,11 +11,10 @@ from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 from werkzeug.datastructures import FileStorage
 
-from mitre.securingai.restapi.models import Job, JobForm, JobFormData
 from mitre.securingai.restapi.job.service import JobService
+from mitre.securingai.restapi.models import Job, JobFormData
 from mitre.securingai.restapi.shared.rq.service import RQService
 from mitre.securingai.restapi.shared.s3.service import S3Service
-
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -63,7 +62,7 @@ def job_service(dependency_injector) -> JobService:
     return dependency_injector.get(JobService)
 
 
-def test_create(job_service: JobService, job_form_data: JobFormData):  # noqa
+def test_create(job_service: JobService, job_form_data: JobFormData):
     job: Job = job_service.create(job_form_data=job_form_data)
 
     assert job.experiment_id == 1
@@ -75,7 +74,7 @@ def test_create(job_service: JobService, job_form_data: JobFormData):  # noqa
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_get_all(db: SQLAlchemy, job_service: JobService):  # noqa
+def test_get_all(db: SQLAlchemy, job_service: JobService):
     timestamp: datetime.datetime = datetime.datetime.now()
 
     new_job1 = Job(
@@ -117,7 +116,7 @@ def test_get_all(db: SQLAlchemy, job_service: JobService):  # noqa
 
 @freeze_time("2020-08-17T18:46:28.717559")
 def test_submit(
-    db: SQLAlchemy,  # noqa
+    db: SQLAlchemy,
     job_service: JobService,
     job_form_data: JobFormData,
     monkeypatch: MonkeyPatch,

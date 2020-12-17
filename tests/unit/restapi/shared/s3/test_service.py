@@ -5,11 +5,10 @@ import pytest
 import structlog
 from _pytest.monkeypatch import MonkeyPatch
 from botocore.stub import Stubber
-from structlog._config import BoundLoggerLazyProxy
 from dateutil.tz.tz import tzutc
+from structlog._config import BoundLoggerLazyProxy
 
 from mitre.securingai.restapi.shared.s3.service import S3Service
-
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -72,7 +71,8 @@ def test_upload(
             "Mocking client.upload_fileobj() function", args=args, kwargs=kwargs
         )
         assert kwargs.get("Fileobj") == workflow_tar_gz
-        return S3Service.as_uri(bucket=kwargs.get("Bucket"), key=kwargs.get("Key"))
+        uri: str = S3Service.as_uri(bucket=kwargs.get("Bucket"), key=kwargs.get("Key"))
+        return uri
 
     list_objects_v2_expected_params = {"Bucket": "workflow"}
 

@@ -3,9 +3,9 @@ import uuid
 from pathlib import Path
 from typing import List, Optional
 
-import rq
 import structlog
 from injector import inject
+from rq.job import Job as RQJob
 from structlog import BoundLogger
 from structlog._config import BoundLoggerLazyProxy
 from werkzeug.utils import secure_filename
@@ -19,7 +19,6 @@ from mitre.securingai.restapi.shared.s3.service import S3Service
 from .errors import JobWorkflowUploadError
 from .model import Job, JobForm, JobFormData
 from .schema import JobFormSchema
-
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -42,7 +41,7 @@ class JobService(object):
 
     @staticmethod
     def create(job_form_data: JobFormData, **kwargs) -> Job:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
         timestamp = datetime.datetime.now()
 
         return Job(
@@ -58,15 +57,15 @@ class JobService(object):
 
     @staticmethod
     def get_all(**kwargs) -> List[Job]:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        return Job.query.all()
+        return Job.query.all()  # type: ignore
 
     @staticmethod
     def get_by_id(job_id: str, **kwargs) -> Job:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        return Job.query.get(job_id)
+        return Job.query.get(job_id)  # type: ignore
 
     def extract_data_from_form(self, job_form: JobForm, **kwargs) -> JobFormData:
         from mitre.securingai.restapi.models import Experiment, Queue
@@ -95,14 +94,16 @@ class JobService(object):
         if workflow_uri is None:
             log.error(
                 "Failed to upload workflow to backend storage",
-                workflow_filename=secure_filename(job_form_data["workflow"].filename),
+                workflow_filename=secure_filename(
+                    job_form_data["workflow"].filename or ""
+                ),
             )
             raise JobWorkflowUploadError
 
         new_job: Job = self.create(job_form_data, log=log)
         new_job.workflow_uri = workflow_uri
 
-        rq_job: rq.job.Job = self._rq_service.submit_mlflow_job(
+        rq_job: RQJob = self._rq_service.submit_mlflow_job(
             queue=job_form_data["queue"],
             workflow_uri=new_job.workflow_uri,
             experiment_id=new_job.experiment_id,
@@ -127,12 +128,14 @@ class JobService(object):
 
         upload_dir = Path(uuid.uuid4().hex)
         workflow_filename = upload_dir / secure_filename(
-            job_form_data["workflow"].filename
+            job_form_data["workflow"].filename or ""
         )
 
-        return self._s3_service.upload(
+        workflow_uri: Optional[str] = self._s3_service.upload(
             fileobj=job_form_data["workflow"],
             bucket="workflow",
             key=str(workflow_filename),
             log=log,
         )
+
+        return workflow_uri

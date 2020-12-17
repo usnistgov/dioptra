@@ -4,7 +4,6 @@ import datetime
 import uuid
 from typing import Any, Dict, Optional, Union
 
-import rq
 import pytest
 import structlog
 from _pytest.monkeypatch import MonkeyPatch
@@ -13,7 +12,6 @@ from structlog._config import BoundLoggerLazyProxy
 
 from mitre.securingai.restapi.models import Job
 from mitre.securingai.restapi.shared.rq.service import RQService
-
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -101,14 +99,15 @@ class MockRQQueue(object):
 
 @pytest.fixture
 def rq_service(dependency_injector, monkeypatch: MonkeyPatch) -> RQService:
-    monkeypatch.setattr(rq.job, "Job", MockRQJob)
-    monkeypatch.setattr(rq, "Queue", MockRQQueue)
-    monkeypatch.setattr(rq.queue, "Queue", MockRQQueue)
+    import mitre.securingai.restapi.shared.rq.service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQJob", MockRQJob)
+    monkeypatch.setattr(rq_service, "RQQueue", MockRQQueue)
     return dependency_injector.get(RQService)
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_get_rq_job(rq_service: RQService):  # noqa
+def test_get_rq_job(rq_service: RQService):
     timestamp: datetime.datetime = datetime.datetime.now()
 
     job: Job = Job(
@@ -132,7 +131,7 @@ def test_get_rq_job(rq_service: RQService):  # noqa
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_submit_mlflow_job(rq_service: RQService):  # noqa
+def test_submit_mlflow_job(rq_service: RQService):
     rq_job = rq_service.submit_mlflow_job(
         queue="tensorflow_cpu",
         timeout="12h",
@@ -154,7 +153,7 @@ def test_submit_mlflow_job(rq_service: RQService):  # noqa
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_submit_dependent_mlflow_jobs(rq_service: RQService):  # noqa
+def test_submit_dependent_mlflow_jobs(rq_service: RQService):
     train_job_id: str = str(uuid.uuid4())
     fgm_job_id: str = str(uuid.uuid4())
 

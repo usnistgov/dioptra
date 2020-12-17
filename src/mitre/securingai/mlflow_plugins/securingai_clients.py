@@ -10,7 +10,6 @@ from mitre.securingai.restapi import create_app
 from mitre.securingai.restapi.app import db
 from mitre.securingai.restapi.models import Experiment, Job
 
-
 ENVVAR_RESTAPI_ENV = "AI_RESTAPI_ENV"
 ENVVAR_JOB_ID = "AI_RQ_JOB_ID"
 
@@ -20,7 +19,8 @@ LOGGER = structlog.get_logger()
 class SecuringAIDatabaseClient(object):
     @property
     def app(self) -> Flask:
-        return create_app(env=self.restapi_env)
+        app: Flask = create_app(env=self.restapi_env)
+        return app
 
     @property
     def job_id(self) -> Optional[str]:
@@ -110,7 +110,7 @@ class SecuringAIDatabaseClient(object):
         )
 
         with self.app.app_context():
-            job: Job = Job.query.get(job_id)
+            job: Job = Job.query.get(job_id)  # noqa: F841
 
             try:
                 db.session.commit()
@@ -126,7 +126,7 @@ class SecuringAIDatabaseClient(object):
         )
 
         with self.app.app_context():
-            job: Job = Job.query.get(job_id)
+            job: Job = Job.query.get(job_id)  # noqa: F841
 
             try:
                 db.session.commit()
@@ -164,8 +164,8 @@ class SecuringAIDatabaseClient(object):
 
     def rename_experiment(self, experiment_id: int, new_name: str) -> None:
         LOGGER.info(
-            f"=== Renaming MLFlow experiment id '{experiment_id}' to '{new_name}' in the"
-            " Securing AI database ==="
+            f"=== Renaming MLFlow experiment id '{experiment_id}' to '{new_name}' in "
+            "the Securing AI database ==="
         )
 
         with self.app.app_context():
@@ -186,7 +186,7 @@ class SecuringAIDatabaseClient(object):
         )
 
         with self.app.app_context():
-            experiment: Experiment = Experiment.query.get(experiment_id)
+            experiment: Experiment = Experiment.query.get(experiment_id)  # noqa: F841
 
             try:
                 db.session.commit()

@@ -15,9 +15,9 @@ from mitre.securingai.restapi.queue.interface import (
 from mitre.securingai.restapi.queue.model import QueueLock
 from mitre.securingai.restapi.queue.schema import (
     QueueLockSchema,
-    QueueSchema,
     QueueNameUpdateSchema,
     QueueRegistrationFormSchema,
+    QueueSchema,
 )
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
@@ -125,7 +125,8 @@ def test_QueueSchema_dump_works(queue_schema: QueueSchema) -> None:
 
 def test_QueueLockSchema_dump_works(queue_lock_schema: QueueLockSchema) -> None:
     queue_lock: QueueLock = QueueLock(
-        queue_id=1, created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
+        queue_id=1,
+        created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
     )
     queue_lock_serialized: Dict[str, Any] = queue_lock_schema.dump(queue_lock)
 

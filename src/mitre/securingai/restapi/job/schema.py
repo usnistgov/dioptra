@@ -61,7 +61,7 @@ class JobFormSchema(Schema):
     def serialize_object(
         self, data: Dict[str, Any], many: bool, **kwargs
     ) -> JobFormData:
-        return self.__model__(**data)
+        return self.__model__(**data)  # type: ignore
 
 
 job_submit_form_schema = [

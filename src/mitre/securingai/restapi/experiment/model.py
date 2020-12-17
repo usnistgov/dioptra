@@ -10,7 +10,7 @@ from mitre.securingai.restapi.app import db
 from .interface import ExperimentUpdateInterface
 
 
-class Experiment(db.Model):  # type: ignore
+class Experiment(db.Model):
     __tablename__ = "experiments"
 
     experiment_id = db.Column(

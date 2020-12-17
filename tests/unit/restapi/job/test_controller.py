@@ -10,9 +10,9 @@ from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 
-from mitre.securingai.restapi.models import Experiment, Job
 from mitre.securingai.restapi.job.routes import BASE_ROUTE as JOB_BASE_ROUTE
 from mitre.securingai.restapi.job.service import JobService
+from mitre.securingai.restapi.models import Experiment, Job
 from mitre.securingai.restapi.shared.s3.service import S3Service
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
@@ -93,7 +93,7 @@ def test_job_resource_post(
     job_form_request: Dict[str, Any],
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def mockuuid4() -> str:
+    def mockuuid4() -> uuid.UUID:
         return uuid.UUID("3db40500-01b1-45a4-ae18-64e7d1bc7e9a")
 
     def mocksubmit(*args, **kwargs) -> Job:
@@ -107,7 +107,9 @@ def test_job_resource_post(
             created_on=timestamp,
             last_modified=timestamp,
             timeout="12h",
-            workflow_uri="s3://workflow/3db4050001b145a4ae1864e7d1bc7e9a/workflows.tar.gz",
+            workflow_uri=(
+                "s3://workflow/3db4050001b145a4ae1864e7d1bc7e9a/workflows.tar.gz"
+            ),
             entry_point="main",
             entry_point_kwargs="-P var1=testing",
             depends_on=None,
@@ -144,7 +146,9 @@ def test_job_resource_post(
             "createdOn": "2020-08-17T18:46:28.717559",
             "lastModified": "2020-08-17T18:46:28.717559",
             "timeout": "12h",
-            "workflowUri": "s3://workflow/3db4050001b145a4ae1864e7d1bc7e9a/workflows.tar.gz",
+            "workflowUri": (
+                "s3://workflow/3db4050001b145a4ae1864e7d1bc7e9a/workflows.tar.gz"
+            ),
             "entryPoint": "main",
             "entryPointKwargs": "-P var1=testing",
             "dependsOn": None,
@@ -154,7 +158,10 @@ def test_job_resource_post(
         assert response == expected
 
 
-def test_job_id_resource_get(app: Flask, monkeypatch: MonkeyPatch,) -> None:
+def test_job_id_resource_get(
+    app: Flask,
+    monkeypatch: MonkeyPatch,
+) -> None:
     def mockgetbyid(self, job_id: str, *args, **kwargs) -> Job:
         LOGGER.info("Mocking JobService.get_by_id()")
         job: Job = Job(

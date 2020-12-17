@@ -9,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 
-from mitre.securingai.restapi.models import Queue, QueueLock
+from mitre.securingai.restapi.models import Queue
 from mitre.securingai.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
 from mitre.securingai.restapi.queue.service import QueueService
 
@@ -140,7 +140,8 @@ def test_queue_id_resource_put(app: Flask, monkeypatch: MonkeyPatch) -> None:
 
     with app.test_client() as client:
         response: Dict[str, Any] = client.put(
-            f"/api/{QUEUE_BASE_ROUTE}/{queue_id}", json=payload,
+            f"/api/{QUEUE_BASE_ROUTE}/{queue_id}",
+            json=payload,
         ).get_json()
 
         expected: Dict[str, Any] = {
@@ -287,7 +288,8 @@ def test_queue_name_resource_put(app: Flask, monkeypatch: MonkeyPatch) -> None:
 
     with app.test_client() as client:
         response: Dict[str, Any] = client.put(
-            f"/api/{QUEUE_BASE_ROUTE}/name/{queue_name}", json=payload,
+            f"/api/{QUEUE_BASE_ROUTE}/name/{queue_name}",
+            json=payload,
         ).get_json()
 
         expected: Dict[str, Any] = {

@@ -1,5 +1,5 @@
 # This is a fork of the work
-# https://github.com/gahjelle/pyplugs/blob/6921de46a2158462dc07c2f013155b53fbcebebb/tests/test_plugins.py
+# https://github.com/gahjelle/pyplugs/blob/6921de46a2158462dc07c2f013155b53fbcebebb/tests/test_plugins.py  # noqa: B950
 # See copyright below.
 #
 # Copyright (c) 2019 Geir Arne Hjelle
@@ -58,7 +58,8 @@ def test_package_not_empty(plugin_package):
 
 
 def test_package_empty():
-    """Test that names() does not find plugins in the mitre.securingai.pyplugs-package
+    """Test that names() does not find plugins in the mitre.securingai.pyplugs
+    package.
     """
     lib_plugins = pyplugs.names("mitre.securingai.pyplugs")
     assert len(lib_plugins) == 0

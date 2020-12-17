@@ -42,7 +42,7 @@ class ExperimentRegistrationFormSchema(Schema):
     def serialize_object(
         self, data: Dict[str, Any], many: bool, **kwargs
     ) -> ExperimentRegistrationFormData:
-        return self.__model__(**data)
+        return self.__model__(**data)  # type: ignore
 
 
 ExperimentRegistrationSchema = [dict(name="name", type=str, location="form")]

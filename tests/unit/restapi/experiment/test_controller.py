@@ -9,11 +9,11 @@ from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 
-from mitre.securingai.restapi.models import Experiment
 from mitre.securingai.restapi.experiment.routes import (
     BASE_ROUTE as EXPERIMENT_BASE_ROUTE,
 )
 from mitre.securingai.restapi.experiment.service import ExperimentService
+from mitre.securingai.restapi.models import Experiment
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 

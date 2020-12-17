@@ -16,7 +16,6 @@ from mitre.securingai.restapi.models import (
 from mitre.securingai.restapi.queue.errors import QueueAlreadyExistsError
 from mitre.securingai.restapi.queue.service import QueueService
 
-
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
 
@@ -49,7 +48,7 @@ def test_create(
     queue_service: QueueService,
     queue_registration_form_data: QueueRegistrationFormData,
     queue_registration_form_data2: QueueRegistrationFormData,
-):  # noqa
+):
     queue: Queue = queue_service.create(
         queue_registration_form_data=queue_registration_form_data
     )
@@ -72,8 +71,10 @@ def test_create(
 
 
 def test_delete_queue(
-    db: SQLAlchemy, queue_service: QueueService, default_queues,
-):  # noqa
+    db: SQLAlchemy,
+    queue_service: QueueService,
+    default_queues,
+):
     tf_cpu_queue_id: List[int] = queue_service.delete_queue(1)
     assert tf_cpu_queue_id[0] == 1
 
@@ -82,8 +83,10 @@ def test_delete_queue(
 
 
 def test_rename_queue(
-    db: SQLAlchemy, queue_service: QueueService, default_queues,
-):  # noqa
+    db: SQLAlchemy,
+    queue_service: QueueService,
+    default_queues,
+):
     tf_cpu_queue: Queue = Queue.query.filter_by(queue_id=1, is_deleted=False).first()
     assert tf_cpu_queue.name == "tensorflow_cpu"
 
@@ -97,9 +100,7 @@ def test_rename_queue(
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_lock_queue(
-    db: SQLAlchemy, queue_service: QueueService, default_queues
-):  # noqa
+def test_lock_queue(db: SQLAlchemy, queue_service: QueueService, default_queues):
     tf_cpu_dev_queue: Queue = Queue.query.filter_by(
         queue_id=3, is_deleted=False
     ).first()
@@ -115,7 +116,7 @@ def test_lock_queue(
 @freeze_time("2020-08-17T18:46:28.717559")
 def test_unlock_queue(
     db: SQLAlchemy, queue_service: QueueService, default_queues_with_locks
-):  # noqa
+):
     tf_gpu_dev_queue: Queue = Queue.query.filter_by(
         queue_id=4, is_deleted=False
     ).first()
@@ -129,7 +130,7 @@ def test_unlock_queue(
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_get_by_id(db: SQLAlchemy, queue_service: QueueService):  # noqa
+def test_get_by_id(db: SQLAlchemy, queue_service: QueueService):
     timestamp: datetime.datetime = datetime.datetime.now()
 
     new_queue: Queue = Queue(
@@ -145,7 +146,7 @@ def test_get_by_id(db: SQLAlchemy, queue_service: QueueService):  # noqa
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_get_by_name(db: SQLAlchemy, queue_service: QueueService):  # noqa
+def test_get_by_name(db: SQLAlchemy, queue_service: QueueService):
     timestamp: datetime.datetime = datetime.datetime.now()
 
     new_queue: Queue = Queue(
@@ -163,7 +164,7 @@ def test_get_by_name(db: SQLAlchemy, queue_service: QueueService):  # noqa
 @freeze_time("2020-08-17T18:46:28.717559")
 def test_get_unlocked_by_id(
     db: SQLAlchemy, queue_service: QueueService, default_queues_with_locks
-):  # noqa
+):
     tf_cpu_dev_queue: Optional[Queue] = queue_service.get_unlocked_by_id(3)
     tf_gpu_dev_queue: Optional[Queue] = queue_service.get_unlocked_by_id(4)
 
@@ -176,7 +177,7 @@ def test_get_unlocked_by_id(
 @freeze_time("2020-08-17T18:46:28.717559")
 def test_get_unlocked_by_name(
     db: SQLAlchemy, queue_service: QueueService, default_queues_with_locks
-):  # noqa
+):
     tf_cpu_dev_queue: Optional[Queue] = queue_service.get_unlocked_by_name(
         "tensorflow_cpu_dev"
     )
@@ -191,7 +192,7 @@ def test_get_unlocked_by_name(
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_get_all(db: SQLAlchemy, queue_service: QueueService):  # noqa
+def test_get_all(db: SQLAlchemy, queue_service: QueueService):
     timestamp: datetime.datetime = datetime.datetime.now()
 
     new_queue1: Queue = Queue(
@@ -215,7 +216,7 @@ def test_get_all(db: SQLAlchemy, queue_service: QueueService):  # noqa
 
 def test_get_all_unlocked(
     db: SQLAlchemy, queue_service: QueueService, default_queues_with_locks
-):  # noqa
+):
     results: List[Queue] = queue_service.get_all_unlocked()
     queue_names: Set[str] = {queue.name for queue in results}
     queue_name_diff: Set[str] = queue_names.difference(
@@ -228,7 +229,7 @@ def test_get_all_unlocked(
 
 def test_get_all_locked(
     db: SQLAlchemy, queue_service: QueueService, default_queues_with_locks
-):  # noqa
+):
     results: List[Queue] = queue_service.get_all_locked()
     queue_names: Set[str] = {queue.name for queue in results}
     queue_name_diff: Set[str] = queue_names.difference({"tensorflow_gpu_dev"})
@@ -238,10 +239,13 @@ def test_get_all_locked(
 
 
 def test_extract_data_from_form(
-    queue_service: QueueService, queue_registration_form: QueueRegistrationForm,
-):  # noqa
-    queue_registration_form_data: QueueRegistrationFormData = queue_service.extract_data_from_form(
-        queue_registration_form=queue_registration_form
+    queue_service: QueueService,
+    queue_registration_form: QueueRegistrationForm,
+):
+    queue_registration_form_data: QueueRegistrationFormData = (
+        queue_service.extract_data_from_form(
+            queue_registration_form=queue_registration_form
+        )
     )
 
     assert queue_registration_form_data["name"] == "tensorflow_cpu"

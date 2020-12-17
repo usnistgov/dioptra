@@ -4,10 +4,7 @@ import pytest
 import structlog
 from structlog._config import BoundLoggerLazyProxy
 
-from mitre.securingai.restapi.job.interface import (
-    JobInterface,
-    JobUpdateInterface,
-)
+from mitre.securingai.restapi.job.interface import JobInterface, JobUpdateInterface
 from mitre.securingai.restapi.models import Job
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()

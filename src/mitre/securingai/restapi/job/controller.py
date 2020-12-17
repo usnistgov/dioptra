@@ -16,14 +16,20 @@ from .service import JobService
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
 api: Namespace = Namespace(
-    "Job", description="Endpoint for the job queue.",
+    "Job",
+    description="Endpoint for the job queue.",
 )
 
 
 @api.route("/")
 class JobResource(Resource):
     @inject
-    def __init__(self, *args, job_service: JobService, **kwargs,) -> None:
+    def __init__(
+        self,
+        *args,
+        job_service: JobService,
+        **kwargs,
+    ) -> None:
         self._job_service = job_service
         super().__init__(*args, **kwargs)
 
@@ -51,7 +57,8 @@ class JobResource(Resource):
 
         log.info("Form validation successful")
         job_form_data: JobFormData = self._job_service.extract_data_from_form(
-            job_form=job_form, log=log,
+            job_form=job_form,
+            log=log,
         )
         return self._job_service.submit(job_form_data=job_form_data, log=log)
 

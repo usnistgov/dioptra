@@ -9,7 +9,6 @@ from structlog._config import BoundLoggerLazyProxy
 
 from mitre.securingai.rq.tasks import run_mlflow_task
 
-
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
 
@@ -34,10 +33,7 @@ class MockCompletedProcess(object):
 
 
 @freeze_time("2020-08-17T19:46:28.717559")
-def test_run_mlflow_task(
-    monkeypatch: MonkeyPatch,
-    tmp_path: Path,  # noqa
-) -> None:
+def test_run_mlflow_task(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     def mockgetcurrentjob(*args, **kwargs) -> MockRQJob:
         LOGGER.info("Mocking rq.get_current_job() function", args=args, kwargs=kwargs)
         return MockRQJob()

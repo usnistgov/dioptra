@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Optional
 
 from boto3.session import Session
 from botocore.client import BaseClient
@@ -31,14 +31,15 @@ def _bind_rq_service_configuration(binder: Binder):
     run_mlflow: str = "mitre.securingai.rq.tasks.run_mlflow_task"
 
     configuration: RQServiceConfiguration = RQServiceConfiguration(
-        redis=redis_conn, run_mlflow=run_mlflow,
+        redis=redis_conn,
+        run_mlflow=run_mlflow,
     )
 
     binder.bind(RQServiceConfiguration, to=configuration, scope=request)
 
 
 def _bind_s3_service_configuration(binder: Binder) -> None:
-    s3_endpoint_url: str = os.getenv("MLFLOW_S3_ENDPOINT_URL")
+    s3_endpoint_url: Optional[str] = os.getenv("MLFLOW_S3_ENDPOINT_URL")
 
     s3_session: Session = Session()
     s3_client: BaseClient = s3_session.client("s3", endpoint_url=s3_endpoint_url)

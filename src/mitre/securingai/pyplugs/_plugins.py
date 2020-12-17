@@ -1,5 +1,5 @@
 # This is a fork of the work
-# https://github.com/gahjelle/pyplugs/blob/90e635777672f75080291c737f08453a26ea380d/pyplugs/_plugins.py
+# https://github.com/gahjelle/pyplugs/blob/90e635777672f75080291c737f08453a26ea380d/pyplugs/_plugins.py  # noqa: B950
 # See copyright below.
 #
 # Copyright (c) 2019 Geir Arne Hjelle
@@ -221,7 +221,7 @@ def _import(package: str, plugin: str) -> None:
 def _import_all(package: str) -> None:
     """Import all plugins in a package"""
     try:
-        all_resources = resources.contents(package)  # type: ignore
+        all_resources = resources.contents(package)
 
     except ImportError as err:
         raise _exceptions.UnknownPackageError(err) from None

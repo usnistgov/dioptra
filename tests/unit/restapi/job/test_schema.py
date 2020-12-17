@@ -7,11 +7,8 @@ from flask import Flask
 from structlog._config import BoundLoggerLazyProxy
 from werkzeug.datastructures import FileStorage
 
+from mitre.securingai.restapi.job.schema import JobFormSchema, JobSchema
 from mitre.securingai.restapi.models import Job, JobForm
-from mitre.securingai.restapi.job.schema import (
-    JobSchema,
-    JobFormSchema,
-)
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -46,15 +43,21 @@ def job_form_schema() -> JobFormSchema:
     return JobFormSchema()
 
 
-def test_JobSchema_create(job_schema: JobSchema,) -> None:
+def test_JobSchema_create(
+    job_schema: JobSchema,
+) -> None:
     assert isinstance(job_schema, JobSchema)
 
 
-def test_JobFormSchema(job_form_schema: JobFormSchema,) -> None:
+def test_JobFormSchema(
+    job_form_schema: JobFormSchema,
+) -> None:
     assert isinstance(job_form_schema, JobFormSchema)
 
 
-def test_JobSchema_load_works(job_schema: JobSchema,) -> None:
+def test_JobSchema_load_works(
+    job_schema: JobSchema,
+) -> None:
     job: Job = job_schema.load(
         {
             "jobId": "4520511d-678b-4966-953e-af2d0edcea32",
@@ -86,7 +89,9 @@ def test_JobSchema_load_works(job_schema: JobSchema,) -> None:
     assert job.status == "finished"
 
 
-def test_JobSchema_dump_works(job_schema: JobSchema,) -> None:
+def test_JobSchema_dump_works(
+    job_schema: JobSchema,
+) -> None:
     job: Job = Job(
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
         mlflow_run_id="a82982a795824afb926e646277eda152",
@@ -118,7 +123,9 @@ def test_JobSchema_dump_works(job_schema: JobSchema,) -> None:
 
 
 def test_JobFormSchema_dump_works(
-    job_form: JobForm, job_form_schema: JobFormSchema, workflow_tar_gz: BinaryIO,
+    job_form: JobForm,
+    job_form_schema: JobFormSchema,
+    workflow_tar_gz: BinaryIO,
 ) -> None:
     job_serialized: Dict[str, Any] = job_form_schema.dump(job_form)
 

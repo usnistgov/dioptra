@@ -1,15 +1,14 @@
-from urllib.parse import urlunparse
 from typing import IO, Optional, Union
+from urllib.parse import urlunparse
 
 import structlog
-from botocore.exceptions import ClientError
-from botocore.client import BaseClient
 from boto3.session import Session
+from botocore.client import BaseClient
+from botocore.exceptions import ClientError
 from injector import inject
 from structlog import BoundLogger
 from structlog._config import BoundLoggerLazyProxy
 from werkzeug.datastructures import FileStorage
-
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -41,6 +40,6 @@ class S3Service(object):
 
     @staticmethod
     def as_uri(bucket: Optional[str], key: Optional[str], **kwargs) -> str:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
         return urlunparse(("s3", bucket or "", key or "", "", "", ""))

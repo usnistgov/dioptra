@@ -8,14 +8,13 @@ from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from structlog._config import BoundLoggerLazyProxy
 
+from mitre.securingai.restapi.experiment.errors import ExperimentAlreadyExistsError
+from mitre.securingai.restapi.experiment.service import ExperimentService
 from mitre.securingai.restapi.models import (
     Experiment,
     ExperimentRegistrationForm,
     ExperimentRegistrationFormData,
 )
-from mitre.securingai.restapi.experiment.errors import ExperimentAlreadyExistsError
-from mitre.securingai.restapi.experiment.service import ExperimentService
-
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -44,7 +43,7 @@ def test_create(
     experiment_service: ExperimentService,
     experiment_registration_form_data: ExperimentRegistrationFormData,
     monkeypatch,
-):  # noqa
+):
     def mockcreatemlflowexperiment(self, experiment_name: str, *args, **kwargs) -> int:
         LOGGER.info(
             "Mocking ExperimentService.create_mlflow_experiment()",
@@ -75,7 +74,7 @@ def test_create(
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_get_by_id(db: SQLAlchemy, experiment_service: ExperimentService):  # noqa
+def test_get_by_id(db: SQLAlchemy, experiment_service: ExperimentService):
     timestamp: datetime.datetime = datetime.datetime.now()
 
     new_experiment: Experiment = Experiment(
@@ -91,7 +90,7 @@ def test_get_by_id(db: SQLAlchemy, experiment_service: ExperimentService):  # no
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_get_by_name(db: SQLAlchemy, experiment_service: ExperimentService):  # noqa
+def test_get_by_name(db: SQLAlchemy, experiment_service: ExperimentService):
     timestamp: datetime.datetime = datetime.datetime.now()
 
     new_experiment: Experiment = Experiment(
@@ -107,7 +106,7 @@ def test_get_by_name(db: SQLAlchemy, experiment_service: ExperimentService):  # 
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
-def test_get_all(db: SQLAlchemy, experiment_service: ExperimentService):  # noqa
+def test_get_all(db: SQLAlchemy, experiment_service: ExperimentService):
     timestamp: datetime.datetime = datetime.datetime.now()
 
     new_experiment1: Experiment = Experiment(
@@ -132,9 +131,11 @@ def test_get_all(db: SQLAlchemy, experiment_service: ExperimentService):  # noqa
 def test_extract_data_from_form(
     experiment_service: ExperimentService,
     experiment_registration_form: ExperimentRegistrationForm,
-):  # noqa
-    experiment_registration_form_data: ExperimentRegistrationFormData = experiment_service.extract_data_from_form(
-        experiment_registration_form=experiment_registration_form
+):
+    experiment_registration_form_data: ExperimentRegistrationFormData = (
+        experiment_service.extract_data_from_form(
+            experiment_registration_form=experiment_registration_form
+        )
     )
 
     assert experiment_registration_form_data["name"] == "mnist"

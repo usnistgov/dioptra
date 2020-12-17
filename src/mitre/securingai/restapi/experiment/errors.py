@@ -41,7 +41,7 @@ def register_error_handlers(api: Api) -> None:
         )
 
     @api.errorhandler(ExperimentMLFlowTrackingAlreadyExistsError)
-    def handle_experiment_already_exists_error(error):
+    def handle_mlflow_tracking_experiment_already_exists_error(error):
         return (
             {
                 "message": "Bad Request - The experiment name on the registration form "
@@ -52,7 +52,7 @@ def register_error_handlers(api: Api) -> None:
         )
 
     @api.errorhandler(ExperimentMLFlowTrackingDoesNotExistError)
-    def handle_experiment_already_exists_error(error):
+    def handle_mlflow_tracking_experiment_does_not_exist_error(error):
         return (
             {
                 "message": "Bad Gateway - The requested experiment exists in "
@@ -63,7 +63,7 @@ def register_error_handlers(api: Api) -> None:
         )
 
     @api.errorhandler(ExperimentMLFlowTrackingRegistrationError)
-    def handle_experiment_registration_error(error):
+    def handle_mlflow_tracking_experiment_registration_error(error):
         return (
             {
                 "message": "Bad Gateway - Experiment registration to the MLFlow "

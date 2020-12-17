@@ -13,7 +13,7 @@ from mitre.securingai.restapi.app import db
 from .interface import QueueUpdateInterface
 
 
-class QueueLock(db.Model):  # type: ignore
+class QueueLock(db.Model):
     __tablename__ = "queue_locks"
 
     queue_id = db.Column(
@@ -26,7 +26,7 @@ class QueueLock(db.Model):  # type: ignore
     queue = db.relationship("Queue", back_populates="lock")
 
 
-class Queue(db.Model):  # type: ignore
+class Queue(db.Model):
     __tablename__ = "queues"
 
     queue_id = db.Column(
@@ -47,7 +47,7 @@ class Queue(db.Model):  # type: ignore
         if queue is None:
             return 1
 
-        return queue.queue_id + 1
+        return int(queue.queue_id) + 1
 
     def update(self, changes: QueueUpdateInterface):
         self.last_modified = datetime.datetime.now()

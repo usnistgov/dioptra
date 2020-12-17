@@ -6,11 +6,11 @@ from subprocess import CompletedProcess
 from tempfile import TemporaryDirectory
 from typing import List, Optional
 
-import rq
 import structlog
+from rq.job import Job as RQJob
+from rq.job import get_current_job
 from structlog import BoundLogger
 from structlog._config import BoundLoggerLazyProxy
-
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
@@ -35,7 +35,7 @@ def run_mlflow_task(
     ]
 
     env = os.environ.copy()
-    rq_job: Optional[rq.job.Job] = rq.get_current_job()
+    rq_job: Optional[RQJob] = get_current_job()
 
     if rq_job is not None:
         env["AI_RQ_JOB_ID"] = rq_job.get_id()

@@ -7,7 +7,6 @@ from mlflow.tracking import MlflowClient
 from structlog import BoundLogger
 from structlog._config import BoundLoggerLazyProxy
 
-
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
 
@@ -20,7 +19,8 @@ class MLFlowTrackingService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         try:
-            return self._client.create_experiment(name=experiment_name)
+            experiment_id: str = self._client.create_experiment(name=experiment_name)
+            return experiment_id
 
         except RestException as e:
             if e.error_code == "RESOURCE_ALREADY_EXISTS":

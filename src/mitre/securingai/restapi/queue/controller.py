@@ -10,24 +10,17 @@ from injector import inject
 from structlog import BoundLogger
 from structlog._config import BoundLoggerLazyProxy
 
-from .errors import QueueRegistrationError, QueueDoesNotExistError
+from .errors import QueueDoesNotExistError, QueueRegistrationError
 from .interface import QueueUpdateInterface
-from .model import (
-    Queue,
-    QueueRegistrationForm,
-    QueueRegistrationFormData,
-)
-from .schema import (
-    QueueSchema,
-    QueueNameUpdateSchema,
-    QueueRegistrationSchema,
-)
+from .model import Queue, QueueRegistrationForm, QueueRegistrationFormData
+from .schema import QueueNameUpdateSchema, QueueRegistrationSchema, QueueSchema
 from .service import QueueService
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 
 api: Namespace = Namespace(
-    "Queue", description="Endpoint for registering new job queues.",
+    "Queue",
+    description="Endpoint for registering new job queues.",
 )
 
 
@@ -100,7 +93,7 @@ class QueueIdResource(Resource):
         log.info("Request received", queue_id=queueId)
         id: List[int] = self._queue_service.delete_queue(queueId, log=log)
 
-        return jsonify(dict(status="Success", id=id))
+        return jsonify(dict(status="Success", id=id))  # type: ignore
 
     @accepts(schema=QueueNameUpdateSchema, api=api)
     @responds(schema=QueueSchema, api=api)
@@ -108,14 +101,14 @@ class QueueIdResource(Resource):
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueId", request_type="PUT"
         )  # noqa: F841
-        changes: QueueUpdateInterface = request.parsed_obj
+        changes: QueueUpdateInterface = request.parsed_obj  # type: ignore
         queue: Optional[Queue] = self._queue_service.get_by_id(queueId, log=log)
 
         if queue is None:
             log.error("Queue not found", queue_id=queueId)
             raise QueueDoesNotExistError
 
-        queue: Queue = self._queue_service.rename_queue(
+        queue = self._queue_service.rename_queue(
             queue=queue, new_name=changes["name"], log=log
         )
 
@@ -143,7 +136,7 @@ class QueueIdLockResource(Resource):
 
         id: List[int] = self._queue_service.unlock_queue(queue, log=log)
 
-        return jsonify(dict(status="Success", id=id))
+        return jsonify(dict(status="Success", id=id))  # type: ignore
 
     def put(self, queueId: int) -> Queue:
         log: BoundLogger = LOGGER.new(
@@ -158,7 +151,7 @@ class QueueIdLockResource(Resource):
 
         id: List[int] = self._queue_service.lock_queue(queue, log=log)
 
-        return jsonify(dict(status="Success", id=id))
+        return jsonify(dict(status="Success", id=id))  # type: ignore
 
 
 @api.route("/name/<string:queueName>")
@@ -198,11 +191,11 @@ class QueueNameResource(Resource):
         )
 
         if queue is None:
-            return jsonify(dict(status="Success", id=[]))
+            return jsonify(dict(status="Success", id=[]))  # type: ignore
 
         id: List[int] = self._queue_service.delete_queue(queue_id=queue.queue_id)
 
-        return jsonify(dict(status="Success", id=id))
+        return jsonify(dict(status="Success", id=id))  # type: ignore
 
     @accepts(schema=QueueNameUpdateSchema, api=api)
     @responds(schema=QueueSchema, api=api)
@@ -210,7 +203,7 @@ class QueueNameResource(Resource):
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueName", request_type="PUT"
         )  # noqa: F841
-        changes: QueueUpdateInterface = request.parsed_obj
+        changes: QueueUpdateInterface = request.parsed_obj  # type: ignore
         queue: Optional[Queue] = self._queue_service.get_by_name(
             queue_name=queueName, log=log
         )
@@ -219,7 +212,7 @@ class QueueNameResource(Resource):
             log.error("Queue not found", queue_name=queueName)
             raise QueueDoesNotExistError
 
-        queue: Queue = self._queue_service.rename_queue(
+        queue = self._queue_service.rename_queue(
             queue=queue, new_name=changes["name"], log=log
         )
 
@@ -250,7 +243,7 @@ class QueueNameLockResource(Resource):
         id: List[int] = self._queue_service.unlock_queue(queue, log=log)
         name: List[str] = [queueName] if id else []
 
-        return jsonify(dict(status="Success", name=name))
+        return jsonify(dict(status="Success", name=name))  # type: ignore
 
     def put(self, queueName: str) -> Queue:
         log: BoundLogger = LOGGER.new(
@@ -266,4 +259,4 @@ class QueueNameLockResource(Resource):
         id: List[int] = self._queue_service.lock_queue(queue, log=log)
         name: List[str] = [queueName] if id else []
 
-        return jsonify(dict(status="Success", name=name))
+        return jsonify(dict(status="Success", name=name))  # type: ignore

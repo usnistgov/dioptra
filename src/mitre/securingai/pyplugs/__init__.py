@@ -1,5 +1,5 @@
 # This is a fork of the work
-# https://github.com/gahjelle/pyplugs/blob/c75a5e1693691adc22bf91d01fad63aa67189d73/pyplugs/__init__.py
+# https://github.com/gahjelle/pyplugs/blob/c75a5e1693691adc22bf91d01fad63aa67189d73/pyplugs/__init__.py  # noqa: B950
 # See copyright below.
 #
 # Copyright (c) 2019 Geir Arne Hjelle
@@ -38,9 +38,6 @@ from datetime import date as _date
 
 from ._exceptions import *  # noqa
 from ._plugins import *  # noqa
-
-__version__ = "0.0.0"
-
 
 __url__ = "https://secure-ai.pages.mitre.org/securing-ai-lab-components"
 

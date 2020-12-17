@@ -4,12 +4,12 @@ import pytest
 import structlog
 from structlog._config import BoundLoggerLazyProxy
 
+from mitre.securingai.restapi.models import Queue, QueueLock
 from mitre.securingai.restapi.queue.interface import (
     QueueInterface,
     QueueLockInterface,
     QueueUpdateInterface,
 )
-from mitre.securingai.restapi.models import Queue, QueueLock
 
 LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
 

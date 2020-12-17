@@ -10,11 +10,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from sqlalchemy import MetaData
 
-
 LOGGER = structlog.get_logger()
 
-csrf = CSRFProtect()
-db = SQLAlchemy(
+csrf: CSRFProtect = CSRFProtect()
+db: SQLAlchemy = SQLAlchemy(
     metadata=MetaData(
         naming_convention={
             "ix": "ix_%(column_0_label)s",
@@ -25,7 +24,7 @@ db = SQLAlchemy(
         }
     )
 )
-migrate = Migrate()
+migrate: Migrate = Migrate()
 
 
 def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
@@ -41,7 +40,9 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
     app.config.from_object(config_by_name[env])
 
     api: Api = Api(
-        app, title="Securing AI Machine Learning Model Endpoint", version="0.0.0",
+        app,
+        title="Securing AI Machine Learning Model Endpoint",
+        version="0.0.0",
     )
     modules: List[Callable[..., Any]] = [bind_dependencies]
 

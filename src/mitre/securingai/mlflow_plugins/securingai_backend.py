@@ -9,18 +9,17 @@ from mlflow.exceptions import ExecutionException
 from mlflow.projects.backend.abstract_backend import AbstractBackend
 from mlflow.projects.submitted_run import LocalSubmittedRun
 from mlflow.projects.utils import (
+    MLFLOW_LOCAL_BACKEND_RUN_ID_CONFIG,
+    PROJECT_STORAGE_DIR,
     fetch_and_validate_project,
+    get_entry_point_command,
     get_or_create_run,
     get_run_env_vars,
     load_project,
-    get_entry_point_command,
-    MLFLOW_LOCAL_BACKEND_RUN_ID_CONFIG,
-    PROJECT_STORAGE_DIR,
 )
 
 from .securingai_clients import SecuringAIDatabaseClient
 from .securingai_tags import SECURINGAI_DEPENDS_ON, SECURINGAI_JOB_ID, SECURINGAI_QUEUE
-
 
 PROJECT_WORKFLOW_FILEPATH = "workflow_filepath"
 _logger = structlog.get_logger()
@@ -86,8 +85,8 @@ class SecuringAIProjectBackend(AbstractBackend):
 
 
 def _run_entry_point(command, work_dir, experiment_id, run_id):
-    """Run an entry point command in a subprocess, returning a SubmittedRun that can be used to
-    query the run's status.
+    """Run an entry point command in a subprocess, returning a SubmittedRun that can be
+    used to query the run's status.
 
     :param command: Entry point command to run
     :param work_dir: Working directory in which to run the command
@@ -115,12 +114,14 @@ def _run_entry_point(command, work_dir, experiment_id, run_id):
 
 
 def _wait_for(submitted_run_obj):
-    """Wait on the passed-in submitted run, reporting its status to the tracking server."""
+    """Wait on the passed-in submitted run, reporting its status to the tracking
+    server.
+    """
     run_id = submitted_run_obj.run_id
     active_run = None
 
-    # Note: there's a small chance we fail to report the run's status to the tracking server if
-    # we're interrupted before we reach the try block below
+    # Note: there's a small chance we fail to report the run's status to the tracking
+    # server if we're interrupted before we reach the try block below
     try:
         active_run = (
             tracking.MlflowClient().get_run(run_id) if run_id is not None else None
@@ -145,9 +146,8 @@ def _wait_for(submitted_run_obj):
 
 
 def _maybe_set_run_terminated(active_run, status):
-    """
-    If the passed-in active run is defined and still running (i.e. hasn't already been terminated
-    within user code), mark it as terminated with the passed-in status.
+    """If the passed-in active run is defined and still running (i.e. hasn't already
+    been terminated within user code), mark it as terminated with the passed-in status.
     """
     if active_run is None:
         return
