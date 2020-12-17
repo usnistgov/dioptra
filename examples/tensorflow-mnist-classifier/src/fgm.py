@@ -9,17 +9,15 @@ import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
 
+from pathlib import Path
+
 import click
 import mlflow
 import mlflow.tensorflow
 import numpy as np
 import structlog
-from pathlib import Path
-
 from attacks import create_adversarial_fgm_dataset
-from data import create_image_dataset
 from log import configure_stdlib_logger, configure_structlog_logger
-
 
 LOGGER = structlog.get_logger()
 
@@ -45,7 +43,9 @@ def evaluate_classification_metrics(classifier, adv_ds):
     help="Root directory for NFS mounted datasets (in container)",
 )
 @click.option(
-    "--model", type=click.STRING, help="Name of model to load from registry",
+    "--model",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -85,7 +85,10 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default="inf",
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def fgm_attack(
     data_dir, model, model_architecture, batch_size, eps, eps_step, minimal, norm, seed

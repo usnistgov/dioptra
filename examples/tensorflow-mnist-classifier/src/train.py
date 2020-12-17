@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 import datetime
-import os
 import warnings
 from pathlib import Path
-from typing import Optional
+from typing import List
 
 warnings.filterwarnings("ignore")
 
@@ -17,19 +16,14 @@ import mlflow
 import mlflow.tensorflow
 import numpy as np
 import structlog
-from mlflow.tracking.client import MlflowClient
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.metrics import (
-    CategoricalAccuracy,
-    Precision,
-    Recall,
-    AUC,
-)
-from tensorflow.keras.optimizers import Adam, Adagrad, RMSprop, SGD
-
 from data import create_image_dataset
 from log import configure_stdlib_logger, configure_structlog_logger
-from models import shallow_net, le_net, alex_net, make_model_register
+from mlflow.tracking.client import MlflowClient
+from models import alex_net, le_net, make_model_register, shallow_net
+from tensorflow.keras.callbacks import Callback, EarlyStopping
+from tensorflow.keras.metrics import AUC, CategoricalAccuracy, Precision, Recall
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import SGD, Adagrad, Adam, Optimizer, RMSprop
 
 LOGGER = structlog.get_logger()
 METRICS = [
@@ -40,7 +34,7 @@ METRICS = [
 ]
 
 
-def get_optimizer(optimizer, learning_rate):
+def get_optimizer(optimizer: str, learning_rate: float) -> Optimizer:
     optimizer_collection = {
         "rmsprop": RMSprop(learning_rate),
         "adam": Adam(learning_rate),
@@ -51,9 +45,7 @@ def get_optimizer(optimizer, learning_rate):
     return optimizer_collection.get(optimizer)
 
 
-def get_model(
-    model_architecture: str, n_classes: int = 10,
-):
+def get_model(model_architecture: str, n_classes: int = 10) -> Sequential:
     model_collection = {
         "shallow_net": shallow_net(input_shape=(28, 28, 1), n_classes=n_classes),
         "le_net": le_net(input_shape=(28, 28, 1), n_classes=n_classes),
@@ -63,7 +55,7 @@ def get_model(
     return model_collection.get(model_architecture)
 
 
-def get_model_callbacks():
+def get_model_callbacks() -> List[Callback]:
     early_stop = EarlyStopping(
         monitor="val_loss", min_delta=1e-2, patience=5, restore_best_weights=True
     )
@@ -71,11 +63,17 @@ def get_model_callbacks():
     return [early_stop]
 
 
-def init_model(learning_rate, model_architecture: str, optimizer: str):
-    model_optimizer = get_optimizer(optimizer=optimizer, learning_rate=learning_rate)
-    model = get_model(model_architecture=model_architecture)
+def init_model(
+    learning_rate: float, model_architecture: str, optimizer: str
+) -> Sequential:
+    model_optimizer: Optimizer = get_optimizer(
+        optimizer=optimizer, learning_rate=learning_rate
+    )
+    model: Sequential = get_model(model_architecture=model_architecture)
     model.compile(
-        loss="categorical_crossentropy", optimizer=model_optimizer, metrics=METRICS,
+        loss="categorical_crossentropy",
+        optimizer=model_optimizer,
+        metrics=METRICS,
     )
 
     return model
@@ -131,7 +129,8 @@ def fit(model, training_ds, validation_ds, epochs):
     time_start = datetime.datetime.now()
 
     LOGGER.info(
-        "training tensorflow model", timestamp=time_start.isoformat(),
+        "training tensorflow model",
+        timestamp=time_start.isoformat(),
     )
 
     history = model.fit(
@@ -184,7 +183,10 @@ def evaluate_metrics(model, testing_ds):
     help="Model architecture",
 )
 @click.option(
-    "--epochs", type=click.INT, help="Number of epochs to train model", default=30,
+    "--epochs",
+    type=click.INT,
+    help="Number of epochs to train model",
+    default=30,
 )
 @click.option(
     "--batch-size",
@@ -214,7 +216,10 @@ def evaluate_metrics(model, testing_ds):
     default=0.2,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def train(
     data_dir,
@@ -259,13 +264,14 @@ def train(
         mlflow.log_param("tensorflow_global_seed", tensorflow_global_seed)
         mlflow.log_param("dataset_seed", dataset_seed)
 
-        experiment_name: str = MlflowClient().get_experiment(
-            active_run.info.experiment_id
-        ).name
+        experiment_name: str = (
+            MlflowClient().get_experiment(active_run.info.experiment_id).name
+        )
         model_name: str = f"{experiment_name}_{model_architecture}"
 
         register_mnist_model = make_model_register(
-            active_run=active_run, name=model_name,
+            active_run=active_run,
+            name=model_name,
         )
 
         training_ds, validation_ds, testing_ds = prepare_data(

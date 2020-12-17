@@ -9,17 +9,16 @@ import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
 
+from pathlib import Path
+
 import click
 import mlflow
 import mlflow.tensorflow
 import numpy as np
 import structlog
-from pathlib import Path
-
 from data import create_image_dataset, download_image_archive
 from log import configure_stdlib_logger, configure_structlog_logger
 from models import load_model_in_registry
-
 
 LOGGER = structlog.get_logger()
 
@@ -38,10 +37,14 @@ def evaluate_classification_metrics(classifier, adv_ds):
 
 @click.command()
 @click.option(
-    "--run-id", type=click.STRING, help="MLFlow Run ID of a successful fgm attack",
+    "--run-id",
+    type=click.STRING,
+    help="MLFlow Run ID of a successful fgm attack",
 )
 @click.option(
-    "--model", type=click.STRING, help="Name of model to load from registry",
+    "--model",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -56,7 +59,10 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default=32,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def infer_adversarial(run_id, model, model_architecture, batch_size, seed):
     rng = np.random.default_rng(seed if seed >= 0 else None)

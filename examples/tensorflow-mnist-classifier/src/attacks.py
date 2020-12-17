@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import warnings
-from typing import Tuple
 from pathlib import Path
+from typing import Callable, Dict, List, Tuple
 
 warnings.filterwarnings("ignore")
 
@@ -17,10 +17,6 @@ import scipy.stats
 import structlog
 from art.attacks.evasion import FastGradientMethod
 from art.estimators.classification import KerasClassifier
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.preprocessing.image import save_img
-
-from models import load_model_in_registry
 from metrics import (
     l_inf_norm,
     paired_cosine_similarities,
@@ -28,9 +24,11 @@ from metrics import (
     paired_manhattan_distances,
     paired_wasserstein_distances,
 )
+from models import load_model_in_registry
+from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
 
 LOGGER = structlog.get_logger()
-DISTANCE_METRICS = [
+DISTANCE_METRICS: List[Tuple[str, Callable[..., np.ndarray]]] = [
     ("l_infinity_norm", l_inf_norm),
     ("cosine_similarity", paired_cosine_similarities),
     ("euclidean_distance", paired_euclidean_distances),
@@ -39,18 +37,20 @@ DISTANCE_METRICS = [
 ]
 
 
-def wrap_keras_classifier(model):
+def wrap_keras_classifier(model) -> KerasClassifier:
     keras_model = load_model_in_registry(model=model)
     return KerasClassifier(model=keras_model)
 
 
-def init_fgm(model, batch_size, **kwargs):
-    classifier = wrap_keras_classifier(model)
-    attack = FastGradientMethod(estimator=classifier, batch_size=batch_size, **kwargs)
+def init_fgm(model, batch_size, **kwargs) -> Tuple[KerasClassifier, FastGradientMethod]:
+    classifier: KerasClassifier = wrap_keras_classifier(model)
+    attack: FastGradientMethod = FastGradientMethod(
+        estimator=classifier, batch_size=batch_size, **kwargs
+    )
     return classifier, attack
 
 
-def save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames):
+def save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames) -> None:
     for batch_image_num, adv_image in enumerate(adv_batch):
         adv_image_path = (
             adv_data_dir
@@ -64,19 +64,20 @@ def save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames):
         save_img(path=str(adv_image_path), x=adv_image)
 
 
-def np_norm(im, im2, order):
+def np_norm(im, im2, order) -> List[float]:
     im_diff = im - im2
     batch_size = im_diff.shape[0]
     flatten_size = np.prod(im_diff.shape[1:])
-    im_diff_norm = np.linalg.norm(
+    im_diff_norm: np.ndarray = np.linalg.norm(
         im_diff.reshape((batch_size, flatten_size)), axis=1, ord=order
     )
-    return im_diff_norm.tolist()
+    im_diff_norm_list: List[float] = im_diff_norm.tolist()
+    return im_diff_norm_list
 
 
 def evaluate_distance_metrics(
     clean_filenames, distance_metrics_, clean_batch, adv_batch
-):
+) -> None:
     LOGGER.debug("evaluate image perturbations using distance metrics")
     distance_metrics_["image"].extend([x.name for x in clean_filenames])
     distance_metrics_["label"].extend([x.parent for x in clean_filenames])
@@ -84,7 +85,7 @@ def evaluate_distance_metrics(
         distance_metrics_[metric_name].extend(metric(clean_batch, adv_batch))
 
 
-def log_distance_metrics(distance_metrics_):
+def log_distance_metrics(distance_metrics_: Dict[str, List[List[float]]]) -> None:
     distance_metrics_ = distance_metrics_.copy()
     del distance_metrics_["image"]
     del distance_metrics_["label"]
@@ -127,7 +128,7 @@ def create_adversarial_fgm_dataset(
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]
 
-    distance_metrics_ = {"image": [], "label": []}
+    distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
     for metric_name, _ in DISTANCE_METRICS:
         distance_metrics_[metric_name] = []
 
@@ -142,11 +143,13 @@ def create_adversarial_fgm_dataset(
             break
 
         clean_filenames = img_filenames[
-            batch_num * batch_size : (batch_num + 1) * batch_size
+            batch_num * batch_size : (batch_num + 1) * batch_size  # noqa: E203
         ]
 
         LOGGER.info(
-            "Generate adversarial image batch", attack="fgm", batch_num=batch_num,
+            "Generate adversarial image batch",
+            attack="fgm",
+            batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)

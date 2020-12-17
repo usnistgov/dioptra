@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import click
 import mnist
@@ -10,7 +10,6 @@ import pandas as pd
 from PIL import Image
 from rich.console import Console
 from rich.panel import Panel
-
 
 CONSOLE: Console = Console()
 
@@ -65,12 +64,14 @@ class MnistDataset(object):
     def training(self) -> pd.DataFrame:
         if self._train_images_cache is None:
             self._train_images_cache = mnist.download_and_parse_mnist_file(
-                fname=self.train_images, target_dir=self._cache_dir,
+                fname=self.train_images,
+                target_dir=self._cache_dir,
             )
 
         if self._train_labels_cache is None:
             self._train_labels_cache = mnist.download_and_parse_mnist_file(
-                fname=self.train_labels, target_dir=self._cache_dir,
+                fname=self.train_labels,
+                target_dir=self._cache_dir,
             )
 
         return pd.DataFrame(
@@ -85,12 +86,14 @@ class MnistDataset(object):
     def testing(self) -> pd.DataFrame:
         if self._test_images_cache is None:
             self._test_images_cache = mnist.download_and_parse_mnist_file(
-                fname=self.test_images, target_dir=self._cache_dir,
+                fname=self.test_images,
+                target_dir=self._cache_dir,
             )
 
         if self._test_labels_cache is None:
             self._test_labels_cache = mnist.download_and_parse_mnist_file(
-                fname=self.test_labels, target_dir=self._cache_dir,
+                fname=self.test_labels,
+                target_dir=self._cache_dir,
             )
 
         return pd.DataFrame(
@@ -139,8 +142,10 @@ def save_gif_images(dataset: pd.DataFrame, target_dir: Path) -> None:
     default=f"{Path(__file__).parent}",
     help="Save dataset in this directory",
 )
-def download_data(training: bool, testing: bool, cache_dir: str, data_dir: str) -> None:
-    cache_dir: Path = Path(cache_dir)
+def download_data(
+    training: bool, testing: bool, cache_dir: Union[str, Path], data_dir: str
+) -> None:
+    cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_dir.chmod(0o777)
 

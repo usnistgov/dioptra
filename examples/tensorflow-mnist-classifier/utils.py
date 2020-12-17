@@ -4,8 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse, urlunparse
 
 import requests
-from IPython.display import HTML, Image
-
+from IPython.display import HTML
 
 PathLike = List[Union[str, Path]]
 
@@ -73,7 +72,8 @@ class SecuringAIClient(object):
         experiment_registration_form = {"name": name}
 
         response = requests.post(
-            self.experiment_endpoint, data=experiment_registration_form,
+            self.experiment_endpoint,
+            data=experiment_registration_form,
         )
 
         return response.json()
@@ -82,7 +82,8 @@ class SecuringAIClient(object):
         queue_registration_form = {"name": name}
 
         response = requests.post(
-            self.queue_endpoint, data=queue_registration_form,
+            self.queue_endpoint,
+            data=queue_registration_form,
         )
 
         return response.json()
@@ -114,16 +115,20 @@ class SecuringAIClient(object):
 
         with workflows_file.open("rb") as f:
             job_files = {"workflow": (workflows_file.name, f)}
-            response = requests.post(self.job_endpoint, data=job_form, files=job_files,)
+            response = requests.post(
+                self.job_endpoint,
+                data=job_form,
+                files=job_files,
+            )
 
         return response.json()
 
 
 def notebook_gallery(images: PathLike, row_height: str = "auto") -> HTML:
     """Display a set of images in a gallery that flexes with the width of the notebook.
-    
+
     Adapted from https://mindtrove.info/jupyter-tidbit-image-gallery/.
-    
+
     Args:
         images: Filepaths of images to display
 

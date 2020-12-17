@@ -12,7 +12,6 @@ import structlog
 from mlflow.entities import Run as MlflowRun
 from mlflow.entities.model_registry import ModelVersion
 from mlflow.tracking import MlflowClient
-from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import (
     BatchNormalization,
     Conv2D,
@@ -21,7 +20,7 @@ from tensorflow.keras.layers import (
     Flatten,
     MaxPooling2D,
 )
-
+from tensorflow.keras.models import Sequential
 
 LOGGER = structlog.get_logger()
 
@@ -47,7 +46,9 @@ def make_model_register(
     def inner_func(model_dir: str) -> ModelVersion:
         source: str = f"{artifact_uri}/{model_dir}"
         LOGGER.info("create model version", name=name, source=source, run_id=run_id)
-        return MlflowClient().create_model_version(name=name, source=source, run_id=run_id)
+        return MlflowClient().create_model_version(
+            name=name, source=source, run_id=run_id
+        )
 
     return inner_func
 

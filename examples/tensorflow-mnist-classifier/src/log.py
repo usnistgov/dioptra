@@ -2,14 +2,15 @@
 import datetime
 import logging
 import sys
+from typing import Any, List, Optional
 
 import structlog
 from pythonjsonlogger import jsonlogger
 
 
-def configure_stdlib_logger(level, log_filepath):
+def configure_stdlib_logger(level: str, log_filepath: Optional[str]) -> None:
     root_logger: logging.Logger = logging.getLogger()
-    level: str = _get_logging_level(level.strip().upper())
+    level = _get_logging_level(level.strip().upper())
 
     if log_filepath is None:
         handler = logging.StreamHandler(sys.stdout)
@@ -25,8 +26,8 @@ def configure_stdlib_logger(level, log_filepath):
     logging.getLogger("tensorflow").setLevel(logging.WARNING)
 
 
-def configure_structlog_logger(fmt):
-    processors = _set_structlog_processors(fmt=fmt)
+def configure_structlog_logger(fmt: str) -> None:
+    processors: List[Any] = _set_structlog_processors(fmt=fmt)
 
     structlog.configure_once(
         processors=processors,
@@ -45,7 +46,7 @@ def _add_timestamp(_, __, event_dict: dict) -> dict:
     return event_dict
 
 
-def _get_logging_level(level):
+def _get_logging_level(level: str) -> str:
     allowed_levels = {"DEBUG", "ERROR", "INFO", "WARNING"}
 
     if level not in allowed_levels:
@@ -54,7 +55,7 @@ def _get_logging_level(level):
     return level
 
 
-def _set_structlog_processors(fmt):
+def _set_structlog_processors(fmt: str) -> List[Any]:
     if fmt == "json":
         return [
             structlog.stdlib.filter_by_level,

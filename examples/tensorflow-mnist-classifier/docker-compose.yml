@@ -1,25 +1,39 @@
 
-version: "3.7"
+version: "2.4"
+
+networks:
+  lab_deployment_backend:
+  lab_deployment_frontend:
+
 services:
   redis:
-    image: securing-ai/redis:0.0.0-1
+    image: securing-ai/redis:latest
     init: true
     restart: always
     hostname: redis
     container_name: redis
+    cpuset: 0-1
+    cpu_shares: 256
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 30
+    command: redis-server --appendonly yes
+    networks:
+      - lab_deployment_backend
+    volumes:
+      - redis-data:/data
 
   minio:
-    image: minio/minio:RELEASE.2020-09-02T18-19-50Z
+    image: minio/minio:latest
     init: true
     restart: always
     hostname: minio
     container_name: minio
     command: server /data
+    cpuset: 0-1
+    cpu_shares: 256
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -28,17 +42,19 @@ services:
     environment:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
+    networks:
+      - lab_deployment_backend
     volumes:
-      - type: volume
-        source: nfs-s3
-        target: /data
+      - minio-data:/data
 
   mlflow-tracking:
-    image: securing-ai/mlflow-tracking:0.0.0-1
+    image: securing-ai/mlflow-tracking:latest
     init: true
     restart: always
     hostname: mlflow-tracking
     container_name: mlflow-tracking
+    cpuset: 0-1
+    cpu_shares: 256
     depends_on:
       - minio
     healthcheck:
@@ -55,17 +71,20 @@ services:
       AWS_ACCESS_KEY_ID: minio
       AWS_SECRET_ACCESS_KEY: minio123
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    networks:
+      - lab_deployment_backend
+      - lab_deployment_frontend
     volumes:
-      - type: volume
-        source: nfs-mlruns
-        target: /work/mlruns
+      - mlflow-tracking-data:/work/mlruns
 
   nginx:
-    image: securing-ai/nginx:0.0.0-1
+    image: securing-ai/nginx:latest
     init: true
     restart: always
     hostname: nginx
     container_name: nginx
+    cpuset: 0-1
+    cpu_shares: 256
     depends_on:
       - mlflow-tracking
       - restapi
@@ -84,22 +103,20 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - lab_deployment_frontend
     ports:
-      - target: 35000
-        published: 35000
-        protocol: tcp
-        mode: host
-      - target: 30080
-        published: 30080
-        protocol: tcp
-        mode: host
+      - "35000:35000/tcp"
+      - "30080:30080/tcp"
 
   restapi:
-    image: securing-ai/restapi:0.0.0-1
+    image: securing-ai/restapi:latest
     init: true
     restart: always
     hostname: restapi
     container_name: restapi
+    cpuset: 0-1
+    cpu_shares: 256
     depends_on:
       - minio
       - mlflow-tracking
@@ -118,17 +135,20 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
       RQ_REDIS_URI: redis://redis:6379/0
+    networks:
+      - lab_deployment_backend
+      - lab_deployment_frontend
     volumes:
-      - type: volume
-        source: nfs-restapi
-        target: /work/data
+      - restapi-data:/work/data
 
   tfcpu-01:
-    image: securing-ai/tensorflow2-cpu-py37:0.0.0-1
+    image: securing-ai/tensorflow2-cpu:latest
     init: true
     restart: always
     hostname: tfcpu-01
     container_name: tfcpu-01
+    cpuset: 0-5
+    cpu_shares: 1024
     environment:
       AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
       AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
@@ -145,20 +165,20 @@ services:
       TF_CPP_MIN_LOG_LEVEL: "2"
     command:
       - tensorflow_cpu
+    networks:
+      - lab_deployment_backend
     volumes:
-      - type: volume
-        source: nfs-data
-        target: /nfs/data
-      - type: volume
-        source: nfs-restapi
-        target: /work/data
+      - nfs-datasets:/nfs/data
+      - restapi-data:/work/data
 
   tfcpu-02:
-    image: securing-ai/tensorflow2-cpu-py37:0.0.0-1
+    image: securing-ai/tensorflow2-cpu:latest
     init: true
     restart: always
     hostname: tfcpu-02
     container_name: tfcpu-02
+    cpuset: 0-5
+    cpu_shares: 1024
     environment:
       AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
       AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
@@ -175,42 +195,40 @@ services:
       TF_CPP_MIN_LOG_LEVEL: "2"
     command:
       - tensorflow_cpu
+    networks:
+      - lab_deployment_backend
     volumes:
-      - type: volume
-        source: nfs-data
-        target: /nfs/data
-      - type: volume
-        source: nfs-restapi
-        target: /work/data
+      - nfs-datasets:/nfs/data
+      - restapi-data:/work/data
 
 volumes:
-  nfs-data:
+  nfs-datasets:
     driver: local
     driver_opts:
-      type: nfs
-      o: addr=host.docker.internal,ro,nolock,hard,nointr,nfsvers=3
-      device: ":/System/Volumes/Data/${PWD}/data"
-  nfs-mlruns:
+      type: none
+      o: bind
+      device: ${PWD}/data
+  minio-data:
     driver: local
     driver_opts:
-      type: nfs
-      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
-      device: ":/System/Volumes/Data/${PWD}/mlruns"
-  nfs-redis:
+      type: none
+      o: bind
+      device: ${PWD}/s3
+  mlflow-tracking-data:
     driver: local
     driver_opts:
-      type: nfs
-      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
-      device: ":/System/Volumes/Data/${PWD}/redis"
-  nfs-restapi:
+      type: none
+      o: bind
+      device: ${PWD}/mlruns
+  redis-data:
     driver: local
     driver_opts:
-      type: nfs
-      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
-      device: ":/System/Volumes/Data/${PWD}/restapi"
-  nfs-s3:
+      type: none
+      o: bind
+      device: ${PWD}/redis
+  restapi-data:
     driver: local
     driver_opts:
-      type: nfs
-      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
-      device: ":/System/Volumes/Data/${PWD}/s3"
+      type: none
+      o: bind
+      device: ${PWD}/restapi

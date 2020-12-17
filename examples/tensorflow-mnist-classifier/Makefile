@@ -11,30 +11,30 @@ MAKEFLAGS += --no-builtin-rules
 #################################################################################
 
 ifeq ($(OS),Windows_NT)
-    DETECTED_OS := Windows
+DETECTED_OS := Windows
 else
-    DETECTED_OS := $(shell sh -c "uname 2>/dev/null || echo Unknown")
+DETECTED_OS := $(shell sh -c "uname 2>/dev/null || echo Unknown")
 endif
 
 ifeq ($(DETECTED_OS),Darwin)
-    CORES = $(shell sysctl -n hw.physicalcpu_max)
-    CHOWN_PERM =
-    IMAGE_SUFFIX =
+CORES = $(shell sysctl -n hw.physicalcpu_max)
+CHOWN_PERM =
 else ifeq ($(DETECTED_OS),Linux)
-    CORES = $(shell lscpu -p | egrep -v '^\#' | sort -u -t, -k 2,4 | wc -l)
-    CHOWN_PERM = :users
-    IMAGE_SUFFIX = -username
+CORES = $(shell lscpu -p | egrep -v '^\#' | sort -u -t, -k 2,4 | wc -l)
+CHOWN_PERM = :users
 else
-    CORES = 1
-    CHOWN_PERM =
-    IMAGE_SUFFIX =
+CORES = 1
+CHOWN_PERM =
 endif
 
 EXAMPLE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 EXAMPLE_NAME = tensorflow-mnist-classifier
 EXAMPLE_CONDA_ENV_NAME = tensorflow-mnist-classifier
 EXAMPLE_DATA_DIR = data
-EXAMPLE_RESTAPI_DIR = restapi
+EXAMPLE_MINIO_DATA_DIR = s3
+EXAMPLE_MLFLOW_TRACKING_DATA_DIR = mlruns
+EXAMPLE_REDIS_DATA_DIR = redis
+EXAMPLE_RESTAPI_DATA_DIR = restapi
 EXAMPLE_SRC_DIR = src
 
 CONDA = conda
@@ -49,7 +49,7 @@ TAR = tar
 CODE_SRC_FILES := $(wildcard $(EXAMPLE_SRC_DIR)/*.py)
 CODE_WORKFLOW_FILE = MLproject
 
-RESTAPI_DATABASE = $(EXAMPLE_RESTAPI_DIR)/securingai.db
+RESTAPI_DATABASE = $(EXAMPLE_RESTAPI_DATA_DIR)/securingai.db
 RESTAPI_DATABASE_INIT_SCRIPT_FILE = initdb.py
 
 S3_WORKFLOW_BUCKET = workflow
@@ -61,102 +61,97 @@ WORKFLOWS_TARBALL_FILE = workflows.tar.gz
 DOCKER_COMPOSE_SENTINEL = .docker-compose.sentinel
 TRAINING_DATASET_SENTINEL = .training-dataset.sentinel
 TESTING_DATASET_SENTINEL = .testing-dataset.sentinel
-WORKFLOWS_UPLOAD_SENTINEL = .workflows-upload.sentinel
 
 #################################################################################
 # FUNCTIONS                                                                     #
 #################################################################################
 
 define chmod
-    chmod $(1) $(2)
+chmod $(1) $(2)
+endef
+
+define chown
+chown $(CHOWN_PERM) $(1)
 endef
 
 define cleanup
-    $(FIND) $(1) -name "__pycache__" -type d -exec $(RM) -rf {} +
-    $(FIND) $(1) -name "*.py[co]" -type f -exec $(RM) -rf {} +
+$(FIND) $(1) -name "__pycache__" -type d -exec $(RM) -rf {} +
+$(FIND) $(1) -name "*.py[co]" -type f -exec $(RM) -rf {} +
 endef
 
 define download_data
-    $(call run_docker_compose,\
-        run\
-        --rm\
-        --entrypoint ""\
-        -v $(strip $(1)):/work/demo:cached\
-        -w /work/demo\
-        tfcpu-01\
-        bash -c "\
-            source /opt/conda/etc/profile.d/conda.sh &&\
-            conda activate base &&\
-            $(PY) $(DATA_DOWNLOAD_FILE) --data-dir $(2) $(3)")
+$(call run_docker_compose,\
+    run\
+    --rm\
+    --entrypoint ""\
+    -v $(strip $(1)):/work/demo:cached\
+    -w /work/demo\
+    tfcpu-01\
+    bash -c "\
+        source /opt/conda/etc/profile.d/conda.sh &&\
+        conda activate base &&\
+        $(PY) $(DATA_DOWNLOAD_FILE) --data-dir $(2) $(3)")
 endef
 
-define fix_access_permissions
-    chown $(CHOWN_PERM) $(1)/data
-    chown $(CHOWN_PERM) $(1)/mlruns
-    chown $(CHOWN_PERM) $(1)/restapi
-    chown $(CHOWN_PERM) $(1)/s3
-endef
-
-define fix_mode_permissions
-    $(call chmod,2775,$(1)/data)
-    $(call chmod,2775,$(1)/mlruns)
-    $(call chmod,2775,$(1)/restapi)
-    $(call chmod,2775,$(1)/s3)
-    $(call chmod,0755,$(1)/docker-gpu.sh)
+define fix_permissions
+$(call chmod,2775,$(1))
+ifdef CHOWN_PERM
+$(call chown,$(1))
+endif
 endef
 
 define init_database
-    $(call run_docker_compose,\
-        run\
-        --rm\
-        --entrypoint ""\
-        -v $(strip $(1))/$(strip $(2)):/work/$(strip $(2))\
-        restapi\
-        /opt/conda/condabin/conda run -n base python /work/$(strip $(2)))
+$(call run_docker_compose,\
+    run\
+    --rm\
+    --entrypoint ""\
+    -v $(strip $(1))/$(strip $(2)):/work/$(strip $(2))\
+    restapi\
+    /opt/conda/condabin/conda run -n base python /work/$(strip $(2)))
 endef
 
 define make_subdirectory
-    mkdir -p "$(strip $(1))"
+mkdir -p "$(strip $(1))"
 endef
 
 define make_tarball
-    $(TAR) czf $(1) $(2)
+$(TAR) czf $(1) $(2)
 endef
 
 define run_docker
-    $(DOCKER) $(1)
+$(DOCKER) $(1)
 endef
 
 define run_docker_compose
-    $(DOCKER_COMPOSE) $(1)
+$(DOCKER_COMPOSE) $(1)
 endef
 
 define s3_cp
-    $(call run_docker_compose,\
-        run\
-        --rm\
-        --entrypoint ""\
-        -v $(strip $(1))/$(strip $(2)):/work/$(strip $(2))\
-        tfcpu-01\
-        s3-cp.sh --endpoint-url http://minio$(strip $(IMAGE_SUFFIX)):9000\
-        /work/$(strip $(2)) s3://$(strip $(3))/$(strip $(2)))
+$(call run_docker_compose,\
+    run\
+    --rm\
+    --entrypoint ""\
+    -v $(strip $(1))/$(strip $(2)):/work/$(strip $(2))\
+    tfcpu-01\
+    s3-cp.sh --endpoint-url http://minio:9000\
+    /work/$(strip $(2)) s3://$(strip $(3))/$(strip $(2)))
 endef
 
 define s3_mb
-    $(call run_docker_compose,\
-        run\
-        --rm\
-        --entrypoint ""\
-        mlflow-tracking$(strip $(IMAGE_SUFFIX))\
-        s3-mb.sh --endpoint-url http://minio$(strip $(IMAGE_SUFFIX)):9000 $(strip $(1)))
+$(call run_docker_compose,\
+    run\
+    --rm\
+    --entrypoint ""\
+    mlflow-tracking\
+    s3-mb.sh --endpoint-url http://minio:9000 $(strip $(1)))
 endef
 
 define save_sentinel_file
-	@touch $(1)
+@touch $(1)
 endef
 
 define split_string_and_get_word
-    $(word $3,$(subst $2, ,$1))
+$(word $3,$(subst $2, ,$1))
 endef
 
 #################################################################################
@@ -190,68 +185,35 @@ workflows: $(WORKFLOWS_TARBALL_FILE)
 # PROJECT SUPPORT RULES                                                         #
 #################################################################################
 
-$(DOCKER_COMPOSE_SENTINEL):
-	$(call make_subdirectory,s3)
-	$(call make_subdirectory,mlruns)
-	$(call make_subdirectory,restapi)
-ifdef CHOWN_PERM
-	$(call fix_access_permissions,.)
-endif
-	$(call fix_mode_permissions,.)
-	$(call run_docker_compose,up -d\
-		mlflow-tracking$(strip $(IMAGE_SUFFIX))\
-		nginx$(strip $(IMAGE_SUFFIX))\
-		redis$(strip $(IMAGE_SUFFIX))\
-		restapi$(strip $(IMAGE_SUFFIX)))
+$(EXAMPLE_MINIO_DATA_DIR): ; $(call make_subdirectory,$@) ; $(call fix_permissions,$@)
+$(EXAMPLE_MLFLOW_TRACKING_DATA_DIR): ; $(call make_subdirectory,$@) ; $(call fix_permissions,$@)
+$(EXAMPLE_REDIS_DATA_DIR): ; $(call make_subdirectory,$@) ; $(call fix_permissions,$@)
+$(EXAMPLE_RESTAPI_DATA_DIR): ; $(call make_subdirectory,$@) ; $(call fix_permissions,$@)
+
+$(DOCKER_COMPOSE_SENTINEL): | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
+	$(call run_docker_compose,up -d mlflow-tracking nginx redis restapi)
 	$(call s3_mb,$(S3_WORKFLOW_BUCKET))
-	$(call run_docker_compose,up -d\
-		tfcpu-01$(strip $(IMAGE_SUFFIX))\
-		tfcpu-02$(strip $(IMAGE_SUFFIX)))
+	$(call run_docker_compose,up -d tfcpu-01 tfcpu-02)
 	$(call save_sentinel_file,$@)
 
-$(RESTAPI_DATABASE): $(RESTAPI_DATABASE_INIT_SCRIPT_FILE)
-	$(call make_subdirectory,mlruns)
-	$(call make_subdirectory,s3)
-	$(call make_subdirectory,$(@D))
-ifdef CHOWN_PERM
-	$(call fix_access_permissions,.)
-endif
-	$(call fix_mode_permissions,.)
+$(RESTAPI_DATABASE): $(RESTAPI_DATABASE_INIT_SCRIPT_FILE) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
 	$(call init_database,$(EXAMPLE_DIR),$(RESTAPI_DATABASE_INIT_SCRIPT_FILE))
 	$(call run_docker_compose, down)
 	$(RM) -f $(DOCKER_COMPOSE_SENTINEL)
 
-$(TRAINING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
-	$(call make_subdirectory,s3)
-	$(call make_subdirectory,mlruns)
-	$(call make_subdirectory,restapi)
-ifdef CHOWN_PERM
-	$(call fix_access_permissions,.)
-endif
-	$(call fix_mode_permissions,.)
+$(TRAINING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
 	$(call chmod,777,$(EXAMPLE_DATA_DIR))
 	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--training)
-	$(call save_sentinel_file,$(TRAINING_DATASET_SENTINEL))
+	$(call save_sentinel_file,$@)
 
-$(TESTING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
-	$(call make_subdirectory,s3)
-	$(call make_subdirectory,mlruns)
-	$(call make_subdirectory,restapi)
-ifdef CHOWN_PERM
-	$(call fix_access_permissions,.)
-endif
-	$(call fix_mode_permissions,.)
+$(TESTING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
 	$(call chmod,777,$(EXAMPLE_DATA_DIR))
 	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--testing)
-	$(call save_sentinel_file,$(TESTING_DATASET_SENTINEL))
+	$(call save_sentinel_file,$@)
 
 $(WORKFLOWS_TARBALL_FILE): $(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE)
 	$(call make_tarball,$@,$(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE))
 	$(call chmod,644,$(WORKFLOWS_TARBALL_FILE))
-
-$(WORKFLOWS_UPLOAD_SENTINEL): $(WORKFLOWS_TARBALL_FILE)
-	$(call s3_cp,$(EXAMPLE_DIR),$(WORKFLOWS_TARBALL_FILE),$(S3_WORKFLOW_BUCKET))
-	$(call save_sentinel_file,$(WORKFLOWS_UPLOAD_SENTINEL))
 
 #################################################################################
 # Self Documenting Commands                                                     #
