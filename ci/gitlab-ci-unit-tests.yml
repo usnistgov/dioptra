@@ -1,0 +1,114 @@
+test:unit:py37:
+  stage: test:code
+  dependencies: []
+  script:
+    - tox -e clean,pytest
+  tags:
+    - tox-py37
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: "$CI_COMMIT_TAG"
+    - if: "$CI_COMMIT_BRANCH"
+
+test:unit:py38:
+  stage: test:code
+  dependencies: []
+  script:
+    - tox -e clean,pytest
+  tags:
+    - tox-py38
+  artifacts:
+    paths:
+      - coverage
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: "$CI_COMMIT_TAG"
+    - if: "$CI_COMMIT_BRANCH"
+
+test:black:
+  stage: test:code
+  dependencies: []
+  script:
+    - tox -e black
+  tags:
+    - tox-py38
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: "$CI_COMMIT_TAG"
+    - if: "$CI_COMMIT_BRANCH"
+
+test:isort:
+  stage: test:code
+  dependencies: []
+  script:
+    - tox -e isort
+  tags:
+    - tox-py38
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: "$CI_COMMIT_TAG"
+    - if: "$CI_COMMIT_BRANCH"
+
+test:flake8:
+  stage: test:code
+  dependencies: []
+  script:
+    - tox -e flake8
+  tags:
+    - tox-py38
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: "$CI_COMMIT_TAG"
+    - if: "$CI_COMMIT_BRANCH"
+
+test:mypy:
+  stage: test:code
+  dependencies: []
+  script:
+    - tox -e mypy
+  tags:
+    - tox-py38
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: "$CI_COMMIT_TAG"
+    - if: "$CI_COMMIT_BRANCH"
+
+test:gitlint:
+  stage: test:code
+  dependencies: []
+  script:
+    - tox -e gitlint
+  tags:
+    - tox-py38
+  cache:
+    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
+    paths:
+      - .tox
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: "$CI_COMMIT_TAG"
+    - if: "$CI_COMMIT_BRANCH"

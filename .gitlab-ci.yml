@@ -1,109 +1,33 @@
+include:
+  - local: ci/gitlab-ci-build-code.yml
+  - local: ci/gitlab-ci-mlflow-tracking.yml
+  - local: ci/gitlab-ci-nginx.yml
+  - local: ci/gitlab-ci-python-build.yml
+  - local: ci/gitlab-ci-pytorch-cpu.yml
+  - local: ci/gitlab-ci-pytorch-gpu.yml
+  - local: ci/gitlab-ci-restapi.yml
+  - local: ci/gitlab-ci-sphinx.yml
+  - local: ci/gitlab-ci-tensorflow2-cpu.yml
+  - local: ci/gitlab-ci-tensorflow2-gpu.yml
+  - local: ci/gitlab-ci-tox-py37.yml
+  - local: ci/gitlab-ci-tox-py38.yml
+  - local: ci/gitlab-ci-unit-tests.yml
+  - local: ci/gitlab-ci-version-vars.yml
+
+variables:
+  PROJECT_PREFIX: securing-ai
+
 stages:
-  - build
-  - test
+  - build:image:ci
+  - build:code
+  - test:code
+  - build:image:lab
   - deploy
-
-docs-build:
-  stage: build
-  script:
-    - sphinx-build -b html docs/source docs/build
-  tags:
-    - sphinx
-  artifacts:
-    paths:
-      - docs/build
-
-test-unit-py37:
-  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py37:latest
-  stage: test
-  script:
-    - tox -e clean,pytest
-  tags:
-    - test-unit
-  cache:
-    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
-    paths:
-      - .tox
-
-test-unit-py38:
-  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
-  stage: test
-  script:
-    - tox -e clean,pytest
-  tags:
-    - test-unit
-  artifacts:
-    paths:
-      - coverage
-  cache:
-    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
-    paths:
-      - .tox
-
-test-black:
-  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
-  stage: test
-  script:
-    - tox -e black
-  tags:
-    - test-unit
-  cache:
-    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
-    paths:
-      - .tox
-
-test-isort:
-  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
-  stage: test
-  script:
-    - tox -e isort
-  tags:
-    - test-unit
-  cache:
-    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
-    paths:
-      - .tox
-
-test-flake8:
-  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
-  stage: test
-  script:
-    - tox -e flake8
-  tags:
-    - test-unit
-  cache:
-    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
-    paths:
-      - .tox
-
-test-mypy:
-  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
-  stage: test
-  script:
-    - tox -e mypy
-  tags:
-    - test-unit
-  cache:
-    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
-    paths:
-      - .tox
-
-test-gitlint:
-  image: artifacts.mitre.org:8200/untrusted-mitrewide-overwritable/securing-ai/tox-py38:latest
-  stage: test
-  script:
-    - tox -e gitlint
-  tags:
-    - test-unit
-  cache:
-    key: ${CI_JOB_NAME}--${CI_COMMIT_REF_SLUG}
-    paths:
-      - .tox
 
 pages:
   stage: deploy
   needs:
-    - docs-build
+    - build:docs
   script:
     - mv docs/build public
   tags:
@@ -111,5 +35,6 @@ pages:
   artifacts:
     paths:
       - public
-  only:
-    - master
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "master"'

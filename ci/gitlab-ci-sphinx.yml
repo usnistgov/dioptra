@@ -1,0 +1,30 @@
+variables:
+  SPHINX_IMAGE: sphinx
+
+build:sphinx:latest:
+  stage: build:image:ci
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${ARTIFACTORY_REPO}\":{\"auth\":\"${ARTIFACTORY_AUTH}\",\"email\":\"${ARTIFACTORY_EMAIL}\"}}}" > /kaniko/.docker/config.json
+    - wget -qO - http://pki.mitre.org/MITRE%20BA%20ROOT.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+    - wget -qO - http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+    - wget -qO - http://pki.mitre.org/MITRE-chain.txt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+  script:
+    - >-
+      /kaniko/executor
+      --cache=false
+      --registry-mirror ${ARTIFACTORY_REPO}
+      --context ${CI_PROJECT_DIR}
+      --dockerfile ${CI_PROJECT_DIR}/docker/${SPHINX_IMAGE}/Dockerfile
+      --destination ${ARTIFACTORY_UNTRUSTED_REPO}/${PROJECT_PREFIX}/${SPHINX_IMAGE}:${CI_JOB_ID}
+      --destination ${ARTIFACTORY_UNTRUSTED_REPO}/${PROJECT_PREFIX}/${SPHINX_IMAGE}:latest
+      --build-arg PROJECT_COMPONENT=${SPHINX_IMAGE}
+      --build-arg SPHINX_VERSION=${SPHINX_VERSION}
+  tags:
+    - kaniko
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'

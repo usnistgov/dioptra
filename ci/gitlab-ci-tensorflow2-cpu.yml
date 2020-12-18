@@ -1,0 +1,104 @@
+variables:
+  TENSORFLOW2_CPU_IMAGE: tensorflow2-cpu
+
+build:tensorflow2-cpu:push:
+  stage: build:image:lab
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${ARTIFACTORY_REPO}\":{\"auth\":\"${ARTIFACTORY_AUTH}\",\"email\":\"${ARTIFACTORY_EMAIL}\"}}}" > /kaniko/.docker/config.json
+    - wget -qO - http://pki.mitre.org/MITRE%20BA%20ROOT.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+    - wget -qO - http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+    - wget -qO - http://pki.mitre.org/MITRE-chain.txt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+  script:
+    - >-
+      /kaniko/executor
+      --cache=true
+      --cache-repo=${ARTIFACTORY_UNTRUSTED_REPO}/${PROJECT_PREFIX}/${TENSORFLOW2_CPU_IMAGE}/cache
+      --registry-mirror ${ARTIFACTORY_REPO}
+      --context ${CI_PROJECT_DIR}
+      --dockerfile ${CI_PROJECT_DIR}/docker/${TENSORFLOW2_CPU_IMAGE}/Dockerfile
+      --destination ${ARTIFACTORY_UNTRUSTED_REPO}/${PROJECT_PREFIX}/${TENSORFLOW2_CPU_IMAGE}:${CI_COMMIT_SHA}
+      --build-arg MINICONDA_VERSION=${MINICONDA_VERSION}
+      --build-arg OS_VERSION=${OS_VERSION}
+      --build-arg OS_VERSION_NUMBER=${OS_VERSION_NUMBER}
+      --build-arg OS_BUILD_NUMBER=${OS_BUILD_NUMBER}
+      --build-arg PROJECT_COMPONENT=${TENSORFLOW2_CPU_IMAGE}
+      --build-arg PROJECT_VERSION=${PROJECT_VERSION}
+      --build-arg PROJECT_PREFIX=${PROJECT_PREFIX}
+      --build-arg TENSORFLOW2_VERSION=${TENSORFLOW2_VERSION}
+  tags:
+    - kaniko
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH != "master"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "master"'
+
+build:tensorflow2-cpu:latest:
+  stage: build:image:lab
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${ARTIFACTORY_REPO}\":{\"auth\":\"${ARTIFACTORY_AUTH}\",\"email\":\"${ARTIFACTORY_EMAIL}\"}}}" > /kaniko/.docker/config.json
+    - wget -qO - http://pki.mitre.org/MITRE%20BA%20ROOT.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+    - wget -qO - http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+    - wget -qO - http://pki.mitre.org/MITRE-chain.txt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+  script:
+    - >-
+      /kaniko/executor
+      --cache=true
+      --cache-repo=${ARTIFACTORY_UNTRUSTED_REPO}/${PROJECT_PREFIX}/${TENSORFLOW2_CPU_IMAGE}/cache
+      --registry-mirror ${ARTIFACTORY_REPO}
+      --context ${CI_PROJECT_DIR}
+      --dockerfile ${CI_PROJECT_DIR}/docker/${TENSORFLOW2_CPU_IMAGE}/Dockerfile
+      --destination ${ARTIFACTORY_UNTRUSTED_REPO}/${PROJECT_PREFIX}/${TENSORFLOW2_CPU_IMAGE}:${CI_COMMIT_SHA}
+      --destination ${ARTIFACTORY_UNTRUSTED_REPO}/${PROJECT_PREFIX}/${TENSORFLOW2_CPU_IMAGE}:latest
+      --build-arg MINICONDA_VERSION=${MINICONDA_VERSION}
+      --build-arg OS_VERSION=${OS_VERSION}
+      --build-arg OS_VERSION_NUMBER=${OS_VERSION_NUMBER}
+      --build-arg OS_BUILD_NUMBER=${OS_BUILD_NUMBER}
+      --build-arg PROJECT_COMPONENT=${TENSORFLOW2_CPU_IMAGE}
+      --build-arg PROJECT_VERSION=${PROJECT_VERSION}
+      --build-arg PROJECT_PREFIX=${PROJECT_PREFIX}
+      --build-arg TENSORFLOW2_VERSION=${TENSORFLOW2_VERSION}
+  tags:
+    - kaniko
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
+
+build:tensorflow2-cpu:tag:
+  stage: build:image:lab
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${ARTIFACTORY_REPO}\":{\"auth\":\"${ARTIFACTORY_AUTH}\",\"email\":\"${ARTIFACTORY_EMAIL}\"}}}" > /kaniko/.docker/config.json
+    - wget -qO - http://pki.mitre.org/MITRE%20BA%20ROOT.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+    - wget -qO - http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+    - wget -qO - http://pki.mitre.org/MITRE-chain.txt >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt
+  script:
+    - >-
+      /kaniko/executor
+      --cache=true
+      --cache-repo=${ARTIFACTORY_UNTRUSTED_REPO}/${PROJECT_PREFIX}/${TENSORFLOW2_CPU_IMAGE}/cache
+      --registry-mirror ${ARTIFACTORY_REPO}
+      --context ${CI_PROJECT_DIR}
+      --dockerfile ${CI_PROJECT_DIR}/docker/${TENSORFLOW2_CPU_IMAGE}/Dockerfile
+      --destination ${ARTIFACTORY_REPO}/${PROJECT_PREFIX}/${TENSORFLOW2_CPU_IMAGE}:${CI_COMMIT_TAG}
+      --build-arg MINICONDA_VERSION=${MINICONDA_VERSION}
+      --build-arg OS_VERSION=${OS_VERSION}
+      --build-arg OS_VERSION_NUMBER=${OS_VERSION_NUMBER}
+      --build-arg OS_BUILD_NUMBER=${OS_BUILD_NUMBER}
+      --build-arg PROJECT_COMPONENT=${TENSORFLOW2_CPU_IMAGE}
+      --build-arg PROJECT_VERSION=${PROJECT_VERSION}
+      --build-arg PROJECT_PREFIX=${PROJECT_PREFIX}
+      --build-arg TENSORFLOW2_VERSION=${TENSORFLOW2_VERSION}
+  tags:
+    - kaniko
+  rules:
+    - if: "$CI_COMMIT_TAG"
