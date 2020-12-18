@@ -30,176 +30,216 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-ARG PROJECT_VERSION
-ARG PROJECT_BUILD_NUMBER
+ARG OS_NAME=ubuntu
+ARG OS_VERSION
+ARG OS_BUILD_NUMBER
 
-FROM securing-ai/miniconda-base:${PROJECT_VERSION}-${PROJECT_BUILD_NUMBER}
+FROM ${OS_NAME}:${OS_VERSION}-${OS_BUILD_NUMBER}
 
-ARG MLFLOW_VERSION
+USER root
 
-ARG ALEMBIC_VERSION=1.4.1
-ARG BOTO3_VERSION=1.16.11
-ARG CLICK_VERSION=7.1.2
-ARG CLOUDPICKLE_VERSION=1.6.0
-ARG CYTHON_VERSION=0.29.21
-ARG DATABRICKS_CLI_VERSION=0.13.0
-ARG DOCKER_PY_VERSION=4.3.1
-ARG ENTRYPOINTS_VERSION=0.3
-ARG FLASK_ACCEPTS_VERSION=0.17.4
-ARG FLASK_INJECTOR_VERSION=0.12.3
-ARG FLASK_JWT_EXTENDED_VERSION=3.24.1
-ARG FLASK_MIGRATE_VERSION=2.5.3
-ARG FLASK_RESTX_VERSION=0.2.0
-ARG FLASK_SQLALCHEMY_VERSION=2.4.4
-ARG FLASK_WTF_VERSION=0.14.3
-ARG FLASK_VERSION=1.1.2
-ARG GITPYTHON_VERSION=3.1.11
-ARG GORILLA_VERSION=0.3.0
-ARG GUNICORN_VERSION=20.0.4
-ARG JINJA2_VERSION=2.11.2
-ARG MARSHMALLOW_VERSION=3.9.0
-ARG NOMKL=3.0
-ARG NUMPY_VERSION=1.19.2
-ARG PANDAS_VERSION=1.1.3
-ARG PASSLIB_VERSION=1.7.4
-ARG PILLOW_VERSION=8.0.1
-ARG PROMETHEUS_FLASK_EXPORTER_VERSION=0.18.1
-ARG PROTOBUF_VERSION=3.13.0.1
-ARG PSYCOPG2_VERSION=2.8.5
-ARG PYARROW=2.0.0
-ARG PYTHON_DATEUTIL_VERSION=2.8.1
-ARG PYTHON_JSON_LOGGER_VERSION=2.0.1
-ARG PYTZ_VERSION=2020.1
-ARG PYYAML_VERSION=5.3.1
-ARG PYZMQ_VERSION=19.0.2
-ARG QUERYSTRING_PARSER_VERSION=1.2.4
-ARG REDIS_PY_VERSION=3.5.3
-ARG RQ_VERSION=1.5.2
-ARG SCIPY_VERSION=1.4.1
-ARG SIMPLEJSON_VERSION=3.17.2
-ARG SQLALCHEMY_VERSION=1.3.13
-ARG SQLPARSE_VERSION=0.4.1
-ARG STRUCTLOG_VERSION=20.1.0
-ARG TYPING_EXTENSIONS_VERSION=3.7.4.3
-ARG WERKZEUG_VERSION=1.0.1
+ENV DEBIAN_FRONTEND noninteractive
+ENV LANG C.UTF-8
+ENV LANGUAGE C.UTF-8
+ENV LC_ALL C.UTF-8
 
-RUN echo "===> Installing dependencies into base conda environment...." && \
-    echo "===> Installing dependencies using conda (defaults channel)...." && \
-    ${CONDA_DIR}/condabin/conda install -n base -q -y \
-    click=${CLICK_VERSION} \
-    cloudpickle=${CLOUDPICKLE_VERSION} \
-    cython=${CYTHON_VERSION} \
-    docker-py=${DOCKER_PY_VERSION} \
-    entrypoints=${ENTRYPOINTS_VERSION} \
-    gitpython=${GITPYTHON_VERSION} \
-    gunicorn=${GUNICORN_VERSION} \
-    jinja2=${JINJA2_VERSION} \
-    nomkl=${NOMKL} \
-    numpy=${NUMPY_VERSION} \
-    pandas=${PANDAS_VERSION} \
-    passlib=${PASSLIB_VERSION} \
-    pillow=${PILLOW_VERSION} \
-    protobuf=${PROTOBUF_VERSION} \
-    psycopg2=${PSYCOPG2_VERSION} \
-    python-dateutil=${PYTHON_DATEUTIL_VERSION} \
-    pytz=${PYTZ_VERSION} \
-    pyyaml=${PYYAML_VERSION} \
-    redis-py=${REDIS_PY_VERSION} \
-    pyzmq=${PYZMQ_VERSION} \
-    scipy=${SCIPY_VERSION} \
-    simplejson=${SIMPLEJSON_VERSION} \
-    sqlalchemy=${SQLALCHEMY_VERSION} \
-    sqlparse=${SQLPARSE_VERSION} \
-    werkzeug=${WERKZEUG_VERSION} && \
-    echo "===> Installing dependencies using pip...." && \
-    ${CONDA_DIR}/condabin/conda run -n base \
-    pip install --no-cache-dir \
-    alembic==${ALEMBIC_VERSION} \
-    boto3==${BOTO3_VERSION} \
-    databricks-cli==${DATABRICKS_CLI_VERSION} \
-    flask-accepts==${FLASK_ACCEPTS_VERSION} \
-    Flask-Injector==${FLASK_INJECTOR_VERSION} \
-    Flask-JWT-Extended==${FLASK_JWT_EXTENDED_VERSION} \
-    Flask-Migrate==${FLASK_MIGRATE_VERSION} \
-    flask-restx==${FLASK_RESTX_VERSION} \
-    Flask-SQLAlchemy==${FLASK_SQLALCHEMY_VERSION} \
-    Flask-WTF==${FLASK_WTF_VERSION} \
-    Flask==${FLASK_VERSION} \
-    gorilla==${GORILLA_VERSION} \
-    marshmallow==${MARSHMALLOW_VERSION} \
-    mlflow==${MLFLOW_VERSION} \
-    prometheus-flask-exporter==${PROMETHEUS_FLASK_EXPORTER_VERSION} \
-    pyarrow==${PYARROW} \
-    python-json-logger==${PYTHON_JSON_LOGGER_VERSION} \
-    querystring-parser==${QUERYSTRING_PARSER_VERSION} \
-    rq==${RQ_VERSION} \
-    structlog==${STRUCTLOG_VERSION} \
-    typing-extensions==${TYPING_EXTENSIONS_VERSION} && \
+RUN apt-get update && \
+    echo "===> Installing ca-certificates curl git gosu libbz2-1.0 liblz4-1 liblzma5 libsnappy1v5 libzstd1 unzip wget zlib1g...." && \
+    apt-get install -yq --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    gosu \
+    libbz2-1.0 \
+    liblz4-1 \
+    liblzma5 \
+    libsnappy1v5 \
+    libzstd1 \
+    unzip \
+    wget \
+    zlib1g && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# The MITRE certs are necessary to install in order for wget to work
+ADD http://pki.mitre.org/MITRE%20BA%20ROOT.crt /usr/local/share/ca-certificates/MITRE-BA-ROOT.crt
+ADD http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt /usr/local/share/ca-certificates/MITRE-BA-NPE-CA-3-1.crt
+ADD http://pki.mitre.org/MITRE-chain.txt /usr/local/share/ca-certificates/MITRE-chain.pem
+
+RUN cat /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/MITRE-chain.pem >/etc/ssl/certs/ca-certificates-plus-mitre.pem && \
+    /usr/sbin/update-ca-certificates
+
+ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+
+ARG AWSCLI_DOWNLOAD_URL=https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+ARG AWSCLI_INSTALL_DIR=/opt/aws-cli
+ARG AWSCLI_BIN_DIR=/usr/local/bin
+
+RUN cd /tmp && \
+    wget -qO /tmp/awscliv2.zip ${AWSCLI_DOWNLOAD_URL} && \
+    unzip awscliv2.zip && \
+    rm /tmp/awscliv2.zip && \
+    ./aws/install --install-dir ${AWSCLI_INSTALL_DIR} --bin-dir ${AWSCLI_BIN_DIR} && \
+    rm -rf /tmp/aws
+
+ARG AI_USER=securingai
+ARG AI_UID=39000
+ARG AI_GID=100
+ARG AI_WORKDIR=/work
+ARG CONDA_DIR=/opt/conda
+ARG PROJECT_COMPONENT
+ARG PROJECT_PREFIX
+
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/fix-permissions.sh /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh
+
+RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh /usr/local/bin/fix-permissions.sh
+
+RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc
+
+RUN useradd -u ${AI_UID} -N -m -s /bin/bash -c "Securing AI Lab user" ${AI_USER} && \
+    mkdir -p /home/${AI_USER}/.aws/cli && \
+    mkdir -p /home/${AI_USER}/.conda && \
+    mkdir -p ${CONDA_DIR} && \
+    mkdir -p ${AI_WORKDIR} && \
+    chown -R ${AI_UID}:${AI_GID} /home/${AI_USER} && \
+    chown -R ${AI_UID}:${AI_GID} ${CONDA_DIR} && \
+    chown -R ${AI_UID}:${AI_GID} ${AI_WORKDIR} && \
+    chmod g+w /etc/passwd && \
+    fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
+
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/aws-config /etc/${PROJECT_PREFIX}/docker/aws-config
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/dot-condarc /etc/${PROJECT_PREFIX}/docker/dot-condarc
+
+RUN chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/dot-condarc && \
+    chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/aws-config && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/aws-config && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/dot-condarc && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/aws-config /home/${AI_USER}/.aws/config && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/dot-condarc /home/${AI_USER}/.condarc && \
+    fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
+
+USER ${AI_UID}
+
+ARG MINICONDA_VERSION
+ARG MINICONDA3_PREFIX=Miniconda3-py37_
+ARG PYTHON_VERSION=default
+
+RUN echo "===> Installing Miniconda3 version ${MINICONDA_VERSION} to ${CONDA_DIR}...." && \
+    cd /tmp && \
+    wget -qO "/tmp/${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" "https://repo.continuum.io/miniconda/${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" && \
+    bash ${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p ${CONDA_DIR} && \
+    rm ${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    if [ ! ${PYTHON_VERSION} = 'default' ]; then ${CONDA_DIR}/condabin/conda install -y python=$PYTHON_VERSION; fi && \
+    ${CONDA_DIR}/condabin/conda install -q -y conda && \
+    ${CONDA_DIR}/condabin/conda install -q -y pip && \
+    ${CONDA_DIR}/condabin/conda update -q -y --all && \
+    ${CONDA_DIR}/condabin/conda list python | grep '^python ' | tr -s ' ' | cut -d '.' -f 1,2 | sed 's/$/.*/' >> ${CONDA_DIR}/conda-meta/pinned && \
+    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+    find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
+    ${CONDA_DIR}/condabin/conda clean -a -f -y && \
+    rm -rf /home/${AI_USER}/.cache/pip && \
+    rm -rf /home/${AI_USER}/.cache/yarn && \
+    fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
+
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/environment-${PROJECT_COMPONENT}.yml /etc/${PROJECT_PREFIX}/docker/environment-${PROJECT_COMPONENT}.yml
+
+RUN echo "===> Installing base dependencies in conda environment of ${PROJECT_COMPONENT} image...." && \
+    cp /etc/${PROJECT_PREFIX}/docker/environment-${PROJECT_COMPONENT}.yml /tmp/environment-${PROJECT_COMPONENT}.yml && \
+    ${CONDA_DIR}/condabin/conda env create --file /tmp/environment-${PROJECT_COMPONENT}.yml && \
     echo "===> Cleaning/pruning directories...." && \
+    rm -f /tmp/environment-${PROJECT_COMPONENT}.yml && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
     ${CONDA_DIR}/condabin/conda clean -afy && \
+    rm -rf /home/${AI_USER}/.cache/pip && \
     rm -rf /home/${AI_USER}/.cache/yarn && \
     echo "===> Fixing directory permissions...." && \
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
-ARG PROJECT_COMPONENT
-ARG PROJECT_PREFIX
-
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/uwsgi.ini /etc/${PROJECT_PREFIX}/docker/uwsgi.ini
-COPY src/migrations /etc/${PROJECT_PREFIX}/docker/migrations
-COPY wsgi.py /etc/${PROJECT_PREFIX}/docker/wsgi.py
-
-USER root
-
-RUN mkdir -p /etc/uwsgi && \
-    mkdir -p /etc/gunicorn && \
-    chown -R ${AI_UID}:${AI_GID} /etc/gunicorn && \
-    chown -R ${AI_UID}:${AI_GID} /etc/uwsgi && \
-    chown -R ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/migrations && \
-    chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
-    chmod 0644 /etc/${PROJECT_PREFIX}/docker/uwsgi.ini && \
-    chmod 0644 /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py && \
-    chmod 0644 /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
-    chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh && \
-    chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
-    chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations && \
-    chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations/versions && \
-    find /etc/${PROJECT_PREFIX}/docker/migrations -follow -type f -exec chmod 0644 {} \; && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/migrations ${AI_WORKDIR}/migrations && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-restapi.sh /usr/local/bin/entrypoint.sh && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/gunicorn/gunicorn.conf.py && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/uwsgi.ini /etc/uwsgi/uwsgi.ini && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/wsgi.py ${AI_WORKDIR}/wsgi.py
-
-USER ${AI_UID}
-
+ARG AI_CONDA_ENV=mitre-securing-ai
 ARG PROJECT_VERSION
 
 COPY dist/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl /etc/${PROJECT_PREFIX}/docker/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl
 
 RUN echo "===> Installing Securing AI code module...." && \
-    ${CONDA_DIR}/condabin/conda run -n base \
+    ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
     pip install --no-cache-dir --no-deps \
     /etc/${PROJECT_PREFIX}/docker/mitre_securing_ai-${PROJECT_VERSION}-py3-none-any.whl && \
     echo "===> Cleaning/pruning directories...." && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
     ${CONDA_DIR}/condabin/conda clean -afy && \
+    rm -rf /home/${AI_USER}/.cache/pip && \
     rm -rf /home/${AI_USER}/.cache/yarn && \
     echo "===> Fixing directory permissions...." && \
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD []
+USER root
 
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/${PROJECT_PREFIX}/docker/bash.bashrc
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-cp.sh /etc/${PROJECT_PREFIX}/docker/s3-cp.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-mb.sh /etc/${PROJECT_PREFIX}/docker/s3-mb.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh
+COPY src/migrations /etc/${PROJECT_PREFIX}/docker/migrations
+COPY wsgi.py /etc/${PROJECT_PREFIX}/docker/wsgi.py
+
+RUN mkdir -p /etc/gunicorn && \
+    chown -R ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/migrations && \
+    chown -R ${AI_UID}:${AI_GID} /etc/gunicorn && \
+    chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/bash.bashrc && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations/versions && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-cp.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-mb.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh && \
+    find /etc/${PROJECT_PREFIX}/docker/migrations -follow -type f -exec chmod 0644 {} \; && \
+    rm /etc/bash.bashrc && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/bash.bashrc && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /usr/local/bin/entrypoint.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/gunicorn/gunicorn.conf.py && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/migrations ${AI_WORKDIR}/migrations && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/s3-cp.sh /usr/local/bin/s3-cp.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/s3-mb.sh /usr/local/bin/s3-mb.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /usr/local/bin/unpack-archive.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/wsgi.py ${AI_WORKDIR}/wsgi.py && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+
+ENV AI_USER ${AI_USER}
+ENV AI_UID ${AI_UID}
+ENV AI_GID ${AI_GID}
 ENV AI_RESTAPI_ENV prod
+ENV AI_WORKDIR ${AI_WORKDIR}
+ENV CONDA_DIR ${CONDA_DIR}
 
+USER ${AI_UID}
+WORKDIR ${AI_WORKDIR}
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+ARG OS_NAME=ubuntu
+ARG OS_VERSION
+ARG OS_VERSION_NUMBER
+ARG OS_BUILD_NUMBER
 ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
 
+LABEL securingai.docker=true
+LABEL securingai.docker.os.name=${OS_NAME}
+LABEL securingai.docker.os.version.name=${OS_VERSION}
+LABEL securingai.docker.os.version.number=${OS_VERSION_NUMBER}
+LABEL securingai.docker.os.build=${OS_BUILD_NUMBER}
 LABEL securingai.docker.project.component=${PROJECT_COMPONENT}
 LABEL securingai.docker.project.component.maintainer=${MAINTAINER}
+LABEL securingai.docker.project.version=${PROJECT_VERSION}

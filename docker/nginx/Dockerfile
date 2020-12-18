@@ -92,7 +92,6 @@ RUN mkdir -p /etc/nginx/conf.d && \
     mkdir -p /var/cache/nginx && \
     mkdir -p /var/lib/nginx && \
     mkdir -p /var/log/nginx && \
-    touch /var/run/nginx.pid && \
     rm /etc/nginx/nginx.conf && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/nginx.conf && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/default.conf && \
@@ -100,14 +99,12 @@ RUN mkdir -p /etc/nginx/conf.d && \
     chmod 0755 /var/cache/nginx && \
     chmod 0755 /var/lib/nginx && \
     chmod 0755 /var/log/nginx && \
-    chmod 0644 /var/run/nginx.pid && \
     chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/nginx.conf && \
     chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/default.conf && \
     chown -R ${AI_UID}:${AI_GID} /etc/nginx/conf.d && \
     chown -R ${AI_UID}:${AI_GID} /var/cache/nginx && \
     chown -R ${AI_UID}:${AI_GID} /var/lib/nginx && \
     chown -R ${AI_UID}:${AI_GID} /var/log/nginx && \
-    chown -R ${AI_UID}:${AI_GID} /var/run/nginx.pid && \
     ln -s /etc/${PROJECT_PREFIX}/docker/nginx.conf /etc/nginx/nginx.conf && \
     ln -s /etc/${PROJECT_PREFIX}/docker/default.conf /etc/nginx/conf.d/default.conf
 
@@ -125,7 +122,6 @@ ARG OS_VERSION_NUMBER
 ARG OS_BUILD_NUMBER
 ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
 ARG PROJECT_VERSION
-ARG PROJECT_BUILD_NUMBER
 
 LABEL securingai.docker=true
 LABEL securingai.docker.os.name=${OS_NAME}
@@ -134,5 +130,5 @@ LABEL securingai.docker.os.version.number=${OS_VERSION_NUMBER}
 LABEL securingai.docker.os.build=${OS_BUILD_NUMBER}
 LABEL securingai.docker.project.component=${PROJECT_COMPONENT}
 LABEL securingai.docker.project.component.maintainer=${MAINTAINER}
+LABEL securingai.docker.project.component.parent=none
 LABEL securingai.docker.project.version=${PROJECT_VERSION}
-LABEL securingai.docker.project.build=${PROJECT_BUILD_NUMBER}

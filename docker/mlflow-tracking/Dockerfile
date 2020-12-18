@@ -1,103 +1,209 @@
+# Part of this script is adapted from the work
+# https://github.com/jupyter/docker-stacks/blob/6bf5922f5a511b4ff28f23783a716df75b8b8d4b/base-notebook/Dockerfile.
+# See copyright below.
+#
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+#
+# Neither the name of the Jupyter Development Team nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-ARG PROJECT_VERSION
-ARG PROJECT_BUILD_NUMBER
+ARG OS_NAME=ubuntu
+ARG OS_VERSION
+ARG OS_BUILD_NUMBER
 
-FROM securing-ai/miniconda-base:${PROJECT_VERSION}-${PROJECT_BUILD_NUMBER}
+FROM ${OS_NAME}:${OS_VERSION}-${OS_BUILD_NUMBER}
 
-ARG MLFLOW_VERSION
+USER root
 
-ARG ALEMBIC_VERSION=1.4.1
-ARG BOTO3_VERSION=1.16.11
-ARG CLICK_VERSION=7.1.2
-ARG CLOUDPICKLE_VERSION=1.6.0
-ARG CYTHON_VERSION=0.29.21
-ARG DATABRICKS_CLI_VERSION=0.13.0
-ARG DOCKER_PY_VERSION=4.3.1
-ARG ENTRYPOINTS_VERSION=0.3
-ARG FLASK_VERSION=1.1.2
-ARG GITPYTHON_VERSION=3.1.11
-ARG GORILLA_VERSION=0.3.0
-ARG GUNICORN_VERSION=20.0.4
-ARG JINJA2_VERSION=2.11.2
-ARG NOMKL=3.0
-ARG NUMPY_VERSION=1.19.2
-ARG PANDAS_VERSION=1.1.3
-ARG PROMETHEUS_FLASK_EXPORTER_VERSION=0.18.1
-ARG PROTOBUF_VERSION=3.13.0.1
-ARG PSYCOPG2_VERSION=2.8.5
-ARG PYTHON_DATEUTIL_VERSION=2.8.1
-ARG PYTZ_VERSION=2020.1
-ARG PYYAML_VERSION=5.3.1
-ARG QUERYSTRING_PARSER_VERSION=1.2.4
-ARG REQUESTS_VERSION=2.24.0
-ARG SCIPY_VERSION=1.4.1
-ARG SIMPLEJSON_VERSION=3.17.2
-ARG SQLALCHEMY_VERSION=1.3.13
-ARG SQLPARSE_VERSION=0.4.1
-ARG WERKZEUG_VERSION=1.0.1
+ENV DEBIAN_FRONTEND noninteractive
+ENV LANG C.UTF-8
+ENV LANGUAGE C.UTF-8
+ENV LC_ALL C.UTF-8
 
-RUN echo "===> Installing dependencies using conda (defaults channel)...." && \
-    ${CONDA_DIR}/condabin/conda install -n base -q -y \
-    click=${CLICK_VERSION} \
-    cloudpickle=${CLOUDPICKLE_VERSION} \
-    cython=${CYTHON_VERSION} \
-    docker-py=${DOCKER_PY_VERSION} \
-    entrypoints=${ENTRYPOINTS_VERSION} \
-    gitpython=${GITPYTHON_VERSION} \
-    gunicorn=${GUNICORN_VERSION} \
-    jinja2=${JINJA2_VERSION} \
-    nomkl=${NOMKL} \
-    numpy=${NUMPY_VERSION} \
-    pandas=${PANDAS_VERSION} \
-    protobuf=${PROTOBUF_VERSION} \
-    psycopg2=${PSYCOPG2_VERSION} \
-    python-dateutil=${PYTHON_DATEUTIL_VERSION} \
-    pytz=${PYTZ_VERSION} \
-    pyyaml=${PYYAML_VERSION} \
-    requests=${REQUESTS_VERSION} \
-    scipy=${SCIPY_VERSION} \
-    simplejson=${SIMPLEJSON_VERSION} \
-    sqlalchemy=${SQLALCHEMY_VERSION} \
-    sqlparse=${SQLPARSE_VERSION} \
-    werkzeug=${WERKZEUG_VERSION} && \
-    echo "===> Installing dependencies using pip...." && \
-    ${CONDA_DIR}/condabin/conda run -n base \
-    pip install --no-cache-dir \
-    alembic==${ALEMBIC_VERSION} \
-    boto3==${BOTO3_VERSION} \
-    databricks-cli==${DATABRICKS_CLI_VERSION} \
-    Flask==${FLASK_VERSION} \
-    gorilla==${GORILLA_VERSION} \
-    mlflow==${MLFLOW_VERSION} \
-    prometheus-flask-exporter==${PROMETHEUS_FLASK_EXPORTER_VERSION} \
-    querystring-parser==${QUERYSTRING_PARSER_VERSION} && \
+RUN apt-get update && \
+    echo "===> Installing ca-certificates curl git gosu libbz2-1.0 liblz4-1 liblzma5 libsnappy1v5 libzstd1 unzip wget zlib1g...." && \
+    apt-get install -yq --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    gosu \
+    libbz2-1.0 \
+    liblz4-1 \
+    liblzma5 \
+    libsnappy1v5 \
+    libzstd1 \
+    unzip \
+    wget \
+    zlib1g && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# The MITRE certs are necessary to install in order for wget to work
+ADD http://pki.mitre.org/MITRE%20BA%20ROOT.crt /usr/local/share/ca-certificates/MITRE-BA-ROOT.crt
+ADD http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt /usr/local/share/ca-certificates/MITRE-BA-NPE-CA-3-1.crt
+ADD http://pki.mitre.org/MITRE-chain.txt /usr/local/share/ca-certificates/MITRE-chain.pem
+
+RUN cat /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/MITRE-chain.pem >/etc/ssl/certs/ca-certificates-plus-mitre.pem && \
+    /usr/sbin/update-ca-certificates
+
+ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+
+ARG AWSCLI_DOWNLOAD_URL=https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+ARG AWSCLI_INSTALL_DIR=/opt/aws-cli
+ARG AWSCLI_BIN_DIR=/usr/local/bin
+
+RUN cd /tmp && \
+    wget -qO /tmp/awscliv2.zip ${AWSCLI_DOWNLOAD_URL} && \
+    unzip awscliv2.zip && \
+    rm /tmp/awscliv2.zip && \
+    ./aws/install --install-dir ${AWSCLI_INSTALL_DIR} --bin-dir ${AWSCLI_BIN_DIR} && \
+    rm -rf /tmp/aws
+
+ARG AI_USER=securingai
+ARG AI_UID=39000
+ARG AI_GID=100
+ARG AI_WORKDIR=/work
+ARG CONDA_DIR=/opt/conda
+ARG PROJECT_COMPONENT
+ARG PROJECT_PREFIX
+
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/fix-permissions.sh /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh
+
+RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh /usr/local/bin/fix-permissions.sh
+
+RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc
+
+RUN useradd -u ${AI_UID} -N -m -s /bin/bash -c "Securing AI Lab user" ${AI_USER} && \
+    mkdir -p /home/${AI_USER}/.aws/cli && \
+    mkdir -p /home/${AI_USER}/.conda && \
+    mkdir -p ${CONDA_DIR} && \
+    mkdir -p ${AI_WORKDIR} && \
+    chown -R ${AI_UID}:${AI_GID} /home/${AI_USER} && \
+    chown -R ${AI_UID}:${AI_GID} ${CONDA_DIR} && \
+    chown -R ${AI_UID}:${AI_GID} ${AI_WORKDIR} && \
+    chmod g+w /etc/passwd && \
+    fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
+
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/aws-config /etc/${PROJECT_PREFIX}/docker/aws-config
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/dot-condarc /etc/${PROJECT_PREFIX}/docker/dot-condarc
+
+RUN chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/dot-condarc && \
+    chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/aws-config && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/aws-config && \
+    chmod 0644 /etc/${PROJECT_PREFIX}/docker/dot-condarc && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/aws-config /home/${AI_USER}/.aws/config && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/dot-condarc /home/${AI_USER}/.condarc && \
+    fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
+
+USER ${AI_UID}
+
+ARG MINICONDA_VERSION
+ARG MINICONDA3_PREFIX=Miniconda3-py37_
+ARG PYTHON_VERSION=default
+
+RUN echo "===> Installing Miniconda3 version ${MINICONDA_VERSION} to ${CONDA_DIR}...." && \
+    cd /tmp && \
+    wget -qO "/tmp/${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" "https://repo.continuum.io/miniconda/${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" && \
+    bash ${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p ${CONDA_DIR} && \
+    rm ${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    if [ ! ${PYTHON_VERSION} = 'default' ]; then ${CONDA_DIR}/condabin/conda install -y python=$PYTHON_VERSION; fi && \
+    ${CONDA_DIR}/condabin/conda install -q -y conda && \
+    ${CONDA_DIR}/condabin/conda install -q -y pip && \
+    ${CONDA_DIR}/condabin/conda update -q -y --all && \
+    ${CONDA_DIR}/condabin/conda list python | grep '^python ' | tr -s ' ' | cut -d '.' -f 1,2 | sed 's/$/.*/' >> ${CONDA_DIR}/conda-meta/pinned && \
+    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+    find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
+    ${CONDA_DIR}/condabin/conda clean -a -f -y && \
+    rm -rf /home/${AI_USER}/.cache/pip && \
+    rm -rf /home/${AI_USER}/.cache/yarn && \
+    fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
+
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/environment-${PROJECT_COMPONENT}.yml /etc/${PROJECT_PREFIX}/docker/environment-${PROJECT_COMPONENT}.yml
+
+RUN echo "===> Installing base dependencies in conda environment of ${PROJECT_COMPONENT} image...." && \
+    cp /etc/${PROJECT_PREFIX}/docker/environment-${PROJECT_COMPONENT}.yml /tmp/environment-${PROJECT_COMPONENT}.yml && \
+    ${CONDA_DIR}/condabin/conda env create --file /tmp/environment-${PROJECT_COMPONENT}.yml && \
     echo "===> Cleaning/pruning directories...." && \
+    rm -f /tmp/environment-${PROJECT_COMPONENT}.yml && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
     ${CONDA_DIR}/condabin/conda clean -afy && \
+    rm -rf /home/${AI_USER}/.cache/pip && \
     rm -rf /home/${AI_USER}/.cache/yarn && \
     echo "===> Fixing directory permissions...." && \
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
-ARG PROJECT_COMPONENT
-ARG PROJECT_PREFIX
-
 USER root
 
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/${PROJECT_PREFIX}/docker/bash.bashrc
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-cp.sh /etc/${PROJECT_PREFIX}/docker/s3-cp.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-mb.sh /etc/${PROJECT_PREFIX}/docker/s3-mb.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-mlflow-tracking.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-mlflow-tracking.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh
 
-RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-mlflow-tracking.sh && \
+RUN chmod 0644 /etc/${PROJECT_PREFIX}/docker/bash.bashrc && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-cp.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-mb.sh && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-mlflow-tracking.sh /usr/local/bin/entrypoint.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh && \
+    rm /etc/bash.bashrc && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/bash.bashrc && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /usr/local/bin/entrypoint.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/s3-cp.sh /usr/local/bin/s3-cp.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/s3-mb.sh /usr/local/bin/s3-mb.sh && \
-    fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+    ln -s /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /usr/local/bin/unpack-archive.sh && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+
+ENV AI_USER ${AI_USER}
+ENV AI_UID ${AI_UID}
+ENV AI_GID ${AI_GID}
+ENV AI_WORKDIR ${AI_WORKDIR}
+ENV CONDA_DIR ${CONDA_DIR}
 
 USER ${AI_UID}
-
+WORKDIR ${AI_WORKDIR}
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
+ARG OS_NAME=ubuntu
+ARG OS_VERSION
+ARG OS_VERSION_NUMBER
+ARG OS_BUILD_NUMBER
 ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
+ARG PROJECT_VERSION
 
+LABEL securingai.docker=true
+LABEL securingai.docker.os.name=${OS_NAME}
+LABEL securingai.docker.os.version.name=${OS_VERSION}
+LABEL securingai.docker.os.version.number=${OS_VERSION_NUMBER}
+LABEL securingai.docker.os.build=${OS_BUILD_NUMBER}
 LABEL securingai.docker.project.component=${PROJECT_COMPONENT}
 LABEL securingai.docker.project.component.maintainer=${MAINTAINER}
+LABEL securingai.docker.project.version=${PROJECT_VERSION}
