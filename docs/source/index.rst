@@ -47,6 +47,14 @@ Another great way to get started is to try out the sample jobs included in our L
 .. toctree::
    :hidden:
    :maxdepth: -1
+   :caption: Redis Queue (RQ)
+
+   rq/index
+   rq/api
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
    :caption: PyPlugs
 
    pyplugs/index
