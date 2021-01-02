@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Created by argbash-init v2.8.1
-# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[base])
+# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[mitre-securing-ai])
 # ARG_OPTIONAL_SINGLE([backend-store-uri],[],[URI to which to persist experiment and run data. Acceptable URIs are\nSQLAlchemy-compatible database connection strings (e.g. 'sqlite:///path/to/file.db')\nor local filesystem URIs (e.g. 'file:///absolute/path/to/directory').],[sqlite:////work/mlruns/mlflow-tracking.db])
 # ARG_OPTIONAL_SINGLE([default-artifact-root],[],[Local or S3 URI to store artifacts, for new experiments. Note that this flag does\nnot impact already-created experiments. Default: Within file store, if a file:/\nURI is provided. If a sql backend is used, then this option is required.],[file:///work/artifacts])
 # ARG_OPTIONAL_SINGLE([gunicorn-opts],[],[Additional command line options forwarded to gunicorn processes.],[])
@@ -36,7 +36,7 @@ begins_with_short_option()
 }
 
 # THE DEFAULTS INITIALIZATION - OPTIONALS
-_arg_conda_env="base"
+_arg_conda_env="mitre-securing-ai"
 _arg_backend_store_uri="sqlite:////work/mlruns/mlflow-tracking.db"
 _arg_default_artifact_root="file:///work/artifacts"
 _arg_gunicorn_opts=
@@ -50,7 +50,7 @@ print_help()
   printf '%s\n' "MLFlow Tracking Server Entry Point
 "
   printf 'Usage: %s [--conda-env <arg>] [--backend-store-uri <arg>] [--default-artifact-root <arg>] [--gunicorn-opts <arg>] [--host <arg>] [--port <arg>] [--workers <arg>] [--upgrade-db] [-h|--help]\n' "$0"
-  printf '\t%s\n' "--conda-env: Conda environment (default: 'base')"
+  printf '\t%s\n' "--conda-env: Conda environment (default: 'mitre-securing-ai')"
   printf '\t%s\n' "--backend-store-uri: URI to which to persist experiment and run data. Acceptable URIs are
 		SQLAlchemy-compatible database connection strings (e.g. 'sqlite:///path/to/file.db')
 		or local filesystem URIs (e.g. 'file:///absolute/path/to/directory'). (default: 'sqlite:////work/mlruns/mlflow-tracking.db')"
