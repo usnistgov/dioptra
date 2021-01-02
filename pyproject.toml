@@ -33,9 +33,9 @@ version_files = [
     "src/mitre/securingai/restapi/__version__.py",
     "src/mitre/securingai/rq/__version__.py",
     "docs/source/conf.py:release",
-    "Makefile:PROJECT_VERSION",
     "pyproject.toml:version",
     "setup.cfg:version",
+    "version-vars.mk:PROJECT_VERSION",
 ]
 style = [
     ["qmark", "fg:#ff9d00 bold"],
