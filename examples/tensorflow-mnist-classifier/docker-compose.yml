@@ -7,7 +7,7 @@ networks:
 
 services:
   redis:
-    image: securing-ai/redis:latest
+    image: redis:latest
     init: true
     restart: always
     hostname: redis
