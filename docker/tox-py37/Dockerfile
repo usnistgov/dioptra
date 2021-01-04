@@ -35,7 +35,8 @@ ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates-plus-mitre.pem
 ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
 ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates-plus-mitre.pem
 
-RUN pip install --no-cache-dir --no-color tox && \
+RUN /usr/local/bin/python -m pip install --no-cache-dir --no-color --upgrade pip && \
+    /usr/local/bin/python -m pip install --no-cache-dir --no-color tox && \
     find /usr/local -depth \
     \( \
     \( -type d -a \( -name test -o -name tests -o -name idle_test \) \) \
