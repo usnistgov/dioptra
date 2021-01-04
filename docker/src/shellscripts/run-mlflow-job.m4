@@ -52,7 +52,6 @@ set -euo pipefail
 # Global parameters
 ###########################################################################################
 
-readonly ai_workdir="${AI_WORKDIR}"
 readonly conda_dir="${CONDA_DIR}"
 readonly conda_env="${_arg_conda_env}"
 readonly entry_point_kwargs="${_arg_leftovers[*]}"
@@ -101,7 +100,6 @@ validate_mlflow_inputs() {
 # Unpack an archive
 #
 # Globals:
-#   ai_workdir
 #   workflow_filename
 # Arguments:
 #   None
@@ -127,7 +125,6 @@ unpack_archive() {
 # Copy file to/from S3 storage
 #
 # Globals:
-#   ai_workdir
 #   mlflow_s3_endpoint_url
 #   s3_workflow_uri
 #   workflow_filename
@@ -155,7 +152,6 @@ s3_cp() {
 # Start MLFlow pipeline defined in MLproject file
 #
 # Globals:
-#   ai_workdir
 #   conda_dir
 #   conda_env
 #   entry_point
@@ -172,7 +168,7 @@ start_mlflow() {
   local workflow_filepath="$(pwd)/${workflow_filename}"
   local mlflow_backend_opts="--backend ${mlflow_backend}\
   --backend-config {\"workflow_filepath\":\"${workflow_filepath}\"}"
-  local mlproject_file=$(find ${ai_workdir} -name MLproject -type f -print)
+  local mlproject_file=$(find . -name MLproject -type f -print)
 
   if [[ -z ${mlproject_file} ]]; then
     echo "${logname}: ERROR - missing MLproject file"
