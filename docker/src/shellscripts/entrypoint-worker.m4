@@ -33,12 +33,12 @@
 # m4_ignore(
 echo "This is just a script template, not the script (yet) - pass it to 'argbash' to fix this." >&2
 exit 11 #)Created by argbash-init v2.8.1
-# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[base])
+# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[mitre-securing-ai])
 # ARG_OPTIONAL_SINGLE([results-ttl],[],[Job results will be kept for this number of seconds],[500])
 # ARG_LEFTOVERS([Queues to watch])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
-# ARG_HELP([Securing AI Lab Entry Point\n])"
+# ARG_HELP([Securing AI Worker Entry Point\n])"
 # ARGBASH_GO
 
 # [ <-- needed because of Argbash
@@ -56,26 +56,6 @@ readonly job_queues="${_arg_leftovers[*]}"
 readonly logname="Container Entry Point"
 readonly rq_redis_uri="${RQ_REDIS_URI-}"
 readonly rq_results_ttl="${_arg_results_ttl}"
-
-###########################################################################################
-# Restrict network access
-#
-# Globals:
-#   None
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-restrict_network_access() {
-  if [[ -f /usr/local/bin/install-python-modules.sh ]]; then
-    /usr/local/bin/restrict-network-access.sh
-  else
-    echo "${logname}: ERROR - /usr/local/bin/restrict-network-access.sh script missing"
-    exit 1
-  fi
-}
 
 ###########################################################################################
 # Secure the container at runtime

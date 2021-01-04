@@ -41,7 +41,7 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([nginx-mlflow-port],[],[Nginx listening port],[35000])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
-# ARG_HELP([Container Entry Point\n])"
+# ARG_HELP([Nginx Entry Point\n])"
 # ARGBASH_GO
 
 # [ <-- needed because of Argbash

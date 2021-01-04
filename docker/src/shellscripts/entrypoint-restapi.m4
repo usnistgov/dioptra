@@ -35,11 +35,11 @@ echo "This is just a script template, not the script (yet) - pass it to 'argbash
 exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([app-module],[],[Application module],[wsgi:app])
 # ARG_OPTIONAL_SINGLE([backend],[],[Server backend],[gunicorn])
-# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[base])
+# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[mitre-securing-ai])
 # ARG_OPTIONAL_ACTION([upgrade-db],[],[Upgrade the database schema],[upgrade_database])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
-# ARG_HELP([Securing AI Lab RESTful API Entry Point\n])"
+# ARG_HELP([Securing AI Lab API Entry Point\n])"
 # ARGBASH_PREPARE
 
 # [ <-- needed because of Argbash
@@ -132,30 +132,6 @@ start_gunicorn() {
 }
 
 ###########################################################################################
-# Start uwsgi server
-#
-# Globals:
-#   ai_workdir
-#   conda_dir
-#   conda_env
-#   logname
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-start_uwsgi() {
-  echo "${logname}: INFO - Starting uwsgi server"
-
-  bash -c "\
-  source ${conda_dir}/etc/profile.d/conda.sh &&\
-  conda activate ${conda_env} &&\
-  cd ${ai_workdir} &&\
-  uwsgi --ini /etc/uwsgi/uwsgi.ini"
-}
-
-###########################################################################################
 # Start RESTful API service
 #
 # Globals:
@@ -171,9 +147,6 @@ start_restapi() {
   case ${server_backend} in
     gunicorn)
       start_gunicorn
-      ;;
-    uwsgi)
-      start_uwsgi
       ;;
     *)
       echo "${logname}: ERROR - unsupported backend - ${server_backend}"
