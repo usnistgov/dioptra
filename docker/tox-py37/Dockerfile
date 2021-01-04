@@ -1,10 +1,6 @@
 
 FROM python:3.7-slim-buster
 
-ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
-ARG PROJECT_COMPONENT
-ARG PROJECT_VERSION
-
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
@@ -64,10 +60,12 @@ ENV PATH ${PATH:+${PATH}:}/home/${AI_USER}/.local/bin
 ENV CPATH /home/${AI_USER}/.local/include${CPATH:+:${CPATH}}
 ENV LIBRARY_PATH /home/${AI_USER}/.local/lib${LIBRARY_PATH:+:${LIBRARY_PATH}}
 
+ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
+ARG PROJECT_COMPONENT
+
 LABEL securingai.docker=true
 LABEL securingai.docker.os.name=debian
 LABEL securingai.docker.os.version.name=buster
 LABEL securingai.docker.os.version.number=10
 LABEL securingai.docker.project.component=${PROJECT_COMPONENT}
 LABEL securingai.docker.project.component.maintainer=${MAINTAINER}
-LABEL securingai.docker.project.version=${PROJECT_VERSION}
