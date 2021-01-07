@@ -6,7 +6,7 @@ networks:
 
 services:
   redis-username:
-    image: securing-ai/redis:0.0.0-1
+    image: redis:latest
     init: true
     restart: always
     hostname: redis-username

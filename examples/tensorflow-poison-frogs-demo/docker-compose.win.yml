@@ -2,7 +2,7 @@
 version: "3.7"
 services:
   redis:
-    image: securing-ai/redis:0.0.0-1
+    image: redis:latest
     init: true
     restart: always
     hostname: redis
