@@ -8,20 +8,17 @@ warnings.filterwarnings("ignore")
 import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
-tf.config.threading.set_intra_op_parallelism_threads(0)
-tf.config.threading.set_inter_op_parallelism_threads(0)
+
+from pathlib import Path
 
 import click
 import mlflow
 import mlflow.tensorflow
 import numpy as np
 import structlog
-from pathlib import Path
-
 from attacks import create_adversarial_fgm_dataset
 from data import create_image_dataset
 from log import configure_stdlib_logger, configure_structlog_logger
-
 
 LOGGER = structlog.get_logger()
 
@@ -47,23 +44,14 @@ def evaluate_classification_metrics(classifier, adv_ds):
     help="Root directory for NFS mounted datasets (in container)",
 )
 @click.option(
-    "--dataset-name",
+    "--model",
     type=click.STRING,
-    default = "val-sorted-5000",
-    help ="ImageNet test set name. Options include: " \
-          "\n val-sorted-1000  : 1000 image test set " \
-          "\n val-sorted-5000  : 5000 image test set " \
-          "\n val-sorted-10000 : 10000 image test set " \
-          "\n val-sorted       : 50000 image test set ",
-)
-@click.option(
-    "--model", type=click.STRING, help="Name of model to load from registry",
-    default = "keras-model-imagenet-resnet50/1"
+    help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
-    type=click.Choice(["resnet50"], case_sensitive=False),
-    default="resnet50",
+    type=click.Choice(["resnet50", "vgg16"], case_sensitive=False),
+    default="vgg16",
     help="Model architecture",
 )
 @click.option(
@@ -98,36 +86,111 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default="inf",
 )
 @click.option(
-    "--apply-defense",
+    "--apply-spatial-smoothing",
     type=click.BOOL,
-    help="Toggles application of spatial smoothing defense.",
+    help="Apply spatial smoothing preprocessing defense over adversarial images.",
     default=False,
 )
+@click.option(
+    "--spatial-smoothing-window-size",
+    type=click.INT,
+    help="The size of the sliding window for spatial smoothing defense.",
+    default=3,
+)
+@click.option(
+    "--spatial-smoothing-apply-fit",
+    type=click.BOOL,
+    help="Spatial smoothing applied on images used for training.",
+    default=False,
+)
+@click.option(
+    "--spatial-smoothing-apply-predict",
+    type=click.BOOL,
+    help="Spatial smoothing applied on images used for testing.",
+    default=True,
+)
+@click.option(
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
+)
 def fgm_attack(
-    data_dir, dataset_name, model, model_architecture, batch_size, eps, eps_step, minimal, norm, apply_defense,
+    data_dir,
+    model,
+    model_architecture,
+    batch_size,
+    eps,
+    eps_step,
+    minimal,
+    norm,
+    apply_spatial_smoothing,
+    spatial_smoothing_window_size,
+    spatial_smoothing_apply_fit,
+    spatial_smoothing_apply_predict,
+    seed,
 ):
     norm_mapping = {"inf": np.inf, "1": 1, "2": 2}
+    rng = np.random.default_rng(seed if seed >= 0 else None)
 
-    LOGGER.info(
-        "Execute MLFlow entry point", entry_point="fgm_attack", data_dir=data_dir,
-    )
+    if seed < 0:
+        seed = rng.bit_generator._seed_seq.entropy
+
+    if not (apply_spatial_smoothing):
+        LOGGER.info(
+            "Execute MLFlow entry point",
+            entry_point="fgm",
+            data_dir=data_dir,
+            model=model,
+            model_architecture=model_architecture,
+            batch_size=batch_size,
+            eps=eps,
+            eps_step=eps_step,
+            minimal=minimal,
+            norm=norm,
+            apply_spatial_smoothing=apply_spatial_smoothing,
+            seed=seed,
+        )
+    else:
+        LOGGER.info(
+            "Execute MLFlow entry point",
+            entry_point="fgm",
+            data_dir=data_dir,
+            model=model,
+            model_architecture=model_architecture,
+            batch_size=batch_size,
+            eps=eps,
+            eps_step=eps_step,
+            minimal=minimal,
+            norm=norm,
+            apply_spatial_smoothing=apply_spatial_smoothing,
+            spatial_smoothing_window_size=spatial_smoothing_window_size,
+            spatial_smoothing_apply_fit=spatial_smoothing_apply_fit,
+            spatial_smoothing_apply_predict=spatial_smoothing_apply_predict,
+            seed=seed,
+        )
 
     minimal = bool(int(minimal))
     norm = norm_mapping[norm]
+    tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
+
+    tf.random.set_seed(tensorflow_global_seed)
 
     with mlflow.start_run() as _:
-        testing_dir = Path(data_dir) / dataset_name
+        testing_dir = Path(data_dir)
         adv_data_dir = Path().cwd() / "adv_testing"
 
         adv_data_dir.mkdir(parents=True, exist_ok=True)
-
         image_size = (224, 224)
-        
-        classifier, distance_metrics = create_adversarial_fgm_dataset(
+
+        distance_metrics = create_adversarial_fgm_dataset(
             data_dir=testing_dir,
             model=model,
-            apply_defense=apply_defense,
             adv_data_dir=adv_data_dir.resolve(),
+            apply_spatial_smoothing=apply_spatial_smoothing,
+            spatial_smoothing_window_size=spatial_smoothing_window_size,
+            spatial_smoothing_apply_fit=spatial_smoothing_apply_fit,
+            spatial_smoothing_apply_predict=spatial_smoothing_apply_predict,
             batch_size=batch_size,
             image_size=image_size,
             eps=eps,
@@ -135,14 +198,6 @@ def fgm_attack(
             minimal=minimal,
             norm=norm,
         )
-
-        adv_ds = create_image_dataset(
-            data_dir=str(adv_data_dir.resolve()),
-            subset=None,
-            validation_split=None,
-            image_size=image_size,
-        )
-        evaluate_classification_metrics(classifier=classifier, adv_ds=adv_ds)
 
         adv_testing_tar = Path().cwd() / "testing_adversarial_fgm.tar.gz"
         image_perturbation_csv = Path().cwd() / "distance_metrics.csv.gz"
@@ -163,4 +218,5 @@ def fgm_attack(
 if __name__ == "__main__":
     configure_stdlib_logger("INFO", log_filepath=None)
     configure_structlog_logger("console")
+
     fgm_attack()

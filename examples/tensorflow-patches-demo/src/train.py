@@ -74,21 +74,35 @@ def model_vgg16():
 
 def get_model(
     model_architecture: str,
-    n_classes: int = 120,
+    n_classes: int,
 ):
-    model_collection = {"resnet50": model_resnet50, "vgg16": model_vgg16}
+    model_collection = {
+        "shallow_net": shallow_net(input_shape=(28, 28, 1), n_classes=n_classes),
+        "le_net": le_net(input_shape=(28, 28, 1), n_classes=n_classes),
+        "alex_net": alex_net(input_shape=(224, 224, 1), n_classes=n_classes),
+        "resnet50": ResNet50V2(
+            weights="imagenet", input_shape=(224, 224, 3), include_top=False
+        ),
+        "vgg16": VGG16(
+            weights="imagenet", input_shape=(224, 224, 3), include_top=False
+        ),
+    }
 
-    # Setup top classification layer, and freeze base model layers.
-    base_model = model_collection.get(model_architecture)()
-    top = base_model.output
-    top = GlobalAveragePooling2D()(top)
-    top = Dense(1024, activation="relu")(top)
-    predictions = Dense(n_classes, activation="softmax")(top)
-    model = Model(inputs=base_model.input, outputs=predictions)
+    keras_models = ["resnet50", "vgg16"]
 
-    for layer in base_model.layers:
-        layer.trainable = False
+    if model_architecture in keras_models:
+        # Setup top classification layer, and freeze base model layers.
+        base_model = model_collection.get(model_architecture)
+        top = base_model.output
+        top = GlobalAveragePooling2D()(top)
+        top = Dense(1024, activation="relu")(top)
+        predictions = Dense(n_classes, activation="softmax")(top)
+        model = Model(inputs=base_model.input, outputs=predictions)
 
+        for layer in base_model.layers:
+            layer.trainable = False
+    else:
+        model = model_collection.get(model_architecture)
     return model
 
 
@@ -100,9 +114,9 @@ def get_model_callbacks():
     return [early_stop]
 
 
-def init_model(learning_rate, model_architecture: str, optimizer: str):
+def init_model(learning_rate, model_architecture: str, n_classes: int, optimizer: str):
     model_optimizer = get_optimizer(optimizer=optimizer, learning_rate=learning_rate)
-    model = get_model(model_architecture=model_architecture)
+    model = get_model(model_architecture=model_architecture, n_classes=n_classes)
     model.compile(
         loss="categorical_crossentropy",
         optimizer=model_optimizer,
@@ -124,6 +138,17 @@ def prepare_data(
     testing_dir = Path(data_dir_test)
 
     image_size = (224, 224)
+    rescale = 1.0
+    imagenet_preprocessing = True
+    color_mode = "rgb"
+    mnist_models = ["shallow_net", "le_net", "alex_net"]
+
+    if model_architecture in mnist_models:
+        if model_architecture != "alex_net":
+            image_size = (28, 28)
+        rescale = 1.0 / 255
+        color_mode = "grayscale"
+        imagenet_preprocessing = False
 
     training = create_image_dataset(
         data_dir=str(training_dir),
@@ -132,6 +157,9 @@ def prepare_data(
         batch_size=batch_size,
         seed=seed,
         image_size=image_size,
+        rescale=rescale,
+        color_mode=color_mode,
+        imagenet_preprocessing=imagenet_preprocessing,
     )
     validation = create_image_dataset(
         data_dir=str(training_dir),
@@ -140,6 +168,9 @@ def prepare_data(
         batch_size=batch_size,
         seed=seed,
         image_size=image_size,
+        rescale=rescale,
+        color_mode=color_mode,
+        imagenet_preprocessing=imagenet_preprocessing,
     )
     testing = create_image_dataset(
         data_dir=str(testing_dir),
@@ -148,6 +179,9 @@ def prepare_data(
         batch_size=batch_size,
         seed=seed + 1,
         image_size=image_size,
+        rescale=rescale,
+        color_mode=color_mode,
+        imagenet_preprocessing=imagenet_preprocessing,
     )
 
     return (
@@ -217,7 +251,9 @@ def evaluate_metrics(model, testing_ds):
 )
 @click.option(
     "--model-architecture",
-    type=click.Choice(["resnet50", "vgg16"], case_sensitive=False),
+    type=click.Choice(
+        ["shallow_net", "le_net", "alex_net", "resnet50", "vgg16"], case_sensitive=False
+    ),
     default="vgg16",
     help="Model architecture",
 )
@@ -377,9 +413,11 @@ def train(
             model_architecture=model_architecture,
             seed=dataset_seed,
         )
+        n_classes = len(training_ds.class_indices)
         model = init_model(
             learning_rate=learning_rate,
             model_architecture=model_architecture,
+            n_classes=n_classes,
             optimizer=optimizer,
         )
         history, model = fit(

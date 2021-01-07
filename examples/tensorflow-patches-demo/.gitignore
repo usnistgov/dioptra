@@ -1,0 +1,3 @@
+docker-compose.yml
+data/download_data.py/
+!data/download_data.py

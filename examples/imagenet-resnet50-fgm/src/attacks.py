@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import warnings
-from typing import Tuple
 from pathlib import Path
+from typing import Tuple
 
 warnings.filterwarnings("ignore")
 
@@ -18,12 +18,6 @@ import structlog
 from art.attacks.evasion import FastGradientMethod
 from art.defences.preprocessor import SpatialSmoothing
 from art.estimators.classification import KerasClassifier
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.preprocessing.image import save_img
-
-
-
-from models import load_model_in_registry
 from metrics import (
     l_inf_norm,
     paired_cosine_similarities,
@@ -31,6 +25,8 @@ from metrics import (
     paired_manhattan_distances,
     paired_wasserstein_distances,
 )
+from models import load_model_in_registry
+from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
 
 LOGGER = structlog.get_logger()
 DISTANCE_METRICS = [
@@ -44,7 +40,8 @@ DISTANCE_METRICS = [
 
 def wrap_keras_classifier(model):
     keras_model = load_model_in_registry(model=model)
-    return KerasClassifier(model=keras_model)
+    clip_values = (0, 255)
+    return KerasClassifier(model=keras_model, clip_values=clip_values)
 
 
 def init_fgm(model, batch_size, **kwargs):
@@ -108,13 +105,16 @@ def log_distance_metrics(distance_metrics_):
 def create_adversarial_fgm_dataset(
     data_dir: str,
     model: str,
-    apply_defense: bool = False,
     adv_data_dir: Path = None,
-    rescale: float = 1.0 ,
-    batch_size: int = 20,
+    rescale: float = 1.0,
+    batch_size: int = 32,
     label_mode: str = "categorical",
     color_mode: str = "rgb",
-    image_size: Tuple[int, int] = (224,224),
+    image_size: Tuple[int, int] = (224, 224),
+    apply_spatial_smoothing: bool = False,
+    spatial_smoothing_window_size: int = 3,
+    spatial_smoothing_apply_fit: bool = False,
+    spatial_smoothing_apply_predict: bool = True,
     **kwargs,
 ):
     classifier, attack = init_fgm(model=model, batch_size=batch_size, **kwargs)
@@ -143,10 +143,7 @@ def create_adversarial_fgm_dataset(
         num_batches=num_images // batch_size,
     )
 
-    # Initalize the SpatialSmoothing defence.
-    if apply_defense:
-        defense = SpatialSmoothing(window_size=3)
-
+    # Initialize the SpatialSmoothing defence.
     for batch_num, (x, y) in enumerate(data_flow):
         if batch_num >= num_images // batch_size:
             break
@@ -156,16 +153,29 @@ def create_adversarial_fgm_dataset(
         ]
 
         LOGGER.info(
-            "Generate adversarial image batch", attack="fgm", batch_num=batch_num,
+            "Generate adversarial image batch",
+            attack="fgm",
+            batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)
         adv_batch = attack.generate(x=x)
-        if apply_defense:
+
+        if apply_spatial_smoothing:
+            defense = SpatialSmoothing(
+                window_size=spatial_smoothing_window_size,
+                apply_fit=spatial_smoothing_apply_fit,
+                apply_predict=spatial_smoothing_apply_predict,
+                clip_values=(0, 255),
+            )
             adv_batch_defend, _ = defense(adv_batch)
-            save_adv_batch(adv_batch_defend, adv_data_dir, y_int, clean_filenames, class_names_list)
+            save_adv_batch(
+                adv_batch_defend, adv_data_dir, y_int, clean_filenames, class_names_list
+            )
         else:
-            save_adv_batch(adv_batch, adv_data_dir, y_int, clean_filenames, class_names_list)
+            save_adv_batch(
+                adv_batch, adv_data_dir, y_int, clean_filenames, class_names_list
+            )
 
         evaluate_distance_metrics(
             clean_filenames=clean_filenames,
@@ -177,4 +187,4 @@ def create_adversarial_fgm_dataset(
     LOGGER.info("Adversarial image generation complete", attack="fgm")
     log_distance_metrics(distance_metrics_)
 
-    return classifier, pd.DataFrame(distance_metrics_)
+    return pd.DataFrame(distance_metrics_)

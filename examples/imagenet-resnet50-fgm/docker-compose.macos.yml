@@ -1,0 +1,216 @@
+
+version: "3.7"
+services:
+  redis:
+    image: securing-ai/redis:0.0.0-1
+    init: true
+    restart: always
+    hostname: redis
+    container_name: redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+
+  minio:
+    image: minio/minio:RELEASE.2020-09-02T18-19-50Z
+    init: true
+    restart: always
+    hostname: minio
+    container_name: minio
+    command: server /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    volumes:
+      - type: volume
+        source: nfs-s3
+        target: /data
+
+  mlflow-tracking:
+    image: securing-ai/mlflow-tracking:0.0.0-1
+    init: true
+    restart: always
+    hostname: mlflow-tracking
+    container_name: mlflow-tracking
+    depends_on:
+      - minio
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://nginx:35000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command:
+      - --host
+      - "0.0.0.0"
+      - --default-artifact-root
+      - "s3://mlflow-tracking/artifacts"
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    volumes:
+      - type: volume
+        source: nfs-mlruns
+        target: /work/mlruns
+
+  nginx:
+    image: securing-ai/nginx:0.0.0-1
+    init: true
+    restart: always
+    hostname: nginx
+    container_name: nginx
+    depends_on:
+      - mlflow-tracking
+      - restapi
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:35000",
+          "&&",
+          "curl",
+          "-f",
+          "http://localhost:30080",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    ports:
+      - target: 35000
+        published: 35000
+        protocol: tcp
+        mode: host
+      - target: 30080
+        published: 30080
+        protocol: tcp
+        mode: host
+
+  restapi:
+    image: securing-ai/restapi:0.0.0-1
+    init: true
+    restart: always
+    hostname: restapi
+    container_name: restapi
+    depends_on:
+      - minio
+      - mlflow-tracking
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://nginx:30080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
+      AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
+      AI_RESTAPI_ENV: prod
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      RQ_REDIS_URI: redis://redis:6379/0
+    volumes:
+      - type: volume
+        source: nfs-restapi
+        target: /work/data
+
+  tfcpu-01:
+    image: securing-ai/tensorflow2-cpu-py37:0.0.0-1
+    init: true
+    restart: always
+    hostname: tfcpu-01
+    container_name: tfcpu-01
+    environment:
+      AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
+      AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
+      AI_RESTAPI_ENV: prod
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      KMP_AFFINITY: "none"
+      KMP_BLOCKTIME: "1"
+      KMP_SETTINGS: "FALSE"
+      OMP_PROC_BIND: "false"
+      RQ_REDIS_URI: redis://redis:6379/0
+      TF_CPP_MIN_LOG_LEVEL: "2"
+    command:
+      - tensorflow_cpu
+    volumes:
+      - type: volume
+        source: nfs-data
+        target: /nfs/data
+      - type: volume
+        source: nfs-restapi
+        target: /work/data
+
+  tfcpu-02:
+    image: securing-ai/tensorflow2-cpu-py37:0.0.0-1
+    init: true
+    restart: always
+    hostname: tfcpu-02
+    container_name: tfcpu-02
+    environment:
+      AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
+      AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
+      AI_RESTAPI_ENV: prod
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      KMP_AFFINITY: "none"
+      KMP_BLOCKTIME: "1"
+      KMP_SETTINGS: "FALSE"
+      OMP_PROC_BIND: "false"
+      RQ_REDIS_URI: redis://redis:6379/0
+      TF_CPP_MIN_LOG_LEVEL: "2"
+    command:
+      - tensorflow_cpu
+    volumes:
+      - type: volume
+        source: nfs-data
+        target: /nfs/data
+      - type: volume
+        source: nfs-restapi
+        target: /work/data
+
+volumes:
+  nfs-data:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=host.docker.internal,ro,nolock,hard,nointr,nfsvers=3
+      device: ":/System/Volumes/Data/${PWD}/data"
+  nfs-mlruns:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
+      device: ":/System/Volumes/Data/${PWD}/mlruns"
+  nfs-redis:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
+      device: ":/System/Volumes/Data/${PWD}/redis"
+  nfs-restapi:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
+      device: ":/System/Volumes/Data/${PWD}/restapi"
+  nfs-s3:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
+      device: ":/System/Volumes/Data/${PWD}/s3"

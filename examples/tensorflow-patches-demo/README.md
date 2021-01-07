@@ -1,9 +1,9 @@
-# Tensorflow Basic Hello World Demo
+# Tensorflow Adversarial Patch Demo
 
 ![Lab architecture diagram](securing_ai_lab_architecture.png)
 
-This demo provides a baseline skeleton example for user entrypoint customization and job submission.
-It can be used as a basic template for crafting your own demos to run within the architecture.
+This demo provides a practical example that shows how the Securing AI Lab Architecture can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
+It can be used as a basic template for crafting your own custom scripts to run within the architecture.
 
 ## Getting started
 

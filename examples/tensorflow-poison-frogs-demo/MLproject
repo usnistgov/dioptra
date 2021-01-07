@@ -1,35 +1,58 @@
 name: tensorflow-mnist-classifier
 
 entry_points:
-  fgm:
+  gen_poison:
     parameters:
       data_dir: {type: path, default: "/nfs/data"}
-      model: {type: string, default: "resnet50/None"}
-      model_architecture: {type: string, default: "resnet50"}
-      batch_size: {type: float, default: 32}
-      eps: {type: float, default: 0.3}
-      eps_step: {type: float, default: 0.1}
-      minimal: {type: float, default: 0}
-      norm: {type: string, default: "inf"}
-      apply_spatial_smoothing: {type: string, default: "false"}
-      spatial_smoothing_window_size: {type: int, default: 3}
-      spatial_smoothing_apply_fit: {type: string, default: "false"}
-      spatial_smoothing_apply_predict: {type: string, default: "true"}
+      target_image_path: {type: path, default: "None"}
+      model: {type: string, default: "mnist_le_net/1"}
+      model_architecture: {type: string, default: "vgg16"}
+      learning_rate: {type: float, default: 5.0}
+      max_iter: {type: int, default: 500}
+      decay_coeff: {type: float, default: 0.5}
+      stopping_tol: {type: float, default: 1e-10}
+      similarity_coeff: {type: float, default: 256.0}
+      watermark: {type: float, default: -1}
+      num_old_obj: {type: int, default: 40}
+      obj_threshold: {type: float, default: -1}
+      target_class: {type: string, default: "0"}
+      batch_size: {type: int, default: 30}
+      num_poisoned_batches: {type: int, default: -1}
+      feature_layer_index: {type: int, default: -1}
       seed: {type: float, default: -1}
     command: >
-      python src/fgm.py
+      python src/gen_poison.py
       --data-dir {data_dir}
+      --target-image-path {target_image_path}
       --model {model}
       --model-architecture {model_architecture}
+      --learning-rate {learning_rate}
+      --max-iter {max_iter}
+      --decay-coeff {decay_coeff}
+      --stopping-tol {stopping_tol}
+      --similarity-coeff {similarity_coeff}
+      --watermark {watermark}
+      --num-old-obj {num_old_obj}
+      --obj-threshold {obj_threshold}
+      --target-class {target_class}
       --batch-size {batch_size}
-      --eps {eps}
-      --eps-step {eps_step}
-      --minimal {minimal}
-      --norm {norm}
-      --apply-spatial-smoothing {apply_spatial_smoothing}
-      --spatial-smoothing-window-size {spatial_smoothing_window_size}
-      --spatial-smoothing-apply-fit {spatial_smoothing_apply_fit}
-      --spatial-smoothing-apply-predict {spatial_smoothing_apply_predict}
+      --num-poisoned-batches {num_poisoned_batches}
+      --feature-layer-index {feature_layer_index}
+      --seed {seed}
+
+  deploy_poison:
+    parameters:
+      run_id: {type: string}
+      data_dir: {type: path, default: "/nfs/data"}
+      poison_deployment_method: {type: string, default: "add"}
+      num_poisoned_images: {type: int, default: -1}
+      seed: {type: float, default: -1}
+    command: >
+      python src/deploy_poison.py
+      --run-id {run_id}
+      --data-dir {data_dir}
+      --poison-deployment-method {poison_deployment_method}
+      --num-poisoned-images {num_poisoned_images}
       --seed {seed}
 
   init_model:
@@ -51,6 +74,7 @@ entry_points:
     parameters:
       run_id: {type: string}
       model: {type: string, default: "mnist_le_net/1"}
+      model_architecture: {type: string, default: "le_net"}
       batch_size: {type: float, default: 32}
       seed: {type: float, default: -1}
       dataset_tar_name: {type: string, default: "testing_adversarial_fgm.tar.gz"}
@@ -59,6 +83,7 @@ entry_points:
       python src/infer.py
       --run-id {run_id}
       --model {model}
+      --model-architecture {model_architecture}
       --batch-size {batch_size}
       --seed {seed}
       --dataset-tar-name {dataset_tar_name}
@@ -77,7 +102,6 @@ entry_points:
       optimizer: {type: string, default: "adam"}
       validation_split: {type: float, default: 0.2}
       load_dataset_from_mlruns: {type: string, default: "False"}
-      testing_dataset_run_id: {type: string, default: "None"}
       training_dataset_run_id: {type: string, default: "None"}
       seed: {type: float, default: -1}
     command: >
@@ -93,6 +117,5 @@ entry_points:
       --optimizer {optimizer}
       --validation-split {validation_split}
       --load-dataset-from-mlruns {load_dataset_from_mlruns}
-      --testing-dataset-run-id {testing_dataset_run_id}
       --training-dataset-run-id {training_dataset_run_id}
       --seed {seed}

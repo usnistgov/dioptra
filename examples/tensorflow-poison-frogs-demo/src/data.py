@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 warnings.filterwarnings("ignore")
 
 import tensorflow as tf
-from tensorflow.keras.applications.resnet50 import preprocess_input
+from tensorflow.keras.applications.imagenet_utils import preprocess_input
 
 tf.compat.v1.disable_eager_execution()
 
@@ -41,12 +41,18 @@ def create_image_dataset(
     label_mode: str = "categorical",
     color_mode: str = "rgb",
     image_size: Tuple[int, int] = (224, 224),
+    imagenet_preprocessing: bool = False,
 ):
-    data_generator: ImageDataGenerator = ImageDataGenerator(
-        rescale=rescale,
-        validation_split=validation_split,
-        preprocessing_function=preprocess_input,
-    )
+    if imagenet_preprocessing:
+        data_generator: ImageDataGenerator = ImageDataGenerator(
+            rescale=rescale,
+            validation_split=validation_split,
+            preprocessing_function=preprocess_input,
+        )
+    else:
+        data_generator: ImageDataGenerator = ImageDataGenerator(
+            rescale=rescale, validation_split=validation_split
+        )
 
     return data_generator.flow_from_directory(
         directory=data_dir,

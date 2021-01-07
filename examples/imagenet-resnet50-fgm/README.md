@@ -1,103 +1,79 @@
-# Securing AI Lab Components
-## ImageNet-ResetNet50 FGM and Spatial Smoothing Demo.
+# Tensorflow ResNet50 FGM Demo
 
-## Summary:
+![Lab architecture diagram](securing_ai_lab_architecture.png)
 
-This demo is a variation of the original tensorflow-mnist demo, configured to run the FGM attack and spatial smoothing defense within the DGX workstation.
-The steps follow the original guide with a few additional steps for launching the new attack and defense on ImageNet model and datasets.
+This demo provides a practical example that shows how the Securing AI Lab Architecture can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
+It can be used as a basic template for crafting your own custom scripts to run within the architecture.
 
-Please see the [changelog](#changelog) section for a summary of general code changes made to this demo from the original tensorflow mnist demo.
+## Getting started
 
+The step-by-step demo is provided in the Jupyter notebook format in the file `demo.ipynb`.
+The easiest way to get up and running with the Jupyter notebook is to install a recent version of Anaconda on your host machine.
+Links for installing version 2020.07 are provided below,
 
-### Mandatory: Setting container and network names for the demo.
+-   Anaconda for Windows: <https://repo.anaconda.com/archive/Anaconda3-2020.07-Windows-x86_64.exe>
 
-Please replace `<username>` entry in the following files with your own personal user name:
+-   Anaconda for Mac: <https://repo.anaconda.com/archive/Anaconda3-2020.07-MacOSX-x86_64.pkg>
 
-```
-demo_*.sh
-docker-compose.yml
-```
+-   Anaconda for Linux: <https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh>
 
-Alternatively: Run `find . \( ! -regex '.*/\..*' \) -type f | xargs sed -i 's/<username>/<YOUR_USER_NAME_HERE>/g'` to
-automatically set the configured files with your username. Or use an IDE to update the scripts automatically.
+After installing Anaconda, use the `environment.yml` file distributed with this example to set up a virtual environment that can be used to run the notebook and also execute the code under the `src/` directory if you want to try it out locally.
+To create the virtual environment and install the necessary dependencies, run
 
-## Some steps have been changed from the original mnist demo, as data download is replaced with NFS mount access.
-
-### Setting proper permissions
-
-Right now, our accounts are set to restrict readability of files to user-only, which interferes with mounting and
-reading of local storage volumes in docker containers. In order to correct this, we'll need to create
-a bash alias to update new folder permissions.
-
-In your home directory:
-
-Create the  `.bash_aliases` file and enter the following line into the file:
-
-`umask 0022`
-
-This will set future directories and folders to be readable for all users as well as within docker containers.
-To ensure the changes take effect, log out and then back into the dgx-workstation.
-To fix permissions for existing directories we will use the following commands.
-
-
-From this directory `examples/tensorflow-mnist-classifier`, please run the following commands:
-
-```
-find . -type d -print0 | xargs -0 chmod 755
-find . -type f -print0 | xargs -0 chmod 644
-
-mkdir s3
-mkdir mlruns
-
-chmod 777 mlruns
-
+```bash
+conda env create --file environment.yml
 ```
 
-This ensures that the data, mlruns, and s3 folders all have proper permissions for access within the docker containers.
-The s3 and mlruns folders are currently where the docker-compose file will bind the docker containers to.
+To activate the environment, run,
 
-### Next: Setting up pretrained model and containers.
-
-Run the following commands, from the tutorial session:
-
-
-```
-make services
-make upload-job
+```bash
+conda activate tensorflow-mnist-classifier
 ```
 
-* `make data` has been removed as we are now accessing the NFS mounted Fruits360 dataset.
+To start up Jupyter Lab, which you can use to view and execute the Jupyter notebook, run,
 
-NOTE: If the tarball upload triggers another permissions issue (i.e. "/work/*.tar.gz is not readable")
+```bash
+jupyter lab
+```
 
-Run: `chmod 644 workflows.tar.gz`
+Please note, if this is your first time using this demo, then you will need to initialize the database and prepare your `docker-compose.yml` file.
+Initializing the database can be done using the `Makefile`,
 
-To set the code tarball file to 'readable' for the S3 upload.
+```bash
+make initdb
+```
 
-Then re-run: `make upload-job`
+To prepare your `docker-compose.yml`, select one of the following three files distributed with the demo that best matches your computing platform,
 
-### Next: Launching GPU-configured docker jobs.
+-   `docker-compose.win.yml` - Best suited for Windows computers (as well as personal Linux installations)
+-   `docker-compose.macos.yml` - Best suited for MacOS, but you need to enable NFS functionality for this to work, otherwise default to the `win` file
 
-Right now, due to differences in docker vs docker-compose, GPU containers have to be manually executed via `docker run`
-command. To simplify this, the following bash scripts have been provided:
+Then, make a copy of it as follows,
 
-1. `demo_train.sh`   - Loads, trains, and tests a lightweight model on a subset of the ImageNet dataset.
-2. `demo_attack.sh`  - Launch an FGM attack on the model from step 1.
-3. `demo_defense.sh` - Repeat step 2, but also launch a preprocessing defense to reduce model accuracy loss.
+```bash
+# This assumes you have a Windows computer
+cp docker-compose.win.yml docker-compose.yml
+```
 
+You should now be able to start running the demo provied in the Jupyter notebook.
 
-### Changelog
- - Updated `MLproject` user parameters to add in the respective patch attack job parameters.
-     - In `MLproject`, the `fgm.py` script is replaced with the `patch.py` script.
- - `patch.py` script follows the original fgm script, with an additional section of code in the `patch_attack` function to save patch results in addition to adversarial images.
-    - Additional job parameters for the patch script are also passed into the `attack.py` script for processing.
- - `attacks.py` has been updated to run the patch attack instead of the fgm attack.
-    - Additional code has been added to save patches in addition to adversarial images.
- - Updated `docker-compose.yml`, following recommendations to use a custom network.
-    - Users must also update container names so they are unique along with the demo scripts (network name must be set here too).
- - The `train.py` script has been updated to automatically store a registered model from training into the MLFlow interface.
+### NFS on MacOS
 
+To enable the use of NFS volumes with Docker on the Mac, you will need to do the following.
+First, open the NFS exports file with administrator privileges: `sudo nano /etc/exports`.
+The file will likely be empty.
+Add this line and save:
 
+    /System/Volumes/Data -alldirs -mapall=501:20 localhost
 
+Next, open the NFS config file with administrator privileges: `sudo nano /etc/nfs.conf`.
+The file again will likely be empty.
+Add this line and save:
 
+    nfs.server.mount.require_resv_port = 0
 
+Afterwards, restart the nfsd service,
+
+    sudo nfsd restart
+
+You should now be able to use the `docker-compose.macos.yml` file without error.
