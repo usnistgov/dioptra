@@ -421,10 +421,10 @@ $(strip $(2))/%.yml: $$(PROJECT_DOCKER_CONDA_ENV_DIR)/%.yml $$(VERSION_VARS_FILE
 		--prettyPrint\
 		eval\
 		'(.dependencies[] | select(. == "python")) = "python=$$(CONTAINER_PYTHON_VERSION)" | \
+			(.dependencies[] | select(. == "scikit-learn")) = "scikit-learn=$$(CONTAINER_SKLEARN_VERSION)" | \
 			(.dependencies[].pip[] | select(. == "adversarial-robustness-toolbox")) = "adversarial-robustness-toolbox==$$(CONTAINER_IBM_ART_VERSION)" | \
 			(.dependencies[].pip[] | select(. == "mlflow")) = "mlflow==$$(CONTAINER_MLFLOW_VERSION)" | \
-			(.dependencies[].pip[] | select(. == "prefect")) = "prefect==$$(CONTAINER_PREFECT_VERSION)" | \
-			(.dependencies[].pip[] | select(. == "scikit-learn")) = "scikit-learn==$$(CONTAINER_SKLEARN_VERSION)"',\
+			(.dependencies[].pip[] | select(. == "prefect")) = "prefect==$$(CONTAINER_PREFECT_VERSION)"', \
 		/workdir/$$<) ) >$$@
 endef
 
