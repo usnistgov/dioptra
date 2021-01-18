@@ -45,8 +45,8 @@ def tmpfile(tmpdir):
 @pytest.fixture
 def plugin_package():
     """Name of the test plugin package"""
-    plugins = pathlib.Path(__file__).parent / "plugin_directory"
-    relative = plugins.relative_to(pathlib.Path.cwd() / "tests")
+    plugins_dir = pathlib.Path(__file__).absolute().parent / "plugin_directory"
+    relative = plugins_dir.relative_to(pathlib.Path.cwd())
 
     return ".".join(relative.parts)
 

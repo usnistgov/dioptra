@@ -57,7 +57,7 @@ MV = mv
 MYPY = mypy
 PRE_COMMIT = pre-commit
 PY ?= python3.8
-PYTEST = pytest
+PYTEST = $(PY) -m pytest
 RM = rm
 TOX = tox
 
@@ -296,7 +296,7 @@ $(CONDA) deactivate"
 endef
 
 define run_pytest
-$(PYTEST) $(1)
+$(PYTEST) --import-mode=importlib $(1)
 endef
 
 define run_python_black
