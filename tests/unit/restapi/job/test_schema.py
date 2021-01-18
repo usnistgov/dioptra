@@ -4,13 +4,13 @@ from typing import Any, BinaryIO, Dict
 import pytest
 import structlog
 from flask import Flask
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from mitre.securingai.restapi.job.schema import JobFormSchema, JobSchema
 from mitre.securingai.restapi.models import Job, JobForm
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @pytest.fixture

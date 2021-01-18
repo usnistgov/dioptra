@@ -7,12 +7,11 @@ from redis.exceptions import RedisError
 from rq.exceptions import NoSuchJobError
 from rq.job import Job as RQJob
 from rq.queue import Queue as RQQueue
-from structlog import BoundLogger
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from mitre.securingai.restapi.job.model import Job
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class RQService(object):

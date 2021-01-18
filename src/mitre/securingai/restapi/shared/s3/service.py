@@ -6,11 +6,10 @@ from boto3.session import Session
 from botocore.client import BaseClient
 from botocore.exceptions import ClientError
 from injector import inject
-from structlog import BoundLogger
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class S3Service(object):

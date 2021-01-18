@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 import structlog
 from flask import Flask
 from sqlalchemy.exc import IntegrityError
+from structlog.stdlib import BoundLogger
 
 from mitre.securingai.restapi import create_app
 from mitre.securingai.restapi.app import db
@@ -13,7 +14,7 @@ from mitre.securingai.restapi.models import Experiment, Job
 ENVVAR_RESTAPI_ENV = "AI_RESTAPI_ENV"
 ENVVAR_JOB_ID = "AI_RQ_JOB_ID"
 
-LOGGER = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class SecuringAIDatabaseClient(object):

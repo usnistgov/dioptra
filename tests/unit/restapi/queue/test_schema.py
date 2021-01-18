@@ -4,7 +4,7 @@ from typing import Any, Dict
 import pytest
 import structlog
 from flask import Flask
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from mitre.securingai.restapi.models import Queue, QueueRegistrationForm
 from mitre.securingai.restapi.queue.interface import (
@@ -20,7 +20,7 @@ from mitre.securingai.restapi.queue.schema import (
     QueueSchema,
 )
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @pytest.fixture

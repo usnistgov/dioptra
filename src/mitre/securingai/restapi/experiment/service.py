@@ -4,8 +4,7 @@ from typing import List, Optional
 import structlog
 from injector import inject
 from mlflow.exceptions import RestException
-from structlog import BoundLogger
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from mitre.securingai.restapi.app import db
 from mitre.securingai.restapi.shared.mlflow_tracking.service import (
@@ -25,7 +24,7 @@ from .model import (
 )
 from .schema import ExperimentRegistrationFormSchema
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class ExperimentService(object):

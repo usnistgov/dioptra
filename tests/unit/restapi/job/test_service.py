@@ -8,7 +8,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from mitre.securingai.restapi.job.service import JobService
@@ -16,7 +16,7 @@ from mitre.securingai.restapi.models import Job, JobFormData
 from mitre.securingai.restapi.shared.rq.service import RQService
 from mitre.securingai.restapi.shared.s3.service import S3Service
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @dataclass

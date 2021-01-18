@@ -6,8 +6,7 @@ from typing import List, Optional
 import structlog
 from injector import inject
 from rq.job import Job as RQJob
-from structlog import BoundLogger
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 from werkzeug.utils import secure_filename
 
 from mitre.securingai.restapi.app import db
@@ -20,7 +19,7 @@ from .errors import JobWorkflowUploadError
 from .model import Job, JobForm, JobFormData
 from .schema import JobFormSchema
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class JobService(object):

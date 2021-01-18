@@ -8,12 +8,12 @@ import pytest
 import structlog
 from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from mitre.securingai.restapi.models import Job
 from mitre.securingai.restapi.shared.rq.service import RQService
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class MockRQJob(object):

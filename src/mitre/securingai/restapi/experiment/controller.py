@@ -7,8 +7,7 @@ from flask.wrappers import Response
 from flask_accepts import accepts, responds
 from flask_restx import Namespace, Resource
 from injector import inject
-from structlog import BoundLogger
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from .errors import ExperimentDoesNotExistError, ExperimentRegistrationError
 from .interface import ExperimentUpdateInterface
@@ -24,7 +23,7 @@ from .schema import (
 )
 from .service import ExperimentService
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 api: Namespace = Namespace(
     "Experiment",

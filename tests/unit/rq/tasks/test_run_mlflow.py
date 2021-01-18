@@ -5,11 +5,11 @@ import rq
 import structlog
 from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from mitre.securingai.rq.tasks import run_mlflow_task
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class MockRQJob(object):

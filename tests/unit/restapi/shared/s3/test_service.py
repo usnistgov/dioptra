@@ -6,11 +6,11 @@ import structlog
 from _pytest.monkeypatch import MonkeyPatch
 from botocore.stub import Stubber
 from dateutil.tz.tz import tzutc
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from mitre.securingai.restapi.shared.s3.service import S3Service
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @pytest.fixture

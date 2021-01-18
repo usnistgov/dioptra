@@ -30,6 +30,9 @@ import sys
 import textwrap
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, TypeVar, overload
 
+import structlog
+from structlog.stdlib import BoundLogger
+
 from . import _exceptions
 
 try:
@@ -37,6 +40,9 @@ try:
 
 except ImportError:  # pragma: nocover
     import importlib_resources as resources  # type: ignore
+
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 # Type aliases

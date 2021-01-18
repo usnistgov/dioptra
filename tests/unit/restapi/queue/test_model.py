@@ -2,11 +2,11 @@ import datetime
 
 import pytest
 import structlog
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from mitre.securingai.restapi.models import Queue, QueueLock, QueueRegistrationFormData
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @pytest.fixture

@@ -3,8 +3,7 @@ from typing import List, Optional
 
 import structlog
 from injector import inject
-from structlog import BoundLogger
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from mitre.securingai.restapi.app import db
 
@@ -12,7 +11,7 @@ from .errors import QueueAlreadyExistsError
 from .model import Queue, QueueLock, QueueRegistrationForm, QueueRegistrationFormData
 from .schema import QueueRegistrationFormSchema
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class QueueService(object):

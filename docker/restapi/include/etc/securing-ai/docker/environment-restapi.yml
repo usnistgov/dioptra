@@ -51,5 +51,5 @@ dependencies:
       - python-json-logger>=2.0.0
       - querystring-parser>=1.2.0
       - rq>=1.5.0
-      - structlog>=20.1.0
+      - structlog>=20.2.0
       - typing-extensions>=3.7.4.0

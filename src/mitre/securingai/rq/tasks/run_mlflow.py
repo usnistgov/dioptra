@@ -9,10 +9,9 @@ from typing import List, Optional
 import structlog
 from rq.job import Job as RQJob
 from rq.job import get_current_job
-from structlog import BoundLogger
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 def run_mlflow_task(

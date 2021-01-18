@@ -9,10 +9,11 @@ from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from sqlalchemy import MetaData
+from structlog.stdlib import BoundLogger
 
 from .__version__ import __version__ as API_VERSION
 
-LOGGER = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 csrf: CSRFProtect = CSRFProtect()
 db: SQLAlchemy = SQLAlchemy(

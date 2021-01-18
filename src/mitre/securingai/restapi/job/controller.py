@@ -5,15 +5,14 @@ import structlog
 from flask_accepts import accepts, responds
 from flask_restx import Namespace, Resource
 from injector import inject
-from structlog import BoundLogger
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from .errors import JobDoesNotExistError, JobSubmissionError
 from .model import Job, JobForm, JobFormData
 from .schema import JobSchema, job_submit_form_schema
 from .service import JobService
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 api: Namespace = Namespace(
     "Job",

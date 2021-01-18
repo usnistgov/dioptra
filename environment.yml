@@ -124,7 +124,7 @@ dependencies:
       - sqlalchemy-stubs
       - sqlalchemy==1.3.13
       - sqlparse
-      - structlog
+      - structlog>=20.2.0
       - tabulate
       - tox
       - typing-extensions>=3.7.4.0

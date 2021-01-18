@@ -7,13 +7,13 @@ from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
-from structlog._config import BoundLoggerLazyProxy
+from structlog.stdlib import BoundLogger
 
 from mitre.securingai.restapi.models import Queue
 from mitre.securingai.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
 from mitre.securingai.restapi.queue.service import QueueService
 
-LOGGER: BoundLoggerLazyProxy = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @pytest.fixture
