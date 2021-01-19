@@ -33,6 +33,7 @@
 # Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[mitre-securing-ai])
 # ARG_OPTIONAL_SINGLE([results-ttl],[],[Job results will be kept for this number of seconds],[500])
+# ARG_OPTIONAL_SINGLE([rq-worker-module],[],[Python module used to start the RQ Worker],[mitre.securingai.rq.cli.rq])
 # ARG_LEFTOVERS([Queues to watch])
 # ARG_DEFAULTS_POS()
 # ARGBASH_SET_INDENT([  ])
@@ -66,16 +67,18 @@ _arg_leftovers=()
 # THE DEFAULTS INITIALIZATION - OPTIONALS
 _arg_conda_env="mitre-securing-ai"
 _arg_results_ttl="500"
+_arg_rq_worker_module="mitre.securingai.rq.cli.rq"
 
 
 print_help()
 {
   printf '%s\n' "Securing AI Worker Entry Point
 "
-  printf 'Usage: %s [--conda-env <arg>] [--results-ttl <arg>] [-h|--help] ... \n' "$0"
+  printf 'Usage: %s [--conda-env <arg>] [--results-ttl <arg>] [--rq-worker-module <arg>] [-h|--help] ... \n' "$0"
   printf '\t%s\n' "... : Queues to watch"
   printf '\t%s\n' "--conda-env: Conda environment (default: 'mitre-securing-ai')"
   printf '\t%s\n' "--results-ttl: Job results will be kept for this number of seconds (default: '500')"
+  printf '\t%s\n' "--rq-worker-module: Python module used to start the RQ Worker (default: 'mitre.securingai.rq.cli.rq')"
   printf '\t%s\n' "-h, --help: Prints help"
 }
 
@@ -102,6 +105,14 @@ parse_commandline()
         ;;
       --results-ttl=*)
         _arg_results_ttl="${_key##--results-ttl=}"
+        ;;
+      --rq-worker-module)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_rq_worker_module="$2"
+        shift
+        ;;
+      --rq-worker-module=*)
+        _arg_rq_worker_module="${_key##--rq-worker-module=}"
         ;;
       -h|--help)
         print_help
@@ -161,6 +172,7 @@ readonly conda_dir="${CONDA_DIR}"
 readonly conda_env="${_arg_conda_env}"
 readonly job_queues="${_arg_leftovers[*]}"
 readonly logname="Container Entry Point"
+readonly rq_worker_module="${_arg_rq_worker_module}"
 readonly rq_redis_uri="${RQ_REDIS_URI-}"
 readonly rq_results_ttl="${_arg_results_ttl}"
 
@@ -192,9 +204,10 @@ secure_container() {
 #   conda_dir
 #   conda_env
 #   job_queues
-#   lognanme
+#   logname
 #   rq_redis_uri
 #   rq_results_ttl
+#   rq_worker_module
 # Arguments:
 #   None
 # Returns:
@@ -210,7 +223,7 @@ start_rq() {
   source ${conda_dir}/etc/profile.d/conda.sh &&\
   conda activate ${conda_env} &&\
   cd ${ai_workdir} &&\
-  rq worker\
+  python -m ${rq_worker_module} worker\
   --url ${rq_redis_uri}\
   --results-ttl ${rq_results_ttl}\
   ${job_queues}"

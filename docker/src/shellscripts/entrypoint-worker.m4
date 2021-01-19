@@ -35,6 +35,7 @@ echo "This is just a script template, not the script (yet) - pass it to 'argbash
 exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[mitre-securing-ai])
 # ARG_OPTIONAL_SINGLE([results-ttl],[],[Job results will be kept for this number of seconds],[500])
+# ARG_OPTIONAL_SINGLE([rq-worker-module],[],[Python module used to start the RQ Worker],[mitre.securingai.rq.cli.rq])
 # ARG_LEFTOVERS([Queues to watch])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
@@ -54,6 +55,7 @@ readonly conda_dir="${CONDA_DIR}"
 readonly conda_env="${_arg_conda_env}"
 readonly job_queues="${_arg_leftovers[*]}"
 readonly logname="Container Entry Point"
+readonly rq_worker_module="${_arg_rq_worker_module}"
 readonly rq_redis_uri="${RQ_REDIS_URI-}"
 readonly rq_results_ttl="${_arg_results_ttl}"
 
@@ -85,9 +87,10 @@ secure_container() {
 #   conda_dir
 #   conda_env
 #   job_queues
-#   lognanme
+#   logname
 #   rq_redis_uri
 #   rq_results_ttl
+#   rq_worker_module
 # Arguments:
 #   None
 # Returns:
@@ -103,7 +106,7 @@ start_rq() {
   source ${conda_dir}/etc/profile.d/conda.sh &&\
   conda activate ${conda_env} &&\
   cd ${ai_workdir} &&\
-  rq worker\
+  python -m ${rq_worker_module} worker\
   --url ${rq_redis_uri}\
   --results-ttl ${rq_results_ttl}\
   ${job_queues}"

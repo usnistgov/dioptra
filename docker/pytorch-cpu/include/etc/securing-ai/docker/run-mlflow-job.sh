@@ -35,6 +35,7 @@
 # ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[base])
 # ARG_OPTIONAL_SINGLE([experiment-id],[],[ID of the experiment under which to launch the run],[])
 # ARG_OPTIONAL_SINGLE([entry-point],[],[MLproject entry point to invoke],[main])
+# ARG_OPTIONAL_SINGLE([mlflow-run-module],[],[Python module used to invoke 'mlflow run'],[mitre.securingai.rq.cli.mlflow])
 # ARG_OPTIONAL_SINGLE([s3-workflow],[],[S3 URI to a tarball or zip archive containing scripts and a MLproject file defining a workflow],[])
 # ARG_USE_ENV([AI_PLUGIN_DIR],[],[Directory in worker container for syncing the builtin plugins])
 # ARG_USE_ENV([AI_PLUGINS_S3_URI],[],[S3 URI to the directory containing the builtin plugins])
@@ -78,6 +79,7 @@ _arg_backend="securingai"
 _arg_conda_env="base"
 _arg_experiment_id=
 _arg_entry_point="main"
+_arg_mlflow_run_module="mitre.securingai.rq.cli.mlflow"
 _arg_s3_workflow=
 
 
@@ -85,12 +87,13 @@ print_help()
 {
   printf '%s\n' "Execute a job defined in a MLproject file.
 "
-  printf 'Usage: %s [--backend <arg>] [--conda-env <arg>] [--experiment-id <arg>] [--entry-point <arg>] [--s3-workflow <arg>] [-h|--help] ... \n' "$0"
+  printf 'Usage: %s [--backend <arg>] [--conda-env <arg>] [--experiment-id <arg>] [--entry-point <arg>] [--mlflow-run-module <arg>] [--s3-workflow <arg>] [-h|--help] ... \n' "$0"
   printf '\t%s\n' "... : Entry point keyword arguments (optional)"
   printf '\t%s\n' "--backend: [securingai|local] Execution backend for MLFlow (default: 'securingai')"
   printf '\t%s\n' "--conda-env: Conda environment (default: 'base')"
   printf '\t%s\n' "--experiment-id: ID of the experiment under which to launch the run (no default)"
   printf '\t%s\n' "--entry-point: MLproject entry point to invoke (default: 'main')"
+  printf '\t%s\n' "--mlflow-run-module: Python module used to invoke 'mlflow run' (default: 'mitre.securingai.rq.cli.mlflow')"
   printf '\t%s\n' "--s3-workflow: S3 URI to a tarball or zip archive containing scripts and a MLproject file defining a workflow (no default)"
   printf '\t%s\n' "-h, --help: Prints help"
   printf '\nEnvironment variables that are supported:\n'
@@ -139,6 +142,14 @@ parse_commandline()
         ;;
       --entry-point=*)
         _arg_entry_point="${_key##--entry-point=}"
+        ;;
+      --mlflow-run-module)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_mlflow_run_module="$2"
+        shift
+        ;;
+      --mlflow-run-module=*)
+        _arg_mlflow_run_module="${_key##--mlflow-run-module=}"
         ;;
       --s3-workflow)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
@@ -210,6 +221,7 @@ readonly entry_point="${_arg_entry_point}"
 readonly logname="Run MLFlow Job"
 readonly mlflow_backend="${_arg_backend}"
 readonly mlflow_experiment_id="${_arg_experiment_id}"
+readonly mlflow_run_module="${_arg_mlflow_run_module}"
 readonly mlflow_s3_endpoint_url="${MLFLOW_S3_ENDPOINT_URL-}"
 readonly s3_workflow_uri="${_arg_s3_workflow}"
 
@@ -385,6 +397,7 @@ sync_builtin_plugins() {
 #   entry_point_kwargs
 #   mlflow_backend
 #   mlflow_experiment_id
+#   mlflow_run_module
 # Arguments:
 #   None
 # Returns:
@@ -409,7 +422,7 @@ start_mlflow() {
   echo "${logname}: mlflow run options - --no-conda ${mlflow_backend_opts}\
   --experiment-id ${mlflow_experiment_id} -e ${entry_point} ${entry_point_kwargs}"
 
-  mlflow run --no-conda \
+  python -m ${mlflow_run_module} run --no-conda \
     ${mlflow_backend_opts} \
     --experiment-id ${mlflow_experiment_id} \
     -e ${entry_point} \

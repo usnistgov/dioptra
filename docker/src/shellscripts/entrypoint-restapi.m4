@@ -36,6 +36,7 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([app-module],[],[Application module],[wsgi:app])
 # ARG_OPTIONAL_SINGLE([backend],[],[Server backend],[gunicorn])
 # ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[mitre-securing-ai])
+# ARG_OPTIONAL_SINGLE([gunicorn-module],[],[Python module used to start Gunicorn WSGI server],[mitre.securingai.restapi.cli.gunicorn])
 # ARG_OPTIONAL_ACTION([upgrade-db],[],[Upgrade the database schema],[upgrade_database])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
@@ -52,6 +53,7 @@ set -euo pipefail
 
 readonly ai_workdir="${AI_WORKDIR}"
 readonly conda_dir="${CONDA_DIR}"
+readonly gunicorn_module="${_arg_gunicorn_module}"
 readonly logname="Container Entry Point"
 
 set_parsed_globals() {
@@ -114,6 +116,7 @@ upgrade_database() {
 #   app_module
 #   conda_dir
 #   conda_env
+#   gunicorn_module
 #   logname
 # Arguments:
 #   None
@@ -128,7 +131,7 @@ start_gunicorn() {
   source ${conda_dir}/etc/profile.d/conda.sh &&\
   conda activate ${conda_env} &&\
   cd ${ai_workdir} &&\
-  gunicorn -c /etc/gunicorn/gunicorn.conf.py ${app_module}"
+  python -m ${gunicorn_module} -c /etc/gunicorn/gunicorn.conf.py ${app_module}"
 }
 
 ###########################################################################################

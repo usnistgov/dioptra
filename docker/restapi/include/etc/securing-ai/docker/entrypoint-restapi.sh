@@ -34,6 +34,7 @@
 # ARG_OPTIONAL_SINGLE([app-module],[],[Application module],[wsgi:app])
 # ARG_OPTIONAL_SINGLE([backend],[],[Server backend],[gunicorn])
 # ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[mitre-securing-ai])
+# ARG_OPTIONAL_SINGLE([gunicorn-module],[],[Python module used to start Gunicorn WSGI server],[mitre.securingai.restapi.cli.gunicorn])
 # ARG_OPTIONAL_ACTION([upgrade-db],[],[Upgrade the database schema],[upgrade_database])
 # ARG_DEFAULTS_POS()
 # ARGBASH_SET_INDENT([  ])
@@ -65,16 +66,18 @@ begins_with_short_option()
 _arg_app_module="wsgi:app"
 _arg_backend="gunicorn"
 _arg_conda_env="mitre-securing-ai"
+_arg_gunicorn_module="mitre.securingai.restapi.cli.gunicorn"
 
 
 print_help()
 {
   printf '%s\n' "Securing AI Lab API Entry Point
 "
-  printf 'Usage: %s [--app-module <arg>] [--backend <arg>] [--conda-env <arg>] [--upgrade-db] [-h|--help]\n' "$0"
+  printf 'Usage: %s [--app-module <arg>] [--backend <arg>] [--conda-env <arg>] [--gunicorn-module <arg>] [--upgrade-db] [-h|--help]\n' "$0"
   printf '\t%s\n' "--app-module: Application module (default: 'wsgi:app')"
   printf '\t%s\n' "--backend: Server backend (default: 'gunicorn')"
   printf '\t%s\n' "--conda-env: Conda environment (default: 'mitre-securing-ai')"
+  printf '\t%s\n' "--gunicorn-module: Python module used to start Gunicorn WSGI server (default: 'mitre.securingai.restapi.cli.gunicorn')"
   printf '\t%s\n' "--upgrade-db: Upgrade the database schema"
   printf '\t%s\n' "-h, --help: Prints help"
 }
@@ -109,6 +112,14 @@ parse_commandline()
         ;;
       --conda-env=*)
         _arg_conda_env="${_key##--conda-env=}"
+        ;;
+      --gunicorn-module)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_gunicorn_module="$2"
+        shift
+        ;;
+      --gunicorn-module=*)
+        _arg_gunicorn_module="${_key##--gunicorn-module=}"
         ;;
       --upgrade-db)
         upgrade_database
@@ -145,6 +156,7 @@ set -euo pipefail
 
 readonly ai_workdir="${AI_WORKDIR}"
 readonly conda_dir="${CONDA_DIR}"
+readonly gunicorn_module="${_arg_gunicorn_module}"
 readonly logname="Container Entry Point"
 
 set_parsed_globals() {
@@ -207,6 +219,7 @@ upgrade_database() {
 #   app_module
 #   conda_dir
 #   conda_env
+#   gunicorn_module
 #   logname
 # Arguments:
 #   None
@@ -221,7 +234,7 @@ start_gunicorn() {
   source ${conda_dir}/etc/profile.d/conda.sh &&\
   conda activate ${conda_env} &&\
   cd ${ai_workdir} &&\
-  gunicorn -c /etc/gunicorn/gunicorn.conf.py ${app_module}"
+  python -m ${gunicorn_module} -c /etc/gunicorn/gunicorn.conf.py ${app_module}"
 }
 
 ###########################################################################################
