@@ -1,6 +1,6 @@
 """Exceptions for optional dependencies"""
 
-from mitre.securingai.sdk.exceptions import BaseOptionalDependencyError
+from .base import BaseOptionalDependencyError
 
 
 class ARTDependencyError(BaseOptionalDependencyError):
@@ -9,6 +9,10 @@ class ARTDependencyError(BaseOptionalDependencyError):
 
 class CryptographyDependencyError(BaseOptionalDependencyError):
     """Method/function depends on the "cryptography" package."""
+
+
+class PrefectDependencyError(BaseOptionalDependencyError):
+    """Method/function depends on the "prefect" package."""
 
 
 class TensorflowDependencyError(BaseOptionalDependencyError):

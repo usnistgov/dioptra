@@ -27,22 +27,16 @@
 Custom exceptions used by PyPlugs for more helpful error messages
 """
 
-
-class PyplugsException(Exception):
-    """Base class for all PyPlugs exceptions"""
+from .base import BasePyPlugsException
 
 
-class OptionalDependencyError(PyplugsException):
-    """PyPlugs function requires an optional dependency"""
+class UnknownPackageError(BasePyPlugsException):
+    """PyPlugs could not import the given package."""
 
 
-class UnknownPackageError(PyplugsException):
-    """PyPlugs could not import the given package"""
+class UnknownPluginError(BasePyPlugsException):
+    """PyPlugs could not locate the given plugin."""
 
 
-class UnknownPluginError(PyplugsException):
-    """PyPlugs could not locate the given plugin"""
-
-
-class UnknownPluginFunctionError(PyplugsException):
-    """PyPlugs could not locate the given function within a plugin"""
+class UnknownPluginFunctionError(BasePyPlugsException):
+    """PyPlugs could not locate the given function within a plugin."""

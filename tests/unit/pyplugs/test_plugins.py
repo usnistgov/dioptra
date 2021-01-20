@@ -34,6 +34,11 @@ import pytest
 from prefect import Flow
 
 from mitre.securingai import pyplugs
+from mitre.securingai.sdk.exceptions import (
+    UnknownPackageError,
+    UnknownPluginError,
+    UnknownPluginFunctionError,
+)
 
 
 @pytest.fixture
@@ -64,7 +69,10 @@ def pyplugs_no_prefect(monkeypatch):
 
     monkeypatch.setitem(sys.modules, "prefect", None)
 
-    return importlib.import_module("mitre.securingai.pyplugs")
+    return (
+        importlib.import_module("mitre.securingai.pyplugs"),
+        importlib.import_module("mitre.securingai.sdk.exceptions"),
+    )
 
 
 def test_package_not_empty(plugin_package):
@@ -89,7 +97,7 @@ def test_list_funcs(plugin_package):
 
 def test_package_non_existing():
     """Test that a non-existent package raises an appropriate error"""
-    with pytest.raises(pyplugs.UnknownPackageError):
+    with pytest.raises(UnknownPackageError):
         pyplugs.names("mitre.securingai.pyplugs.non_existent")
 
 
@@ -106,7 +114,7 @@ def test_plugin_not_exists(plugin_package, plugin_name):
     Tests both for an existing module (no_plugins) and a non-existent module
     (non_existent).
     """
-    with pytest.raises(pyplugs.UnknownPluginError):
+    with pytest.raises(UnknownPluginError):
         pyplugs.info(plugin_package, plugin_name)
 
 
@@ -115,10 +123,10 @@ def test_prefect_dependency_not_installed(
     pyplugs_no_prefect, plugin_package, task_func_name
 ):
     plugin_name = "plugin_plain"
-    pyplugs = pyplugs_no_prefect
+    pyplugs, exceptions = pyplugs_no_prefect
     task_func = getattr(pyplugs, task_func_name)
 
-    with pytest.raises(pyplugs.OptionalDependencyError):
+    with pytest.raises(exceptions.PrefectDependencyError):
         task_func(plugin_package, plugin=plugin_name)
 
 
@@ -126,10 +134,10 @@ def test_prefect_dependency_not_installed(
 def test_factory_prefect_dependency_not_installed(
     pyplugs_no_prefect, plugin_package, task_factory_name
 ):
-    pyplugs = pyplugs_no_prefect
+    pyplugs, exceptions = pyplugs_no_prefect
     task_factory_func = getattr(pyplugs, task_factory_name)
 
-    with pytest.raises(pyplugs.OptionalDependencyError):
+    with pytest.raises(exceptions.PrefectDependencyError):
         task_factory_func(plugin_package)
 
 
@@ -155,7 +163,7 @@ def test_call_existing_plugin(plugin_package):
 
 def test_call_non_existing_plugin():
     """Test that calling a non-existing plugin raises an error"""
-    with pytest.raises(pyplugs.UnknownPluginError):
+    with pytest.raises(UnknownPluginError):
         pyplugs.call("mitre.securingai.pyplugs", "non_existent")
 
 
@@ -178,7 +186,7 @@ def test_call_non_existing_func(plugin_package):
     """Test that calling a non-existing plug-in function raises an error"""
     plugin_name = "plugin_parts"
     func_name = "non_existent"
-    with pytest.raises(pyplugs.UnknownPluginFunctionError):
+    with pytest.raises(UnknownPluginFunctionError):
         pyplugs.call(plugin_package, plugin_name, func=func_name)
 
 

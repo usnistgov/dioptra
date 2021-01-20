@@ -31,12 +31,12 @@ Current maintainers:
 
 {maintainers}
 """
+from __future__ import annotations
 
 # Standard library imports
 from collections import namedtuple as _namedtuple
 from datetime import date as _date
 
-from ._exceptions import *  # noqa
 from ._plugins import *  # noqa
 
 __url__ = "https://secure-ai.pages.mitre.org/securing-ai-lab-components"

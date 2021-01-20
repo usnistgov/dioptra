@@ -2,16 +2,16 @@
 
 
 class BaseSecuringAIError(Exception):
-    """Base class for all Securing AI exceptions"""
+    """Base class for all Securing AI exceptions."""
 
 
 class BaseOptionalDependencyError(BaseSecuringAIError):
-    """Base class for all optional dependency exceptions"""
+    """Base class for all optional dependency exceptions."""
 
 
 class BasePyPlugsException(BaseSecuringAIError):
-    """Base class for all PyPlugs exceptions"""
+    """Base class for all PyPlugs exceptions."""
 
 
 class BaseTaskPluginError(BaseSecuringAIError):
-    """Base class for all task plugin exceptions"""
+    """Base class for all task plugin exceptions."""

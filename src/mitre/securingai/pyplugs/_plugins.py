@@ -45,7 +45,16 @@ from typing import (
 import structlog
 from structlog.stdlib import BoundLogger
 
-from . import _exceptions
+from mitre.securingai.sdk.exceptions import (
+    PrefectDependencyError,
+    UnknownPackageError,
+    UnknownPluginError,
+    UnknownPluginFunctionError,
+)
+from mitre.securingai.sdk.utilities.decorators import require_package
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
 
 try:
     from importlib import resources
@@ -56,16 +65,14 @@ except ImportError:  # pragma: nocover
 try:
     from prefect import task
 
-    _HAS_PREFECT = True
-
 except ImportError:  # pragma: nocover
-    _HAS_PREFECT = False
+    LOGGER.warn(
+        "Unable to import one or more optional packages, functionality may be reduced",
+        package="prefect",
+    )
 
 if TYPE_CHECKING:
     from prefect import Task
-
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 # Type aliases
@@ -174,7 +181,7 @@ def info(package: str, plugin: str, func: Optional[str] = None) -> PluginInfo:
         plugin_info = _PLUGINS[package][plugin]
 
     except KeyError:
-        raise _exceptions.UnknownPluginError(
+        raise UnknownPluginError(
             f"Could not find any plug-in named {plugin!r} inside {package!r}. "
             "Use pyplugs.register to register functions as plug-ins"
         )
@@ -185,7 +192,7 @@ def info(package: str, plugin: str, func: Optional[str] = None) -> PluginInfo:
         return plugin_info[func]
 
     except KeyError:
-        raise _exceptions.UnknownPluginFunctionError(
+        raise UnknownPluginFunctionError(
             f"Could not find any function named {func!r} inside '{package}.{plugin}'. "
             "Use pyplugs.register to register plug-in functions"
         )
@@ -200,7 +207,7 @@ def exists(package: str, plugin: str) -> bool:
     try:
         _import(package, plugin)
 
-    except (_exceptions.UnknownPluginError, _exceptions.UnknownPackageError):
+    except (UnknownPluginError, UnknownPackageError):
         return False
 
     else:
@@ -224,27 +231,18 @@ def call(
 
 
 @expose
+@require_package("prefect", exc_type=PrefectDependencyError)
 def get_task(package: str, plugin: str, func: Optional[str] = None) -> Task:
     """Get a given plugin wrapped as a prefect task"""
-    if not _HAS_PREFECT:
-        raise _exceptions.OptionalDependencyError(
-            "Optional package prefect is not installed, unable to return plugins as "
-            "tasks"
-        ) from None
-
     return task(info(package, plugin, func).func)
 
 
 @expose
+@require_package("prefect", exc_type=PrefectDependencyError)
 def call_task(
     package: str, plugin: str, func: Optional[str] = None, *args: Any, **kwargs: Any
 ) -> Any:
     """Call the given plugin as a prefect task"""
-    if not _HAS_PREFECT:
-        raise _exceptions.OptionalDependencyError(
-            "Optional package prefect is not installed, unable to call plugins as tasks"
-        ) from None
-
     plugin_task = get_task(package, plugin, func)
 
     return plugin_task(*args, **kwargs)
@@ -262,14 +260,12 @@ def _import(package: str, plugin: str) -> None:
 
     except ImportError as err:
         if repr(plugin_module) in err.msg:  # type: ignore
-            raise _exceptions.UnknownPluginError(
+            raise UnknownPluginError(
                 f"Plugin {plugin!r} not found in {package!r}"
             ) from None
 
         elif repr(package) in err.msg:  # type: ignore
-            raise _exceptions.UnknownPackageError(
-                f"Package {package!r} does not exist"
-            ) from None
+            raise UnknownPackageError(f"Package {package!r} does not exist") from None
 
         raise
 
@@ -280,7 +276,7 @@ def _import_all(package: str) -> None:
         all_resources = resources.contents(package)
 
     except ImportError as err:
-        raise _exceptions.UnknownPackageError(err) from None
+        raise UnknownPackageError(err) from None
 
     # Note that we have tried to import the package by adding it to _PLUGINS
     _PLUGINS.setdefault(package, {})
@@ -335,23 +331,14 @@ def call_factory(package: str) -> Callable[..., Any]:
 
 
 @expose
+@require_package("prefect", exc_type=PrefectDependencyError)
 def get_task_factory(package: str) -> Callable[[str, Optional[str]], Task]:
     """Create a get_task() function for one package"""
-    if not _HAS_PREFECT:
-        raise _exceptions.OptionalDependencyError(
-            "Optional package prefect is not installed, unable to return plugins as "
-            "tasks"
-        ) from None
-
     return functools.partial(get_task, package)
 
 
 @expose
+@require_package("prefect", exc_type=PrefectDependencyError)
 def call_task_factory(package: str) -> Callable[..., Any]:
     """Create a call_task() function for one package"""
-    if not _HAS_PREFECT:
-        raise _exceptions.OptionalDependencyError(
-            "Optional package prefect is not installed, unable to call plugins as tasks"
-        ) from None
-
     return functools.partial(call_task, package)
