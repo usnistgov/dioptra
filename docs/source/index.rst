@@ -8,7 +8,7 @@ Getting Started
 
 Check out the :ref:`overview-quickstart` to learn more about how to run machine learning security experiments using the Securing AI Lab.
 
-Another great way to get started is to try out the sample jobs included in our Lab REST API :ref:`restapi-examples`.
+Another great way to get started is to try out the sample jobs included in the :ref:`Tutorials and Examples Overview <tutorial-index>`.
 
 .. toctree::
    :hidden:
@@ -21,10 +21,16 @@ Another great way to get started is to try out the sample jobs included in our L
 .. toctree::
    :hidden:
    :maxdepth: -1
+   :caption: Tutorials and Examples
+
+   tutorials/index
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
    :caption: Lab Architecture
 
    architecture/index
-   architecture/building-images
    architecture/local-deployment
 
 .. toctree::
@@ -33,7 +39,6 @@ Another great way to get started is to try out the sample jobs included in our L
    :caption: Lab REST API
 
    restapi/index
-   restapi/tutorials-and-examples
    restapi/api
 
 .. toctree::
