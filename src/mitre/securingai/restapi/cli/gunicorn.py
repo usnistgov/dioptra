@@ -4,7 +4,7 @@ import os
 
 from gunicorn.app.wsgiapp import run as gunicorn_cli
 
-from mitre.securingai.sdk.logging import (
+from mitre.securingai.sdk.utilities.logging import (
     attach_stdout_stream_handler,
     configure_structlog,
     set_logging_level,

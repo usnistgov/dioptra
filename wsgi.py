@@ -2,7 +2,7 @@ import os
 
 from mitre.securingai.restapi import create_app
 
-from mitre.securingai.sdk.logging import (
+from mitre.securingai.sdk.utilities.logging import (
     attach_stdout_stream_handler,
     configure_structlog,
     set_logging_level,
