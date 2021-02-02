@@ -184,8 +184,10 @@ USER root
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/${PROJECT_PREFIX}/docker/bash.bashrc
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/parse-uri.sh /etc/${PROJECT_PREFIX}/docker/parse-uri.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-cp.sh /etc/${PROJECT_PREFIX}/docker/s3-cp.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-mb.sh /etc/${PROJECT_PREFIX}/docker/s3-mb.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-sync.sh /etc/${PROJECT_PREFIX}/docker/s3-sync.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh
 COPY src/migrations /etc/${PROJECT_PREFIX}/docker/migrations
@@ -199,10 +201,12 @@ RUN mkdir -p /etc/gunicorn && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/parse-uri.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations/versions && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-cp.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-mb.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-sync.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh && \
     find /etc/${PROJECT_PREFIX}/docker/migrations -follow -type f -exec chmod 0644 {} \; && \
@@ -211,8 +215,10 @@ RUN mkdir -p /etc/gunicorn && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /usr/local/bin/entrypoint.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/gunicorn/gunicorn.conf.py && \
     ln -s /etc/${PROJECT_PREFIX}/docker/migrations ${AI_WORKDIR}/migrations && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/parse-uri.sh /usr/local/bin/parse-uri.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/s3-cp.sh /usr/local/bin/s3-cp.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/s3-mb.sh /usr/local/bin/s3-mb.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/s3-sync.sh /usr/local/bin/s3-sync.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /usr/local/bin/unpack-archive.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/wsgi.py ${AI_WORKDIR}/wsgi.py && \

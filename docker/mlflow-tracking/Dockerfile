@@ -165,20 +165,26 @@ USER root
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/${PROJECT_PREFIX}/docker/bash.bashrc
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/parse-uri.sh /etc/${PROJECT_PREFIX}/docker/parse-uri.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-cp.sh /etc/${PROJECT_PREFIX}/docker/s3-cp.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-mb.sh /etc/${PROJECT_PREFIX}/docker/s3-mb.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-sync.sh /etc/${PROJECT_PREFIX}/docker/s3-sync.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh
 
 RUN chmod 0644 /etc/${PROJECT_PREFIX}/docker/bash.bashrc && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/parse-uri.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-cp.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-mb.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/s3-sync.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh && \
     rm /etc/bash.bashrc && \
     ln -s /etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/bash.bashrc && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /usr/local/bin/entrypoint.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/parse-uri.sh /usr/local/bin/parse-uri.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/s3-cp.sh /usr/local/bin/s3-cp.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/s3-mb.sh /usr/local/bin/s3-mb.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/s3-sync.sh /usr/local/bin/s3-sync.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /usr/local/bin/unpack-archive.sh && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
 
