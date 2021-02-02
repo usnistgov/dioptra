@@ -205,13 +205,17 @@ define get_host_user_id
 $(shell id -u)
 endef
 
+define get_host_group_id
+$(shell id -g)
+endef
+
 define package_code
 $(call run_docker,\
     run\
     -t\
     --rm\
     -e PIP_CACHE_DIR=/work/.pip-cache\
-    -u $(strip $(call get_host_user_id)):100\
+    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
     -v $(PROJECT_DIR):/work\
     $(CONTAINER_PYTHON_BUILD_IMAGE_LATEST)\
     /usr/local/bin/python -m build -sw)
@@ -245,6 +249,7 @@ $(call run_docker,\
     -t\
     --rm\
     -e PROGRAM=argbash\
+    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
     -v $(strip $(1)):/work\
     -v $(strip $(2)):/output\
     matejak/argbash:latest\
@@ -304,6 +309,7 @@ $(call run_docker,\
     -t\
     --rm\
     -v $(PROJECT_DIR):/docs\
+    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
     $(CONTAINER_SPHINX_IMAGE_LATEST)\
     sphinx-build\
     -b html\
@@ -317,7 +323,7 @@ $(call run_docker,\
     -t\
     --rm\
     -e PIP_CACHE_DIR=/work/.tox/pip-cache-py37\
-    -u $(strip $(call get_host_user_id)):100\
+    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
     -v $(PROJECT_DIR):/work\
     --entrypoint ""\
     --workdir /work\
@@ -331,7 +337,7 @@ $(call run_docker,\
     -t\
     --rm\
     -e PIP_CACHE_DIR=/work/.tox/pip-cache-py38\
-    -u $(strip $(call get_host_user_id)):100\
+    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
     -v $(PROJECT_DIR):/work\
     --entrypoint ""\
     --workdir /work\
@@ -345,6 +351,7 @@ $(call run_docker,\
     -t\
     --rm\
     -v $(PROJECT_DIR):/workdir\
+    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
     mikefarah/yq\
     $(strip $(1))\
     $(strip $(2)))
