@@ -65,7 +65,7 @@ s3_mb() {
     echo "${logname}: artifacts storage path is ${default_artifact_root}, ensuring bucket ${bucket} exists"
     /usr/local/bin/s3-mb.sh ${bucket}
   elif [[ ! -f /usr/local/bin/s3-mb.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/s3-mb.sh script missing"
+    echo "${logname}: ERROR - /usr/local/bin/s3-mb.sh script missing" 1>&2
     exit 1
   else
     echo "${logname}: artifacts storage path is ${default_artifact_root}"

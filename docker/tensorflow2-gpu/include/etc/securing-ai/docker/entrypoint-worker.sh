@@ -179,7 +179,7 @@ secure_container() {
   if [[ -f /usr/local/bin/secure-container.sh ]]; then
     /usr/local/bin/secure-container.sh
   else
-    echo "${logname}: ERROR - /usr/local/bin/secure-container.sh script missing"
+    echo "${logname}: ERROR - /usr/local/bin/secure-container.sh script missing" 1>&2
     exit 1
   fi
 }

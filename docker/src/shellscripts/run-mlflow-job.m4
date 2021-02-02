@@ -85,8 +85,8 @@ readonly workflow_filename="$(basename ${s3_workflow_uri} 2>/dev/null)"
 
 validate_mlflow_inputs() {
   if [[ -z ${mlflow_experiment_id} ]]; then
-    echo "${logname}: ERROR - --experiment-id option not set" ||
-      exit 1
+    echo "${logname}: ERROR - --experiment-id option not set" 1>&2
+    exit 1
   fi
 
   if [[ -z ${mlflow_s3_endpoint_url} ]]; then
@@ -97,7 +97,7 @@ validate_mlflow_inputs() {
   case ${mlflow_backend} in
     securingai | local) ;;
     *)
-      echo "${logname}: ERROR - --backend option must be \"securingai\" or \"local\""
+      echo "${logname}: ERROR - --backend option must be \"securingai\" or \"local\"" 1>&2
       exit 1
       ;;
   esac
@@ -167,10 +167,10 @@ unpack_workflow_archive() {
   if [[ -f ${filepath} && -f /usr/local/bin/unpack-archive.sh ]]; then
     /usr/local/bin/unpack-archive.sh ${filepath}
   elif [[ ! -f /usr/local/bin/unpack-archive.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/unpack-archive.sh script missing"
+    echo "${logname}: ERROR - /usr/local/bin/unpack-archive.sh script missing" 1>&2
     exit 1
   elif [[ ! -f ${filepath} ]]; then
-    echo "${logname}: ERROR - workflow archive file missing"
+    echo "${logname}: ERROR - workflow archive file missing" 1>&2
     exit 1
   fi
 }
@@ -197,7 +197,7 @@ download_workflow() {
   elif [[ -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-cp.sh ]]; then
     /usr/local/bin/s3-cp.sh ${src} ${dest}
   elif [[ ! -f /usr/local/bin/s3-cp.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/s3-cp.sh script missing"
+    echo "${logname}: ERROR - /usr/local/bin/s3-cp.sh script missing" 1>&2
     exit 1
   fi
 }
@@ -224,7 +224,7 @@ sync_builtin_plugins() {
   elif [[ -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-sync.sh ]]; then
     /usr/local/bin/s3-sync.sh --delete ${src} ${dest}
   elif [[ ! -f /usr/local/bin/s3-sync.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/s3-sync.sh script missing"
+    echo "${logname}: ERROR - /usr/local/bin/s3-sync.sh script missing" 1>&2
     exit 1
   fi
 }
@@ -252,7 +252,7 @@ start_mlflow() {
   local mlproject_file=$(find . -name MLproject -type f -print)
 
   if [[ -z ${mlproject_file} ]]; then
-    echo "${logname}: ERROR - missing MLproject file"
+    echo "${logname}: ERROR - missing MLproject file" 1>&2
     exit 1
   fi
 

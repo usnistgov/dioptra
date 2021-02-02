@@ -89,7 +89,7 @@ unpack_archive() {
       fi
       ;;
     *)
-      echo "${logname}: WARNING - unsupported file format - $(basename ${archive_filepath})"
+      echo "${logname}: WARNING - unsupported file format - $(basename ${archive_filepath})" 1>&2
       ;;
   esac
 }

@@ -75,7 +75,7 @@ secure_container() {
   if [[ -f /usr/local/bin/secure-container.sh ]]; then
     /usr/local/bin/secure-container.sh
   else
-    echo "${logname}: ERROR - /usr/local/bin/secure-container.sh script missing"
+    echo "${logname}: ERROR - /usr/local/bin/secure-container.sh script missing" 1>&2
     exit 1
   fi
 }
@@ -149,7 +149,7 @@ start_restapi() {
       start_gunicorn
       ;;
     *)
-      echo "${logname}: ERROR - unsupported backend - ${server_backend}"
+      echo "${logname}: ERROR - unsupported backend - ${server_backend}" 1>&2
       exit 1
       ;;
   esac
