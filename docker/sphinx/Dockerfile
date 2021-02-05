@@ -46,6 +46,7 @@ RUN pip install --no-cache-dir --no-color \
     recommonmark \
     sphinx-book-theme \
     sphinx-rtd-theme \
+    sphinx-copybutton \
     SQLAlchemy \
     typing-extensions && \
     find /usr/local -depth \
