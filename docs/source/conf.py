@@ -35,6 +35,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "recommonmark",
     "sphinx_copybutton",
+    "sphinx_panels",
+    "sphinx_togglebutton",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -124,3 +126,7 @@ napoleon_use_admonition_for_references = True
 napoleon_use_ivar = True
 napoleon_use_param = True
 napoleon_use_rtype = True
+
+# -- Options for panels extension --------------------------------------------
+
+panels_add_bootstrap_css = False
