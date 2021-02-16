@@ -25,7 +25,7 @@ except ImportError:  # pragma: nocover
     )
 
 
-@estimator_predict.register  # type: ignore
+@estimator_predict.register
 def _(estimator: Model, x: Any, pred_type: str, **kwargs) -> np.ndarray:
     LOGGER.info(
         "Dispatch generic function",
