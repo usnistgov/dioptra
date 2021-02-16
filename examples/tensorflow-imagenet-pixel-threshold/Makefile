@@ -1,4 +1,4 @@
-.PHONY: clean data help
+.PHONY: clean help jupyter teardown teardown-docker-compose teardown-docker-volumes teardown-docker-compose-sentinel workflows
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
@@ -11,23 +11,26 @@ MAKEFLAGS += --no-builtin-rules
 #################################################################################
 
 ifeq ($(OS),Windows_NT)
-	DETECTED_OS := Windows
+DETECTED_OS := Windows
 else
-	DETECTED_OS := $(shell sh -c "uname 2>/dev/null || echo Unknown")
+DETECTED_OS := $(shell sh -c "uname 2>/dev/null || echo Unknown")
 endif
 
 ifeq ($(DETECTED_OS),Darwin)
-	CORES = $(shell sysctl -n hw.physicalcpu_max)
+CORES = $(shell sysctl -n hw.physicalcpu_max)
+CHOWN_PERM =
 else ifeq ($(DETECTED_OS),Linux)
-	CORES = $(shell lscpu -p | egrep -v '^\#' | sort -u -t, -k 2,4 | wc -l)
+CORES = $(shell lscpu -p | egrep -v '^\#' | sort -u -t, -k 2,4 | wc -l)
+CHOWN_PERM = 1
 else
-	CORES = 1
+CORES = 1
+CHOWN_PERM =
 endif
 
 EXAMPLE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-EXAMPLE_NAME = tensorflow-mnist-classifier
-EXAMPLE_CONDA_ENV_NAME = securing-ai-lab-components
-EXAMPLE_DATA_DIR = data
+EXAMPLE_NAME = tensorflow-imagenet-pixel-threshold
+EXAMPLE_CONDA_ENV_NAME = imagenet-pixel-threshold
+EXAMPLE_JUPYTER_DIR = jupyter
 EXAMPLE_SRC_DIR = src
 
 CONDA = conda
@@ -42,70 +45,72 @@ TAR = tar
 CODE_SRC_FILES := $(wildcard $(EXAMPLE_SRC_DIR)/*.py)
 CODE_WORKFLOW_FILE = MLproject
 
-S3_WORKFLOW_BUCKET = workflow
+JUPYTER_INSTALL_PACKAGES_SCRIPT = $(EXAMPLE_JUPYTER_DIR)/before-notebook.d/install-packages.sh
 
 MAKEFILE_FILE = Makefile
 WORKFLOWS_TARBALL_FILE = workflows.tar.gz
 
-DOCKER_INIT_SENTINEL = .docker-init.sentinel
-DOCKER_COMPOSE_SENTINEL = .docker-compose.sentinel
-WORKFLOWS_UPLOAD_SENTINEL = .workflows-upload.sentinel
+DOCKER_VOLUME_PREFIX := $(shell basename $(EXAMPLE_DIR))
+DOCKER_LOCAL_VOLUMES =\
+    $(DOCKER_VOLUME_PREFIX)_before-notebook-scripts\
+    $(DOCKER_VOLUME_PREFIX)_full-dir
+
+JUPYTER_SENTINEL = .jupyter.sentinel
 
 #################################################################################
 # FUNCTIONS                                                                     #
 #################################################################################
 
+define chmod
+chmod $(1) $(2)
+endef
+
+define chown
+chown $(2) $(1)
+endef
+
 define cleanup
-	$(FIND) $(1) -name "__pycache__" -type d -exec $(RM) -rf {} +
-	$(FIND) $(1) -name "*.py[co]" -type f -exec $(RM) -rf {} +
+$(FIND) . \( -name "__pycache__" -and -not -path "./.tox*" \) -type d -exec $(RM) -rf {} +
+$(FIND) . \( -name "*.py[co]" -and -not -path "./.tox*" \) -type f -exec $(RM) -rf {} +
+$(FIND) . -name ".ipynb_checkpoints" -type d -exec $(RM) -rf {} +
+$(RM) -rf $(EXAMPLE_DIR)/.mypy_cache
+$(RM) -rf $(EXAMPLE_DIR)/$(WORKFLOWS_TARBALL_FILE)
+endef
+
+define get_host_user_id
+$(shell id -u)
+endef
+
+define get_host_group_id
+$(shell id -g)
 endef
 
 define make_subdirectory
-	mkdir -p "$(strip $(1))"
+mkdir -p "$(strip $(1))"
 endef
 
-#define set_permissions
-#    chmod -R 777 "$(strip $(1))"
-#endef
-
 define make_tarball
-	$(TAR) czf $(1) $(2)
+$(TAR) czf $(1) $(2)
 endef
 
 define run_docker
-	$(DOCKER) $(1)
+$(DOCKER) $(1)
 endef
 
 define run_docker_compose
-	$(DOCKER_COMPOSE) $(1)
+$(DOCKER_COMPOSE) $(1)
 endef
 
-define s3_cp
-	$(call run_docker_compose,\
-		run\
-		--rm\
-		--entrypoint ""\
-		-v $(strip $(1))/$(strip $(2)):/work/$(strip $(2))\
-		tfcpu\
-		s3-cp.sh --endpoint-url http://minio:9000\
-		/work/$(strip $(2)) s3://$(strip $(3))/$(strip $(2)))
-endef
-
-define s3_mb
-	$(call run_docker_compose,\
-		run\
-		--rm\
-		--entrypoint ""\
-		mlflow-tracking\
-		s3-mb.sh --endpoint-url http://minio:9000 $(strip $(1)))
+define docker_remove_volume
+$(call run_docker,volume rm $(1))
 endef
 
 define save_sentinel_file
-	@touch $(1)
+@touch $(1)
 endef
 
 define split_string_and_get_word
-	$(word $3,$(subst $2, ,$1))
+$(word $3,$(subst $2, ,$1))
 endef
 
 #################################################################################
@@ -113,40 +118,44 @@ endef
 #################################################################################
 
 ## Remove temporary files
-clean:
-	$(call cleanup,$(EXAMPLE_DIR))
+clean: ; $(call cleanup)
 
-## Launch the Minio S3 and MLFlow Tracking services
-services: $(DOCKER_COMPOSE_SENTINEL)
+## Launch the jupyter lab service
+jupyter: $(JUPYTER_SENTINEL)
 
-## Destroy service containers
-teardown:
-ifneq ("$(wildcard $(DOCKER_COMPOSE_SENTINEL))","")
-	$(call run_docker_compose, down)
-	$(RM) -f $(DOCKER_COMPOSE_SENTINEL)
-endif
+## Stop and remove the Testbed service containers
+teardown: teardown-docker-compose teardown-docker-volumes teardown-docker-compose-sentinel
 
-## Create job tarball and upload to Minio S3 storage
-upload-job: services $(WORKFLOWS_UPLOAD_SENTINEL)
+## Create workflows tarball
+workflows: $(WORKFLOWS_TARBALL_FILE)
 
 #################################################################################
 # PROJECT SUPPORT RULES                                                         #
 #################################################################################
 
-
-$(DOCKER_COMPOSE_SENTINEL):
-	$(call make_subdirectory,s3)
-	$(call make_subdirectory,mlruns)
-	$(call run_docker_compose,up -d mlflow-tracking)
-	$(call s3_mb,$(S3_WORKFLOW_BUCKET))
+$(JUPYTER_SENTINEL):
+	$(call chmod,0755,$(JUPYTER_INSTALL_PACKAGES_SCRIPT))
+	$(call run_docker_compose,up -d jupyter)
 	$(call save_sentinel_file,$@)
 
 $(WORKFLOWS_TARBALL_FILE): $(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE)
 	$(call make_tarball,$@,$(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE))
+	$(call chmod,644,$(WORKFLOWS_TARBALL_FILE))
 
-$(WORKFLOWS_UPLOAD_SENTINEL): $(WORKFLOWS_TARBALL_FILE)
-	$(call s3_cp,$(EXAMPLE_DIR),$(WORKFLOWS_TARBALL_FILE),$(S3_WORKFLOW_BUCKET))
-	$(call save_sentinel_file,$(WORKFLOWS_UPLOAD_SENTINEL))
+teardown-docker-compose:
+ifneq ("$(wildcard $(JUPYTER_SENTINEL))","")
+	$(call run_docker_compose,down)
+endif
+
+teardown-docker-volumes:
+ifneq ("$(wildcard $(JUPYTER_SENTINEL))","")
+	$(call docker_remove_volume,$(DOCKER_LOCAL_VOLUMES))
+endif
+
+teardown-docker-compose-sentinel:
+ifneq ("$(wildcard $(JUPYTER_SENTINEL))","")
+	$(RM) -f $(JUPYTER_SENTINEL)
+endif
 
 #################################################################################
 # Self Documenting Commands                                                     #

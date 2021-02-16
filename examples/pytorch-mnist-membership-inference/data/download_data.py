@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import click
 import mnist
@@ -10,8 +10,6 @@ import pandas as pd
 from PIL import Image
 from rich.console import Console
 from rich.panel import Panel
-
-import tempfile
 
 CONSOLE: Console = Console()
 
@@ -55,25 +53,25 @@ class MnistDataset(object):
     test_images = "t10k-images-idx3-ubyte.gz"
     test_labels = "t10k-labels-idx1-ubyte.gz"
 
-    def __init__(self, tmp_dir) -> None:
+    def __init__(self, cache_dir: Optional[str] = None) -> None:
         self._train_images_cache: Optional[np.ndarray] = None
         self._train_labels_cache: Optional[np.ndarray] = None
         self._test_images_cache: Optional[np.ndarray] = None
         self._test_labels_cache: Optional[np.ndarray] = None
-        self.tmp_dir = tmp_dir
+        self._cache_dir: Optional[str] = cache_dir
 
     @property
     def training(self) -> pd.DataFrame:
         if self._train_images_cache is None:
             self._train_images_cache = mnist.download_and_parse_mnist_file(
-                self.train_images,
-                self.tmp_dir
+                fname=self.train_images,
+                target_dir=self._cache_dir,
             )
 
         if self._train_labels_cache is None:
             self._train_labels_cache = mnist.download_and_parse_mnist_file(
-                self.train_labels,
-                self.tmp_dir
+                fname=self.train_labels,
+                target_dir=self._cache_dir,
             )
 
         return pd.DataFrame(
@@ -88,14 +86,14 @@ class MnistDataset(object):
     def testing(self) -> pd.DataFrame:
         if self._test_images_cache is None:
             self._test_images_cache = mnist.download_and_parse_mnist_file(
-                self.test_images,
-                self.tmp_dir
+                fname=self.test_images,
+                target_dir=self._cache_dir,
             )
 
         if self._test_labels_cache is None:
             self._test_labels_cache = mnist.download_and_parse_mnist_file(
-                self.test_labels,
-                self.tmp_dir
+                fname=self.test_labels,
+                target_dir=self._cache_dir,
             )
 
         return pd.DataFrame(
@@ -116,6 +114,7 @@ def save_gif_images(dataset: pd.DataFrame, target_dir: Path) -> None:
 
         if not image_filepath.parent.exists():
             image_filepath.parent.mkdir(parents=True, exist_ok=True)
+            image_filepath.parent.chmod(0o777)
 
         image.save(f"{image_filepath}")
 
@@ -132,34 +131,50 @@ def save_gif_images(dataset: pd.DataFrame, target_dir: Path) -> None:
     help="Download and prepare MNIST testing data set",
 )
 @click.option(
+    "--cache-dir",
+    type=click.Path(),
+    default=f"{Path(__file__).parent}/.cache",
+    help="Caching directory",
+)
+@click.option(
     "--data-dir",
     type=click.Path(),
     default=f"{Path(__file__).parent}",
     help="Save dataset in this directory",
 )
-def download_data(training: bool, testing: bool, data_dir: str) -> None:
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        console: AppConsole = AppConsole(CONSOLE)
-        mnist_dataset: MnistDataset = MnistDataset(tmp_dir)
-  
-        console.print_title("MNIST Data Downloader")
-        console.print_parameter("data-dir", value=f"{click.format_filename(data_dir)}")
-    
-        if training:
-            target_dir: Path = Path(data_dir) / "training"
-            target_dir.mkdir(parents=True, exist_ok=True)
-            console.print_info("Begin download of MNIST training dataset")
-            save_gif_images(dataset=mnist_dataset.training, target_dir=target_dir)
-            console.print_success("Training images downloaded")
-            console.print_info("MNIST training dataset downloading complete")
-    
-        if testing:
-            target_dir = Path(data_dir) / "testing"
-            target_dir.mkdir(parents=True, exist_ok=True)
-            console.print_info("Begin download of MNIST testing dataset")
-            save_gif_images(dataset=mnist_dataset.testing, target_dir=target_dir)
-            console.print_success("Testing images downloaded")
-            console.print_info("MNIST testing dataset downloading complete")
+def download_data(
+    training: bool, testing: bool, cache_dir: Union[str, Path], data_dir: str
+) -> None:
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir.chmod(0o777)
+
+    console: AppConsole = AppConsole(CONSOLE)
+    mnist_dataset: MnistDataset = MnistDataset(str(cache_dir))
+
+    console.print_title("MNIST Data Downloader")
+    console.print_parameter(
+        "cache-dir", value=f"{click.format_filename(str(cache_dir))}"
+    )
+    console.print_parameter("data-dir", value=f"{click.format_filename(data_dir)}")
+
+    if training:
+        target_dir: Path = Path(data_dir) / "training"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target_dir.chmod(0o777)
+        console.print_info("Begin download of MNIST training dataset")
+        save_gif_images(dataset=mnist_dataset.training, target_dir=target_dir)
+        console.print_success("Training images downloaded")
+        console.print_info("MNIST training dataset downloading complete")
+
+    if testing:
+        target_dir = Path(data_dir) / "testing"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target_dir.chmod(0o777)
+        console.print_info("Begin download of MNIST testing dataset")
+        save_gif_images(dataset=mnist_dataset.testing, target_dir=target_dir)
+        console.print_success("Testing images downloaded")
+        console.print_info("MNIST testing dataset downloading complete")
 
 
 if __name__ == "__main__":

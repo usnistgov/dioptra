@@ -1,4 +1,4 @@
-name: tensorflow-imagenet-patches
+name: imagenet-pixel-threshold
 
 entry_points:
   pt:
@@ -17,9 +17,18 @@ entry_points:
       --batch-size 25
       --th 10
       --es 0
+
   init_model:
     parameters:
-      data_dir: {type: path, default: "/nfs/data/ImageNet-Kaggle-2017/images/ILSVRC/Data/CLS-LOC"}
-      dataset_name: {type: string, default: "val-sorted-5000"}
+      data_dir: {type: path, default: "/nfs/data/ImageNet-Kaggle-2017/images/ILSVRC/Data/CLS-LOC/val-sorted-5000"}
+      model_tag: {type: string, default: "default_pretrained"}
+      model_architecture: {type: string, default: "resnet50"}
+      batch_size: {type: float, default: 10}
+      seed: {type: float, default: -1}
     command: >
       python src/init_model.py
+      --data-dir {data_dir}
+      --model-tag {model_tag}
+      --model-architecture {model_architecture}
+      --batch-size {batch_size}
+      --seed {seed}

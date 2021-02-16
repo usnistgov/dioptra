@@ -13,7 +13,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 def create_image_dataset(
     data_dir: str,
     subset: str,
-    rescale: float = 1.0 / 255,
+    rescale: float = 1.0,
     validation_split: float = 0.2,
     batch_size: int = 32,
     seed: int = 8237131,

@@ -1,0 +1,41 @@
+version: "2.4"
+
+services:
+  jupyter:
+    image: jupyter/tensorflow-notebook:3b1f4f5e6cc1
+    restart: always
+    hostname: jupyter
+    container_name: jupyter
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      IS_JUPYTER_SERVICE: "yes"
+      JUPYTER_ENABLE_LAB: "yes"
+      KMP_AFFINITY: "none"
+      KMP_BLOCKTIME: "1"
+      KMP_SETTINGS: "FALSE"
+      OMP_PROC_BIND: "false"
+      TF_CPP_MIN_LOG_LEVEL: "2"
+    command:
+      - start-notebook.sh
+      - --NotebookApp.port=38888
+      - --LabApp.token=''
+    ports:
+      - "38888:38888/tcp"
+    volumes:
+      - full-dir:/home/jovyan/work
+      - before-notebook-scripts:/usr/local/bin/before-notebook.d
+
+volumes:
+  full-dir:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}
+  before-notebook-scripts:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/jupyter/before-notebook.d
