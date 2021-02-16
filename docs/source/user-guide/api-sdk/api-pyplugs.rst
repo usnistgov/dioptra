@@ -1,12 +1,14 @@
-.. _pyplugs-api:
+.. _user-guide-api-reference-sdk-pyplugs:
 
-API Reference
-=============
+PyPlugs
+=======
 
 Decorators
 ----------
 
 .. autodecorator:: mitre.securingai.pyplugs.register
+
+.. autodecorator:: mitre.securingai.pyplugs.task_nout
 
 Methods
 -------
@@ -45,16 +47,3 @@ Method Factories
 .. autofunction:: mitre.securingai.pyplugs.get_task_factory
 
 .. autofunction:: mitre.securingai.pyplugs.call_task_factory
-
-Error Messages
---------------
-
-.. autoexception:: mitre.securingai.pyplugs.PyplugsException
-
-.. autoexception:: mitre.securingai.pyplugs.OptionalDependencyError
-
-.. autoexception:: mitre.securingai.pyplugs.UnknownPackageError
-
-.. autoexception:: mitre.securingai.pyplugs.UnknownPluginError
-
-.. autoexception:: mitre.securingai.pyplugs.UnknownPluginFunctionError

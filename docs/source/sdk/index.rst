@@ -1,4 +1,0 @@
-.. _sdk-index:
-
-Overview
-========

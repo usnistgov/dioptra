@@ -1,7 +1,7 @@
 What is the Securing AI Lab?
 ============================
 
-.. include:: overview/index.rst
+.. include:: overview/executive-summary.rst
 
 Getting Started
 ---------------
@@ -13,10 +13,11 @@ Another great way to get started is to try out the sample jobs included in the :
 .. toctree::
    :hidden:
    :maxdepth: -1
-   :caption: Overview of the Securing AI Lab
+   :caption: Getting Started
 
-   overview/quickstart
-   overview/installation
+   getting-started/installation
+   getting-started/newcomer-tips
+   getting-started/where-to-go
 
 .. toctree::
    :hidden:
@@ -24,46 +25,34 @@ Another great way to get started is to try out the sample jobs included in the :
    :caption: Tutorials and Examples
 
    tutorials/index
+   tutorials/examples-demos
 
 .. toctree::
    :hidden:
    :maxdepth: -1
-   :caption: Lab Architecture
+   :caption: User Guide
 
-   architecture/index
-   architecture/local-deployment
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: Lab REST API
-
-   restapi/index
-   restapi/api
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: Lab SDK
-
-   sdk/index
-   sdk/api
+   user-guide/overview
+   user-guide/entry-points
+   user-guide/task-plugins
+   user-guide/using-the-restapi
+   user-guide/custom-entry-points
+   user-guide/custom-task-plugins
+   user-guide/task-plugins-collection
+   user-guide/api-reference-sdk
+   user-guide/api-reference-restapi
 
 .. toctree::
    :hidden:
    :maxdepth: -1
-   :caption: Redis Queue (RQ)
+   :caption: Deployment Guide
 
-   rq/index
-   rq/api
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: PyPlugs
-
-   pyplugs/index
-   pyplugs/api
+   deployment-guide/requirements-spec
+   deployment-guide/testbed-services
+   deployment-guide/deploy-docker
+   deployment-guide/task-plugins-management
+   deployment-guide/obtaining-datasets
+   deployment-guide/testbed-ansible-collection
 
 .. toctree::
    :hidden:

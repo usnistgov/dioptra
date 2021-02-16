@@ -1,4 +1,0 @@
-.. _rq-index:
-
-Overview
-========

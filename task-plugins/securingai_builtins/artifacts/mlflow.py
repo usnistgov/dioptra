@@ -20,6 +20,18 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 def download_all_artifacts_in_run(
     run_id: str, artifact_path: str, destination_path: Optional[str] = None
 ) -> str:
+    """Download an artifact file or directory from a previous MLFlow run.
+
+    Args:
+        run_id: The unique identifier of a previous MLFlow run.
+        artifact_path: The relative source path to the desired artifact.
+        destination_path: The relative destination path where the artifacts will be
+            downloaded. If ``None``, the artifacts will be downloaded to a new
+            uniquely-named directory on the local filesystem. Defaults to ``None``.
+
+    Returns:
+        A string pointing to the directory containing the downloaded artifacts.
+    """
     download_path: str = MlflowClient().download_artifacts(
         run_id=run_id, path=artifact_path, dst_path=destination_path
     )

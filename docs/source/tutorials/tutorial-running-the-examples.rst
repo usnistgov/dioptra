@@ -1,18 +1,4 @@
-.. _architecture-local-deployment:
-
-Local Deployment
-================
-
-Before :ref:`architecture-local-deployment-perform` of the Secure AI Lab, make sure to first complete the following sections of the :ref:`overview-quickstart`:
-
-- :ref:`quickstart-clone-repository`
-- :ref:`quickstart-create-environment`
-- :ref:`quickstart-build-images`
-
-.. _architecture-local-deployment-perform:
-
-Performing a Local Deployment
------------------------------
+**What goes here:** a generic explanation of how to setup and run each of the demos, including accessing the Jupyter notebooks, etc.
 
 The Secure AI Lab has multiple demos you can perform locally. The following steps will help you choose and run any demo provided:
 

@@ -1,7 +1,7 @@
-.. _rq-api:
+.. _user-guide-api-reference-sdk-rq:
 
-API Reference
-=============
+Redis Queue (RQ)
+================
 
 Tasks
 -----
