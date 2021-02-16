@@ -1,3 +1,4 @@
+from .generics import EstimatorPredictGenericPredTypeError
 from .optional_dependencies import (
     ARTDependencyError,
     CryptographyDependencyError,
@@ -9,6 +10,7 @@ from .pyplugs import UnknownPackageError, UnknownPluginError, UnknownPluginFunct
 __all__ = [
     "ARTDependencyError",
     "CryptographyDependencyError",
+    "EstimatorPredictGenericPredTypeError",
     "PrefectDependencyError",
     "TensorflowDependencyError",
     "UnknownPackageError",
