@@ -58,6 +58,7 @@ dependencies:
       - marshmallow>=3.9.0
       - mlflow
       - mnist>=0.2.2
+      - multimethod>=1.5
       - prefect
       - prometheus-flask-exporter==0.18.1
       - pyarrow>=2.0.0

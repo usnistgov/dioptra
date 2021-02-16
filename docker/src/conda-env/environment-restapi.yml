@@ -45,6 +45,7 @@ dependencies:
       - gorilla==0.3.0
       - marshmallow>=3.9.0
       - mlflow
+      - multimethod>=1.5
       - prometheus-flask-exporter==0.18.1
       - pyarrow>=2.0.0
       - python-json-logger>=2.0.0
