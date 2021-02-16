@@ -44,9 +44,11 @@ RUN pip install --no-cache-dir --no-color \
     plantuml-markdown \
     pymdown-extensions \
     recommonmark \
-    sphinx-book-theme \
-    sphinx-rtd-theme \
+    sphinx_togglebutton \
+    sphinx-book-theme>=0.0.39 \
     sphinx-copybutton \
+    sphinx-panels~=0.5.2 \
+    sphinx-rtd-theme \
     SQLAlchemy \
     typing-extensions && \
     find /usr/local -depth \
