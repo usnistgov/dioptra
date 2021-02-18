@@ -85,6 +85,9 @@ CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*/*/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/rq/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/rq/*/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/sdk/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/sdk/*/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/sdk/*/*/*.py)
 CODE_DB_MIGRATIONS_FILES :=\
     $(PROJECT_SRC_MIGRATIONS_DIR)/alembic.ini\
     $(PROJECT_SRC_MIGRATIONS_DIR)/env.py\
