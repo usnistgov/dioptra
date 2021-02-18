@@ -26,9 +26,12 @@
 
 Based on the Pytest test runner
 """
+import importlib
 import pathlib
+import sys
 
 import pytest
+from prefect import Flow
 
 from mitre.securingai import pyplugs
 
@@ -49,6 +52,19 @@ def plugin_package():
     relative = plugins_dir.relative_to(pathlib.Path.cwd())
 
     return ".".join(relative.parts)
+
+
+@pytest.fixture
+def pyplugs_no_prefect(monkeypatch):
+    package_modules = [x for x in sys.modules.keys() if "mitre" in x]
+    prefect_modules = [x for x in sys.modules.keys() if "prefect" in x]
+
+    for module in package_modules + prefect_modules:
+        monkeypatch.delitem(sys.modules, module)
+
+    monkeypatch.setitem(sys.modules, "prefect", None)
+
+    return importlib.import_module("mitre.securingai.pyplugs")
 
 
 def test_package_not_empty(plugin_package):
@@ -92,6 +108,29 @@ def test_plugin_not_exists(plugin_package, plugin_name):
     """
     with pytest.raises(pyplugs.UnknownPluginError):
         pyplugs.info(plugin_package, plugin_name)
+
+
+@pytest.mark.parametrize("task_func_name", ["get_task", "call_task"])
+def test_prefect_dependency_not_installed(
+    pyplugs_no_prefect, plugin_package, task_func_name
+):
+    plugin_name = "plugin_plain"
+    pyplugs = pyplugs_no_prefect
+    task_func = getattr(pyplugs, task_func_name)
+
+    with pytest.raises(pyplugs.OptionalDependencyError):
+        task_func(plugin_package, plugin=plugin_name)
+
+
+@pytest.mark.parametrize("task_factory_name", ["get_task_factory", "call_task_factory"])
+def test_factory_prefect_dependency_not_installed(
+    pyplugs_no_prefect, plugin_package, task_factory_name
+):
+    pyplugs = pyplugs_no_prefect
+    task_factory_func = getattr(pyplugs, task_factory_name)
+
+    with pytest.raises(pyplugs.OptionalDependencyError):
+        task_factory_func(plugin_package)
 
 
 def test_exists(plugin_package):
@@ -207,3 +246,29 @@ def test_call_factory(plugin_package):
     factory_call = call(plugin_name)
     pyplugs_call = pyplugs.call(plugin_package, plugin=plugin_name)
     assert factory_call == pyplugs_call
+
+
+def test_get_task_factory(plugin_package):
+    """Test that the get task factory can retrieve a task get in package"""
+    plugin_name = "plugin_parts"
+    get_task = pyplugs.get_task_factory(plugin_package)
+
+    with Flow("Test Get Task Factory") as flow:  # noqa: F841
+        factory_get_task = get_task(plugin_name)
+        pyplugs_get_task = pyplugs.get_task(plugin_package, plugin=plugin_name)
+        assert factory_get_task.is_equal(pyplugs_get_task)
+
+
+def test_call_task_factory(plugin_package):
+    """Test that the call task factory can retrieve a task call in package"""
+    plugin_name = "plugin_parts"
+    call_task = pyplugs.call_task_factory(plugin_package)
+
+    with Flow("Test Call Task Factory") as flow:
+        factory_call_task = call_task(plugin_name)
+        pyplugs_call_task = pyplugs.call_task(plugin_package, plugin=plugin_name)
+
+    state = flow.run()
+    assert (
+        state.result[factory_call_task].result == state.result[pyplugs_call_task].result
+    )

@@ -32,6 +32,10 @@ class PyplugsException(Exception):
     """Base class for all PyPlugs exceptions"""
 
 
+class OptionalDependencyError(PyplugsException):
+    """PyPlugs function requires an optional dependency"""
+
+
 class UnknownPackageError(PyplugsException):
     """PyPlugs could not import the given package"""
 

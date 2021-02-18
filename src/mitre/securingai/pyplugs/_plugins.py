@@ -24,11 +24,23 @@
 # SOFTWARE.
 """Decorators for registering plugins"""
 
+from __future__ import annotations
+
 import functools
 import importlib
 import sys
 import textwrap
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, TypeVar, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    TypeVar,
+    overload,
+)
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -40,6 +52,17 @@ try:
 
 except ImportError:  # pragma: nocover
     import importlib_resources as resources  # type: ignore
+
+try:
+    from prefect import task
+
+    _HAS_PREFECT = True
+
+except ImportError:  # pragma: nocover
+    _HAS_PREFECT = False
+
+if TYPE_CHECKING:
+    from prefect import Task
 
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -200,6 +223,33 @@ def call(
     return plugin_func(*args, **kwargs)
 
 
+@expose
+def get_task(package: str, plugin: str, func: Optional[str] = None) -> Task:
+    """Get a given plugin wrapped as a prefect task"""
+    if not _HAS_PREFECT:
+        raise _exceptions.OptionalDependencyError(
+            "Optional package prefect is not installed, unable to return plugins as "
+            "tasks"
+        ) from None
+
+    return task(info(package, plugin, func).func)
+
+
+@expose
+def call_task(
+    package: str, plugin: str, func: Optional[str] = None, *args: Any, **kwargs: Any
+) -> Any:
+    """Call the given plugin as a prefect task"""
+    if not _HAS_PREFECT:
+        raise _exceptions.OptionalDependencyError(
+            "Optional package prefect is not installed, unable to call plugins as tasks"
+        ) from None
+
+    plugin_task = get_task(package, plugin, func)
+
+    return plugin_task(*args, **kwargs)
+
+
 def _import(package: str, plugin: str) -> None:
     """Import the given plugin file from a package"""
     if package in _PLUGINS and plugin in _PLUGINS[package]:
@@ -282,3 +332,26 @@ def get_factory(package: str) -> Callable[[str, Optional[str]], Plugin]:
 def call_factory(package: str) -> Callable[..., Any]:
     """Create a call() function for one package"""
     return functools.partial(call, package)
+
+
+@expose
+def get_task_factory(package: str) -> Callable[[str, Optional[str]], Task]:
+    """Create a get_task() function for one package"""
+    if not _HAS_PREFECT:
+        raise _exceptions.OptionalDependencyError(
+            "Optional package prefect is not installed, unable to return plugins as "
+            "tasks"
+        ) from None
+
+    return functools.partial(get_task, package)
+
+
+@expose
+def call_task_factory(package: str) -> Callable[..., Any]:
+    """Create a call_task() function for one package"""
+    if not _HAS_PREFECT:
+        raise _exceptions.OptionalDependencyError(
+            "Optional package prefect is not installed, unable to call plugins as tasks"
+        ) from None
+
+    return functools.partial(call_task, package)

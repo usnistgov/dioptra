@@ -23,6 +23,10 @@ Methods
 
 .. autofunction:: mitre.securingai.pyplugs.call
 
+.. autofunction:: mitre.securingai.pyplugs.get_task
+
+.. autofunction:: mitre.securingai.pyplugs.call_task
+
 Method Factories
 ----------------
 
@@ -38,13 +42,19 @@ Method Factories
 
 .. autofunction:: mitre.securingai.pyplugs.call_factory
 
+.. autofunction:: mitre.securingai.pyplugs.get_task_factory
+
+.. autofunction:: mitre.securingai.pyplugs.call_task_factory
+
 Error Messages
 --------------
 
-.. autoexception:: mitre.securingai.pyplugs._exceptions.PyplugsException
+.. autoexception:: mitre.securingai.pyplugs.PyplugsException
 
-.. autoexception:: mitre.securingai.pyplugs._exceptions.UnknownPackageError
+.. autoexception:: mitre.securingai.pyplugs.OptionalDependencyError
 
-.. autoexception:: mitre.securingai.pyplugs._exceptions.UnknownPluginError
+.. autoexception:: mitre.securingai.pyplugs.UnknownPackageError
 
-.. autoexception:: mitre.securingai.pyplugs._exceptions.UnknownPluginFunctionError
+.. autoexception:: mitre.securingai.pyplugs.UnknownPluginError
+
+.. autoexception:: mitre.securingai.pyplugs.UnknownPluginFunctionError
