@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from posixpath import join as urljoin
 from typing import Any, Dict, List, Optional, Union
@@ -10,7 +11,8 @@ PathLike = List[Union[str, Path]]
 
 
 class SecuringAIClient(object):
-    def __init__(self, address: str) -> None:
+    def __init__(self, address: Optional[str] = None) -> None:
+        address = f"{address}/api" if address else f"{os.environ['AI_RESTAPI_URI']}/api"
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
 
     @property

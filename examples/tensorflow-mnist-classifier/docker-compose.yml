@@ -6,13 +6,44 @@ networks:
   lab_deployment_frontend:
 
 services:
+  jupyter:
+    image: jupyter/tensorflow-notebook:3b1f4f5e6cc1
+    restart: always
+    hostname: jupyter
+    container_name: jupyter
+    cpu_shares: 512
+    environment:
+      AI_RESTAPI_URI: http://nginx:30080
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      IS_JUPYTER_SERVICE: "yes"
+      JUPYTER_ENABLE_LAB: "yes"
+      MLFLOW_TRACKING_URI: http://nginx:35000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      KMP_AFFINITY: "none"
+      KMP_BLOCKTIME: "1"
+      KMP_SETTINGS: "FALSE"
+      OMP_PROC_BIND: "false"
+      TF_CPP_MIN_LOG_LEVEL: "2"
+    command:
+      - start-notebook.sh
+      - --NotebookApp.port=38888
+      - --LabApp.token=''
+    networks:
+      - lab_deployment_frontend
+      - lab_deployment_backend
+    ports:
+      - "38888:38888/tcp"
+    volumes:
+      - full-dir:/home/jovyan/work
+      - before-notebook-scripts:/usr/local/bin/before-notebook.d
+
   redis:
     image: redis:latest
     init: true
     restart: always
     hostname: redis
     container_name: redis
-    cpuset: 0-1
     cpu_shares: 256
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -32,7 +63,6 @@ services:
     hostname: minio
     container_name: minio
     command: server /data
-    cpuset: 0-1
     cpu_shares: 256
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -40,10 +70,12 @@ services:
       timeout: 10s
       retries: 3
     environment:
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio123
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
     networks:
       - lab_deployment_backend
+    ports:
+      - "39000:9000/tcp"
     volumes:
       - minio-data:/data
 
@@ -53,7 +85,6 @@ services:
     restart: always
     hostname: mlflow-tracking
     container_name: mlflow-tracking
-    cpuset: 0-1
     cpu_shares: 256
     depends_on:
       - minio
@@ -83,7 +114,6 @@ services:
     restart: always
     hostname: nginx
     container_name: nginx
-    cpuset: 0-1
     cpu_shares: 256
     depends_on:
       - mlflow-tracking
@@ -115,7 +145,6 @@ services:
     restart: always
     hostname: restapi
     container_name: restapi
-    cpuset: 0-1
     cpu_shares: 256
     depends_on:
       - minio
@@ -147,9 +176,9 @@ services:
     restart: always
     hostname: tfcpu-01
     container_name: tfcpu-01
-    cpuset: 0-5
     cpu_shares: 1024
     environment:
+      AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
       AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
       AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
       AI_RESTAPI_ENV: prod
@@ -177,9 +206,9 @@ services:
     restart: always
     hostname: tfcpu-02
     container_name: tfcpu-02
-    cpuset: 0-5
     cpu_shares: 1024
     environment:
+      AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
       AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
       AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
       AI_RESTAPI_ENV: prod
@@ -232,3 +261,15 @@ volumes:
       type: none
       o: bind
       device: ${PWD}/restapi
+  full-dir:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}
+  before-notebook-scripts:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/jupyter/before-notebook.d

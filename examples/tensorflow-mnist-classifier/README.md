@@ -2,45 +2,24 @@
 
 ![Lab architecture diagram](securing_ai_lab_architecture.png)
 
-This demo provides a practical example that shows how the Securing AI Lab Architecture can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
-It can be used as a basic template for crafting your own custom scripts to run within the architecture.
+This demo provides a practical example that you can run on your personal computer to see how the Securing AI Testbed can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
+It can be used as a basic template for crafting your own custom scripts to run within the testbed.
 
 ## Getting started
 
-The step-by-step demo is provided in the Jupyter notebook format in the file `demo.ipynb`.
-The easiest way to get up and running with the Jupyter notebook is to install a recent version of Anaconda on your host machine.
-Links for installing version 2020.11 are provided below,
-
--   Anaconda for Windows: <https://repo.anaconda.com/archive/Anaconda3-2020.11-Windows-x86_64.exe>
-
--   Anaconda for Mac: <https://repo.anaconda.com/archive/Anaconda3-2020.11-MacOSX-x86_64.pkg>
-
--   Anaconda for Linux: <https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh>
-
-After installing Anaconda, use the `environment.yml` file distributed with this example to set up a virtual environment that can be used to run the notebook and also execute the code under the `src/` directory if you want to try it out locally.
-To create the virtual environment and install the necessary dependencies, run
+Everything you need to run this demo is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running `make pull-latest`.
+Once you have downloaded the images, navigate to this directory using the terminal and run the demo startup sequence:
 
 ```bash
-conda env create --file environment.yml
+make demo
 ```
 
-To activate the environment, run,
+The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
+Once the startup process completes, open up your web browser and enter `http://localhost:38888` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the `work` folder and open the `demo.ipynb` file.
+From here, follow the provided instructions to run the demo provided in the Jupyter notebook.
 
-```bash
-conda activate tensorflow-mnist-classifier
-```
+To watch the output logs for the Tensorflow worker containers as you step through the demo, run `docker-compose logs -f tfcpu-01 tfcpu-02` in your terminal.
 
-To start up Jupyter Lab, which you can use to view and execute the Jupyter notebook, run,
-
-```bash
-jupyter lab
-```
-
-Please note, if this is your first time using this demo, then you will need to initialize the database.
-Initializing the database can be done using the `Makefile`,
-
-```bash
-make initdb
-```
-
-You should now be able to start running the demo provided in the Jupyter notebook.
+When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
+If you were watching the output logs, you will need to press <kbd>Ctrl</kbd>+<kbd>C</kbd> to stop following the logs before you can run `make teardown`.
