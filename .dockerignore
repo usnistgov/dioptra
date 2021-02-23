@@ -24,6 +24,7 @@ pip-wheel-metadata
 results
 site
 target
+task-plugins
 tests*
 venv
 venv.bak
