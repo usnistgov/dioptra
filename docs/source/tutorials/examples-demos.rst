@@ -7,3 +7,4 @@ Examples / Demos
    :maxdepth: -1
 
    example-tensorflow-mnist-classifier
+   example-tensorflow-mnist-feature-squeezing.rst
