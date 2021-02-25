@@ -280,3 +280,42 @@ def test_call_task_factory(plugin_package):
     assert (
         state.result[factory_call_task].result == state.result[pyplugs_call_task].result
     )
+
+
+def test_call_tasks_with_nout(plugin_package):
+    """Test that the task_nout decorator handles multiple argument returns in prefect
+    tasks.
+    """
+    plugin_name = "plugin_task_nout"
+    call_task = pyplugs.call_task_factory(plugin_package)
+
+    with Flow("Test Call Task with nout") as flow:
+        factory_result_1, factory_result_2 = call_task(
+            plugin_name, func="plugin_with_nout"
+        )
+        pyplugs_result_1, pyplugs_result_2 = pyplugs.call_task(
+            plugin_package, plugin=plugin_name, func="plugin_with_nout"
+        )
+
+    state = flow.run()
+    assert (
+        state.result[factory_result_1].result == state.result[pyplugs_result_1].result
+    )
+    assert (
+        state.result[factory_result_2].result == state.result[pyplugs_result_2].result
+    )
+
+
+def test_call_tasks_without_nout(plugin_package):
+    """Test that omitting the task_nout decorator is not compatible with multiple
+    argument returns in prefect tasks.
+    """
+    plugin_name = "plugin_task_nout"
+
+    with pytest.raises(TypeError):
+        with Flow("Test Call Task without nout") as flow:
+            result_1, result_2 = pyplugs.call_task(
+                plugin_package, plugin=plugin_name, func="plugin_without_nout"
+            )
+
+            _ = flow.run()

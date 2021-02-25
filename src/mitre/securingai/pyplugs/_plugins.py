@@ -39,6 +39,7 @@ from typing import (
     NamedTuple,
     Optional,
     TypeVar,
+    Union,
     overload,
 )
 
@@ -71,11 +72,26 @@ except ImportError:  # pragma: nocover
         package="prefect",
     )
 
+try:
+    from typing import Protocol
+
+except ImportError:  # pragma: nocover
+    from typing_extensions import Protocol  # type: ignore
+
 if TYPE_CHECKING:
     from prefect import Task
 
 
+# Structural subtyping
+class NoutPlugin(Protocol):
+    _task_nout: int
+
+    def __call__(self, *args, **kwargs) -> Any:
+        ...  # pragma: nocover
+
+
 # Type aliases
+F = TypeVar("F", bound=NoutPlugin)
 T = TypeVar("T")
 Plugin = Callable[..., Any]
 
@@ -97,7 +113,7 @@ class PluginInfo(NamedTuple):
     package_name: str
     plugin_name: str
     func_name: str
-    func: Plugin
+    func: Union[Plugin, NoutPlugin]
     description: str
     doc: str
     module_doc: str
@@ -153,6 +169,16 @@ def register(
 
     else:
         return decorator_register(_func)
+
+
+@expose
+def task_nout(nout: int) -> Callable[[F], F]:
+    def decorator(func: F) -> F:
+        func._task_nout = nout
+
+        return func
+
+    return decorator
 
 
 @expose
@@ -234,7 +260,10 @@ def call(
 @require_package("prefect", exc_type=PrefectDependencyError)
 def get_task(package: str, plugin: str, func: Optional[str] = None) -> Task:
     """Get a given plugin wrapped as a prefect task"""
-    return task(info(package, plugin, func).func)
+    plugin_func: Union[Plugin, NoutPlugin] = info(package, plugin, func).func
+    nout: Optional[int] = getattr(plugin_func, "_task_nout", None)
+
+    return task(plugin_func, nout=nout)  # type: ignore
 
 
 @expose
