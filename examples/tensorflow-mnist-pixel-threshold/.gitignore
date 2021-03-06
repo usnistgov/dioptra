@@ -1,3 +1,2 @@
-docker-compose.yml
 data/**/
 !data/download_data.py

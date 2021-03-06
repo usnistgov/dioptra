@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import click
 import mnist
@@ -10,7 +10,6 @@ import pandas as pd
 from PIL import Image
 from rich.console import Console
 from rich.panel import Panel
-
 
 CONSOLE: Console = Console()
 
@@ -143,8 +142,10 @@ def save_gif_images(dataset: pd.DataFrame, target_dir: Path) -> None:
     default=f"{Path(__file__).parent}",
     help="Save dataset in this directory",
 )
-def download_data(training: bool, testing: bool, cache_dir: str, data_dir: str) -> None:
-    cache_dir: Path = Path(cache_dir)
+def download_data(
+    training: bool, testing: bool, cache_dir: Union[str, Path], data_dir: str
+) -> None:
+    cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_dir.chmod(0o777)
 
