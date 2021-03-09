@@ -41,6 +41,7 @@ RUN pip install --no-cache-dir --no-color \
     Flask-WTF \
     markdown \
     marshmallow \
+    multimethod \
     plantuml-markdown \
     pymdown-extensions \
     recommonmark \
