@@ -14,12 +14,13 @@ import os
 import sys
 from datetime import datetime
 
+sys.path.insert(0, os.path.abspath("../../task-plugins"))
 sys.path.insert(0, os.path.abspath("../../src"))
 
 
 # -- Project information -----------------------------------------------------
 
-project = "Securing AI Lab"
+project = "Securing AI Testbed"
 release = "0.0.0"
 version = ".".join(release.split(".")[:2])
 
@@ -101,13 +102,19 @@ autodoc_mock_imports = [
     "alembic",
     "botocore",
     "boto3",
+    "entrypoints",
     "flask_injector",
     "flask_migrate",
     "injector",
     "mlflow",
+    "numpy",
+    "pandas",
     "redis",
     "rq",
+    "scipy",
+    "sklearn",
     "structlog",
+    "tensorflow",
 ]
 autodoc_inherit_docstrings = True
 autodoc_member_order = "bysource"
