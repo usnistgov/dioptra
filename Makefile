@@ -125,12 +125,14 @@ DOCS_BUILD_DIR = $(PROJECT_DOCS_DIR)/build
 DOCS_SOURCE_DIR = $(PROJECT_DOCS_DIR)/source
 DOCS_FILES := $(wildcard $(DOCS_SOURCE_DIR)/*.py)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/*.rst)
-DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/architecture/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/deployment-guide/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/deployment-guide/*/*.rst)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/dev-guide/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/getting-started/*.rst)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/overview/*.rst)
-DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/pyplugs/*.rst)
-DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/restapi/*.rst)
-DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/sdk/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/tutorials/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/user-guide/*.rst)
+DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/user-guide/*/*.rst)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/_static/*)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/_templates/*)
 
@@ -662,7 +664,7 @@ $(CONDA_ENV_DEV_INSTALL_SENTINEL): | $(PROJECT_BUILD_DIR)
 	$(call run_pip_install,-e .)
 	$(call save_sentinel_file,$@)
 
-$(DOCS_SENTINEL): $(DOCS_FILES) | $(PROJECT_BUILD_DIR)
+$(DOCS_SENTINEL): $(DOCS_FILES) $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) | $(PROJECT_BUILD_DIR)
 	@$(RM) -rf $(DOCS_BUILD_DIR)
 	$(call run_sphinx_build,$(DOCS_SOURCE_DIR),$(DOCS_BUILD_DIR))
 	@$(RM) -rf $(PROJECT_DOCS_DIR)/mlruns
