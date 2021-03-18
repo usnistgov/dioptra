@@ -1,3 +1,5 @@
+"""A task plugin module for using the MLFlow model registry."""
+
 from __future__ import annotations
 
 from typing import Optional
@@ -29,6 +31,19 @@ except ImportError:  # pragma: nocover
 def add_model_to_registry(
     active_run: MlflowRun, name: str, model_dir: str
 ) -> Optional[ModelVersion]:
+    """Registers a trained model logged during the current run to the MLFlow registry.
+
+    Args:
+        active_run: The :py:class:`mlflow.ActiveRun` object managing the current run's
+            state.
+        name: The registration name to use for the model.
+        model_dir: The relative artifact directory where MLFlow logged the model trained
+            during the current run.
+
+    Returns:
+        A :py:class:`~mlflow.entities.model_registry.ModelVersion` object created by the
+        backend.
+    """
     if not name.strip():
         return None
 
@@ -52,6 +67,15 @@ def add_model_to_registry(
 
 @pyplugs.register
 def get_experiment_name(active_run: MlflowRun) -> str:
+    """Gets the name of the experiment for the current run.
+
+    Args:
+        active_run: The :py:class:`mlflow.ActiveRun` object managing the current run's
+            state.
+
+    Returns:
+        The name of the experiment.
+    """
     experiment_name: str = (
         MlflowClient().get_experiment(active_run.info.experiment_id).name
     )
@@ -65,6 +89,15 @@ def get_experiment_name(active_run: MlflowRun) -> str:
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def load_tensorflow_keras_classifier(name: str, version: int) -> Sequential:
+    """Loads a registered Keras classifier.
+
+    Args:
+        name: The name of the registered model in the MLFlow model registry.
+        version: The version number of the registered model in the MLFlow registry.
+
+    Returns:
+        A trained :py:class:`tf.keras.Sequential` object.
+    """
     uri: str = f"models:/{name}/{version}"
     LOGGER.info("Load Keras classifier from model registry", uri=uri)
 

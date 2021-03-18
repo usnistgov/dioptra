@@ -20,6 +20,31 @@ def fit(
     y: Any = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Any:
+    """Fits the estimator to the given data.
+
+    This task plugin wraps :py:func:`~mitre.securingai.sdk.generics.fit_estimator`,
+    which is a generic function that uses multiple argument dispatch to handle the
+    estimator fitting method for different machine learning libraries. The modules
+    attached to the advertised plugin entry point `securingai.generics.fit_estimator`
+    are used to build the function dispatch registry at runtime. For more information on
+    the supported fitting methods and `fit_kwargs` arguments, please refer to the
+    documentation of the registered dispatch functions.
+
+    Args:
+        estimator: The model to be trained.
+        x: The input data to be used for training.
+        y: The target data to be used for training.
+        fit_kwargs: An optional dictionary of keyword arguments to pass to the
+            dispatched function.
+
+    Returns:
+        The object returned by the estimator's fitting function. For further details on
+        the type of object this method can return, see the documentation for the
+        registered dispatch functions.
+
+    See Also:
+        - :py:func:`mitre.securingai.sdk.generics.fit_estimator`
+    """
     fit_kwargs = fit_kwargs or {}
     time_start: datetime.datetime = datetime.datetime.now()
 
@@ -51,6 +76,30 @@ def predict(
     x: Any = None,
     predict_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Any:
+    """Uses the estimator to make predictions on the given input data.
+
+    This task plugin wraps :py:func:`~mitre.securingai.sdk.generics.estimator_predict`,
+    which is a generic function that uses multiple argument dispatch to handle estimator
+    prediction methods for different machine learning libraries. The modules attached to
+    the advertised plugin entry point `securingai.generics.estimator_predict` are used
+    to build the function dispatch registry at runtime. For more information on the
+    supported prediction methods and `predict_kwargs` arguments, refer to the
+    documentation of the registered dispatch functions.
+
+    Args:
+        estimator: A trained model to be used to generate predictions.
+        x: The input data for which to generate predictions.
+        predict_kwargs: An optional dictionary of keyword arguments to pass to the
+            dispatched function.
+
+    Returns:
+        The object returned by the estimator's predict function. For further details on
+        the type of object this method can return, see the documentation for the
+        registered dispatch functions.
+
+    See Also:
+        - :py:func:`mitre.securingai.sdk.generics.estimator_predict`
+    """
     predict_kwargs = predict_kwargs or {}
     prediction: Any = estimator_predict(estimator, x, **predict_kwargs)
 

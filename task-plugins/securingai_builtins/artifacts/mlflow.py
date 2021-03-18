@@ -1,3 +1,9 @@
+"""A task plugin module for MLFlow artifacts management.
+
+This module contains a set of task plugins for managing artifacts generated during an
+entry point run.
+"""
+
 import tarfile
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Union
@@ -20,17 +26,20 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 def download_all_artifacts_in_run(
     run_id: str, artifact_path: str, destination_path: Optional[str] = None
 ) -> str:
-    """Download an artifact file or directory from a previous MLFlow run.
+    """Downloads an artifact file or directory from a previous MLFlow run.
 
     Args:
         run_id: The unique identifier of a previous MLFlow run.
         artifact_path: The relative source path to the desired artifact.
         destination_path: The relative destination path where the artifacts will be
-            downloaded. If ``None``, the artifacts will be downloaded to a new
-            uniquely-named directory on the local filesystem. Defaults to ``None``.
+            downloaded. If `None`, the artifacts will be downloaded to a new
+            uniquely-named directory on the local filesystem. The default is `None`.
 
     Returns:
         A string pointing to the directory containing the downloaded artifacts.
+
+    See Also:
+        - :py:meth:`mlflow.tracking.MlflowClient.download_artifacts`
     """
     download_path: str = MlflowClient().download_artifacts(
         run_id=run_id, path=artifact_path, dst_path=destination_path
@@ -53,6 +62,39 @@ def upload_data_frame_artifact(
     file_format_kwargs: Optional[Dict[str, Any]] = None,
     working_dir: Optional[Union[str, Path]] = None,
 ) -> None:
+    """Uploads a :py:class:`~pandas.DataFrame` as an artifact of the active MLFlow run.
+
+    The `file_format` argument selects the :py:class:`~pandas.DataFrame` serializer,
+    which are all handled using the object's `DataFrame.to_{format}` methods. The string
+    passed to `file_format` must match one of the following,
+
+    - `csv[.bz2|.gz|.xz]` - A comma-separated values plain text file with optional
+      compression.
+    - `feather` - A binary feather file.
+    - `json` - A plain text JSON file.
+    - `pickle` - A binary pickle file.
+
+    Args:
+        data_frame: A :py:class:`~pandas.DataFrame` to be uploaded.
+        file_name: The filename to use for the serialized :py:class:`~pandas.DataFrame`.
+        file_format: The :py:class:`~pandas.DataFrame` file serialization format.
+        file_format_kwargs: A dictionary of additional keyword arguments to pass to the
+            serializer. If `None`, then no additional keyword arguments are passed. The
+            default is `None`.
+        working_dir: The location where the file should be saved. If `None`, then the
+            current working directory is used. The default is `None`.
+
+    Notes:
+        The :py:mod:`pyarrow` package must be installed in order to serialize to the
+        feather format.
+
+    See Also:
+        - :py:meth:`pandas.DataFrame.to_csv`
+        - :py:meth:`pandas.DataFrame.to_feather`
+        - :py:meth:`pandas.DataFrame.to_json`
+        - :py:meth:`pandas.DataFrame.to_pickle`
+    """
+
     def to_format(
         data_frame: pd.DataFrame, format: str, output_dir: Union[str, Path]
     ) -> Dict[str, Any]:
@@ -128,6 +170,20 @@ def upload_directory_as_tarball_artifact(
     tarball_write_mode: str = "w:gz",
     working_dir: Optional[Union[str, Path]] = None,
 ) -> None:
+    """Archives a directory and uploads it as an artifact of the active MLFlow run.
+
+    Args:
+        source_dir: The directory which should be uploaded.
+        tarball_filename: The filename to use for the archived directory tarball.
+        tarball_write_mode: The write mode for the tarball, see :py:func:`tarfile.open`
+            for the full list of compression options. The default is `"w:gz"` (gzip
+            compression).
+        working_dir: The location where the file should be saved. If `None`, then the
+            current working directory is used. The default is `None`.
+
+    See Also:
+        - :py:func:`tarfile.open`
+    """
     if working_dir is None:
         working_dir = Path.cwd()
 
@@ -149,6 +205,14 @@ def upload_directory_as_tarball_artifact(
 
 @pyplugs.register
 def upload_file_as_artifact(artifact_path: Union[str, Path]) -> None:
+    """Uploads a file as an artifact of the active MLFlow run.
+
+    Args:
+        artifact_path: The location of the file to be uploaded.
+
+    See Also:
+        - :py:func:`mlflow.log_artifact`
+    """
     artifact_path = Path(artifact_path)
     mlflow.log_artifact(str(artifact_path))
     LOGGER.info("Artifact uploaded for current MLFlow run", filename=artifact_path.name)

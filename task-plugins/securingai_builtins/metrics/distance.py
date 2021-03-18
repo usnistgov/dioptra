@@ -1,3 +1,5 @@
+"""A task plugin module for getting functions from a distance metric registry."""
+
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -19,6 +21,29 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 def get_distance_metric_list(
     request: List[Dict[str, str]]
 ) -> List[Tuple[str, Callable[..., np.ndarray]]]:
+    """Gets multiple distance metric functions from the registry.
+
+    The following metrics are available in the registry,
+
+    - `l_inf_norm`
+    - `l_1_norm`
+    - `l_2_norm`
+    - `paired_cosine_similarities`
+    - `paired_euclidean_distances`
+    - `paired_manhattan_distances`
+    - `paired_wasserstein_distances`
+
+    Args:
+        request: A list of dictionaries with the keys `name` and `func`. The `func` key
+            is used to lookup the metric function in the registry and must match one of
+            the metric names listed above. The `name` key is human-readable label for
+            the metric function.
+
+    Returns:
+        A list of tuples with two elements. The first element of each tuple is the label
+        from the `name` key of `request`, and the second element is the callable metric
+        function.
+    """
     distance_metrics_list: List[Tuple[str, Callable[..., np.ndarray]]] = []
 
     for metric in request:
@@ -41,6 +66,25 @@ def get_distance_metric_list(
 
 @pyplugs.register
 def get_distance_metric(func: str) -> Callable[..., np.ndarray]:
+    """Gets a distance metric function from the registry.
+
+    The following metrics are available in the registry,
+
+    - `l_inf_norm`
+    - `l_1_norm`
+    - `l_2_norm`
+    - `paired_cosine_similarities`
+    - `paired_euclidean_distances`
+    - `paired_manhattan_distances`
+    - `paired_wasserstein_distances`
+
+    Args:
+        func: A string that identifies the distance metric to return from the registry.
+            The string must match one of the names of the metrics in the registry.
+
+    Returns:
+        A callable distance metric function.
+    """
     metric_callable: Optional[
         Callable[..., np.ndarray]
     ] = DISTANCE_METRICS_REGISTRY.get(func)
@@ -59,6 +103,17 @@ def get_distance_metric(func: str) -> Callable[..., np.ndarray]:
 
 
 def l_inf_norm(y_true, y_pred) -> np.ndarray:
+    """Calculates the |Linf| norm between a batch of two matrices.
+
+    Args:
+        y_true: A batch of matrices containing the original or target values.
+        y_pred: A batch of matrices containing the perturbed or predicted values.
+
+    Returns:
+        A :py:class:`numpy.ndarray` containing a batch of |Linf| norms.
+
+    .. |Linf| replace:: L\\ :sub:`∞`
+    """
     metric: np.ndarray = _matrix_difference_l_norm(
         y_true=y_true, y_pred=y_pred, order=np.inf
     )
@@ -66,6 +121,17 @@ def l_inf_norm(y_true, y_pred) -> np.ndarray:
 
 
 def l_1_norm(y_true, y_pred) -> np.ndarray:
+    """Calculates the |L1| norm between a batch of two matrices.
+
+    Args:
+        y_true: A batch of matrices containing the original or target values.
+        y_pred: A batch of matrices containing the perturbed or predicted values.
+
+    Returns:
+        A :py:class:`numpy.ndarray` containing a batch of |L1| norms.
+
+    .. |L1| replace:: L\\ :sub:`1`
+    """
     metric: np.ndarray = _matrix_difference_l_norm(
         y_true=y_true, y_pred=y_pred, order=1
     )
@@ -73,6 +139,17 @@ def l_1_norm(y_true, y_pred) -> np.ndarray:
 
 
 def l_2_norm(y_true, y_pred) -> np.ndarray:
+    """Calculates the |L2| norm between a batch of two matrices.
+
+    Args:
+        y_true: A batch of matrices containing the original or target values.
+        y_pred: A batch of matrices containing the perturbed or predicted values.
+
+    Returns:
+        A :py:class:`numpy.ndarray` containing a batch of |L2| norms.
+
+    .. |L2| replace:: L\\ :sub:`2`
+    """
     metric: np.ndarray = _matrix_difference_l_norm(
         y_true=y_true, y_pred=y_pred, order=2
     )
@@ -80,6 +157,15 @@ def l_2_norm(y_true, y_pred) -> np.ndarray:
 
 
 def paired_cosine_similarities(y_true, y_pred) -> np.ndarray:
+    """Calculates the cosine similarity between a batch of two matrices.
+
+    Args:
+        y_true: A batch of matrices containing the original or target values.
+        y_pred: A batch of matrices containing the perturbed or predicted values.
+
+    Returns:
+        A :py:class:`numpy.ndarray` containing a batch of cosine similarities.
+    """
     y_true_normalized: np.ndarray = _normalize_batch(_flatten_batch(y_true), order=2)
     y_pred_normalized: np.ndarray = _normalize_batch(_flatten_batch(y_pred), order=2)
     metric: np.ndarray = np.sum(y_true_normalized * y_pred_normalized, axis=1)
@@ -87,16 +173,55 @@ def paired_cosine_similarities(y_true, y_pred) -> np.ndarray:
 
 
 def paired_euclidean_distances(y_true, y_pred) -> np.ndarray:
+    """Calculates the Euclidean distance between a batch of two matrices.
+
+    The Euclidean distance is equivalent to the |L2| norm.
+
+    Args:
+        y_true: A batch of matrices containing the original or target values.
+        y_pred: A batch of matrices containing the perturbed or predicted values.
+
+    Returns:
+        A :py:class:`numpy.ndarray` containing a batch of euclidean distances.
+
+    .. |L2| replace:: L\\ :sub:`2`
+    """
     metric: np.ndarray = l_2_norm(y_true=y_true, y_pred=y_pred)
     return metric
 
 
 def paired_manhattan_distances(y_true, y_pred) -> np.ndarray:
+    """Calculates the Manhattan distance between a batch of two matrices.
+
+    The Manhattan distance is equivalent to the |L1| norm.
+
+    Args:
+        y_true: A batch of matrices containing the original or target values.
+        y_pred: A batch of matrices containing the perturbed or predicted values.
+
+    Returns:
+        A :py:class:`numpy.ndarray` containing a batch of Manhattan distances.
+
+    .. |L1| replace:: L\\ :sub:`1`
+    """
     metric: np.ndarray = l_1_norm(y_true=y_true, y_pred=y_pred)
     return metric
 
 
 def paired_wasserstein_distances(y_true, y_pred, **kwargs) -> np.ndarray:
+    """Calculates the Wasserstein distance between a batch of two matrices.
+
+    Args:
+        y_true: A batch of matrices containing the original or target values.
+        y_pred: A batch of matrices containing the perturbed or predicted values.
+
+    Returns:
+        A :py:class:`numpy.ndarray` containing a batch of Wasserstein distances.
+
+    See Also:
+        - :py:func:`scipy.stats.wasserstein_distance`
+    """
+
     def wrapped_metric(X, Y):
         return wasserstein_distance(u_values=X, v_values=Y, **kwargs)
 
@@ -107,18 +232,54 @@ def paired_wasserstein_distances(y_true, y_pred, **kwargs) -> np.ndarray:
 
 
 def _flatten_batch(X: np.ndarray) -> np.ndarray:
+    """Flattens each of the matrices in a batch into a one-dimensional array.
+
+    Args:
+        X: A batch of matrices.
+
+    Returns:
+        A :py:class:`numpy.ndarray` containing a batch of one-dimensional arrays.
+    """
     num_samples = X.shape[0]
     num_matrix_elements = np.prod(X.shape[1:])
     return X.reshape((num_samples, num_matrix_elements))
 
 
 def _matrix_difference_l_norm(y_true, y_pred, order) -> np.ndarray:
+    """Calculates a batch of norms of the difference between two matrices.
+
+    Args:
+        y_true: A batch of matrices containing the original or target values.
+        y_pred: A batch of matrices containing the perturbed or predicted values.
+        order: The order of the norm, see :py:func:`numpy.linalg.norm` for the full list
+            of norms that can be calculated.
+
+    Returns:
+        A :py:class:`numpy.ndarray` containing a batch of norms.
+
+    See Also:
+        - :py:func:`numpy.linalg.norm`
+    """
     y_diff: np.ndarray = _flatten_batch(y_true - y_pred)
     y_diff_l_norm: float = np.linalg.norm(y_diff, axis=1, ord=order)
     return y_diff_l_norm
 
 
 def _normalize_batch(X: np.ndarray, order: int) -> np.ndarray:
+    """Normalizes a batch of matrices by their norms.
+
+    Args:
+        X: A numpy array to be normalized.
+        X: A batch of matrices.
+        order: The order of the norm used for normalization, see
+            :py:func:`numpy.linalg.norm` for the full list of available norms.
+
+    Returns:
+        A :py:class:`numpy.ndarray` containing a batch of normalized matrices.
+
+    See Also:
+        - :py:func:`numpy.linalg.norm`
+    """
     X_l_norm = np.linalg.norm(X, axis=1, ord=order)
     num_samples = X_l_norm.shape[0]
 

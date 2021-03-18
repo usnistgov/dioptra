@@ -1,3 +1,9 @@
+"""A task plugin module for interfacing the |ART| with the MLFlow model registry.
+
+.. |ART| replace:: `Adversarial Robustness Toolbox\
+   <https://adversarial-robustness-toolbox.readthedocs.io/en/latest/>`__
+"""
+
 from __future__ import annotations
 
 import structlog
@@ -40,6 +46,22 @@ except ImportError:  # pragma: nocover
 def load_wrapped_tensorflow_keras_classifier(
     name: str, version: int
 ) -> KerasClassifier:
+    """Loads and wraps a registered Keras classifier for compatibility with the |ART|.
+
+    Args:
+        name: The name of the registered model in the MLFlow model registry.
+        version: The version number of the registered model in the MLFlow registry.
+
+    Returns:
+        A trained :py:class:`~art.estimators.classification.KerasClassifier` object.
+
+    See Also:
+        - :py:class:`art.estimators.classification.KerasClassifier`
+        - :py:func:`.mlflow.load_tensorflow_keras_classifier`
+
+    .. |ART| replace:: `Adversarial Robustness Toolbox\
+       <https://adversarial-robustness-toolbox.readthedocs.io/en/latest/>`__
+    """
     keras_classifier: Sequential = load_tensorflow_keras_classifier(
         name=name, version=version
     )
