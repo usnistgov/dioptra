@@ -1,6 +1,6 @@
 .. _tutorials-example-tensorflow-mnist-feature-squeezing:
 
-Example: MNIST Tensorflow Feature Squeezing
+Example: Tensorflow MNIST Feature Squeezing
 ===========================================
 
 Introduction
@@ -11,7 +11,7 @@ Introduction
    Some of the attacks in this demo, *deepfool* and *CW* in particular, are computationally expensive and will take a very long to complete if run using the CPUs found in a typical personal computer.
    For this reason, it is highly recommended that you run these demos on a CUDA-compatible GPU.
 
-The demo provided in the Jupyter notebook ``demo_production.ipynb`` uses the Securing AI Testbed to run experiments that investigate the effectiveness of the feature-squeezing defense against a series of evasion attacks against a neural network model.
+The demo provided in the Jupyter notebook ``demo.ipynb`` uses the Securing AI Testbed to run experiments that investigate the effectiveness of the feature-squeezing defense against a series of evasion attacks against a neural network model.
 
 Using this Demo
 ---------------
@@ -21,22 +21,24 @@ Navigate to the tab below that best describes your setup in order to proceed.
 
 .. tabbed:: Local
 
-   Everything you need to run this demo locally is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running `make pull-latest`.
-   Once you have downloaded the images, stay in the terminal and navigate to this example's directory and run the demo startup sequence,
-
-   .. code-block:: sh
-
-      make demo
+   .. include:: snippets/common-local-setup-instructions.rst
 
    The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
 
    .. include:: snippets/common-setup-instructions.rst
 
-   If you are running the demos locally and want to watch the output logs for the Tensorflow worker containers as you step through the demo, run `docker-compose logs -f tfcpu-01 tfcpu-02` in your terminal.
+   Before doing anything else, take the time to set your user id in the first code block.
+
+   .. note::
+
+      The user id can be anything you'd like it to be, but be aware that it will be publicly viewable to all users with access to the Testbed's MLFlow dashboard.
+
+   If you are running the demos locally and want to watch the output logs for the Tensorflow worker containers as you step through the demo, run ``docker-compose logs -f tfcpu-01 tfcpu-02`` in your terminal.
 
    .. include:: snippets/common-feature-squeezing-notebook-summary.rst
 
    .. include:: snippets/common-teardown-instructions.rst
+
    If you were watching the output logs, you will need to press :kbd:`Ctrl-C` to stop following the logs before you can run ``make teardown``.
 
 .. tabbed:: On-Prem Deployment
@@ -49,6 +51,13 @@ Navigate to the tab below that best describes your setup in order to proceed.
       make jupyter
 
    .. include:: snippets/common-setup-instructions.rst
+
+   Before doing anything else, take the time to set your user id in the first code block.
+
+   .. note::
+
+      The user id can be anything you'd like it to be, but be aware that it will be publicly viewable to all users with access to the Testbed's MLFlow dashboard.
+
    If necessary, also change the queue variable from ``tensorflow_gpu`` to the appropriate queue name registered in your on-prem deployment.
    If you are unsure which queue you should be submitting jobs to, contact your Testbed system administrator.
 
