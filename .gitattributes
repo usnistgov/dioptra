@@ -31,6 +31,7 @@ MLproject text
 # Denote all files that are truly binary and should not be modified
 *.gif binary
 *.gz binary
+*.inv binary
 *.png binary
 *.jpeg binary
 *.jpg binary
