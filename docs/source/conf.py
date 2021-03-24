@@ -32,6 +32,7 @@ version = ".".join(release.split(".")[:2])
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "recommonmark",
@@ -119,6 +120,37 @@ autodoc_mock_imports = [
 autodoc_inherit_docstrings = True
 autodoc_member_order = "bysource"
 autodoc_typehints = "signature"
+
+# -- Options for intersphinx extension ---------------------------------------
+
+intersphinx_mapping = {
+    "alembic": ("https://alembic.sqlalchemy.org/en/latest/", None),
+    "art": (
+        "https://adversarial-robustness-toolbox.readthedocs.io/en/latest/",
+        None,
+    ),
+    "boto3": ("https://boto3.amazonaws.com/v1/documentation/api/latest/", None),
+    "click": ("https://click.palletsprojects.com/en/7.x/", None),
+    "flask": ("https://flask.palletsprojects.com/en/1.1.x/", None),
+    "flask_migrate": ("https://flask-migrate.readthedocs.io/en/latest/", None),
+    "flask_restx": ("https://flask-restx.readthedocs.io/en/latest/", None),
+    "flask_sqlalchemy": ("https://flask-sqlalchemy.palletsprojects.com/en/2.x/", None),
+    "flask_wtf": ("https://flask-wtf.readthedocs.io/en/0.15.x/", None),
+    "injector": ("https://injector.readthedocs.io/en/latest/", None),
+    "marshmallow": ("https://marshmallow.readthedocs.io/en/stable/", None),
+    "mlflow": ("https://mlflow.org/docs/latest/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "python": ("https://docs.python.org/3/", None),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/13/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "sklearn": ("https://scikit-learn.org/0.23/", None),
+    "structlog": ("https://www.structlog.org/en/stable/", None),
+    "tensorflow": (
+        "https://www.tensorflow.org/versions/r2.1/api_docs/python/",
+        "tf21_py_objects.inv",
+    ),
+}
 
 # -- Options for napoleon extension ------------------------------------------
 
