@@ -29,13 +29,12 @@ def require_package(
         def wrapper(*args, **kwargs):
             try:
                 importlib.import_module(name=name)
-                result = func(*args, **kwargs)
 
             except ModuleNotFoundError:
                 LOGGER.exception(error_msg, args=args, kwargs=kwargs)
                 raise exc
 
-            return result
+            return func(*args, **kwargs)
 
         return cast(T, wrapper)
 
