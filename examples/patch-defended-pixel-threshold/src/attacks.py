@@ -37,6 +37,7 @@ DISTANCE_METRICS = [
     ("wasserstein_distance", paired_wasserstein_distances),
 ]
 
+
 def wrap_keras_classifier(model):
     keras_model = load_model_in_registry(model=model)
     return KerasClassifier(model=keras_model)
@@ -44,12 +45,13 @@ def wrap_keras_classifier(model):
 
 def init_pt(model, batch_size, **kwargs):
     classifier = wrap_keras_classifier(model)
-    #th=4, es=1, targeted=True, verbose=True
+    # th=4, es=1, targeted=True, verbose=True
     attack = PixelAttack(classifier, **kwargs)
     return classifier, attack
 
+
 def save_adv_batch(class_names_list, adv_batch, batch_size, batch_num, adv_data_dir, y):
-    
+
     for batch_image_num, adv_image in enumerate(adv_batch):
         outfile = class_names_list[y[batch_image_num]]
         adv_image_path = (
@@ -62,6 +64,7 @@ def save_adv_batch(class_names_list, adv_batch, batch_size, batch_num, adv_data_
             adv_image_path.parent.mkdir(parents=True)
 
         save_img(path=str(adv_image_path), x=adv_image)
+
 
 def np_norm(im, im2, order):
     im_diff = im - im2
@@ -99,6 +102,7 @@ def log_distance_metrics(distance_metrics_):
         mlflow.log_metric(key=f"{metric_name}_max", value=metric_values.max())
         LOGGER.info("logged distance-based metric", metric_name=metric_name)
 
+
 def create_adversarial_pt_dataset(
     data_dir: str,
     model: str,
@@ -107,7 +111,7 @@ def create_adversarial_pt_dataset(
     batch_size: int = 32,
     label_mode: str = "categorical",
     color_mode: str = "rgb",
-    image_size: Tuple[int, int] = (224,224),
+    image_size: Tuple[int, int] = (224, 224),
     **kwargs,
 ):
     classifier, attack = init_pt(model=model, batch_size=batch_size, **kwargs)
@@ -134,7 +138,6 @@ def create_adversarial_pt_dataset(
         if batch_num >= num_images // batch_size:
             break
 
-
         clean_filenames = img_filenames[
             batch_num * batch_size : (batch_num + 1) * batch_size
         ]
@@ -143,7 +146,9 @@ def create_adversarial_pt_dataset(
 
         y_int = np.argmax(y, axis=1)
         adv_batch = attack.generate(x=x)
-        save_adv_batch(class_names_list, adv_batch, batch_size, batch_num, adv_data_dir, y_int)
+        save_adv_batch(
+            class_names_list, adv_batch, batch_size, batch_num, adv_data_dir, y_int
+        )
         evaluate_distance_metrics(
             clean_filenames=clean_filenames,
             distance_metrics_=distance_metrics_,

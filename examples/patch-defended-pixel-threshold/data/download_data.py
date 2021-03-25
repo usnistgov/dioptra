@@ -66,14 +66,12 @@ class MnistDataset(object):
     def training(self) -> pd.DataFrame:
         if self._train_images_cache is None:
             self._train_images_cache = mnist.download_and_parse_mnist_file(
-                self.train_images,
-                self.tmp_dir
+                self.train_images, self.tmp_dir
             )
 
         if self._train_labels_cache is None:
             self._train_labels_cache = mnist.download_and_parse_mnist_file(
-                self.train_labels,
-                self.tmp_dir
+                self.train_labels, self.tmp_dir
             )
 
         return pd.DataFrame(
@@ -88,14 +86,12 @@ class MnistDataset(object):
     def testing(self) -> pd.DataFrame:
         if self._test_images_cache is None:
             self._test_images_cache = mnist.download_and_parse_mnist_file(
-                self.test_images,
-                self.tmp_dir
+                self.test_images, self.tmp_dir
             )
 
         if self._test_labels_cache is None:
             self._test_labels_cache = mnist.download_and_parse_mnist_file(
-                self.test_labels,
-                self.tmp_dir
+                self.test_labels, self.tmp_dir
             )
 
         return pd.DataFrame(
@@ -141,10 +137,10 @@ def download_data(training: bool, testing: bool, data_dir: str) -> None:
     with tempfile.TemporaryDirectory() as tmp_dir:
         console: AppConsole = AppConsole(CONSOLE)
         mnist_dataset: MnistDataset = MnistDataset(tmp_dir)
-  
+
         console.print_title("MNIST Data Downloader")
         console.print_parameter("data-dir", value=f"{click.format_filename(data_dir)}")
-    
+
         if training:
             target_dir: Path = Path(data_dir) / "training"
             target_dir.mkdir(parents=True, exist_ok=True)
@@ -152,7 +148,7 @@ def download_data(training: bool, testing: bool, data_dir: str) -> None:
             save_gif_images(dataset=mnist_dataset.training, target_dir=target_dir)
             console.print_success("Training images downloaded")
             console.print_info("MNIST training dataset downloading complete")
-    
+
         if testing:
             target_dir = Path(data_dir) / "testing"
             target_dir.mkdir(parents=True, exist_ok=True)

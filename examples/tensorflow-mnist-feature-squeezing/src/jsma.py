@@ -45,7 +45,9 @@ def evaluate_classification_metrics(classifier, adv_ds):
     help="Root directory for NFS mounted datasets (in container)",
 )
 @click.option(
-    "--model", type=click.STRING, help="Name of model to load from registry",
+    "--model",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -60,16 +62,27 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default=32,
 )
 @click.option(
-    "--theta", type=click.FLOAT, help="Oversoot parameter", default=0.1,
+    "--theta",
+    type=click.FLOAT,
+    help="Oversoot parameter",
+    default=0.1,
 )
 @click.option(
-    "--gamma", type=click.FLOAT, default=1.0,
+    "--gamma",
+    type=click.FLOAT,
+    default=1.0,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 @click.option(
-    "--verbose", type=click.BOOL, help="Show progress bars", default=True,
+    "--verbose",
+    type=click.BOOL,
+    help="Show progress bars",
+    default=True,
 )
 def jsma_attack(
     data_dir, model, model_architecture, batch_size, seed, gamma, theta, verbose

@@ -57,7 +57,8 @@ def get_optimizer(optimizer, learning_rate):
 
 
 def get_model(
-    model_architecture: str, n_classes: int = 10,
+    model_architecture: str,
+    n_classes: int = 10,
 ):
     model_collection = {
         "le_net": le_net(input_shape=(28, 28, 1), n_classes=n_classes),
@@ -79,7 +80,9 @@ def init_model(learning_rate, model_architecture: str, optimizer: str):
     model_optimizer = get_optimizer(optimizer=optimizer, learning_rate=learning_rate)
     model = get_model(model_architecture=model_architecture)
     model.compile(
-        loss="categorical_crossentropy", optimizer=model_optimizer, metrics=METRICS,
+        loss="categorical_crossentropy",
+        optimizer=model_optimizer,
+        metrics=METRICS,
     )
 
     return model
@@ -135,7 +138,8 @@ def fit(model, training_ds, validation_ds, epochs):
     time_start = datetime.datetime.now()
 
     LOGGER.info(
-        "training tensorflow model", timestamp=time_start.isoformat(),
+        "training tensorflow model",
+        timestamp=time_start.isoformat(),
     )
 
     history = model.fit(
@@ -184,7 +188,10 @@ def evaluate_metrics(model, testing_ds):
     help="Model architecture",
 )
 @click.option(
-    "--epochs", type=click.INT, help="Number of epochs to train model", default=30,
+    "--epochs",
+    type=click.INT,
+    help="Number of epochs to train model",
+    default=30,
 )
 @click.option(
     "--batch-size",

@@ -42,7 +42,9 @@ def evaluate_metrics(classifier, adv_ds):
     help="Root directory for NFS mounted datasets (in container)",
 )
 @click.option(
-    "--model", type=click.STRING, help="Name of model to load from registry",
+    "--model",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -68,11 +70,11 @@ def evaluate_metrics(classifier, adv_ds):
     help="Pixel Attack Evolution Algorithm",
     default=0,
 )
-def pt_attack(
-    data_dir, model, model_architecture, batch_size, th, es
-):
+def pt_attack(data_dir, model, model_architecture, batch_size, th, es):
     LOGGER.info(
-        "Execute MLFlow entry point", entry_point="pt_attack", data_dir=data_dir,
+        "Execute MLFlow entry point",
+        entry_point="pt_attack",
+        data_dir=data_dir,
     )
 
     with mlflow.start_run() as _:
@@ -81,7 +83,7 @@ def pt_attack(
 
         adv_data_dir.mkdir(parents=True, exist_ok=True)
 
-        image_size = (224,224)
+        image_size = (224, 224)
         classifier = create_adversarial_pt_dataset(
             data_dir=testing_dir,
             model=model,
@@ -89,7 +91,7 @@ def pt_attack(
             batch_size=batch_size,
             image_size=image_size,
             th=th,
-            es=es
+            es=es,
         )
 
         adv_ds = create_image_dataset(

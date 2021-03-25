@@ -38,10 +38,14 @@ def evaluate_classification_metrics(classifier, adv_ds):
 
 @click.command()
 @click.option(
-    "--run-id", type=click.STRING, help="MLFlow Run ID of a successful attack",
+    "--run-id",
+    type=click.STRING,
+    help="MLFlow Run ID of a successful attack",
 )
 @click.option(
-    "--model", type=click.STRING, help="Name of model to load from registry",
+    "--model",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -59,7 +63,10 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default=32,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def infer_adversarial(run_id, model, model_architecture, batch_size, seed):
     rng = np.random.default_rng(seed if seed >= 0 else None)

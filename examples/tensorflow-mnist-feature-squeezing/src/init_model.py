@@ -117,7 +117,10 @@ def evaluate_metrics(model, testing_ds):
     default=10,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def load_and_test_model(data_dir, model_architecture, model_tag, batch_size, seed):
 
@@ -136,9 +139,9 @@ def load_and_test_model(data_dir, model_architecture, model_tag, batch_size, see
         mlflow.log_param("tensorflow_global_seed", tensorflow_global_seed)
         mlflow.log_param("dataset_seed", dataset_seed)
 
-        experiment_name: str = MlflowClient().get_experiment(
-            active_run.info.experiment_id
-        ).name
+        experiment_name: str = (
+            MlflowClient().get_experiment(active_run.info.experiment_id).name
+        )
 
         if len(model_tag) > 0:
             model_name = f"{experiment_name}_{model_tag}_{model_architecture}"
@@ -158,7 +161,8 @@ def load_and_test_model(data_dir, model_architecture, model_tag, batch_size, see
             newmodel.summary()
 
             newmodel.compile(
-                loss="categorical_crossentropy", metrics=METRICS,
+                loss="categorical_crossentropy",
+                metrics=METRICS,
             )
 
             mlflow.keras.log_model(
@@ -170,7 +174,8 @@ def load_and_test_model(data_dir, model_architecture, model_tag, batch_size, see
         model = model_collection[model_architecture]()
         model.summary()
         model.compile(
-            loss="categorical_crossentropy", metrics=METRICS,
+            loss="categorical_crossentropy",
+            metrics=METRICS,
         )
         if model_architecture != "mobilenet":
             mlflow.keras.log_model(

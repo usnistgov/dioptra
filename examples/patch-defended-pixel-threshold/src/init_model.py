@@ -33,7 +33,8 @@ from tensorflow.keras.metrics import (
 from tensorflow import keras
 from data import create_image_dataset
 from log import configure_stdlib_logger, configure_structlog_logger
-from tensorflow.keras.layers import  Input, Dense, Flatten
+from tensorflow.keras.layers import Input, Dense, Flatten
+
 LOGGER = structlog.get_logger()
 
 # List of Keras model metrics.
@@ -51,12 +52,14 @@ METRICS = [
 # Initialize, compile, and return a Keras ResNet50 model pretrained on imagenet weights.
 def init_model():
 
-    model = keras.models.load_model("/nfs/data/undefended_regular_model/data/model.h5")    
-    #model = keras.models.load_model("/nfs/data/mixed-patch-model/data/model.h5")    
+    model = keras.models.load_model("/nfs/data/undefended_regular_model/data/model.h5")
+    # model = keras.models.load_model("/nfs/data/mixed-patch-model/data/model.h5")
     model.compile(
-        loss="categorical_crossentropy", metrics=METRICS,
+        loss="categorical_crossentropy",
+        metrics=METRICS,
     )
     return model
+
 
 # Evaluate metrics against a chosen dataset.
 def evaluate_metrics(classifier, ds):
@@ -74,38 +77,43 @@ def evaluate_metrics(classifier, ds):
     type=click.Path(
         exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
     ),
-    default = "/nfs/data/",
+    default="/nfs/data/",
 )
 @click.option(
     "--dataset-name",
     type=click.STRING,
-    default = "regular_data",
+    default="regular_data",
 )
 def load_and_test_model(data_dir, dataset_name):
-    image_shape = (224,224, 3)
+    image_shape = (224, 224, 3)
     clip_values = (0, 255)
-    nb_classes  =120
+    nb_classes = 120
     batch_size = 32
     scale_min = 0.4
     scale_max = 1.0
-    learning_rate = 5000.
+    learning_rate = 5000.0
     max_iter = 500
 
     mlflow.tensorflow.autolog()
 
     with mlflow.start_run() as _:
         model = init_model()
-        print("HERE:"+str(model.outputs))
+        print("HERE:" + str(model.outputs))
         mlflow.keras.log_model(
-          keras_model=model,
-          artifact_path="patch-defended",
-          registered_model_name="patch-defended"
+            keras_model=model,
+            artifact_path="patch-defended",
+            registered_model_name="patch-defended",
         )
         dataset = Path(data_dir) / dataset_name / "testing"
         ds = create_image_dataset(
-          data_dir=dataset.resolve(), subset=None, validation_split=None, batch_size=batch_size
+            data_dir=dataset.resolve(),
+            subset=None,
+            validation_split=None,
+            batch_size=batch_size,
         )
-        classifier = KerasClassifier(model=model, clip_values=clip_values, use_logits=True)
+        classifier = KerasClassifier(
+            model=model, clip_values=clip_values, use_logits=True
+        )
         evaluate_metrics(classifier=classifier, ds=ds)
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-
 import warnings
+
 warnings.filterwarnings("ignore")
 
 import click
@@ -17,14 +17,17 @@ LOGGER = structlog.get_logger()
 @click.option(
     "--output-log-string",
     type=click.STRING,
-    default = "Hello World",
-    help = "Basic MLflow string input."
+    default="Hello World",
+    help="Basic MLflow string input.",
 )
 def hello_world(output_log_string):
     with mlflow.start_run() as _:
         LOGGER.info(
-            "Execute MLFlow entry point", entry_point="hello_world", log_output=output_log_string,
+            "Execute MLFlow entry point",
+            entry_point="hello_world",
+            log_output=output_log_string,
         )
+
 
 if __name__ == "__main__":
     configure_stdlib_logger("INFO", log_filepath=None)

@@ -48,6 +48,10 @@ _AUTHORS = [
     _Author(
         "James Glasbrenner", "jglasbrenner@mitre.org", _date(2020, 11, 24), _date.max
     ),
+    _Author("Cory Miniter", "jminiter@mitre.org", _date(2020, 11, 24), _date.max),
+    _Author("Howard Huang", "hhuang@mitre.org", _date(2020, 11, 24), _date.max),
+    _Author("Julian Sexton", "jtsexton@mitre.org", _date(2020, 11, 24), _date.max),
+    _Author("Paul Rowe", "prowe@mitre.org", _date(2020, 11, 24), _date.max),
     _Author(
         "Geir Arne Hjelle", "geirarne@gmail.com", _date(2019, 4, 1), _date(2020, 11, 23)
     ),

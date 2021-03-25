@@ -114,7 +114,6 @@ CODE_PACKAGING_FILES =\
     $(DOCS_FILES)\
     $(SETUP_CFG_FILE)\
     $(TOX_CONFIG_FILE)\
-    LICENSE\
     MANIFEST.in\
     pyproject.toml
 CODE_DISTRIBUTION_FILES =\

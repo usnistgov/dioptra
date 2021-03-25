@@ -44,19 +44,15 @@ def wrap_keras_classifier(model):
     return KerasClassifier(model=keras_model)
 
 
-
 def init_miface(model, batch_size, **kwargs):
     classifier = wrap_keras_classifier(model)
-    attack =  MIFace(classifier, max_iter=250, batch_size=batch_size)
+    attack = MIFace(classifier, max_iter=250, batch_size=batch_size)
     return classifier, attack
+
 
 def save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames):
     for batch_image_num, adv_image in enumerate(adv_batch):
-        adv_image_path = (
-            adv_data_dir
-            / f"{y}"
-            / f"adv_{clean_filenames}"
-        )
+        adv_image_path = adv_data_dir / f"{y}" / f"adv_{clean_filenames}"
 
         if not adv_image_path.parent.exists():
             adv_image_path.parent.mkdir(parents=True)
@@ -103,10 +99,10 @@ def miface_infer(
     preds = np.argmax(classifier.predict(x_train_infer_from_zero), axis=1)
 
     for c in np.arange(10):
-        save_adv_batch([x_train_infer_from_zero[c]], adv_data_dir, c, "c" + str(c) + ".png")
-    
-    #print("X_TRAIN_ZERO:" + str(x_train_infer_from_zero.shape))
-    
-    
+        save_adv_batch(
+            [x_train_infer_from_zero[c]], adv_data_dir, c, "c" + str(c) + ".png"
+        )
+
+    # print("X_TRAIN_ZERO:" + str(x_train_infer_from_zero.shape))
 
     return None

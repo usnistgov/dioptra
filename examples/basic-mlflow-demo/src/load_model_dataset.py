@@ -48,6 +48,7 @@ METRICS = [
     AUC(name="auc"),
 ]
 
+
 def create_image_dataset(
     data_dir: str,
     subset: str,
@@ -74,13 +75,16 @@ def create_image_dataset(
         subset=subset,
     )
 
+
 # Initialize, compile, and return a Keras ResNet50 model pretrained on imagenet weights.
 def init_model():
     model = tf.keras.applications.resnet50.ResNet50(weights="imagenet")
     model.compile(
-        loss="categorical_crossentropy", metrics=METRICS,
+        loss="categorical_crossentropy",
+        metrics=METRICS,
     )
     return model
+
 
 # Evaluate metrics against a chosen dataset.
 def evaluate_metrics(classifier, ds):
@@ -98,18 +102,18 @@ def evaluate_metrics(classifier, ds):
     type=click.Path(
         exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
     ),
-    default = "/nfs/data/ImageNet-Kaggle-2017/images/ILSVRC/Data/CLS-LOC",
-    help ="Root directory for ImageNet test sets.",
+    default="/nfs/data/ImageNet-Kaggle-2017/images/ILSVRC/Data/CLS-LOC",
+    help="Root directory for ImageNet test sets.",
 )
 @click.option(
     "--dataset-name",
     type=click.STRING,
-    default = "val-sorted-5000",
-    help ="ImageNet test set name. Options include: " \
-          "\n val-sorted-1000  : 1000 image test set " \
-          "\n val-sorted-5000  : 5000 image test set " \
-          "\n val-sorted-10000 : 10000 image test set " \
-          "\n val-sorted       : 50000 image test set ",
+    default="val-sorted-5000",
+    help="ImageNet test set name. Options include: "
+    "\n val-sorted-1000  : 1000 image test set "
+    "\n val-sorted-5000  : 5000 image test set "
+    "\n val-sorted-10000 : 10000 image test set "
+    "\n val-sorted       : 50000 image test set ",
 )
 def load_and_test_model(data_dir, dataset_name):
 
@@ -124,16 +128,21 @@ def load_and_test_model(data_dir, dataset_name):
     with mlflow.start_run() as _:
         model = init_model()
         mlflow.keras.log_model(
-          keras_model=model,
-          artifact_path="keras-model-imagenet-resnet50",
-          registered_model_name="keras-model-imagenet-resnet50"
+            keras_model=model,
+            artifact_path="keras-model-imagenet-resnet50",
+            registered_model_name="keras-model-imagenet-resnet50",
         )
         dataset = Path(data_dir) / dataset_name
         ds = create_image_dataset(
-          data_dir=dataset.resolve(), subset=None, validation_split=None
+            data_dir=dataset.resolve(), subset=None, validation_split=None
         )
-        classifier = KerasClassifier(model=model, clip_values=clip_values, preprocessing =([mean_b, mean_g, mean_r], 1))
+        classifier = KerasClassifier(
+            model=model,
+            clip_values=clip_values,
+            preprocessing=([mean_b, mean_g, mean_r], 1),
+        )
         evaluate_metrics(classifier=classifier, ds=ds)
+
 
 if __name__ == "__main__":
     configure_stdlib_logger("INFO", log_filepath=None)

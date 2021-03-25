@@ -45,7 +45,9 @@ def evaluate_classification_metrics(classifier, adv_ds):
     help="Root directory for NFS mounted datasets (in container)",
 )
 @click.option(
-    "--model", type=click.STRING, help="Name of model to load from registry",
+    "--model",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -59,35 +61,26 @@ def evaluate_classification_metrics(classifier, adv_ds):
     help="Batch size to use when training a single epoch",
     default=1,
 )
+@click.option("--max-iter", type=click.INT, help="Max Iterations", default=10000)
+@click.option("--window-length", type=click.INT, help="Window length", default=100)
+@click.option("--threshold", type=click.FLOAT, help="Threshold", default=0.99)
+@click.option("--learning-rate", type=click.FLOAT, help="Learning Rate", default=0.1)
 @click.option(
-    "--max-iter",
+    "--seed",
     type=click.INT,
-    help="Max Iterations",
-    default=10000
-)
-@click.option(
-    "--window-length",
-    type=click.INT,
-    help="Window length",
-    default=100
-)
-@click.option(
-    "--threshold",
-    type=click.FLOAT,
-    help="Threshold",
-    default=0.99
-)
-@click.option(
-    "--learning-rate",
-    type=click.FLOAT,
-    help="Learning Rate",
-    default=0.1
-)
-@click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def miface_attack(
-    data_dir, model, model_architecture, batch_size, max_iter, window_length, threshold, learning_rate, seed
+    data_dir,
+    model,
+    model_architecture,
+    batch_size,
+    max_iter,
+    window_length,
+    threshold,
+    learning_rate,
+    seed,
 ):
     norm_mapping = {"inf": np.inf, "1": 1, "2": 2}
     rng = np.random.default_rng(seed if seed >= 0 else None)
@@ -101,7 +94,7 @@ def miface_attack(
         data_dir=data_dir,
         model=model,
         model_architecture=model_architecture,
-        batch_size=batch_size
+        batch_size=batch_size,
     )
 
     tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
@@ -124,7 +117,7 @@ def miface_attack(
             max_iter=max_iter,
             window_length=window_length,
             threshold=threshold,
-            learning_rate=learning_rate
+            learning_rate=learning_rate,
         )
 
         adv_testing_tar = Path().cwd() / "testing_adversarial_miface.tar.gz"
@@ -134,7 +127,6 @@ def miface_attack(
 
         LOGGER.info("Log adversarial images", filename=adv_testing_tar.name)
         mlflow.log_artifact(str(adv_testing_tar))
-
 
 
 if __name__ == "__main__":

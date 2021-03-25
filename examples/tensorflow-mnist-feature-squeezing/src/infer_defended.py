@@ -55,10 +55,14 @@ def evaluate_classification_metrics(classifier, adv_ds):
 
 @click.command()
 @click.option(
-    "--run-id", type=click.STRING, help="MLFlow Run ID of a successful fgm attack",
+    "--run-id",
+    type=click.STRING,
+    help="MLFlow Run ID of a successful fgm attack",
 )
 @click.option(
-    "--model", type=click.STRING, help="Name of model to load from registry",
+    "--model",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -73,7 +77,10 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default=32,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 @click.option(
     "--bit-depth",
@@ -140,7 +147,9 @@ def infer_adversarial(run_id, model, model_architecture, batch_size, seed, bit_d
         ]
 
         LOGGER.info(
-            "Applying Defense", attack="fgm", batch_num=batch_num,
+            "Applying Defense",
+            attack="fgm",
+            batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)

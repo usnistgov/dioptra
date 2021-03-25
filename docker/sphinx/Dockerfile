@@ -1,4 +1,3 @@
-
 ARG SPHINX_VERSION
 
 FROM sphinxdoc/sphinx:${SPHINX_VERSION}

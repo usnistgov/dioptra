@@ -53,11 +53,15 @@ METRICS = [
 
 
 def model_resnet50():
-    return ResNet50(weights='imagenet', input_shape = (224, 224, 3))
+    return ResNet50(weights="imagenet", input_shape=(224, 224, 3))
+
+
 def model_vgg16():
-    return VGG16(weights='imagenet', input_shape = (224, 224, 3))
+    return VGG16(weights="imagenet", input_shape=(224, 224, 3))
+
 
 # Evaluate metrics against a chosen dataset.
+
 
 def evaluate_metrics(model, testing_ds):
     LOGGER.info("evaluating classification metrics using testing images")
@@ -78,8 +82,8 @@ def evaluate_metrics(model, testing_ds):
     type=click.Path(
         exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
     ),
-    default = "/nfs/data/ImageNet-Kaggle-2017/images/ILSVRC/Data/CLS-LOC/val-sorted-5000",
-    help ="Root directory for ImageNet test sets.",
+    default="/nfs/data/ImageNet-Kaggle-2017/images/ILSVRC/Data/CLS-LOC/val-sorted-5000",
+    help="Root directory for ImageNet test sets.",
 )
 @click.option(
     "--model-architecture",
@@ -100,7 +104,10 @@ def evaluate_metrics(model, testing_ds):
     default=10,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def load_and_test_model(data_dir, model_architecture, model_tag, batch_size, seed):
 
@@ -119,36 +126,36 @@ def load_and_test_model(data_dir, model_architecture, model_tag, batch_size, see
         mlflow.log_param("tensorflow_global_seed", tensorflow_global_seed)
         mlflow.log_param("dataset_seed", dataset_seed)
 
-        experiment_name: str = MlflowClient().get_experiment(
-            active_run.info.experiment_id
-        ).name
+        experiment_name: str = (
+            MlflowClient().get_experiment(active_run.info.experiment_id).name
+        )
 
         if len(model_tag) > 0:
             model_name = f"{experiment_name}_{model_tag}_{model_architecture}"
         else:
             model_name = f"{experiment_name}_{model_architecture}"
 
-        model_collection = {
-            "resnet50": model_resnet50,
-            "vgg16": model_vgg16
-        }
+        model_collection = {"resnet50": model_resnet50, "vgg16": model_vgg16}
         model = model_collection[model_architecture]()
         model.compile(
-            loss="categorical_crossentropy", metrics=METRICS,
+            loss="categorical_crossentropy",
+            metrics=METRICS,
         )
 
         mlflow.keras.log_model(
-            keras_model=model,
-            artifact_path="model",
-            registered_model_name=model_name
+            keras_model=model, artifact_path="model", registered_model_name=model_name
         )
 
         dataset = Path(data_dir)
         ds = create_image_dataset(
-          data_dir=dataset.resolve(), subset=None, validation_split=None, batch_size=batch_size,
+            data_dir=dataset.resolve(),
+            subset=None,
+            validation_split=None,
+            batch_size=batch_size,
         )
 
         evaluate_metrics(model=model, testing_ds=ds)
+
 
 if __name__ == "__main__":
     configure_stdlib_logger("INFO", log_filepath=None)
