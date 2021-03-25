@@ -12,7 +12,6 @@
 #
 import os
 import sys
-from datetime import datetime
 
 sys.path.insert(0, os.path.abspath("../../task-plugins"))
 sys.path.insert(0, os.path.abspath("../../src"))
@@ -23,7 +22,6 @@ sys.path.insert(0, os.path.abspath("../../src"))
 project = "Securing AI Testbed"
 release = "0.0.0"
 version = ".".join(release.split(".")[:2])
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -92,6 +90,7 @@ html_theme_options = {
     "use_repository_button": True,
     "home_page_in_toc": True,
     "path_to_docs": "docs/source",
+    "extra_navbar": False,
 }
 
 # -- Extension configuration -------------------------------------------------

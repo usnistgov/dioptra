@@ -1,0 +1,28 @@
+{% if theme_navbar_footer_text %}{% set theme_extra_navbar=theme_navbar_footer_text %}{% endif %} <!-- To handle the deprecated key -->
+{% if hasdoc('developers') %}
+{% set developers_footer %}
+<a href="{{ pathto('developers') }}"><em>Testbed Developers</em></a>
+{% endset %}
+{% endif %}
+{% if hasdoc('contact') %}
+{% set contact_footer %}
+<a href="{{ pathto('contact') }}"><em>Contact</em></a>
+{% endset %}
+{% endif %}
+{% if hasdoc('terms') %}
+{% set terms_footer %}
+<a href="{{ pathto('terms') }}"><em>Terms of Use</em></a>
+{% endset %}
+{% endif %}
+<div class="navbar_extra_footer">
+  {% if hasdoc('developers') or hasdoc('contact') or hasdoc('terms') %}
+  <div>
+    {{ [developers_footer, contact_footer, terms_footer]|select("defined")|join(" | ") }}
+  </div>
+  {% endif %}
+  {% if theme_extra_navbar %}
+  <div>
+    {{ theme_extra_navbar }}
+  </div>
+  {% endif %}
+</div>
