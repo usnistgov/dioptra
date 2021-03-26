@@ -121,13 +121,13 @@ The following is the list of supported scopes:
 
 -  **mlflow**: used for updates related to the development and maintenance of plugins that extend the functionality of the MLFlow library
 
--  **pyplugs**: used for updates related to the development and maintenance of the Lab’s `PyPlugs <https://pypi.org/project/pyplugs>`__ fork
+-  **pyplugs**: used for updates related to the development and maintenance of the Testbed’s `PyPlugs <https://pypi.org/project/pyplugs>`__ fork
 
--  **restapi**: used for updates related to the development and maintenance of the Lab’s RESTful API
+-  **restapi**: used for updates related to the development and maintenance of the Testbed’s RESTful API
 
--  **rq**: used for updates related to the development and maintenance of the Lab’s Redis-based job tracking and management system
+-  **rq**: used for updates related to the development and maintenance of the Testbed’s Redis-based job tracking and management system
 
--  **sdk**: used for updates related to the development and maintenance of the Lab’s software development kit
+-  **sdk**: used for updates related to the development and maintenance of the Testbed’s software development kit
 
 Ad-hoc scopes are permitted for the ``examples`` change type to indicate which example was updated provided the scope names remain consistent.
 The special scopes **gitlab** and **tox** are also permitted when combined with the ``ci`` change type.

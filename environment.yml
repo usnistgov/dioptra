@@ -1,4 +1,4 @@
-name: securing-ai-lab-components
+name: securing-ai-testbed
 channels:
   - defaults
 dependencies:

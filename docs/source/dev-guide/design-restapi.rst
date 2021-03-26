@@ -1,4 +1,4 @@
 .. _dev-guide-design-restapi:
 
-Lab REST API Design Guide
-=========================
+Testbed REST API Design Guide
+=============================

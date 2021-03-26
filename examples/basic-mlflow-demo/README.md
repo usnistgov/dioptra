@@ -1,6 +1,6 @@
 # Tensorflow Basic Hello World Demo
 
-![Lab architecture diagram](securing_ai_lab_architecture.png)
+![Testbed architecture diagram](securing_ai_lab_architecture.png)
 
 This demo provides a baseline skeleton example for user entrypoint customization and job submission.
 It can be used as a basic template for crafting your own demos to run within the architecture.

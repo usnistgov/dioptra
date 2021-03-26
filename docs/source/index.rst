@@ -1,12 +1,12 @@
-What is the Securing AI Lab?
-============================
+What is the Securing AI Testbed?
+================================
 
 .. include:: overview/executive-summary.rst
 
 Getting Started
 ---------------
 
-Check out the :ref:`overview-quickstart` to learn more about how to run machine learning security experiments using the Securing AI Lab.
+Check out the :ref:`overview-quickstart` to learn more about how to run machine learning security experiments using the Securing AI Testbed.
 
 Another great way to get started is to try out the sample jobs included in the :ref:`Tutorials and Examples Overview <tutorial-index>`.
 

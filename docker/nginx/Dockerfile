@@ -51,7 +51,7 @@ RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh /usr/local/bin/entrypoint.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh && \
     sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
-    useradd -u ${AI_UID} -N -M -s /bin/bash -c "Securing AI Lab user" ${AI_USER} && \
+    useradd -u ${AI_UID} -N -M -s /bin/bash -c "Securing AI Testbed user" ${AI_USER} && \
     chmod g+w /etc/passwd
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/nginx.conf /etc/${PROJECT_PREFIX}/docker/nginx.conf

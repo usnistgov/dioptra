@@ -44,7 +44,7 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
 
     api: Api = Api(
         app,
-        title="Securing AI Machine Learning Model Endpoint",
+        title="Securing AI Testbed REST API",
         version=API_VERSION,
     )
     modules: List[Callable[..., Any]] = [bind_dependencies]

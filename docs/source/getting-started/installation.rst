@@ -78,7 +78,7 @@ A host device that uses a GNU/Linux environment can be the following:
 
 .. note::
 
-   The Securing AI Lab was developed for use with native GNU/Linux environments.
+   The Securing AI Testbed was developed for use with native GNU/Linux environments.
    When using MacOS/OS X or Windows there is a chance you will encounter errors that are specific to your system's setup that are not covered in this documentation.
    To resolve such issues, first look at the external documentation linked (i.e. Homebrew_ and `Windows Subsystem for Linux`_) before submitting a bug report.
    Also, when using a virtual machine it is likely the performance of can be throttled because of the CPU and Memory allocations set at the time the virtual machine was configured.
@@ -181,7 +181,7 @@ Demo-specific instructions for creating a suitable environment will be provided 
 Pulling the Latest Docker Images
 --------------------------------
 
-The last step to setup the Secure AI Lab is to build the necessary docker images used by the repositories various tutorials.
+The last step to setup the Secure AI Testbed is to build the necessary docker images used by the repositories various tutorials.
 
 **NOTE**: The following steps will only work if you are attempting to use the *master* branch of the repository.
 If you are a developer using a separate branch please see :ref:`dev-guide-build-dev-images`.
@@ -195,9 +195,9 @@ If you are a developer using a separate branch please see :ref:`dev-guide-build-
    **NOTE**: You must substitute the code snippet ``path/to/`` with the true path for the project codebase on your device.
    This should be the same path used in step 2 of :ref:`Clone the Repository <quickstart-clone-repository>`.
 
-2. Pull the latest vendor, Continuous Integration (CI), and lab images.
+2. Pull the latest vendor, Continuous Integration (CI), and Testbed images.
    These are most current images that are pre-built to be used by the *master* branch.
 
    .. code-block:: bash
 
-      make pull-latest-hub pull-latest-ci pull-latest-lab
+      make pull-latest-hub pull-latest-ci pull-latest-testbed

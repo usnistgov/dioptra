@@ -1,4 +1,4 @@
-.PHONY: beautify build-all build-ci build-lab build-mlflow-tracking build-nginx build-python-build build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-sphinx build-tensorflow build-tensorflow-cpu build-tensorflow-gpu build-tox ci-deps clean code-check code-pkg conda-env docker-deps docs help hooks pull-latest pull-latest-ci pull-latest-hub pull-latest-lab tag-latest-ci tag-latest-lab tests tests-integration tests-unit tox
+.PHONY: beautify build-all build-ci build-testbed build-mlflow-tracking build-nginx build-python-build build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-sphinx build-tensorflow build-tensorflow-cpu build-tensorflow-gpu build-tox ci-deps clean code-check code-pkg conda-env docker-deps docs help hooks pull-latest pull-latest-ci pull-latest-hub pull-latest-testbed tag-latest-ci tag-latest-testbed tests tests-integration tests-unit tox
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -O extglob -o pipefail -c
@@ -30,7 +30,7 @@ endif
 COMMA := ,
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-PROJECT_NAME = securing-ai-lab-components
+PROJECT_NAME = securing-ai-testbed
 PROJECT_PREFIX = securing-ai
 PROJECT_BUILD_DIR = build
 PROJECT_CI_DIR = ci
@@ -161,7 +161,7 @@ DOCKER_HUB_IMAGES_LATEST =\
     postgres:latest\
     redis:latest
 CI_IMAGES_LATEST =
-LAB_IMAGES_LATEST =
+TESTBED_IMAGES_LATEST =
 
 BEAUTIFY_SENTINEL = $(PROJECT_BUILD_DIR)/.beautify.sentinel
 CODE_PACKAGING_SENTINEL = $(PROJECT_BUILD_DIR)/.code-packaging.sentinel
@@ -492,14 +492,14 @@ endef
 #################################################################################
 
 $(call generate_full_docker_image_vars,SPHINX,CONTAINER_IMAGE_TAG,sphinx,CI)
-$(call generate_full_docker_image_vars,MLFLOW_TRACKING,CONTAINER_IMAGE_TAG,mlflow-tracking,LAB)
-$(call generate_full_docker_image_vars,NGINX,CONTAINER_IMAGE_TAG,nginx,LAB)
-$(call generate_full_docker_image_vars,RESTAPI,CONTAINER_IMAGE_TAG,restapi,LAB)
+$(call generate_full_docker_image_vars,MLFLOW_TRACKING,CONTAINER_IMAGE_TAG,mlflow-tracking,TESTBED)
+$(call generate_full_docker_image_vars,NGINX,CONTAINER_IMAGE_TAG,nginx,TESTBED)
+$(call generate_full_docker_image_vars,RESTAPI,CONTAINER_IMAGE_TAG,restapi,TESTBED)
 $(call generate_full_docker_image_vars,PYTHON_BUILD,CONTAINER_IMAGE_TAG,python-build,CI)
-$(call generate_full_docker_image_vars,PYTORCH_CPU,CONTAINER_IMAGE_TAG,pytorch-cpu,LAB)
-$(call generate_full_docker_image_vars,PYTORCH_GPU,CONTAINER_IMAGE_TAG,pytorch-gpu,LAB)
-$(call generate_full_docker_image_vars,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG,tensorflow2-cpu,LAB)
-$(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tensorflow2-gpu,LAB)
+$(call generate_full_docker_image_vars,PYTORCH_CPU,CONTAINER_IMAGE_TAG,pytorch-cpu,TESTBED)
+$(call generate_full_docker_image_vars,PYTORCH_GPU,CONTAINER_IMAGE_TAG,pytorch-gpu,TESTBED)
+$(call generate_full_docker_image_vars,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG,tensorflow2-cpu,TESTBED)
+$(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tensorflow2-gpu,TESTBED)
 $(call generate_full_docker_image_vars,TOX_PY37,CONTAINER_IMAGE_TAG,tox-py37,CI)
 $(call generate_full_docker_image_vars,TOX_PY38,CONTAINER_IMAGE_TAG,tox-py38,CI)
 
@@ -511,13 +511,13 @@ $(call generate_full_docker_image_vars,TOX_PY38,CONTAINER_IMAGE_TAG,tox-py38,CI)
 beautify: $(BEAUTIFY_SENTINEL)
 
 ## Build all Docker images in project
-build-all: build-ci build-lab
+build-all: build-ci build-testbed
 
 ## Build all continuous integration (CI) images
 build-ci: build-python-build build-sphinx build-tox
 
-## Build all Securing AI Lab images
-build-lab: build-nginx build-mlflow-tracking build-restapi build-pytorch build-tensorflow
+## Build all Securing AI Testbed images
+build-testbed: build-nginx build-mlflow-tracking build-restapi build-pytorch build-tensorflow
 
 ## Build the MLFlow Tracking Docker image
 build-mlflow-tracking: $(CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL)
@@ -580,7 +580,7 @@ docs: $(DOCS_SENTINEL)
 hooks: $(PRE_COMMIT_HOOKS_SENTINEL)
 
 ## Pull latest images from the MITRE artifactory and retag
-pull-latest: pull-latest-hub pull-latest-ci pull-latest-lab
+pull-latest: pull-latest-hub pull-latest-ci pull-latest-testbed
 
 ## Pull latest CI images from the MITRE artifactory and retag
 pull-latest-ci: ; $(call pull_mitre_docker_images,$(CI_IMAGES_LATEST),$(ARTIFACTORY_UNTRUSTED_PREFIX))
@@ -588,14 +588,14 @@ pull-latest-ci: ; $(call pull_mitre_docker_images,$(CI_IMAGES_LATEST),$(ARTIFACT
 ## Pull latest vendor images from Docker Hub
 pull-latest-hub: ; $(call pull_docker_hub_images,$(DOCKER_HUB_IMAGES_LATEST))
 
-## Pull latest Lab images from the MITRE artifactory and retag
-pull-latest-lab: ; $(call pull_mitre_docker_images,$(LAB_IMAGES_LATEST),$(ARTIFACTORY_UNTRUSTED_PREFIX))
+## Pull latest Testbed images from the MITRE artifactory and retag
+pull-latest-testbed: ; $(call pull_mitre_docker_images,$(TESTBED_IMAGES_LATEST),$(ARTIFACTORY_UNTRUSTED_PREFIX))
 
 ## Manually set "latest" tag on all continuous integration (CI) images
 tag-latest-ci: $(CONTAINER_PYTHON_BUILD_BUILD_LATEST_SENTINEL) $(CONTAINER_SPHINX_BUILD_LATEST_SENTINEL) $(CONTAINER_TOX_PY37_BUILD_LATEST_SENTINEL) $(CONTAINER_TOX_PY38_BUILD_LATEST_SENTINEL)
 
-## Manually set "latest" tag on all Securing AI Lab images
-tag-latest-lab: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL) $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL) $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL)
+## Manually set "latest" tag on all Securing AI Testbed images
+tag-latest-testbed: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL) $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL) $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL)
 
 ## Run all tests
 tests: tests-unit tests-integration

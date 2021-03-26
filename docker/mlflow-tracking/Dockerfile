@@ -101,7 +101,7 @@ RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh && \
 
 RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc
 
-RUN useradd -u ${AI_UID} -N -m -s /bin/bash -c "Securing AI Lab user" ${AI_USER} && \
+RUN useradd -u ${AI_UID} -N -m -s /bin/bash -c "Securing AI Testbed user" ${AI_USER} && \
     mkdir -p /home/${AI_USER}/.aws/cli && \
     mkdir -p /home/${AI_USER}/.conda && \
     mkdir -p ${CONDA_DIR} && \

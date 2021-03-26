@@ -10,7 +10,7 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_ACTION([upgrade-db],[],[Upgrade the database schema],[upgrade_database])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
-# ARG_HELP([Securing AI Lab API Entry Point\n])"
+# ARG_HELP([Securing AI Testbed API Entry Point\n])"
 # ARGBASH_PREPARE
 
 # [ <-- needed because of Argbash

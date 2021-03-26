@@ -1,6 +1,6 @@
 **What goes here:** a generic explanation of how to setup and run each of the demos, including accessing the Jupyter notebooks, etc.
 
-The Secure AI Lab has multiple demos you can perform locally. The following steps will help you choose and run any demo provided:
+The Secure AI Testbed has multiple demos you can perform locally. The following steps will help you choose and run any demo provided:
 
 1. Navigate to the root directory of the project codebase.
 

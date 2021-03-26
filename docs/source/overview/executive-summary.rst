@@ -1,4 +1,4 @@
-.. **The Securing AI Lab provides Machine Learning Security researchers with a testbed for organizing and running experiments.**
+.. **The Securing AI Testbed provides Machine Learning Security researchers with a testbed for organizing and running experiments.**
 
 .. **What goes here:** The executive summary along with additional discussion points, such as:
 

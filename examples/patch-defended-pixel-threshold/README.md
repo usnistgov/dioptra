@@ -1,4 +1,4 @@
-# Securing AI Lab Components
+# Securing AI Testbed
 ## ImageNet-Patch Demo.
 
 ## Summary:
@@ -120,8 +120,3 @@ The following changes are specific to ImageNet model and NFS dataset access.
  - `patch.py` has been updated to use the ImageNet nfs mount directory.
     - The job settings there contain updated documentation reflecting the new nfs filepath and ImageNet dataset options.
  - The attack and model setup .sh scripts also contain updated docker volume settings needed to mount the ImageNet dataset.
-
-
-
-
-

@@ -7,7 +7,7 @@ This demo adapts the [Tensorflow MNIST Classifier](../tensorflow-mnist-classifie
 > :information_source: More detailed setup instructions are available in the [Tensorflow MNIST Classifier README](../tensorflow-mnist-classifier/README.md).
 
 The step-by-step demo is provided in the Jupyter notebook format in the file `demo.ipynb`.
-Before starting up the notebook for the first time, users need to first initialize the lab API's database,
+Before starting up the notebook for the first time, users need to first initialize the Testbed API's database,
 
 ```bash
 make initdb

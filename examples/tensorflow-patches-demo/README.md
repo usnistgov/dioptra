@@ -1,8 +1,8 @@
 # Tensorflow Adversarial Patch Demo
 
-![Lab architecture diagram](securing_ai_lab_architecture.png)
+![Testbed architecture diagram](securing_ai_lab_architecture.png)
 
-This demo provides a practical example that shows how the Securing AI Lab Architecture can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
+This demo provides a practical example that shows how the Securing AI Testbed can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
 It can be used as a basic template for crafting your own custom scripts to run within the architecture.
 
 ## Getting started
