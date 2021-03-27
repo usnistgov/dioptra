@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
 import os
+import tarfile
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 
 import click
 import mlflow
 import numpy as np
 import structlog
-from attacks_fgm_updated import create_adversarial_fgm_dataset
+from defenses_image_preprocessing import create_defended_dataset
+from mlflow.tracking import MlflowClient
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from registry_art_updated import load_wrapped_tensorflow_keras_classifier
@@ -70,26 +72,16 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Dimensions for the input images",
 )
 @click.option(
-    "--adv-tar-name",
+    "--def-tar-name",
     type=click.STRING,
-    default="testing_adversarial_fgm.tar.gz",
-    help="Name to give to tarfile artifact containing fgm images",
+    default="spatial_smoothing_dataset.tar.gz",
+    help="Name to give to tarfile artifact containing preprocessed  images",
 )
 @click.option(
-    "--adv-data-dir",
+    "--def-data-dir",
     type=click.STRING,
     default="adv_testing",
-    help="Directory for saving fgm images",
-)
-@click.option(
-    "--model-name",
-    type=click.STRING,
-    help="Name of model to load from registry",
-)
-@click.option(
-    "--model-version",
-    type=click.STRING,
-    help="Version of model to load from registry",
+    help="Directory for saving preprocessed images",
 )
 @click.option(
     "--batch-size",
@@ -98,43 +90,46 @@ def _coerce_int_to_bool(ctx, param, value):
     default=32,
 )
 @click.option(
-    "--eps",
-    type=click.FLOAT,
-    help="FGM attack step size (input variation)",
-    default=0.3,
+    "--spatial-smoothing-window-size",
+    type=click.INT,
+    help="The size of the sliding window for spatial smoothing defense.",
+    default=3,
 )
 @click.option(
-    "--eps-step",
-    type=click.FLOAT,
-    help="FGM attack step size of input variation for minimal perturbation computation",
-    default=0.1,
-)
-@click.option(
-    "--minimal",
-    type=click.Choice(["0", "1"]),
-    callback=_coerce_int_to_bool,
-    help="If 1, compute the minimal perturbation using eps_step for the step size and "
-    "eps for the maximum perturbation.",
-    default="0",
-)
-@click.option(
-    "--norm",
-    type=click.Choice(["inf", "1", "2"]),
-    default="inf",
-    callback=_map_norm,
-    help="FGM attack norm of adversarial perturbation",
-)
-@click.option(
-    "--imagenet-preprocessing",
+    "--spatial-smoothing-apply-fit",
     type=click.BOOL,
-    help="If true, initializes model with Imagenet image preprocessing settings.",
+    help="Spatial smoothing applied on images used for training.",
     default=False,
 )
 @click.option(
-    "--target-index",
-    type=click.INT,
-    help="Class index for targeted attack. If set to a negative value, the fgm attack will be untargeted.",
-    default="-1",
+    "--spatial-smoothing-apply-predict",
+    type=click.BOOL,
+    help="Spatial smoothing applied on images used for testing.",
+    default=True,
+)
+@click.option(
+    "--load-dataset-from-mlruns",
+    type=click.BOOL,
+    help="If set to true, instead loads the test dataset from a previous mlrun.",
+    default=False,
+)
+@click.option(
+    "--dataset-run-id",
+    type=click.STRING,
+    help="MLFlow Run ID of an updated dataset.",
+    default="",
+)
+@click.option(
+    "--dataset-tar-name",
+    type=click.STRING,
+    help="Name of dataset tarfile.",
+    default="adversarial_poison.tar.gz",
+)
+@click.option(
+    "--dataset-name",
+    type=click.STRING,
+    help="Name of dataset directory.",
+    default="adv_poison_data",
 )
 @click.option(
     "--seed",
@@ -142,63 +137,62 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
-def fgm_attack(
+def spatial_smoothing(
     data_dir,
     image_size,
-    adv_tar_name,
-    adv_data_dir,
-    model_name,
-    model_version,
+    def_tar_name,
+    def_data_dir,
     batch_size,
-    eps,
-    eps_step,
-    minimal,
-    norm,
-    imagenet_preprocessing,
-    target_index,
+    spatial_smoothing_window_size,
+    spatial_smoothing_apply_fit,
+    spatial_smoothing_apply_predict,
+    load_dataset_from_mlruns,
+    dataset_run_id,
+    dataset_tar_name,
+    dataset_name,
     seed,
 ):
-    targeted = False
-    if target_index >= 0:
-        targeted = True
+
     LOGGER.info(
         "Execute MLFlow entry point",
-        entry_point="fgm",
+        entry_point="spatial_smoothing",
         data_dir=data_dir,
         image_size=image_size,
-        adv_tar_name=adv_tar_name,
-        adv_data_dir=adv_data_dir,
-        model_name=model_name,
-        model_version=model_version,
+        def_tar_name=def_tar_name,
+        def_data_dir=def_data_dir,
         batch_size=batch_size,
-        eps=eps,
-        eps_step=eps_step,
-        minimal=minimal,
-        targeted=targeted,
-        target_index=target_index,
-        imagenet_preprocessing=imagenet_preprocessing,
-        norm=norm,
+        spatial_smoothing_window_size=spatial_smoothing_window_size,
+        spatial_smoothing_apply_fit=spatial_smoothing_apply_fit,
+        spatial_smoothing_apply_predict=spatial_smoothing_apply_predict,
+        load_dataset_from_mlruns=load_dataset_from_mlruns,
+        dataset_run_id=dataset_run_id,
+        dataset_tar_name=dataset_tar_name,
+        dataset_name=dataset_name,
         seed=seed,
     )
 
+    if load_dataset_from_mlruns:
+        data_dir = Path.cwd() / "dataset" / dataset_name
+        data_tar_name = dataset_tar_name
+        data_tar_path = download_image_archive(
+            run_id=dataset_run_id, archive_path=data_tar_name
+        )
+        with tarfile.open(data_tar_path, "r:gz") as f:
+            f.extractall(path=(Path.cwd() / "dataset"))
+
     with mlflow.start_run() as active_run:  # noqa: F841
-        flow: Flow = init_fgm_flow()
+        flow: Flow = init_spatial_smoothing_flow()
         state = flow.run(
             parameters=dict(
                 testing_dir=Path(data_dir),
                 image_size=image_size,
-                adv_tar_name=adv_tar_name,
-                adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
+                def_tar_name=def_tar_name,
+                def_data_dir=(Path.cwd() / def_data_dir).resolve(),
                 distance_metrics_filename="distance_metrics.csv",
-                model_name=model_name,
-                model_version=model_version,
                 batch_size=batch_size,
-                eps=eps,
-                eps_step=eps_step,
-                minimal=minimal,
-                norm=norm,
-                targeted=targeted,
-                target_index=target_index,
+                spatial_smoothing_window_size=spatial_smoothing_window_size,
+                spatial_smoothing_apply_fit=spatial_smoothing_apply_fit,
+                spatial_smoothing_apply_predict=spatial_smoothing_apply_predict,
                 seed=seed,
             )
         )
@@ -206,39 +200,46 @@ def fgm_attack(
     return state
 
 
-def init_fgm_flow() -> Flow:
+# Update data dir path if user is applying defense over image artifacts.
+def download_image_archive(
+    run_id: str, archive_path: str, destination_path: Optional[str] = None
+) -> str:
+    client: MlflowClient = MlflowClient()
+    image_archive_path: str = client.download_artifacts(
+        run_id=run_id, path=archive_path, dst_path=destination_path
+    )
+    LOGGER.info(
+        "Image archive downloaded",
+        run_id=run_id,
+        storage_path=archive_path,
+        dst_path=image_archive_path,
+    )
+    return image_archive_path
+
+
+def init_spatial_smoothing_flow() -> Flow:
     with Flow("Fast Gradient Method") as flow:
         (
             testing_dir,
             image_size,
-            adv_tar_name,
-            adv_data_dir,
+            def_tar_name,
+            def_data_dir,
             distance_metrics_filename,
-            model_name,
-            model_version,
             batch_size,
-            eps,
-            eps_step,
-            minimal,
-            norm,
-            targeted,
-            target_index,
+            spatial_smoothing_window_size,
+            spatial_smoothing_apply_fit,
+            spatial_smoothing_apply_predict,
             seed,
         ) = (
             Parameter("testing_dir"),
             Parameter("image_size"),
-            Parameter("adv_tar_name"),
-            Parameter("adv_data_dir"),
+            Parameter("def_tar_name"),
+            Parameter("def_data_dir"),
             Parameter("distance_metrics_filename"),
-            Parameter("model_name"),
-            Parameter("model_version"),
             Parameter("batch_size"),
-            Parameter("eps"),
-            Parameter("eps_step"),
-            Parameter("minimal"),
-            Parameter("norm"),
-            Parameter("targeted"),
-            Parameter("target_index"),
+            Parameter("spatial_smoothing_window_size"),
+            Parameter("spatial_smoothing_apply_fit"),
+            Parameter("spatial_smoothing_apply_predict"),
             Parameter("seed"),
         )
         seed, rng = pyplugs.call_task(
@@ -260,7 +261,7 @@ def init_fgm_flow() -> Flow:
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
             "utils",
             "make_directories",
-            dirs=[adv_data_dir],
+            dirs=[def_data_dir],
         )
 
         log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
@@ -274,39 +275,29 @@ def init_fgm_flow() -> Flow:
             ),
         )
 
-        keras_classifier = load_wrapped_tensorflow_keras_classifier(
-            name=model_name,
-            version=model_version,
-            upstream_tasks=[init_tensorflow_results],
-        )
-
         distance_metrics_list = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.metrics",
             "distance",
             "get_distance_metric_list",
             request=DISTANCE_METRICS,
         )
-        distance_metrics = create_adversarial_fgm_dataset(
+        distance_metrics = create_defended_dataset(
             data_dir=testing_dir,
-            keras_classifier=keras_classifier,
             distance_metrics_list=distance_metrics_list,
-            adv_data_dir=adv_data_dir,
+            def_data_dir=def_data_dir,
             batch_size=batch_size,
             image_size=image_size,
-            eps=eps,
-            eps_step=eps_step,
-            minimal=minimal,
-            norm=norm,
-            targeted=targeted,
-            target_index=target_index,
+            window_size=spatial_smoothing_window_size,
+            apply_fit=spatial_smoothing_apply_fit,
+            apply_predict=spatial_smoothing_apply_predict,
             upstream_tasks=[make_directories_results],
         )
         log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
             "mlflow",
             "upload_directory_as_tarball_artifact",
-            source_dir=adv_data_dir,
-            tarball_filename=adv_tar_name,
+            source_dir=def_data_dir,
+            tarball_filename=def_tar_name,
             upstream_tasks=[distance_metrics],
         )
         log_distance_metrics_result = pyplugs.call_task(  # noqa: F841
@@ -332,4 +323,4 @@ if __name__ == "__main__":
     configure_structlog()
 
     with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
-        _ = fgm_attack()
+        _ = spatial_smoothing()

@@ -68,12 +68,11 @@ def evaluate_classification_metrics(classifier, adv_ds):
 )
 @click.option(
     "--patch-deployment-method",
-    type=click.Choice(["corrupt", "augment", "patches-only"], case_sensitive=False),
+    type=click.Choice(["corrupt", "augment"], case_sensitive=False),
     default="augment-original-images",
     help="Deployment method for creating patched dataset. "
     "If set to corrupt, patched images will replace a portion of original images. "
-    "If set to augment, patched images will be created with a copy of the original dataset. "
-    "If set to patches only, no original images will be included.",
+    "If set to augment, patched images will be created with a copy of the original dataset. ",
 )
 @click.option(
     "--patch-application-rate",

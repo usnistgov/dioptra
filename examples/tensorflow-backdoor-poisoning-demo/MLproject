@@ -1,62 +1,141 @@
-name: tensorflow-patches-demo
+name: tensorflow-backdoor-poisoning-demo
 
 entry_points:
-  gen_patch:
+  gen_poison_model:
+    parameters:
+      model_tag: {type: string, default: ""}
+      data_dir_train: {type: path, default: "/nfs/data/training"}
+      data_dir_test: {type: path, default: "/nfs/data/testing"}
+      model_architecture: {type: string, default: "le_net"}
+      epochs: {type: float, default: 10}
+      batch_size: {type: float, default: 32}
+      register_model: {type: string, default: "True"}
+      learning_rate: {type: float, default: 0.001}
+      optimizer: {type: string, default: "adam"}
+      training_split: {type: float, default: 1.0}
+      load_dataset_from_mlruns: {type: string, default: "False"}
+      training_dataset_run_id: {type: string, default: "None"}
+      seed: {type: float, default: -1}
+      target_class_id: {type: int, default: 1}
+      feature_layer_index: {type: int, default: 6}
+      discriminator_layer_1_size: {type: int, default: 256}
+      discriminator_layer_2_size: {type: int, default: 128}
+      regularization_factor: {type: float, default: 30.0}
+      poison_fraction: {type: float, default: 0.10}
+    command: >
+      python src/gen_poison_model.py
+      --data-dir-train {data_dir_train}
+      --data-dir-test {data_dir_test}
+      --model-architecture {model_architecture}
+      --model-tag {model_tag}
+      --epochs {epochs}
+      --batch-size {batch_size}
+      --register-model {register_model}
+      --learning-rate {learning_rate}
+      --optimizer {optimizer}
+      --training-split {training_split}
+      --load-dataset-from-mlruns {load_dataset_from_mlruns}
+      --training-dataset-run-id {training_dataset_run_id}
+      --seed {seed}
+      --target-class-id {target_class_id}
+      --feature-layer-index {feature_layer_index}
+      --discriminator-layer-1-size {discriminator_layer_1_size}
+      --discriminator-layer-2-size {discriminator_layer_2_size}
+      --regularization-factor {regularization_factor}
+      --poison-fraction {poison_fraction}
+
+  gen_poison_test_data:
+    parameters:
+      data_dir: {type: path, default: "/nfs/data"}
+      model_architecture: {type: string, default: "vgg16"}
+      target_class: {type: string, default: "0"}
+      batch_size: {type: int, default: 30}
+      seed: {type: float, default: -1}
+      poison_fraction: {type: float, default: 1}
+      label_type: {type: string, default: "test"}
+    command: >
+      python src/gen_poison_test_data.py
+      --data-dir {data_dir}
+      --model-architecture {model_architecture}
+      --target-class {target_class}
+      --batch-size {batch_size}
+      --seed {seed}
+      --poison-fraction {poison_fraction}
+      --label-type {label_type}
+
+  gen_poison_clean_data:
     parameters:
       data_dir: {type: path, default: "/nfs/data"}
       model: {type: string, default: "mnist_le_net/1"}
       model_architecture: {type: string, default: "vgg16"}
-      rotation_max: {type: float, default: 22.5}
-      scale_min: {type: float, default: 0.1}
-      scale_max: {type: float, default: 1.0}
-      learning_rate: {type: float, default: 5.0}
-      max_iter: {type: int, default: 500}
-      patch_target: {type: int, default: -1}
-      num_patch: {type: int, default: 1}
-      num_patch_gen_samples: {type: int, default: 10}
+      target_class: {type: string, default: "0"}
+      batch_size: {type: int, default: 30}
       seed: {type: float, default: -1}
+      poison_fraction: {type: float, default: 1}
+      label_type: {type: string, default: "test"}
     command: >
-      python src/gen_patch.py
+      python src/gen_poison_clean_data.py
       --data-dir {data_dir}
       --model {model}
       --model-architecture {model_architecture}
-      --rotation-max {rotation_max}
-      --scale-max {scale_max}
-      --scale-min {scale_min}
+      --target-class {target_class}
+      --batch-size {batch_size}
+      --seed {seed}
+      --poison-fraction {poison_fraction}
+      --label-type {label_type}
+
+  gen_poison:
+    parameters:
+      data_dir: {type: path, default: "/nfs/data"}
+      target_image_path: {type: path, default: "None"}
+      model: {type: string, default: "mnist_le_net/1"}
+      model_architecture: {type: string, default: "vgg16"}
+      learning_rate: {type: float, default: 5.0}
+      max_iter: {type: int, default: 500}
+      decay_coeff: {type: float, default: 0.5}
+      stopping_tol: {type: float, default: 1e-10}
+      similarity_coeff: {type: float, default: 256.0}
+      watermark: {type: float, default: -1}
+      num_old_obj: {type: int, default: 40}
+      obj_threshold: {type: float, default: -1}
+      target_class: {type: string, default: "0"}
+      batch_size: {type: int, default: 30}
+      num_poisoned_batches: {type: int, default: -1}
+      feature_layer_index: {type: int, default: -1}
+      seed: {type: float, default: -1}
+    command: >
+      python src/gen_poison.py
+      --data-dir {data_dir}
+      --target-image-path {target_image_path}
+      --model {model}
+      --model-architecture {model_architecture}
       --learning-rate {learning_rate}
       --max-iter {max_iter}
-      --patch-target {patch_target}
-      --num-patch {num_patch}
-      --num-patch-gen-samples {num_patch_gen_samples}
+      --decay-coeff {decay_coeff}
+      --stopping-tol {stopping_tol}
+      --similarity-coeff {similarity_coeff}
+      --watermark {watermark}
+      --num-old-obj {num_old_obj}
+      --obj-threshold {obj_threshold}
+      --target-class {target_class}
+      --batch-size {batch_size}
+      --num-poisoned-batches {num_poisoned_batches}
+      --feature-layer-index {feature_layer_index}
       --seed {seed}
 
-  deploy_patch:
+  deploy_poison:
     parameters:
       run_id: {type: string}
       data_dir: {type: path, default: "/nfs/data"}
-      model: {type: string, default: "mnist_le_net/1"}
-      model_architecture: {type: string, default: "vgg16"}
-      patch_deployment_method: {type: string, default: "augment"}
-      patch_application_rate: {type: string, default: 1.0}
-      patch_scale: {type: float, default: 0.4}
-      batch_size: {type: float, default: 32}
-      rotation_max: {type: float, default: 22.5}
-      scale_min: {type: float, default: 0.1}
-      scale_max: {type: float, default: 1.0}
+      poison_deployment_method: {type: string, default: "add"}
+      num_poisoned_images: {type: int, default: -1}
       seed: {type: float, default: -1}
     command: >
-      python src/deploy_patch.py
+      python src/deploy_poison.py
       --run-id {run_id}
       --data-dir {data_dir}
-      --model {model}
-      --model-architecture {model_architecture}
-      --patch-deployment-method {patch_deployment_method}
-      --patch-application-rate {patch_application_rate}
-      --patch-scale {patch_scale}
-      --batch-size {batch_size}
-      --rotation-max {rotation_max}
-      --scale-max {scale_max}
-      --scale-min {scale_min}
+      --poison-deployment-method {poison_deployment_method}
+      --num-poisoned-images {num_poisoned_images}
       --seed {seed}
 
   init_model:
@@ -106,8 +185,10 @@ entry_points:
       optimizer: {type: string, default: "adam"}
       validation_split: {type: float, default: 0.2}
       load_dataset_from_mlruns: {type: string, default: "False"}
-      testing_dataset_run_id: {type: string, default: "None"}
       training_dataset_run_id: {type: string, default: "None"}
+      dataset_tar_name: {type: string, default: "adversarial_poison.tar.gz"}
+      dataset_name: {type: string, default: "adv_poison_data"}
+      apply_defense: {type: string, default: "False"}
       seed: {type: float, default: -1}
     command: >
       python src/train.py
@@ -122,8 +203,10 @@ entry_points:
       --optimizer {optimizer}
       --validation-split {validation_split}
       --load-dataset-from-mlruns {load_dataset_from_mlruns}
-      --testing-dataset-run-id {testing_dataset_run_id}
       --training-dataset-run-id {training_dataset_run_id}
+      --dataset-tar-name {dataset_tar_name}
+      --dataset-name {dataset_name}
+      --apply-defense {apply_defense}
       --seed {seed}
 
 

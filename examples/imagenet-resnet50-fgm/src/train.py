@@ -1,231 +1,87 @@
 #!/usr/bin/env python
 
-import datetime
 import os
-import warnings
 from pathlib import Path
-from typing import Optional
-
-warnings.filterwarnings("ignore")
-
-import tensorflow as tf
-
-tf.compat.v1.disable_eager_execution()
-
-import tarfile
+from typing import Any, Dict, List
 
 import click
 import mlflow
-import mlflow.tensorflow
-import numpy as np
 import structlog
-from data import create_image_dataset, download_image_archive
-from log import configure_stdlib_logger, configure_structlog_logger
-from mlflow.tracking.client import MlflowClient
-from models import alex_net, le_net, make_model_register, shallow_net
-from tensorflow.keras.applications.resnet_v2 import ResNet50V2
-from tensorflow.keras.applications.vgg16 import VGG16
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
-from tensorflow.keras.metrics import (
-    AUC,
-    CategoricalAccuracy,
-    FalseNegatives,
-    FalsePositives,
-    Precision,
-    Recall,
-    TrueNegatives,
-    TruePositives,
+from data_tensorflow_updated import create_image_dataset
+from estimators_keras_classifiers_updated import init_classifier
+from prefect import Flow, Parameter
+from prefect.utilities.logging import get_logger as get_prefect_logger
+from structlog.stdlib import BoundLogger
+from tasks import (
+    evaluate_metrics_tensorflow,
+    get_model_callbacks,
+    get_optimizer,
+    get_performance_metrics,
 )
-from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import SGD, Adagrad, Adam, RMSprop
 
-LOGGER = structlog.get_logger()
-METRICS = [
-    TruePositives(name="tp"),
-    FalsePositives(name="fp"),
-    TrueNegatives(name="tn"),
-    FalseNegatives(name="fn"),
-    CategoricalAccuracy(name="accuracy"),
-    Precision(name="precision"),
-    Recall(name="recall"),
-    AUC(name="auc"),
+from mitre.securingai import pyplugs
+from mitre.securingai.sdk.utilities.contexts import plugin_dirs
+from mitre.securingai.sdk.utilities.logging import (
+    StderrLogStream,
+    StdoutLogStream,
+    attach_stdout_stream_handler,
+    clear_logger_handlers,
+    configure_structlog,
+    set_logging_level,
+)
+
+_PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+CALLBACKS: List[Dict[str, Any]] = [
+    {
+        "name": "EarlyStopping",
+        "parameters": {
+            "monitor": "val_loss",
+            "min_delta": 1e-2,
+            "patience": 5,
+            "restore_best_weights": True,
+        },
+    },
+]
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+PERFORMANCE_METRICS: List[Dict[str, Any]] = [
+    {"name": "CategoricalAccuracy", "parameters": {"name": "accuracy"}},
+    {"name": "Precision", "parameters": {"name": "precision"}},
+    {"name": "Recall", "parameters": {"name": "recall"}},
+    {"name": "AUC", "parameters": {"name": "auc"}},
 ]
 
 
-def get_optimizer(optimizer, learning_rate):
-    optimizer_collection = {
-        "rmsprop": RMSprop(learning_rate),
-        "adam": Adam(learning_rate),
-        "adagrad": Adagrad(learning_rate),
-        "sgd": SGD(learning_rate),
-    }
-
-    return optimizer_collection.get(optimizer)
-
-
-def model_resnet50():
-    return ResNet50V2(weights="imagenet", input_shape=(224, 224, 3), include_top=False)
-
-
-def model_vgg16():
-    return VGG16(weights="imagenet", input_shape=(224, 224, 3), include_top=False)
-
-
-def get_model(
-    model_architecture: str,
-    n_classes: int = 120,
-):
-    model_collection = {"resnet50": model_resnet50, "vgg16": model_vgg16}
-
-    # Setup top classification layer, and freeze base model layers.
-    base_model = model_collection.get(model_architecture)()
-    top = base_model.output
-    top = GlobalAveragePooling2D()(top)
-    top = Dense(1024, activation="relu")(top)
-    predictions = Dense(n_classes, activation="softmax")(top)
-    model = Model(inputs=base_model.input, outputs=predictions)
-
-    for layer in base_model.layers:
-        layer.trainable = False
-
-    return model
-
-
-def get_model_callbacks():
-    early_stop = EarlyStopping(
-        monitor="val_loss", min_delta=1e-2, patience=5, restore_best_weights=True
-    )
-
-    return [early_stop]
-
-
-def init_model(learning_rate, model_architecture: str, optimizer: str):
-    model_optimizer = get_optimizer(optimizer=optimizer, learning_rate=learning_rate)
-    model = get_model(model_architecture=model_architecture)
-    model.compile(
-        loss="categorical_crossentropy",
-        optimizer=model_optimizer,
-        metrics=METRICS,
-    )
-
-    return model
-
-
-def prepare_data(
-    data_dir_train,
-    data_dir_test,
-    batch_size: int,
-    validation_split: float,
-    model_architecture: str,
-    seed: int,
-):
-    training_dir = Path(data_dir_train)
-    testing_dir = Path(data_dir_test)
-
-    image_size = (224, 224)
-
-    training = create_image_dataset(
-        data_dir=str(training_dir),
-        subset="training",
-        validation_split=validation_split,
-        batch_size=batch_size,
-        seed=seed,
-        image_size=image_size,
-    )
-    validation = create_image_dataset(
-        data_dir=str(training_dir),
-        subset="validation",
-        validation_split=validation_split,
-        batch_size=batch_size,
-        seed=seed,
-        image_size=image_size,
-    )
-    testing = create_image_dataset(
-        data_dir=str(testing_dir),
-        subset=None,
-        validation_split=None,
-        batch_size=batch_size,
-        seed=seed + 1,
-        image_size=image_size,
-    )
-
-    return (
-        training,
-        validation,
-        testing,
-    )
-
-
-def fit(model, training_ds, validation_ds, epochs):
-    time_start = datetime.datetime.now()
-
-    LOGGER.info(
-        "training tensorflow model",
-        timestamp=time_start.isoformat(),
-    )
-
-    history = model.fit(
-        training_ds,
-        epochs=epochs,
-        validation_data=validation_ds,
-        callbacks=get_model_callbacks(),
-        verbose=1,
-    )
-
-    time_end = datetime.datetime.now()
-
-    total_seconds = (time_end - time_start).total_seconds()
-    total_minutes = total_seconds / 60
-
-    mlflow.log_metric("training_time_in_minutes", total_minutes)
-    LOGGER.info(
-        "tensorflow model training complete",
-        timestamp=time_end.isoformat(),
-        total_minutes=total_minutes,
-    )
-
-    return history, model
-
-
-def evaluate_metrics(model, testing_ds):
-    LOGGER.info("evaluating classification metrics using testing images")
-    result = model.evaluate(testing_ds, verbose=0)
-    testing_metrics = dict(zip(model.metrics_names, result))
-    LOGGER.info(
-        "computation of classification metrics for testing images complete",
-        **testing_metrics,
-    )
-    for metric_name, metric_value in testing_metrics.items():
-        mlflow.log_metric(key=metric_name, value=metric_value)
+def _coerce_comma_separated_ints(ctx, param, value):
+    return tuple(int(x.strip()) for x in value.split(","))
 
 
 @click.command()
 @click.option(
-    "--data-dir-train",
+    "--data-dir",
     type=click.Path(
         exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
     ),
-    help="Root directory for NFS mounted training dataset (in container)",
+    help="Root directory for NFS mounted datasets (in container)",
 )
 @click.option(
-    "--data-dir-test",
-    type=click.Path(
-        exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
-    ),
-    help="Root directory for NFS mounted training dataset (in container)",
+    "--image-size",
+    type=click.STRING,
+    callback=_coerce_comma_separated_ints,
+    help="Dimensions for the input images",
 )
 @click.option(
     "--model-architecture",
-    type=click.Choice(["resnet50", "vgg16"], case_sensitive=False),
-    default="vgg16",
+    type=click.Choice(
+        ["shallow_net", "le_net", "alex_net", "resnet50", "vgg16"], case_sensitive=False
+    ),
+    default="le_net",
     help="Model architecture",
 )
 @click.option(
     "--epochs",
     type=click.INT,
     help="Number of epochs to train model",
-    default=10,
+    default=30,
 )
 @click.option(
     "--batch-size",
@@ -234,19 +90,22 @@ def evaluate_metrics(model, testing_ds):
     default=32,
 )
 @click.option(
-    "--register-model",
-    type=click.Choice(["True", "False"], case_sensitive=True),
-    default="False",
-    help="Add trained model to registry",
+    "--register-model-name",
+    type=click.STRING,
+    default="",
+    help=(
+        "Register the trained model under the provided name. If an empty string, "
+        "then the trained model will not be registered."
+    ),
 )
 @click.option(
     "--learning-rate", type=click.FLOAT, help="Model learning rate", default=0.001
 )
 @click.option(
     "--optimizer",
-    type=click.Choice(["adam", "adagrad", "rmsprop", "sgd"], case_sensitive=False),
+    type=click.Choice(["Adam", "Adagrad", "RMSprop", "SGD"], case_sensitive=True),
     help="Optimizer to use to train the model",
-    default="adam",
+    default="Adam",
 )
 @click.option(
     "--validation-split",
@@ -255,28 +114,10 @@ def evaluate_metrics(model, testing_ds):
     default=0.2,
 )
 @click.option(
-    "--model-tag",
-    type=click.STRING,
-    help="Optional model tag identifier.",
-    default="",
-)
-@click.option(
-    "--load-dataset-from-mlruns",
+    "--imagenet-preprocessing",
     type=click.BOOL,
-    help="If set to true, instead loads the training and test datasets from a previous patch mlruns.",
+    help="If true, initializes model with Imagenet image preprocessing settings.",
     default=False,
-)
-@click.option(
-    "--testing-dataset-run-id",
-    type=click.STRING,
-    help="MLFlow Run ID of a successful patch attack on a test dataset.",
-    default="None",
-)
-@click.option(
-    "--training-dataset-run-id",
-    type=click.STRING,
-    help="MLFlow Run ID of a successful patch attack on a training dataset.",
-    default="None",
 )
 @click.option(
     "--seed",
@@ -285,117 +126,222 @@ def evaluate_metrics(model, testing_ds):
     default=-1,
 )
 def train(
-    data_dir_train,
-    data_dir_test,
+    data_dir,
+    image_size,
     model_architecture,
-    model_tag,
     epochs,
     batch_size,
-    register_model,
+    register_model_name,
     learning_rate,
     optimizer,
     validation_split,
-    load_dataset_from_mlruns,
-    testing_dataset_run_id,
-    training_dataset_run_id,
+    imagenet_preprocessing,
     seed,
 ):
-    register_model = True if register_model == "True" else False
-    rng = np.random.default_rng(seed if seed >= 0 else None)
-
-    if seed < 0:
-        seed = rng.bit_generator._seed_seq.entropy
-
     LOGGER.info(
         "Execute MLFlow entry point",
         entry_point="train",
-        data_dir_train=data_dir_train,
-        data_dir_test=data_dir_test,
+        data_dir=data_dir,
+        image_size=image_size,
         model_architecture=model_architecture,
         epochs=epochs,
         batch_size=batch_size,
-        register_model=register_model,
+        register_model_name=register_model_name,
         learning_rate=learning_rate,
         optimizer=optimizer,
         validation_split=validation_split,
+        imagenet_preprocessing=imagenet_preprocessing,
         seed=seed,
     )
 
-    tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
-    dataset_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
-
-    tf.random.set_seed(tensorflow_global_seed)
-
-    mlflow.tensorflow.autolog()
+    mlflow.autolog()
 
     with mlflow.start_run() as active_run:
-        mlflow.log_param("entry_point_seed", seed)
-        mlflow.log_param("tensorflow_global_seed", tensorflow_global_seed)
-        mlflow.log_param("dataset_seed", dataset_seed)
-
-        experiment_name: str = (
-            MlflowClient().get_experiment(active_run.info.experiment_id).name
+        flow: Flow = init_train_flow()
+        state = flow.run(
+            parameters=dict(
+                active_run=active_run,
+                training_dir=Path(data_dir) / "training",
+                testing_dir=Path(data_dir) / "testing",
+                image_size=image_size,
+                model_architecture=model_architecture,
+                epochs=epochs,
+                batch_size=batch_size,
+                register_model_name=register_model_name,
+                learning_rate=learning_rate,
+                optimizer_name=optimizer,
+                validation_split=validation_split,
+                imagenet_preprocessing=imagenet_preprocessing,
+                seed=seed,
+            )
         )
 
-        if len(model_tag) > 0:
-            model_name = f"{experiment_name}_{model_tag}_{model_architecture}"
+    return state
+
+
+def init_train_flow() -> Flow:
+    with Flow("Train Model") as flow:
+        (
+            active_run,
+            training_dir,
+            testing_dir,
+            image_size,
+            model_architecture,
+            epochs,
+            batch_size,
+            register_model_name,
+            learning_rate,
+            optimizer_name,
+            validation_split,
+            imagenet_preprocessing,
+            seed,
+        ) = (
+            Parameter("active_run"),
+            Parameter("training_dir"),
+            Parameter("testing_dir"),
+            Parameter("image_size"),
+            Parameter("model_architecture"),
+            Parameter("epochs"),
+            Parameter("batch_size"),
+            Parameter("register_model_name"),
+            Parameter("learning_rate"),
+            Parameter("optimizer_name"),
+            Parameter("validation_split"),
+            Parameter("imagenet_preprocessing"),
+            Parameter("seed"),
+        )
+        seed, rng = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
+        )
+        tensorflow_global_seed = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
+        )
+        dataset_seed = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
+        )
+        init_tensorflow_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.backend_configs",
+            "tensorflow",
+            "init_tensorflow",
+            seed=tensorflow_global_seed,
+        )
+
+        log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.tracking",
+            "mlflow",
+            "log_parameters",
+            parameters=dict(
+                entry_point_seed=seed,
+                tensorflow_global_seed=tensorflow_global_seed,
+                dataset_seed=dataset_seed,
+            ),
+        )
+        optimizer = get_optimizer(
+            optimizer_name,
+            learning_rate=learning_rate,
+            upstream_tasks=[init_tensorflow_results],
+        )
+        metrics = get_performance_metrics(
+            PERFORMANCE_METRICS, upstream_tasks=[init_tensorflow_results]
+        )
+        callbacks_list = get_model_callbacks(
+            CALLBACKS, upstream_tasks=[init_tensorflow_results]
+        )
+        if imagenet_preprocessing:
+            rescale = 1.0
         else:
-            model_name = f"{experiment_name}_{model_architecture}"
-
-        if load_dataset_from_mlruns:
-
-            dataset_name = "adv_patch_dataset"
-            data_dir_test = Path.cwd() / "testing" / dataset_name
-            data_dir_train = Path.cwd() / "training" / dataset_name
-
-            data_test_tar_name = "adversarial_patch_dataset.tar.gz"
-            data_train_tar_name = "adversarial_patch_dataset.tar.gz"
-
-            adv_testing_tar_path = download_image_archive(
-                run_id=testing_dataset_run_id, archive_path=data_test_tar_name
-            )
-            adv_training_tar_path = download_image_archive(
-                run_id=training_dataset_run_id, archive_path=data_train_tar_name
-            )
-
-            with tarfile.open(adv_testing_tar_path, "r:gz") as f:
-                f.extractall(path=(Path.cwd() / "testing"))
-
-            with tarfile.open(adv_training_tar_path, "r:gz") as f:
-                f.extractall(path=(Path.cwd() / "training"))
-
-        register_mnist_model = make_model_register(
-            active_run=active_run,
-            name=model_name,
-        )
-
-        training_ds, validation_ds, testing_ds = prepare_data(
-            data_dir_train=data_dir_train,
-            data_dir_test=data_dir_test,
+            rescale = 1.0 / 255
+        training_ds = create_image_dataset(
+            data_dir=training_dir,
+            subset="training",
+            image_size=image_size,
+            seed=dataset_seed,
             validation_split=validation_split,
             batch_size=batch_size,
-            model_architecture=model_architecture,
-            seed=dataset_seed,
+            upstream_tasks=[init_tensorflow_results],
+            rescale=rescale,
+            imagenet_preprocessing=imagenet_preprocessing,
         )
-        model = init_model(
-            learning_rate=learning_rate,
+        validation_ds = create_image_dataset(
+            data_dir=training_dir,
+            subset="validation",
+            image_size=image_size,
+            seed=dataset_seed,
+            validation_split=validation_split,
+            batch_size=batch_size,
+            upstream_tasks=[init_tensorflow_results],
+            rescale=rescale,
+            imagenet_preprocessing=imagenet_preprocessing,
+        )
+        testing_ds = create_image_dataset(
+            data_dir=testing_dir,
+            subset=None,
+            image_size=image_size,
+            seed=dataset_seed + 1,
+            validation_split=None,
+            batch_size=batch_size,
+            upstream_tasks=[init_tensorflow_results],
+            rescale=rescale,
+            imagenet_preprocessing=imagenet_preprocessing,
+        )
+        n_classes = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.data",
+            "tensorflow",
+            "get_n_classes_from_directory_iterator",
+            ds=training_ds,
+        )
+        # TODO: Swap to pyplugs in next update.
+        classifier = init_classifier(
             model_architecture=model_architecture,
             optimizer=optimizer,
+            metrics=metrics,
+            input_shape=image_size,
+            n_classes=n_classes,
+            upstream_tasks=[init_tensorflow_results],
         )
-        history, model = fit(
-            model=model,
-            training_ds=training_ds,
-            validation_ds=validation_ds,
-            epochs=epochs,
+        history = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.estimators",
+            "methods",
+            "fit",
+            estimator=classifier,
+            x=training_ds,
+            fit_kwargs=dict(
+                nb_epochs=epochs,
+                validation_data=validation_ds,
+                callbacks=callbacks_list,
+                verbose=2,
+            ),
         )
-        evaluate_metrics(model=model, testing_ds=testing_ds)
+        classifier_performance_metrics = evaluate_metrics_tensorflow(
+            classifier=classifier, dataset=testing_ds, upstream_tasks=[history]
+        )
+        log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.tracking",
+            "mlflow",
+            "log_metrics",
+            metrics=classifier_performance_metrics,
+        )
+        model_version = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.registry",
+            "mlflow",
+            "add_model_to_registry",
+            active_run=active_run,
+            name=register_model_name,
+            model_dir="model",
+            upstream_tasks=[history],
+        )
 
-        if register_model:
-            register_mnist_model(model_dir="model")
+    return flow
 
 
 if __name__ == "__main__":
-    configure_stdlib_logger("INFO", log_filepath=None)
-    configure_structlog_logger("console")
+    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
 
-    train()
+    clear_logger_handlers(get_prefect_logger())
+    attach_stdout_stream_handler(as_json)
+    set_logging_level(log_level)
+    configure_structlog()
+
+    with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
+        _ = train()
