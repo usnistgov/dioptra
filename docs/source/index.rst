@@ -38,6 +38,7 @@ Another great way to get started is to try out the sample jobs included in the :
    user-guide/using-the-restapi
    user-guide/custom-entry-points
    user-guide/custom-task-plugins
+   user-guide/generics-plugin-system
    user-guide/task-plugins-collection
    user-guide/api-reference-sdk
    user-guide/api-reference-restapi
