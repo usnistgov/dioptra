@@ -1,3 +1,5 @@
+"""A subpackage of generic functions for common data science operations."""
+
 from __future__ import annotations
 
 from ._estimator_predict import estimator_predict
