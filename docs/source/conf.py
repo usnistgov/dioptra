@@ -30,6 +30,7 @@ version = ".".join(release.split(".")[:2])
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
@@ -37,6 +38,8 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_panels",
     "sphinx_togglebutton",
+    "sphinxcontrib.httpdomain",
+    "sphinxcontrib.openapi",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
