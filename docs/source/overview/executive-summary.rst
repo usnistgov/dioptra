@@ -1,11 +1,3 @@
-.. **The Securing AI Testbed provides Machine Learning Security researchers with a testbed for organizing and running experiments.**
-
-.. **What goes here:** The executive summary along with additional discussion points, such as:
-
-.. - High-level summary of the software components, i.e. the SDK modules and the task plugins
-.. - High-level overview of the testbed architecture
-.. - Four types of users statement
-
 Summary
 -------
 
@@ -29,18 +21,19 @@ The result is an ability to advance the metrology needed to ultimately help secu
 Context
 -------
 
-While there is a large variety of types of attacks against ML algorithms, they can usefully be identified as falling into one of three categories: Evasion, Poisoning, or Oracle.
+While there is a large variety of types of attacks against ML algorithms, NIST Internal Report 8269 identifies three broad categories: Evasion, Poisoning, and Oracle.
 In Evasion attacks, an adversary manipulates the test data (sometimes by altering the physical environment) in order to cause the ML model to misbehave.
 Poisoning attacks alter the training data used to create or maintain a model with the intention of causing it to learn incorrect associations.
-Oracle attacks attempt to “reverse engineer” a model to learn about details of the training set used to create it, or specific model parameters to replicate the model.
+Oracle attacks attempt to "reverse engineer" a model to learn about details of the training set used to create it, or specific model parameters to replicate the model.
 
 .. figure:: /images/overview-image-attack-examples.png
 
-In the case of image classification, attacks can manifest in many different ways ranging from the addition of noise that is difficult for humans to detect in the training or testing images, to the inclusion of colorful “patches” that are noticeable by a human observer but can be printed and placed in the physical environment to alter the images entering the classifier.
+In the case of image classification, attacks can manifest in many different ways ranging from the addition of noise that is difficult for humans to detect in the training or testing images, to the inclusion of colorful "patches" that are noticeable by a human observer but can be printed and placed in the physical environment to alter the images entering the classifier.
 
 There is an equal variety in the types of defenses researchers have developed to mitigate the effectiveness of attacks.
-These range from altering the training the paradigm for generating models, to techniques that pre-process test data in an attempt to eliminate any carefully crafted alterations added by an adversary.
-Just as with attacks, defenses can be deployed at any stage of the ML development pipeline. The simplified diagrams of the development pipeline below depict some examples.
+These range from altering the training paradigm for generating models, to techniques that pre-process test data in an attempt to eliminate any carefully crafted alterations added by an adversary.
+Just as with attacks, defenses can be deployed at any stage of the ML development pipeline.
+The simplified diagrams of the development pipeline below depict some examples.
 
 .. figure:: /images/overview-attack-interfaces.png
    :figwidth: 49%
@@ -49,34 +42,40 @@ Just as with attacks, defenses can be deployed at any stage of the ML developmen
 
 The sheer variety of attacks and defenses results in a combinatorial explosion of possible combinations of attacks, defenses, model architectures, and datasets.
 This creates a challenge for evaluating the effectiveness of defenses against the full array of attacks it may face.
-The NCCoE’s Securing AI testbed addresses this challenge by making it easier for researchers to explore the set of possible combinations.
+The NCCoE's Securing AI testbed addresses this challenge by making it easier for researchers to explore the set of possible combinations.
 
 Audience
 --------
 
-There are several potential groups who can benefit from the testbed.
-First, we envision it as an asset to ML researchers.
-The testbed will allow them to evaluate any new techniques they develop by running them through their paces.
+We envision an audience with a wide variety of familiarity with and expertise in machine learning.
+Newcomers to the platform will be able to run the included demonstrations of attacks and defenses even if they have very little programming experience.
+
+The testbed offers new opportunities for analysts in organizations using ML-enabled products.
+For example, the inclusion of testing as part of the build pipeline for 1\ :sup:`st` party developers would help promote more robust products.
+Similarly, 2\ :sup:`nd` party consumers of such products might leverage the testbed as part of a verification or risk assessment process.
+In both cases it allows them to test a product against a range of attacks, thereby helping to understand what types of threats are most harmful.
+
+We also envision it as an asset to ML researchers developing new solutions.
+The testbed will allow them to evaluate the security of any new techniques they develop by running them through their paces.
 For example, we envision new defenses being tested against a wider array of attacks than is typically found in the literature.
-Similarly, it can facilitate “parameter sweeping” to better understand the degree to which small changes in parameters can affect an algorithm.
+Similarly, it can facilitate "parameter sweeping" to better understand the degree to which small changes in parameters can affect an algorithm.
 It also affords an opportunity to replicate and benchmark well-known results from the research literature.
 This ability to repeat experiments to reproduce results is critical for creating and validating reliable metrics.
-
-Additionally, the testbed offers new opportunities for organizations using ML-enabled products.
-For example, the inclusion of testing as part of the build pipeline for first party developers would help promote more robust products.
-Similarly, second party consumers of such products might leverage the testbed as part of a verification or risk assessment process.
-In both cases it allows them to test a product against a range of attacks, thereby helping to understand what types of threats are most harmful.
 
 Scope
 -----
 
 The testbed is specifically focused on adversarial attacks against the ML algorithms themselves and defensive techniques designed to mitigate the attacks.
 In that spirit, the testbed is not originally designed to embed ML algorithms into a larger system context.
-For instance, it would take additional engineering to integrate image classification algorithms into a system.
-It is therefore not suitable for testing system-level defenses.
+For instance, an automated checkout system based on classifying images of products would require additional engineering.
+Defenses that could be applied to the surrounding system are currently out of scope.
 Similarly, the initial focus has been on image classification algorithms due to the prevalence of available information about attacks and defenses against such algorithms.
 There is nothing about the architecture that inherently limits the scope to computer vision, and it would be relatively straightforward to include algorithms using different modalities such as speech recognition or natural language processing.
-It comes packaged with several built-in demonstrations.
+
+It comes packaged with about 10 built-in demonstrations of attacks and defenses from the literature combined in various ways.
+The attacks include the Fast Gradient Method evasion attack, the Poison Frogs poisoning attack, and a membership inference oracle attack among others.
+Defenses include feature squeezing, adversarial training, and jpeg compression among others.
+We anticipate this list will grow with time, and we encourage users to contribute back to the project other algorithms as they are developed.
 
 Assumptions / System Requirements
 ---------------------------------
@@ -86,12 +85,12 @@ Those familiar with the Windows Subsystem for Linux (WSL) should be able to depl
 Most included demos perform computationally intensive calculations requiring access to significant computational resources such as Graphics Processing Units (GPUs).
 The architecture has been tested on a DGX server with 4 GPUs.
 The demonstrations also rely on publicly available datasets such as MNIST handwritten digits, ImageNet, and Fruits360 that are not part of the testbed distribution.
-The built-in demonstrations assume that relevant datasets have already been obtained and saved in testbed’s Data Storage container.
+The built-in demonstrations assume that relevant datasets have already been obtained and saved in testbed's Data Storage container.
 
 Architecture Overview
 ---------------------
 
-.. figure:: /images/overview-testbed-architecture-diagram.png
+.. figure:: /images/testbed-architecture.svg
 
 The testbed is built on a microservices architecture.
 It is designed to be deployed across several physical machines but is equally deployable on a local laptop.
@@ -105,7 +104,7 @@ These worker containers run the plugins interacting with the MLflow Tracking Ser
 The user may then interact with the MLflow service directly to access a user-friendly dashboard with relevant results, or they may use the API to mediate access.
 The architecture is built entirely from open-source resources making it easy for others to extend and improve upon.
 
-.. figure:: /images/overview-experiment-components.png
+.. figure:: /images/experiment-components.svg
 
 As depicted above, the architecture relies on a modular task plugin system to ease the job of programming new combinations of attacks and defenses.
 The task plugins perform various basic, low-level functions such as loading models, preparing data, and computing metrics.
@@ -123,29 +122,18 @@ Level 1—The Newcomer
 
 Level 2—The Analyst
    These are individuals who want to analyze a wider variety of scenarios.
-   They will be able to interface with the testbed’s RESTful API to create new experiments from existing entry points.
+   They will be able to interface with the testbed's RESTful API to create new experiments from existing entry points.
    They will also learn to create custom entry points from the built-in task plugins.
-   They must know how to customize the testbed’s code templates, thus a basic knowledge of scripting or programming is required.
+   They must know how to customize the testbed's code templates, thus a basic knowledge of scripting or programming is required.
 
 Level 3—The Researcher
    These are individuals who want to run experiments using novel metrics, algorithms, and analytical techniques.
    They will be able to implement their own "in-house" task plugins and SDK plugins to create novel entry points that rely on custom algorithms.
-   They will need to understand the testbed’s plugin architecture to extend it with new functionality.
+   They will need to understand the testbed's plugin architecture to extend it with new functionality.
    They therefore require a solid background in scripting or programming.
 
 Level 4—The Developer
-   These are individuals that want to expand the testbed’s core capabilities by contributing to the distribution.
+   These are individuals that want to expand the testbed's core capabilities by contributing to the distribution.
    They will add new features by implementing built-in task plugins, RESTful API endpoints, SDK modules, and architecture extensions.
-   These individuals will have a deep understanding of the how the testbed’s architectural and software components work together.
+   These individuals will have a deep understanding of the how the testbed's architectural and software components work together.
    They will be able to write reusable code and program applications that conform to coding best practices.
-
-Getting Started
----------------
-
-The testbed will be available on GitHub at [location stub].
-Complete documentation, including a Quick Start guide, can be found here: [url stub]
-
-Points of Contact
------------------
-
-Email us: [testbed-alias@nist.gov]

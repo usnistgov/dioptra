@@ -6,9 +6,14 @@ What is the Securing AI Testbed?
 Getting Started
 ---------------
 
-Check out the :ref:`overview-quickstart` to learn more about how to run machine learning security experiments using the Securing AI Testbed.
+The testbed will be available on GitHub at https://github.com/usnistgov/testais.
+Complete documentation, including a Quick Start guide, can be found here: [url stub]
 
-Another great way to get started is to try out the sample jobs included in the :ref:`Tutorials and Examples Overview <tutorial-index>`.
+Points of Contact
+-----------------
+
+Email us: ai-nccoe@nist.gov
+
 
 .. toctree::
    :hidden:
