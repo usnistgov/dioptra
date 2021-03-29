@@ -1,4 +1,10 @@
-"""A task plugin module for preparing Tensorflow-specific dataset iterators."""
+"""A task plugin module for preparing Tensorflow-specific dataset iterators.
+
+.. |flow_from_directory| replace:: :py:meth:`tensorflow.keras.preprocessing.image\\
+   .ImageDataGenerator.flow_from_directory`
+.. |directory_iterator| replace:: :py:class:`~tensorflow.keras.preprocessing.image\\
+   .DirectoryIterator`
+"""
 
 from __future__ import annotations
 
@@ -70,9 +76,6 @@ def create_image_dataset(
     See Also:
         - |flow_from_directory|
         - :py:class:`~tensorflow.keras.preprocessing.image.DirectoryIterator`
-
-    .. |flow_from_directory| replace:: :py:meth:`tensorflow.keras.preprocessing.image\\
-       .ImageDataGenerator.flow_from_directory`
     """
     color_mode: str = "color" if image_size[2] == 3 else "grayscale"
     target_size: Tuple[int, int] = image_size[:2]
@@ -103,8 +106,5 @@ def get_n_classes_from_directory_iterator(ds: DirectoryIterator) -> int:
 
     Returns:
         The number of unique labels in the dataset.
-
-    .. |directory_iterator| replace:: :py:class:`~tensorflow.keras.preprocessing.image\\
-       .DirectoryIterator`
     """
     return len(ds.class_indices)

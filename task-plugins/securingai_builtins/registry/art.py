@@ -58,9 +58,6 @@ def load_wrapped_tensorflow_keras_classifier(
     See Also:
         - :py:class:`art.estimators.classification.KerasClassifier`
         - :py:func:`.mlflow.load_tensorflow_keras_classifier`
-
-    .. |ART| replace:: `Adversarial Robustness Toolbox\
-       <https://adversarial-robustness-toolbox.readthedocs.io/en/latest/>`__
     """
     keras_classifier: Sequential = load_tensorflow_keras_classifier(
         name=name, version=version

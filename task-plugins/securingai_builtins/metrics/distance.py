@@ -1,4 +1,9 @@
-"""A task plugin module for getting functions from a distance metric registry."""
+"""A task plugin module for getting functions from a distance metric registry.
+
+.. |Linf| replace:: L\\ :sub:`∞`
+.. |L1| replace:: L\\ :sub:`1`
+.. |L2| replace:: L\\ :sub:`2`
+"""
 
 from __future__ import annotations
 
@@ -111,8 +116,6 @@ def l_inf_norm(y_true, y_pred) -> np.ndarray:
 
     Returns:
         A :py:class:`numpy.ndarray` containing a batch of |Linf| norms.
-
-    .. |Linf| replace:: L\\ :sub:`∞`
     """
     metric: np.ndarray = _matrix_difference_l_norm(
         y_true=y_true, y_pred=y_pred, order=np.inf
@@ -129,8 +132,6 @@ def l_1_norm(y_true, y_pred) -> np.ndarray:
 
     Returns:
         A :py:class:`numpy.ndarray` containing a batch of |L1| norms.
-
-    .. |L1| replace:: L\\ :sub:`1`
     """
     metric: np.ndarray = _matrix_difference_l_norm(
         y_true=y_true, y_pred=y_pred, order=1
@@ -147,8 +148,6 @@ def l_2_norm(y_true, y_pred) -> np.ndarray:
 
     Returns:
         A :py:class:`numpy.ndarray` containing a batch of |L2| norms.
-
-    .. |L2| replace:: L\\ :sub:`2`
     """
     metric: np.ndarray = _matrix_difference_l_norm(
         y_true=y_true, y_pred=y_pred, order=2
@@ -183,8 +182,6 @@ def paired_euclidean_distances(y_true, y_pred) -> np.ndarray:
 
     Returns:
         A :py:class:`numpy.ndarray` containing a batch of euclidean distances.
-
-    .. |L2| replace:: L\\ :sub:`2`
     """
     metric: np.ndarray = l_2_norm(y_true=y_true, y_pred=y_pred)
     return metric
@@ -201,8 +198,6 @@ def paired_manhattan_distances(y_true, y_pred) -> np.ndarray:
 
     Returns:
         A :py:class:`numpy.ndarray` containing a batch of Manhattan distances.
-
-    .. |L1| replace:: L\\ :sub:`1`
     """
     metric: np.ndarray = l_1_norm(y_true=y_true, y_pred=y_pred)
     return metric
