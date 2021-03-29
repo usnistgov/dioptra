@@ -49,6 +49,7 @@ RUN pip install --no-cache-dir --no-color \
     sphinx-copybutton \
     sphinx-panels~=0.5.2 \
     sphinx-rtd-theme \
+    sphinxcontrib-openapi \
     SQLAlchemy \
     typing-extensions && \
     find /usr/local -depth \
