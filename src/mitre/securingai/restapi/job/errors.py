@@ -1,16 +1,18 @@
+"""Error handlers for the job endpoints."""
+
 from flask_restx import Api
 
 
 class JobDoesNotExistError(Exception):
-    pass
+    """The requested job does not exist."""
 
 
 class JobSubmissionError(Exception):
-    pass
+    """The job submission form contains invalid parameters."""
 
 
 class JobWorkflowUploadError(Exception):
-    pass
+    """The service for storing the uploaded workfile file is unavailable."""
 
 
 def register_error_handlers(api: Api) -> None:

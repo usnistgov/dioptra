@@ -1,16 +1,18 @@
+"""Error handlers for the queue endpoints."""
+
 from flask_restx import Api
 
 
 class QueueAlreadyExistsError(Exception):
-    pass
+    """The queue name already exists."""
 
 
 class QueueDoesNotExistError(Exception):
-    pass
+    """The requested queue does not exist."""
 
 
 class QueueRegistrationError(Exception):
-    pass
+    """The queue registration form contains invalid parameters."""
 
 
 def register_error_handlers(api: Api) -> None:

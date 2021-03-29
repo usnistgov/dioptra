@@ -1,3 +1,5 @@
+"""The module defining the experiment endpoints."""
+
 import uuid
 from typing import List, Optional
 
@@ -8,6 +10,8 @@ from flask_accepts import accepts, responds
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
+
+from mitre.securingai.restapi.utils import as_api_parser
 
 from .errors import ExperimentDoesNotExistError, ExperimentRegistrationError
 from .interface import ExperimentUpdateInterface
@@ -27,12 +31,14 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 api: Namespace = Namespace(
     "Experiment",
-    description="Endpoint for registering experiments.",
+    description="Experiment registration operations",
 )
 
 
 @api.route("/")
 class ExperimentResource(Resource):
+    """Shows a list of all experiments, and lets you POST to register new ones."""
+
     @inject
     def __init__(self, *args, experiment_service: ExperimentService, **kwargs) -> None:
         self._experiment_service = experiment_service
@@ -40,15 +46,18 @@ class ExperimentResource(Resource):
 
     @responds(schema=ExperimentSchema(many=True), api=api)
     def get(self) -> List[Experiment]:
+        """Gets a list of all registered experiments."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="GET"
         )  # noqa: F841
         log.info("Request received")
         return self._experiment_service.get_all(log=log)
 
+    @api.expect(as_api_parser(api, ExperimentRegistrationSchema))
     @accepts(ExperimentRegistrationSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
     def post(self) -> Experiment:
+        """Creates a new experiment via an experiment registration form."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="POST"
         )  # noqa: F841
@@ -74,8 +83,10 @@ class ExperimentResource(Resource):
 
 
 @api.route("/<int:experimentId>")
-@api.param("experimentId", "Unique experiment identifier")
+@api.param("experimentId", "An integer identifying a registered experiment.")
 class ExperimentIdResource(Resource):
+    """Shows a single experiment (id reference) and lets you modify and delete it."""
+
     @inject
     def __init__(self, *args, experiment_service: ExperimentService, **kwargs) -> None:
         self._experiment_service = experiment_service
@@ -83,6 +94,7 @@ class ExperimentIdResource(Resource):
 
     @responds(schema=ExperimentSchema, api=api)
     def get(self, experimentId: int) -> Experiment:
+        """Gets an experiment by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentId", request_type="GET"
         )  # noqa: F841
@@ -98,6 +110,7 @@ class ExperimentIdResource(Resource):
         return experiment
 
     def delete(self, experimentId: int) -> Response:
+        """Deletes an experiment by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentId", request_type="DELETE"
         )  # noqa: F841
@@ -111,6 +124,7 @@ class ExperimentIdResource(Resource):
     @accepts(schema=ExperimentUpdateSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
     def put(self, experimentId: int) -> Experiment:
+        """Modifies an experiment by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentId", request_type="PUT"
         )  # noqa: F841
@@ -131,8 +145,10 @@ class ExperimentIdResource(Resource):
 
 
 @api.route("/name/<string:experimentName>")
-@api.param("experimentName", "Unique experiment name")
+@api.param("experimentName", "The name of the experiment.")
 class ExperimentNameResource(Resource):
+    """Shows a single experiment (name reference) and lets you modify and delete it."""
+
     @inject
     def __init__(self, *args, experiment_service: ExperimentService, **kwargs) -> None:
         self._experiment_service = experiment_service
@@ -140,6 +156,7 @@ class ExperimentNameResource(Resource):
 
     @responds(schema=ExperimentSchema, api=api)
     def get(self, experimentName: str) -> Experiment:
+        """Gets an experiment by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentName", request_type="GET"
         )  # noqa: F841
@@ -155,6 +172,7 @@ class ExperimentNameResource(Resource):
         return experiment
 
     def delete(self, experimentName: str) -> Response:
+        """Deletes an experiment by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="experimentName",
@@ -178,6 +196,7 @@ class ExperimentNameResource(Resource):
     @accepts(schema=ExperimentUpdateSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
     def put(self, experimentName: str) -> Experiment:
+        """Modifies an experiment by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentName", request_type="PUT"
         )  # noqa: F841

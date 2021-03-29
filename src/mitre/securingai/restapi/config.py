@@ -1,3 +1,12 @@
+"""A module for the Flask configuration environments.
+
+There are three configuration environments available,
+
+- **dev:** The configuration for interactive development sessions.
+- **prod:** The configuration for production environments.
+- **test:** The configuration for running unit tests.
+"""
+
 import os
 from typing import List, Type
 

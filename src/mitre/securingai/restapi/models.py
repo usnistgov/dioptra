@@ -1,3 +1,5 @@
+"""A module of reexports of the application's data models and forms."""
+
 from .experiment.model import (
     Experiment,
     ExperimentRegistrationForm,

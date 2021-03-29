@@ -1,3 +1,5 @@
+"""The data models for the queue endpoint objects."""
+
 from __future__ import annotations
 
 import datetime
@@ -14,6 +16,13 @@ from .interface import QueueUpdateInterface
 
 
 class QueueLock(db.Model):
+    """The queue_locks table.
+
+    Attributes:
+        queue_id: An integer identifying a registered queue.
+        created_on: The date and time the queue lock was created.
+    """
+
     __tablename__ = "queue_locks"
 
     queue_id = db.Column(
@@ -27,6 +36,16 @@ class QueueLock(db.Model):
 
 
 class Queue(db.Model):
+    """The queues table.
+
+    Attributes:
+        queue_id: An integer identifying a registered queue.
+        created_on: The date and time the queue was created.
+        last_modified: The date and time the queue was last modified.
+        name: The name of the queue.
+        is_deleted: A boolean that indicates if the queue record is deleted.
+    """
+
     __tablename__ = "queues"
 
     queue_id = db.Column(
@@ -42,6 +61,7 @@ class Queue(db.Model):
 
     @classmethod
     def next_id(cls) -> int:
+        """Generates the next id in the sequence."""
         queue: Optional[Queue] = cls.query.order_by(cls.queue_id.desc()).first()
 
         if queue is None:
@@ -50,6 +70,12 @@ class Queue(db.Model):
         return int(queue.queue_id) + 1
 
     def update(self, changes: QueueUpdateInterface):
+        """Updates the record.
+
+        Args:
+            changes: A :py:class:`~.interface.QueueUpdateInterface` dictionary
+                containing record updates.
+        """
         self.last_modified = datetime.datetime.now()
 
         for key, val in changes.items():
@@ -59,9 +85,25 @@ class Queue(db.Model):
 
 
 class QueueRegistrationForm(FlaskForm):
-    name = StringField("Name of Queue", validators=[InputRequired()])
+    """The queue registration form.
+
+    Attributes:
+        name: The name to register as a new queue.
+    """
+
+    name = StringField(
+        "Name of Queue",
+        validators=[InputRequired()],
+        description="The name to register as a new queue.",
+    )
 
     def validate_name(self, field):
+        """Validates that the queue does not exist in the registry.
+
+        Args:
+            field: The form field for `name`.
+        """
+
         def slugify(text: str) -> str:
             return text.lower().strip().replace(" ", "-")
 
@@ -78,4 +120,10 @@ class QueueRegistrationForm(FlaskForm):
 
 
 class QueueRegistrationFormData(TypedDict, total=False):
+    """The data extracted from the queue registration form.
+
+    Attributes:
+        name: The name of the queue.
+    """
+
     name: str

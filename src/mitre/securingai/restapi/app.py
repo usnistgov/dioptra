@@ -1,3 +1,10 @@
+"""The top-level module of the Flask application.
+
+:py:func:`~.create_app` is a factory function that instantiates a new
+:py:class:`~flask.Flask` object and wires up all the configurations and third-party
+dependencies.
+"""
+
 import uuid
 from typing import Any, Callable, List, Optional
 
@@ -31,6 +38,21 @@ migrate: Migrate = Migrate()
 
 
 def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
+    """Creates and configures a fresh instance of the Securing AI Testbed REST API.
+
+    Args:
+        env: The configuration environment to use for the application. The allowed
+            values are `"dev"`, `"prod"` and `"test"`. If `None`, the `"test"`
+            configuration is used. The default is `None`.
+        inject_dependencies: Controls whether or not the dependency injection settings
+            in the ``dependencies.py`` files will be used. If `False`, then dependency
+            injection is not used and the configuration of the shared services must be
+            handled after the :py:class:`~flask.Flask` object is created. This is mostly
+            useful when performing unit tests. The default is `True`.
+
+    Returns:
+        An initialized and configured :py:class:`~flask.Flask` object.
+    """
     from .config import config_by_name
     from .dependencies import bind_dependencies, register_providers
     from .errors import register_error_handlers
@@ -60,6 +82,7 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
 
     @app.route("/health")
     def health():
+        """An endpoint for monitoring if the REST API is responding to requests."""
         log = LOGGER.new(request_id=str(uuid.uuid4()))  # noqa: F841
         return jsonify("healthy")
 

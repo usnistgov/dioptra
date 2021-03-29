@@ -1,3 +1,5 @@
+"""The data models for the experiment endpoint objects."""
+
 import datetime
 
 from flask_wtf import FlaskForm
@@ -11,6 +13,16 @@ from .interface import ExperimentUpdateInterface
 
 
 class Experiment(db.Model):
+    """The experiments table.
+
+    Attributes:
+        experiment_id: An integer identifying a registered experiment.
+        created_on: The date and time the experiment was created.
+        last_modified: The date and time the experiment was last modified.
+        name: The name of the experiment.
+        is_deleted: A boolean that indicates if the experiment record is deleted.
+    """
+
     __tablename__ = "experiments"
 
     experiment_id = db.Column(
@@ -24,6 +36,12 @@ class Experiment(db.Model):
     jobs = db.relationship("Job", back_populates="experiment")
 
     def update(self, changes: ExperimentUpdateInterface):
+        """Updates the record.
+
+        Args:
+            changes: A :py:class:`~.interface.ExperimentUpdateInterface` dictionary
+                containing record updates.
+        """
         self.last_modified = datetime.datetime.now()
 
         for key, val in changes.items():
@@ -33,9 +51,21 @@ class Experiment(db.Model):
 
 
 class ExperimentRegistrationForm(FlaskForm):
+    """The experiment registration form.
+
+    Attributes:
+        name: The name to register as a new experiment.
+    """
+
     name = StringField("Name of Experiment", validators=[InputRequired()])
 
     def validate_name(self, field):
+        """Validates that the experiment does not exist in the registry.
+
+        Args:
+            field: The form field for `name`.
+        """
+
         def slugify(text: str) -> str:
             return text.lower().strip().replace(" ", "-")
 
@@ -52,4 +82,10 @@ class ExperimentRegistrationForm(FlaskForm):
 
 
 class ExperimentRegistrationFormData(TypedDict, total=False):
+    """The data extracted from the experiment registration form.
+
+    Attributes:
+        name: The name of the experiment.
+    """
+
     name: str

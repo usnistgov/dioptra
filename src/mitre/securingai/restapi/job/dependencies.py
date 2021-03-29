@@ -1,3 +1,5 @@
+"""Binding configurations to shared services using dependency injection."""
+
 import os
 from dataclasses import dataclass
 from typing import Any, Callable, List, Optional
@@ -49,9 +51,20 @@ def _bind_s3_service_configuration(binder: Binder) -> None:
 
 
 def bind_dependencies(binder: Binder) -> None:
+    """Binds interfaces to implementations within the main application.
+
+    Args:
+        binder: A :py:class:`~injector.Binder` object.
+    """
     _bind_rq_service_configuration(binder)
     _bind_s3_service_configuration(binder)
 
 
 def register_providers(modules: List[Callable[..., Any]]) -> None:
+    """Registers type providers within the main application.
+
+    Args:
+        modules: A list of callables used for configuring the dependency injection
+            environment.
+    """
     modules.append(RQServiceModule)

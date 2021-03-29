@@ -1,3 +1,5 @@
+"""The module defining the queue endpoints."""
+
 import uuid
 from typing import List, Optional
 
@@ -9,6 +11,8 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
+from mitre.securingai.restapi.utils import as_api_parser
+
 from .errors import QueueDoesNotExistError, QueueRegistrationError
 from .interface import QueueUpdateInterface
 from .model import Queue, QueueRegistrationForm, QueueRegistrationFormData
@@ -19,12 +23,14 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 api: Namespace = Namespace(
     "Queue",
-    description="Endpoint for registering new job queues.",
+    description="Queue registration operations",
 )
 
 
 @api.route("/")
 class QueueResource(Resource):
+    """Shows a list of all queues, and lets you POST to register new ones."""
+
     @inject
     def __init__(self, *args, queue_service: QueueService, **kwargs) -> None:
         self._queue_service = queue_service
@@ -32,15 +38,18 @@ class QueueResource(Resource):
 
     @responds(schema=QueueSchema(many=True), api=api)
     def get(self) -> List[Queue]:
+        """Gets a list of all registered queues."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queue", request_type="GET"
         )  # noqa: F841
         log.info("Request received")
         return self._queue_service.get_all_unlocked(log=log)
 
+    @api.expect(as_api_parser(api, QueueRegistrationSchema))
     @accepts(QueueRegistrationSchema, api=api)
     @responds(schema=QueueSchema, api=api)
     def post(self) -> Queue:
+        """Creates a new queue via a queue registration form."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queue", request_type="POST"
         )  # noqa: F841
@@ -64,8 +73,10 @@ class QueueResource(Resource):
 
 
 @api.route("/<int:queueId>")
-@api.param("queueId", "Unique queue identifier")
+@api.param("queueId", "An integer identifying a registered queue.")
 class QueueIdResource(Resource):
+    """Shows a single queue (id reference) and lets you modify and delete it."""
+
     @inject
     def __init__(self, *args, queue_service: QueueService, **kwargs) -> None:
         self._queue_service = queue_service
@@ -73,6 +84,7 @@ class QueueIdResource(Resource):
 
     @responds(schema=QueueSchema, api=api)
     def get(self, queueId: int) -> Queue:
+        """Gets a queue by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueId", request_type="GET"
         )  # noqa: F841
@@ -86,6 +98,7 @@ class QueueIdResource(Resource):
         return queue
 
     def delete(self, queueId: int) -> Response:
+        """Deletes a queue by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueId", request_type="DELETE"
         )  # noqa: F841
@@ -97,6 +110,7 @@ class QueueIdResource(Resource):
     @accepts(schema=QueueNameUpdateSchema, api=api)
     @responds(schema=QueueSchema, api=api)
     def put(self, queueId: int) -> Queue:
+        """Modifies a queue by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueId", request_type="PUT"
         )  # noqa: F841
@@ -115,14 +129,17 @@ class QueueIdResource(Resource):
 
 
 @api.route("/<int:queueId>/lock")
-@api.param("queueId", "Unique queue identifier")
+@api.param("queueId", "An integer identifying a registered queue.")
 class QueueIdLockResource(Resource):
+    """Lets you put a lock on a queue (id reference) and lets you delete it."""
+
     @inject
     def __init__(self, *args, queue_service: QueueService, **kwargs) -> None:
         self._queue_service = queue_service
         super().__init__(*args, **kwargs)
 
     def delete(self, queueId: int) -> Response:
+        """Removes the lock from the queue (id reference) if it exists."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="QueueIdLock", request_type="DELETE"
         )  # noqa: F841
@@ -138,6 +155,7 @@ class QueueIdLockResource(Resource):
         return jsonify(dict(status="Success", id=id))  # type: ignore
 
     def put(self, queueId: int) -> Queue:
+        """Locks the queue (id reference) if it is unlocked."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="QueueIdLock", request_type="PUT"
         )  # noqa: F841
@@ -154,8 +172,10 @@ class QueueIdLockResource(Resource):
 
 
 @api.route("/name/<string:queueName>")
-@api.param("queueName", "Unique queue name")
+@api.param("queueName", "The name of the queue.")
 class QueueNameResource(Resource):
+    """Shows a single queue (name reference) and lets you modify and delete it."""
+
     @inject
     def __init__(self, *args, queue_service: QueueService, **kwargs) -> None:
         self._queue_service = queue_service
@@ -163,6 +183,7 @@ class QueueNameResource(Resource):
 
     @responds(schema=QueueSchema, api=api)
     def get(self, queueName: str) -> Queue:
+        """Gets a queue by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueName", request_type="GET"
         )  # noqa: F841
@@ -178,6 +199,7 @@ class QueueNameResource(Resource):
         return queue
 
     def delete(self, queueName: str) -> Response:
+        """Deletes a queue by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="queueName",
@@ -199,6 +221,7 @@ class QueueNameResource(Resource):
     @accepts(schema=QueueNameUpdateSchema, api=api)
     @responds(schema=QueueSchema, api=api)
     def put(self, queueName: str) -> Queue:
+        """Modifies a queue by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueName", request_type="PUT"
         )  # noqa: F841
@@ -219,14 +242,17 @@ class QueueNameResource(Resource):
 
 
 @api.route("/name/<string:queueName>/lock")
-@api.param("queueName", "Unique queue name")
+@api.param("queueName", "The name of the queue.")
 class QueueNameLockResource(Resource):
+    """Lets you put a lock on a queue (name reference) and lets you delete it."""
+
     @inject
     def __init__(self, *args, queue_service: QueueService, **kwargs) -> None:
         self._queue_service = queue_service
         super().__init__(*args, **kwargs)
 
     def delete(self, queueName: str) -> Response:
+        """Removes the lock from the queue (name reference) if it exists."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="QueueNameLock",
@@ -245,6 +271,7 @@ class QueueNameLockResource(Resource):
         return jsonify(dict(status="Success", name=name))  # type: ignore
 
     def put(self, queueName: str) -> Queue:
+        """Locks the queue (name reference) if it is unlocked."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="QueueNameLock", request_type="PUT"
         )  # noqa: F841

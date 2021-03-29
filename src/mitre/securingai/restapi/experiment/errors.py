@@ -1,28 +1,30 @@
+"""Error handlers for the experiment endpoints."""
+
 from flask_restx import Api
 
 
 class ExperimentAlreadyExistsError(Exception):
-    pass
+    """The experiment name already exists."""
 
 
 class ExperimentMLFlowTrackingAlreadyExistsError(Exception):
-    pass
+    """The experiment name already exists on the MLFlow Tracking backend."""
 
 
 class ExperimentDoesNotExistError(Exception):
-    pass
+    """The requested experiment does not exist."""
 
 
 class ExperimentMLFlowTrackingDoesNotExistError(Exception):
-    pass
+    """The requested experiment is in our database but is not in MLFlow Tracking."""
 
 
 class ExperimentMLFlowTrackingRegistrationError(Exception):
-    pass
+    """Experiment registration to the MLFlow Tracking backend has failed."""
 
 
 class ExperimentRegistrationError(Exception):
-    pass
+    """The experiment registration form contains invalid parameters."""
 
 
 def register_error_handlers(api: Api) -> None:
@@ -67,8 +69,8 @@ def register_error_handlers(api: Api) -> None:
         return (
             {
                 "message": "Bad Gateway - Experiment registration to the MLFlow "
-                "Tracking backend experiment has failed. If this happens more "
-                "than once, please file a bug report."
+                "Tracking backend has failed. If this happens more than once, please "
+                "file a bug report."
             },
             502,
         )

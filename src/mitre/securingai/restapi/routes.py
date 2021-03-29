@@ -1,8 +1,20 @@
+"""A module for registering the endpoint routes with the main application.
+
+.. |Api| replace:: :py:class:`flask_restx.Api`
+.. |Flask| replace:: :py:class:`flask.Flask`
+"""
+
 from flask import Flask
 from flask_restx import Api
 
 
 def register_routes(api: Api, app: Flask) -> None:
+    """Registers the endpoint routes with the main application.
+
+    Args:
+        api: The main REST |Api| object.
+        app: The main |Flask| application.
+    """
     from .experiment import register_routes as attach_experiment
     from .job import register_routes as attach_job
     from .queue import register_routes as attach_job_queue

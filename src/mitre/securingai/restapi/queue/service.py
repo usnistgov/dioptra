@@ -1,3 +1,5 @@
+"""The server-side functions that perform queue endpoint operations."""
+
 import datetime
 from typing import List, Optional
 
