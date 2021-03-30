@@ -1,20 +1,18 @@
 # Tensorflow Adversarial Patch Demo
 
-![Testbed architecture diagram](securing_ai_lab_architecture.png)
+>⚠️ **Warning:** Some of the demos assume that you have access to an on-prem deployment of the Securing AI Testbed that provides a copy of the Fruits360 and ImageNet datasets and a CUDA-compatible GPU.
+> These demos cannot be run on a typical personal computer.
 
 This demo provides three different versions of the adversarial patch attack on separate image classification datasets and model architectures.
+The three available Jupyter notebooks explore the following poisoning attacks:
 
-## Demo Overview
-
-The three available ipython demos explore the following poisoning attacks:
-
--   `demo-mnist-patches`: Applies adversarial patch attack on the MNIST dataset. Includes preprocessing and adversarial training defenses.
--   `demo-fruits360-patches`: Applies adversarial patch attack  on Fruits360 dataset. Includes adversarial training defenses.
+-   `demo-mnist-patches.ipynb`: Applies adversarial patch attack on the MNIST dataset. Includes preprocessing and adversarial training defenses.
+-   `demo-fruits360-patches.ipynb`: Applies adversarial patch attack  on Fruits360 dataset. Includes adversarial training defenses.
 -   `demo-imagenet-patches.ipynb`: Applies attack on the ImageNet dataset. Uses a pretrained model with the `init` entrypoint, rather than train a new model with the `train` entrypoint.
 
 Users are welcome to run the demos in any order.
 The MNIST demo takes the shortest time to complete and contains an additional set of defense examples.
-For more information regarding attack and defense parameters, please see the attack and defense sections of the MLflow Entrypoint Overview section.
+For more information regarding attack and defense parameters, please see the attack and defense sections of the [MLflow Entrypoint Overview](#MLflow-Entrypoint-Overview) section.
 
 Users can also explore the following preprocessing defenses from their associated defense entry points:
 
@@ -22,7 +20,43 @@ Users can also explore the following preprocessing defenses from their associate
 -   Gaussian Augmentation: Adds gaussian noise to an image.
 -   JPEG Compression: Applies an image compression algorithm over the image.
 
-Please note that the patch attack generally bypasses most preprocessing defenses, see `demo-mnist-patches` for details.
+Please note that the patch attack generally bypasses most preprocessing defenses, see `demo-mnist-patches.ipynb` for details.
+
+## Getting started
+
+### MNIST patches demo
+
+Everything you need to run the `demo-mnist-patches.ipynb` demo on your local computer is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running `make pull-latest`.
+Once you have downloaded the images, navigate to this example's directory using the terminal and run the demo startup sequence:
+
+```bash
+make demo
+```
+
+The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
+Once the startup process completes, open up your web browser and enter `http://localhost:38888` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the `work` folder and open the `demo-mnist-patches.ipynb` file.
+From here, follow the provided instructions to run the demo provided in the Jupyter notebook.
+**Don't forget to update the `DATASET_DIR` variable to be: `DATASET_DIR = "/nfs/data"`.**
+
+If you want to watch the output logs for the Tensorflow worker containers as you step through the demo, run `docker-compose logs -f tfcpu-01 tfcpu-02` in your terminal.
+
+When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
+If you were watching the output logs, you will need to press <kbd>Ctrl</kbd>-<kbd>C</kbd> to stop following the logs before you can run `make teardown`.
+
+### On-prem deployment
+
+To run any of the demo notebooks using an on-prem deployment, all you need to do is download and start the **jupyter** service defined in this example's `docker-compose.yml` file.
+Open a terminal and navigate to this example's directory and run the **jupyter** startup sequence,
+
+```bash
+make jupyter
+```
+
+Once the startup process completes, open up your web browser and enter http://localhost:38888 in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the `work` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
+
+When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
 
 ## MLflow Entrypoint Overview
 
@@ -99,15 +133,15 @@ Here are the available MLflow entry points used by the demos and their associate
         -   `model`: The name of the associated trained model.
         -   `model_architecture`: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16").
         -   `patch_deployment_method`: If set to "corrupt", patched-images replace their original versions. If set to "augment", patched-images are stored alongside their original counterparts.
-        -   `patch_application_rate`: Specifies fraction from [0, 1.0] of dataset to apply patches over. A value of 1.0 results in the patch applied over the entire dataset.
-        -   `patch_scale`: Floating point value from [0, 1.0] specifying patch size relative to image. Setting this value to 1.0 effectively replaces the entire image with a patch.
+        -   `patch_application_rate`: Specifies fraction from \[0, 1.0\] of dataset to apply patches over. A value of 1.0 results in the patch applied over the entire dataset.
+        -   `patch_scale`: Floating point value from \[0, 1.0\] specifying patch size relative to image. Setting this value to 1.0 effectively replaces the entire image with a patch.
         -   `batch_size`: Integer batch size of patch deployment over images.
-        -   `rotation_max`: Floating point value from [0, 180] degrees specifying maximum, randomized patch rotation.
-        -   `scale_min`: Floating point value from [0, 1.0) degrees specifying minimum random scaling. Must be smaller than `scale_max`.
-        -   `scale_max`: Floating point value from (0, 1.0] degrees specifying maximum random scaling. Must be larger than `scale_min`.
+        -   `rotation_max`: Floating point value from \[0, 180\] degrees specifying maximum, randomized patch rotation.
+        -   `scale_min`: Floating point value from \[0, 1.0) degrees specifying minimum random scaling. Must be smaller than `scale_max`.
+        -   `scale_max`: Floating point value from (0, 1.0\] degrees specifying maximum random scaling. Must be larger than `scale_min`.
         -   `seed`: Specifies an integer seed value for controlling randomized tensorflow behavior.
     -   Additional Notes:
-        -   Patches are effectively rotated a randomized amount within `rotation_max` degrees and will be scaled by a value between [`scale_min`, `scale_max`].
+        -   Patches are effectively rotated a randomized amount within `rotation_max` degrees and will be scaled by a value between \[`scale_min`, `scale_max`\].
 
 ### Image Preprocessing Defense Entry Points
 
@@ -149,7 +183,7 @@ Here are the available MLflow entry points used by the demos and their associate
         -   `model_architecture`: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
         -   `batch_size`: Batch size for input images. Positive integer values only.
         -   `gaussian_augmentation_perform_data_augmentation`: If set to true, include original test data as well.
-        -   `gaussian_augmentation_ratio`: With data augmentation on, specifies ratio from [0.0, 1.0] of poisoning examples to add. A value of 1.0 results in the defense applied over the entire dataset.
+        -   `gaussian_augmentation_ratio`: With data augmentation on, specifies ratio from \[0.0, 1.0\] of poisoning examples to add. A value of 1.0 results in the defense applied over the entire dataset.
         -   `gaussian_augmentation_sigma`: Controls the standard deviation of the noise. Higher floating-point values result in greater noise added.
         -   `gaussian_augmentation_apply_fit`: Apply noise to training set.
         -   `gaussian_augmentation_apply_predict`: Apply noise to testing set.

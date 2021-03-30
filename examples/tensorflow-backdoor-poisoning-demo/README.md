@@ -1,14 +1,6 @@
 # Tensorflow Backdoor Poisoning Demos
 
-![Lab architecture diagram](securing_ai_lab_architecture.png)
-
 This demo provides three different versions of a backdoor poisoning attack with image preprocessing defense.
-
-Please see the demo overview section and following sections for more details regarding this specific set of demos.
-The next section will detail basic demo setup and is common across all available examples.
-
-## Demo Overview
-
 The three available ipython demos explore the following poisoning attacks:
 
 -   `demo-mnist-poison-backdoor-baseline.ipynb`: Basic backdoor poisoning via training data mislabeling.
@@ -17,13 +9,48 @@ The three available ipython demos explore the following poisoning attacks:
 
 Users are welcome to run the demos in any order.
 Please note that the clean label backdoor attack takes the longest time to complete.
-For more information regarding attack and defense parameters, please see the attack and defense sections of the MLflow Entrypoint Overview section.
+For more information regarding attack and defense parameters, please see the attack and defense sections of the [MLflow Entrypoint Overview](#MLflow-Entrypoint-Overview) section.
 
 Each of these attacks also explore the following preprocessing defenses from their associated defense entry points:
 
 -   Spatial Smoothing: Smooths out an image by passing a median filter through neighboring pixel values in images.
 -   Gaussian Augmentation: Adds gaussian noise to an image.
 -   JPEG Compression: Applies an image compression algorithm over the image.
+
+## Getting started
+
+### Local run
+
+Everything you need to run the demos on your local computer is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running `make pull-latest`.
+Once you have downloaded the images, navigate to this example's directory using the terminal and run the demo startup sequence:
+
+```bash
+make demo
+```
+
+The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
+Once the startup process completes, open up your web browser and enter `http://localhost:38888` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the `work` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
+**Don't forget to update the `DATASET_DIR` variable to be: `DATASET_DIR = "/nfs/data"`.**
+
+If you want to watch the output logs for the Tensorflow worker containers as you step through the demo, run `docker-compose logs -f tfcpu-01 tfcpu-02` in your terminal.
+
+When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
+If you were watching the output logs, you will need to press <kbd>Ctrl</kbd>-<kbd>C</kbd> to stop following the logs before you can run `make teardown`.
+
+### On-prem deployment
+
+To run any of the demo notebooks using an on-prem deployment, all you need to do is download and start the **jupyter** service defined in this example's `docker-compose.yml` file.
+Open a terminal and navigate to this example's directory and run the **jupyter** startup sequence,
+
+```bash
+make jupyter
+```
+
+Once the startup process completes, open up your web browser and enter http://localhost:38888 in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the `work` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
+
+When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
 
 ## MLflow Entrypoint Overview
 

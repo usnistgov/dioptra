@@ -1,4 +1,4 @@
-name: tensorflow-fruits360-patches
+name: basic-mlflow-demo
 
 entry_points:
   hello_world:

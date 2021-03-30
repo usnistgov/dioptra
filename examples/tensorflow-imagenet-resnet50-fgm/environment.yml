@@ -1,4 +1,4 @@
-name: tensorflow-mnist-classifier
+name: imagenet-resnet50-fgm
 channels:
   - defaults
   - conda-forge
