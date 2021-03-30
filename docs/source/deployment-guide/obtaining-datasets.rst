@@ -1,129 +1,82 @@
 .. _deployment-guide-obtaining-datasets:
 
-How to Obtain Common Datasets: Fruits360, and ImageNet
-=========================================================
+How to Obtain Common Datasets
+=============================
 
-Welcome! This tutorial will show you how to use the Kaggle API to
-download datasets into your own personalized data repo.
+This guide provides instructions on how to obtain common datasets to use for an on-premises deployment.
 
-Kaggle Setup:
--------------
+Kaggle Datasets
+---------------
 
-To begin, please register an account with Kaggle:
-https://www.kaggle.com/
+Kaggle_ is a website and a company that provides a platform for hosting data science competitions and publishing public datasets.
+We recommend using their API to help with automating the download of any datasets from the site for an on-premises deployment.
+In order to run all of the examples distributed with the Securing AI Testbed, you will need to download the following datasets and challenges from Kaggle_:
 
-This will allow you to join and access the following datasets and
-challenges:
+-  **Fruits360 Classification Dataset:** https://www.kaggle.com/moltean/fruits
+-  **ImageNet Classification Challenge:** https://www.kaggle.com/c/imagenet-object-localization-challenge/data
 
--  Fruits360 Classification Dataset :
-   https://www.kaggle.com/moltean/fruits
+.. _Kaggle: https://www.kaggle.com
 
--  ImageNet Classification Challenge :
-   https://www.kaggle.com/c/imagenet-object-localization-challenge/data
+Setup
+~~~~~
 
-You will also need to setup the Kaggle API via python pip install:
+Register an account with Kaggle at https://www.kaggle.com/ so that you can access their content.
+Next, install the Python ``kaggle`` package so that you can use Python to access the API,
 
-::
+.. tabbed:: Pip
 
-       pip3 install kaggle
+   .. code-block:: sh
 
-If you are planning on running this notebook to download the dataset,
-please ensure that the above instruction is completed within the
-jupyther notebook environment.
+      # User-level install
+      python -m pip install --user kaggle
 
-Conda environment pip install
------------------------------
+.. tabbed:: Conda + Pip
 
-If you are running the notebook within a local conda environment ex.
-``conda-env-dataset-setup`` run the following commands to install Kaggle
-within the conda environment:
+   .. code-block:: sh
 
-::
+      # Conda virtual environment install
+      conda create -n kaggle python=3 pip
+      conda activate kaggle
+      python -m pip install kaggle
 
-       conda activate <conda_env_name>
-       conda install pip3
-       ~/.conda/envs/<conda_env_name>/bin/pip install kaggle
+Finally, you will need to generate a Kaggle API Token for authentication purposes by following these steps,
 
-Downloading Kaggle JSON key:
-----------------------------
+#. From your Kaggle account page go to ``Account`` settings (upper right corner of Kaggle site after login)
+#. Navigate to the ``API`` section and click on the **Create New API Token** button to generate an API token and download it as a ``kaggle.json`` file
+#. Create a ``~/.kaggle`` folder in your home directory if it does not already exist and move the ``kaggle.json`` file you downloaded into the ``~/.kaggle`` directory
+#. Restrict the access permissions for the ``kaggle.json`` file by running ``chmod 600 ~/.kaggle/kaggle.json``.
 
-Once you have login access to Kaggle and downloaded the Kaggle API
-please follow the steps below to set your Kaggle user account:
+Data Download Script
+~~~~~~~~~~~~~~~~~~~~
 
--  From the Kaggle account page go to ``Account`` setings (upper right
-   corner of Kaggle site after login.
--  Go to the ``API`` section and click on the ``Create New API Token``
-   button to download a ``kaggle.json`` folder.
--  From your home directory create a ``.kaggle`` folder if it does not
-   already exist.
--  Move the ``kaggle.json`` folder into ``.kaggle``.
--  Finally set the permissions of the ``kaggle.json`` file by running
-   ``chmod 600 ~/.kaggle/kaggle.json``.
+In your terminal, navigate to the root directory where you plan to store the datasets.
+This should be a storage device that can be mounted inside a Docker container, such as an NFS share with plenty of storage space available.
+Then, from that directory, run the following bash script to download the data.
 
-Downloading Kaggle Datasets
----------------------------
+.. code-block:: bash
 
-Next we will download the Kaggle datasets to a target directory and
-unpack the files.
+    #!/bin/bash
 
-Please update the ``target_install_data_dir`` variable as needed to
-change the data directory for the kaggle files.
+    # Define parameters
+    target_install_data_dir=$(pwd)/kaggle_datasets
+    fruits360_data_dir=${target_install_data_dir}/Fruits360-Kaggle-2019
+    imagenet_data_dir=${target_install_data_dir}/ImageNet-Kaggle-2017
 
-Note that most of the examples will assume that the dataset has been
-mounted in\ ``/nfs/data/`` in an s3 storage container.
+    # Create the dataset directories
+    echo "Creating fruits360 data dir: ${fruits360_data_dir}"
+    echo "Creating imagenet data dir: ${imagenet_data_dir}"
+    mkdir -p ${fruits360_data_dir} ${imagenet_data_dir}
 
-Please keep track of the dataset storage location to link the data
-directory to the appropriate location when launching the Secure AI
-services.
-
-.. code:: ipython3
-
-    import os
-
-    # Specify full storage path and dataset folder names here:
-    target_install_data_dir = './kaggle_datasets/'
-    fruits360_subdir = 'Fruits360-Kaggle-2019'
-    imagenet_subdir = 'ImageNet-Kaggle-2017'
-
-
-    fruits360_data_dir = os.path.abspath(target_install_data_dir + '/' + fruits360_subdir)
-    imagenet_data_dir = os.path.abspath(target_install_data_dir + '/' + imagenet_subdir)
-
-
-.. code:: bash
-
-    %%bash -s "$fruits360_data_dir" "$imagenet_data_dir"
-    echo "Creating fruits360 data dir: $1"
-    echo "Creating imagenet data dir: $2"
-    mkdir -p $1 $2
-
-.. code:: bash
-
-    %%bash -s "$fruits360_data_dir" "$imagenet_data_dir"
-    cd $1
+    # Download the Fruits360 dataset
+    cd ${fruits360_data_dir}
     kaggle datasets download -d moltean/fruits
     unzip fruits.zip
     rm fruits.zip
 
-    cd $2
+    # Download the ImageNet dataset
+    cd ${imagenet_data_dir}
     kaggle competitions download -c imagenet-object-localization-challenge
     unzip imagenet-object-localization-challenge.zip
-    tar -xvzf imagenet_object_localization_patched2019.tar.gz
+    tar -xzf imagenet_object_localization_patched2019.tar.gz
     rm imagenet-object-localization-challenge.zip
     rm imagenet_object_localization_patched2019.tar.gz
-
-
-.. parsed-literal::
-
-    IOPub data rate exceeded.
-    The notebook server will temporarily stop sending output
-    to the client in order to avoid crashing it.
-    To change this limit, set the config variable
-    `--NotebookApp.iopub_data_rate_limit`.
-
-    Current values:
-    NotebookApp.iopub_data_rate_limit=1000000.0 (bytes/sec)
-    NotebookApp.rate_limit_window=3.0 (secs)
-
-    100%|██████████| 760M/760M [00:09<00:00, 79.7MB/s]
-    100%|██████████| 155G/155G [46:00<00:00, 60.2MB/s]

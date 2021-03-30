@@ -1,52 +1,24 @@
-.. _tutorials-example-tensorflow-backdoor-poisoning:
+.. _tutorials-example-tensorflow-imagenet-resnet50-fgm:
 
-Tensorflow Backdoor Poisoning
-=============================
+Tensorflow ImageNet Resnet50 FGM
+================================
 
-This demo provides three different versions of a backdoor poisoning attack with image preprocessing defense.
-The three available ipython demos explore the following poisoning attacks:
+.. warning::
 
--  ``demo-mnist-poison-backdoor-baseline.ipynb``: Basic backdoor poisoning via training data mislabeling.
--  ``demo-mnist-poison-backdoor-adv-embedding.ipynb``: Model backdoor poisoning using the adversarial embedding technique to add a secondary backdoor training objective to the model.
--  ``demo-mnist-poison-backdoor-clean-label.ipynb``: Advanced backdoor poisoning using a clean label technique to generate hidden poisons from a proxy model.
+   This demo assumes that you have access to an on-prem deployment of the Securing AI Testbed that provides a copy of the ImageNet dataset and a CUDA-compatible GPU.
+   This demo cannot be run on a typical personal computer.
 
-Users are welcome to run the demos in any order.
-Please note that the clean label backdoor attack takes the longest time to complete.
-For more information regarding attack and defense parameters, please see the attack and defense sections of the `MLflow Entrypoint Overview <#MLflow-Entrypoint-Overview>`__ section.
+The demo provided in the Jupyter notebook ``demo.ipynb`` contains an example of the FGM attack on the ResNet50 architecture with optional defense entry points.
+Users can also explore the following preprocessing defenses from their associated defense entry points:
 
-Each of these attacks also explore the following preprocessing defenses from their associated defense entry points:
-
--  Spatial Smoothing: Smooths out an image by passing a median filter through neighboring pixel values in images.
--  Gaussian Augmentation: Adds gaussian noise to an image.
--  JPEG Compression: Applies an image compression algorithm over the image.
+-  **Spatial Smoothing:** Smooths out an image by passing a median filter through neighboring pixel values in images.
+-  **Gaussian Augmentation:** Adds gaussian noise to an image.
+-  **JPEG Compression:** Applies an image compression algorithm over the image.
 
 Getting started
 ---------------
 
-Local run
-~~~~~~~~~
-
-Everything you need to run the demos on your local computer is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running ``make pull-latest``.
-Once you have downloaded the images, navigate to this example’s directory using the terminal and run the demo startup sequence:
-
-.. code:: bash
-
-   make demo
-
-The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
-Once the startup process completes, open up your web browser and enter ``http://localhost:38888`` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
-Double click the ``work`` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
-**Don’t forget to update the ``DATASET_DIR`` variable to be: ``DATASET_DIR = "/nfs/data"``.**
-
-If you want to watch the output logs for the Tensorflow worker containers as you step through the demo, run ``docker-compose logs -f tfcpu-01 tfcpu-02`` in your terminal.
-
-When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running ``make teardown`` on the command-line.
-If you were watching the output logs, you will need to press Ctrl-C to stop following the logs before you can run ``make teardown``.
-
-On-prem deployment
-~~~~~~~~~~~~~~~~~~
-
-To run any of the demo notebooks using an on-prem deployment, all you need to do is download and start the **jupyter** service defined in this example’s ``docker-compose.yml`` file.
+To run the demo on an on-prem deployment, all you need to do is download and start the **jupyter** service defined in this example’s ``docker-compose.yml`` file.
 Open a terminal and navigate to this example’s directory and run the **jupyter** startup sequence,
 
 .. code:: bash
@@ -54,14 +26,15 @@ Open a terminal and navigate to this example’s directory and run the **jupyter
    make jupyter
 
 Once the startup process completes, open up your web browser and enter http://localhost:38888 in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
-Double click the ``work`` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
+Double click the ``work`` folder and open the ``demo.ipynb`` file.
+From here, follow the provided instructions to run the demo provided in the Jupyter notebook.
 
 When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running ``make teardown`` on the command-line.
 
-MLflow Entrypoint Overview
+MLFlow Entrypoint Overview
 --------------------------
 
-Here are the available MLflow entry points used by the poisoning demos and their associated parameters.
+Here are the available MLFlow entry points used by the demos and their associated parameters.
 
 Common Training and Testing Entry Points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,10 +43,10 @@ Common Training and Testing Entry Points
 
    -  Parameters:
 
-      -  ``data_dir`` : The directory of test set for evaluating pretrained model.
+      -  ``data_dir`` : The directory of the test set for evaluating pretrained model.
       -  ``model_tag``: An optional identifier for the loaded model.
-      -  ``model_architecture``: Specifies model type (Current options: "resnet50", "vgg16")
-      -  ``batch_size``: Specifies batch size of image testing.
+      -  ``model_architecture``: Specifies model type (Current options: "resnet50", "vgg16").
+      -  ``batch_size``: Specifies a positive integer batch size for image testing.
       -  ``seed``: Specifies an integer seed value for controlling randomized tensorflow behavior.
 
    -  Additional Notes:
@@ -87,7 +60,7 @@ Common Training and Testing Entry Points
 
       -  ``run_id``: The string ID of the associated MLflow run.
       -  ``model``: The name of the associated model.
-      -  ``model_architecture``: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
+      -  ``model_architecture``: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16").
       -  ``batch_size``: Specifies batch size of image testing.
       -  ``seed``: Specifies an integer seed value for controlling randomized tensorflow behavior.
       -  ``dataset_tar_name``: Specifies the tarfile name for the dataset artifact.
@@ -106,10 +79,10 @@ Common Training and Testing Entry Points
       -  ``data_dir_train``: Training data directory.
       -  ``data_dir_test``: Testing data directory.
       -  ``model_architecture``: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
-      -  ``epochs``: Specifies a floating point number of iterations through the given dataset.
-      -  ``batch_size``: Batch size for training and testing.
+      -  ``epochs``: Specifies a positive floating point number of iterations through the given dataset.
+      -  ``batch_size``: Positive integer batch size for training and testing.
       -  ``register_model``: If set to true, store trained model into MLflow models repository.
-      -  ``learning_rate``: Initial learning rate for the training step.
+      -  ``learning_rate``: Initial learning rate for the training step. Positive floating point values only.
       -  ``optimizer``: Model optimization algorithm (Current options:"rmsprop", "adam", "adagrad", "sgd")
       -  ``validation_split``: Amount of training data to split off as the validation set. Range is 0 to 1.0.
       -  ``load_dataset_from_mlruns``: If set to true, loads the dataset from the MLflow experiment artifacts repo instead.
@@ -126,57 +99,22 @@ Common Training and Testing Entry Points
       -  When ``load_dataset_from_mlruns`` is set to true, the provided data artifact is used over the default dataset location.
       -  As a result the ``training_dataset_run_id``, ``dataset_tar_name``, and ``dataset_name`` parameters must be provided when ``load_dataset_from_mlruns`` is true. If false, they are not used in the job.
 
-Poisoning Attack Entry Points
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+FGM Attack Entry Points
+~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``gen_poison_model``: Applies the adversarial embedding technique and creates a newly trained model.
-
-   -  Parameters:
-
-      -  ``model_tag``: Specifies a tag to provide to the trained model.
-      -  ``data_dir_train``: Training data directory.
-      -  ``data_dir_test``: Testing data directory.
-      -  ``model_architecture``: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
-      -  ``epochs``: Specifies a non-negative floating point number of iterations through the given dataset.
-      -  ``batch_size``: Batch size for training and testing.
-      -  ``register_model``: If set to true, store trained model into MLflow models repository.
-      -  ``learning_rate``: Initial non-negative floating point learning rate for the training step.
-      -  ``optimizer``: Model optimization algorithm (Current options:"rmsprop", "adam", "adagrad", "sgd")
-      -  ``training_split``: Fraction of training dataset to use for embedding attack. ART attack takes in training data as a single numpy array which limits dataset sizes. Range is from 0.0 (none) to 1.0 (the entire dataset is used).
-      -  ``load_dataset_from_mlruns``: If set to true, loads the dataset from the MLflow experiment artifacts repo instead.
-      -  ``training_dataset_run_id``: The string ID of the associated MLflow run.
-      -  ``seed``: Specifies an integer seed value for controlling randomized tensorflow behavior.
-      -  ``target_class_id``: Target non-negative integer id for poisoning attack.
-      -  ``feature_layer_index``: Feature layer integer index to add secondary backdoor objective.
-      -  ``discriminator_layer_1_size``: Integer size of the first discriminator layer of the secondary backdoor objective.
-      -  ``discriminator_layer_2_size``: Integer size of the second discriminator layer of the secondary backdoor objective.
-      -  ``regularization_factor``: The regularization constant for the backdoor recognition loss function. Postive floating point values only.
-      -  ``poison_fraction``: The fraction of training data to be poisoned during training. Range is from 0 (none) to 1.0 (all of the data is poisoned).
-
--  ``gen_poison_test_data``: Generates the backdoor-poisoned data for testing. Can also be applied over training data for the baseline attack.
-
-   -  Parameters:
-
-      -  ``data_dir``: Directory of target dataset.
-      -  ``model_architecture``: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
-      -  ``target_class``: Integer label of target class.
-      -  ``batch_size``: Batch size for poisoning step.
-      -  ``seed``: Specifies an integer seed value for controlling randomized tensorflow behavior.
-      -  ``poison_fraction``: Fraction of inputs to poison. Range is from 0 (none) to 1.0 (all of the data is poisoned).
-      -  ``label_type``: If set to ``test``, keep original label. If set to ``train``, mislabel as poisoning inputs.
-
--  ``gen_poison_clean_data``: Creates clean label poisons from an available proxy model. Similar to the ``gen_poison_test_data`` entry point with an additional model input parameter.
+-  ``fgm``: Applies the FGM evasion attack on a dataset based on a given trained model.
 
    -  Parameters:
 
       -  ``data_dir``: Directory of target dataset.
       -  ``model``: Name of trained model stored in MLflow repo.
       -  ``model_architecture``: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
-      -  ``target_class``: Label of target class.
-      -  ``batch_size``: Batch size for poisoning step.
+      -  ``batch_size``: Batch size for input images. Positive integer values only.
+      -  ``eps``: A positive floating point value specifying attack step size.
+      -  ``eps_step``: A positive floating point value specifying size of input variation for minimal perturbation computation.
+      -  ``minimal``: If 1, compute the minimal perturbation using eps_step for the step size and eps for the maximum perturbation.
+      -  ``norm``: Specifies FGM attack norm for generating adversarial perturbations. Choices are ``inf``, ``1``, and ``2``.
       -  ``seed``: Specifies an integer seed value for controlling randomized tensorflow behavior.
-      -  ``poison_fraction``: Fraction of inputs to poison. Range is from 0 (none) to 1.0 (all of the data is poisoned).
-      -  ``label_type``: If set to ``test``, keep original label. If set to ``train``, mislabel as poisoning inputs.
 
 Image Preprocessing Defense Entry Points
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
