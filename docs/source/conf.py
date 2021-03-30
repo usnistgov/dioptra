@@ -83,9 +83,7 @@ html_theme = "sphinx_book_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-html_context = {
-    "css_files": ["_static/securing-ai-testbed.css"],
-}
+html_css_files = ["securing-ai-testbed.css"]
 
 html_theme_options = {
     "repository_url": "https://gitlab.mitre.org/secure-ai/securing-ai-lab-components",
