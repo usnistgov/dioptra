@@ -49,7 +49,6 @@ Another great way to get started is to try out the sample jobs included in the :
    :caption: Deployment Guide
 
    deployment-guide/requirements-spec
-   deployment-guide/testbed-services
    deployment-guide/deploy-docker
    deployment-guide/task-plugins-management
    deployment-guide/obtaining-datasets
