@@ -3,4 +3,6 @@
 Setup Tips for Newcomers
 ========================
 
-Beginner guides and tips for installing and configuring external software used in the project and avoiding common setup pitfalls (Anaconda, Docker Desktop, Windows Subsystem for Linux 2)
+.. Purpose: Beginner guides and tips for installing and configuring external software used in the project and avoiding common setup pitfalls (Anaconda, Docker Desktop, Windows Subsystem for Linux 2)
+
+Coming soon!
