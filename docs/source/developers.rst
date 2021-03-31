@@ -1,5 +1,5 @@
-Securing AI Testbed Developers
-==============================
+Development Team
+================
 
 - James Glasbrenner, *The MITRE Corporation*
 - Cory Miniter, *The MITRE Corporation*
