@@ -48,8 +48,9 @@ Another great way to get started is to try out the sample jobs included in the :
    :maxdepth: -1
    :caption: Deployment Guide
 
-   deployment-guide/requirements-spec
-   deployment-guide/deploy-docker
+   deployment-guide/system-requirements
+   deployment-guide/docker-images-list-and-settings
+   deployment-guide/single-machine-deployment
    deployment-guide/task-plugins-management
    deployment-guide/obtaining-datasets
    deployment-guide/testbed-ansible-collection
