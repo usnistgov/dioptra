@@ -35,7 +35,6 @@ Another great way to get started is to try out the sample jobs included in the :
    user-guide/the-basics
    user-guide/entry-points
    user-guide/task-plugins
-   user-guide/using-the-restapi
    user-guide/custom-entry-points
    user-guide/custom-task-plugins
    user-guide/generics-plugin-system
