@@ -1,12 +1,12 @@
 .. _user-guide-api-reference-sdk-rq:
 
-Redis Queue (RQ)
-================
+rq
+==
 
 Tasks
 -----
 
-.. automodule:: mitre.securingai.rq.tasks.run_mlflow
+.. automodule:: mitre.securingai.rq.tasks
    :members:
    :undoc-members:
    :show-inheritance:

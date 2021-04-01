@@ -8,6 +8,14 @@ utilities
    :undoc-members:
    :show-inheritance:
 
+contexts
+--------
+
+.. automodule:: mitre.securingai.sdk.utilities.contexts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 decorators
 ----------
 

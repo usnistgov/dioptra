@@ -1,6 +1,6 @@
 .. _user-guide-api-reference-sdk-pyplugs:
 
-PyPlugs
+pyplugs
 =======
 
 Decorators
