@@ -4,22 +4,79 @@ Custom Task Plugins
 ===================
 
 When designing a custom example, you may be required to create a new task plugin in order to effect specific behaviors not included in the core plugins.
-For additional examples on how these plugins are constructed, you can refer to examples/tensorflow-mnist-classifier/src/tasks.py.
 
-Creating a Basic Task
----------------------
+Task Organization: Built-in Tasks
+---------------------------------
 
-The testbed utilizes Prefect library for task creation.
-Tasks represent discreet actions in a workflow, and work like a function.
-They take inputs, perform an action, and return an optional result.
-Use the @task decorator before a function definition to create a new task:
+The Securing-AI project contains a number of builtin task plugins that can be executed across all available examples.
+They are stored in the following directories:
 
-.. code-block:: python
+.. code-block:: none
 
-   from prefect import task
+   task-plugins/
+       └── securingai_builtins
+           ├── artifacts
+           |   ├── exceptions.py
+           |   ├── mlflow.py
+           |   └── utils.py
+           ├── attacks
+           |   └── fgm.py
+           ├── backend_configs
+           |   └── tensorflow.py
+           ├── data
+           |   └── tensorflow.py
+           ├── estimators
+           |   ├── keras_classifiers.py
+           |   └── tensorflow.py
+           ├── metrics
+           |   ├── distance.py
+           |   ├── exceptions.py
+           |   └── performance.py
+           ├── random
+           |   ├── rng.py
+           |   └── sample.py
+           ├── registry
+           |   ├── art.py
+           |   └── mlflow.py
+           └──tracking
+              └── mlflow.py
 
-   @task
-   def add_values(x,y):
+Please refer to :ref:`user-guide-task-plugins-collection` for more information regarding each built-in task.
+
+Task Organization: Local Tasks
+------------------------------
+
+In general while built-in task plugins are located in the ``task-plugins/securingai_builtins`` folder, local tasks can be stored in the same way as local python functions in each example's src code folder.
+
+For instance, in our previous guide on creating custom entry points we had a localized task called ``task_B`` which was stored in the python file ``custom_local_task_plugins.py``.
+
+.. code-block::
+
+   example_dir/
+   ├── src/
+   │   ├── custom_entrypoint_script.py
+   │   ├── <Other src code>
+   │   └── custom_local_task_plugins.py
+   ├── ...
+   └── MLproject
+
+To retrieve this plugin for our entry point we had to call the import statement ``from .custom_local_task_plugins import task_B``, similar to how we would import and use a python function.
+For additional examples on how these plugins are constructed, you can refer to ``examples/tensorflow-mnist-classifier/src/tasks.py`` for local plugins.
+
+The following sections will now involve creating built-in and localized task plugins.
+
+Creating a Builtin Task
+-----------------------
+
+To create a builtin task, first the user must identify which builtin subdirectory (artifacts, attacks, etc.) should contain the new task.
+Once this is done, the task can be declared as follows:
+
+.. code-block::
+
+   from mitre.securingai import pyplugs
+
+   @pyplugs.register
+   def add_values(x, y):
        return x + y
 
 It is generally best practice to create small tasks, atomizing your workflow down to discrete units of work.
@@ -27,7 +84,53 @@ Those tasks may then be chained together.
 Tasks can be as complex as needed with no ill effect.
 For a slightly more complex task, consider the sample below, which will generate random samples according to the parameters you set.
 
+.. code-block::
+
+   @pyplugs.register
+   def draw_random_integers(
+       rng: RNGenerator,
+       low: int = 0,
+       high: int = 2 ** 31 - 1,
+       size: Optional[Union[int, Tuple[int, ...]]] = None,
+   ) -> np.ndarray:
+       size = size or 1
+       result: np.ndarray = rng.integers(low=low, high=high, size=size)
+
+       return result
+
+To access the builtin task from a given example, users will need to call the plugin-task using the following notation in their flow pipeline.
+Note that we assumed these new tasks have been saved in a module named ``ops.py`` under the `data` task plugins directory:
+
 .. code-block:: python
+
+   from mitre.securingai import pyplugs
+   ...
+   def custom_flow() -> Flow:
+       ...
+       // Call new builtin task.
+       result = pyplugs.call_task(
+           "securingai_builtins.data",
+           "ops",
+           "add_values",
+           x=input_x,
+           y=input_y,
+       )
+
+For local tasks we will use a different notation for both creating and invoking tasks in the flow pipeline.
+
+Creating a Local Task
+---------------------
+
+In general the major difference besides location of local task plugins is that the the `@task` decorator now replaces the `@pyplugs.register` decorator.
+The task decorator is imported from the prefect library:
+
+.. code-block:: python
+
+   from prefect import task
+
+   @task
+   def add_values(x, y):
+       return x + y
 
    @task
    def draw_random_integers(
@@ -41,95 +144,15 @@ For a slightly more complex task, consider the sample below, which will generate
 
        return result
 
-
-Chaining Tasks with Flow
-------------------------
-
-Once your tasks have been created, your entrypoint must create a prefect Flow (workflow) that defines how the tasks are to be executed.
-Note: Prefect Flows are not to be confused with MLflow.
-Refer to the fgm.py entrypoint below for an example:
+Furthermore as seen in the :ref:`previous guide on building new entry points <user-guide-custom-entry-points>` calling local tasks is also more similar to calling a local python function:
 
 .. code-block:: python
 
-   def init_fgm_flow() -> Flow:
-       with Flow("Fast Gradient Method") as flow:
-           (
-               testing_dir,
-               image_size,
-               adv_tar_name,
-               adv_data_dir,
-               distance_metrics_filename,
-               model_name,
-               model_version,
-               batch_size,
-               eps,
-               eps_step,
-               minimal,
-               norm,
-               seed,
-           ) = (
-               Parameter("testing_dir"),
-               Parameter("image_size"),
-               Parameter("adv_tar_name"),
-               Parameter("adv_data_dir"),
-               Parameter("distance_metrics_filename"),
-               Parameter("model_name"),
-               Parameter("model_version"),
-               Parameter("batch_size"),
-               Parameter("eps"),
-               Parameter("eps_step"),
-               Parameter("minimal"),
-               Parameter("norm"),
-               Parameter("seed"),
-           )
-           seed, rng = pyplugs.call_task(
-               f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
-           )
-           tensorflow_global_seed = pyplugs.call_task(
-               f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
-           )
-           dataset_seed = pyplugs.call_task(
-               f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
-           )
-           init_tensorflow_results = pyplugs.call_task(
-               f"{_PLUGINS_IMPORT_PATH}.backend_configs",
-               "tensorflow",
-               "init_tensorflow",
-               seed=tensorflow_global_seed,
-           )
-           make_directories_results = pyplugs.call_task(
-               f"{_PLUGINS_IMPORT_PATH}.artifacts",
-               "utils",
-               "make_directories",
-               dirs=[adv_data_dir],
-           )
-
-           # ...
-           # Truncated
-           # ...
-
-           log_distance_metrics_result = pyplugs.call_task(
-               f"{_PLUGINS_IMPORT_PATH}.artifacts",
-               "mlflow",
-               "upload_data_frame_artifact",
-               data_frame=distance_metrics,
-               file_name=distance_metrics_filename,
-               file_format="csv.gz",
-               file_format_kwargs=dict(index=False),
-           )
-
-           return flow
-
-In this sample, you can see that each invocation of :py:func:`.pyplugs.call_task` calls a unique task.
-The arguments for each case are (directory, python_script, task, task_arguments).
-This sample references plugins that are included in the core testbed plugins package, but you are not limited to those.
-Imagine a custom plugin named ``squeeze_plugin.py`` written in the src directory of the feature_squeeze_mnist example:
-
-.. code-block:: python
-
-   feature_squeeze = pyplugs.call_task(
-       "src",
-       "squeeze_plugin",
-       "feature_squeeze",
-       # ... Additional arguments ...
-   )
+   from .tasks import add_values
+   ...
+   def custom_flow() -> Flow:
+       ...
+       // Call new local task.
+       result = add_values(
+           x=input_x, y=input_y
+       )
