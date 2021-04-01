@@ -1,7 +1,7 @@
 .. _tutorials-example-tensorflow-mnist-model-inversion:
 
-Example: Tensorflow MNIST Model Inversion
-=========================================
+Tensorflow MNIST Model Inversion
+================================
 
 .. warning::
 

@@ -34,7 +34,7 @@ The term *entry point*, in the context of running experiment jobs, refers to exe
 Entry points are the fundamental unit of work within the Testbed, where each job submitted to the Testbed selects one entry point to run.
 The Securing AI Testbed derives its modularity in part by establishing a convention for how to compose new entry points.
 The convention is identifying related units of work, for example applying one out of many evasion attacks to generate a batch of adversarial images, and then ensuring they are interchangeable with one another by implementing the corresponding executable scripts to share a common set of inputs and outputs.
-This guided the construction of all the :ref:`example experiments <tutorials-examples-demos>` distributed as part of this project.
+This guided the construction of all the example experiments distributed as part of this project.
 The SDK library and the task plugins system are both provided to help Testbed users apply this convention to their own experiments.
 
 .. note::

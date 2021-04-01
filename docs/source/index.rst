@@ -22,15 +22,21 @@ Email us: ai-nccoe@nist.gov
 
    getting-started/installation
    getting-started/newcomer-tips
-   getting-started/where-to-go
 
 .. toctree::
    :hidden:
    :maxdepth: -1
    :caption: Tutorials and Examples
 
-   tutorials/index
-   tutorials/examples-demos
+   tutorials/example-basic-mlflow-demo
+   tutorials/example-tensorflow-mnist-classifier
+   tutorials/example-tensorflow-mnist-feature-squeezing
+   tutorials/example-tensorflow-mnist-model-inversion
+   tutorials/example-tensorflow-adversarial-patches
+   tutorials/example-tensorflow-backdoor-poisoning
+   tutorials/example-tensorflow-imagenet-resnet50-fgm
+   tutorials/example-tensorflow-imagenet-pixel-threshold
+   tutorials/example-pytorch-mnist-membership-inference
 
 .. toctree::
    :hidden:

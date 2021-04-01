@@ -1,7 +1,7 @@
 .. _tutorials-example-tensorflow-mnist-feature-squeezing:
 
-Example: Tensorflow MNIST Feature Squeezing
-===========================================
+Tensorflow MNIST Feature Squeezing
+==================================
 
 Introduction
 ------------

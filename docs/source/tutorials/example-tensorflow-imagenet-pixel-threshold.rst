@@ -1,7 +1,7 @@
 .. _tutorials-example-tensorflow-imagenet-pixel-threshold:
 
-Example: Tensorflow ImageNet Pixel Threshold
-============================================
+Tensorflow ImageNet Pixel Threshold
+===================================
 
 .. warning::
 

@@ -1,1 +1,0 @@
-**What goes here:** A table listing the available examples/demos and indicating which ones can be run on personal computers vs. which ones require a GPU, and whether or not dataset downloads are part of the demo or not (i.e. MNIST is scripted to download automatically for some demos, but you need to go get ImageNet on your own for others)

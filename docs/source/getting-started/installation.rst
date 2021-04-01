@@ -4,8 +4,7 @@ Installation Guide
 ==================
 
 This installation guide is divided into three parts, with the first part covering system requirements, the second part covering how to install the ``mitre-securing-ai`` Python package, and the third part covering how to setup a personal computer for test-driving the Securing AI Testbed architecture locally.
-General instructions on how to use the Securing AI Ansible Collection to configure and deploy the Testbed in an on-premises server or cluster environment can be found in another section of the documentation.
-.. TODO: Link to the on-prem deployment instructions once they are available.
+General instructions on how to deploy the Testbed in an on-premises server can be found in the sections under **Deployment Guide**.
 
 Package Installation
 --------------------
