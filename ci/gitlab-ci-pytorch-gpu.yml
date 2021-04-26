@@ -65,7 +65,7 @@ build:pytorch-gpu:latest:
       --build-arg PROJECT_PREFIX=${PROJECT_PREFIX}
       --build-arg PYTORCH_VERSION=${PYTORCH_VERSION}
   tags:
-    - kaniko
+    - kaniko-large
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "master"'
     - if: '$CI_COMMIT_BRANCH == "master"'
@@ -99,6 +99,6 @@ build:pytorch-gpu:tag:
       --build-arg PROJECT_PREFIX=${PROJECT_PREFIX}
       --build-arg PYTORCH_VERSION=${PYTORCH_VERSION}
   tags:
-    - kaniko
+    - kaniko-large
   rules:
     - if: "$CI_COMMIT_TAG"
