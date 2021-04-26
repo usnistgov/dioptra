@@ -30,7 +30,7 @@ build:tensorflow2-gpu:push:
       --build-arg PROJECT_PREFIX=${PROJECT_PREFIX}
       --build-arg TENSORFLOW2_VERSION=${TENSORFLOW2_VERSION}
   tags:
-    - kaniko
+    - kaniko-large
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH != "master"'
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "master"'

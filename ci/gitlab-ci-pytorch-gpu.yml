@@ -30,7 +30,7 @@ build:pytorch-gpu:push:
       --build-arg PROJECT_PREFIX=${PROJECT_PREFIX}
       --build-arg PYTORCH_VERSION=${PYTORCH_VERSION}
   tags:
-    - kaniko
+    - kaniko-large
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH != "master"'
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "master"'
