@@ -79,7 +79,7 @@ services:
       - minio-data:/data
 
   mlflow-tracking:
-    image: securing-ai/mlflow-tracking:latest
+    image: securing-ai/mlflow-tracking:dev
     init: true
     restart: always
     hostname: mlflow-tracking
@@ -139,7 +139,7 @@ services:
       - "30080:30080/tcp"
 
   restapi:
-    image: securing-ai/restapi:latest
+    image: securing-ai/restapi:dev
     init: true
     restart: always
     hostname: restapi
@@ -170,7 +170,7 @@ services:
       - restapi-data:/work/data
 
   tfcpu-01:
-    image: securing-ai/tensorflow2-cpu:latest
+    image: securing-ai/tensorflow2-cpu:dev
     init: true
     restart: always
     hostname: tfcpu-01
@@ -178,6 +178,7 @@ services:
     cpu_shares: 1024
     environment:
       AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
+      AI_CUSTOM_PLUGINS_S3_URI: s3://plugins/securingai_custom
       AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
       AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
       AI_RESTAPI_ENV: prod
@@ -200,7 +201,7 @@ services:
       - restapi-data:/work/data
 
   tfcpu-02:
-    image: securing-ai/tensorflow2-cpu:latest
+    image: securing-ai/tensorflow2-cpu:dev
     init: true
     restart: always
     hostname: tfcpu-02
@@ -208,6 +209,7 @@ services:
     cpu_shares: 1024
     environment:
       AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
+      AI_CUSTOM_PLUGINS_S3_URI: s3://plugins/securingai_custom
       AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
       AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
       AI_RESTAPI_ENV: prod

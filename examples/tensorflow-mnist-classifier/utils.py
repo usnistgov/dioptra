@@ -28,10 +28,46 @@ class SecuringAIClient(object):
         )
 
     @property
+    def task_plugin_endpoint(self) -> str:
+        return urlunparse(
+            (self._scheme, self._netloc, urljoin(self._path, "taskPlugin/"), "", "", "")
+        )
+
+    @property
+    def task_plugin_builtins_endpoint(self) -> str:
+        return urlunparse(
+            (
+                self._scheme,
+                self._netloc,
+                urljoin(self._path, "taskPlugin/securingai_builtins"),
+                "",
+                "",
+                "",
+            )
+        )
+
+    @property
+    def task_plugin_custom_endpoint(self) -> str:
+        return urlunparse(
+            (
+                self._scheme,
+                self._netloc,
+                urljoin(self._path, "taskPlugin/securingai_custom"),
+                "",
+                "",
+                "",
+            )
+        )
+
+    @property
     def queue_endpoint(self) -> str:
         return urlunparse(
             (self._scheme, self._netloc, urljoin(self._path, "queue/"), "", "", "")
         )
+
+    def delete_custom_task_plugin(self, name: str):
+        plugin_name_query: str = urljoin(self.task_plugin_custom_endpoint, name)
+        return requests.delete(plugin_name_query).json()
 
     def get_experiment_by_id(self, id: int):
         experiment_id_query: str = urljoin(self.experiment_endpoint, str(id))
@@ -53,6 +89,14 @@ class SecuringAIClient(object):
         queue_name_query: str = urljoin(self.queue_endpoint, "name", name)
         return requests.get(queue_name_query).json()
 
+    def get_builtin_task_plugin(self, name: str):
+        task_plugin_name_query: str = urljoin(self.task_plugin_builtins_endpoint, name)
+        return requests.get(task_plugin_name_query).json()
+
+    def get_custom_task_plugin(self, name: str):
+        task_plugin_name_query: str = urljoin(self.task_plugin_custom_endpoint, name)
+        return requests.get(task_plugin_name_query).json()
+
     def list_experiments(self) -> List[Dict[str, Any]]:
         return requests.get(self.experiment_endpoint).json()
 
@@ -61,6 +105,15 @@ class SecuringAIClient(object):
 
     def list_queues(self) -> List[Dict[str, Any]]:
         return requests.get(self.queue_endpoint).json()
+
+    def list_all_task_plugins(self) -> List[Dict[str, Any]]:
+        return requests.get(self.task_plugin_endpoint).json()
+
+    def list_builtin_task_plugins(self) -> List[Dict[str, Any]]:
+        return requests.get(self.task_plugin_builtins_endpoint).json()
+
+    def list_custom_task_plugins(self) -> List[Dict[str, Any]]:
+        return requests.get(self.task_plugin_custom_endpoint).json()
 
     def lock_queue(self, name: str):
         queue_name_query: str = urljoin(self.queue_endpoint, "name", name, "lock")
@@ -121,6 +174,29 @@ class SecuringAIClient(object):
                 self.job_endpoint,
                 data=job_form,
                 files=job_files,
+            )
+
+        return response.json()
+
+    def upload_custom_plugin_package(
+        self,
+        custom_plugin_name: str,
+        custom_plugin_file: PathLike,
+        collection: str = "securingai_custom",
+    ) -> Dict[str, Any]:
+        plugin_upload_form = {
+            "task_plugin_name": custom_plugin_name,
+            "collection": collection,
+        }
+
+        custom_plugin_file = Path(custom_plugin_file)
+
+        with custom_plugin_file.open("rb") as f:
+            custom_plugin_file = {"task_plugin_file": (custom_plugin_file.name, f)}
+            response = requests.post(
+                self.task_plugin_endpoint,
+                data=plugin_upload_form,
+                files=custom_plugin_file,
             )
 
         return response.json()

@@ -3,13 +3,14 @@ from __future__ import annotations
 from types import FunctionType
 from typing import Any, Dict, List, Union
 
-import import_keras
 import structlog
-from prefect import task
 from structlog.stdlib import BoundLogger
 
+from mitre.securingai import pyplugs
 from mitre.securingai.sdk.exceptions import TensorflowDependencyError
 from mitre.securingai.sdk.utilities.decorators import require_package
+
+from . import import_keras
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -25,20 +26,20 @@ except ImportError:  # pragma: nocover
     )
 
 
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def evaluate_metrics_tensorflow(classifier, dataset) -> Dict[str, float]:
     result = classifier.evaluate(dataset, verbose=0)
     return dict(zip(classifier.metrics_names, result))
 
 
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def get_optimizer(optimizer: str, learning_rate: float) -> Optimizer:
     return import_keras.get_optimizer(optimizer)(learning_rate)
 
 
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def get_model_callbacks(callbacks_list: List[Dict[str, Any]]) -> List[Callback]:
     return [
@@ -47,7 +48,7 @@ def get_model_callbacks(callbacks_list: List[Dict[str, Any]]) -> List[Callback]:
     ]
 
 
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def get_performance_metrics(
     metrics_list: List[Dict[str, Any]]

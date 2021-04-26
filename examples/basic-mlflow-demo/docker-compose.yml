@@ -178,6 +178,7 @@ services:
     cpu_shares: 1024
     environment:
       AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
+      AI_CUSTOM_PLUGINS_S3_URI: s3://plugins/securingai_custom
       AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
       AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
       AI_RESTAPI_ENV: prod
@@ -207,6 +208,7 @@ services:
     cpu_shares: 1024
     environment:
       AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
+      AI_CUSTOM_PLUGINS_S3_URI: s3://plugins/securingai_custom
       AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
       AI_RESTAPI_DEV_DATABASE_URI: sqlite:////work/data/securingai-dev.db
       AI_RESTAPI_ENV: prod
