@@ -11,6 +11,7 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([s3-workflow],[],[S3 URI to a tarball or zip archive containing scripts and a MLproject file defining a workflow],[])
 # ARG_USE_ENV([AI_PLUGIN_DIR],[],[Directory in worker container for syncing the builtin plugins])
 # ARG_USE_ENV([AI_PLUGINS_S3_URI],[],[S3 URI to the directory containing the builtin plugins])
+# ARG_USE_ENV([AI_CUSTOM_PLUGINS_S3_URI],[],[S3 URI to the directory containing the custom plugins])
 # ARG_USE_ENV([MLFLOW_S3_ENDPOINT_URL],[],[The S3 endpoint URL])
 # ARG_LEFTOVERS([Entry point keyword arguments (optional)])
 # ARG_DEFAULTS_POS
@@ -28,6 +29,7 @@ set -euo pipefail
 
 readonly ai_plugin_dir="${AI_PLUGIN_DIR-}"
 readonly ai_plugins_s3_uri="${AI_PLUGINS_S3_URI-}"
+readonly ai_custom_plugins_s3_uri="${AI_CUSTOM_PLUGINS_S3_URI-}"
 readonly conda_dir="${CONDA_DIR}"
 readonly conda_env="${_arg_conda_env}"
 readonly entry_point_kwargs="${_arg_leftovers[*]}"
@@ -97,6 +99,32 @@ validate_builtin_plugins_s3_uri() {
 
   if [[ ! -z $(s3_bucket_exists ${bucket} 2>&1) ]]; then
     echo "${logname}: ERROR - S3 bucket for builtin plugins does not exist" 1>&2
+    exit 1
+  fi
+}
+
+###########################################################################################
+# Validate existence of custom plugins bucket
+#
+# Globals:
+#   ai_custom_plugins_s3_uri
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+validate_custom_plugins_s3_uri() {
+  local scheme=$(/usr/local/bin/parse-uri.sh --scheme ${ai_custom_plugins_s3_uri})
+  local bucket=$(/usr/local/bin/parse-uri.sh --authority ${ai_custom_plugins_s3_uri})
+
+  if [[ ${scheme} != s3 ]]; then
+    echo "${logname}: ERROR - URI for custom plugins does not use the s3 protocol" 1>&2
+    exit 1
+  fi
+
+  if [[ ! -z $(s3_bucket_exists ${bucket} 2>&1) ]]; then
+    echo "${logname}: ERROR - S3 bucket for custom plugins does not exist" 1>&2
     exit 1
   fi
 }
@@ -202,6 +230,33 @@ sync_builtin_plugins() {
 }
 
 ###########################################################################################
+# Synchronize custom plugins from S3 storage
+#
+# Globals:
+#   ai_plugin_dir
+#   ai_custom_plugins_s3_uri
+#   mlflow_s3_endpoint_url
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+sync_custom_plugins() {
+  local src="${ai_custom_plugins_s3_uri}"
+  local dest="${ai_plugin_dir}/securingai_custom"
+
+  if [[ ! -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-sync.sh ]]; then
+    /usr/local/bin/s3-sync.sh --endpoint-url ${mlflow_s3_endpoint_url} --delete ${src} ${dest}
+  elif [[ -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-sync.sh ]]; then
+    /usr/local/bin/s3-sync.sh --delete ${src} ${dest}
+  elif [[ ! -f /usr/local/bin/s3-sync.sh ]]; then
+    echo "${logname}: ERROR - /usr/local/bin/s3-sync.sh script missing" 1>&2
+    exit 1
+  fi
+}
+
+###########################################################################################
 # Start MLFlow pipeline defined in MLproject file
 #
 # Globals:
@@ -250,7 +305,9 @@ start_mlflow() {
 
 validate_mlflow_inputs
 validate_builtin_plugins_s3_uri
+validate_custom_plugins_s3_uri
 sync_builtin_plugins
+sync_custom_plugins
 download_workflow
 unpack_workflow_archive
 start_mlflow
