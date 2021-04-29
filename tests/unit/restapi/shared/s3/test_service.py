@@ -1,16 +1,146 @@
 import datetime
-from typing import Any, BinaryIO, Dict
+from pathlib import Path
+from typing import Any, BinaryIO, Dict, List
 
 import pytest
 import structlog
 from _pytest.monkeypatch import MonkeyPatch
 from botocore.stub import Stubber
-from dateutil.tz.tz import tzutc
+from dateutil.tz.tz import tzlocal, tzutc
 from structlog.stdlib import BoundLogger
 
 from mitre.securingai.restapi.shared.s3.service import S3Service
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+
+@pytest.fixture
+def list_objects_v2_plugin_artifacts_response() -> Dict[str, Any]:
+    return {
+        "ResponseMetadata": {
+            "RequestId": "167A72C9F1046510",
+            "HostId": "",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {
+                "accept-ranges": "bytes",
+                "content-length": "1736",
+                "content-security-policy": "block-all-mixed-content",
+                "content-type": "application/xml",
+                "server": "MinIO",
+                "vary": "Origin",
+                "x-amz-request-id": "167A72C9F1046510",
+                "x-xss-protection": "1; mode=block",
+                "date": "Thu, 29 Apr 2021 21:53:47 GMT",
+            },
+            "RetryAttempts": 0,
+        },
+        "IsTruncated": False,
+        "Contents": [
+            {
+                "Key": "securingai_custom/artifacts/__init__.py",
+                "LastModified": datetime.datetime(
+                    2021, 4, 26, 21, 2, 18, 688000, tzinfo=tzlocal()
+                ),
+                "ETag": '"2fe369e96fea5d62a27f273c96fc3cab"',
+                "Size": 85,
+                "StorageClass": "STANDARD",
+                "Owner": {
+                    "DisplayName": "minio",
+                    "ID": "02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855"
+                    "f66bdbf4",
+                },
+            },
+            {
+                "Key": "securingai_custom/artifacts/exceptions.py",
+                "LastModified": datetime.datetime(
+                    2021, 4, 26, 21, 2, 18, 809000, tzinfo=tzlocal()
+                ),
+                "ETag": '"b75bac005df1346cf9dba3d54adba6cc"',
+                "Size": 280,
+                "StorageClass": "STANDARD",
+                "Owner": {
+                    "DisplayName": "minio",
+                    "ID": "02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855"
+                    "f66bdbf4",
+                },
+            },
+            {
+                "Key": "securingai_custom/artifacts/mlflow.py",
+                "LastModified": datetime.datetime(
+                    2021, 4, 26, 21, 2, 18, 818000, tzinfo=tzlocal()
+                ),
+                "ETag": '"476b2cd34ea5c5631eb1eab0ad969beb"',
+                "Size": 7552,
+                "StorageClass": "STANDARD",
+                "Owner": {
+                    "DisplayName": "minio",
+                    "ID": "02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855"
+                    "f66bdbf4",
+                },
+            },
+            {
+                "Key": "securingai_custom/artifacts/utils.py",
+                "LastModified": datetime.datetime(
+                    2021, 4, 26, 21, 2, 18, 810000, tzinfo=tzlocal()
+                ),
+                "ETag": '"94760357c1c79c69b11b709e90aa6e5e"',
+                "Size": 1436,
+                "StorageClass": "STANDARD",
+                "Owner": {
+                    "DisplayName": "minio",
+                    "ID": "02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855"
+                    "f66bdbf4",
+                },
+            },
+        ],
+        "Name": "plugins",
+        "Prefix": "securingai_custom/artifacts",
+        "Delimiter": "",
+        "MaxKeys": 4500,
+        "EncodingType": "url",
+        "KeyCount": 4,
+    }
+
+
+@pytest.fixture
+def list_objects_v2_common_prefix_response() -> Dict[str, Any]:
+    return {
+        "ResponseMetadata": {
+            "RequestId": "167A6835FF3B9793",
+            "HostId": "",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {
+                "accept-ranges": "bytes",
+                "content-length": "1027",
+                "content-security-policy": "block-all-mixed-content",
+                "content-type": "application/xml",
+                "server": "MinIO",
+                "vary": "Origin",
+                "x-amz-request-id": "167A6835FF3B9793",
+                "x-xss-protection": "1; mode=block",
+                "date": "Thu, 29 Apr 2021 18:39:57 GMT",
+            },
+            "RetryAttempts": 0,
+        },
+        "IsTruncated": False,
+        "Name": "plugins",
+        "Prefix": "securingai_builtins/",
+        "Delimiter": "/",
+        "MaxKeys": 4500,
+        "CommonPrefixes": [
+            {"Prefix": "securingai_builtins/artifacts/"},
+            {"Prefix": "securingai_builtins/attacks/"},
+            {"Prefix": "securingai_builtins/backend_configs/"},
+            {"Prefix": "securingai_builtins/data/"},
+            {"Prefix": "securingai_builtins/estimators/"},
+            {"Prefix": "securingai_builtins/metrics/"},
+            {"Prefix": "securingai_builtins/random/"},
+            {"Prefix": "securingai_builtins/registry/"},
+            {"Prefix": "securingai_builtins/tracking/"},
+        ],
+        "EncodingType": "url",
+        "KeyCount": 9,
+    }
 
 
 @pytest.fixture
@@ -60,6 +190,70 @@ def s3_service(dependency_injector) -> S3Service:
     return dependency_injector.get(S3Service)
 
 
+def test_list_directories(
+    s3_service: S3Service,
+    list_objects_v2_common_prefix_response: Dict[str, Any],
+) -> None:
+    list_objects_v2_expected_params: Dict[str, Any] = {
+        "Bucket": "plugins",
+        "Prefix": "securingai_builtins/",
+        "Delimiter": "/",
+    }
+    expected_response: List[str] = [
+        "artifacts",
+        "attacks",
+        "backend_configs",
+        "data",
+        "estimators",
+        "metrics",
+        "random",
+        "registry",
+        "tracking",
+    ]
+
+    with Stubber(s3_service._client) as stubber:
+        stubber.add_response(
+            "list_objects_v2",
+            list_objects_v2_common_prefix_response,
+            list_objects_v2_expected_params,
+        )
+        service_response: List[str] = s3_service.list_directories(
+            bucket="plugins", prefix="securingai_builtins/"
+        )
+        stubber.assert_no_pending_responses()
+
+    assert set(service_response) == set(expected_response)
+
+
+def test_list_objects(
+    s3_service: S3Service,
+    list_objects_v2_plugin_artifacts_response: Dict[str, Any],
+) -> None:
+    list_objects_v2_expected_params: Dict[str, Any] = {
+        "Bucket": "plugins",
+        "Prefix": "securingai_custom/",
+    }
+    expected_response: List[str] = [
+        "securingai_custom/artifacts/__init__.py",
+        "securingai_custom/artifacts/exceptions.py",
+        "securingai_custom/artifacts/mlflow.py",
+        "securingai_custom/artifacts/utils.py",
+    ]
+
+    with Stubber(s3_service._client) as stubber:
+        stubber.add_response(
+            "list_objects_v2",
+            list_objects_v2_plugin_artifacts_response,
+            list_objects_v2_expected_params,
+        )
+        service_response: List[str] = s3_service.list_objects(
+            bucket="plugins", prefix="securingai_custom/"
+        )
+        stubber.assert_no_pending_responses()
+
+    assert set(service_response) == set(expected_response)
+
+
 def test_upload(
     s3_service: S3Service,
     workflow_tar_gz: BinaryIO,
@@ -93,3 +287,90 @@ def test_upload(
 
     assert service_response == "s3://workflow/workflows.tar.gz"
     assert list_objects_v2_service_response == list_objects_v2_response
+
+
+def test_upload_directory(
+    s3_service: S3Service,
+    task_plugins_dir: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    uri_list: List[str] = []
+    data_json_uri: str = S3Service.as_uri(
+        bucket="plugins", key="securingai_custom/models/data.json"
+    )
+
+    def mockuploadfile(*args, **kwargs) -> None:
+        LOGGER.info("Mocking client.upload_file() function", args=args, kwargs=kwargs)
+        uri_list.append(
+            S3Service.as_uri(bucket=kwargs.get("Bucket"), key=kwargs.get("Key"))
+        )
+
+    with monkeypatch.context() as m:
+        m.setattr(s3_service._client, "upload_file", mockuploadfile)
+        service_response: List[str] = s3_service.upload_directory(
+            directory=task_plugins_dir,
+            bucket="plugins",
+            prefix="securingai_custom",
+            include_suffixes=[".py"],
+        )
+
+    assert set(service_response) == set(uri_list)
+    assert data_json_uri not in set(service_response)
+
+
+def test_delete_prefix(
+    s3_service: S3Service,
+    list_objects_v2_plugin_artifacts_response: Dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    def mockdeleteprefix(*args, **kwargs) -> Dict[str, Any]:
+        LOGGER.info(
+            "Mocking client.delete_objects() function", args=args, kwargs=kwargs
+        )
+        return dict(Deleted=kwargs.get("Delete", {}).get("Objects"))
+
+    list_objects_v2_expected_params: Dict[str, Any] = {
+        "Bucket": "plugins",
+        "Prefix": "securingai_custom/artifacts",
+    }
+    expected_response: List[str] = [
+        "securingai_custom/artifacts/__init__.py",
+        "securingai_custom/artifacts/exceptions.py",
+        "securingai_custom/artifacts/mlflow.py",
+        "securingai_custom/artifacts/utils.py",
+    ]
+
+    with Stubber(s3_service._client) as stubber, monkeypatch.context() as m:
+        m.setattr(s3_service._client, "delete_objects", mockdeleteprefix)
+        stubber.add_response(
+            "list_objects_v2",
+            list_objects_v2_plugin_artifacts_response,
+            list_objects_v2_expected_params,
+        )
+        service_response: List[str] = s3_service.delete_prefix(
+            bucket="plugins",
+            prefix="securingai_custom/artifacts",
+        )
+        stubber.assert_no_pending_responses()
+
+    assert set(service_response) == set(expected_response)
+
+
+def test_normalize_prefix(s3_service: S3Service) -> None:
+    assert s3_service.normalize_prefix(prefix="/") == "/"
+    assert (
+        s3_service.normalize_prefix(prefix="///securingai_builtins")
+        == "securingai_builtins/"
+    )
+    assert (
+        s3_service.normalize_prefix(prefix="securingai_builtins")
+        == "securingai_builtins/"
+    )
+    assert (
+        s3_service.normalize_prefix(prefix="securingai_builtins/")
+        == "securingai_builtins/"
+    )
+    assert (
+        s3_service.normalize_prefix(prefix="securingai_builtins//")
+        == "securingai_builtins/"
+    )

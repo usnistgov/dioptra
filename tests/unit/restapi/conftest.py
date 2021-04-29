@@ -12,6 +12,21 @@ from injector import Binder, Injector
 from redis import Redis
 
 
+@pytest.fixture(scope="session")
+def task_plugins_dir(tmp_path_factory):
+    base_dir = tmp_path_factory.getbasetemp()
+    artifacts_dir = tmp_path_factory.mktemp("artifacts", numbered=False)
+    models_dir = tmp_path_factory.mktemp("models", numbered=False)
+
+    for fn in ["__init__.py", "mlflow.py"]:
+        (artifacts_dir / fn).touch()
+
+    for fn in ["__init__.py", "keras.py", "data.json"]:
+        (models_dir / fn).touch()
+
+    return base_dir
+
+
 @pytest.fixture
 def workflow_tar_gz():
     workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
