@@ -179,9 +179,7 @@ def create_adversarial_cw_inf_dataset(
         ]
 
         LOGGER.info(
-            "Generate adversarial image batch",
-            attack="cw_inf",
-            batch_num=batch_num,
+            "Generate adversarial image batch", attack="cw_inf", batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)
@@ -252,9 +250,7 @@ def create_adversarial_cw_dataset(
         ]
 
         LOGGER.info(
-            "Generate adversarial image batch",
-            attack="cw",
-            batch_num=batch_num,
+            "Generate adversarial image batch", attack="cw", batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)
@@ -321,9 +317,7 @@ def create_adversarial_fgm_dataset(
         ]
 
         LOGGER.info(
-            "Generate adversarial image batch",
-            attack="fgm",
-            batch_num=batch_num,
+            "Generate adversarial image batch", attack="fgm", batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)
@@ -464,9 +458,7 @@ def create_adversarial_deepfool_dataset(
         ]
 
         LOGGER.info(
-            "Generate adversarial image batch",
-            attack="deepfool",
-            batch_num=batch_num,
+            "Generate adversarial image batch", attack="deepfool", batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)
@@ -533,9 +525,7 @@ def create_adversarial_jsma_dataset(
         ]
 
         LOGGER.info(
-            "Generate adversarial image batch",
-            attack="jsma",
-            batch_num=batch_num,
+            "Generate adversarial image batch", attack="jsma", batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)

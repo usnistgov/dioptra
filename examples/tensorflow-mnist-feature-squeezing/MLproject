@@ -1,26 +1,35 @@
 name: feature_squeeze_mnist
 
 entry_points:
+
   jsma:
     parameters:
       data_dir: {type: path, default: "/nfs/data"}
-      model: {type: string, default: "mnist_le_net/1"}
+      model_name: {type: string, default: "mnist_le_net"}
+      model_version: {type: string, default: "1"}
       model_architecture: {type: string, default: "le_net"}
       batch_size: {type: float, default: 32}
       seed: {type: float, default: -1}
-      verbose: {type: string, default: "True"}
-      theta: {type: float, default: 0.1}
-      gamma: {type: float, default: 1.0}
+      verbose: {type: string, default:"True"}
+      theta: {type: float, default:0.1}
+      gamma: {type: float, default:1.0}
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      image_size: { type: string, default: "28,28,1" }
+      adv_data_dir: { type: string, default: "adv_testing" }
     command: >
       python src/jsma.py
       --data-dir {data_dir}
-      --model {model}
+      --model-name {model_architecture}
+      --model-version {model_version}
       --model-architecture {model_architecture}
       --batch-size {batch_size}
       --seed {seed}
       --theta {theta}
       --gamma {gamma}
       --verbose {verbose}
+      --adv-tar-name {adv_tar_name}
+      --adv-data-dir {adv_data_dir}
+      --image-size {image_size}
 
   deepfool:
     parameters:
@@ -29,10 +38,11 @@ entry_points:
       model_architecture: {type: string, default: "le_net"}
       batch_size: {type: float, default: 40}
       seed: {type: float, default: -1}
-      max_iter: {type: float, default: 10}
-      nb_grads: {type: float, default: 10}
-      epsilon: {type: float, default: 0.000001}
-      verbose: {type: string, default: "True"}
+      max_iter: {type:float, default:10}
+      nb_grads: {type:float, default:10}
+      epsilon: {type:float, default:0.000001}
+      verbose: {type: string, default:"True"}
+      
     command: >
       python src/deepfool.py
       --data-dir {data_dir}
@@ -45,26 +55,29 @@ entry_points:
       --epsilon {epsilon}
       --verbose {verbose}
 
-  cw:
+  cw_l2:
     parameters:
       data_dir: {type: path, default: "/nfs/data"}
-      model: {type: string, default: "mnist_le_net/1"}
+      model_name: {type: string, default: "mnist_le_net"}
+      model_version: {type: string, default: "1"}
       model_architecture: {type: string, default: "le_net"}
       batch_size: {type: float, default: 1}
       seed: {type: float, default: -1}
       confidence: {type: float, default: 0.0}
       targeted: {type: string, default: "False"}
       learning_rate: {type: float, default: 0.01}
-      binary_search_steps: {type: float, default: 10.0}
-      max_iter: {type: float, default: 10}
-      initial_const: {type: float, default: 0.01}
-      max_doubling: {type: float, default: 5}
-      max_halving: {type: float, default: 5}
-      verbose: {type: string, default: "True"}
+      binary_search_steps: {type: float, default:10.0}
+      max_iter: {type:float, default:10}
+      initial_const: {type: float, default:0.01}
+      max_doubling: {type: float, default:5}
+      max_halving: {type: float, default:5}
+      verbose: {type: string, default:"True"}
+      image_size: {type: string, default: "28,28,1" }
     command: >
-      python src/cw.py
+      python src/cw_l2.py
       --data-dir {data_dir}
-      --model {model}
+      --model-name {model_name}
+      --model-version {model_version}
       --model-architecture {model_architecture}
       --batch-size {batch_size}
       --seed {seed}
@@ -76,27 +89,33 @@ entry_points:
       --initial-const {initial_const}
       --max-doubling {max_doubling}
       --max-halving {max_halving}
+      --image-size {image_size}
       --verbose {verbose}
 
   cw_inf:
     parameters:
       data_dir: {type: path, default: "/nfs/data"}
-      model: {type: string, default: "mnist_le_net/1"}
+      model_name: {type: string, default: "mnist_le_net"}
+      model_version: { type: string, default: "1" }
       model_architecture: {type: string, default: "le_net"}
-      batch_size: {type: float, default: 1}
+      batch_size: {type: float, default: 32}
       seed: {type: float, default: -1}
       confidence: {type: float, default: 0.0}
       targeted: {type: string, default: "False"}
       learning_rate: {type: float, default: 0.01}
-      max_iter: {type:float, default: 10}
-      max_doubling: {type: float, default: 5}
-      max_halving: {type: float, default: 5}
-      verbose: {type: string, default: "True"}
+      max_iter: {type:float, default:10}
+      max_doubling: {type: float, default:5}
+      max_halving: {type: float, default:5}
+      verbose: {type: string, default:"True"}
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      image_size: { type: string, default: "28,28,1" }
+      adv_data_dir: { type: string, default: "adv_testing" }
     command: >
       python src/cw_inf.py
       --data-dir {data_dir}
-      --model {model}
+      --model-name {model_name}
       --model-architecture {model_architecture}
+      --model-version {model_version}
       --batch-size {batch_size}
       --seed {seed}
       --confidence {confidence}
@@ -106,23 +125,31 @@ entry_points:
       --max-doubling {max_doubling}
       --max-halving {max_halving}
       --verbose {verbose}
-
+      --adv-tar-name {adv_tar_name}
+      --image-size {image_size}
+      --adv-data-dir {adv_data_dir}
   fgm:
     parameters:
-      data_dir: {type: path, default: "/nfs/data"}
-      model: {type: string, default: "mnist_le_net/1"}
-      model_architecture: {type: string, default: "le_net"}
-      batch_size: {type: float, default: 32}
-      eps: {type: float, default: 0.3}
-      eps_step: {type: float, default: 0.1}
-      minimal: {type: float, default: 0}
-      norm: {type: string, default: "inf"}
-      seed: {type: float, default: -1}
+      data_dir: { type: path, default: "/nfs/data" }
+      image_size: { type: string, default: "28,28,1" }
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      model_name: { type: string, default: "mnist_le_net" }
+      model_version: { type: string, default: "1" }
+      batch_size: { type: float, default: 32 }
+      eps: { type: float, default: 0.3 }
+      eps_step: { type: float, default: 0.1 }
+      minimal: { type: float, default: 0 }
+      norm: { type: string, default: "inf" }
+      seed: { type: float, default: -1 }
     command: >
       python src/fgm.py
       --data-dir {data_dir}
-      --model {model}
-      --model-architecture {model_architecture}
+      --image-size {image_size}
+      --adv-tar-name {adv_tar_name}
+      --adv-data-dir {adv_data_dir}
+      --model-name {model_name}
+      --model-version {model_version}
       --batch-size {batch_size}
       --eps {eps}
       --eps-step {eps_step}
@@ -132,17 +159,21 @@ entry_points:
 
   infer:
     parameters:
-      run_id: {type: string}
-      model: {type: string, default: "mnist_le_net/1"}
-      model_architecture: {type: string, default: "le_net"}
-      batch_size: {type: float, default: 32}
-      seed: {type: float, default: -1}
+      run_id: { type: string }
+      image_size: { type: string, default: "28,28,1" }
+      model_name: { type: string, default: "mnist_le_net" }
+      model_version: { type: string, default: "1" }
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      seed: { type: float, default: -1 }
     command: >
       python src/infer.py
       --run-id {run_id}
-      --model {model}
-      --model-architecture {model_architecture}
-      --batch-size {batch_size}
+      --image-size {image_size}
+      --model-name {model_name}
+      --model-version {model_version}
+      --adv-tar-name {adv_tar_name}
+      --adv-data-dir {adv_data_dir}
       --seed {seed}
 
   feature_squeeze:
@@ -154,6 +185,10 @@ entry_points:
       batch_size: {type: float, default: 32}
       seed: {type: float, default: -1}
       bit_depth: {type: float, default: 8}
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      model_version: { type: string, default: "1" }
+      image_size: { type: string, default: "28,28,1" }
     command: >
       python src/feature_squeeze.py
       --data-dir {data_dir}
@@ -163,14 +198,17 @@ entry_points:
       --batch-size {batch_size}
       --seed {seed}
       --bit-depth {bit_depth}
-
+      --adv-data-dir {adv_data_dir}
+      --adv-tar-name {adv_tar_name}
+      --model-version {model_version}
+      --image-size {image_size}
   init_model:
     parameters:
       data_dir: {type: path, default: "/nfs/data"}
       model_architecture: {type: string, default: "resnet50"}
       model_tag: {type: string, default: "default_pretrained"}
       batch_size: {type: float, default: 32}
-      seed: {type: float, default: -1}
+      seed: {type: float, default:-1}
     command: >
       python src/init_model.py
       --data-dir {data_dir}
@@ -181,23 +219,26 @@ entry_points:
 
   train:
     parameters:
-      data_dir: {type: path, default: "/nfs/data"}
-      model_architecture: {type: string, default: "le_net"}
-      epochs: {type: float, default: 30}
-      batch_size: {type: float, default: 32}
-      register_model: {type: string, default: "False"}
-      learning_rate: {type: float, default: 0.001}
-      optimizer: {type: string, default: "adam"}
-      validation_split: {type: float, default: 0.2}
-      seed: {type: float, default: -1}
+      data_dir: { type: path, default: "/nfs/data" }
+      image_size: { type: string, default: "28,28,1" }
+      model_architecture: { type: string, default: "le_net" }
+      epochs: { type: float, default: 30 }
+      batch_size: { type: float, default: 32 }
+      register_model_name: { type: string, default: "" }
+      learning_rate: { type: float, default: 0.001 }
+      optimizer: { type: string, default: "Adam" }
+      validation_split: { type: float, default: 0.2 }
+      seed: { type: float, default: -1 }
     command: >
       python src/train.py
       --data-dir {data_dir}
+      --image-size {image_size}
       --model-architecture {model_architecture}
       --epochs {epochs}
       --batch-size {batch_size}
-      --register-model {register_model}
+      --register-model-name {register_model_name}
       --learning-rate {learning_rate}
       --optimizer {optimizer}
       --validation-split {validation_split}
       --seed {seed}
+

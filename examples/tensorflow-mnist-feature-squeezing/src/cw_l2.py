@@ -62,6 +62,12 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Root directory for NFS mounted datasets (in container)",
 )
 @click.option(
+    "--adv-data-dir",
+    type=click.STRING,
+    default="adv_testing",
+    help="Directory for saving fgm images",
+)
+@click.option(
     "--image-size",
     type=click.STRING,
     callback=_coerce_comma_separated_ints,
@@ -74,16 +80,16 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Name to give to tarfile artifact containing fgm images",
 )
 @click.option(
-    "--adv-data-dir",
-    type=click.STRING,
-    default="adv_testing",
-    help="Directory for saving fgm images",
-)
-@click.option(
     "--model-name", type=click.STRING, help="Name of model to load from registry",
 )
 @click.option(
-    "--model-version", type=click.STRING, help="Version of model to load from registry",
+    "--model-version", type=click.STRING,
+)
+@click.option(
+    "--model-architecture",
+    type=click.Choice(["shallow_net", "le_net", "alex_net"], case_sensitive=False),
+    default="le_net",
+    help="Model architecture",
 )
 @click.option(
     "--batch-size",
@@ -92,36 +98,57 @@ def _coerce_int_to_bool(ctx, param, value):
     default=32,
 )
 @click.option(
-    "--eps",
+    "--max-iter", type=click.INT, help="The maximum number of iterations", default=100,
+)
+@click.option(
+    "--binary-search-steps",
+    type=click.INT,
+    help="Number of times to adjust constant with binary search (positive value). If binary_search_steps is large, then the algorithm is not very sensitive to the value of initial_const.",
+    default=10,
+)
+@click.option(
+    "--learning-rate",
     type=click.FLOAT,
-    help="FGM attack step size (input variation)",
-    default=0.3,
+    default="0.01",
+    help="The initial learning rate for the attack algorithm, Smaller values produce better results but are slower to converge.",
 )
 @click.option(
-    "--eps-step",
+    "--initial-const",
     type=click.FLOAT,
-    help="FGM attack step size of input variation for minimal perturbation computation",
-    default=0.1,
+    default=0.01,
+    help="The initial trade-off constant c to use to tune the relative importance of distance and confidence. ",
 )
 @click.option(
-    "--minimal",
-    type=click.Choice(["0", "1"]),
-    callback=_coerce_int_to_bool,
-    help="If 1, compute the minimal perturbation using eps_step for the step size and "
-    "eps for the maximum perturbation.",
-    default="0",
+    "--confidence",
+    type=click.FLOAT,
+    default="0.0",
+    help=" Confidence of adversarial examples",
 )
 @click.option(
-    "--norm",
-    type=click.Choice(["inf", "1", "2"]),
-    default="inf",
-    callback=_map_norm,
-    help="FGM attack norm of adversarial perturbation",
+    "--max-halving",
+    type=click.INT,
+    help="Maximum number of halving steps in the line search optimization",
+    default=5,
+)
+@click.option(
+    "--max-doubling",
+    type=click.INT,
+    help="Maximum number of doubling steps in the line search optimization",
+    default=5,
 )
 @click.option(
     "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
 )
-def fgm_attack(
+@click.option(
+    "--targeted",
+    type=click.BOOL,
+    help="Should the attack target one specific class",
+    default=False,
+)
+@click.option(
+    "--verbose", type=click.BOOL, help="Show progress bars", default=True,
+)
+def cw_l2_attack(
     data_dir,
     image_size,
     adv_tar_name,
@@ -129,15 +156,21 @@ def fgm_attack(
     model_name,
     model_version,
     batch_size,
-    eps,
-    eps_step,
-    minimal,
-    norm,
     seed,
+    model_architecture,
+    confidence,
+    targeted,
+    learning_rate,
+    max_iter,
+    max_doubling,
+    max_halving,
+    verbose,
+    binary_search_steps,
+    initial_const,
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
-        entry_point="fgm",
+        entry_point="cw_l2",
         data_dir=data_dir,
         image_size=image_size,
         adv_tar_name=adv_tar_name,
@@ -145,15 +178,21 @@ def fgm_attack(
         model_name=model_name,
         model_version=model_version,
         batch_size=batch_size,
-        eps=eps,
-        eps_step=eps_step,
-        minimal=minimal,
-        norm=norm,
         seed=seed,
+        model_architecture=model_architecture,
+        confidence=confidence,
+        targeted=targeted,
+        learning_rate=learning_rate,
+        max_iter=max_iter,
+        max_doubling=max_doubling,
+        max_halving=max_halving,
+        verbose=verbose,
+        binary_search_steps=binary_search_steps,
+        initial_const=initial_const,
     )
 
     with mlflow.start_run() as active_run:  # noqa: F841
-        flow: Flow = init_fgm_flow()
+        flow: Flow = init_cw_flow()
         state = flow.run(
             parameters=dict(
                 testing_dir=Path(data_dir) / "testing",
@@ -164,19 +203,25 @@ def fgm_attack(
                 model_name=model_name,
                 model_version=model_version,
                 batch_size=batch_size,
-                eps=eps,
-                eps_step=eps_step,
-                minimal=minimal,
-                norm=norm,
                 seed=seed,
+                model_architecture=model_architecture,
+                confidence=confidence,
+                targeted=targeted,
+                learning_rate=learning_rate,
+                max_iter=max_iter,
+                max_doubling=max_doubling,
+                max_halving=max_halving,
+                verbose=verbose,
+                initial_const=initial_const,
+                binary_search_steps=binary_search_steps,
             )
         )
 
     return state
 
 
-def init_fgm_flow() -> Flow:
-    with Flow("Fast Gradient Method") as flow:
+def init_cw_flow() -> Flow:
+    with Flow("cw_l2") as flow:
         (
             testing_dir,
             image_size,
@@ -186,11 +231,17 @@ def init_fgm_flow() -> Flow:
             model_name,
             model_version,
             batch_size,
-            eps,
-            eps_step,
-            minimal,
-            norm,
             seed,
+            model_architecture,
+            confidence,
+            targeted,
+            learning_rate,
+            max_iter,
+            max_doubling,
+            max_halving,
+            verbose,
+            binary_search_steps,
+            initial_const,
         ) = (
             Parameter("testing_dir"),
             Parameter("image_size"),
@@ -200,11 +251,17 @@ def init_fgm_flow() -> Flow:
             Parameter("model_name"),
             Parameter("model_version"),
             Parameter("batch_size"),
-            Parameter("eps"),
-            Parameter("eps_step"),
-            Parameter("minimal"),
-            Parameter("norm"),
             Parameter("seed"),
+            Parameter("model_architecture"),
+            Parameter("confidence"),
+            Parameter("targeted"),
+            Parameter("learning_rate"),
+            Parameter("max_iter"),
+            Parameter("max_doubling"),
+            Parameter("max_halving"),
+            Parameter("verbose"),
+            Parameter("binary_search_steps"),
+            Parameter("initial_const"),
         )
         seed, rng = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
@@ -254,18 +311,26 @@ def init_fgm_flow() -> Flow:
         )
         distance_metrics = pyplugs.call_task(
             "src",
-            "fgm_plugin",
-            "create_adversarial_fgm_dataset",
+            "cw_l2_plugin",
+            "create_adversarial_cw_l2_dataset",
+            model_name=model_name,
+            model_version=model_version,
             data_dir=testing_dir,
             keras_classifier=keras_classifier,
             distance_metrics_list=distance_metrics_list,
             adv_data_dir=adv_data_dir,
             batch_size=batch_size,
             image_size=image_size,
-            eps=eps,
-            eps_step=eps_step,
-            minimal=minimal,
-            norm=norm,
+            max_doubling=max_doubling,
+            max_iter=max_iter,
+            targeted=targeted,
+            binary_search_steps=binary_search_steps,
+            confidence=confidence,
+            learning_rate=learning_rate,
+            model_architecture=model_architecture,
+            max_halving=max_halving,
+            verbose=verbose,
+            initial_const=initial_const,
             upstream_tasks=[make_directories_results],
         )
         log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
@@ -299,4 +364,4 @@ if __name__ == "__main__":
     configure_structlog()
 
     with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
-        _ = fgm_attack()
+        _ = cw_l2_attack()

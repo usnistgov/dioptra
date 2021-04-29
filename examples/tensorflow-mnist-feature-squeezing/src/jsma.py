@@ -1,39 +1,56 @@
 #!/usr/bin/env python
 
-import tarfile
-import warnings
-
-warnings.filterwarnings("ignore")
-
-import tensorflow as tf
-
-tf.compat.v1.disable_eager_execution()
+import os
+from pathlib import Path
+from typing import Dict, List
 
 import click
 import mlflow
-import mlflow.tensorflow
 import numpy as np
 import structlog
-from pathlib import Path
+from prefect import Flow, Parameter
+from prefect.utilities.logging import get_logger as get_prefect_logger
+from structlog.stdlib import BoundLogger
 
-from attacks import create_adversarial_jsma_dataset
-from data import create_image_dataset
-from log import configure_stdlib_logger, configure_structlog_logger
+from mitre.securingai import pyplugs
+from mitre.securingai.sdk.utilities.contexts import plugin_dirs
+from mitre.securingai.sdk.utilities.logging import (
+    StderrLogStream,
+    StdoutLogStream,
+    attach_stdout_stream_handler,
+    clear_logger_handlers,
+    configure_structlog,
+    set_logging_level,
+)
+
+_PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+DISTANCE_METRICS: List[Dict[str, str]] = [
+    {"name": "l_infinity_norm", "func": "l_inf_norm"},
+    {"name": "l_1_norm", "func": "l_1_norm"},
+    {"name": "l_2_norm", "func": "l_2_norm"},
+    {"name": "cosine_similarity", "func": "paired_cosine_similarities"},
+    {"name": "euclidean_distance", "func": "paired_euclidean_distances"},
+    {"name": "manhattan_distance", "func": "paired_manhattan_distances"},
+    {"name": "wasserstein_distance", "func": "paired_wasserstein_distances"},
+]
 
 
-LOGGER = structlog.get_logger()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
-def evaluate_classification_metrics(classifier, adv_ds):
-    LOGGER.info("evaluating classification metrics using adversarial images")
-    result = classifier.model.evaluate(adv_ds, verbose=0)
-    adv_metrics = dict(zip(classifier.model.metrics_names, result))
-    LOGGER.info(
-        "computation of classification metrics for adversarial images complete",
-        **adv_metrics,
-    )
-    for metric_name, metric_value in adv_metrics.items():
-        mlflow.log_metric(key=metric_name, value=metric_value)
+def _map_norm(ctx, param, value):
+    norm_mapping: Dict[str, float] = {"inf": np.inf, "1": 1, "2": 2}
+    processed_norm: float = norm_mapping[value]
+
+    return processed_norm
+
+
+def _coerce_comma_separated_ints(ctx, param, value):
+    return tuple(int(x.strip()) for x in value.split(","))
+
+
+def _coerce_int_to_bool(ctx, param, value):
+    return bool(int(value))
 
 
 @click.command()
@@ -45,9 +62,28 @@ def evaluate_classification_metrics(classifier, adv_ds):
     help="Root directory for NFS mounted datasets (in container)",
 )
 @click.option(
-    "--model",
+    "--adv-data-dir",
     type=click.STRING,
-    help="Name of model to load from registry",
+    default="adv_testing",
+    help="Directory for saving fgm images",
+)
+@click.option(
+    "--image-size",
+    type=click.STRING,
+    callback=_coerce_comma_separated_ints,
+    help="Dimensions for the input images",
+)
+@click.option(
+    "--adv-tar-name",
+    type=click.STRING,
+    default="testing_adversarial_fgm.tar.gz",
+    help="Name to give to tarfile artifact containing fgm images",
+)
+@click.option(
+    "--model-name", type=click.STRING, help="Name of model to load from registry",
+)
+@click.option(
+    "--model-version", type=click.STRING,
 )
 @click.option(
     "--model-architecture",
@@ -62,90 +98,196 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default=32,
 )
 @click.option(
-    "--theta",
-    type=click.FLOAT,
-    help="Oversoot parameter",
-    default=0.1,
+    "--theta", type=click.FLOAT, default="0.01",
 )
 @click.option(
     "--gamma",
     type=click.FLOAT,
-    default=1.0,
+    default="1.0",
+    help=" Confidence of adversarial examples",
 )
 @click.option(
-    "--seed",
-    type=click.INT,
-    help="Set the entry point rng seed",
-    default=-1,
+    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
 )
 @click.option(
-    "--verbose",
-    type=click.BOOL,
-    help="Show progress bars",
-    default=True,
+    "--verbose", type=click.BOOL, help="Show progress bars", default=True,
 )
 def jsma_attack(
-    data_dir, model, model_architecture, batch_size, seed, gamma, theta, verbose
+    data_dir,
+    image_size,
+    adv_tar_name,
+    adv_data_dir,
+    model_name,
+    model_version,
+    batch_size,
+    seed,
+    model_architecture,
+    verbose,
+    theta,
+    gamma,
 ):
-    norm_mapping = {"inf": np.inf, "1": 1, "2": 2}
-    rng = np.random.default_rng(seed if seed >= 0 else None)
-
-    if seed < 0:
-        seed = rng.bit_generator._seed_seq.entropy
-
     LOGGER.info(
         "Execute MLFlow entry point",
         entry_point="jsma",
         data_dir=data_dir,
-        model=model,
+        image_size=image_size,
+        adv_tar_name=adv_tar_name,
+        adv_data_dir=adv_data_dir,
+        model_name=model_name,
+        model_version=model_version,
         batch_size=batch_size,
         seed=seed,
-        gamma=gamma,
-        theta=theta,
+        model_architecture=model_architecture,
         verbose=verbose,
+        theta=theta,
+        gamma=gamma,
     )
 
-    tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
+    with mlflow.start_run() as active_run:  # noqa: F841
+        flow: Flow = init_jsma_flow()
+        state = flow.run(
+            parameters=dict(
+                testing_dir=Path(data_dir) / "testing",
+                image_size=image_size,
+                adv_tar_name=adv_tar_name,
+                adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
+                distance_metrics_filename="distance_metrics.csv",
+                #               model_name=model_name,
+                model_version=model_version,
+                batch_size=batch_size,
+                seed=seed,
+                #               model_architecture=model_architecture,
+                #               verbose=verbose,
+                theta=theta,
+                gamma=gamma,
+            )
+        )
 
-    tf.random.set_seed(tensorflow_global_seed)
+    return state
 
-    with mlflow.start_run() as _:
-        testing_dir = Path(data_dir) / "testing"
-        adv_data_dir = Path().cwd() / "adv_testing"
 
-        adv_data_dir.mkdir(parents=True, exist_ok=True)
+def init_jsma_flow() -> Flow:
+    with Flow("jsma") as flow:
+        (
+            testing_dir,
+            image_size,
+            adv_tar_name,
+            adv_data_dir,
+            distance_metrics_filename,
+            model_name,
+            model_version,
+            batch_size,
+            seed,
+            model_architecture,
+            verbose,
+            theta,
+            gamma,
+        ) = (
+            Parameter("testing_dir"),
+            Parameter("image_size"),
+            Parameter("adv_tar_name"),
+            Parameter("adv_data_dir"),
+            Parameter("distance_metrics_filename"),
+            Parameter("model_name"),
+            Parameter("model_version"),
+            Parameter("batch_size"),
+            Parameter("seed"),
+            Parameter("model_architecture"),
+            Parameter("verbose"),
+            Parameter("theta"),
+            Parameter("gamma"),
+        )
+        seed, rng = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
+        )
+        tensorflow_global_seed = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
+        )
+        dataset_seed = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
+        )
+        init_tensorflow_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.backend_configs",
+            "tensorflow",
+            "init_tensorflow",
+            seed=tensorflow_global_seed,
+        )
+        make_directories_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "utils",
+            "make_directories",
+            dirs=[adv_data_dir],
+        )
 
-        image_size = (28, 28)
-        if model_architecture == "alex_net":
-            image_size = (224, 224)
-
-        classifier, distance_metrics = create_adversarial_jsma_dataset(
+        log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.tracking",
+            "mlflow",
+            "log_parameters",
+            parameters=dict(
+                entry_point_seed=seed,
+                tensorflow_global_seed=tensorflow_global_seed,
+                dataset_seed=dataset_seed,
+            ),
+        )
+        keras_classifier = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.registry",
+            "art",
+            "load_wrapped_tensorflow_keras_classifier",
+            name="plugin_feature_squeeze_le_net",  # model_name,
+            version=model_version,
+            upstream_tasks=[init_tensorflow_results],
+        )
+        distance_metrics_list = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.metrics",
+            "distance",
+            "get_distance_metric_list",
+            request=DISTANCE_METRICS,
+        )
+        distance_metrics = pyplugs.call_task(
+            "src",
+            "jsma_plugin",
+            "create_adversarial_jsma_dataset",
+            model_name="plugin_feature_squeeze_le_net",  # model_name,
+            model_version=model_version,
             data_dir=testing_dir,
-            model=model,
-            adv_data_dir=adv_data_dir.resolve(),
+            keras_classifier=keras_classifier,
+            distance_metrics_list=distance_metrics_list,
+            adv_data_dir=adv_data_dir,
             batch_size=batch_size,
+            image_size=image_size,
             theta=theta,
             gamma=gamma,
-            verbose=verbose,
-        )  # verbose=verbose
-
-        adv_testing_tar = Path().cwd() / "testing_adversarial.tar.gz"
-        image_perturbation_csv = Path().cwd() / "distance_metrics.csv.gz"
-
-        with tarfile.open(adv_testing_tar, "w:gz") as f:
-            f.add(str(adv_data_dir.resolve()), arcname=adv_data_dir.name)
-
-        LOGGER.info("Log adversarial images", filename=adv_testing_tar.name)
-        mlflow.log_artifact(str(adv_testing_tar))
-
-        LOGGER.info(
-            "Log distance metric distributions", filename=image_perturbation_csv.name
+            upstream_tasks=[make_directories_results],
         )
-        distance_metrics.to_csv(image_perturbation_csv, index=False)
-        mlflow.log_artifact(str(image_perturbation_csv))
+        log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "upload_directory_as_tarball_artifact",
+            source_dir=adv_data_dir,
+            tarball_filename=adv_tar_name,
+            upstream_tasks=[distance_metrics],
+        )
+        log_distance_metrics_result = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "upload_data_frame_artifact",
+            data_frame=distance_metrics,
+            file_name=distance_metrics_filename,
+            file_format="csv.gz",
+            file_format_kwargs=dict(index=False),
+        )
+
+    return flow
 
 
 if __name__ == "__main__":
-    configure_stdlib_logger("INFO", log_filepath=None)
-    configure_structlog_logger("console")
-    jsma_attack()
+    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
+
+    clear_logger_handlers(get_prefect_logger())
+    attach_stdout_stream_handler(as_json)
+    set_logging_level(log_level)
+    configure_structlog()
+
+    with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
+        _ = jsma_attack()

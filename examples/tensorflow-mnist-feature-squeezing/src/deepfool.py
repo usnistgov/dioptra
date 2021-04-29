@@ -48,9 +48,7 @@ def evaluate_classification_metrics(classifier, adv_ds):
     help="Root directory for NFS mounted datasets (in container)",
 )
 @click.option(
-    "--model",
-    type=click.STRING,
-    help="Name of model to load from registry",
+    "--model", type=click.STRING, help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -68,10 +66,7 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default=32,
 )
 @click.option(
-    "--max-iter",
-    type=click.INT,
-    help="The maximum number of iterations",
-    default=10,
+    "--max-iter", type=click.INT, help="The maximum number of iterations", default=10,
 )
 @click.option(
     "--nb-grads",
@@ -80,22 +75,13 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default=10,
 )
 @click.option(
-    "--epsilon",
-    type=click.FLOAT,
-    help="Oversoot parameter",
-    default=0.000001,
+    "--epsilon", type=click.FLOAT, help="Oversoot parameter", default=0.000001,
 )
 @click.option(
-    "--seed",
-    type=click.INT,
-    help="Set the entry point rng seed",
-    default=-1,
+    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
 )
 @click.option(
-    "--verbose",
-    type=click.BOOL,
-    help="Show progress bars",
-    default=True,
+    "--verbose", type=click.BOOL, help="Show progress bars", default=True,
 )
 def deepfool_attack(
     data_dir,

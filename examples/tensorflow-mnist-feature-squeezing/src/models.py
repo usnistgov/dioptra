@@ -96,6 +96,28 @@ def le_net(
 
     return model
 
+def le_net_logit(
+    input_shape: Tuple[int, int, int] = (28, 28, 1), n_classes: int = 10
+) -> Sequential:
+    model = Sequential()
+
+    # first convolutional layer:
+    model.add(
+        Conv2D(32, kernel_size=(3, 3), activation="relu", input_shape=input_shape)
+    )
+
+    # second conv layer, with pooling and dropout:
+    model.add(Conv2D(64, kernel_size=(3, 3), activation="relu"))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+    model.add(Flatten())
+
+    # dense hidden layer, with dropout:
+    model.add(Dense(128, activation="relu"))
+    model.add(Dropout(0.5))
+
+    return model
+
 
 def alex_net(
     input_shape: Tuple[int, int, int] = (224, 224, 1), n_classes: int = 10

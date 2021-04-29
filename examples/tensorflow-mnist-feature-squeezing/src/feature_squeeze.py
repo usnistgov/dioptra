@@ -23,11 +23,39 @@ from log import configure_stdlib_logger, configure_structlog_logger
 from models import load_model_in_registry
 from tensorflow.keras.preprocessing.image import save_img
 from art.defences.preprocessor import FeatureSqueezing
+from typing import Dict, List
+
+from prefect import Flow, Parameter, task
+from mitre.securingai import pyplugs
+from mitre.securingai.sdk.utilities.contexts import plugin_dirs
+from mitre.securingai.sdk.utilities.logging import (
+    StderrLogStream,
+    StdoutLogStream,
+    attach_stdout_stream_handler,
+    clear_logger_handlers,
+    configure_structlog,
+    set_logging_level,
+)
+
+_PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+DISTANCE_METRICS: List[Dict[str, str]] = [
+    {"name": "l_infinity_norm", "func": "l_inf_norm"},
+    {"name": "l_1_norm", "func": "l_1_norm"},
+    {"name": "l_2_norm", "func": "l_2_norm"},
+    {"name": "cosine_similarity", "func": "paired_cosine_similarities"},
+    {"name": "euclidean_distance", "func": "paired_euclidean_distances"},
+    {"name": "manhattan_distance", "func": "paired_manhattan_distances"},
+    {"name": "wasserstein_distance", "func": "paired_wasserstein_distances"},
+]
+
+
+def _coerce_comma_separated_ints(ctx, param, value):
+    return tuple(int(x.strip()) for x in value.split(","))
 
 
 LOGGER = structlog.get_logger()
 
-
+"""
 def save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames, class_names_list):
     for batch_image_num, adv_image in enumerate(adv_batch):
         out_label = class_names_list[y[batch_image_num]]
@@ -53,18 +81,15 @@ def evaluate_classification_metrics(classifier, adv_ds):
     )
     for metric_name, metric_value in adv_metrics.items():
         mlflow.log_metric(key=metric_name, value=metric_value)
+"""
 
 
 @click.command()
 @click.option(
-    "--run-id",
-    type=click.STRING,
-    help="MLFlow Run ID of a successful fgm attack",
+    "--run-id", type=click.STRING, help="MLFlow Run ID of a successful fgm attack",
 )
 @click.option(
-    "--model",
-    type=click.STRING,
-    help="Name of model to load from registry",
+    "--model", type=click.STRING, help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -81,10 +106,7 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default=32,
 )
 @click.option(
-    "--seed",
-    type=click.INT,
-    help="Set the entry point rng seed",
-    default=-1,
+    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
 )
 @click.option(
     "--bit-depth",
@@ -99,8 +121,39 @@ def evaluate_classification_metrics(classifier, adv_ds):
     ),
     help="Root directory for NFS mounted datasets (in container)",
 )
+@click.option(
+    "--adv-tar-name",
+    type=click.STRING,
+    default="testing_adversarial_fgm.tar.gz",
+    help="Name to give to tarfile artifact containing fgm images",
+)
+@click.option(
+    "--adv-data-dir",
+    type=click.STRING,
+    default="adv_testing",
+    help="Directory for saving fgm images",
+)
+@click.option(
+    "--model-version", type=click.STRING, default="1",
+)
+@click.option(
+    "--image-size",
+    type=click.STRING,
+    callback=_coerce_comma_separated_ints,
+    help="Dimensions for the input images",
+)
 def feature_squeeze(
-    data_dir, run_id, model, model_architecture, batch_size, seed, bit_depth
+    data_dir,
+    run_id,
+    model,
+    model_architecture,
+    model_version,
+    batch_size,
+    seed,
+    bit_depth,
+    adv_data_dir,
+    adv_tar_name,
+    image_size,
 ):
     rng = np.random.default_rng(seed if seed >= 0 else None)
 
@@ -117,118 +170,183 @@ def feature_squeeze(
         bit_depth=bit_depth,
     )
 
-    tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
-    dataset_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
-
-    tf.random.set_seed(tensorflow_global_seed)
-    defense = FeatureSqueezing(bit_depth=bit_depth, clip_values=(0.0, 1.0))
-    with mlflow.start_run() as _:
-        adv_testing_tar_name = "testing_adversarial.tar.gz"
-        adv_testing_data_dir = Path.cwd() / "adv_testing"
-        def_testing_data_dir = Path.cwd() / "def_testing"
-        adv_perturbation_tar_name = "distance_metrics.csv.gz"
-        image_size = (28, 28)
-        color_mode = "grayscale"
-        if model_architecture == "alex_net" or model_architecture == "mobilenet":
-            image_size = (224, 224)
-            color_mode = "rgb"
-        LOGGER.info("Downloading image archive at ", path=adv_testing_tar_name)
-        adv_testing_tar_path = download_image_archive(
-            run_id=run_id, archive_path=adv_testing_tar_name
-        )
-        LOGGER.info("downloading adv_perturbation_tar ", path=adv_perturbation_tar_name)
-        adv_perturbation_tar_path = download_image_archive(
-            run_id=run_id, archive_path=adv_perturbation_tar_name
+    with mlflow.start_run() as active_run:  # noqa: F841
+        flow: Flow = init_squeeze_flow()
+        state = flow.run(
+            parameters=dict(
+                run_id=run_id,
+                data_dir=data_dir,
+                model=model,
+                model_version=model_version,
+                batch_size=batch_size,
+                model_architecture=model_architecture,
+                seed=seed,
+                bit_depth=bit_depth,
+                adv_tar_name=adv_tar_name,
+                adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),  # orig: data dir
+                image_size=image_size,
+            )
         )
 
-        with tarfile.open(adv_testing_tar_path, "r:gz") as f:
-            f.extractall(path=Path.cwd())
-        adv_ds = create_image_dataset(
-            data_dir=str(adv_testing_data_dir.resolve()),
+    return state
+
+
+def init_squeeze_flow() -> Flow:
+    with Flow("Feature Squeezing") as flow:
+        (
+            run_id,
+            data_dir,
+            model,
+            model_version,
+            batch_size,
+            model_architecture,
+            seed,
+            bit_depth,
+            adv_tar_name,
+            adv_data_dir,
+            image_size,
+        ) = (
+            Parameter("run_id"),
+            Parameter("model_architecture"),
+            Parameter("data_dir"),
+            Parameter("model"),
+            Parameter("model_version"),
+            Parameter("batch_size"),
+            Parameter("seed"),
+            Parameter("bit_depth"),
+            Parameter("adv_tar_name"),
+            Parameter("adv_data_dir"),
+            Parameter("image_size"),
+        )
+        seed, rng = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
+        )
+        tensorflow_global_seed = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
+        )
+        dataset_seed = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
+        )
+        init_tensorflow_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.backend_configs",
+            "tensorflow",
+            "init_tensorflow",
+            seed=tensorflow_global_seed,
+        )
+        make_directories_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "utils",
+            "make_directories",
+            dirs=[adv_data_dir],
+        )
+
+        make_directories_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "utils",
+            "make_directories",
+            dirs=["def_testing"],
+        )
+
+        log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.tracking",
+            "mlflow",
+            "log_parameters",
+            parameters=dict(
+                entry_point_seed=seed,
+                tensorflow_global_seed=tensorflow_global_seed,
+                dataset_seed=dataset_seed,
+            ),
+        )
+        """
+        keras_classifier = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.registry",
+            "art",
+            "load_wrapped_tensorflow_keras_classifier",
+            name=model,
+            version=model_version,
+            upstream_tasks=[init_tensorflow_results],
+        )
+        """
+        distance_metrics_list = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.metrics",
+            "distance",
+            "get_distance_metric_list",
+            request=DISTANCE_METRICS,
+        )
+        adv_tar_path = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "download_all_artifacts_in_run",
+            run_id=run_id,
+            artifact_path=adv_tar_name,
+        )
+        extract_tarfile_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "utils",
+            "extract_tarfile",
+            filepath=adv_tar_path,
+        )
+        adv_ds = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.data",
+            "tensorflow",
+            "create_image_dataset",
+            data_dir=adv_data_dir,  # adv_tar_name,
             subset=None,
             validation_split=None,
             image_size=image_size,
-            color_mode=color_mode,
             seed=dataset_seed,
+            upstream_tasks=[init_tensorflow_results, extract_tarfile_results],
+        )
+
+        feature_squeeze = pyplugs.call_task(
+            "src",
+            "squeeze_plugin",
+            "feature_squeeze",
+            data_dir=data_dir,
+            model=model,
+            model_version=model_version,
+            model_architecture=model_architecture,
             batch_size=batch_size,
-        )
-
-        data_flow = adv_ds
-
-        num_images = data_flow.n
-        img_filenames = [Path(x) for x in data_flow.filenames]
-        class_names_list = sorted(
-            data_flow.class_indices, key=data_flow.class_indices.get
-        )
-        # distance_metrics_ = {"image": [], "label": []}
-        for batch_num, (x, y) in enumerate(data_flow):
-            if batch_num >= num_images // batch_size:
-                break
-
-            clean_filenames = img_filenames[
-                batch_num * batch_size : (batch_num + 1) * batch_size
-            ]
-
-            LOGGER.info(
-                "Applying Defense",
-                defense="feature squeezing",
-                batch_num=batch_num,
-            )
-
-            y_int = np.argmax(y, axis=1)
-            adv_batch = x
-
-            adv_batch_defend, _ = defense(adv_batch)
-            save_adv_batch(
-                adv_batch_defend,
-                def_testing_data_dir,
-                y_int,
-                clean_filenames,
-                class_names_list,
-            )
-
-        testing_dir = Path(data_dir) / "testing"
-        adv_data_dir = Path().cwd() / "adv_testing"
-        def_data_dir = Path().cwd() / "def_testing"
-        adv_data_dir.mkdir(parents=True, exist_ok=True)
-        adv_testing_tar = Path().cwd() / "testing_adversarial.tar.gz"
-        image_perturbation_csv = Path().cwd() / "distance_metrics.csv.gz"
-
-        #       distance_metrics = pd.DataFrame(distance_metrics_)
-
-        image_perturbation_csv = Path(data_dir).cwd() / "distance_metrics.csv.gz"
-        with tarfile.open(adv_testing_tar, "w:gz") as f:
-            f.add(str(def_data_dir.resolve()), arcname=adv_data_dir.name)
-
-        tar = tarfile.open(adv_testing_tar)
-        LOGGER.info("Saved to : ", dir=adv_testing_tar_path)
-        LOGGER.info("Log defended images", filename=adv_testing_tar.name)
-        print("Base: ", str(adv_testing_tar))
-        print("Name: ", str(adv_testing_tar.name))
-        mlflow.log_artifact(str(adv_testing_tar.name))
-        mlflow.log_artifact(str(adv_perturbation_tar_path))
-        LOGGER.info(
-            "Log distance metric distributions", filename=image_perturbation_csv.name
-        )
-
-        LOGGER.info("Finishing run ID: ", run_id=run_id)
-        adv_ds_defend = create_image_dataset(
-            data_dir=str(adv_testing_data_dir.resolve()),
-            subset=None,
-            validation_split=None,
+            seed=seed,
+            bit_depth=bit_depth,
+            run_id=run_id,
+            adv_tar_name=adv_tar_name,
+            adv_data_dir=adv_data_dir,
+            data_flow=adv_ds,
             image_size=image_size,
-            color_mode=color_mode,
-            seed=dataset_seed,
-            batch_size=batch_size,
+            upstream_tasks=[make_directories_results],
         )
+        """
+        log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "upload_directory_as_tarball_artifact",
+            source_dir=data_dir,
+            tarball_filename=adv_tar_name,
+            upstream_tasks=[distance_metrics],
+        )
+        
+        log_distance_metrics_result = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "upload_data_frame_artifact",
+            data_frame=distance_metrics,
+            file_name=distance_metrics_filename,
+            file_format="csv.gz",
+            file_format_kwargs=dict(index=False),
+        )
+        """
+    return flow
 
 
-"""
-        classifier = load_model_in_registry(model=model)
-        evaluate_classification_metrics(classifier=classifier, adv_ds=adv_ds_defend)
-"""
 if __name__ == "__main__":
-    configure_stdlib_logger("INFO", log_filepath=None)
-    configure_structlog_logger("console")
+    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
 
-    feature_squeeze()
+    #   clear_logger_handlers(get_prefect_logger())
+    attach_stdout_stream_handler(as_json)
+    set_logging_level(log_level)
+    configure_structlog()
+
+    with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
+        _ = feature_squeeze()
