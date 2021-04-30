@@ -18,8 +18,10 @@ def register_routes(api: Api, app: Flask) -> None:
     from .experiment import register_routes as attach_experiment
     from .job import register_routes as attach_job
     from .queue import register_routes as attach_job_queue
+    from .task_plugin import register_routes as attach_task_plugin
 
     # Add routes
     attach_experiment(api, app)
     attach_job(api, app)
     attach_job_queue(api, app)
+    attach_task_plugin(api, app)

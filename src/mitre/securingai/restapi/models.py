@@ -12,6 +12,11 @@ from .queue.model import (
     QueueRegistrationForm,
     QueueRegistrationFormData,
 )
+from .task_plugin.model import (
+    TaskPlugin,
+    TaskPluginUploadForm,
+    TaskPluginUploadFormData,
+)
 
 __all__ = [
     "Experiment",
@@ -24,4 +29,7 @@ __all__ = [
     "QueueRegistrationForm",
     "QueueRegistrationFormData",
     "QueueLock",
+    "TaskPlugin",
+    "TaskPluginUploadForm",
+    "TaskPluginUploadFormData",
 ]

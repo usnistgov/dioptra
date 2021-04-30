@@ -17,6 +17,7 @@ class BaseConfig(object):
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = False
+    AI_PLUGINS_BUCKET = os.getenv("AI_PLUGINS_BUCKET", "plugins")
 
 
 class DevelopmentConfig(BaseConfig):
