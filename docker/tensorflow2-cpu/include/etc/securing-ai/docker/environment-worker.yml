@@ -46,16 +46,16 @@ dependencies:
       - alembic<=1.4.1
       - boto3>=1.16.0
       - databricks-cli==0.13.0
-      - flask-accepts>=0.17.0
-      - Flask-Injector>=0.12.0
-      - Flask-JWT-Extended>=3.24.0
-      - Flask-Migrate>=2.5.0
-      - flask-restx>=0.2.0
-      - Flask-SQLAlchemy>=2.4.0
-      - Flask-WTF>=0.14.3
-      - Flask>=1.1.0
+      - flask-accepts>=0.17.0,<1
+      - Flask-Injector>=0.12.0,<1
+      - Flask-JWT-Extended>=3.24.0,<4
+      - Flask-Migrate>=2.5.0,<3
+      - flask-restx>=0.2.0,<1
+      - Flask-SQLAlchemy>=2.4.0,<3
+      - Flask-WTF>=0.14.3,<1
+      - Flask>=1.1.0,<2
       - gorilla==0.3.0
-      - marshmallow>=3.9.0
+      - marshmallow>=3.9.0,<4
       - mlflow==1.12.1
       - mnist>=0.2.2
       - multimethod>=1.5
