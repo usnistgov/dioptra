@@ -6,7 +6,7 @@ dependencies:
   - beautifulsoup4
   - blinker
   - bottleneck
-  - click>=7.1.0
+  - click>=7.1.0,<8
   - cloudpickle
   - coverage
   - cryptography=3.*
@@ -66,7 +66,7 @@ dependencies:
   - twine
   - ujson=1.35
   - watchdog=0.10.*
-  - werkzeug>=1.0.0
+  - werkzeug>=1.0.0,<2
   - wheel
   - pip:
       - adversarial-robustness-toolbox==1.5.1
@@ -80,14 +80,14 @@ dependencies:
       - docformatter
       - fett~=0.3.2
       - flake8-bugbear
-      - Flask>=1.1.0
-      - flask-accepts>=0.17.0
-      - Flask-Injector>=0.12.0
-      - Flask-JWT-Extended>3.24.0
-      - Flask-Migrate>=2.5.0
-      - flask-restx>=0.2.0
-      - Flask-SQLAlchemy>=2.4.0
-      - Flask-WTF>=0.14.0
+      - Flask>=1.1.0,<2
+      - flask-accepts>=0.17.0,<1
+      - Flask-Injector>=0.12.0,<1
+      - Flask-JWT-Extended>3.24.0,<4
+      - Flask-Migrate>=2.5.0,<3
+      - flask-restx>=0.2.0,<1
+      - Flask-SQLAlchemy>=2.4.0,<3
+      - Flask-WTF>=0.14.0,<1
       - freezegun
       - gorilla
       - injector>=0.18.0
