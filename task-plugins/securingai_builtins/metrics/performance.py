@@ -189,7 +189,7 @@ def mcc(y_true, y_pred, **kwargs) -> float:
     See Also:
         - :py:func:`sklearn.metrics.matthews_corrcoef`
     """
-    metric: float = matthews_corrcoef(y_true=y_true, y_score=y_pred, **kwargs)
+    metric: float = matthews_corrcoef(y_true=y_true, y_pred=y_pred, **kwargs)
     return metric
 
 
