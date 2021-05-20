@@ -51,6 +51,6 @@ class StderrLogStream(LogStream):
     def __init__(self, as_json: bool):
         self.logger = logging.getLogger("STDERR")
         self.name = self.logger.name
-        self.level = logging.ERROR
+        self.level = logging.INFO
         self._as_json = as_json
         self._redirector = contextlib.redirect_stderr(self)  # type: ignore
