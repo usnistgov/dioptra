@@ -9,6 +9,7 @@ import click
 import mlflow
 import structlog
 from data_tensorflow_updated import create_image_dataset
+from defenses_training import create_Madry_PGD_model
 from estimators_keras_classifiers_updated import init_classifier
 from mlflow.tracking import MlflowClient
 from prefect import Flow, Parameter, case
@@ -20,6 +21,7 @@ from tasks import (
     get_optimizer,
     get_performance_metrics,
 )
+from tracking_mlflow_updated import add_model_manually_to_registry
 
 from mitre.securingai import pyplugs
 from mitre.securingai.sdk.utilities.contexts import plugin_dirs
@@ -90,7 +92,7 @@ def _coerce_comma_separated_ints(ctx, param, value):
     "--epochs",
     type=click.INT,
     help="Number of epochs to train model",
-    default=30,
+    default=10,
 )
 @click.option(
     "--batch-size",
@@ -159,6 +161,18 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Directory in tarfile containing images",
 )
 @click.option(
+    "--eps",
+    type=click.FLOAT,
+    help="Maximum perturbation that the attacker can introduce.",
+    default=0.15,
+)
+@click.option(
+    "--eps-step",
+    type=click.FLOAT,
+    help="Attack step size (input variation) at each iteration.",
+    default=0.001,
+)
+@click.option(
     "--seed",
     type=click.INT,
     help="Set the entry point rng seed",
@@ -181,6 +195,8 @@ def train(
     dataset_run_id_training,
     adv_tar_name,
     adv_data_dir,
+    eps,
+    eps_step,
     seed,
 ):
     LOGGER.info(
@@ -200,6 +216,8 @@ def train(
         load_dataset_from_mlruns=load_dataset_from_mlruns,
         dataset_run_id_testing=dataset_run_id_testing,
         dataset_run_id_training=dataset_run_id_training,
+        eps=eps,
+        eps_step=eps_step,
         seed=seed,
     )
 
@@ -210,22 +228,23 @@ def train(
         rescale = 1.0 / 255
 
     if load_dataset_from_mlruns:
-        data_dir_testing = Path.cwd() / "testing" / adv_data_dir
+        if len(dataset_run_id_testing) > 0:
+            data_dir_testing = Path.cwd() / "testing" / adv_data_dir
+            data_test_tar_name = adv_tar_name
+            adv_testing_tar_path = download_image_archive(
+                run_id=dataset_run_id_testing, archive_path=data_test_tar_name
+            )
+            with tarfile.open(adv_testing_tar_path, "r:gz") as f:
+                f.extractall(path=(Path.cwd() / "testing"))
+        else:
+            LOGGER.info(
+                "No test run_id provided, defaulting to original test directory.",
+            )
         data_dir_training = Path.cwd() / "training" / adv_data_dir
-
-        data_test_tar_name = adv_tar_name
         data_train_tar_name = adv_tar_name
-
-        adv_testing_tar_path = download_image_archive(
-            run_id=dataset_run_id_testing, archive_path=data_test_tar_name
-        )
         adv_training_tar_path = download_image_archive(
             run_id=dataset_run_id_training, archive_path=data_train_tar_name
         )
-
-        with tarfile.open(adv_testing_tar_path, "r:gz") as f:
-            f.extractall(path=(Path.cwd() / "testing"))
-
         with tarfile.open(adv_training_tar_path, "r:gz") as f:
             f.extractall(path=(Path.cwd() / "training"))
 
@@ -246,6 +265,8 @@ def train(
                 optimizer_name=optimizer,
                 validation_split=validation_split,
                 imagenet_preprocessing=imagenet_preprocessing,
+                eps=eps,
+                eps_step=eps_step,
                 seed=seed,
             )
         )
@@ -268,6 +289,8 @@ def init_train_flow() -> Flow:
             optimizer_name,
             validation_split,
             imagenet_preprocessing,
+            eps,
+            eps_step,
             seed,
         ) = (
             Parameter("active_run"),
@@ -283,6 +306,8 @@ def init_train_flow() -> Flow:
             Parameter("optimizer_name"),
             Parameter("validation_split"),
             Parameter("imagenet_preprocessing"),
+            Parameter("eps"),
+            Parameter("eps_step"),
             Parameter("seed"),
         )
         seed, rng = pyplugs.call_task(
@@ -332,6 +357,7 @@ def init_train_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
             rescale=rescale,
             imagenet_preprocessing=imagenet_preprocessing,
+            set_to_max_size=True,
         )
         validation_ds = create_image_dataset(
             data_dir=training_dir,
@@ -361,7 +387,7 @@ def init_train_flow() -> Flow:
             "get_n_classes_from_directory_iterator",
             ds=training_ds,
         )
-        # TODO: Swap to pyplugs in next update.
+
         classifier = init_classifier(
             model_architecture=model_architecture,
             optimizer=optimizer,
@@ -370,21 +396,21 @@ def init_train_flow() -> Flow:
             n_classes=n_classes,
             upstream_tasks=[init_tensorflow_results],
         )
-        history = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.estimators",
-            "methods",
-            "fit",
-            estimator=classifier,
-            x=training_ds,
-            fit_kwargs=dict(
-                nb_epochs=epochs,
-                validation_data=validation_ds,
-                callbacks=callbacks_list,
-                verbose=2,
-            ),
+
+        classifier = create_Madry_PGD_model(
+            model=classifier,
+            training_ds=training_ds,
+            learning_rate=learning_rate,
+            batch_size=batch_size,
+            epochs=epochs,
+            optimizer=optimizer,
+            metrics=metrics,
+            eps=eps,
+            eps_step=eps_step,
         )
+
         classifier_performance_metrics = evaluate_metrics_tensorflow(
-            classifier=classifier, dataset=testing_ds, upstream_tasks=[history]
+            classifier=classifier, dataset=testing_ds
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
@@ -392,16 +418,12 @@ def init_train_flow() -> Flow:
             "log_metrics",
             metrics=classifier_performance_metrics,
         )
-        model_version = pyplugs.call_task(  # noqa: F841
-            f"{_PLUGINS_IMPORT_PATH}.registry",
-            "mlflow",
-            "add_model_to_registry",
+        add_model_manually_to_registry(
             active_run=active_run,
-            name=register_model_name,
-            model_dir="model",
-            upstream_tasks=[history],
+            model=classifier,
+            artifact_path="model",
+            model_name=register_model_name,
         )
-
     return flow
 
 

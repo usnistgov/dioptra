@@ -1,32 +1,27 @@
-# Tensorflow Adversarial Patch Demo
+# Tensorflow Backdoor Poisoning Demos
 
->⚠️ **Warning:** Some of the demos assume that you have access to an on-prem deployment of the Securing AI Testbed that provides a copy of the Fruits360 and ImageNet datasets and a CUDA-compatible GPU.
-> These demos cannot be run on a typical personal computer.
+This demo provides three different versions of a backdoor poisoning attack with image preprocessing defense.
+The three available ipython demos explore the following poisoning attacks:
 
-This demo provides three different versions of the adversarial patch attack on separate image classification datasets and model architectures.
-The three available Jupyter notebooks explore the following poisoning attacks:
-
--   `demo-mnist-patches.ipynb`: Applies adversarial patch attack on the MNIST dataset. Includes preprocessing and adversarial training defenses.
--   `demo-fruits360-patches.ipynb`: Applies adversarial patch attack  on Fruits360 dataset. Includes adversarial training defenses.
--   `demo-imagenet-patches.ipynb`: Applies attack on the ImageNet dataset. Uses a pretrained model with the `init` entrypoint, rather than train a new model with the `train` entrypoint.
+-   `demo-mnist-poison-backdoor-baseline.ipynb`: Basic backdoor poisoning via training data mislabeling.
+-   `demo-mnist-poison-backdoor-adv-embedding.ipynb`: Model backdoor poisoning using the adversarial embedding technique to add a secondary backdoor training objective to the model.
+-   `demo-mnist-poison-backdoor-clean-label.ipynb`: Advanced backdoor poisoning using a clean label technique to generate hidden poisons from a proxy model.
 
 Users are welcome to run the demos in any order.
-The MNIST demo takes the shortest time to complete and contains an additional set of defense examples.
+Please note that the clean label backdoor attack takes the longest time to complete.
 For more information regarding attack and defense parameters, please see the attack and defense sections of the [MLflow Entrypoint Overview](#MLflow-Entrypoint-Overview) section.
 
-Users can also explore the following preprocessing defenses from their associated defense entry points:
+Each of these attacks also explore the following preprocessing defenses from their associated defense entry points:
 
 -   Spatial Smoothing: Smooths out an image by passing a median filter through neighboring pixel values in images.
 -   Gaussian Augmentation: Adds gaussian noise to an image.
 -   JPEG Compression: Applies an image compression algorithm over the image.
 
-Please note that the patch attack generally bypasses most preprocessing defenses, see `demo-mnist-patches.ipynb` for details.
-
 ## Getting started
 
-### MNIST patches demo
+### Local run
 
-Everything you need to run the `demo-mnist-patches.ipynb` demo on your local computer is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running `make pull-latest`.
+Everything you need to run the demos on your local computer is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running `make pull-latest`.
 Once you have downloaded the images, navigate to this example's directory using the terminal and run the demo startup sequence:
 
 ```bash
@@ -34,9 +29,8 @@ make demo
 ```
 
 The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
-Once the startup process completes, open up your web browser and enter `http://localhost:38888` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
-Double click the `work` folder and open the `demo-mnist-patches.ipynb` file.
-From here, follow the provided instructions to run the demo provided in the Jupyter notebook.
+Once the startup process completes, open up your web browser and enter `<http://localhost:38888>` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the `work` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
 **Don't forget to update the `DATASET_DIR` variable to be: `DATASET_DIR = "/nfs/data"`.**
 
 If you want to watch the output logs for the Tensorflow worker containers as you step through the demo, run `docker-compose logs -f tfcpu-01 tfcpu-02` in your terminal.
@@ -53,98 +47,109 @@ Open a terminal and navigate to this example's directory and run the **jupyter**
 make jupyter
 ```
 
-Once the startup process completes, open up your web browser and enter `http://localhost:38888` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Once the startup process completes, open up your web browser and enter <http://localhost:38888> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
 Double click the `work` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
 
 When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
 
 ## MLflow Entrypoint Overview
 
-Here are the available MLflow entry points used by the demos and their associated parameters.
+Here are the available MLflow entry points used by the poisoning demos and their associated parameters.
 
 ### Common Training and Testing Entry Points
 
 -   `init_model`: Loads a pretrained model available from the TensorFlow library into the MLflow model storage. Evaluates the model on an available test set
     -   Parameters:
-        -   `data_dir` : The directory of the test set for evaluating pretrained model.
-        -   `image_size`: A tuple specifying default image size.
-        -   `register_model_name`: Specifies trained model name.
-        -   `model_architecture`: Specifies model type (Current options: "resnet50", "vgg16").
-        -   `batch_size`: Specifies a positive integer batch size for image testing.
+        -   `data_dir` : The directory of test set for evaluating pretrained model.
+        -   `model_tag`: An optional identifier for the loaded model.
+        -   `model_architecture`: Specifies model type (Current options: "resnet50", "vgg16")
+        -   `batch_size`: Specifies batch size of image testing.
         -   `seed`: Specifies an integer seed value for controlling randomized tensorflow behavior.
-        -   `imagenet_preprocessing`: If set to true, apply keras ImageNet preprocessing settings for images.
+    -   Additional Notes:
+        -   Named models generated by this entry point follow the pattern: `{EXPERIMENT_NAME}_{model_tag}_{model_architecture}`
+        -   If `model_tag` is left blank, the models are instead named: `{EXPERIMENT_NAME}_{model_architecture}`
 
 -   `infer`:  Loads and evaluates an model from MLflow storage on a test set created from another MLflow run.
     -   Parameters:
         -   `run_id`: The string ID of the associated MLflow run.
-        -   `image_size`: A tuple specifying default image size.
-        -   `model_name`: The name of the associated model.
-        -   `model_version`: The version of the associated model. Use `none` for latest version.
+        -   `model`: The name of the associated model.
+        -   `model_architecture`: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
         -   `batch_size`: Specifies batch size of image testing.
         -   `seed`: Specifies an integer seed value for controlling randomized tensorflow behavior.
-        -   `adv_tar_name`: Specifies the tarfile name for the dataset artifact.
-        -   `adv_data_dir`: Specifies the folder name containing the dataset artifact.
-        -   `imagenet_preprocessing`: If set to true, apply keras ImageNet preprocessing settings for images.
+        -   `dataset_tar_name`: Specifies the tarfile name for the dataset artifact.
+        -   `dataset_name`: Specifies the folder name containing the dataset artifact.
     -   Additional Notes:
         -   Most data preprocessing steps and attack deployment steps will generate a data artifact (ex. `adv_testing.tar`) which will contain the specified dataset of interest (ex `adversarial_patched_data`).
         -   Users must specify the artifact tarfile and dataset name in order to properly transfer the inputs between job runs.
 
 -   `train`: Trains a model architecture over a given dataset.
     -   Parameters:
-        -   `register_model_name`: Specifies trained model name.
-        -   `data_dir_training`: Training data directory.
-        -   `data_dir_testing`: Testing data directory.
+        -   `model_tag`: Specifies a tag to provide to the trained model.
+        -   `data_dir_train`: Training data directory.
+        -   `data_dir_test`: Testing data directory.
         -   `model_architecture`: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
-        -   `epochs`: Specifies a positive floating point number of iterations through the given dataset.
-        -   `batch_size`: Positive integer batch size for training and testing.
-        -   `learning_rate`: Initial learning rate for the training step. Positive floating point values only.
+        -   `epochs`: Specifies a floating point number of iterations through the given dataset.
+        -   `batch_size`: Batch size for training and testing.
+        -   `register_model`: If set to true, store trained model into MLflow models repository.
+        -   `learning_rate`: Initial learning rate for the training step.
         -   `optimizer`: Model optimization algorithm (Current options:"rmsprop", "adam", "adagrad", "sgd")
         -   `validation_split`: Amount of training data to split off as the validation set. Range is 0 to 1.0.
         -   `load_dataset_from_mlruns`: If set to true, loads the dataset from the MLflow experiment artifacts repo instead.
-        -   `dataset_run_id_testing`: The string ID of the associated MLflow run for testing. Can be left blank to use `data_dir_testing` instead.
-        -   `dataset_run_id_training`: The string ID of the associated MLflow run for training. Must be instantiated if user sets `load_dataset_from_mlruns` to true.
-        -   `adv_tar_name`: Specifies the tarfile name for the dataset artifact.
-        -   `adv_data_dir`: Specifies the folder name containing the dataset artifact.
+        -   `training_dataset_run_id`: The string ID of the associated MLflow run.
+        -   `dataset_tar_name`: Specifies the tarfile name for the dataset artifact.
+        -   `dataset_name`: Specifies the folder name containing the dataset artifact.
+        -   `apply_defense`: Set to true to apply the PGD defense.
         -   `seed`: Specifies an integer seed value for controlling randomized tensorflow behavior.
-        -   `imagenet_preprocessing`: If set to true, apply keras ImageNet preprocessing settings for images.
     -   Additional Notes:
+        -   Named models generated by this entry point follow the pattern: `{EXPERIMENT_NAME}_{model_tag}_{model_architecture}`
+        -   If `model_tag` is left blank, the models are instead named: `{EXPERIMENT_NAME}_{model_architecture}`
         -   When `load_dataset_from_mlruns` is set to true, the provided data artifact is used over the default dataset location.
-        -   As a result the `dataset_run_id_training`, `adv_tar_name`, and `adv_data_dir` parameters must be provided when `load_dataset_from_mlruns` is true. If false, they are not used in the job.
+        -   As a result the `training_dataset_run_id`, `dataset_tar_name`, and `dataset_name` parameters must be provided when `load_dataset_from_mlruns` is true. If false, they are not used in the job.
 
-### Patch Attack Entry Points
+### Poisoning Attack Entry Points
 
--   `gen_patch`: Generates adversarial patches from a trained model and dataset.
+-   `gen_poison_model`: Applies the adversarial embedding technique and creates a newly trained model.
     -   Parameters:
-        -   `data_dir`: Sample data directory for generating adversarial patches.
-        -   `image_size`: A tuple specifying default image size.
-        -   `model_name`: The name of the associated model.
-        -   `model_version`: The version of the associated model. Use `none` for latest version.
-        -   `adv_tar_name`: Specifies the output tarfile name for the patch artifact.
-        -   `adv_data_dir`: Specifies the output folder name containing the patch artifact.
-        -   `learning_rate`: Positive floating point value for patch optimization.
-        -   `max_iter`: Maximum number of patch optimization steps. Positive integer values only.
-        -   `patch_target`: Target integer class index for patch attack.
-        -   `num_patch`: Number of patches to generate.
-        -   `num_patch_gen_samples`: Number of images to use for optimizing each patch.
-        -   `imagenet_preprocessing`: If set to true, apply keras ImageNet preprocessing settings for images.
+        -   `model_tag`: Specifies a tag to provide to the trained model.
+        -   `data_dir_train`: Training data directory.
+        -   `data_dir_test`: Testing data directory.
+        -   `model_architecture`: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
+        -   `epochs`: Specifies a non-negative floating point number of iterations through the given dataset.
+        -   `batch_size`: Batch size for training and testing.
+        -   `register_model`: If set to true, store trained model into MLflow models repository.
+        -   `learning_rate`: Initial non-negative floating point learning rate for the training step.
+        -   `optimizer`: Model optimization algorithm (Current options:"rmsprop", "adam", "adagrad", "sgd")
+        -   `training_split`: Fraction of training dataset to use for embedding attack. ART attack takes in training data as a single numpy array which limits dataset sizes. Range is from 0.0 (none) to 1.0 (the entire dataset is used).
+        -   `load_dataset_from_mlruns`: If set to true, loads the dataset from the MLflow experiment artifacts repo instead.
+        -   `training_dataset_run_id`: The string ID of the associated MLflow run.
         -   `seed`: Specifies an integer seed value for controlling randomized tensorflow behavior.
+        -   `target_class_id`: Target non-negative integer id for poisoning attack.
+        -   `feature_layer_index`: Feature layer integer index to add secondary backdoor objective.
+        -   `discriminator_layer_1_size`: Integer size of the first discriminator layer of the secondary backdoor objective.
+        -   `discriminator_layer_2_size`: Integer size  of the second discriminator layer of the secondary backdoor objective.
+        -   `regularization_factor`: The regularization constant for the backdoor recognition loss function. Postive floating point values only.
+        -   `poison_fraction`: The fraction of training data to be poisoned during training. Range is from 0 (none) to 1.0 (all of the data is poisoned).
 
--   `deploy_patch`: Deploys adversarial patches to a given dataset.
+-   `gen_poison_test_data`: Generates the backdoor-poisoned data for testing. Can also be applied over training data for the baseline attack.
     -   Parameters:
-        -   `run_id`: The string ID of the associated MLflow run.
-        -   `data_dir`:  Sample data directory for applying adversarial patches.
-        -   `model`: The name of the associated trained model.
-        -   `model_architecture`: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16").
-        -   `patch_deployment_method`: If set to "corrupt", patched-images replace their original versions. If set to "augment", patched-images are stored alongside their original counterparts.
-        -   `patch_application_rate`: Specifies fraction from \[0, 1.0\] of dataset to apply patches over. A value of 1.0 results in the patch applied over the entire dataset.
-        -   `patch_scale`: Floating point value from \[0, 1.0\] specifying patch size relative to image. Setting this value to 1.0 effectively replaces the entire image with a patch.
-        -   `batch_size`: Integer batch size of patch deployment over images.
-        -   `rotation_max`: Floating point value from \[0, 180\] degrees specifying maximum, randomized patch rotation.
-        -   `scale_min`: Floating point value from \[0, 1.0) degrees specifying minimum random scaling. Must be smaller than `scale_max`.
-        -   `scale_max`: Floating point value from (0, 1.0\] degrees specifying maximum random scaling. Must be larger than `scale_min`.
+        -   `data_dir`: Directory of target dataset.
+        -   `model_architecture`: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
+        -   `target_class`: Integer label of target class.
+        -   `batch_size`: Batch size for poisoning step.
         -   `seed`: Specifies an integer seed value for controlling randomized tensorflow behavior.
-    -   Additional Notes:
-        -   Patches are effectively rotated a randomized amount within `rotation_max` degrees and will be scaled by a value between \[`scale_min`, `scale_max`\].
+        -   `poison_fraction`: Fraction of inputs to poison. Range is from 0 (none) to 1.0 (all of the data is poisoned).
+        -   `label_type`: If set to `test`, keep original label. If set to `train`, mislabel as poisoning inputs.
+
+-   `gen_poison_clean_data`: Creates clean label poisons from an available proxy model. Similar to the `gen_poison_test_data` entry point with an additional model input parameter.
+    -   Parameters:
+        -   `data_dir`: Directory of target dataset.
+        -   `model`: Name of trained model stored in MLflow repo.
+        -   `model_architecture`: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
+        -   `target_class`: Label of target class.
+        -   `batch_size`: Batch size for poisoning step.
+        -   `seed`: Specifies an integer seed value for controlling randomized tensorflow behavior.
+        -   `poison_fraction`: Fraction of inputs to poison. Range is from 0 (none) to 1.0 (all of the data is poisoned).
+        -   `label_type`: If set to `test`, keep original label. If set to `train`, mislabel as poisoning inputs.
 
 ### Image Preprocessing Defense Entry Points
 
@@ -186,7 +191,7 @@ Here are the available MLflow entry points used by the demos and their associate
         -   `model_architecture`: Specifies model type (Current options: "le_net","shallow_net", "alex_net", "resnet50", "vgg16")
         -   `batch_size`: Batch size for input images. Positive integer values only.
         -   `gaussian_augmentation_perform_data_augmentation`: If set to true, include original test data as well.
-        -   `gaussian_augmentation_ratio`: With data augmentation on, specifies ratio from \[0.0, 1.0\] of poisoning examples to add. A value of 1.0 results in the defense applied over the entire dataset.
+        -   `gaussian_augmentation_ratio`: With data augmentation on, specifies ratio from [0.0, 1.0] of poisoning examples to add. A value of 1.0 results in the defense applied over the entire dataset.
         -   `gaussian_augmentation_sigma`: Controls the standard deviation of the noise. Higher floating-point values result in greater noise added.
         -   `gaussian_augmentation_apply_fit`: Apply noise to training set.
         -   `gaussian_augmentation_apply_predict`: Apply noise to testing set.

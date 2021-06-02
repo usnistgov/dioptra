@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 import click
 import mlflow
 import structlog
+from attacks_poison_updated import create_adv_embedding_model
 from data_tensorflow_updated import create_image_dataset
 from estimators_keras_classifiers_updated import init_classifier
 from mlflow.tracking import MlflowClient
@@ -20,6 +21,7 @@ from tasks import (
     get_optimizer,
     get_performance_metrics,
 )
+from tracking_mlflow_updated import add_model_manually_to_registry
 
 from mitre.securingai import pyplugs
 from mitre.securingai.sdk.utilities.contexts import plugin_dirs
@@ -159,6 +161,42 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Directory in tarfile containing images",
 )
 @click.option(
+    "--target-class-id",
+    type=click.INT,
+    help="Index of target class for backdoor poison.",
+    default=1,
+)
+@click.option(
+    "--feature-layer-index",
+    type=click.INT,
+    help="Index of feature layer for backdoor poisoning.",
+    default=6,
+)
+@click.option(
+    "--discriminator-layer-1-size",
+    type=click.INT,
+    help="The size of the first discriminator layer.",
+    default=256,
+)
+@click.option(
+    "--discriminator-layer-2-size",
+    type=click.INT,
+    help="The size of the second discriminator layer.",
+    default=128,
+)
+@click.option(
+    "--regularization-factor",
+    type=click.FLOAT,
+    help="The regularization constant for the backdoor recognition part of the loss function.",
+    default=30.0,
+)
+@click.option(
+    "--poison-fraction",
+    type=click.FLOAT,
+    help="The fraction of training data to be poisoned. Range 0 to 1.",
+    default=0.10,
+)
+@click.option(
     "--seed",
     type=click.INT,
     help="Set the entry point rng seed",
@@ -181,6 +219,12 @@ def train(
     dataset_run_id_training,
     adv_tar_name,
     adv_data_dir,
+    target_class_id,
+    feature_layer_index,
+    discriminator_layer_1_size,
+    discriminator_layer_2_size,
+    regularization_factor,
+    poison_fraction,
     seed,
 ):
     LOGGER.info(
@@ -200,6 +244,12 @@ def train(
         load_dataset_from_mlruns=load_dataset_from_mlruns,
         dataset_run_id_testing=dataset_run_id_testing,
         dataset_run_id_training=dataset_run_id_training,
+        target_class_id=target_class_id,
+        feature_layer_index=feature_layer_index,
+        discriminator_layer_1_size=discriminator_layer_1_size,
+        discriminator_layer_2_size=discriminator_layer_2_size,
+        regularization_factor=regularization_factor,
+        poison_fraction=poison_fraction,
         seed=seed,
     )
 
@@ -210,22 +260,23 @@ def train(
         rescale = 1.0 / 255
 
     if load_dataset_from_mlruns:
-        data_dir_testing = Path.cwd() / "testing" / adv_data_dir
+        if len(dataset_run_id_testing) > 0:
+            data_dir_testing = Path.cwd() / "testing" / adv_data_dir
+            data_test_tar_name = adv_tar_name
+            adv_testing_tar_path = download_image_archive(
+                run_id=dataset_run_id_testing, archive_path=data_test_tar_name
+            )
+            with tarfile.open(adv_testing_tar_path, "r:gz") as f:
+                f.extractall(path=(Path.cwd() / "testing"))
+        else:
+            LOGGER.info(
+                "No test run_id provided, defaulting to original test directory.",
+            )
         data_dir_training = Path.cwd() / "training" / adv_data_dir
-
-        data_test_tar_name = adv_tar_name
         data_train_tar_name = adv_tar_name
-
-        adv_testing_tar_path = download_image_archive(
-            run_id=dataset_run_id_testing, archive_path=data_test_tar_name
-        )
         adv_training_tar_path = download_image_archive(
             run_id=dataset_run_id_training, archive_path=data_train_tar_name
         )
-
-        with tarfile.open(adv_testing_tar_path, "r:gz") as f:
-            f.extractall(path=(Path.cwd() / "testing"))
-
         with tarfile.open(adv_training_tar_path, "r:gz") as f:
             f.extractall(path=(Path.cwd() / "training"))
 
@@ -246,6 +297,12 @@ def train(
                 optimizer_name=optimizer,
                 validation_split=validation_split,
                 imagenet_preprocessing=imagenet_preprocessing,
+                target_class_id=target_class_id,
+                feature_layer_index=feature_layer_index,
+                discriminator_layer_1_size=discriminator_layer_1_size,
+                discriminator_layer_2_size=discriminator_layer_2_size,
+                regularization_factor=regularization_factor,
+                poison_fraction=poison_fraction,
                 seed=seed,
             )
         )
@@ -268,6 +325,12 @@ def init_train_flow() -> Flow:
             optimizer_name,
             validation_split,
             imagenet_preprocessing,
+            target_class_id,
+            feature_layer_index,
+            discriminator_layer_1_size,
+            discriminator_layer_2_size,
+            regularization_factor,
+            poison_fraction,
             seed,
         ) = (
             Parameter("active_run"),
@@ -283,6 +346,12 @@ def init_train_flow() -> Flow:
             Parameter("optimizer_name"),
             Parameter("validation_split"),
             Parameter("imagenet_preprocessing"),
+            Parameter("target_class_id"),
+            Parameter("feature_layer_index"),
+            Parameter("discriminator_layer_1_size"),
+            Parameter("discriminator_layer_2_size"),
+            Parameter("regularization_factor"),
+            Parameter("poison_fraction"),
             Parameter("seed"),
         )
         seed, rng = pyplugs.call_task(
@@ -332,6 +401,7 @@ def init_train_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
             rescale=rescale,
             imagenet_preprocessing=imagenet_preprocessing,
+            set_to_max_size=True,
         )
         validation_ds = create_image_dataset(
             data_dir=training_dir,
@@ -361,7 +431,14 @@ def init_train_flow() -> Flow:
             "get_n_classes_from_directory_iterator",
             ds=training_ds,
         )
-        # TODO: Swap to pyplugs in next update.
+
+        # Add keras wrapper and set the image preprocessing settings there.
+        # Disable imagenet preprocessing on training dataset.
+        # pipe all dependencies into a new attack pipeline (inport and define here first)
+        # In this attack pipeline, create poisoned attacker and then return the corrupted model.
+        # Update mlflow
+        # Update example
+
         classifier = init_classifier(
             model_architecture=model_architecture,
             optimizer=optimizer,
@@ -370,21 +447,25 @@ def init_train_flow() -> Flow:
             n_classes=n_classes,
             upstream_tasks=[init_tensorflow_results],
         )
-        history = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.estimators",
-            "methods",
-            "fit",
-            estimator=classifier,
-            x=training_ds,
-            fit_kwargs=dict(
-                nb_epochs=epochs,
-                validation_data=validation_ds,
-                callbacks=callbacks_list,
-                verbose=2,
-            ),
+
+        classifier = create_adv_embedding_model(
+            model=classifier,
+            training_ds=training_ds,
+            target_class_id=target_class_id,
+            feature_layer_index=feature_layer_index,
+            poison_fraction=poison_fraction,
+            regularization_factor=regularization_factor,
+            learning_rate=learning_rate,
+            batch_size=batch_size,
+            epochs=epochs,
+            discriminator_layer_1_size=discriminator_layer_1_size,
+            discriminator_layer_2_size=discriminator_layer_2_size,
+            optimizer=optimizer,
+            metrics=metrics,
         )
+
         classifier_performance_metrics = evaluate_metrics_tensorflow(
-            classifier=classifier, dataset=testing_ds, upstream_tasks=[history]
+            classifier=classifier, dataset=testing_ds
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
@@ -392,16 +473,12 @@ def init_train_flow() -> Flow:
             "log_metrics",
             metrics=classifier_performance_metrics,
         )
-        model_version = pyplugs.call_task(  # noqa: F841
-            f"{_PLUGINS_IMPORT_PATH}.registry",
-            "mlflow",
-            "add_model_to_registry",
+        add_model_manually_to_registry(
             active_run=active_run,
-            name=register_model_name,
-            model_dir="model",
-            upstream_tasks=[history],
+            model=classifier,
+            artifact_path="model",
+            model_name=register_model_name,
         )
-
     return flow
 
 

@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 
 import os
-import tarfile
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import click
 import mlflow
 import numpy as np
 import structlog
-from defenses_image_preprocessing import create_defended_dataset
-from mlflow.tracking import MlflowClient
+from attacks_poison_updated import create_adversarial_poison_data
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from registry_art_updated import load_wrapped_tensorflow_keras_classifier
@@ -72,64 +70,28 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Dimensions for the input images",
 )
 @click.option(
-    "--def-tar-name",
+    "--adv-tar-name",
     type=click.STRING,
-    default="spatial_smoothing_dataset.tar.gz",
-    help="Name to give to tarfile artifact containing preprocessed  images",
+    default="adversarial_poison.tar.gz",
+    help="Name of output tarfile artifact containing poisoned images",
 )
 @click.option(
-    "--def-data-dir",
+    "--adv-data-dir",
     type=click.STRING,
-    default="adv_testing",
-    help="Directory for saving preprocessed images",
+    default="adv_poison_data",
+    help="Directory for output poisoned images",
+)
+@click.option(
+    "--target-class",
+    type=click.INT,
+    help=" The target class index to generate poisoned examples.",
+    default=0,
 )
 @click.option(
     "--batch-size",
     type=click.INT,
-    help="Batch size to use when training a single epoch",
-    default=32,
-)
-@click.option(
-    "--spatial-smoothing-window-size",
-    type=click.INT,
-    help="The size of the sliding window for spatial smoothing defense.",
-    default=3,
-)
-@click.option(
-    "--spatial-smoothing-apply-fit",
-    type=click.BOOL,
-    help="Spatial smoothing applied on images used for training.",
-    default=False,
-)
-@click.option(
-    "--spatial-smoothing-apply-predict",
-    type=click.BOOL,
-    help="Spatial smoothing applied on images used for testing.",
-    default=True,
-)
-@click.option(
-    "--load-dataset-from-mlruns",
-    type=click.BOOL,
-    help="If set to true, instead loads the test dataset from a previous mlrun.",
-    default=False,
-)
-@click.option(
-    "--dataset-run-id",
-    type=click.STRING,
-    help="MLFlow Run ID of an updated dataset.",
-    default="",
-)
-@click.option(
-    "--dataset-tar-name",
-    type=click.STRING,
-    help="Name of dataset tarfile.",
-    default="adversarial_poison.tar.gz",
-)
-@click.option(
-    "--dataset-name",
-    type=click.STRING,
-    help="Name of dataset directory.",
-    default="adv_poison_data",
+    help=" The number of clean sample images per poisoning batch. ",
+    default=30,
 )
 @click.option(
     "--seed",
@@ -137,113 +99,98 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
-def spatial_smoothing(
+@click.option(
+    "--poison-fraction",
+    type=click.FLOAT,
+    help="The fraction of data to be poisoned. Range 0 to 1.",
+    default=1.0,
+)
+@click.option(
+    "--label-type",
+    type=click.Choice(["train", "training", "test", "testing"], case_sensitive=False),
+    default="test",
+    help="Sets labels either to original label (test) or poisoned label (train). Non-poisoned images keep their original label.",
+)
+def poison_attack(
     data_dir,
     image_size,
-    def_tar_name,
-    def_data_dir,
+    adv_tar_name,
+    adv_data_dir,
     batch_size,
-    spatial_smoothing_window_size,
-    spatial_smoothing_apply_fit,
-    spatial_smoothing_apply_predict,
-    load_dataset_from_mlruns,
-    dataset_run_id,
-    dataset_tar_name,
-    dataset_name,
+    target_class,
+    poison_fraction,
+    label_type,
     seed,
 ):
 
     LOGGER.info(
         "Execute MLFlow entry point",
-        entry_point="spatial_smoothing",
+        entry_point="gen_poison_data",
         data_dir=data_dir,
         image_size=image_size,
-        def_tar_name=def_tar_name,
-        def_data_dir=def_data_dir,
+        adv_tar_name=adv_tar_name,
+        adv_data_dir=adv_data_dir,
         batch_size=batch_size,
-        spatial_smoothing_window_size=spatial_smoothing_window_size,
-        spatial_smoothing_apply_fit=spatial_smoothing_apply_fit,
-        spatial_smoothing_apply_predict=spatial_smoothing_apply_predict,
-        load_dataset_from_mlruns=load_dataset_from_mlruns,
-        dataset_run_id=dataset_run_id,
-        dataset_tar_name=dataset_tar_name,
-        dataset_name=dataset_name,
+        target_class=target_class,
+        poison_fraction=poison_fraction,
+        label_type=label_type,
         seed=seed,
     )
 
-    if load_dataset_from_mlruns:
-        data_dir = Path.cwd() / "dataset" / dataset_name
-        data_tar_name = dataset_tar_name
-        data_tar_path = download_image_archive(
-            run_id=dataset_run_id, archive_path=data_tar_name
-        )
-        with tarfile.open(data_tar_path, "r:gz") as f:
-            f.extractall(path=(Path.cwd() / "dataset"))
+    if image_size[2] == 3:
+        rescale = 1.0
+    else:
+        rescale = 1.0 / 255
 
     with mlflow.start_run() as active_run:  # noqa: F841
-        flow: Flow = init_spatial_smoothing_flow()
+        flow: Flow = generate_poison_data()
         state = flow.run(
             parameters=dict(
                 testing_dir=Path(data_dir),
                 image_size=image_size,
-                def_tar_name=def_tar_name,
-                def_data_dir=(Path.cwd() / def_data_dir).resolve(),
+                rescale=rescale,
+                adv_tar_name=adv_tar_name,
+                adv_data_dir=(Path.cwd() / adv_data_dir),
                 distance_metrics_filename="distance_metrics.csv",
                 batch_size=batch_size,
-                spatial_smoothing_window_size=spatial_smoothing_window_size,
-                spatial_smoothing_apply_fit=spatial_smoothing_apply_fit,
-                spatial_smoothing_apply_predict=spatial_smoothing_apply_predict,
+                target_class=target_class,
+                poison_fraction=poison_fraction,
+                label_type=label_type,
                 seed=seed,
             )
         )
-
     return state
 
 
-# Update data dir path if user is applying defense over image artifacts.
-def download_image_archive(
-    run_id: str, archive_path: str, destination_path: Optional[str] = None
-) -> str:
-    client: MlflowClient = MlflowClient()
-    image_archive_path: str = client.download_artifacts(
-        run_id=run_id, path=archive_path, dst_path=destination_path
-    )
-    LOGGER.info(
-        "Image archive downloaded",
-        run_id=run_id,
-        storage_path=archive_path,
-        dst_path=image_archive_path,
-    )
-    return image_archive_path
-
-
-def init_spatial_smoothing_flow() -> Flow:
-    with Flow("Fast Gradient Method") as flow:
+def generate_poison_data() -> Flow:
+    with Flow("Genereate Backdoor Poisoned Data") as flow:
         (
             testing_dir,
             image_size,
-            def_tar_name,
-            def_data_dir,
+            rescale,
+            adv_tar_name,
+            adv_data_dir,
             distance_metrics_filename,
             batch_size,
-            spatial_smoothing_window_size,
-            spatial_smoothing_apply_fit,
-            spatial_smoothing_apply_predict,
+            target_class,
+            poison_fraction,
+            label_type,
             seed,
         ) = (
             Parameter("testing_dir"),
             Parameter("image_size"),
-            Parameter("def_tar_name"),
-            Parameter("def_data_dir"),
+            Parameter("rescale"),
+            Parameter("adv_tar_name"),
+            Parameter("adv_data_dir"),
             Parameter("distance_metrics_filename"),
             Parameter("batch_size"),
-            Parameter("spatial_smoothing_window_size"),
-            Parameter("spatial_smoothing_apply_fit"),
-            Parameter("spatial_smoothing_apply_predict"),
+            Parameter("target_class"),
+            Parameter("poison_fraction"),
+            Parameter("label_type"),
             Parameter("seed"),
         )
         seed, rng = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
+            f"{_PLUGINS_IMPORT_PATH }.random", "rng", "init_rng", seed=seed
         )
         tensorflow_global_seed = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
@@ -261,7 +208,7 @@ def init_spatial_smoothing_flow() -> Flow:
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
             "utils",
             "make_directories",
-            dirs=[def_data_dir],
+            dirs=[adv_data_dir],
         )
 
         log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
@@ -281,23 +228,26 @@ def init_spatial_smoothing_flow() -> Flow:
             "get_distance_metric_list",
             request=DISTANCE_METRICS,
         )
-        distance_metrics = create_defended_dataset(
+
+        distance_metrics = create_adversarial_poison_data(
             data_dir=testing_dir,
             distance_metrics_list=distance_metrics_list,
-            def_data_dir=def_data_dir,
-            batch_size=batch_size,
+            adv_data_dir=adv_data_dir,
             image_size=image_size,
-            window_size=spatial_smoothing_window_size,
-            apply_fit=spatial_smoothing_apply_fit,
-            apply_predict=spatial_smoothing_apply_predict,
+            rescale=rescale,
+            target_class=target_class,
+            poison_fraction=poison_fraction,
+            label_type=label_type,
+            batch_size=batch_size,
             upstream_tasks=[make_directories_results],
         )
+
         log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
             "mlflow",
             "upload_directory_as_tarball_artifact",
-            source_dir=def_data_dir,
-            tarball_filename=def_tar_name,
+            source_dir=adv_data_dir,
+            tarball_filename=adv_tar_name,
             upstream_tasks=[distance_metrics],
         )
         log_distance_metrics_result = pyplugs.call_task(  # noqa: F841
@@ -309,7 +259,6 @@ def init_spatial_smoothing_flow() -> Flow:
             file_format="csv.gz",
             file_format_kwargs=dict(index=False),
         )
-
     return flow
 
 
@@ -323,4 +272,4 @@ if __name__ == "__main__":
     configure_structlog()
 
     with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
-        _ = spatial_smoothing()
+        _ = poison_attack()

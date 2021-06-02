@@ -102,7 +102,6 @@ def _coerce_comma_separated_ints(ctx, param, value):
     type=click.Choice(["Adam", "Adagrad", "RMSprop", "SGD"], case_sensitive=True),
     help="Optimizer to use to train the model",
     default="Adam",
-    batch_size=batch_size,
 )
 @click.option(
     "--imagenet-preprocessing",

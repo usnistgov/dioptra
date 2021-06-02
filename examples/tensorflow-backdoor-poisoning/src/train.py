@@ -210,22 +210,23 @@ def train(
         rescale = 1.0 / 255
 
     if load_dataset_from_mlruns:
-        data_dir_testing = Path.cwd() / "testing" / adv_data_dir
+        if len(dataset_run_id_testing) > 0:
+            data_dir_testing = Path.cwd() / "testing" / adv_data_dir
+            data_test_tar_name = adv_tar_name
+            adv_testing_tar_path = download_image_archive(
+                run_id=dataset_run_id_testing, archive_path=data_test_tar_name
+            )
+            with tarfile.open(adv_testing_tar_path, "r:gz") as f:
+                f.extractall(path=(Path.cwd() / "testing"))
+        else:
+            LOGGER.info(
+                "No test run_id provided, defaulting to original test directory.",
+            )
         data_dir_training = Path.cwd() / "training" / adv_data_dir
-
-        data_test_tar_name = adv_tar_name
         data_train_tar_name = adv_tar_name
-
-        adv_testing_tar_path = download_image_archive(
-            run_id=dataset_run_id_testing, archive_path=data_test_tar_name
-        )
         adv_training_tar_path = download_image_archive(
             run_id=dataset_run_id_training, archive_path=data_train_tar_name
         )
-
-        with tarfile.open(adv_testing_tar_path, "r:gz") as f:
-            f.extractall(path=(Path.cwd() / "testing"))
-
         with tarfile.open(adv_training_tar_path, "r:gz") as f:
             f.extractall(path=(Path.cwd() / "training"))
 

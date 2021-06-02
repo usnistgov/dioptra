@@ -1,82 +1,50 @@
 name: imagenet-resnet50-fgm
 
 entry_points:
-  gen_patch:
+  gen_poison_data:
     parameters:
       data_dir: {type: path, default: "/nfs/data"}
-      model_name: { type: string, default: "mnist_le_net" }
-      model_version: { type: string, default: "1" }
-      image_size: { type: string, default: "28,28,1" }
-      adv_tar_name: { type: string, default: "adversarial_patch.tar.gz" }
-      adv_data_dir: { type: string, default: "adv_patches" }
-      rotation_max: {type: float, default: 22.5}
-      scale_min: {type: float, default: 0.1}
-      scale_max: {type: float, default: 1.0}
-      learning_rate: {type: float, default: 5.0}
-      max_iter: {type: int, default: 500}
-      patch_target: {type: int, default: -1}
-      num_patch: {type: int, default: 1}
-      num_patch_gen_samples: {type: int, default: 10}
-      imagenet_preprocessing: { type: string, default: "false"}
+      image_size: {type: string, default: "28,28,1"}
+      adv_tar_name: { type: string, default: "adversarial_poison.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_poison_data" }
+      target_class: {type: string, default: "0"}
+      batch_size: {type: int, default: 30}
       seed: {type: float, default: -1}
+      poison_fraction: {type: float, default: 1}
+      label_type: {type: string, default: "test"}
     command: >
-      python src/generate_patch.py
+      python src/gen_poison_data.py
       --data-dir {data_dir}
-      --rotation-max {rotation_max}
-      --scale-max {scale_max}
-      --scale-min {scale_min}
-      --learning-rate {learning_rate}
-      --max-iter {max_iter}
-      --patch-target {patch_target}
-      --num-patch {num_patch}
-      --num-patch-gen-samples {num_patch_gen_samples}
       --image-size {image_size}
       --adv-tar-name {adv_tar_name}
       --adv-data-dir {adv_data_dir}
-      --model-name {model_name}
-      --model-version {model_version}
-      --imagenet-preprocessing {imagenet_preprocessing}
+      --target-class {target_class}
+      --batch-size {batch_size}
       --seed {seed}
+      --poison-fraction {poison_fraction}
+      --label-type {label_type}
 
-  deploy_patch:
+  deploy_poison:
     parameters:
-      data_dir: {type: path, default: "/nfs/data"}
       run_id: {type: string}
-      model_name: { type: string, default: "mnist_le_net" }
-      model_version: { type: string, default: "1" }
-      image_size: { type: string, default: "28,28,1" }
-      adv_tar_name: { type: string, default: "adversarial_patch_dataset.tar.gz" }
-      adv_data_dir: { type: string, default: "adv_patch_dataset" }
-      adv_patch_tar_name: { type: string, default: "adversarial_patch.tar.gz" }
-      adv_patch_dir: { type: string, default: "adv_patches" }
-      imagenet_preprocessing: { type: string, default: "false"}
-      patch_deployment_method: {type: string, default: "augment"}
-      patch_application_rate: {type: string, default: 1.0}
-      patch_scale: {type: float, default: 0.4}
-      batch_size: {type: float, default: 32}
-      rotation_max: {type: float, default: 22.5}
-      scale_min: {type: float, default: 0.1}
-      scale_max: {type: float, default: 1.0}
+      data_dir: {type: path, default: "/nfs/data"}
+      poison_deployment_method: {type: string, default: "add"}
+      num_poisoned_images: {type: int, default: -1}
+      adv_tar_name: { type: string, default: "adversarial_poison.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_poison_data" }
+      poison_tar_name: { type: string, default: "adversarial_poison_dataset.tar.gz" }
+      poison_data_dir: { type: string, default: "adv_poison_dataset" }
       seed: {type: float, default: -1}
     command: >
-      python src/deploy_patch.py
+      python src/deploy_poison.py
       --run-id {run_id}
       --data-dir {data_dir}
-      --patch-deployment-method {patch_deployment_method}
-      --patch-application-rate {patch_application_rate}
-      --patch-scale {patch_scale}
-      --batch-size {batch_size}
-      --rotation-max {rotation_max}
-      --scale-max {scale_max}
-      --scale-min {scale_min}
-      --model-name {model_name}
-      --model-version {model_version}
-      --image-size {image_size}
       --adv-tar-name {adv_tar_name}
       --adv-data-dir {adv_data_dir}
-      --adv-patch-tar-name {adv_patch_tar_name}
-      --adv-patch-dir {adv_patch_dir}
-      --imagenet-preprocessing {imagenet_preprocessing}
+      --poison-tar-name {poison_tar_name}
+      --poison-data-dir {poison_data_dir}
+      --poison-deployment-method {poison_deployment_method}
+      --num-poisoned-images {num_poisoned_images}
       --seed {seed}
 
   spatial_smoothing:
@@ -202,7 +170,7 @@ entry_points:
       --imagenet-preprocessing {imagenet_preprocessing}
       --seed {seed}
 
-  train:
+  gen_poison_model:
     parameters:
       data_dir_testing: { type: path, default: "/nfs/data" }
       data_dir_training: { type: path, default: "/nfs/data" }
@@ -220,9 +188,15 @@ entry_points:
       dataset_run_id_training: {type: string, default: ""}
       adv_tar_name: { type: string, default: "adversarial_patch_dataset.tar.gz" }
       adv_data_dir: { type: string, default: "adv_patch_dataset" }
+      target_class_id: {type: int, default: 1}
+      feature_layer_index: {type: int, default: 6}
+      discriminator_layer_1_size: {type: int, default: 256}
+      discriminator_layer_2_size: {type: int, default: 128}
+      regularization_factor: {type: float, default: 30.0}
+      poison_fraction: {type: float, default: 0.10}
       seed: { type: float, default: -1 }
     command: >
-      python src/train.py
+      python src/gen_poison_model.py
       --data-dir-testing {data_dir_testing}
       --data-dir-training {data_dir_training}
       --image-size {image_size}
@@ -239,7 +213,57 @@ entry_points:
       --dataset-run-id-training {dataset_run_id_training}
       --adv-tar-name {adv_tar_name}
       --adv-data-dir {adv_data_dir}
+      --target-class-id {target_class_id}
+      --feature-layer-index {feature_layer_index}
+      --discriminator-layer-1-size {discriminator_layer_1_size}
+      --discriminator-layer-2-size {discriminator_layer_2_size}
+      --regularization-factor {regularization_factor}
+      --poison-fraction {poison_fraction}
       --seed {seed}
+
+  train_madry_pgd:
+    parameters:
+      data_dir_testing: { type: path, default: "/nfs/data" }
+      data_dir_training: { type: path, default: "/nfs/data" }
+      image_size: { type: string, default: "28,28,1" }
+      model_architecture: { type: string, default: "le_net" }
+      epochs: { type: float, default:10 }
+      batch_size: { type: float, default: 32 }
+      register_model_name: { type: string, default: "" }
+      learning_rate: { type: float, default: 0.001 }
+      eps: { type: float, default: 0.15 }
+      eps_step: { type: float, default: 0.001 }
+      optimizer: { type: string, default: "Adam" }
+      validation_split: { type: float, default: 0.2 }
+      imagenet_preprocessing: { type: string, default: "false"}
+      load_dataset_from_mlruns: {type: string, default: "False"}
+      dataset_run_id_testing: {type: string, default: ""}
+      dataset_run_id_training: {type: string, default: ""}
+      adv_tar_name: { type: string, default: "adversarial_patch_dataset.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_patch_dataset" }
+      seed: { type: float, default: -1 }
+    command: >
+      python src/train_with_madry_pgd_defense.py
+      --data-dir-testing {data_dir_testing}
+      --data-dir-training {data_dir_training}
+      --image-size {image_size}
+      --model-architecture {model_architecture}
+      --epochs {epochs}
+      --batch-size {batch_size}
+      --register-model-name {register_model_name}
+      --eps {eps}
+      --eps-step {eps_step}
+      --learning-rate {learning_rate}
+      --optimizer {optimizer}
+      --validation-split {validation_split}
+      --imagenet-preprocessing {imagenet_preprocessing}
+      --load-dataset-from-mlruns {load_dataset_from_mlruns}
+      --dataset-run-id-testing {dataset_run_id_testing}
+      --dataset-run-id-training {dataset_run_id_training}
+      --adv-tar-name {adv_tar_name}
+      --adv-data-dir {adv_data_dir}
+      --seed {seed}
+
 
   init_model:
     parameters:
@@ -262,4 +286,39 @@ entry_points:
       --learning-rate {learning_rate}
       --optimizer {optimizer}
       --imagenet-preprocessing {imagenet_preprocessing}
+      --seed {seed}
+
+  gen_poison_clean_data:
+    parameters:
+      data_dir: { type: path, default: "/nfs/data" }
+      image_size: { type: string, default: "28,28,1" }
+      adv_tar_name: { type: string, default: "adversarial_poison.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_poison_data" }
+      model_name: { type: string, default: "mnist_le_net" }
+      model_version: { type: string, default: "1" }
+      batch_size: { type: float, default: 32 }
+      poison_fraction: {type: float, default: 1}
+      label_type: {type: string, default: "test"}
+      target_index: { type: int, default: -1 }
+      imagenet_preprocessing: { type: string, default: "false"}
+      eps: { type: float, default: 50 }
+      eps_step: { type: float, default: 0.1 }
+      norm: { type: string, default: "2" }
+      seed: { type: float, default: -1 }
+    command: >
+      python src/gen_poison_clean_data.py
+      --data-dir {data_dir}
+      --image-size {image_size}
+      --adv-tar-name {adv_tar_name}
+      --adv-data-dir {adv_data_dir}
+      --model-name {model_name}
+      --model-version {model_version}
+      --batch-size {batch_size}
+      --poison-fraction {poison_fraction}
+      --label-type {label_type}
+      --target-index {target_index}
+      --imagenet-preprocessing {imagenet_preprocessing}
+      --eps {eps}
+      --eps-step {eps_step}
+      --norm {norm}
       --seed {seed}

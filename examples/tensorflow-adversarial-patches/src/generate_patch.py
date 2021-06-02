@@ -8,7 +8,7 @@ import click
 import mlflow
 import numpy as np
 import structlog
-from attacks_fgm_updated import create_adversarial_fgm_dataset
+from attacks_patch_updated import create_adversarial_patches
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from registry_art_updated import load_wrapped_tensorflow_keras_classifier
@@ -72,14 +72,14 @@ def _coerce_int_to_bool(ctx, param, value):
 @click.option(
     "--adv-tar-name",
     type=click.STRING,
-    default="testing_adversarial_fgm.tar.gz",
-    help="Name to give to tarfile artifact containing fgm images",
+    default="adversarial_patch.tar.gz",
+    help="Name to give to tarfile artifact containing patches",
 )
 @click.option(
     "--adv-data-dir",
     type=click.STRING,
-    default="adv_testing",
-    help="Directory for saving fgm images",
+    default="adv_patches",
+    help="Directory for saving adversarial patches",
 )
 @click.option(
     "--model-name",
@@ -92,37 +92,55 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Version of model to load from registry",
 )
 @click.option(
-    "--batch-size",
-    type=click.INT,
-    help="Batch size to use when training a single epoch",
-    default=32,
+    "--rotation-max",
+    type=click.FLOAT,
+    help="The maximum rotation applied to random patches. \
+            The value is expected to be in the range `[0, 180]` ",
+    default=22.5,
 )
 @click.option(
-    "--eps",
+    "--scale-min",
     type=click.FLOAT,
-    help="FGM attack step size (input variation)",
-    default=0.3,
-)
-@click.option(
-    "--eps-step",
-    type=click.FLOAT,
-    help="FGM attack step size of input variation for minimal perturbation computation",
+    help="The minimum scaling applied to random patches. \
+            The value should be in the range `[0, 1]`, but less than `scale_max` ",
     default=0.1,
 )
 @click.option(
-    "--minimal",
-    type=click.Choice(["0", "1"]),
-    callback=_coerce_int_to_bool,
-    help="If 1, compute the minimal perturbation using eps_step for the step size and "
-    "eps for the maximum perturbation.",
-    default="0",
+    "--scale-max",
+    type=click.FLOAT,
+    help="The maximum scaling applied to random patches. \
+            The value should be in the range `[0, 1]`, but larger than `scale_min.` ",
+    default=1.0,
 )
 @click.option(
-    "--norm",
-    type=click.Choice(["inf", "1", "2"]),
-    default="inf",
-    callback=_map_norm,
-    help="FGM attack norm of adversarial perturbation",
+    "--learning-rate",
+    type=click.FLOAT,
+    help="The learning rate of the patch attack optimization procedure. ",
+    default=5.0,
+)
+@click.option(
+    "--max-iter",
+    type=click.INT,
+    help=" The number of patch optimization steps. ",
+    default=500,
+)
+@click.option(
+    "--patch-target",
+    type=click.INT,
+    help=" The target class index of the generated patch. Negative numbers will generate randomized id labels.",
+    default=-1,
+)
+@click.option(
+    "--num-patch",
+    type=click.INT,
+    help=" The number of patches generated. Each adversarial image recieves one patch. ",
+    default=1,
+)
+@click.option(
+    "--num-patch-gen-samples",
+    type=click.INT,
+    help=" The number of sample images used to generate each patch. ",
+    default=10,
 )
 @click.option(
     "--imagenet-preprocessing",
@@ -131,126 +149,128 @@ def _coerce_int_to_bool(ctx, param, value):
     default=False,
 )
 @click.option(
-    "--target-index",
-    type=click.INT,
-    help="Class index for targeted attack. If set to a negative value, the fgm attack will be untargeted.",
-    default="-1",
-)
-@click.option(
     "--seed",
     type=click.INT,
     help="Set the entry point rng seed",
     default=-1,
 )
-def fgm_attack(
+def patch_attack(
     data_dir,
     image_size,
     adv_tar_name,
     adv_data_dir,
+    rotation_max,
+    scale_min,
+    scale_max,
+    learning_rate,
+    max_iter,
+    patch_target,
+    num_patch,
+    num_patch_gen_samples,
     model_name,
     model_version,
-    batch_size,
-    eps,
-    eps_step,
-    minimal,
-    norm,
     imagenet_preprocessing,
-    target_index,
     seed,
+    patch_shape=None,
 ):
-    targeted = False
-    if target_index >= 0:
-        targeted = True
+
     LOGGER.info(
         "Execute MLFlow entry point",
-        entry_point="fgm",
+        entry_point="gen_patch",
         data_dir=data_dir,
         image_size=image_size,
         adv_tar_name=adv_tar_name,
         adv_data_dir=adv_data_dir,
         model_name=model_name,
         model_version=model_version,
-        batch_size=batch_size,
-        eps=eps,
-        eps_step=eps_step,
-        minimal=minimal,
-        targeted=targeted,
-        target_index=target_index,
+        patch_target=patch_target,
+        num_patch=num_patch,
+        num_patch_gen_samples=num_patch_gen_samples,
+        rotation_max=rotation_max,
+        scale_min=scale_min,
+        scale_max=scale_max,
+        learning_rate=learning_rate,
+        max_iter=max_iter,
         imagenet_preprocessing=imagenet_preprocessing,
-        norm=norm,
         seed=seed,
     )
 
-    # Allow imagenet preprocessing.
+    clip_values: Tuple[float, float] = (0, 255) if image_size[2] == 3 else (0, 1)
+
     if imagenet_preprocessing:
         rescale = 1.0
     else:
         rescale = 1.0 / 255
 
     with mlflow.start_run() as active_run:  # noqa: F841
-        flow: Flow = init_fgm_flow()
+        flow: Flow = init_gen_patch_flow()
         state = flow.run(
             parameters=dict(
                 testing_dir=Path(data_dir),
                 image_size=image_size,
                 rescale=rescale,
+                clip_values=clip_values,
                 adv_tar_name=adv_tar_name,
                 adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
-                distance_metrics_filename="distance_metrics.csv",
                 model_name=model_name,
                 model_version=model_version,
-                batch_size=batch_size,
-                eps=eps,
-                eps_step=eps_step,
-                minimal=minimal,
-                norm=norm,
-                targeted=targeted,
-                target_index=target_index,
+                patch_target=patch_target,
+                num_patch=num_patch,
+                num_patch_gen_samples=num_patch_gen_samples,
+                rotation_max=rotation_max,
+                scale_min=scale_min,
+                scale_max=scale_max,
+                learning_rate=learning_rate,
+                max_iter=max_iter,
+                patch_shape=patch_shape,
                 imagenet_preprocessing=imagenet_preprocessing,
                 seed=seed,
             )
         )
-
     return state
 
 
-def init_fgm_flow() -> Flow:
+def init_gen_patch_flow() -> Flow:
     with Flow("Fast Gradient Method") as flow:
         (
             testing_dir,
             image_size,
             rescale,
+            clip_values,
             adv_tar_name,
             adv_data_dir,
-            distance_metrics_filename,
             model_name,
             model_version,
-            batch_size,
-            eps,
-            eps_step,
-            minimal,
-            norm,
-            targeted,
-            target_index,
+            rotation_max,
+            scale_min,
+            scale_max,
+            learning_rate,
+            max_iter,
+            patch_target,
+            num_patch,
+            num_patch_gen_samples,
             imagenet_preprocessing,
+            patch_shape,
             seed,
         ) = (
             Parameter("testing_dir"),
             Parameter("image_size"),
             Parameter("rescale"),
+            Parameter("clip_values"),
             Parameter("adv_tar_name"),
             Parameter("adv_data_dir"),
-            Parameter("distance_metrics_filename"),
             Parameter("model_name"),
             Parameter("model_version"),
-            Parameter("batch_size"),
-            Parameter("eps"),
-            Parameter("eps_step"),
-            Parameter("minimal"),
-            Parameter("norm"),
-            Parameter("targeted"),
-            Parameter("target_index"),
+            Parameter("rotation_max"),
+            Parameter("scale_min"),
+            Parameter("scale_max"),
+            Parameter("learning_rate"),
+            Parameter("max_iter"),
+            Parameter("patch_target"),
+            Parameter("num_patch"),
+            Parameter("num_patch_gen_samples"),
             Parameter("imagenet_preprocessing"),
+            Parameter("patch_shape"),
             Parameter("seed"),
         )
         seed, rng = pyplugs.call_task(
@@ -289,30 +309,25 @@ def init_fgm_flow() -> Flow:
         keras_classifier = load_wrapped_tensorflow_keras_classifier(
             name=model_name,
             version=model_version,
+            clip_values=clip_values,
             imagenet_preprocessing=imagenet_preprocessing,
             upstream_tasks=[init_tensorflow_results],
         )
-
-        distance_metrics_list = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.metrics",
-            "distance",
-            "get_distance_metric_list",
-            request=DISTANCE_METRICS,
-        )
-        distance_metrics = create_adversarial_fgm_dataset(
+        patch_dir = create_adversarial_patches(
             data_dir=testing_dir,
             keras_classifier=keras_classifier,
-            distance_metrics_list=distance_metrics_list,
             adv_data_dir=adv_data_dir,
-            batch_size=batch_size,
             image_size=image_size,
             rescale=rescale,
-            eps=eps,
-            eps_step=eps_step,
-            minimal=minimal,
-            norm=norm,
-            targeted=targeted,
-            target_index=target_index,
+            patch_target=patch_target,
+            num_patch=num_patch,
+            num_patch_samples=num_patch_gen_samples,
+            rotation_max=rotation_max,
+            scale_min=scale_min,
+            scale_max=scale_max,
+            learning_rate=learning_rate,
+            max_iter=max_iter,
+            patch_shape=patch_shape,
             upstream_tasks=[make_directories_results],
         )
         log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
@@ -321,16 +336,7 @@ def init_fgm_flow() -> Flow:
             "upload_directory_as_tarball_artifact",
             source_dir=adv_data_dir,
             tarball_filename=adv_tar_name,
-            upstream_tasks=[distance_metrics],
-        )
-        log_distance_metrics_result = pyplugs.call_task(  # noqa: F841
-            f"{_PLUGINS_IMPORT_PATH}.artifacts",
-            "mlflow",
-            "upload_data_frame_artifact",
-            data_frame=distance_metrics,
-            file_name=distance_metrics_filename,
-            file_format="csv.gz",
-            file_format_kwargs=dict(index=False),
+            upstream_tasks=[patch_dir],
         )
 
     return flow
@@ -346,4 +352,4 @@ if __name__ == "__main__":
     configure_structlog()
 
     with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
-        _ = fgm_attack()
+        _ = patch_attack()
