@@ -79,7 +79,7 @@ services:
       - minio-data:/data
 
   mlflow-tracking:
-    image: securing-ai/mlflow-tracking:dev
+    image: securing-ai/mlflow-tracking:latest
     init: true
     restart: always
     hostname: mlflow-tracking
@@ -139,7 +139,7 @@ services:
       - "30080:30080/tcp"
 
   restapi:
-    image: securing-ai/restapi:dev
+    image: securing-ai/restapi:latest
     init: true
     restart: always
     hostname: restapi
@@ -170,7 +170,7 @@ services:
       - restapi-data:/work/data
 
   tfcpu-01:
-    image: securing-ai/tensorflow2-cpu:dev
+    image: securing-ai/tensorflow2-cpu:latest
     init: true
     restart: always
     hostname: tfcpu-01
@@ -201,7 +201,7 @@ services:
       - restapi-data:/work/data
 
   tfcpu-02:
-    image: securing-ai/tensorflow2-cpu:dev
+    image: securing-ai/tensorflow2-cpu:latest
     init: true
     restart: always
     hostname: tfcpu-02
