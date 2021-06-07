@@ -44,6 +44,28 @@ def workflow_tar_gz():
 
 
 @pytest.fixture
+def task_plugin_archive():
+    archive_fileobj: BinaryIO = io.BytesIO()
+
+    with tarfile.open(fileobj=archive_fileobj, mode="w:gz") as f, io.BytesIO(
+        initial_bytes=b"# init file"
+    ) as f_init, io.BytesIO(initial_bytes=b"# plugin module") as f_plugin_module:
+        tarinfo_init = tarfile.TarInfo(name="new_plugin_module/__init__.py")
+        tarinfo_init.size = len(f_init.getbuffer())
+        f.addfile(tarinfo=tarinfo_init, fileobj=f_init)
+
+        tarinfo_plugin_module = tarfile.TarInfo(
+            name="new_plugin_module/plugin_module.py"
+        )
+        tarinfo_plugin_module.size = len(f_plugin_module.getbuffer())
+        f.addfile(tarinfo=tarinfo_plugin_module, fileobj=f_plugin_module)
+
+    archive_fileobj.seek(0)
+    yield archive_fileobj
+    archive_fileobj.close()
+
+
+@pytest.fixture
 def dependency_modules() -> List[Any]:
     from mitre.securingai.restapi.job.dependencies import (
         RQServiceConfiguration,
