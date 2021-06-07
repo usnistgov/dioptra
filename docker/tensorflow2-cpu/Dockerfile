@@ -169,7 +169,8 @@ RUN ${CONDA_DIR}/condabin/conda config --set channel_priority flexible
 
 RUN echo "===> Installing Tensorflow (CPU) library...."; \
     ${CONDA_DIR}/condabin/conda install -n ${AI_CONDA_ENV} -q -y \
-    tensorflow=${TENSORFLOW2_VERSION}=${TENSORFLOW2_BUILD} && \
+    tensorflow=${TENSORFLOW2_VERSION}=${TENSORFLOW2_BUILD} \
+    tensorflow-estimator=${TENSORFLOW2_VERSION} && \
     echo "===> Cleaning/pruning directories...." && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
