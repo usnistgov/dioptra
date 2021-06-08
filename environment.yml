@@ -28,7 +28,6 @@ dependencies:
   - jupyter
   - markupsafe
   - matplotlib
-  - mypy
   - networkx=2.4
   - nose
   - numexpr
@@ -96,6 +95,7 @@ dependencies:
       - mlflow==1.12.1
       - mnist
       - multimethod>=1.5
+      - mypy>=0.900
       - plantuml-markdown
       - pre-commit
       - prefect==0.14.*
@@ -128,5 +128,15 @@ dependencies:
       - structlog>=20.2.0
       - tabulate
       - tox
+      - types-click
+      - types-cryptography
+      - types-enum34
+      - types-Flask
+      - types-freezegun
+      - types-ipaddress
+      - types-Jinja2
+      - types-python-dateutil
+      - types-redis
+      - types-Werkzeug
       - typing-extensions>=3.7.4.0
       - web-compile
