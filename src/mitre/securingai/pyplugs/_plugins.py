@@ -79,7 +79,7 @@ except ImportError:  # pragma: nocover
     from typing_extensions import Protocol  # type: ignore
 
 if TYPE_CHECKING:
-    from prefect import Task
+    from prefect.core.task import TaskMetaclass as Task
 
 
 # Structural subtyping
@@ -288,12 +288,12 @@ def _import(package: str, plugin: str) -> None:
         importlib.import_module(plugin_module)
 
     except ImportError as err:
-        if repr(plugin_module) in err.msg:  # type: ignore
+        if repr(plugin_module) in err.msg:
             raise UnknownPluginError(
                 f"Plugin {plugin!r} not found in {package!r}"
             ) from None
 
-        elif repr(package) in err.msg:  # type: ignore
+        elif repr(package) in err.msg:
             raise UnknownPackageError(f"Package {package!r} does not exist") from None
 
         raise
