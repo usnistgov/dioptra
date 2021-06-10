@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+# NOTICE
+#
+# This software (or technical data) was produced for the U. S. Government under
+# contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+# 52.227-14, Alt. IV (DEC 2007)
+#
+# © 2021 The MITRE Corporation.
 
 import os
 from pathlib import Path
@@ -80,10 +87,14 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Directory for saving fgm images",
 )
 @click.option(
-    "--model-name", type=click.STRING, help="Name of model to load from registry",
+    "--model-name",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
-    "--model-version", type=click.STRING, help="Version of model to load from registry",
+    "--model-version",
+    type=click.STRING,
+    help="Version of model to load from registry",
 )
 @click.option(
     "--batch-size",
@@ -119,7 +130,10 @@ def _coerce_int_to_bool(ctx, param, value):
     help="FGM attack norm of adversarial perturbation",
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def fgm_attack(
     data_dir,

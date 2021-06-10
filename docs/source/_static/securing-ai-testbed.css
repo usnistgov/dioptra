@@ -1,6 +1,14 @@
 @charset "UTF-8";
+
 /*! securing-ai-testbed CSS
  */
+/* NOTICE
+
+This software (or technical data) was produced for the U. S. Government under
+contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+52.227-14, Alt. IV (DEC 2007)
+
+© 2021 The MITRE Corporation. */
 /*********************************************
 * Main body *
 *********************************************/
@@ -371,12 +379,14 @@ main.bd-content #main-content table.table.autosummary th {
 
 /* override table width restrictions */
 @media screen and (min-width: 767px) {
+
   .wy-table-responsive table td,
-.wy-table-responsive table th {
+  .wy-table-responsive table th {
     /* !important prevents the common CSS stylesheets from overriding this as on RTD
         they are loaded after this stylesheet */
     white-space: normal !important;
   }
+
   .wy-table-responsive {
     overflow: visible !important;
   }

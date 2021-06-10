@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+# NOTICE
+#
+# This software (or technical data) was produced for the U. S. Government under
+# contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+# 52.227-14, Alt. IV (DEC 2007)
+#
+# © 2021 The MITRE Corporation.
 
 import os
 from pathlib import Path
@@ -123,7 +130,6 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
-
 def mi_attack(
     data_dir,
     image_size,
@@ -137,7 +143,7 @@ def mi_attack(
     window_length,
     threshold,
     learning_rate,
-    seed
+    seed,
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
@@ -154,7 +160,7 @@ def mi_attack(
         window_length=window_length,
         threshold=threshold,
         learning_rate=learning_rate,
-        seed=seed
+        seed=seed,
     )
 
     with mlflow.start_run() as active_run:  # noqa: F841
@@ -173,7 +179,7 @@ def mi_attack(
                 window_length=window_length,
                 threshold=threshold,
                 learning_rate=learning_rate,
-                seed=seed
+                seed=seed,
             )
         )
 
@@ -251,22 +257,22 @@ def init_mi_flow() -> Flow:
             version=model_version,
             upstream_tasks=[init_tensorflow_results],
         )
-##        inferred = pyplugs.call_task(
-##            f"{_PLUGINS_IMPORT_PATH}.attacks",
-##            "modelinversion",
-##            "infer_model_inversion",
-##            data_dir=testing_dir,
-##            keras_classifier=keras_classifier,
-##            adv_data_dir=adv_data_dir,
-##            batch_size=batch_size,
-##            image_size=image_size,
-##            classes=classes,
-##            max_iter=max_iter,
-##            window_length=window_length,
-##            threshold=threshold,
-##            learning_rate=learning_rate,
-##            upstream_tasks=[make_directories_results],
-##        )
+        ##        inferred = pyplugs.call_task(
+        ##            f"{_PLUGINS_IMPORT_PATH}.attacks",
+        ##            "modelinversion",
+        ##            "infer_model_inversion",
+        ##            data_dir=testing_dir,
+        ##            keras_classifier=keras_classifier,
+        ##            adv_data_dir=adv_data_dir,
+        ##            batch_size=batch_size,
+        ##            image_size=image_size,
+        ##            classes=classes,
+        ##            max_iter=max_iter,
+        ##            window_length=window_length,
+        ##            threshold=threshold,
+        ##            learning_rate=learning_rate,
+        ##            upstream_tasks=[make_directories_results],
+        ##        )
 
         inferred = infer_model_inversion(
             data_dir=testing_dir,
@@ -281,8 +287,7 @@ def init_mi_flow() -> Flow:
             learning_rate=learning_rate,
             upstream_tasks=[make_directories_results],
         )
-        
-        
+
         log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
             "mlflow",

@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+# NOTICE
+#
+# This software (or technical data) was produced for the U. S. Government under
+# contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+# 52.227-14, Alt. IV (DEC 2007)
+#
+# © 2021 The MITRE Corporation.
 
 import os
 from pathlib import Path
@@ -76,7 +83,10 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Model architecture",
 )
 @click.option(
-    "--epochs", type=click.INT, help="Number of epochs to train model", default=30,
+    "--epochs",
+    type=click.INT,
+    help="Number of epochs to train model",
+    default=30,
 )
 @click.option(
     "--batch-size",
@@ -109,7 +119,10 @@ def _coerce_comma_separated_ints(ctx, param, value):
     default=0.2,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def train(
     data_dir,

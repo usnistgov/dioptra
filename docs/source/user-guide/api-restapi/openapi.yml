@@ -1,6 +1,13 @@
+# NOTICE
+#
+# This software (or technical data) was produced for the U. S. Government under
+# contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+# 52.227-14, Alt. IV (DEC 2007)
+#
+# © 2021 The MITRE Corporation.
 basePath: /
 consumes:
-- application/json
+  - application/json
 definitions:
   Experiment:
     properties:
@@ -60,8 +67,8 @@ definitions:
         description: An integer identifying a registered queue.
         type: integer
       status:
-        description: 'The current status of the job. The allowed values are: queued,
-          started, deferred, finished, failed.'
+        description: "The current status of the job. The allowed values are: queued,
+          started, deferred, finished, failed."
         type: string
       timeout:
         description: The maximum alloted time for a job before it times out and is
@@ -103,442 +110,443 @@ paths:
     get:
       operationId: get_experiment_resource
       parameters:
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
             items:
-              $ref: '#/definitions/Experiment'
+              $ref: "#/definitions/Experiment"
             type: array
       summary: Gets a list of all registered experiments
       tags:
-      - Experiment
+        - Experiment
     post:
       consumes:
-      - application/x-www-form-urlencoded
-      - multipart/form-data
+        - application/x-www-form-urlencoded
+        - multipart/form-data
       operationId: post_experiment_resource
       parameters:
-      - description: The name of the experiment. Must be unique.
-        in: formData
-        name: name
-        required: true
-        type: string
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: The name of the experiment. Must be unique.
+          in: formData
+          name: name
+          required: true
+          type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Experiment'
+            $ref: "#/definitions/Experiment"
       summary: Creates a new experiment via an experiment registration form
       tags:
-      - Experiment
+        - Experiment
   /api/experiment/name/{experimentName}:
     delete:
       operationId: delete_experiment_name_resource
       responses:
-        '200':
+        "200":
           description: Success
       summary: Deletes an experiment by its unique name
       tags:
-      - Experiment
+        - Experiment
     get:
       operationId: get_experiment_name_resource
       parameters:
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Experiment'
+            $ref: "#/definitions/Experiment"
       summary: Gets an experiment by its unique name
       tags:
-      - Experiment
+        - Experiment
     parameters:
-    - description: Unique experiment name
-      in: path
-      name: experimentName
-      required: true
-      type: string
+      - description: Unique experiment name
+        in: path
+        name: experimentName
+        required: true
+        type: string
     put:
       operationId: put_experiment_name_resource
       parameters:
-      - in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/ExperimentUpdate'
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/ExperimentUpdate"
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Experiment'
+            $ref: "#/definitions/Experiment"
       summary: Modifies an experiment by its unique name
       tags:
-      - Experiment
+        - Experiment
   /api/experiment/{experimentId}:
     delete:
       operationId: delete_experiment_id_resource
       responses:
-        '200':
+        "200":
           description: Success
       summary: Deletes an experiment by its unique identifier
       tags:
-      - Experiment
+        - Experiment
     get:
       operationId: get_experiment_id_resource
       parameters:
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Experiment'
+            $ref: "#/definitions/Experiment"
       summary: Gets an experiment by its unique identifier
       tags:
-      - Experiment
+        - Experiment
     parameters:
-    - description: Unique experiment identifier
-      in: path
-      name: experimentId
-      required: true
-      type: integer
+      - description: Unique experiment identifier
+        in: path
+        name: experimentId
+        required: true
+        type: integer
     put:
       operationId: put_experiment_id_resource
       parameters:
-      - in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/ExperimentUpdate'
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/ExperimentUpdate"
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Experiment'
+            $ref: "#/definitions/Experiment"
       summary: Modifies an experiment by its unique identifier
       tags:
-      - Experiment
+        - Experiment
   /api/job/:
     get:
       operationId: get_job_resource
       parameters:
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
             items:
-              $ref: '#/definitions/Job'
+              $ref: "#/definitions/Job"
             type: array
       summary: Gets a list of all submitted jobs
       tags:
-      - Job
+        - Job
     post:
       consumes:
-      - multipart/form-data
+        - multipart/form-data
       operationId: post_job_resource
       parameters:
-      - description: The name of a registered experiment.
-        in: formData
-        name: experiment_name
-        required: true
-        type: string
-      - description: The name of an active queue.
-        in: formData
-        name: queue
-        required: true
-        type: string
-      - description: The maximum alloted time for a job before it times out and is
-          stopped. If omitted, the job timeout will default to 24 hours.
-        in: formData
-        name: timeout
-        type: string
-      - description: The name of the entry point in the MLproject file to run.
-        in: formData
-        name: entry_point
-        required: true
-        type: string
-      - description: 'A list of entry point parameter values to use for the job. The
-          list is a string with the following format: "-P param1=value1 -P param2=value2".
-          If omitted, the default values in the MLproject file will be used.'
-        in: formData
-        name: entry_point_kwargs
-        type: string
-      - description: A job UUID to set as a dependency for this new job. The new job
-          will not run until this job completes successfully. If omitted, then the
-          new jobwill start as soon as computing resources are available.
-        in: formData
-        name: depends_on
-        type: string
-      - description: A tarball archive or zip file containing, at a minimum, a MLproject
-          file and its associated entry point scripts.
-        in: formData
-        name: workflow
-        required: true
-        type: file
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: The name of a registered experiment.
+          in: formData
+          name: experiment_name
+          required: true
+          type: string
+        - description: The name of an active queue.
+          in: formData
+          name: queue
+          required: true
+          type: string
+        - description: The maximum alloted time for a job before it times out and is
+            stopped. If omitted, the job timeout will default to 24 hours.
+          in: formData
+          name: timeout
+          type: string
+        - description: The name of the entry point in the MLproject file to run.
+          in: formData
+          name: entry_point
+          required: true
+          type: string
+        - description: 'A list of entry point parameter values to use for the job. The
+            list is a string with the following format: "-P param1=value1 -P param2=value2".
+            If omitted, the default values in the MLproject file will be used.'
+          in: formData
+          name: entry_point_kwargs
+          type: string
+        - description: A job UUID to set as a dependency for this new job. The new job
+            will not run until this job completes successfully. If omitted, then the
+            new jobwill start as soon as computing resources are available.
+          in: formData
+          name: depends_on
+          type: string
+        - description:
+            A tarball archive or zip file containing, at a minimum, a MLproject
+            file and its associated entry point scripts.
+          in: formData
+          name: workflow
+          required: true
+          type: file
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Job'
+            $ref: "#/definitions/Job"
       summary: Creates a new job via a job submission form with an attached file
       tags:
-      - Job
+        - Job
   /api/job/{jobId}:
     get:
       operationId: get_job_id_resource
       parameters:
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Job'
+            $ref: "#/definitions/Job"
       summary: Gets a job by its unique identifier
       tags:
-      - Job
+        - Job
     parameters:
-    - description: A string specifying a job's UUID.
-      in: path
-      name: jobId
-      required: true
-      type: string
+      - description: A string specifying a job's UUID.
+        in: path
+        name: jobId
+        required: true
+        type: string
   /api/queue/:
     get:
       operationId: get_queue_resource
       parameters:
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
             items:
-              $ref: '#/definitions/Queue'
+              $ref: "#/definitions/Queue"
             type: array
       summary: Gets a list of all registered queues
       tags:
-      - Queue
+        - Queue
     post:
       consumes:
-      - application/x-www-form-urlencoded
-      - multipart/form-data
+        - application/x-www-form-urlencoded
+        - multipart/form-data
       operationId: post_queue_resource
       parameters:
-      - description: The name of the queue. Must be unique.
-        in: formData
-        name: name
-        required: true
-        type: string
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: The name of the queue. Must be unique.
+          in: formData
+          name: name
+          required: true
+          type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Queue'
+            $ref: "#/definitions/Queue"
       summary: Creates a new queue via a queue registration form
       tags:
-      - Queue
+        - Queue
   /api/queue/name/{queueName}:
     delete:
       operationId: delete_queue_name_resource
       responses:
-        '200':
+        "200":
           description: Success
       summary: Deletes a queue by its unique name
       tags:
-      - Queue
+        - Queue
     get:
       operationId: get_queue_name_resource
       parameters:
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Queue'
+            $ref: "#/definitions/Queue"
       summary: Gets a queue by its unique name
       tags:
-      - Queue
+        - Queue
     parameters:
-    - description: The name of the queue.
-      in: path
-      name: queueName
-      required: true
-      type: string
+      - description: The name of the queue.
+        in: path
+        name: queueName
+        required: true
+        type: string
     put:
       operationId: put_queue_name_resource
       parameters:
-      - in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/QueueNameUpdate'
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/QueueNameUpdate"
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Queue'
+            $ref: "#/definitions/Queue"
       summary: Modifies a queue by its unique name
       tags:
-      - Queue
+        - Queue
   /api/queue/name/{queueName}/lock:
     delete:
       operationId: delete_queue_name_lock_resource
       responses:
-        '200':
+        "200":
           description: Success
       summary: Removes the lock from the queue (name reference) if it exists
       tags:
-      - Queue
+        - Queue
     parameters:
-    - description: The name of the queue.
-      in: path
-      name: queueName
-      required: true
-      type: string
+      - description: The name of the queue.
+        in: path
+        name: queueName
+        required: true
+        type: string
     put:
       operationId: put_queue_name_lock_resource
       responses:
-        '200':
+        "200":
           description: Success
       summary: Locks the queue (name reference) if it is unlocked
       tags:
-      - Queue
+        - Queue
   /api/queue/{queueId}:
     delete:
       operationId: delete_queue_id_resource
       responses:
-        '200':
+        "200":
           description: Success
       summary: Deletes a queue by its unique identifier
       tags:
-      - Queue
+        - Queue
     get:
       operationId: get_queue_id_resource
       parameters:
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Queue'
+            $ref: "#/definitions/Queue"
       summary: Gets a queue by its unique identifier
       tags:
-      - Queue
+        - Queue
     parameters:
-    - description: An integer identifying a registered queue.
-      in: path
-      name: queueId
-      required: true
-      type: integer
+      - description: An integer identifying a registered queue.
+        in: path
+        name: queueId
+        required: true
+        type: integer
     put:
       operationId: put_queue_id_resource
       parameters:
-      - in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/QueueNameUpdate'
-      - description: An optional fields mask
-        format: mask
-        in: header
-        name: X-Fields
-        type: string
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/QueueNameUpdate"
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
       responses:
-        '200':
+        "200":
           description: Success
           schema:
-            $ref: '#/definitions/Queue'
+            $ref: "#/definitions/Queue"
       summary: Modifies a queue by its unique identifier
       tags:
-      - Queue
+        - Queue
   /api/queue/{queueId}/lock:
     delete:
       operationId: delete_queue_id_lock_resource
       responses:
-        '200':
+        "200":
           description: Success
       summary: Removes the lock from the queue (id reference) if it exists
       tags:
-      - Queue
+        - Queue
     parameters:
-    - description: An integer identifying a registered queue.
-      in: path
-      name: queueId
-      required: true
-      type: integer
+      - description: An integer identifying a registered queue.
+        in: path
+        name: queueId
+        required: true
+        type: integer
     put:
       operationId: put_queue_id_lock_resource
       responses:
-        '200':
+        "200":
           description: Success
       summary: Locks the queue (id reference) if it is unlocked
       tags:
-      - Queue
+        - Queue
 produces:
-- application/json
+  - application/json
 responses:
   ExperimentAlreadyExistsError: {}
   ExperimentDoesNotExistError: {}
@@ -556,11 +564,11 @@ responses:
   QueueAlreadyExistsError: {}
   QueueDoesNotExistError: {}
   QueueRegistrationError: {}
-swagger: '2.0'
+swagger: "2.0"
 tags:
-- description: Experiment registration operations
-  name: Experiment
-- description: Job submission and management operations
-  name: Job
-- description: Queue registration operations
-  name: Queue
+  - description: Experiment registration operations
+    name: Experiment
+  - description: Job submission and management operations
+    name: Job
+  - description: Queue registration operations
+    name: Queue

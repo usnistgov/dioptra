@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+# NOTICE
+#
+# This software (or technical data) was produced for the U. S. Government under
+# contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+# 52.227-14, Alt. IV (DEC 2007)
+#
+# © 2021 The MITRE Corporation.
 
 from pathlib import Path
 from typing import Optional, Union
@@ -64,12 +71,14 @@ class MnistDataset(object):
     def training(self) -> pd.DataFrame:
         if self._train_images_cache is None:
             self._train_images_cache = mnist.download_and_parse_mnist_file(
-                fname=self.train_images, target_dir=self._cache_dir,
+                fname=self.train_images,
+                target_dir=self._cache_dir,
             )
 
         if self._train_labels_cache is None:
             self._train_labels_cache = mnist.download_and_parse_mnist_file(
-                fname=self.train_labels, target_dir=self._cache_dir,
+                fname=self.train_labels,
+                target_dir=self._cache_dir,
             )
 
         return pd.DataFrame(
@@ -84,12 +93,14 @@ class MnistDataset(object):
     def testing(self) -> pd.DataFrame:
         if self._test_images_cache is None:
             self._test_images_cache = mnist.download_and_parse_mnist_file(
-                fname=self.test_images, target_dir=self._cache_dir,
+                fname=self.test_images,
+                target_dir=self._cache_dir,
             )
 
         if self._test_labels_cache is None:
             self._test_labels_cache = mnist.download_and_parse_mnist_file(
-                fname=self.test_labels, target_dir=self._cache_dir,
+                fname=self.test_labels,
+                target_dir=self._cache_dir,
             )
 
         return pd.DataFrame(

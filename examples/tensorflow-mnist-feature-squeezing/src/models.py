@@ -1,3 +1,10 @@
+# NOTICE
+#
+# This software (or technical data) was produced for the U. S. Government under
+# contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+# 52.227-14, Alt. IV (DEC 2007)
+#
+# © 2021 The MITRE Corporation.
 import warnings
 from typing import Callable, Tuple
 
@@ -95,6 +102,7 @@ def le_net(
     model.add(Dense(n_classes, activation="softmax"))
 
     return model
+
 
 def le_net_logit(
     input_shape: Tuple[int, int, int] = (28, 28, 1), n_classes: int = 10

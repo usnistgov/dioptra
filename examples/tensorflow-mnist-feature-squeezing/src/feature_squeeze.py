@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+# NOTICE
+#
+# This software (or technical data) was produced for the U. S. Government under
+# contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+# 52.227-14, Alt. IV (DEC 2007)
+#
+# © 2021 The MITRE Corporation.
 
 import tarfile
 import warnings
@@ -86,10 +93,14 @@ def evaluate_classification_metrics(classifier, adv_ds):
 
 @click.command()
 @click.option(
-    "--run-id", type=click.STRING, help="MLFlow Run ID of a successful fgm attack",
+    "--run-id",
+    type=click.STRING,
+    help="MLFlow Run ID of a successful fgm attack",
 )
 @click.option(
-    "--model", type=click.STRING, help="Name of model to load from registry",
+    "--model",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
     "--model-architecture",
@@ -106,7 +117,10 @@ def evaluate_classification_metrics(classifier, adv_ds):
     default=32,
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 @click.option(
     "--bit-depth",
@@ -134,7 +148,9 @@ def evaluate_classification_metrics(classifier, adv_ds):
     help="Directory for saving fgm images",
 )
 @click.option(
-    "--model-version", type=click.STRING, default="1",
+    "--model-version",
+    type=click.STRING,
+    default="1",
 )
 @click.option(
     "--image-size",

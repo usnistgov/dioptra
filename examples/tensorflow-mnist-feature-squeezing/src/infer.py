@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+# NOTICE
+#
+# This software (or technical data) was produced for the U. S. Government under
+# contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+# 52.227-14, Alt. IV (DEC 2007)
+#
+# © 2021 The MITRE Corporation.
 
 import os
 from pathlib import Path
@@ -33,7 +40,9 @@ def _coerce_comma_separated_ints(ctx, param, value):
 
 @click.command()
 @click.option(
-    "--run-id", type=click.STRING, help="MLFlow Run ID of a successful fgm attack",
+    "--run-id",
+    type=click.STRING,
+    help="MLFlow Run ID of a successful fgm attack",
 )
 @click.option(
     "--image-size",
@@ -42,10 +51,14 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Dimensions for the input images",
 )
 @click.option(
-    "--model-name", type=click.STRING, help="Name of model to load from registry",
+    "--model-name",
+    type=click.STRING,
+    help="Name of model to load from registry",
 )
 @click.option(
-    "--model-version", type=click.STRING, help="Version of model to load from registry",
+    "--model-version",
+    type=click.STRING,
+    help="Version of model to load from registry",
 )
 @click.option(
     "--adv-tar-name",
@@ -60,7 +73,10 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Directory in tarfile containing fgm images",
 )
 @click.option(
-    "--seed", type=click.INT, help="Set the entry point rng seed", default=-1,
+    "--seed",
+    type=click.INT,
+    help="Set the entry point rng seed",
+    default=-1,
 )
 def infer_adversarial(
     run_id, image_size, model_name, model_version, adv_tar_name, adv_data_dir, seed

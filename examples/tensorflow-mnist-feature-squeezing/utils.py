@@ -1,3 +1,10 @@
+# NOTICE
+#
+# This software (or technical data) was produced for the U. S. Government under
+# contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+# 52.227-14, Alt. IV (DEC 2007)
+#
+# © 2021 The MITRE Corporation.
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -53,11 +60,15 @@ class SecuringAIClient(object):
     def list_jobs(self) -> List[Dict[str, Any]]:
         return requests.get(self.job_endpoint).json()
 
-    def register_experiment(self, name: str,) -> Dict[str, Any]:
+    def register_experiment(
+        self,
+        name: str,
+    ) -> Dict[str, Any]:
         experiment_registration_form = {"name": name}
 
         response = requests.post(
-            self.experiment_endpoint, data=experiment_registration_form,
+            self.experiment_endpoint,
+            data=experiment_registration_form,
         )
 
         return response.json()
@@ -89,16 +100,20 @@ class SecuringAIClient(object):
 
         with workflows_file.open("rb") as f:
             job_files = {"workflow": (workflows_file.name, f)}
-            response = requests.post(self.job_endpoint, data=job_form, files=job_files,)
+            response = requests.post(
+                self.job_endpoint,
+                data=job_form,
+                files=job_files,
+            )
 
         return response.json()
 
 
 def notebook_gallery(images: PathLike, row_height: str = "auto") -> HTML:
     """Display a set of images in a gallery that flexes with the width of the notebook.
-    
+
     Adapted from https://mindtrove.info/jupyter-tidbit-image-gallery/.
-    
+
     Args:
         images: Filepaths of images to display
 

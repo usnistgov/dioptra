@@ -1,3 +1,11 @@
+# NOTICE
+#
+# This software (or technical data) was produced for the U. S. Government under
+# contract SB-1341-14-CQ-0010, and is subject to the Rights in Data-General Clause
+# 52.227-14, Alt. IV (DEC 2007)
+#
+# © 2021 The MITRE Corporation.
+#
 # This is a fork of the work
 # https://github.com/gahjelle/pyplugs/blob/6921de46a2158462dc07c2f013155b53fbcebebb/tests/test_plugins.py  # noqa: B950
 # See copyright below.
