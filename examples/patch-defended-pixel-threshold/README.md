@@ -1,4 +1,4 @@
-# Securing AI Testbed
+# Dioptra
 ## ImageNet-Patch Demo.
 
 ## Summary:

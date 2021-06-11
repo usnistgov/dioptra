@@ -11,7 +11,7 @@ Introduction
    Some of the attacks in this demo, *deepfool* and *CW* in particular, are computationally expensive and will take a very long to complete if run using the CPUs found in a typical personal computer.
    For this reason, it is highly recommended that you run these demos on a CUDA-compatible GPU.
 
-The demo provided in the Jupyter notebook ``demo.ipynb`` uses the Securing AI Testbed to run experiments that investigate the effectiveness of the feature-squeezing defense against a series of evasion attacks against a neural network model.
+The demo provided in the Jupyter notebook ``demo.ipynb`` uses Dioptra to run experiments that investigate the effectiveness of the feature-squeezing defense against a series of evasion attacks against a neural network model.
 
 Using this Demo
 ---------------

@@ -10,8 +10,8 @@ What are the basic steps?
 
 .. tip::
 
-   When creating a new entrypoint, users may also find it helpful to create their own python task plugins in combination with existing SecuringAI builtin task plugins.
-   Instructions for developing local and Securing AI builtin tasks can be found in the following guide: :ref:`user-guide-custom-task-plugins`.
+   When creating a new entrypoint, users may also find it helpful to create their own python task plugins in combination with existing builtin task plugins.
+   Instructions for developing local and builtin tasks can be found in the following guide: :ref:`user-guide-custom-task-plugins`.
    The following sections will assume that all task plugins already exist somewhere (either locally or as a builtin), and are ready to use for use in our entry point python script.
 
 Entry point development generally involves the creating Python script, that is then executed by its associated command within the MLproject file.

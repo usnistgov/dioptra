@@ -516,7 +516,7 @@ build-all: build-ci build-testbed
 ## Build all continuous integration (CI) images
 build-ci: build-python-build build-sphinx build-tox
 
-## Build all Securing AI Testbed images
+## Build all Dioptra Testbed images
 build-testbed: build-nginx build-mlflow-tracking build-restapi build-pytorch build-tensorflow
 
 ## Build the MLFlow Tracking Docker image
@@ -594,7 +594,7 @@ pull-latest-testbed: ; $(call pull_mitre_docker_images,$(TESTBED_IMAGES_LATEST),
 ## Manually set "latest" tag on all continuous integration (CI) images
 tag-latest-ci: $(CONTAINER_PYTHON_BUILD_BUILD_LATEST_SENTINEL) $(CONTAINER_SPHINX_BUILD_LATEST_SENTINEL) $(CONTAINER_TOX_PY37_BUILD_LATEST_SENTINEL) $(CONTAINER_TOX_PY38_BUILD_LATEST_SENTINEL)
 
-## Manually set "latest" tag on all Securing AI Testbed images
+## Manually set "latest" tag on all Dioptra Testbed images
 tag-latest-testbed: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL) $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL) $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL)
 
 ## Run all tests

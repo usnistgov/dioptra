@@ -5,7 +5,7 @@ Tensorflow ImageNet Resnet50 FGM
 
 .. warning::
 
-   This demo assumes that you have access to an on-prem deployment of the Securing AI Testbed that provides a copy of the ImageNet dataset and a CUDA-compatible GPU.
+   This demo assumes that you have access to an on-prem deployment of Dioptra that provides a copy of the ImageNet dataset and a CUDA-compatible GPU.
    This demo cannot be run on a typical personal computer.
 
 The demo provided in the Jupyter notebook ``demo.ipynb`` contains an example of the FGM attack on the ResNet50 architecture with optional defense entry points.

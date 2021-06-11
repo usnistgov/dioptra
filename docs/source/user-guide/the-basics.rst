@@ -3,7 +3,7 @@
 The Basics
 ==========
 
-The primary use case for the Securing AI Testbed is the running, tracking, and organizing of machine learning security experiments using the open-source technologies and architectures found in real-world AI applications.
+The primary use case for Dioptra is the running, tracking, and organizing of machine learning security experiments using the open-source technologies and architectures found in real-world AI applications.
 The Testbed supports this by providing the following capabilities,
 
 #. A containerized micro-services architecture for running and tracking experiments that is straightforward to deploy on a wide range of computational environments

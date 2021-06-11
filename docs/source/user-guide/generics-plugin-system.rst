@@ -148,6 +148,6 @@ Once you have this configured for your package, all you need to do is ``pip inst
 .. tip::
 
    For guidance on how to prepare a Python package, including what else needs to be included in `setup.cfg` and the rest of the files, see the `Packaging Python Projects`_ tutorial.
-   Readers are also encouraged to examine the source files of the Securing AI Testbed repository itself.
+   Readers are also encouraged to examine the source files of the Dioptra repository itself.
 
 .. _Packaging Python Projects: https://packaging.python.org/tutorials/packaging-projects/

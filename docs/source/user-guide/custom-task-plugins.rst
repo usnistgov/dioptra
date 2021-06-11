@@ -8,7 +8,7 @@ When designing a custom example, you may be required to create a new task plugin
 Task Organization: Built-in Tasks
 ---------------------------------
 
-The Securing-AI project contains a number of builtin task plugins that can be executed across all available examples.
+Dioptra contains a number of builtin task plugins that can be executed across all available examples.
 They are stored in the following directories:
 
 .. code-block:: none

@@ -96,7 +96,7 @@ definitions:
         type: string
     type: object
 info:
-  title: Securing AI Testbed REST API
+  title: Dioptra REST API
   version: 0.0.0
 paths:
   /api/experiment/:

@@ -1,6 +1,6 @@
 # Tensorflow MNIST Pixel Threshold Demo
 
-The demo provided in the Jupyter notebook `demo.ipynb` uses the Securing AI Testbed to run experiments that investigate the effects of the pixel threshold attack when launched on a neural network model trained on the MNIST dataset.
+The demo provided in the Jupyter notebook `demo.ipynb` uses Dioptra to run experiments that investigate the effects of the pixel threshold attack when launched on a neural network model trained on the MNIST dataset.
 
 ## Getting started
 

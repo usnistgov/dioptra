@@ -1,6 +1,6 @@
 # Tensorflow Adversarial Patch Demo
 
->⚠️ **Warning:** Some of the demos assume that you have access to an on-prem deployment of the Securing AI Testbed that provides a copy of the Fruits360 and ImageNet datasets and a CUDA-compatible GPU.
+>⚠️ **Warning:** Some of the demos assume that you have access to an on-prem deployment of Dioptra that provides a copy of the Fruits360 and ImageNet datasets and a CUDA-compatible GPU.
 > These demos cannot be run on a typical personal computer.
 
 This demo provides three different versions of the adversarial patch attack on separate image classification datasets and model architectures.

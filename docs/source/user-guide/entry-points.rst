@@ -32,14 +32,14 @@ What is an Entry Point?
 
 The term *entry point*, in the context of running experiment jobs, refers to executable scripts or binaries that are paired with information about their parameters.
 Entry points are the fundamental unit of work within the Testbed, where each job submitted to the Testbed selects one entry point to run.
-The Securing AI Testbed derives its modularity in part by establishing a convention for how to compose new entry points.
+Dioptra derives its modularity in part by establishing a convention for how to compose new entry points.
 The convention is identifying related units of work, for example applying one out of many evasion attacks to generate a batch of adversarial images, and then ensuring they are interchangeable with one another by implementing the corresponding executable scripts to share a common set of inputs and outputs.
 This guided the construction of all the example experiments distributed as part of this project.
 The SDK library and the task plugins system are both provided to help Testbed users apply this convention to their own experiments.
 
 .. note::
 
-   This particular usage for the term *entry point* `originates with the MLFlow library <https://mlflow.org/docs/latest/projects.html#overview>`_, and we have adopted for this project since the Securing AI Testbed uses MLFlow_ on the backend to provide job tracking capabilities.
+   This particular usage for the term *entry point* `originates with the MLFlow library <https://mlflow.org/docs/latest/projects.html#overview>`_, and we have adopted for this project since Dioptra uses MLFlow_ on the backend to provide job tracking capabilities.
 
 Each implementation of a Testbed entry point requires, at minimum, two separate files, a YAML formatted ``MLproject`` file, and an executable Python script that can set its internal parameters via command-line options (e.g. :py:mod:`argparse` and :py:mod:`click`).
 These files are the topics of the following sections.
@@ -235,7 +235,7 @@ Prefect - Task Execution
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The main work done within an entry point needs to use the :py:class:`~prefect.Flow` class from the Prefect_ library to create a context for assembling the entry point script's task workflow.
-Prefect is a modern workflow library that is aimed at helping data scientists set up task execution graphs with minimal changes to their existing code, and in the Securing AI Testbed it provides a framework for wiring :doc:`task plugins <task-plugins>` together.
+Prefect is a modern workflow library that is aimed at helping data scientists set up task execution graphs with minimal changes to their existing code, and in Dioptra it provides a framework for wiring :doc:`task plugins <task-plugins>` together.
 The following example shows the beginnings of a :py:class:`~prefect.Flow` context to be run by the ``train()`` function in the previous section.
 
 .. _entry-points-prefect-task-execution-code:

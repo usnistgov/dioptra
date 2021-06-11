@@ -38,7 +38,7 @@ migrate: Migrate = Migrate()
 
 
 def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
-    """Creates and configures a fresh instance of the Securing AI Testbed REST API.
+    """Creates and configures a fresh instance of the Dioptra REST API.
 
     Args:
         env: The configuration environment to use for the application. The allowed
@@ -66,7 +66,7 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
 
     api: Api = Api(
         app,
-        title="Securing AI Testbed REST API",
+        title="Dioptra REST API",
         version=API_VERSION,
     )
     modules: List[Callable[..., Any]] = [bind_dependencies]

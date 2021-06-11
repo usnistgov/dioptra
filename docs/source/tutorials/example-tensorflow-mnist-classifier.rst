@@ -3,7 +3,7 @@
 First Steps - MNIST Tensorflow Classifier
 =========================================
 
-This demo provides a practical example that you can run on your personal computer to see how the Securing AI Testbed can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
+This demo provides a practical example that you can run on your personal computer to see how Dioptra can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
 It can be used as a basic template for crafting your own custom scripts to run within the testbed.
 
 Getting started
@@ -114,9 +114,9 @@ This folder structure is a standardized way to encode the label information and 
 Testbed microservices
 ---------------------
 
-The Securing AI Testbed is composed of several micro-services that are used to manage job execution, artifact storage, and logging the results of experiments.
+Dioptra is composed of several micro-services that are used to manage job execution, artifact storage, and logging the results of experiments.
 These services all run within separate containers that were instantiated via Docker images that you either built locally or pulled into your environment from a Docker image registry.
-A high-level schematic showing how all of the images connect together to form the architecture of the Securing AI Testbed is provided below.
+A high-level schematic showing how all of the images connect together to form the architecture of Dioptra is provided below.
 
 .. figure:: /images/testbed-architecture.svg
 
@@ -364,7 +364,7 @@ Like before, we can monitor the status of the dependent jobs by querying the API
    print("")
    pprint.pprint(response_le_net_infer_le_net_fgm)
 
-Congratulations, you’ve just run your first experiment using the Securing AI Testbed!
+Congratulations, you’ve just run your first experiment using Dioptra!
 
 Querying the MLFlow Tracking Service
 ------------------------------------

@@ -8,7 +8,7 @@ Tensorflow MNIST Model Inversion
    The attack used in this demo is computationally expensive and will take a very long to complete if run using the CPUs found in a typical personal computer.
    For this reason, it is highly recommended that you run these demos on a CUDA-compatible GPU.
 
-The demo provided in the Jupyter notebook ``demo.ipynb`` uses the Securing AI Testbed to run experiments that investigate the model inversion attack when launched on a neural network model trained on the MNIST dataset.
+The demo provided in the Jupyter notebook ``demo.ipynb`` uses Dioptra to run experiments that investigate the model inversion attack when launched on a neural network model trained on the MNIST dataset.
 
 Using this Demo
 ---------------

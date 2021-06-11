@@ -42,7 +42,7 @@ The simplified diagrams of the development pipeline below depict some examples.
 
 The sheer variety of attacks and defenses results in a combinatorial explosion of possible combinations of attacks, defenses, model architectures, and datasets.
 This creates a challenge for evaluating the effectiveness of defenses against the full array of attacks it may face.
-The NCCoE's Securing AI testbed addresses this challenge by making it easier for researchers to explore the set of possible combinations.
+Dioptra, the NCCoE's machine learning security testbed, addresses this challenge by making it easier for researchers to explore the set of possible combinations.
 
 Audience
 --------

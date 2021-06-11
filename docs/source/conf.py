@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath("../../src"))
 
 # -- Project information -----------------------------------------------------
 
-project = "Securing AI Testbed"
+project = "Dioptra"
 release = "0.0.0"
 version = ".".join(release.split(".")[:2])
 

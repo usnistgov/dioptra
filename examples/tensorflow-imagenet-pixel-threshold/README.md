@@ -1,9 +1,9 @@
 # Tensorflow ImageNet Pixel Threshold Demo
 
->⚠️ **Warning:** This demo assumes that you have access to an on-prem deployment of the Securing AI Testbed that provides a copy of the ImageNet dataset and a CUDA-compatible GPU.
+>⚠️ **Warning:** This demo assumes that you have access to an on-prem deployment of Dioptra that provides a copy of the ImageNet dataset and a CUDA-compatible GPU.
 > This demo cannot be run on a typical personal computer.
 
-The demo provided in the Jupyter notebook `demo.ipynb` uses the Securing AI Testbed to run experiments that investigate the effects of the pixel threshold attack when launched on a neural network model trained on the ImageNet dataset.
+The demo provided in the Jupyter notebook `demo.ipynb` uses Dioptra to run experiments that investigate the effects of the pixel threshold attack when launched on a neural network model trained on the ImageNet dataset.
 
 ## Getting started
 

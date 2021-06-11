@@ -3,7 +3,7 @@
 Installation Guide
 ==================
 
-This installation guide is divided into three parts, with the first part covering system requirements, the second part covering how to install the ``mitre-securing-ai`` Python package, and the third part covering how to setup a personal computer for test-driving the Securing AI Testbed architecture locally.
+This installation guide is divided into three parts, with the first part covering system requirements, the second part covering how to install the ``mitre-securing-ai`` Python package, and the third part covering how to setup a personal computer for test-driving the Dioptra architecture locally.
 General instructions on how to deploy the Testbed in an on-premises server can be found in the sections under **Deployment Guide**.
 
 Package Installation
@@ -77,7 +77,7 @@ A host device that uses a GNU/Linux environment can be the following:
 
 .. note::
 
-   The Securing AI Testbed was developed for use with native GNU/Linux environments.
+   Dioptra was developed for use with native GNU/Linux environments.
    When using MacOS/OS X or Windows there is a chance you will encounter errors that are specific to your system's setup that are not covered in this documentation.
    To resolve such issues, first look at the external documentation linked (i.e. Homebrew_ and `Windows Subsystem for Linux`_) before submitting a bug report.
    Also, when using a virtual machine it is likely the performance of can be throttled because of the CPU and Memory allocations set at the time the virtual machine was configured.

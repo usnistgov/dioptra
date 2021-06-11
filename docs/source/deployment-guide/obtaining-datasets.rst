@@ -10,7 +10,7 @@ Kaggle Datasets
 
 Kaggle_ is a website and a company that provides a platform for hosting data science competitions and publishing public datasets.
 We recommend using their API to help with automating the download of any datasets from the site for an on-premises deployment.
-In order to run all of the examples distributed with the Securing AI Testbed, you will need to download the following datasets and challenges from Kaggle_:
+In order to run all of the examples distributed with Dioptra, you will need to download the following datasets and challenges from Kaggle_:
 
 -  **Fruits360 Classification Dataset:** https://www.kaggle.com/moltean/fruits
 -  **ImageNet Classification Challenge:** https://www.kaggle.com/c/imagenet-object-localization-challenge/data

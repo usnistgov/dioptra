@@ -3,15 +3,15 @@
 Testbed REST API Reference
 ==========================
 
-This page documents the endpoints and available HTTP methods for the Securing AI Testbed REST API.
+This page documents the endpoints and available HTTP methods for the Dioptra REST API.
 In addition to using this page, it is highly recommended that Testbed users also use the Swagger documentation that the REST API service automatically generates at runtime, which presents all of this page's information in an interactive format.
 To access the Swagger documentation, just navigate to the web URL for the Testbed REST API service (omit the ``/api`` part at the end of the web address).
 
 .. figure:: ../images/swagger-docs-testbed-rest-api.gif
    :figwidth: 100%
-   :alt: An animation clicking and scrolling through the contents of the Securing AI Testbed REST API Swagger documentation.
+   :alt: An animation clicking and scrolling through the contents of the Dioptra REST API Swagger documentation.
 
-   An animated tour of the automatically generated Swagger documentation for the Securing AI Testbed REST API.
+   An animated tour of the automatically generated Swagger documentation for the Dioptra REST API.
    Several of the Testbed demos that you can run on a personal computer publish the REST API service at the address http://localhost:30080.
 
 Experiment

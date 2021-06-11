@@ -3,7 +3,7 @@
 PyTorch MNIST Membership Inference
 ==================================
 
-The demo provided in the Jupyter notebook ``demo.ipynb`` uses the Securing AI Testbed to run experiments that investigate the membership inference attack when launched on a neural network model trained on the MNIST dataset.
+The demo provided in the Jupyter notebook ``demo.ipynb`` uses Dioptra to run experiments that investigate the membership inference attack when launched on a neural network model trained on the MNIST dataset.
 
 Using this Demo
 ---------------
