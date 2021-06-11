@@ -146,13 +146,13 @@ Clone the repository to your local computer,
 
    .. code:: sh
 
-      git clone https://gitlab.mitre.org/secure-ai/securing-ai-lab-components.git
+      git clone https://github.com/usnistgov/dioptra.git
 
 .. tabbed:: Clone with SSH
 
    .. code:: sh
 
-      git clone git@gitlab.mitre.org:secure-ai/securing-ai-lab-components.git
+      git clone git@github.com:usnistgov/dioptra.git
 
 Finally, verify the repository was downloaded and is up to date,
 

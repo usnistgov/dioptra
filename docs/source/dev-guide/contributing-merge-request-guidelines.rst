@@ -27,10 +27,10 @@ Please follow these steps to submit a contribution using a merge request:
    .. code:: sh
 
       # Clone with HTTPS
-      git clone https://gitlab.mitre.org/secure-ai/securing-ai-lab-components.git
+      git clone https://github.com/usnistgov/dioptra.git
 
       # Clone with SSH
-      git clone git@gitlab.mitre.org:secure-ai/securing-ai-lab-components.git
+      git clone git@github.com:usnistgov/dioptra.git
 
 -  `Set up a development environment by following the Install instructions in the project README <README.md>`__ and installing the project’s pre-commit hooks:
 

@@ -103,7 +103,7 @@ html_static_path = ["_static"]
 html_css_files = ["securing-ai-testbed.css"]
 
 html_theme_options = {
-    "repository_url": "https://gitlab.mitre.org/secure-ai/securing-ai-lab-components",
+    "repository_url": "https://github.com/usnistgov/dioptra",
     "repository_branch": "master",
     "use_repository_button": True,
     "home_page_in_toc": True,
