@@ -1,0 +1,580 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Basics &#8212; Dioptra 0.0.0 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Entry Points" href="entry-points.html" />
+    <link rel="prev" title="PyTorch MNIST Membership Inference" href="../tutorials/example-pytorch-mnist-membership-inference.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+      
+      <h1 class="site-logo" id="site-title">Dioptra 0.0.0 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../index.html">
+   What is Dioptra?
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Getting Started
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/installation.html">
+   Installation Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/newcomer-tips.html">
+   Setup Tips for Newcomers
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  User Guide
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   The Basics
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="entry-points.html">
+   Entry Points
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="task-plugins.html">
+   Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="custom-entry-points.html">
+   Creating a New Entry Point
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="custom-task-plugins.html">
+   Custom Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="generics-plugin-system.html">
+   Generics Plugin System
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="task-plugins-collection.html">
+   Task Plugins Collection
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-artifacts.html">
+     artifacts
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-attacks.html">
+     attacks
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-backend_configs.html">
+     backend_configs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-data.html">
+     data
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-estimators.html">
+     estimators
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-metrics.html">
+     metrics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-random.html">
+     random
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-registry.html">
+     registry
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-tracking.html">
+     tracking
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="api-reference-sdk.html">
+   Testbed SDK API Reference
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-generics.html">
+     generics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-utilities.html">
+     utilities
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-exceptions.html">
+     exceptions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-pyplugs.html">
+     pyplugs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-rq.html">
+     rq
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-cryptography.html">
+     cryptography
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="api-reference-restapi.html">
+   Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Deployment Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/system-requirements.html">
+   System Requirements
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">
+   Docker Images List and Settings
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/single-machine-deployment.html">
+   Single Machine Deployment
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/task-plugins-management.html">
+   Task Plugins Management
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/obtaining-datasets.html">
+   How to Obtain Common Datasets
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/testbed-ansible-collection.html">
+   Testbed Ansible Collection
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Developer Guides
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../dev-guide/index.html">
+   Getting Involved / Contributing
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-merge-request-guidelines.html">
+     Merge Request Guidelines
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-commit-styleguide.html">
+     Commit Styleguide
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-build-dev-images.html">
+     Building Development Docker Images
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/programming-style.html">
+   Programming Style Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-architecture.html">
+   Testbed Architecture Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-restapi.html">
+   Testbed REST API Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-sdk.html">
+   Testbed SDK Design Guide
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav>
+ <!-- To handle the deprecated key -->
+
+
+
+
+
+<div class="navbar_extra_footer">
+  
+  <div>
+    
+<a href="../developers.html"><em>Development Team</em></a>
+
+  </div>
+  
+  
+</div>
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/user-guide/the-basics.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/usnistgov/dioptra"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#fundamental-units-of-an-experiment">
+   Fundamental Units of an Experiment
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#job-submission">
+   Job Submission
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="the-basics">
+<span id="user-guide-the-basics"></span><h1>The Basics<a class="headerlink" href="#the-basics" title="Permalink to this headline">¶</a></h1>
+<p>The primary use case for Dioptra is the running, tracking, and organizing of machine learning security experiments using the open-source technologies and architectures found in real-world AI applications.
+The Testbed supports this by providing the following capabilities,</p>
+<ol class="arabic simple">
+<li><p>A containerized micro-services architecture for running and tracking experiments that is straightforward to deploy on a wide range of computational environments</p></li>
+<li><p>A modular workflow system with swappable units of work to enable low effort hypothesis testing and the rapid iteration of experiments</p></li>
+</ol>
+<p>These capabilities rely on four types of components:</p>
+<dl class="simple">
+<dt>Testbed REST API</dt><dd><p>The Testbed REST API is the heart of the micro-services architecture and is used to register experiments, submit jobs, log experimental results and artifacts, and access the model registry.</p>
+</dd>
+<dt>Task Plugins System</dt><dd><p>The task plugins are the low-level building blocks of an experiment that can be installed and updated in the Testbed with zero downtime.</p>
+</dd>
+<dt>Software Development Kit (SDK)</dt><dd><p>The software development kit is a developer-focused Python library for extending the Testbed’s functionality via its plugin system.</p>
+</dd>
+<dt>Docker Images</dt><dd><p>The Docker images are the concrete implementations of the individual components of the micro-services architecture.</p>
+</dd>
+</dl>
+<div class="section" id="fundamental-units-of-an-experiment">
+<h2>Fundamental Units of an Experiment<a class="headerlink" href="#fundamental-units-of-an-experiment" title="Permalink to this headline">¶</a></h2>
+<p>The following diagram illustrates the fundamental units of a Testbed experiment and their nesting hierarchy,</p>
+<div class="figure align-default" id="id3">
+<img alt="The diagram showing the nesting of the fundamental building blocks of an experiment. There is a large block labeled &quot;experiment,&quot; nested within it are smaller blocks labeled &quot;entry point&quot;, and nested within those are several, even smaller blocks labeled &quot;task&quot;. The tasks flow from one to the next via a sequence of arrows. The entry points also flow from one to the next via a sequence of arrows." src="../_images/experiment-components.svg" /><p class="caption"><span class="caption-text">Entry points are composed of tasks and an experiment is a collection of related entry point runs.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<p>In essence, a testbed experiment is a sequence of entry points composed of tasks.
+An entry point is a construct provided via the MLFlow library that consists of an executable script or binary with declared parameters.
+The tasks within an entry point are calls to Python functions in a plugin registry, with the task execution order managed by the Prefect library.
+The entry point executables are themselves run by a Testbed worker, which is a managed process within a Docker container that has been provisioned with all the necessary environment dependencies to support the job.</p>
+</div>
+<div class="section" id="job-submission">
+<h2>Job Submission<a class="headerlink" href="#job-submission" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-default">
+<img alt="../_images/api-entry-point-submission.svg" src="../_images/api-entry-point-submission.svg" /></div>
+<p>The above diagram illustrates the three steps of the Testbed job submission process,</p>
+<ol class="arabic simple">
+<li><p>Create an entry point by writing an executable script and preparing a configuration file that declares the script’s variable parameters</p></li>
+<li><p>Package the entry point files into a tarball or zip archive</p></li>
+<li><p>Submit the job by uploading the entry point archive and your parameter choices to the Testbed API</p></li>
+</ol>
+<p>After submission, a job’s status can be monitored by querying the Testbed API or by accessing the MLFlow dashboard <a class="footnote-reference brackets" href="#id2" id="id1">1</a> using a web browser.
+The Testbed API and MLFlow dashboard can also be used to review a job’s results and download its artifacts for local inspection.</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>The MLFlow dashboard is a web app provided by the MLFlow Tracking service. Whether or not it can be accessed depends on the details of your deployment.</p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="../tutorials/example-pytorch-mnist-membership-inference.html" title="previous page">PyTorch MNIST Membership Inference</a>
+    <a class='right-next' id="next-link" href="entry-points.html" title="next page">Entry Points</a>
+
+        </div>
+        
+        </div>
+    </div>
+    
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+      </p>
+    </div>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

@@ -1,0 +1,67 @@
+.. This Software (Dioptra) is being made available as a public service by the
+.. National Cybersecurity Center of Excellence (NCCoE), a part of the National
+.. Institute of Standards and Technology (NIST), an Agency of the United States
+.. Department of Commerce. This software was developed in part by employees of NIST
+.. and in part by NIST contractors. Copyright in portions of this software that were
+.. developed by NIST contractors has been licensed or assigned to NIST. Pursuant to
+.. Title 17 United States Code Section 105, works of NIST employees are not subject
+.. to copyright protection in the United States. However, NIST may hold international
+.. copyright in software created by its employees and domestic copyright (or
+.. licensing rights) in portions of software that were assigned or licensed to NIST.
+.. To the extent that NIST holds copyright in this software, it is being made
+.. available under the Creative Commons Attribution 4.0 International license (CC BY
+.. 4.0). The disclaimers of the CC BY 4.0 license apply to all parts of the software
+.. developed or licensed by NIST.
+..
+.. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+.. https://creativecommons.org/licenses/by/4.0/legalcode
+
+.. _user-guide-api-reference-sdk-pyplugs:
+
+pyplugs
+=======
+
+Decorators
+----------
+
+.. autodecorator:: mitre.securingai.pyplugs.register
+
+.. autodecorator:: mitre.securingai.pyplugs.task_nout
+
+Methods
+-------
+
+.. autofunction:: mitre.securingai.pyplugs.names
+
+.. autofunction:: mitre.securingai.pyplugs.funcs
+
+.. autofunction:: mitre.securingai.pyplugs.info
+
+.. autofunction:: mitre.securingai.pyplugs.exists
+
+.. autofunction:: mitre.securingai.pyplugs.get
+
+.. autofunction:: mitre.securingai.pyplugs.call
+
+.. autofunction:: mitre.securingai.pyplugs.get_task
+
+.. autofunction:: mitre.securingai.pyplugs.call_task
+
+Method Factories
+----------------
+
+.. autofunction:: mitre.securingai.pyplugs.names_factory
+
+.. autofunction:: mitre.securingai.pyplugs.funcs_factory
+
+.. autofunction:: mitre.securingai.pyplugs.info_factory
+
+.. autofunction:: mitre.securingai.pyplugs.exists_factory
+
+.. autofunction:: mitre.securingai.pyplugs.get_factory
+
+.. autofunction:: mitre.securingai.pyplugs.call_factory
+
+.. autofunction:: mitre.securingai.pyplugs.get_task_factory
+
+.. autofunction:: mitre.securingai.pyplugs.call_task_factory

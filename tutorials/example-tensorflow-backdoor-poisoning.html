@@ -1,0 +1,820 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tensorflow Backdoor Poisoning &#8212; Dioptra 0.0.0 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tensorflow ImageNet Resnet50 FGM" href="example-tensorflow-imagenet-resnet50-fgm.html" />
+    <link rel="prev" title="Tensorflow Adversarial Patch" href="example-tensorflow-adversarial-patches.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+      
+      <h1 class="site-logo" id="site-title">Dioptra 0.0.0 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../index.html">
+   What is Dioptra?
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Getting Started
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/installation.html">
+   Installation Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/newcomer-tips.html">
+   Setup Tips for Newcomers
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  User Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/the-basics.html">
+   The Basics
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/entry-points.html">
+   Entry Points
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/task-plugins.html">
+   Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/custom-entry-points.html">
+   Creating a New Entry Point
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/custom-task-plugins.html">
+   Custom Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/generics-plugin-system.html">
+   Generics Plugin System
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../user-guide/task-plugins-collection.html">
+   Task Plugins Collection
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-artifacts.html">
+     artifacts
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-attacks.html">
+     attacks
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-backend_configs.html">
+     backend_configs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-data.html">
+     data
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-estimators.html">
+     estimators
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-metrics.html">
+     metrics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-random.html">
+     random
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-registry.html">
+     registry
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-tracking.html">
+     tracking
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../user-guide/api-reference-sdk.html">
+   Testbed SDK API Reference
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-generics.html">
+     generics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-utilities.html">
+     utilities
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-exceptions.html">
+     exceptions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-pyplugs.html">
+     pyplugs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-rq.html">
+     rq
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-cryptography.html">
+     cryptography
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/api-reference-restapi.html">
+   Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Deployment Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/system-requirements.html">
+   System Requirements
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">
+   Docker Images List and Settings
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/single-machine-deployment.html">
+   Single Machine Deployment
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/task-plugins-management.html">
+   Task Plugins Management
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/obtaining-datasets.html">
+   How to Obtain Common Datasets
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/testbed-ansible-collection.html">
+   Testbed Ansible Collection
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Developer Guides
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../dev-guide/index.html">
+   Getting Involved / Contributing
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-merge-request-guidelines.html">
+     Merge Request Guidelines
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-commit-styleguide.html">
+     Commit Styleguide
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-build-dev-images.html">
+     Building Development Docker Images
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/programming-style.html">
+   Programming Style Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-architecture.html">
+   Testbed Architecture Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-restapi.html">
+   Testbed REST API Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-sdk.html">
+   Testbed SDK Design Guide
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav>
+ <!-- To handle the deprecated key -->
+
+
+
+
+
+<div class="navbar_extra_footer">
+  
+  <div>
+    
+<a href="../developers.html"><em>Development Team</em></a>
+
+  </div>
+  
+  
+</div>
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/tutorials/example-tensorflow-backdoor-poisoning.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/usnistgov/dioptra"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#getting-started">
+   Getting started
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#local-run">
+     Local run
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#on-prem-deployment">
+     On-prem deployment
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mlflow-entrypoint-overview">
+   MLflow Entrypoint Overview
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#common-training-and-testing-entry-points">
+     Common Training and Testing Entry Points
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#poisoning-attack-entry-points">
+     Poisoning Attack Entry Points
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#image-preprocessing-defense-entry-points">
+     Image Preprocessing Defense Entry Points
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="tensorflow-backdoor-poisoning">
+<span id="tutorials-example-tensorflow-backdoor-poisoning"></span><h1>Tensorflow Backdoor Poisoning<a class="headerlink" href="#tensorflow-backdoor-poisoning" title="Permalink to this headline">¶</a></h1>
+<p>This demo provides three different versions of a backdoor poisoning attack with image preprocessing defense.
+The three available ipython demos explore the following poisoning attacks:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">demo-mnist-poison-backdoor-baseline.ipynb</span></code>: Basic backdoor poisoning via training data mislabeling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">demo-mnist-poison-backdoor-adv-embedding.ipynb</span></code>: Model backdoor poisoning using the adversarial embedding technique to add a secondary backdoor training objective to the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">demo-mnist-poison-backdoor-clean-label.ipynb</span></code>: Advanced backdoor poisoning using a clean label technique to generate hidden poisons from a proxy model.</p></li>
+</ul>
+<p>Users are welcome to run the demos in any order.
+Please note that the clean label backdoor attack takes the longest time to complete.
+For more information regarding attack and defense parameters, please see the attack and defense sections of the <a class="reference external" href="#MLflow-Entrypoint-Overview">MLflow Entrypoint Overview</a> section.</p>
+<p>Each of these attacks also explore the following preprocessing defenses from their associated defense entry points:</p>
+<ul class="simple">
+<li><p>Spatial Smoothing: Smooths out an image by passing a median filter through neighboring pixel values in images.</p></li>
+<li><p>Gaussian Augmentation: Adds gaussian noise to an image.</p></li>
+<li><p>JPEG Compression: Applies an image compression algorithm over the image.</p></li>
+</ul>
+<div class="section" id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="local-run">
+<h3>Local run<a class="headerlink" href="#local-run" title="Permalink to this headline">¶</a></h3>
+<p>Everything you need to run the demos on your local computer is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
+Once you have downloaded the images, navigate to this example’s directory using the terminal and run the demo startup sequence:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make demo
+</pre></div>
+</div>
+<p>The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
+Once the startup process completes, open up your web browser and enter <code class="docutils literal notranslate"><span class="pre">http://localhost:38888</span></code> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the <code class="docutils literal notranslate"><span class="pre">work</span></code> folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
+<strong>Don’t forget to update the ``DATASET_DIR`` variable to be: ``DATASET_DIR = “/nfs/data”``.</strong></p>
+<p>If you want to watch the output logs for the Tensorflow worker containers as you step through the demo, run <code class="docutils literal notranslate"><span class="pre">docker-compose</span> <span class="pre">logs</span> <span class="pre">-f</span> <span class="pre">tfcpu-01</span> <span class="pre">tfcpu-02</span></code> in your terminal.</p>
+<p>When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code> on the command-line.
+If you were watching the output logs, you will need to press Ctrl-C to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
+</div>
+<div class="section" id="on-prem-deployment">
+<h3>On-prem deployment<a class="headerlink" href="#on-prem-deployment" title="Permalink to this headline">¶</a></h3>
+<p>To run any of the demo notebooks using an on-prem deployment, all you need to do is download and start the <strong>jupyter</strong> service defined in this example’s <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file.
+Open a terminal and navigate to this example’s directory and run the <strong>jupyter</strong> startup sequence,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make jupyter
+</pre></div>
+</div>
+<p>Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the <code class="docutils literal notranslate"><span class="pre">work</span></code> folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.</p>
+<p>When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code> on the command-line.</p>
+</div>
+</div>
+<div class="section" id="mlflow-entrypoint-overview">
+<h2>MLflow Entrypoint Overview<a class="headerlink" href="#mlflow-entrypoint-overview" title="Permalink to this headline">¶</a></h2>
+<p>Here are the available MLflow entry points used by the poisoning demos and their associated parameters.</p>
+<div class="section" id="common-training-and-testing-entry-points">
+<h3>Common Training and Testing Entry Points<a class="headerlink" href="#common-training-and-testing-entry-points" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">init_model</span></code>: Loads a pretrained model available from the TensorFlow library into the MLflow model storage. Evaluates the model on an available test set</p>
+<ul>
+<li><p>Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_dir</span></code> : The directory of test set for evaluating pretrained model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_tag</span></code>: An optional identifier for the loaded model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_architecture</span></code>: Specifies model type (Current options: “resnet50”, “vgg16”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code>: Specifies batch size of image testing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Specifies an integer seed value for controlling randomized tensorflow behavior.</p></li>
+</ul>
+</li>
+<li><p>Additional Notes:</p>
+<ul>
+<li><p>Named models generated by this entry point follow the pattern: <code class="docutils literal notranslate"><span class="pre">{EXPERIMENT_NAME}_{model_tag}_{model_architecture}</span></code></p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">model_tag</span></code> is left blank, the models are instead named: <code class="docutils literal notranslate"><span class="pre">{EXPERIMENT_NAME}_{model_architecture}</span></code></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">infer</span></code>: Loads and evaluates an model from MLflow storage on a test set created from another MLflow run.</p>
+<ul>
+<li><p>Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">run_id</span></code>: The string ID of the associated MLflow run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code>: The name of the associated model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_architecture</span></code>: Specifies model type (Current options: “le_net”,”shallow_net”, “alex_net”, “resnet50”, “vgg16”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code>: Specifies batch size of image testing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Specifies an integer seed value for controlling randomized tensorflow behavior.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_tar_name</span></code>: Specifies the tarfile name for the dataset artifact.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_name</span></code>: Specifies the folder name containing the dataset artifact.</p></li>
+</ul>
+</li>
+<li><p>Additional Notes:</p>
+<ul>
+<li><p>Most data preprocessing steps and attack deployment steps will generate a data artifact (ex. <code class="docutils literal notranslate"><span class="pre">adv_testing.tar</span></code>) which will contain the specified dataset of interest (ex <code class="docutils literal notranslate"><span class="pre">adversarial_patched_data</span></code>).</p></li>
+<li><p>Users must specify the artifact tarfile and dataset name in order to properly transfer the inputs between job runs.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">train</span></code>: Trains a model architecture over a given dataset.</p>
+<ul>
+<li><p>Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_tag</span></code>: Specifies a tag to provide to the trained model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_dir_train</span></code>: Training data directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_dir_test</span></code>: Testing data directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_architecture</span></code>: Specifies model type (Current options: “le_net”,”shallow_net”, “alex_net”, “resnet50”, “vgg16”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">epochs</span></code>: Specifies a floating point number of iterations through the given dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code>: Batch size for training and testing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">register_model</span></code>: If set to true, store trained model into MLflow models repository.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">learning_rate</span></code>: Initial learning rate for the training step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimizer</span></code>: Model optimization algorithm (Current options:”rmsprop”, “adam”, “adagrad”, “sgd”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">validation_split</span></code>: Amount of training data to split off as the validation set. Range is 0 to 1.0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">load_dataset_from_mlruns</span></code>: If set to true, loads the dataset from the MLflow experiment artifacts repo instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">training_dataset_run_id</span></code>: The string ID of the associated MLflow run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_tar_name</span></code>: Specifies the tarfile name for the dataset artifact.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_name</span></code>: Specifies the folder name containing the dataset artifact.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">apply_defense</span></code>: Set to true to apply the PGD defense.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Specifies an integer seed value for controlling randomized tensorflow behavior.</p></li>
+</ul>
+</li>
+<li><p>Additional Notes:</p>
+<ul>
+<li><p>Named models generated by this entry point follow the pattern: <code class="docutils literal notranslate"><span class="pre">{EXPERIMENT_NAME}_{model_tag}_{model_architecture}</span></code></p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">model_tag</span></code> is left blank, the models are instead named: <code class="docutils literal notranslate"><span class="pre">{EXPERIMENT_NAME}_{model_architecture}</span></code></p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">load_dataset_from_mlruns</span></code> is set to true, the provided data artifact is used over the default dataset location.</p></li>
+<li><p>As a result the <code class="docutils literal notranslate"><span class="pre">training_dataset_run_id</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset_tar_name</span></code>, and <code class="docutils literal notranslate"><span class="pre">dataset_name</span></code> parameters must be provided when <code class="docutils literal notranslate"><span class="pre">load_dataset_from_mlruns</span></code> is true. If false, they are not used in the job.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="poisoning-attack-entry-points">
+<h3>Poisoning Attack Entry Points<a class="headerlink" href="#poisoning-attack-entry-points" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gen_poison_model</span></code>: Applies the adversarial embedding technique and creates a newly trained model.</p>
+<ul>
+<li><p>Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_tag</span></code>: Specifies a tag to provide to the trained model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_dir_train</span></code>: Training data directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_dir_test</span></code>: Testing data directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_architecture</span></code>: Specifies model type (Current options: “le_net”,”shallow_net”, “alex_net”, “resnet50”, “vgg16”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">epochs</span></code>: Specifies a non-negative floating point number of iterations through the given dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code>: Batch size for training and testing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">register_model</span></code>: If set to true, store trained model into MLflow models repository.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">learning_rate</span></code>: Initial non-negative floating point learning rate for the training step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimizer</span></code>: Model optimization algorithm (Current options:”rmsprop”, “adam”, “adagrad”, “sgd”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">training_split</span></code>: Fraction of training dataset to use for embedding attack. ART attack takes in training data as a single numpy array which limits dataset sizes. Range is from 0.0 (none) to 1.0 (the entire dataset is used).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">load_dataset_from_mlruns</span></code>: If set to true, loads the dataset from the MLflow experiment artifacts repo instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">training_dataset_run_id</span></code>: The string ID of the associated MLflow run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Specifies an integer seed value for controlling randomized tensorflow behavior.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_class_id</span></code>: Target non-negative integer id for poisoning attack.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">feature_layer_index</span></code>: Feature layer integer index to add secondary backdoor objective.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">discriminator_layer_1_size</span></code>: Integer size of the first discriminator layer of the secondary backdoor objective.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">discriminator_layer_2_size</span></code>: Integer size of the second discriminator layer of the secondary backdoor objective.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">regularization_factor</span></code>: The regularization constant for the backdoor recognition loss function. Postive floating point values only.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">poison_fraction</span></code>: The fraction of training data to be poisoned during training. Range is from 0 (none) to 1.0 (all of the data is poisoned).</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gen_poison_test_data</span></code>: Generates the backdoor-poisoned data for testing. Can also be applied over training data for the baseline attack.</p>
+<ul>
+<li><p>Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_dir</span></code>: Directory of target dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_architecture</span></code>: Specifies model type (Current options: “le_net”,”shallow_net”, “alex_net”, “resnet50”, “vgg16”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_class</span></code>: Integer label of target class.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code>: Batch size for poisoning step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Specifies an integer seed value for controlling randomized tensorflow behavior.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">poison_fraction</span></code>: Fraction of inputs to poison. Range is from 0 (none) to 1.0 (all of the data is poisoned).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label_type</span></code>: If set to <code class="docutils literal notranslate"><span class="pre">test</span></code>, keep original label. If set to <code class="docutils literal notranslate"><span class="pre">train</span></code>, mislabel as poisoning inputs.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gen_poison_clean_data</span></code>: Creates clean label poisons from an available proxy model. Similar to the <code class="docutils literal notranslate"><span class="pre">gen_poison_test_data</span></code> entry point with an additional model input parameter.</p>
+<ul>
+<li><p>Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_dir</span></code>: Directory of target dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code>: Name of trained model stored in MLflow repo.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_architecture</span></code>: Specifies model type (Current options: “le_net”,”shallow_net”, “alex_net”, “resnet50”, “vgg16”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_class</span></code>: Label of target class.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code>: Batch size for poisoning step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Specifies an integer seed value for controlling randomized tensorflow behavior.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">poison_fraction</span></code>: Fraction of inputs to poison. Range is from 0 (none) to 1.0 (all of the data is poisoned).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label_type</span></code>: If set to <code class="docutils literal notranslate"><span class="pre">test</span></code>, keep original label. If set to <code class="docutils literal notranslate"><span class="pre">train</span></code>, mislabel as poisoning inputs.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="image-preprocessing-defense-entry-points">
+<h3>Image Preprocessing Defense Entry Points<a class="headerlink" href="#image-preprocessing-defense-entry-points" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">spatial_smoothing</span></code>: Applies localized median filtering across an image for the given dataset.</p>
+<ul>
+<li><p>Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_dir</span></code>: Directory of target dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code>: Name of trained model stored in MLflow repo.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_architecture</span></code>: Specifies model type (Current options: “le_net”,”shallow_net”, “alex_net”, “resnet50”, “vgg16”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code>: Batch size for input images. Positive integer values only.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spatial_smoothing_window_size</span></code>: Size of median filtering window. Positive integer values only.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spatial_smoothing_apply_fit</span></code>: If true, set to training data filtering.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spatial_smoothing_apply_predict</span></code>: If true, set to testing data filtering.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">load_dataset_from_mlruns</span></code>: If true, load dataset from an MLflow run instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_run_id</span></code>: The string ID of the associated MLflow run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_tar_name</span></code>: Name of tarfile for stored dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_name</span></code>: Folder name of stored dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Specifies an integer seed value for controlling randomized tensorflow behavior.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">jpeg_compression</span></code>: Applies image compression onto the given dataset.</p>
+<ul>
+<li><p>Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_dir</span></code>: Directory of target dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code>: Name of trained model stored in MLflow repo.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_architecture</span></code>: Specifies model type (Current options: “le_net”,”shallow_net”, “alex_net”, “resnet50”, “vgg16”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code>: Batch size for input images. Positive integer values only.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">jpeg_compression_channels_first</span></code>: Specifies whether to apply channels first (true) or last (false).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">jpeg_compression_quality</span></code>: Controls quality of image compression from 1 (worst) to 100 (best) in integer values. Recommend values of 95 or lower.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">jpeg_compression_apply_fit</span></code>: If true, set to training data compression.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">jpeg_compression_apply_predict</span></code>: If true, set to testing data compression.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">load_dataset_from_mlruns</span></code>: If true, load dataset from an MLflow run instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_run_id</span></code>: The string ID of the associated MLflow run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_tar_name</span></code>: Name of tarfile for stored dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_name</span></code>: Folder name of stored dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Specifies an integer seed value for controlling randomized tensorflow behavior.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaussian_augmentation</span></code>: Applies gaussian noise over a given dataset.</p>
+<ul>
+<li><p>Parameters:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_dir</span></code>: Directory of target dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code>: Name of trained model stored in MLflow repo.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_architecture</span></code>: Specifies model type (Current options: “le_net”,”shallow_net”, “alex_net”, “resnet50”, “vgg16”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code>: Batch size for input images. Positive integer values only.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaussian_augmentation_perform_data_augmentation</span></code>: If set to true, include original test data as well.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaussian_augmentation_ratio</span></code>: With data augmentation on, specifies ratio from [0.0, 1.0] of poisoning examples to add. A value of 1.0 results in the defense applied over the entire dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaussian_augmentation_sigma</span></code>: Controls the standard deviation of the noise. Higher floating-point values result in greater noise added.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaussian_augmentation_apply_fit</span></code>: Apply noise to training set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaussian_augmentation_apply_predict</span></code>: Apply noise to testing set.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">load_dataset_from_mlruns</span></code>: If true, load dataset from an MLflow run instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_run_id</span></code>: The string ID of the associated MLflow run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_tar_name</span></code>: Name of tarfile for stored dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset_name</span></code>: Folder name of stored dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Specifies an integer seed value for controlling randomized tensorflow behavior.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="example-tensorflow-adversarial-patches.html" title="previous page">Tensorflow Adversarial Patch</a>
+    <a class='right-next' id="next-link" href="example-tensorflow-imagenet-resnet50-fgm.html" title="next page">Tensorflow ImageNet Resnet50 FGM</a>
+
+        </div>
+        
+        </div>
+    </div>
+    
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+      </p>
+    </div>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

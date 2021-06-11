@@ -1,0 +1,603 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PyTorch MNIST Membership Inference &#8212; Dioptra 0.0.0 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The Basics" href="../user-guide/the-basics.html" />
+    <link rel="prev" title="Tensorflow ImageNet Pixel Threshold" href="example-tensorflow-imagenet-pixel-threshold.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+      
+      <h1 class="site-logo" id="site-title">Dioptra 0.0.0 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../index.html">
+   What is Dioptra?
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Getting Started
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/installation.html">
+   Installation Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/newcomer-tips.html">
+   Setup Tips for Newcomers
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   PyTorch MNIST Membership Inference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  User Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/the-basics.html">
+   The Basics
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/entry-points.html">
+   Entry Points
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/task-plugins.html">
+   Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/custom-entry-points.html">
+   Creating a New Entry Point
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/custom-task-plugins.html">
+   Custom Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/generics-plugin-system.html">
+   Generics Plugin System
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../user-guide/task-plugins-collection.html">
+   Task Plugins Collection
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-artifacts.html">
+     artifacts
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-attacks.html">
+     attacks
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-backend_configs.html">
+     backend_configs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-data.html">
+     data
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-estimators.html">
+     estimators
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-metrics.html">
+     metrics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-random.html">
+     random
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-registry.html">
+     registry
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-tracking.html">
+     tracking
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../user-guide/api-reference-sdk.html">
+   Testbed SDK API Reference
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-generics.html">
+     generics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-utilities.html">
+     utilities
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-exceptions.html">
+     exceptions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-pyplugs.html">
+     pyplugs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-rq.html">
+     rq
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-cryptography.html">
+     cryptography
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/api-reference-restapi.html">
+   Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Deployment Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/system-requirements.html">
+   System Requirements
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">
+   Docker Images List and Settings
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/single-machine-deployment.html">
+   Single Machine Deployment
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/task-plugins-management.html">
+   Task Plugins Management
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/obtaining-datasets.html">
+   How to Obtain Common Datasets
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/testbed-ansible-collection.html">
+   Testbed Ansible Collection
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Developer Guides
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../dev-guide/index.html">
+   Getting Involved / Contributing
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-merge-request-guidelines.html">
+     Merge Request Guidelines
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-commit-styleguide.html">
+     Commit Styleguide
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-build-dev-images.html">
+     Building Development Docker Images
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/programming-style.html">
+   Programming Style Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-architecture.html">
+   Testbed Architecture Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-restapi.html">
+   Testbed REST API Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-sdk.html">
+   Testbed SDK Design Guide
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav>
+ <!-- To handle the deprecated key -->
+
+
+
+
+
+<div class="navbar_extra_footer">
+  
+  <div>
+    
+<a href="../developers.html"><em>Development Team</em></a>
+
+  </div>
+  
+  
+</div>
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/tutorials/example-pytorch-mnist-membership-inference.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/usnistgov/dioptra"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#using-this-demo">
+   Using this Demo
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#attacks">
+   Attacks
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#viewing-results">
+   Viewing Results
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="pytorch-mnist-membership-inference">
+<span id="tutorials-example-pytorch-mnist-membership-inference"></span><h1>PyTorch MNIST Membership Inference<a class="headerlink" href="#pytorch-mnist-membership-inference" title="Permalink to this headline">¶</a></h1>
+<p>The demo provided in the Jupyter notebook <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> uses Dioptra to run experiments that investigate the membership inference attack when launched on a neural network model trained on the MNIST dataset.</p>
+<div class="section" id="using-this-demo">
+<h2>Using this Demo<a class="headerlink" href="#using-this-demo" title="Permalink to this headline">¶</a></h2>
+<p>The steps for getting your environment ready to run this demo depend on whether you intend to run the demo locally (i.e. on your personal computer) or on an existing on-prem deployment.
+Navigate to the tab below that best describes your setup in order to proceed.</p>
+<div class="tabbed-set docutils">
+<input checked="checked" id="8715716e-f91e-460b-9755-21187e6ed15c" name="fe3f1dca-360d-449a-aa89-ce67c8346e5b" type="radio">
+</input><label class="tabbed-label" for="8715716e-f91e-460b-9755-21187e6ed15c">
+Local</label><div class="tabbed-content docutils">
+<p>Everything you need to run this demo locally is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
+Once you have downloaded the images, stay in the terminal and navigate to this example’s directory and run the demo startup sequence,</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make demo
+</pre></div>
+</div>
+<p>The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.</p>
+<p>Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the <code class="docutils literal notranslate"><span class="pre">work</span></code> folder and open the <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> file.</p>
+<p>Before doing anything else, ensure that the first 4 code blocks are configured for your local environment. your deployment of the testbed architecture.</p>
+<p>If you are running the demos locally and want to watch the output logs for the PyTorch worker containers as you step through the demo, run <code class="docutils literal notranslate"><span class="pre">docker-compose</span> <span class="pre">logs</span> <span class="pre">-f</span> <span class="pre">pytorchcpu-01</span> <span class="pre">pytorchcpu-02</span></code> in your terminal.</p>
+<p>From here, you will follow the provided instructions to run the demo provided in the Jupyter notebook.
+Running the first 4 blocks will set up the the environment.
+Running block 5 will train a LeNet-5 model for classifying MNIST images.</p>
+<p>Once the models are trained and the environment is configured, you will be able to run the rest of the demo.
+Running block 7 will run the membership inference attack on the MNIST LeNet-5 model.</p>
+<p>When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running the following on the command-line,</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make teardown
+</pre></div>
+</div>
+<p>If you were watching the output logs, you will need to press <kbd class="kbd docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
+</div>
+<input id="86a19fca-12c2-4d6b-acb4-1ad2638c0c57" name="fe3f1dca-360d-449a-aa89-ce67c8346e5b" type="radio">
+</input><label class="tabbed-label" for="86a19fca-12c2-4d6b-acb4-1ad2638c0c57">
+On-Prem Deployment</label><div class="tabbed-content docutils">
+<p>To run the demo on an on-prem deployment, all you need to do is download and start the <strong>jupyter</strong> service defined in this example’s <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file.
+Open a terminal and navigate to this example’s directory and run the <strong>jupyter</strong> startup sequence,</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make jupyter
+</pre></div>
+</div>
+<p>Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the <code class="docutils literal notranslate"><span class="pre">work</span></code> folder and open the <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> file.</p>
+<p>Before doing anything else, ensure that the first 4 code blocks are configured for interacting with your on-prem deployment of the testbed architecture.</p>
+<p>From here, you will follow the provided instructions to run the demo provided in the Jupyter notebook.
+Running the first 4 blocks will set up the the environment.
+Running block 5 will train a LeNet-5 model for classifying MNIST images.</p>
+<p>Once the models are trained and the environment is configured, you will be able to run the rest of the demo.
+Running block 7 will run the membership inference attack on the MNIST LeNet-5 model.</p>
+<p>When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running the following on the command-line,</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make teardown
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="attacks">
+<h2>Attacks<a class="headerlink" href="#attacks" title="Permalink to this headline">¶</a></h2>
+<p>Membership Inference is an attack which attempts to classify items as either part of the training set or not.
+It does this by training a model on training and testing data, and the model’s outputs for both of them, and then attempts to classify new data based on the original model’s classification of that data.</p>
+<p>The membership inference attack does not have specific parameters, as the main variable is the model used to classify the data as “training” or “testing”.
+The input to this attack is a full model which classifies an image as part of the training set or not, written for PyTorch.</p>
+</div>
+<div class="section" id="viewing-results">
+<h2>Viewing Results<a class="headerlink" href="#viewing-results" title="Permalink to this headline">¶</a></h2>
+<p>The result of this example is simply the accuracy of the model that is trained to determine whether an image was part of the original training set.</p>
+</div>
+</div>
+
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="example-tensorflow-imagenet-pixel-threshold.html" title="previous page">Tensorflow ImageNet Pixel Threshold</a>
+    <a class='right-next' id="next-link" href="../user-guide/the-basics.html" title="next page">The Basics</a>
+
+        </div>
+        
+        </div>
+    </div>
+    
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+      </p>
+    </div>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

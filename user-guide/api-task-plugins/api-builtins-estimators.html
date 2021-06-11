@@ -1,0 +1,731 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>estimators &#8212; Dioptra 0.0.0 documentation</title>
+    
+  <link href="../../_static/css/theme.css" rel="stylesheet" />
+  <link href="../../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="metrics" href="api-builtins-metrics.html" />
+    <link rel="prev" title="data" href="api-builtins-data.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../../index.html">
+      
+      
+      <h1 class="site-logo" id="site-title">Dioptra 0.0.0 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../index.html">
+   What is Dioptra?
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Getting Started
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../getting-started/installation.html">
+   Installation Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../getting-started/newcomer-tips.html">
+   Setup Tips for Newcomers
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  User Guide
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../the-basics.html">
+   The Basics
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../entry-points.html">
+   Entry Points
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../task-plugins.html">
+   Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../custom-entry-points.html">
+   Creating a New Entry Point
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../custom-task-plugins.html">
+   Custom Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../generics-plugin-system.html">
+   Generics Plugin System
+  </a>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../task-plugins-collection.html">
+   Task Plugins Collection
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-builtins-artifacts.html">
+     artifacts
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-builtins-attacks.html">
+     attacks
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-builtins-backend_configs.html">
+     backend_configs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-builtins-data.html">
+     data
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     estimators
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-builtins-metrics.html">
+     metrics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-builtins-random.html">
+     random
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-builtins-registry.html">
+     registry
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-builtins-tracking.html">
+     tracking
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../api-reference-sdk.html">
+   Testbed SDK API Reference
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api-sdk/api-generics.html">
+     generics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api-sdk/api-utilities.html">
+     utilities
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api-sdk/api-exceptions.html">
+     exceptions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api-sdk/api-pyplugs.html">
+     pyplugs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api-sdk/api-rq.html">
+     rq
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api-sdk/api-cryptography.html">
+     cryptography
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../api-reference-restapi.html">
+   Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Deployment Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../deployment-guide/system-requirements.html">
+   System Requirements
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../deployment-guide/docker-images-list-and-settings.html">
+   Docker Images List and Settings
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../deployment-guide/single-machine-deployment.html">
+   Single Machine Deployment
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../deployment-guide/task-plugins-management.html">
+   Task Plugins Management
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../deployment-guide/obtaining-datasets.html">
+   How to Obtain Common Datasets
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../deployment-guide/testbed-ansible-collection.html">
+   Testbed Ansible Collection
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Developer Guides
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../dev-guide/index.html">
+   Getting Involved / Contributing
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../dev-guide/contributing-merge-request-guidelines.html">
+     Merge Request Guidelines
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../dev-guide/contributing-commit-styleguide.html">
+     Commit Styleguide
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../dev-guide/contributing-build-dev-images.html">
+     Building Development Docker Images
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../dev-guide/programming-style.html">
+   Programming Style Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../dev-guide/design-architecture.html">
+   Testbed Architecture Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../dev-guide/design-restapi.html">
+   Testbed REST API Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../dev-guide/design-sdk.html">
+   Testbed SDK Design Guide
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav>
+ <!-- To handle the deprecated key -->
+
+
+
+
+
+<div class="navbar_extra_footer">
+  
+  <div>
+    
+<a href="../../developers.html"><em>Development Team</em></a>
+
+  </div>
+  
+  
+</div>
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../../_sources/user-guide/api-task-plugins/api-builtins-estimators.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/usnistgov/dioptra"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-securingai_builtins.estimators.keras_classifiers">
+   keras_classifiers.py
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-securingai_builtins.estimators.methods">
+   methods.py
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="module-securingai_builtins.estimators">
+<span id="estimators"></span><span id="api-task-plugins-builtins-estimators"></span><h1>estimators<a class="headerlink" href="#module-securingai_builtins.estimators" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-securingai_builtins.estimators.keras_classifiers">
+<span id="keras-classifiers-py"></span><h2>keras_classifiers.py<a class="headerlink" href="#module-securingai_builtins.estimators.keras_classifiers" title="Permalink to this headline">¶</a></h2>
+<p>Neural network image classifiers implemented in Tensorflow/Keras.</p>
+<dl class="py function">
+<dt id="securingai_builtins.estimators.keras_classifiers.init_classifier">
+<code class="sig-name descname">init_classifier</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_architecture</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span></em>, <em class="sig-param"><span class="n">optimizer</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/optimizers/Optimizer" title="(in TensorFlow v2.1)">tf.keras.optimizers.Optimizer</a></span></em>, <em class="sig-param"><span class="n">metrics</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Union<span class="p">[</span><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/metrics/Metric" title="(in TensorFlow v2.1)">tf.keras.metrics.Metric</a><span class="p">, </span>function<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_classes</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a></span></em>, <em class="sig-param"><span class="n">loss</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a></span> <span class="o">=</span> <span class="default_value">'categorical_crossentropy'</span></em><span class="sig-paren">)</span> &#x2192; tensorflow.keras.models.Sequential<a class="reference internal" href="../../_modules/securingai_builtins/estimators/keras_classifiers.html#init_classifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#securingai_builtins.estimators.keras_classifiers.init_classifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes an untrained neural network image classifier for Tensorflow/Keras.</p>
+<p>The <cite>model_architecture</cite> argument is used to select a neural network architecture
+from the architecture registry. The string passed to <cite>model_architecture</cite> must match
+one of the following,</p>
+<ul class="simple">
+<li><p><cite>“shallow_net”</cite> - A shallow neural network architecture.</p></li>
+<li><p><cite>“le_net”</cite> - The LeNet-5 convolutional neural network architecture.</p></li>
+<li><p><cite>“alex_net”</cite> - The AlexNet convolutional neural network architecture.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_architecture</strong> – The neural network architecture to use.</p></li>
+<li><p><strong>optimizer</strong> – A Keras <a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/optimizers/Optimizer" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code></a> providing an
+algorithm to use to train the estimator, such as
+<a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/optimizers/SGD" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">SGD</span></code></a> and
+<a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/optimizers/Adam" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adam</span></code></a>.</p></li>
+<li><p><strong>metrics</strong> – A list of metrics to be evaluated by the model during training and
+testing.</p></li>
+<li><p><strong>input_shape</strong> – A shape tuple of integers, not including the batch size, specifying
+the dimensions of the image data. The shape tuple for all classifiers in the
+architecture registry follows the convention <cite>(height, width, channels)</cite>.</p></li>
+<li><p><strong>n_classes</strong> – The number of target labels in the dataset.</p></li>
+<li><p><strong>loss</strong> – A string specifying the loss function to be minimized during training. The
+string must match the name of one of the loss functions in the
+<a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/losses" title="(in TensorFlow v2.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tf.keras.losses</span></code></a> module. The default is
+<cite>“categorical_crossentropy”</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A compiled <a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/losses" title="(in TensorFlow v2.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tf.keras.losses</span></code></a></p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/optimizers" title="(in TensorFlow v2.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tf.keras.optimizers</span></code></a></p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="securingai_builtins.estimators.keras_classifiers.shallow_net">
+<code class="sig-name descname">shallow_net</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_classes</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a></span></em><span class="sig-paren">)</span> &#x2192; tensorflow.keras.models.Sequential<a class="reference internal" href="../../_modules/securingai_builtins/estimators/keras_classifiers.html#shallow_net"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#securingai_builtins.estimators.keras_classifiers.shallow_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an untrained shallow neural network architecture for Tensorflow/Keras.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> – A shape tuple of integers, not including the batch size, specifying
+the dimensions of the image data. The shape tuple for all classifiers in the
+architecture registry follows the convention <cite>(height, width, channels)</cite>.</p></li>
+<li><p><strong>n_classes</strong> – The number of target labels in the dataset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="securingai_builtins.estimators.keras_classifiers.le_net">
+<code class="sig-name descname">le_net</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_classes</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a></span></em><span class="sig-paren">)</span> &#x2192; tensorflow.keras.models.Sequential<a class="reference internal" href="../../_modules/securingai_builtins/estimators/keras_classifiers.html#le_net"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#securingai_builtins.estimators.keras_classifiers.le_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an untrained LeNet-5 neural network architecture for Tensorflow/Keras.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> – A shape tuple of integers, not including the batch size, specifying
+the dimensions of the image data. The shape tuple for all classifiers in the
+architecture registry follows the convention <cite>(height, width, channels)</cite>.</p></li>
+<li><p><strong>n_classes</strong> – The number of target labels in the dataset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="securingai_builtins.estimators.keras_classifiers.alex_net">
+<code class="sig-name descname">alex_net</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_shape</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">, </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n_classes</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a></span></em><span class="sig-paren">)</span> &#x2192; tensorflow.keras.models.Sequential<a class="reference internal" href="../../_modules/securingai_builtins/estimators/keras_classifiers.html#alex_net"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#securingai_builtins.estimators.keras_classifiers.alex_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an untrained AlexNet neural network architecture for Tensorflow/Keras.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> – A shape tuple of integers, not including the batch size, specifying
+the dimensions of the image data. The shape tuple for all classifiers in the
+architecture registry follows the convention <cite>(height, width, channels)</cite>.</p></li>
+<li><p><strong>n_classes</strong> – The number of target labels in the dataset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-securingai_builtins.estimators.methods">
+<span id="methods-py"></span><h2>methods.py<a class="headerlink" href="#module-securingai_builtins.estimators.methods" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="securingai_builtins.estimators.methods.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span><span class="p">:</span> <span class="n">Any</span></em>, <em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Any<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">y</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Any<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fit_kwargs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a><span class="p">, </span>Any<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../../_modules/securingai_builtins/estimators/methods.html#fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#securingai_builtins.estimators.methods.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits the estimator to the given data.</p>
+<p>This task plugin wraps <a class="reference internal" href="../api-sdk/api-generics.html#mitre.securingai.sdk.generics.fit_estimator" title="mitre.securingai.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_estimator()</span></code></a>,
+which is a generic function that uses multiple argument dispatch to handle the
+estimator fitting method for different machine learning libraries. The modules
+attached to the advertised plugin entry point <cite>securingai.generics.fit_estimator</cite>
+are used to build the function dispatch registry at runtime. For more information on
+the supported fitting methods and <cite>fit_kwargs</cite> arguments, please refer to the
+documentation of the registered dispatch functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimator</strong> – The model to be trained.</p></li>
+<li><p><strong>x</strong> – The input data to be used for training.</p></li>
+<li><p><strong>y</strong> – The target data to be used for training.</p></li>
+<li><p><strong>fit_kwargs</strong> – An optional dictionary of keyword arguments to pass to the
+dispatched function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The object returned by the estimator’s fitting function. For further details on
+the type of object this method can return, see the documentation for the
+registered dispatch functions.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api-sdk/api-generics.html#mitre.securingai.sdk.generics.fit_estimator" title="mitre.securingai.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">mitre.securingai.sdk.generics.fit_estimator()</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="securingai_builtins.estimators.methods.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">estimator</span><span class="p">:</span> <span class="n">Any</span></em>, <em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Any<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">predict_kwargs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a><span class="p">, </span>Any<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../../_modules/securingai_builtins/estimators/methods.html#predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#securingai_builtins.estimators.methods.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses the estimator to make predictions on the given input data.</p>
+<p>This task plugin wraps <a class="reference internal" href="../api-sdk/api-generics.html#mitre.securingai.sdk.generics.estimator_predict" title="mitre.securingai.sdk.generics.estimator_predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimator_predict()</span></code></a>,
+which is a generic function that uses multiple argument dispatch to handle estimator
+prediction methods for different machine learning libraries. The modules attached to
+the advertised plugin entry point <cite>securingai.generics.estimator_predict</cite> are used
+to build the function dispatch registry at runtime. For more information on the
+supported prediction methods and <cite>predict_kwargs</cite> arguments, refer to the
+documentation of the registered dispatch functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimator</strong> – A trained model to be used to generate predictions.</p></li>
+<li><p><strong>x</strong> – The input data for which to generate predictions.</p></li>
+<li><p><strong>predict_kwargs</strong> – An optional dictionary of keyword arguments to pass to the
+dispatched function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The object returned by the estimator’s predict function. For further details on
+the type of object this method can return, see the documentation for the
+registered dispatch functions.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api-sdk/api-generics.html#mitre.securingai.sdk.generics.estimator_predict" title="mitre.securingai.sdk.generics.estimator_predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">mitre.securingai.sdk.generics.estimator_predict()</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="api-builtins-data.html" title="previous page">data</a>
+    <a class='right-next' id="next-link" href="api-builtins-metrics.html" title="next page">metrics</a>
+
+        </div>
+        
+        </div>
+    </div>
+    
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+      </p>
+    </div>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

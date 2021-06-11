@@ -1,0 +1,889 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Docker Images List and Settings &#8212; Dioptra 0.0.0 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Single Machine Deployment" href="single-machine-deployment.html" />
+    <link rel="prev" title="System Requirements" href="system-requirements.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+      
+      <h1 class="site-logo" id="site-title">Dioptra 0.0.0 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../index.html">
+   What is Dioptra?
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Getting Started
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/installation.html">
+   Installation Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/newcomer-tips.html">
+   Setup Tips for Newcomers
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  User Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/the-basics.html">
+   The Basics
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/entry-points.html">
+   Entry Points
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/task-plugins.html">
+   Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/custom-entry-points.html">
+   Creating a New Entry Point
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/custom-task-plugins.html">
+   Custom Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/generics-plugin-system.html">
+   Generics Plugin System
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../user-guide/task-plugins-collection.html">
+   Task Plugins Collection
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-artifacts.html">
+     artifacts
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-attacks.html">
+     attacks
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-backend_configs.html">
+     backend_configs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-data.html">
+     data
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-estimators.html">
+     estimators
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-metrics.html">
+     metrics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-random.html">
+     random
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-registry.html">
+     registry
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-tracking.html">
+     tracking
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../user-guide/api-reference-sdk.html">
+   Testbed SDK API Reference
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-generics.html">
+     generics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-utilities.html">
+     utilities
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-exceptions.html">
+     exceptions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-pyplugs.html">
+     pyplugs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-rq.html">
+     rq
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-cryptography.html">
+     cryptography
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/api-reference-restapi.html">
+   Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Deployment Guide
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="system-requirements.html">
+   System Requirements
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Docker Images List and Settings
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="single-machine-deployment.html">
+   Single Machine Deployment
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="task-plugins-management.html">
+   Task Plugins Management
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="obtaining-datasets.html">
+   How to Obtain Common Datasets
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="testbed-ansible-collection.html">
+   Testbed Ansible Collection
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Developer Guides
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../dev-guide/index.html">
+   Getting Involved / Contributing
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-merge-request-guidelines.html">
+     Merge Request Guidelines
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-commit-styleguide.html">
+     Commit Styleguide
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-build-dev-images.html">
+     Building Development Docker Images
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/programming-style.html">
+   Programming Style Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-architecture.html">
+   Testbed Architecture Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-restapi.html">
+   Testbed REST API Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-sdk.html">
+   Testbed SDK Design Guide
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav>
+ <!-- To handle the deprecated key -->
+
+
+
+
+
+<div class="navbar_extra_footer">
+  
+  <div>
+    
+<a href="../developers.html"><em>Development Team</em></a>
+
+  </div>
+  
+  
+</div>
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/deployment-guide/docker-images-list-and-settings.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/usnistgov/dioptra"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#nginx">
+   Nginx
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#command">
+     Command
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mlflow-tracking">
+   MLFlow Tracking
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#environment-variables">
+     Environment Variables
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id1">
+     Command
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#rest-api">
+   REST API
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id2">
+     Environment Variables
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id3">
+     Command
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#workers-pytorch-tensorflow">
+   Workers (PyTorch/Tensorflow)
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id4">
+     Environment Variables
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id5">
+     Command
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#minio">
+   Minio
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id6">
+     Command
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id7">
+     Environment Variables
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#redis">
+   Redis
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id8">
+     Command
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="docker-images-list-and-settings">
+<span id="deployment-guide-docker-images-list-and-settings"></span><h1>Docker Images List and Settings<a class="headerlink" href="#docker-images-list-and-settings" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="nginx">
+<h2>Nginx<a class="headerlink" href="#nginx" title="Permalink to this headline">¶</a></h2>
+<p>Nginx is an open-source web server that serves as a reverse proxy in the Testbed architecture.
+It receives HTTP requests originating from outside the Testbed network and routes the traffic to the appropriate service.</p>
+<div class="section" id="command">
+<h3>Command<a class="headerlink" href="#command" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE [OPTIONS]
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="option-list">
+<dt><kbd><span class="option">--ai-lab-host</span></kbd></dt>
+<dd><p>AI Lab Service host (default: <code class="docutils literal notranslate"><span class="pre">'restapi'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--ai-lab-port</span></kbd></dt>
+<dd><p>AI Lab Service port (default: <code class="docutils literal notranslate"><span class="pre">'5000'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--mlflow-tracking-host</span></kbd></dt>
+<dd><p>AI Lab Service host (default: <code class="docutils literal notranslate"><span class="pre">'mlflow-tracking'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--mlflow-tracking-port</span></kbd></dt>
+<dd><p>AI Lab Service port (default: <code class="docutils literal notranslate"><span class="pre">'5000'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--nginx-lab-port</span></kbd></dt>
+<dd><p>Nginx listening port (default: <code class="docutils literal notranslate"><span class="pre">'30080'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--nginx-mlflow-port</span></kbd></dt>
+<dd><p>Nginx listening port (default: <code class="docutils literal notranslate"><span class="pre">'35000'</span></code>)</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="mlflow-tracking">
+<h2>MLFlow Tracking<a class="headerlink" href="#mlflow-tracking" title="Permalink to this headline">¶</a></h2>
+<p>The MLFlow Tracking service is an API and UI for logging and querying parameters, metrics, and output files when running your experiments.</p>
+<div class="section" id="environment-variables">
+<h3>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AWS_ACCESS_KEY_ID</kbd></div>
+</div>
+<p>The username for accessing S3 storage.
+Must match <code class="docutils literal notranslate"><span class="pre">MINIO_ROOT_USER</span></code> set for the Minio image.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AWS_SECRET_ACCESS_KEY</kbd></div>
+</div>
+<p>The password for accessing S3 storage.
+Must match <code class="docutils literal notranslate"><span class="pre">MINIO_ROOT_PASSWORD</span></code> set for the Minio image.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">MLFLOW_S3_ENDPOINT_URL</kbd></div>
+</div>
+<p>The URL endpoint for accessing the S3 storage.</p>
+</div>
+<div class="section" id="id1">
+<h3>Command<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE [OPTIONS]
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="option-list">
+<dt><kbd><span class="option">--conda-env</span></kbd></dt>
+<dd><p>Conda environment (default: <code class="docutils literal notranslate"><span class="pre">'mitre-securing-ai'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--backend-store-uri</span></kbd></dt>
+<dd><p>URI to which to persist experiment and run data. Acceptable URIs are SQLAlchemy-compatible database connection strings (e.g. ‘sqlite:///path/to/file.db’) or local filesystem URIs (e.g. <code class="docutils literal notranslate"><span class="pre">'file:///absolute/path/to/directory'</span></code>). (default: <code class="docutils literal notranslate"><span class="pre">'sqlite:////work/mlruns/mlflow-tracking.db'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--default-artifact-root</span></kbd></dt>
+<dd><p>Local or S3 URI to store artifacts, for new experiments. Note that this flag does not impact already-created experiments. Default: Within file store, if a <a class="reference external" href="file:/">file:/</a> URI is provided. If a sql backend is used, then this option is required. (default: <code class="docutils literal notranslate"><span class="pre">'file:///work/artifacts'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--gunicorn-opts</span></kbd></dt>
+<dd><p>Additional command line options forwarded to gunicorn processes. (no default)</p>
+</dd>
+<dt><kbd><span class="option">--host</span></kbd></dt>
+<dd><p>The network address to listen on. Use 0.0.0.0 to bind to all addresses if you want to access the tracking server from other machines. (default: <code class="docutils literal notranslate"><span class="pre">'0.0.0.0'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--port</span></kbd></dt>
+<dd><p>The port to listen on. (default: <code class="docutils literal notranslate"><span class="pre">'5000'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--workers</span></kbd></dt>
+<dd><p>Number of gunicorn worker processes to handle requests. (default: <code class="docutils literal notranslate"><span class="pre">'4'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--upgrade-db</span></kbd></dt>
+<dd><p>Upgrade the database schema</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="rest-api">
+<h2>REST API<a class="headerlink" href="#rest-api" title="Permalink to this headline">¶</a></h2>
+<p>The REST API service is an API for registering experiments and submitting jobs to the Testbed.</p>
+<div class="section" id="id2">
+<h3>Environment Variables<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AI_RESTAPI_DATABASE_URI</kbd></div>
+</div>
+<p>The URI to use to connect to the REST API database.
+(default: <code class="docutils literal notranslate"><span class="pre">'$(pwd)/securingai.db'</span></code>)</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AI_RESTAPI_ENV</kbd></div>
+</div>
+<p>Selects a set of configurations for the Flask app to use.
+Must be ‘prod’, ‘dev’, or ‘test’.
+(default: <code class="docutils literal notranslate"><span class="pre">'prod'</span></code>)</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AI_DEPLOY_SECRET_KEY</kbd></div>
+</div>
+<p>Secret key used by Flask to sign cookies.
+While cookies are not used when accessing the REST API, per best practices this should still be changed to a long, random value.
+(default: <code class="docutils literal notranslate"><span class="pre">'deploy123'</span></code>)</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AWS_ACCESS_KEY_ID</kbd></div>
+</div>
+<p>The username for accessing S3 storage.
+Must match <code class="docutils literal notranslate"><span class="pre">MINIO_ROOT_USER</span></code> set for the Minio image.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AWS_SECRET_ACCESS_KEY</kbd></div>
+</div>
+<p>The password for accessing S3 storage.
+Must match <code class="docutils literal notranslate"><span class="pre">MINIO_ROOT_PASSWORD</span></code> set for the Minio image.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">MLFLOW_TRACKING_URI</kbd></div>
+</div>
+<p>The URI to use for connecting to the MLFlow Tracking service.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">MLFLOW_S3_ENDPOINT_URL</kbd></div>
+</div>
+<p>The URL endpoint for accessing the S3 storage.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">RQ_REDIS_URI</kbd></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">redis://</span></code> URI to the Redis queue.</p>
+</div>
+<div class="section" id="id3">
+<h3>Command<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE [OPTIONS]
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="option-list">
+<dt><kbd><span class="option">--app-module</span></kbd></dt>
+<dd><p>Application module (default: <code class="docutils literal notranslate"><span class="pre">'wsgi:app'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--backend</span></kbd></dt>
+<dd><p>Server backend (default: <code class="docutils literal notranslate"><span class="pre">'gunicorn'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--conda-env</span></kbd></dt>
+<dd><p>Conda environment (default: <code class="docutils literal notranslate"><span class="pre">'mitre-securing-ai'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--gunicorn-module</span></kbd></dt>
+<dd><p>Python module used to start Gunicorn WSGI server (default: <code class="docutils literal notranslate"><span class="pre">'mitre.securingai.restapi.cli.gunicorn'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--upgrade-db</span></kbd></dt>
+<dd><p>Upgrade the database schema</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="workers-pytorch-tensorflow">
+<h2>Workers (PyTorch/Tensorflow)<a class="headerlink" href="#workers-pytorch-tensorflow" title="Permalink to this headline">¶</a></h2>
+<p>A Testbed Worker is a managed process within a Docker container that watches one or more Redis Queues for new jobs to handle.
+The Testbed Workers come in different flavors, with each one provisioned to support running jobs for different types of machine learning libraries.</p>
+<div class="section" id="id4">
+<h3>Environment Variables<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AI_PLUGIN_DIR</kbd></div>
+</div>
+<p>Directory to use for syncing the task plugins.
+(default: <code class="docutils literal notranslate"><span class="pre">'/work/plugins'</span></code>)</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AI_PLUGINS_S3_URI</kbd></div>
+</div>
+<p>The S3 URI to the directory containing the builtin plugins</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AI_RESTAPI_DATABASE_URI</kbd></div>
+</div>
+<p>The URI to use to connect to the REST API database.
+(default: <code class="docutils literal notranslate"><span class="pre">'$(pwd)/securingai.db'</span></code>)</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AWS_ACCESS_KEY_ID</kbd></div>
+</div>
+<p>The username for accessing S3 storage.
+Must match <code class="docutils literal notranslate"><span class="pre">MINIO_ROOT_USER</span></code> set for the Minio image.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">AWS_SECRET_ACCESS_KEY</kbd></div>
+</div>
+<p>The password for accessing S3 storage.
+Must match <code class="docutils literal notranslate"><span class="pre">MINIO_ROOT_PASSWORD</span></code> set for the Minio image.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">MLFLOW_TRACKING_URI</kbd></div>
+</div>
+<p>The URI to use for connecting to the MLFlow Tracking service.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">MLFLOW_S3_ENDPOINT_URL</kbd></div>
+</div>
+<p>The URL endpoint for accessing the S3 storage.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">RQ_REDIS_URI</kbd></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">redis://</span></code> URI to the Redis queue.</p>
+</div>
+<div class="section" id="id5">
+<h3>Command<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE [OPTIONS] [ARGS]...
+</pre></div>
+</div>
+<p class="rubric">Positional Arguments</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">...</kbd></div>
+</div>
+<p>Queues to watch</p>
+<p class="rubric">Options</p>
+<dl class="option-list">
+<dt><kbd><span class="option">--conda-env</span></kbd></dt>
+<dd><p>Conda environment (default: <code class="docutils literal notranslate"><span class="pre">'mitre-securing-ai'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--results-ttl</span></kbd></dt>
+<dd><p>Job results will be kept for this number of seconds (default: <code class="docutils literal notranslate"><span class="pre">'500'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--rq-worker-module</span></kbd></dt>
+<dd><p>Python module used to start the RQ Worker (default: <code class="docutils literal notranslate"><span class="pre">'mitre.securingai.rq.cli.rq'</span></code>)</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="minio">
+<h2>Minio<a class="headerlink" href="#minio" title="Permalink to this headline">¶</a></h2>
+<p><strong>Vendor image:</strong> <a class="reference external" href="https://hub.docker.com/r/minio/minio/">https://hub.docker.com/r/minio/minio/</a></p>
+<p>The Minio service provides distributed, S3-compatible storage for the Testbed.</p>
+<div class="section" id="id6">
+<h3>Command<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE server [ARGS]...
+</pre></div>
+</div>
+<p class="rubric">Positional Arguments</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">...</kbd></div>
+</div>
+<p>A list of paths to data storage locations.
+For a single machine deployment, the path should point to a bind mounted or docker volume directory, e.g. <code class="docutils literal notranslate"><span class="pre">/data</span></code>.
+For a distributed deployment, pass a list of URLs instead, e.g. <code class="docutils literal notranslate"><span class="pre">http://minio{1...4}/data{1...2}</span></code>.
+The ellipses syntax <code class="docutils literal notranslate"><span class="pre">{1...4}</span></code> expands into a list of URLs at runtime.</p>
+</div>
+<div class="section" id="id7">
+<h3>Environment Variables<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">MINIO_ROOT_USER</kbd></div>
+</div>
+<p>Sets the username for logging into the Minio deployment.</p>
+<div class="line-block">
+<div class="line"><kbd class="kbd docutils literal notranslate">MINIO_ROOT_PASSWORD</kbd></div>
+</div>
+<p>Sets the password for logging into the Minio deployment.</p>
+</div>
+</div>
+<div class="section" id="redis">
+<h2>Redis<a class="headerlink" href="#redis" title="Permalink to this headline">¶</a></h2>
+<p><strong>Vendor image:</strong> <a class="reference external" href="https://hub.docker.com/_/redis">https://hub.docker.com/_/redis</a></p>
+<p>The Redis service is a fast in-memory database that is leveraged as a centralized queue to delegate jobs to the Testbed Workers.</p>
+<div class="section" id="id8">
+<h3>Command<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE redis-server [OPTIONS]
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="option-list">
+<dt><kbd><span class="option">--appendonly</span></kbd></dt>
+<dd><p>Persist data using an append only file. Accepts <code class="docutils literal notranslate"><span class="pre">'yes'</span></code> or <code class="docutils literal notranslate"><span class="pre">'no'</span></code>. (default: <code class="docutils literal notranslate"><span class="pre">'no'</span></code>)</p>
+</dd>
+<dt><kbd><span class="option">--appendfilename</span></kbd></dt>
+<dd><p>The name of the append only file. (default: <code class="docutils literal notranslate"><span class="pre">'appendonly.aof'</span></code>)</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="system-requirements.html" title="previous page">System Requirements</a>
+    <a class='right-next' id="next-link" href="single-machine-deployment.html" title="next page">Single Machine Deployment</a>
+
+        </div>
+        
+        </div>
+    </div>
+    
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+      </p>
+    </div>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

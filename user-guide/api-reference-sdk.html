@@ -1,0 +1,763 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Testbed SDK API Reference &#8212; Dioptra 0.0.0 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="generics" href="api-sdk/api-generics.html" />
+    <link rel="prev" title="tracking" href="api-task-plugins/api-builtins-tracking.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+      
+      <h1 class="site-logo" id="site-title">Dioptra 0.0.0 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../index.html">
+   What is Dioptra?
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Getting Started
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/installation.html">
+   Installation Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/newcomer-tips.html">
+   Setup Tips for Newcomers
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  User Guide
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="the-basics.html">
+   The Basics
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="entry-points.html">
+   Entry Points
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="task-plugins.html">
+   Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="custom-entry-points.html">
+   Creating a New Entry Point
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="custom-task-plugins.html">
+   Custom Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="generics-plugin-system.html">
+   Generics Plugin System
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="task-plugins-collection.html">
+   Task Plugins Collection
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-artifacts.html">
+     artifacts
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-attacks.html">
+     attacks
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-backend_configs.html">
+     backend_configs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-data.html">
+     data
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-estimators.html">
+     estimators
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-metrics.html">
+     metrics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-random.html">
+     random
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-registry.html">
+     registry
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-tracking.html">
+     tracking
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="current reference internal" href="#">
+   Testbed SDK API Reference
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-generics.html">
+     generics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-utilities.html">
+     utilities
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-exceptions.html">
+     exceptions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-pyplugs.html">
+     pyplugs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-rq.html">
+     rq
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-cryptography.html">
+     cryptography
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="api-reference-restapi.html">
+   Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Deployment Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/system-requirements.html">
+   System Requirements
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">
+   Docker Images List and Settings
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/single-machine-deployment.html">
+   Single Machine Deployment
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/task-plugins-management.html">
+   Task Plugins Management
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/obtaining-datasets.html">
+   How to Obtain Common Datasets
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/testbed-ansible-collection.html">
+   Testbed Ansible Collection
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Developer Guides
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../dev-guide/index.html">
+   Getting Involved / Contributing
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-merge-request-guidelines.html">
+     Merge Request Guidelines
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-commit-styleguide.html">
+     Commit Styleguide
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-build-dev-images.html">
+     Building Development Docker Images
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/programming-style.html">
+   Programming Style Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-architecture.html">
+   Testbed Architecture Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-restapi.html">
+   Testbed REST API Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-sdk.html">
+   Testbed SDK Design Guide
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav>
+ <!-- To handle the deprecated key -->
+
+
+
+
+
+<div class="navbar_extra_footer">
+  
+  <div>
+    
+<a href="../developers.html"><em>Development Team</em></a>
+
+  </div>
+  
+  
+</div>
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/user-guide/api-reference-sdk.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/usnistgov/dioptra"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#generics">
+   generics
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#utilities">
+   utilities
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#exceptions">
+   exceptions
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#pyplugs">
+   pyplugs
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#rq">
+   rq
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#cryptography">
+   cryptography
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="testbed-sdk-api-reference">
+<span id="user-guide-api-reference-sdk"></span><h1>Testbed SDK API Reference<a class="headerlink" href="#testbed-sdk-api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="generics">
+<h2>generics<a class="headerlink" href="#generics" title="Permalink to this headline">¶</a></h2>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-generics.html#mitre.securingai.sdk.generics.fit_estimator" title="mitre.securingai.sdk.generics.fit_estimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_estimator</span></code></a>(estimator, x, y, **kwargs)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-generics.html#mitre.securingai.sdk.generics.estimator_predict" title="mitre.securingai.sdk.generics.estimator_predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimator_predict</span></code></a>(estimator, x, **kwargs)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="utilities">
+<h2>utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h2>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-utilities.html#mitre.securingai.sdk.utilities.contexts.plugin_dirs" title="mitre.securingai.sdk.utilities.contexts.plugin_dirs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contexts.plugin_dirs</span></code></a>([dirs])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-utilities.html#mitre.securingai.sdk.utilities.decorators.require_package" title="mitre.securingai.sdk.utilities.decorators.require_package"><code class="xref py py-obj docutils literal notranslate"><span class="pre">decorators.require_package</span></code></a>(name[, …])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-utilities.html#mitre.securingai.sdk.utilities.logging.attach_stdout_stream_handler" title="mitre.securingai.sdk.utilities.logging.attach_stdout_stream_handler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logging.attach_stdout_stream_handler</span></code></a>(as_json)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-utilities.html#mitre.securingai.sdk.utilities.logging.clear_logger_handlers" title="mitre.securingai.sdk.utilities.logging.clear_logger_handlers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logging.clear_logger_handlers</span></code></a>(logger)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-utilities.html#mitre.securingai.sdk.utilities.logging.configure_structlog" title="mitre.securingai.sdk.utilities.logging.configure_structlog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logging.configure_structlog</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-utilities.html#mitre.securingai.sdk.utilities.logging.set_logging_level" title="mitre.securingai.sdk.utilities.logging.set_logging_level"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logging.set_logging_level</span></code></a>(level[, logger])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-utilities.html#mitre.securingai.sdk.utilities.logging.StderrLogStream" title="mitre.securingai.sdk.utilities.logging.StderrLogStream"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logging.StderrLogStream</span></code></a>(as_json)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-utilities.html#mitre.securingai.sdk.utilities.logging.StdoutLogStream" title="mitre.securingai.sdk.utilities.logging.StdoutLogStream"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logging.StdoutLogStream</span></code></a>(as_json)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-utilities.html#mitre.securingai.sdk.utilities.paths.set_path_ext" title="mitre.securingai.sdk.utilities.paths.set_path_ext"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paths.set_path_ext</span></code></a>(filepath, ext)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="exceptions">
+<h2>exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-exceptions.html#mitre.securingai.sdk.exceptions.ARTDependencyError" title="mitre.securingai.sdk.exceptions.ARTDependencyError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ARTDependencyError</span></code></a></p></td>
+<td><p>Method/function depends on the “art” package.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-exceptions.html#mitre.securingai.sdk.exceptions.CryptographyDependencyError" title="mitre.securingai.sdk.exceptions.CryptographyDependencyError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CryptographyDependencyError</span></code></a></p></td>
+<td><p>Method/function depends on the “cryptography” package.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-exceptions.html#mitre.securingai.sdk.exceptions.EstimatorPredictGenericPredTypeError" title="mitre.securingai.sdk.exceptions.EstimatorPredictGenericPredTypeError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EstimatorPredictGenericPredTypeError</span></code></a></p></td>
+<td><p>Unknown pred_type argument passed to estimator_predict.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-exceptions.html#mitre.securingai.sdk.exceptions.PrefectDependencyError" title="mitre.securingai.sdk.exceptions.PrefectDependencyError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PrefectDependencyError</span></code></a></p></td>
+<td><p>Method/function depends on the “prefect” package.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-exceptions.html#mitre.securingai.sdk.exceptions.TensorflowDependencyError" title="mitre.securingai.sdk.exceptions.TensorflowDependencyError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorflowDependencyError</span></code></a></p></td>
+<td><p>Method/function depends on the “tensorflow” package.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-exceptions.html#mitre.securingai.sdk.exceptions.UnknownPackageError" title="mitre.securingai.sdk.exceptions.UnknownPackageError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnknownPackageError</span></code></a></p></td>
+<td><p>PyPlugs could not import the given package.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-exceptions.html#mitre.securingai.sdk.exceptions.UnknownPluginError" title="mitre.securingai.sdk.exceptions.UnknownPluginError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnknownPluginError</span></code></a></p></td>
+<td><p>PyPlugs could not locate the given plugin.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-exceptions.html#mitre.securingai.sdk.exceptions.UnknownPluginFunctionError" title="mitre.securingai.sdk.exceptions.UnknownPluginFunctionError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnknownPluginFunctionError</span></code></a></p></td>
+<td><p>PyPlugs could not locate the given function within a plugin.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="pyplugs">
+<h2>pyplugs<a class="headerlink" href="#pyplugs" title="Permalink to this headline">¶</a></h2>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.register" title="mitre.securingai.pyplugs.register"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.register</span></code></a>()</p></td>
+<td><p>Decorator for registering a new plug-in</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.task_nout" title="mitre.securingai.pyplugs.task_nout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.task_nout</span></code></a>(nout)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.names" title="mitre.securingai.pyplugs.names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.names</span></code></a>(package)</p></td>
+<td><p>List all plug-ins in one package</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.funcs" title="mitre.securingai.pyplugs.funcs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.funcs</span></code></a>(package, plugin)</p></td>
+<td><p>List all functions in one plug-in</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.info" title="mitre.securingai.pyplugs.info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.info</span></code></a>(package, plugin[, func])</p></td>
+<td><p>Get information about a plug-in</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.exists" title="mitre.securingai.pyplugs.exists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.exists</span></code></a>(package, plugin)</p></td>
+<td><p>Check if a given plugin exists</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.get" title="mitre.securingai.pyplugs.get"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.get</span></code></a>(package, plugin[, func])</p></td>
+<td><p>Get a given plugin</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.call" title="mitre.securingai.pyplugs.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.call</span></code></a>(package, plugin[, func])</p></td>
+<td><p>Call the given plugin</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.get_task" title="mitre.securingai.pyplugs.get_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.get_task</span></code></a>(package, plugin[, func])</p></td>
+<td><p>Get a given plugin wrapped as a prefect task</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.call_task" title="mitre.securingai.pyplugs.call_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.call_task</span></code></a>(package, plugin[, func])</p></td>
+<td><p>Call the given plugin as a prefect task</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.names_factory" title="mitre.securingai.pyplugs.names_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.names_factory</span></code></a>(package)</p></td>
+<td><p>Create a names() function for one package</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.funcs_factory" title="mitre.securingai.pyplugs.funcs_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.funcs_factory</span></code></a>(package)</p></td>
+<td><p>Create a funcs() function for one package</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.info_factory" title="mitre.securingai.pyplugs.info_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.info_factory</span></code></a>(package)</p></td>
+<td><p>Create a info() function for one package</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.exists_factory" title="mitre.securingai.pyplugs.exists_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.exists_factory</span></code></a>(package)</p></td>
+<td><p>Create an exists() function for one package</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.get_factory" title="mitre.securingai.pyplugs.get_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.get_factory</span></code></a>(package)</p></td>
+<td><p>Create a get() function for one package</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.call_factory" title="mitre.securingai.pyplugs.call_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.call_factory</span></code></a>(package)</p></td>
+<td><p>Create a call() function for one package</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.get_task_factory" title="mitre.securingai.pyplugs.get_task_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.get_task_factory</span></code></a>(package)</p></td>
+<td><p>Create a get_task() function for one package</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.call_task_factory" title="mitre.securingai.pyplugs.call_task_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyplugs.call_task_factory</span></code></a>(package)</p></td>
+<td><p>Create a call_task() function for one package</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="rq">
+<h2>rq<a class="headerlink" href="#rq" title="Permalink to this headline">¶</a></h2>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-rq.html#mitre.securingai.rq.tasks.run_mlflow_task" title="mitre.securingai.rq.tasks.run_mlflow_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tasks.run_mlflow_task</span></code></a>(workflow_uri, …[, …])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="cryptography">
+<h2>cryptography<a class="headerlink" href="#cryptography" title="Permalink to this headline">¶</a></h2>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-cryptography.html#mitre.securingai.sdk.cryptography.common.load_payload" title="mitre.securingai.sdk.cryptography.common.load_payload"><code class="xref py py-obj docutils literal notranslate"><span class="pre">common.load_payload</span></code></a>(filepath)</p></td>
+<td><p>Load the payload contents</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-cryptography.html#mitre.securingai.sdk.cryptography.keygen.generate_rsa_key_pair" title="mitre.securingai.sdk.cryptography.keygen.generate_rsa_key_pair"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keygen.generate_rsa_key_pair</span></code></a>([…])</p></td>
+<td><p>Generate a public/private key pair using the RSA algorithm</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-cryptography.html#mitre.securingai.sdk.cryptography.keygen.save_private_key" title="mitre.securingai.sdk.cryptography.keygen.save_private_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keygen.save_private_key</span></code></a>(private_key, filepath)</p></td>
+<td><p>Save the private RSA key to a file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-cryptography.html#mitre.securingai.sdk.cryptography.keygen.save_public_key" title="mitre.securingai.sdk.cryptography.keygen.save_public_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keygen.save_public_key</span></code></a>(public_key, filepath)</p></td>
+<td><p>Save the public RSA key to a file</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-cryptography.html#mitre.securingai.sdk.cryptography.sign.load_private_key" title="mitre.securingai.sdk.cryptography.sign.load_private_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sign.load_private_key</span></code></a>(filepath)</p></td>
+<td><p>Load the private RSA key from a file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-cryptography.html#mitre.securingai.sdk.cryptography.sign.sign_payload" title="mitre.securingai.sdk.cryptography.sign.sign_payload"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sign.sign_payload</span></code></a>(payload, private_key, filepath)</p></td>
+<td><p>Sign the payload</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-cryptography.html#mitre.securingai.sdk.cryptography.verify.load_public_key" title="mitre.securingai.sdk.cryptography.verify.load_public_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">verify.load_public_key</span></code></a>(filepath)</p></td>
+<td><p>Load the public RSA key from a file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-cryptography.html#mitre.securingai.sdk.cryptography.verify.load_signature" title="mitre.securingai.sdk.cryptography.verify.load_signature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">verify.load_signature</span></code></a>(filepath)</p></td>
+<td><p>Load the signature</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-cryptography.html#mitre.securingai.sdk.cryptography.verify.verify_payload" title="mitre.securingai.sdk.cryptography.verify.verify_payload"><code class="xref py py-obj docutils literal notranslate"><span class="pre">verify.verify_payload</span></code></a>(payload, signature, …)</p></td>
+<td><p>Verify the payload signature</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="api-task-plugins/api-builtins-tracking.html" title="previous page">tracking</a>
+    <a class='right-next' id="next-link" href="api-sdk/api-generics.html" title="next page">generics</a>
+
+        </div>
+        
+        </div>
+    </div>
+    
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+      </p>
+    </div>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

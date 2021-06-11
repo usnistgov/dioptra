@@ -1,0 +1,818 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Creating a New Entry Point &#8212; Dioptra 0.0.0 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Custom Task Plugins" href="custom-task-plugins.html" />
+    <link rel="prev" title="Task Plugins" href="task-plugins.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+      
+      <h1 class="site-logo" id="site-title">Dioptra 0.0.0 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../index.html">
+   What is Dioptra?
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Getting Started
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/installation.html">
+   Installation Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/newcomer-tips.html">
+   Setup Tips for Newcomers
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  User Guide
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="the-basics.html">
+   The Basics
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="entry-points.html">
+   Entry Points
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="task-plugins.html">
+   Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Creating a New Entry Point
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="custom-task-plugins.html">
+   Custom Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="generics-plugin-system.html">
+   Generics Plugin System
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="task-plugins-collection.html">
+   Task Plugins Collection
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-artifacts.html">
+     artifacts
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-attacks.html">
+     attacks
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-backend_configs.html">
+     backend_configs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-data.html">
+     data
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-estimators.html">
+     estimators
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-metrics.html">
+     metrics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-random.html">
+     random
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-registry.html">
+     registry
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-task-plugins/api-builtins-tracking.html">
+     tracking
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="api-reference-sdk.html">
+   Testbed SDK API Reference
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-generics.html">
+     generics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-utilities.html">
+     utilities
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-exceptions.html">
+     exceptions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-pyplugs.html">
+     pyplugs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-rq.html">
+     rq
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api-sdk/api-cryptography.html">
+     cryptography
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="api-reference-restapi.html">
+   Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Deployment Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/system-requirements.html">
+   System Requirements
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">
+   Docker Images List and Settings
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/single-machine-deployment.html">
+   Single Machine Deployment
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/task-plugins-management.html">
+   Task Plugins Management
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/obtaining-datasets.html">
+   How to Obtain Common Datasets
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/testbed-ansible-collection.html">
+   Testbed Ansible Collection
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Developer Guides
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../dev-guide/index.html">
+   Getting Involved / Contributing
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-merge-request-guidelines.html">
+     Merge Request Guidelines
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-commit-styleguide.html">
+     Commit Styleguide
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-build-dev-images.html">
+     Building Development Docker Images
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/programming-style.html">
+   Programming Style Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-architecture.html">
+   Testbed Architecture Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-restapi.html">
+   Testbed REST API Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-sdk.html">
+   Testbed SDK Design Guide
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav>
+ <!-- To handle the deprecated key -->
+
+
+
+
+
+<div class="navbar_extra_footer">
+  
+  <div>
+    
+<a href="../developers.html"><em>Development Team</em></a>
+
+  </div>
+  
+  
+</div>
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/user-guide/custom-entry-points.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/usnistgov/dioptra"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#what-are-the-basic-steps">
+   What are the basic steps?
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#developing-the-python-entry-point-script-defining-tasks-and-parameters">
+   Developing the Python Entry Point Script: Defining Tasks and Parameters
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#developing-the-python-entry-point-script-passing-job-parameters-into-a-given-flow">
+   Developing the Python Entry Point Script: Passing Job Parameters into a Given Flow
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#developing-the-python-entry-point-script-creating-a-flow-pipeline">
+   Developing the Python Entry Point Script: Creating a Flow Pipeline
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#adding-the-new-entry-point-to-mlproject-file">
+   Adding the New Entry Point to MLproject File:
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="creating-a-new-entry-point">
+<span id="user-guide-custom-entry-points"></span><h1>Creating a New Entry Point<a class="headerlink" href="#creating-a-new-entry-point" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-are-the-basic-steps">
+<h2>What are the basic steps?<a class="headerlink" href="#what-are-the-basic-steps" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-default">
+<img alt="../_images/entry-point-customization.svg" src="../_images/entry-point-customization.svg" /></div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>When creating a new entrypoint, users may also find it helpful to create their own python task plugins in combination with existing builtin task plugins.
+Instructions for developing local and builtin tasks can be found in the following guide: <a class="reference internal" href="custom-task-plugins.html#user-guide-custom-task-plugins"><span class="std std-ref">Custom Task Plugins</span></a>.
+The following sections will assume that all task plugins already exist somewhere (either locally or as a builtin), and are ready to use for use in our entry point python script.</p>
+</div>
+<p>Entry point development generally involves the creating Python script, that is then executed by its associated command within the MLproject file.</p>
+<p>The general development work can be divided as follows:</p>
+<ul class="simple">
+<li><p>Developing the Python entry point script:</p>
+<ul>
+<li><p>Identifying tasks that will need to run in sequence (i.e. download_image -&gt; process_image -&gt; log_image) and their associated parameters.</p></li>
+<li><p>Identifying which parameters will need to be provided by user and setting the appropriate MLflow command line arguments with Click.</p></li>
+<li><p>Prefect Flow pipeline input initialization, chaining user/command line inputs to the Prefect Flow pipeline.</p></li>
+<li><p>Constructing the Flow pipeline using existing local and builtin tasks.</p></li>
+</ul>
+</li>
+<li><p>Linking Python script parameters to the MLproject file:</p>
+<ul>
+<li><p>Updating the entry point section with new/existing Python scripts.</p></li>
+<li><p>Creating the parameters section.</p></li>
+<li><p>Linking the parameters to the Python script command.</p></li>
+</ul>
+</li>
+</ul>
+<p>In the given example folder directory, the files that will need to be created/modified are marked with an asterisk:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>example_dir/
+├── src/
+│   ├── &lt;custom_entrypoint_script&gt;.py *Main entry point script we will need to create and edit.
+│   ├── &lt;Other src code&gt;
+│   └── custom_local_task_plugins.py
+├── ...
+└── MLproject *MLproject file we will also need to edit.
+</pre></div>
+</div>
+<p>We will start by defining the <code class="docutils literal notranslate"><span class="pre">&lt;custom_entrypoint_script&gt;.py</span></code> file followed by the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file.</p>
+</div>
+<div class="section" id="developing-the-python-entry-point-script-defining-tasks-and-parameters">
+<h2>Developing the Python Entry Point Script: Defining Tasks and Parameters<a class="headerlink" href="#developing-the-python-entry-point-script-defining-tasks-and-parameters" title="Permalink to this headline">¶</a></h2>
+<p>Let us assume we want to do the following tasks in a new python script, called <code class="docutils literal notranslate"><span class="pre">process_artifacts.py</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Call built-in task <code class="docutils literal notranslate"><span class="pre">A</span></code> to load artifacts from an existing mlrun.</p></li>
+<li><p>Call custom task <code class="docutils literal notranslate"><span class="pre">B</span></code> to process the artifacts.</p></li>
+<li><p>Call built-in task <code class="docutils literal notranslate"><span class="pre">C</span></code> to log and store the processed artifacts.</p></li>
+</ol>
+<p>Our flow pipeline will involve the following plugins called in sequence: <code class="docutils literal notranslate"><span class="pre">task</span> <span class="pre">A</span> <span class="pre">-&gt;</span> <span class="pre">task</span> <span class="pre">B</span> <span class="pre">-&gt;</span> <span class="pre">task</span> <span class="pre">C</span></code></p>
+<p>For the job parameters we’ll need to provide:</p>
+<ol class="arabic simple">
+<li><p>The mlrun ID string containing the artifacts to be downloaded. Let us call it <code class="docutils literal notranslate"><span class="pre">runID_A</span></code>.</p></li>
+<li><p>Associated target parameters for controlling processing behavior. Let us call it <code class="docutils literal notranslate"><span class="pre">process_parameter_B</span></code>.</p></li>
+<li><p>Storage ID tag for task <code class="docutils literal notranslate"><span class="pre">C</span></code>. Let us call it <code class="docutils literal notranslate"><span class="pre">storage_name_C</span></code>.</p></li>
+</ol>
+<p>Now that we have identified all the parameters we will need to provide to each task, we will need to setup the proper Click commands in our script so that it will request those parameters when it is executed.</p>
+<p>Please refer to <a class="reference internal" href="entry-points.html#user-guide-entry-points"><span class="std std-ref">Entry Points</span></a> for more information on setting up command line arguments with Click.</p>
+<p>After Click parameter setup, we will need to pass the parameters into our flow pipeline.</p>
+</div>
+<div class="section" id="developing-the-python-entry-point-script-passing-job-parameters-into-a-given-flow">
+<h2>Developing the Python Entry Point Script: Passing Job Parameters into a Given Flow<a class="headerlink" href="#developing-the-python-entry-point-script-passing-job-parameters-into-a-given-flow" title="Permalink to this headline">¶</a></h2>
+<p>Let us call our flow pipeline <code class="docutils literal notranslate"><span class="pre">process_artifacts_flow</span></code>.
+With this we will need to do the following steps to initialize the flow in our main body of the script:</p>
+<ol class="arabic simple">
+<li><p>Create an instance of the flow in our main script: ex. <code class="docutils literal notranslate"><span class="pre">flow:</span> <span class="pre">Flow</span> <span class="pre">=</span> <span class="pre">process_artifacts_flow()</span></code></p></li>
+<li><p>Pass our parameters into the <code class="docutils literal notranslate"><span class="pre">flow.run()</span></code> call.</p></li>
+<li><p>Define the <code class="docutils literal notranslate"><span class="pre">process_artifacts_flow</span></code> task pipeline.</p></li>
+</ol>
+<p>We should have something similar to the example below (after defining our <a class="reference external" href="https://click.palletsprojects.com/en/7.x/api/#click.command" title="(in Click v7.x)"><code class="xref py py-func docutils literal notranslate"><span class="pre">click.command()</span></code></a> line inputs):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># START OF PYTHON SCRIPT
+!/usr/bin/env python
+import ...
+
+# Local tasks plugins must be directly imported similar to local Python src functions.
+from .custom_local_task_plugins import task_B
+
+@click.command(_
+@click.option(
+... # Setup + info for parameter A.
+)
+... # Repeat for parameters B and C.
+def process_artifacts(runID_A, process_parameter_B, storage_name_C):
+    with mlflow.start_run() as active_run:
+
+        # Extra initialization steps as needed
+        default_process_parameter_B2 = &lt;Some Default Value based on B1&gt;
+
+        flow: Flow = process_artifacts_flow()
+        # Execute the flow run with our given input parameters
+        state = flow.run(
+            parameters=dict(runID_A=runID_A,
+                            process_parameter_B=process_parameter_B,
+                            process_parameter_B2=default_process_parameter_B2,
+                            storage_name_C=storage_name_C
+                            )
+        )
+
+# Define the flow pipeline here:
+def process_artifacts_flow() -&gt; Flow:
+    with Flow(&quot;&lt;Description of What this Flow Does Here&gt;&quot;) as flow:
+        ...
+        # Flow definition here
+        ...
+    return flow
+
+if __name__ == &quot;__main__&quot;:
+    process_artifacts()
+</pre></div>
+</div>
+<p>Here we can see that we’ve transferred the parameters for tasks A-C through into process_artifacts_flow’s <code class="docutils literal notranslate"><span class="pre">flow.run()</span></code> call.</p>
+<p>This call will take in all job associated parameters needed for running each task and transfer it our flow pipeline.
+Users are also allowed to initialize and pass through additional parameter values as needed into the <code class="docutils literal notranslate"><span class="pre">flow.run()</span></code> call, such as the secondary parameters that can be set by default or calculated based on other input parameters.</p>
+</div>
+<div class="section" id="developing-the-python-entry-point-script-creating-a-flow-pipeline">
+<h2>Developing the Python Entry Point Script: Creating a Flow Pipeline<a class="headerlink" href="#developing-the-python-entry-point-script-creating-a-flow-pipeline" title="Permalink to this headline">¶</a></h2>
+<p>Next, we will define the flow pipeline itself.
+We will start with the input parameters we need to provide to the current Flow.
+Here will define the name of each parameter and their associated parameter information:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">init_hello_world_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">Flow</span><span class="p">(</span><span class="s2">&quot;&lt;Description of What this Flow Does Here&gt;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">flow</span><span class="p">:</span>
+        <span class="p">(</span>
+            <span class="n">runID_A</span><span class="p">,</span>
+            <span class="n">process_parameter_B</span><span class="p">,</span>
+            <span class="n">process_parameter_B2</span><span class="p">,</span>
+            <span class="n">storage_name_C</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;This is Parameter A + optional information&quot;</span><span class="p">),</span>
+            <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;This is Parameter B + optional information&quot;</span><span class="p">),</span>
+            <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;Parameter B2&quot;</span><span class="p">),</span>
+            <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;Parameter C&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="o">...</span> <span class="o">//</span> <span class="n">Perform</span> <span class="n">Tasks</span> <span class="n">A</span><span class="o">-&gt;</span><span class="n">C</span>
+    <span class="k">return</span> <span class="n">flow</span>
+</pre></div>
+</div>
+<p>The first set of variables defines which parameters are passed through the <code class="docutils literal notranslate"><span class="pre">flow.run()</span></code> call.
+The second set of <code class="docutils literal notranslate"><span class="pre">Parameter()</span></code> declarations defines what each parameter is effectively called the during the flow execution.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>It is important to note that each of these variables are effectively now Flow parameters and thus any values they contain can only be accessed once they are passed into a given task during execution.
+For example, if a user were to attempt a <code class="docutils literal notranslate"><span class="pre">print(runID_A)</span></code> within the task flow block, they will get back a message similar to <code class="docutils literal notranslate"><span class="pre">Parameter(&quot;This</span> <span class="pre">is</span> <span class="pre">Parameter</span> <span class="pre">A</span> <span class="pre">+</span> <span class="pre">optional</span> <span class="pre">information&quot;)</span></code>.
+The only way to view what <code class="docutils literal notranslate"><span class="pre">runID_A</span></code> actually contains is to invoke the <code class="docutils literal notranslate"><span class="pre">print(runID_A)</span></code> call within task_A’s plugin code itself.
+Once <code class="docutils literal notranslate"><span class="pre">task_A</span></code> is executed in the pipeline, the corresponding parameter value will be accessed and printed by that task.</p>
+</div>
+<p>Now that our parameters are all available in our Flow pipeline, we can setup our task calls as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">process_artifacts_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">Flow</span><span class="p">(</span><span class="s2">&quot;&lt;Description of What this Flow Does Here&gt;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">flow</span><span class="p">:</span>
+        <span class="p">(</span>
+            <span class="o">...</span> <span class="c1"># parameter init.</span>
+        <span class="p">)</span>
+
+        <span class="o">//</span> <span class="n">Call</span> <span class="n">task</span> <span class="n">A</span><span class="p">,</span> <span class="n">get</span> <span class="n">artifacts</span> <span class="n">download</span> <span class="n">location</span><span class="o">.</span>
+        <span class="n">artifact_location</span> <span class="o">=</span> <span class="n">pyplugs</span><span class="o">.</span><span class="n">call_task</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_PLUGINS_IMPORT_PATH</span><span class="si">}</span><span class="s2">.random&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset_downloads&quot;</span><span class="p">,</span> <span class="s2">&quot;task_A&quot;</span><span class="p">,</span> <span class="n">parameter_A</span><span class="o">=</span><span class="n">runID_A</span>
+        <span class="p">)</span>
+
+        <span class="o">//</span> <span class="n">Call</span> <span class="n">task</span> <span class="n">B</span><span class="p">,</span> <span class="n">get</span> <span class="n">processed</span> <span class="n">artifacts</span> <span class="n">location</span><span class="o">.</span>
+        <span class="n">processed_artifact_location</span> <span class="o">=</span> <span class="n">task_B</span><span class="p">(</span>
+            <span class="n">artifact_location</span><span class="o">=</span><span class="n">artifact_location</span><span class="p">,</span>
+            <span class="n">process_parameter_B</span><span class="o">=</span><span class="n">process_parameter_B</span><span class="p">,</span>
+            <span class="n">process_parameter_B2</span><span class="o">=</span><span class="n">process_parameter_B2</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="o">//</span> <span class="n">Call</span> <span class="n">task</span> <span class="n">C</span><span class="o">.</span>
+        <span class="n">pyplugs</span><span class="o">.</span><span class="n">call_task</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_PLUGINS_IMPORT_PATH</span><span class="si">}</span><span class="s2">.random&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset_storage&quot;</span><span class="p">,</span> <span class="s2">&quot;task_C&quot;</span><span class="p">,</span>
+               <span class="n">storage_name_C</span><span class="o">=</span><span class="n">storage_name_C</span><span class="p">,</span>
+               <span class="n">processed_artifact_location</span><span class="o">=</span><span class="n">processed_artifact_location</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">flow</span>
+</pre></div>
+</div>
+<p>Here we can see there are some differences between how local and builtin tasks are called:</p>
+<ul class="simple">
+<li><p>Any local defined tasks (like <code class="docutils literal notranslate"><span class="pre">task_B</span></code>) must be imported and executed similar to a regular python function call.</p></li>
+<li><p>Builtin tasks must be called using the format: <code class="docutils literal notranslate"><span class="pre">pyplugs.call_task(f&quot;{_PLUGINS_IMPORT_PATH}.random&quot;,&quot;&lt;task_dir&gt;&quot;</span> <span class="pre">,&quot;&lt;task_name&gt;&quot;,</span> <span class="pre">&lt;task_parameters&gt;</span> <span class="pre">)</span></code></p></li>
+</ul>
+<p>Users can refer to <a class="reference internal" href="task-plugins-collection.html#user-guide-task-plugins-collection"><span class="std std-ref">Task Plugins Collection</span></a> to see our builtin task plugin directories and <a class="reference internal" href="custom-task-plugins.html#user-guide-custom-task-plugins"><span class="std std-ref">Custom Task Plugins</span></a> for how to create local and builtin plugins.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>For this example, the input and output parameters link up nicely so that the task dependencies follow an <code class="docutils literal notranslate"><span class="pre">task</span> <span class="pre">A-&gt;B-&gt;C</span></code> in order.
+However, should any intermediate tasks not have preceding dependencies, they can be run out of order. Those will require their preceding tasks to be declared as well.
+Please refer to <a class="reference internal" href="task-plugins.html#user-guide-task-plugins"><span class="std std-ref">Task Plugins</span></a> for more information.</p>
+</div>
+<p>We now have our fully developed entry point script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># START OF PYTHON SCRIPT
+!/usr/bin/env python
+import ...
+
+# Local tasks plugins must be directly imported.
+from .custom_local_task_plugins import task_B
+
+@click.command(_
+... # Setup for parameters A-C
+def process_artifacts(runID_A, process_parameter_B, storage_name_C):
+    with mlflow.start_run() as active_run:
+
+        # Extra initialization steps as needed
+        default_process_parameter_B2 = &lt;Some Default Value based on B1&gt;
+
+        flow: Flow = process_artifacts_flow()
+        # Execute the flow run with our given input parameters
+        state = flow.run(
+            parameters=dict(runID_A=runID_A,
+                            process_parameter_B=process_parameter_B,
+                            process_parameter_B2=default_process_parameter_B2,
+                            storage_name_C=storage_name_C
+                            )
+        )
+
+# Define the flow pipeline here:
+def init_hello_world_flow() -&gt; Flow:
+    with Flow(&quot;&lt;Description of What this Flow Does Here&gt;&quot;) as flow:
+        (
+            runID_A,
+            process_parameter_B,
+            process_parameter_B2,
+            storage_name_C,
+        ) = (
+            Parameter(&quot;This is Parameter A + optional information&quot;),
+            Parameter(&quot;This is Parameter B + optional information&quot;),
+            Parameter(&quot;Parameter B2&quot;),
+            Parameter(&quot;Parameter C&quot;),
+        )
+
+        // Call task A, get artifacts download location.
+        artifact_location = pyplugs.call_task(
+            f&quot;{_PLUGINS_IMPORT_PATH}.random&quot;, &quot;dataset_downloads&quot;, &quot;task_A&quot;, parameter_A=runID_A
+        )
+
+        // Call task B, get processed artifacts location.
+        processed_artifact_location = task_B(
+            artifact_location, process_parameter_B, process_parameter_B2
+        )
+
+        // Call task C.
+        pyplugs.call_task(
+            f&quot;{_PLUGINS_IMPORT_PATH}.random&quot;, &quot;dataset_storage&quot;, &quot;task_C&quot;, parameter_C=storage_name_C
+        )
+    return flow
+
+if __name__ == &quot;__main__&quot;:
+    process_artifacts()
+</pre></div>
+</div>
+<p>Next we will need to add our new entry point script to the MLproject file.</p>
+</div>
+<div class="section" id="adding-the-new-entry-point-to-mlproject-file">
+<h2>Adding the New Entry Point to MLproject File:<a class="headerlink" href="#adding-the-new-entry-point-to-mlproject-file" title="Permalink to this headline">¶</a></h2>
+<p>Assuming we will want to create an entry point called <code class="docutils literal notranslate"><span class="pre">process_artifacts</span></code> to invoke our <code class="docutils literal notranslate"><span class="pre">process_artifacts.py</span></code> script with the same job parameter names, we will create the following example below to link our script to our MLproject file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="n">example_mlflow_project_name_here</span>
+
+<span class="n">entry_points</span><span class="p">:</span>
+  <span class="n">process_parameters</span><span class="p">:</span>
+    <span class="n">parameters</span><span class="p">:</span>
+      <span class="n">runID_A</span><span class="p">:</span>  <span class="p">{</span><span class="nb">type</span><span class="p">:</span> <span class="n">string</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">}</span>
+      <span class="n">process_parameter_B</span><span class="p">:</span>  <span class="p">{</span><span class="nb">type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="mi">30</span><span class="p">}</span>
+      <span class="n">storage_name_C</span><span class="p">:</span>  <span class="p">{</span><span class="nb">type</span><span class="p">:</span> <span class="n">string</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="s2">&quot;processed_artifacts.tar.gz&quot;</span><span class="p">}</span>
+    <span class="n">command</span><span class="p">:</span> <span class="o">&gt;</span>
+      <span class="n">python</span> <span class="n">src</span><span class="o">/</span><span class="n">process_artifacts</span><span class="o">.</span><span class="n">py</span>
+      <span class="o">--</span><span class="n">runID</span><span class="o">-</span><span class="n">A</span> <span class="p">{</span><span class="n">runID_A</span><span class="p">}</span>
+      <span class="o">--</span><span class="n">process</span><span class="o">-</span><span class="n">parameter</span><span class="o">-</span><span class="n">B</span> <span class="p">{</span><span class="n">process_parameter_B</span><span class="p">}</span>
+      <span class="o">--</span><span class="n">storage</span><span class="o">-</span><span class="n">name</span><span class="o">-</span><span class="n">C</span>  <span class="p">{</span><span class="n">storage_name_C</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Effectively, the <code class="docutils literal notranslate"><span class="pre">process_parameters</span></code> entry point will now invoke the <code class="docutils literal notranslate"><span class="pre">src/process_parameters.py</span></code> script with the associated job parameters now forwarding to their counterpart command line arguments.</p>
+<p>Please refer to <a class="reference internal" href="entry-points.html#user-guide-entry-points"><span class="std std-ref">Entry Points</span></a> for more details regarding MLproject specifications.</p>
+</div>
+</div>
+
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="task-plugins.html" title="previous page">Task Plugins</a>
+    <a class='right-next' id="next-link" href="custom-task-plugins.html" title="next page">Custom Task Plugins</a>
+
+        </div>
+        
+        </div>
+    </div>
+    
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+      </p>
+    </div>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

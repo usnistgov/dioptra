@@ -1,0 +1,923 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>First Steps - MNIST Tensorflow Classifier &#8212; Dioptra 0.0.0 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tensorflow MNIST Feature Squeezing" href="example-tensorflow-mnist-feature-squeezing.html" />
+    <link rel="prev" title="Hello World!" href="example-basic-mlflow-demo.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+      
+      <h1 class="site-logo" id="site-title">Dioptra 0.0.0 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../index.html">
+   What is Dioptra?
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Getting Started
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/installation.html">
+   Installation Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting-started/newcomer-tips.html">
+   Setup Tips for Newcomers
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  User Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/the-basics.html">
+   The Basics
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/entry-points.html">
+   Entry Points
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/task-plugins.html">
+   Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/custom-entry-points.html">
+   Creating a New Entry Point
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/custom-task-plugins.html">
+   Custom Task Plugins
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/generics-plugin-system.html">
+   Generics Plugin System
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../user-guide/task-plugins-collection.html">
+   Task Plugins Collection
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-artifacts.html">
+     artifacts
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-attacks.html">
+     attacks
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-backend_configs.html">
+     backend_configs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-data.html">
+     data
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-estimators.html">
+     estimators
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-metrics.html">
+     metrics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-random.html">
+     random
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-registry.html">
+     registry
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-tracking.html">
+     tracking
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../user-guide/api-reference-sdk.html">
+   Testbed SDK API Reference
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-generics.html">
+     generics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-utilities.html">
+     utilities
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-exceptions.html">
+     exceptions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-pyplugs.html">
+     pyplugs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-rq.html">
+     rq
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../user-guide/api-sdk/api-cryptography.html">
+     cryptography
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../user-guide/api-reference-restapi.html">
+   Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Deployment Guide
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/system-requirements.html">
+   System Requirements
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">
+   Docker Images List and Settings
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/single-machine-deployment.html">
+   Single Machine Deployment
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/task-plugins-management.html">
+   Task Plugins Management
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/obtaining-datasets.html">
+   How to Obtain Common Datasets
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../deployment-guide/testbed-ansible-collection.html">
+   Testbed Ansible Collection
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Developer Guides
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../dev-guide/index.html">
+   Getting Involved / Contributing
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-merge-request-guidelines.html">
+     Merge Request Guidelines
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-commit-styleguide.html">
+     Commit Styleguide
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../dev-guide/contributing-build-dev-images.html">
+     Building Development Docker Images
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/programming-style.html">
+   Programming Style Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-architecture.html">
+   Testbed Architecture Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-restapi.html">
+   Testbed REST API Design Guide
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../dev-guide/design-sdk.html">
+   Testbed SDK Design Guide
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav>
+ <!-- To handle the deprecated key -->
+
+
+
+
+
+<div class="navbar_extra_footer">
+  
+  <div>
+    
+<a href="../developers.html"><em>Development Team</em></a>
+
+  </div>
+  
+  
+</div>
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/tutorials/example-tensorflow-mnist-classifier.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/usnistgov/dioptra"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#getting-started">
+   Getting started
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#setup">
+   Setup
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#dataset">
+   Dataset
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#testbed-microservices">
+   Testbed microservices
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#submit-and-run-jobs">
+   Submit and run jobs
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#querying-the-mlflow-tracking-service">
+   Querying the MLFlow Tracking Service
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#cleanup">
+   Cleanup
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="first-steps-mnist-tensorflow-classifier">
+<span id="tutorials-example-tensorflow-mnist-classifier"></span><h1>First Steps - MNIST Tensorflow Classifier<a class="headerlink" href="#first-steps-mnist-tensorflow-classifier" title="Permalink to this headline">¶</a></h1>
+<p>This demo provides a practical example that you can run on your personal computer to see how Dioptra can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
+It can be used as a basic template for crafting your own custom scripts to run within the testbed.</p>
+<div class="section" id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>Everything you need to run this demo is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
+Once you have downloaded the images, navigate to this directory using the terminal and run the demo startup sequence:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make demo
+</pre></div>
+</div>
+<p>The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
+Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Double click the <code class="docutils literal notranslate"><span class="pre">work</span></code> folder and open the <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> file.
+From here, follow the provided instructions to run the demo provided in the Jupyter notebook.</p>
+<p>To watch the output logs for the Tensorflow worker containers as you step through the demo, run <code class="docutils literal notranslate"><span class="pre">docker-compose</span> <span class="pre">logs</span> <span class="pre">-f</span> <span class="pre">tfcpu-01</span> <span class="pre">tfcpu-02</span></code> in your terminal.</p>
+<p>When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code> on the command-line.
+If you were watching the output logs, you will need to press <kbd class="kbd docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The contents that follows is also found in the corresponding Jupyter notebook for this demo.</p>
+</div>
+</div>
+<div class="section" id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<p>Below we import the necessary Python modules and ensure the proper environment variables are set so that all the code blocks will work as expected,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import packages from the Python standard library</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+
+<span class="c1"># Filter out warning messages</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+<span class="c1"># Default address for accessing the RESTful API service</span>
+<span class="n">RESTAPI_ADDRESS</span> <span class="o">=</span> <span class="s2">&quot;http://localhost:30080&quot;</span>
+
+<span class="c1"># Set AI_RESTAPI_URI variable if not defined, used to connect to RESTful API service</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AI_RESTAPI_URI&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;AI_RESTAPI_URI&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">RESTAPI_ADDRESS</span>
+
+<span class="c1"># Default address for accessing the MLFlow Tracking server</span>
+<span class="n">MLFLOW_TRACKING_URI</span> <span class="o">=</span> <span class="s2">&quot;http://localhost:35000&quot;</span>
+
+<span class="c1"># Set MLFLOW_TRACKING_URI variable, used to connect to MLFlow Tracking service</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;MLFLOW_TRACKING_URI&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MLFLOW_TRACKING_URI&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MLFLOW_TRACKING_URI</span>
+
+<span class="c1"># Path to workflows archive</span>
+<span class="n">WORKFLOWS_TAR_GZ</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;workflows.tar.gz&quot;</span><span class="p">)</span>
+
+<span class="c1"># Import third-party Python packages</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">mlflow.tracking</span> <span class="kn">import</span> <span class="n">MlflowClient</span>
+
+<span class="c1"># Import utils.py file</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="c1"># Create random number generator</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">54399264723942495723666216079516778448</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dataset">
+<h2>Dataset<a class="headerlink" href="#dataset" title="Permalink to this headline">¶</a></h2>
+<p>We obtained a copy of the MNIST dataset as part of the startup process invoked by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">demo</span></code>.
+The training and testing images for the MNIST dataset are stored within the <code class="docutils literal notranslate"><span class="pre">data/</span></code> directory as PNG files that are organized into the following folder structure,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>data
+├── testing
+│   ├── 0
+│   ├── 1
+│   ├── 2
+│   ├── 3
+│   ├── 4
+│   ├── 5
+│   ├── 6
+│   ├── 7
+│   ├── 8
+│   └── 9
+└── training
+    ├── 0
+    ├── 1
+    ├── 2
+    ├── 3
+    ├── 4
+    ├── 5
+    ├── 6
+    ├── 7
+    ├── 8
+    └── 9
+</pre></div>
+</div>
+<p>The subfolders under <code class="docutils literal notranslate"><span class="pre">data/training/</span></code> and <code class="docutils literal notranslate"><span class="pre">data/testing/</span></code> are the classification labels for the images in the dataset.
+This folder structure is a standardized way to encode the label information and many libraries can make use of it, including the Tensorflow library that we are using for this particular demo.</p>
+</div>
+<div class="section" id="testbed-microservices">
+<h2>Testbed microservices<a class="headerlink" href="#testbed-microservices" title="Permalink to this headline">¶</a></h2>
+<p>Dioptra is composed of several micro-services that are used to manage job execution, artifact storage, and logging the results of experiments.
+These services all run within separate containers that were instantiated via Docker images that you either built locally or pulled into your environment from a Docker image registry.
+A high-level schematic showing how all of the images connect together to form the architecture of Dioptra is provided below.</p>
+<div class="figure align-default">
+<img alt="../_images/testbed-architecture.svg" src="../_images/testbed-architecture.svg" /></div>
+<p>The startup process for all of these services, including database initialization and synchronizing the task plugins into the Minio S3 storage service, was handled automatically when you invoked <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">demo</span></code>.</p>
+</div>
+<div class="section" id="submit-and-run-jobs">
+<h2>Submit and run jobs<a class="headerlink" href="#submit-and-run-jobs" title="Permalink to this headline">¶</a></h2>
+<p>The entrypoints that we will be running in this example are implemented in the Python source files under <code class="docutils literal notranslate"><span class="pre">src/</span></code> and the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file.
+To run these entrypoints within the testbed architecture, we need to package those files up into an archive and submit it to the Testbed RESTful API to create a new job.
+For convenience, the <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> provides a rule for creating the archive file for this example, just run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">workflows</span></code>,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%%bash
+
+<span class="c1"># Create the workflows.tar.gz file</span>
+make workflows
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">workflows</span></code> was invoked as part of the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">demo</span></code> startup procedure, so unless you edited the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file or one of the files under <code class="docutils literal notranslate"><span class="pre">src/</span></code>, you will likely see a message of <em>make: Nothing to be done for ‘workflows’</em>.</p>
+<p>To connect with the endpoint, we will use a client class defined in the <code class="docutils literal notranslate"><span class="pre">utils.py</span></code> file that is able to connect with the Testbed RESTful API using the HTTP protocol.
+We connect using the client below, which uses the environment variable <code class="docutils literal notranslate"><span class="pre">AI_RESTAPI_URI</span></code> to figure out how to connect to the Testbed RESTful API,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">restapi_client</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">SecuringAIClient</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>We need to register an experiment under which to collect our job runs.
+The code below checks if the relevant experiment named <code class="docutils literal notranslate"><span class="pre">&quot;mnist&quot;</span></code> exists.
+If it does, then it just returns info about the experiment, if it doesn’t, it then registers the new experiment.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">response_experiment</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">get_experiment_by_name</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response_experiment</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="s2">&quot;Not Found&quot;</span> <span class="ow">in</span> <span class="n">response_experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="n">response_experiment</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">register_experiment</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">)</span>
+
+<span class="n">response_experiment</span>
+</pre></div>
+</div>
+<p>We also need to register the name of the queue that is being watched for our jobs.
+The code below checks if the relevant queue named <code class="docutils literal notranslate"><span class="pre">&quot;tensorflow_cpu&quot;</span></code> exists.
+If it does, then it just returns info about the queue, if it doesn’t, it then registers the new queue.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">response_queue</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">get_queue_by_name</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;tensorflow_cpu&quot;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">response_queue</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="s2">&quot;Not Found&quot;</span> <span class="ow">in</span> <span class="n">response_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="n">response_queue</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">register_queue</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;tensorflow_cpu&quot;</span><span class="p">)</span>
+
+<span class="n">response_queue</span>
+</pre></div>
+</div>
+<p>Next, we need to train our model.
+Depending on the specs of your computer, training either the shallow net model or the LeNet-5 model on a CPU can take 10-20 minutes or longer to complete.
+If you are fortunate enough to have access to a dedicated GPU, then the training time will be much shorter.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Submit training job for the shallow network architecture</span>
+<span class="n">response_shallow_train</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span>
+    <span class="n">workflows_file</span><span class="o">=</span><span class="n">WORKFLOWS_TAR_GZ</span><span class="p">,</span>
+    <span class="n">experiment_name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span>
+    <span class="n">entry_point</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+    <span class="n">entry_point_kwargs</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+        <span class="s2">&quot;-P model_architecture=shallow_net&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;-P epochs=30&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;-P register_model_name=mnist_shallow_net&quot;</span><span class="p">,</span>
+    <span class="p">]),</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training job for shallow neural network submitted&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">response_shallow_train</span><span class="p">)</span>
+
+<span class="c1"># Submit training job for the LeNet-5 network architecture</span>
+<span class="n">response_le_net_train</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span>
+    <span class="n">workflows_file</span><span class="o">=</span><span class="n">WORKFLOWS_TAR_GZ</span><span class="p">,</span>
+    <span class="n">experiment_name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span>
+    <span class="n">entry_point</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+    <span class="n">entry_point_kwargs</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+        <span class="s2">&quot;-P model_architecture=le_net&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;-P epochs=30&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;-P register_model_name=mnist_le_net&quot;</span><span class="p">,</span>
+    <span class="p">]),</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training job for LeNet-5 neural network submitted&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">response_le_net_train</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now that we have two trained models (the shallow network and the LeNet-5 network), next we will apply the fast-gradient method (FGM) evasion attack on the shallow network to generate adversarial images.
+Then, after we have the adversarial images, we will use them to evaluate some standard machine learning metrics against both models.
+This will give us a sense of the transferability of the attacks between models.</p>
+<p>This specific workflow is an example of jobs that contain dependencies, as the metric evaluation jobs cannot start until the adversarial image generation jobs have completed.
+The testbed allows users to declare one-to-many job dependencies like this, which we will use to queue up jobs to start immediately after the previous jobs have concluded.
+The code below illustrates this by doing the following:</p>
+<ol class="arabic simple">
+<li><p>A job is submitted that generates adversarial images based on the shallow net architecture (entry point <strong>fgm</strong>).</p></li>
+<li><p>We wait until the job starts and a MLFlow identifier is assigned, which we check by polling the API until we see the id appear.</p></li>
+<li><p>Once we have an id returned to us from the API, we queue up the metrics evaluation jobs and declare the job dependency using the <code class="docutils literal notranslate"><span class="pre">depends_on</span></code> option.</p></li>
+<li><p>The message “Dependent jobs submitted” will display once everything is queued up.</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mlflow_run_id_is_not_known</span><span class="p">(</span><span class="n">response_fgm</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">response_fgm</span><span class="p">[</span><span class="s2">&quot;mlflowRunId&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">response_fgm</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;finished&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+<span class="n">response_fgm_shallow_net</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span>
+    <span class="n">workflows_file</span><span class="o">=</span><span class="n">WORKFLOWS_TAR_GZ</span><span class="p">,</span>
+    <span class="n">experiment_name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span>
+    <span class="n">entry_point</span><span class="o">=</span><span class="s2">&quot;fgm&quot;</span><span class="p">,</span>
+    <span class="n">entry_point_kwargs</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">&quot;-P model_name=mnist_shallow_net&quot;</span><span class="p">,</span> <span class="s2">&quot;-P model_version=1&quot;</span><span class="p">]</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;FGM attack (shallow net architecture) job submitted&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">response_fgm_shallow_net</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="k">while</span> <span class="n">mlflow_run_id_is_not_known</span><span class="p">(</span><span class="n">response_fgm_shallow_net</span><span class="p">):</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">response_fgm_shallow_net</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">get_job_by_id</span><span class="p">(</span>
+        <span class="n">response_fgm_shallow_net</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+<span class="n">response_shallow_net_infer_shallow_net</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span>
+    <span class="n">workflows_file</span><span class="o">=</span><span class="n">WORKFLOWS_TAR_GZ</span><span class="p">,</span>
+    <span class="n">experiment_name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span>
+    <span class="n">entry_point</span><span class="o">=</span><span class="s2">&quot;infer&quot;</span><span class="p">,</span>
+    <span class="n">entry_point_kwargs</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;-P run_id=</span><span class="si">{</span><span class="n">response_fgm_shallow_net</span><span class="p">[</span><span class="s1">&#39;mlflowRunId&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-P model_name=mnist_shallow_net&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-P model_version=1&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">depends_on</span><span class="o">=</span><span class="n">response_fgm_shallow_net</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">response_le_net_infer_shallow_net</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span>
+    <span class="n">workflows_file</span><span class="o">=</span><span class="n">WORKFLOWS_TAR_GZ</span><span class="p">,</span>
+    <span class="n">experiment_name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span>
+    <span class="n">entry_point</span><span class="o">=</span><span class="s2">&quot;infer&quot;</span><span class="p">,</span>
+    <span class="n">entry_point_kwargs</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;-P run_id=</span><span class="si">{</span><span class="n">response_fgm_shallow_net</span><span class="p">[</span><span class="s1">&#39;mlflowRunId&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-P model_name=mnist_le_net&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-P model_version=1&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">depends_on</span><span class="o">=</span><span class="n">response_fgm_shallow_net</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dependent jobs submitted&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can poll the status of the dependent jobs using the code below.
+We should see the status of the jobs shift from “queued” to “started” and eventually become “finished”.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">response_shallow_net_infer_shallow_net</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">get_job_by_id</span><span class="p">(</span>
+    <span class="n">response_shallow_net_infer_shallow_net</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">response_le_net_infer_shallow_net</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">get_job_by_id</span><span class="p">(</span>
+    <span class="n">response_le_net_infer_shallow_net</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">response_shallow_net_infer_shallow_net</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">response_le_net_infer_shallow_net</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can similiarly run an FGM-based evasion attack using the LeNet-5 architecture as our starting point.
+The following code is very similar to the code we just saw, all we’ve done is swap out the entry point keyword argument that requests the shallow net architecture with a version that requests the LeNet-5 architecture.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">response_fgm_le_net</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span>
+    <span class="n">workflows_file</span><span class="o">=</span><span class="n">WORKFLOWS_TAR_GZ</span><span class="p">,</span>
+    <span class="n">experiment_name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span>
+    <span class="n">entry_point</span><span class="o">=</span><span class="s2">&quot;fgm&quot;</span><span class="p">,</span>
+    <span class="n">entry_point_kwargs</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">&quot;-P model_name=mnist_le_net&quot;</span><span class="p">,</span> <span class="s2">&quot;-P model_version=1&quot;</span><span class="p">]</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;FGM attack (LeNet-5 architecture) job submitted&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">response_fgm_le_net</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="k">while</span> <span class="n">mlflow_run_id_is_not_known</span><span class="p">(</span><span class="n">response_fgm_le_net</span><span class="p">):</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">response_fgm_le_net</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">get_job_by_id</span><span class="p">(</span><span class="n">response_fgm_le_net</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">])</span>
+
+<span class="n">response_shallow_net_infer_le_net_fgm</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span>
+    <span class="n">workflows_file</span><span class="o">=</span><span class="n">WORKFLOWS_TAR_GZ</span><span class="p">,</span>
+    <span class="n">experiment_name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span>
+    <span class="n">entry_point</span><span class="o">=</span><span class="s2">&quot;infer&quot;</span><span class="p">,</span>
+    <span class="n">entry_point_kwargs</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;-P run_id=</span><span class="si">{</span><span class="n">response_fgm_le_net</span><span class="p">[</span><span class="s1">&#39;mlflowRunId&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-P model_name=mnist_shallow_net&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-P model_version=1&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">depends_on</span><span class="o">=</span><span class="n">response_fgm_le_net</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">response_le_net_infer_le_net_fgm</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span>
+    <span class="n">workflows_file</span><span class="o">=</span><span class="n">WORKFLOWS_TAR_GZ</span><span class="p">,</span>
+    <span class="n">experiment_name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span>
+    <span class="n">entry_point</span><span class="o">=</span><span class="s2">&quot;infer&quot;</span><span class="p">,</span>
+    <span class="n">entry_point_kwargs</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;-P run_id=</span><span class="si">{</span><span class="n">response_fgm_le_net</span><span class="p">[</span><span class="s1">&#39;mlflowRunId&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-P model_name=mnist_le_net&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-P model_version=1&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">depends_on</span><span class="o">=</span><span class="n">response_fgm_le_net</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dependent jobs submitted&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Like before, we can monitor the status of the dependent jobs by querying the API using the code block below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">response_shallow_net_infer_le_net_fgm</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">get_job_by_id</span><span class="p">(</span>
+    <span class="n">response_shallow_net_infer_le_net_fgm</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">response_le_net_infer_le_net_fgm</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">get_job_by_id</span><span class="p">(</span>
+    <span class="n">response_le_net_infer_le_net_fgm</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">response_shallow_net_infer_le_net_fgm</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">response_le_net_infer_le_net_fgm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Congratulations, you’ve just run your first experiment using Dioptra!</p>
+</div>
+<div class="section" id="querying-the-mlflow-tracking-service">
+<h2>Querying the MLFlow Tracking Service<a class="headerlink" href="#querying-the-mlflow-tracking-service" title="Permalink to this headline">¶</a></h2>
+<p>Currently the Testbed API can only be used to register experiments and start jobs, so if users wish to extract their results programmatically, they can use the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.tracking.html#mlflow.tracking.MlflowClient" title="(in MLflow v1.17.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MlflowClient</span></code></a> class from the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#module-mlflow" title="(in MLflow v1.17.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mlflow</span></code></a> Python package to connect and query their results.
+Since we captured the run ids generated by MLFlow, we can easily retrieve the data logged about one of our jobs and inspect the results.
+To start the client, we simply need to run,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mlflow_client</span> <span class="o">=</span> <span class="n">MlflowClient</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The client uses the environment variable <code class="docutils literal notranslate"><span class="pre">MLFLOW_TRACKING_URI</span></code> to figure out how to connect to the MLFlow Tracking Service, which we configured near the top of this notebook.
+To query the results of one of our runs, we just need to pass the run id to the client’s <code class="docutils literal notranslate"><span class="pre">get_run()</span></code> method.
+As an example, let’s query the run results for the FGM attack applied to the LeNet-5 architecture,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fgm_run_le_net</span> <span class="o">=</span> <span class="n">mlflow_client</span><span class="o">.</span><span class="n">get_run</span><span class="p">(</span><span class="n">response_fgm_le_net</span><span class="p">[</span><span class="s2">&quot;mlflowRunId&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>If the request completed successfully, we should now be able to query data collected during the run.
+For example, to review the collected metrics, we just use,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">fgm_run_le_net</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To review the run’s parameters, we use,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">fgm_run_le_net</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To review the run’s tags, we use,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">fgm_run_le_net</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">tags</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>There are many things you can query using the MLFlow client.
+<a class="reference external" href="https://www.mlflow.org/docs/latest/python_api/mlflow.tracking.html#mlflow.tracking.MlflowClient">The MLFlow documentation gives a full overview of the methods that are available</a>.</p>
+</div>
+<div class="section" id="cleanup">
+<h2>Cleanup<a class="headerlink" href="#cleanup" title="Permalink to this headline">¶</a></h2>
+<p>To clean up, you simply need to close the browser tab containing the Jupyter notebook and shut down the services by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code> on the command-line.</p>
+</div>
+</div>
+
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="example-basic-mlflow-demo.html" title="previous page">Hello World!</a>
+    <a class='right-next' id="next-link" href="example-tensorflow-mnist-feature-squeezing.html" title="next page">Tensorflow MNIST Feature Squeezing</a>
+
+        </div>
+        
+        </div>
+    </div>
+    
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+      </p>
+    </div>
+</footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>
