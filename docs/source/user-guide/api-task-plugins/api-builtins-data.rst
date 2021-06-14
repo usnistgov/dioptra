@@ -20,6 +20,8 @@
 data
 ====
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: securingai_builtins.data
    :members:
    :undoc-members:

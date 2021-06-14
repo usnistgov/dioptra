@@ -20,4 +20,6 @@
 Programming Style Guide
 =======================
 
+.. include:: /_glossary_note.rst
+
 Coming soon!

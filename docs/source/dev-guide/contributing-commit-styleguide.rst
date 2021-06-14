@@ -20,6 +20,8 @@
 Commit Styleguide
 -----------------
 
+.. include:: /_glossary_note.rst
+
 This project follows precise rules over how git commit messages should be formatted.
 This leads to more readable messages that are easy to follow when looking through the project history.
 
@@ -140,7 +142,7 @@ The following is the list of supported scopes:
 
 -  **pyplugs**: used for updates related to the development and maintenance of the Testbed’s `PyPlugs <https://pypi.org/project/pyplugs>`__ fork
 
--  **restapi**: used for updates related to the development and maintenance of the Testbed’s RESTful API
+-  **restapi**: used for updates related to the development and maintenance of the Testbed’s :term:`REST` :term:`API`
 
 -  **rq**: used for updates related to the development and maintenance of the Testbed’s Redis-based job tracking and management system
 

@@ -20,12 +20,14 @@
 Tensorflow ImageNet Resnet50 FGM
 ================================
 
+.. include:: /_glossary_note.rst
+
 .. warning::
 
    This demo assumes that you have access to an on-prem deployment of Dioptra that provides a copy of the ImageNet dataset and a CUDA-compatible GPU.
    This demo cannot be run on a typical personal computer.
 
-The demo provided in the Jupyter notebook ``demo.ipynb`` contains an example of the FGM attack on the ResNet50 architecture with optional defense entry points.
+The demo provided in the Jupyter notebook ``demo.ipynb`` contains an example of the :term:`FGM` attack on the ResNet50 architecture with optional defense entry points.
 Users can also explore the following preprocessing defenses from their associated defense entry points:
 
 -  **Spatial Smoothing:** Smooths out an image by passing a median filter through neighboring pixel values in images.
@@ -119,7 +121,7 @@ Common Training and Testing Entry Points
 FGM Attack Entry Points
 ~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``fgm``: Applies the FGM evasion attack on a dataset based on a given trained model.
+-  ``fgm``: Applies the :term:`FGM` evasion attack on a dataset based on a given trained model.
 
    -  Parameters:
 
@@ -130,7 +132,7 @@ FGM Attack Entry Points
       -  ``eps``: A positive floating point value specifying attack step size.
       -  ``eps_step``: A positive floating point value specifying size of input variation for minimal perturbation computation.
       -  ``minimal``: If 1, compute the minimal perturbation using eps_step for the step size and eps for the maximum perturbation.
-      -  ``norm``: Specifies FGM attack norm for generating adversarial perturbations. Choices are ``inf``, ``1``, and ``2``.
+      -  ``norm``: Specifies :term:`FGM` attack norm for generating adversarial perturbations. Choices are ``inf``, ``1``, and ``2``.
       -  ``seed``: Specifies an integer seed value for controlling randomized tensorflow behavior.
 
 Image Preprocessing Defense Entry Points

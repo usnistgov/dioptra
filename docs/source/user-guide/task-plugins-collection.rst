@@ -20,6 +20,8 @@
 Task Plugins Collection
 =======================
 
+.. include:: /_glossary_note.rst
+
 .. toctree::
    :hidden:
    :maxdepth: -1

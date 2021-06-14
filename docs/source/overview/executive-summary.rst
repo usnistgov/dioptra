@@ -102,10 +102,9 @@ Assumptions / System Requirements
 Most of the built-in demonstrations in the testbed assume the testbed is deployed on Unix-based operating systems (e.g., Linux, MacOS).
 Those familiar with the Windows Subsystem for Linux (WSL) should be able to deploy it on Windows, but this mode is not explicitly supported at this time.
 Most included demos perform computationally intensive calculations requiring access to significant computational resources such as Graphics Processing Units (GPUs).
-The architecture has been tested on a DGX server with 4 GPUs.
-The demonstrations also rely on publicly available datasets such as MNIST handwritten digits, ImageNet, and Fruits360 that are not part of the testbed distribution.
-The built-in demonstrations assume that relevant datasets have already
-been obtained and saved in the testbed's Data Storage container.
+The architecture has been tested on a :term:`NVIDIA DGX` server with 4 GPUs.
+The demonstrations also rely on publicly available datasets such as :term:`MNIST` handwritten digits, ImageNet, and Fruits360 that are not part of the testbed distribution.
+The built-in demonstrations assume that relevant datasets have already been obtained and saved in the testbed's Data Storage container.
 
 Architecture Overview
 ---------------------
@@ -116,12 +115,12 @@ The testbed is built on a microservices architecture.
 It is designed to be deployed across several physical machines but is equally deployable on a local laptop.
 The distributed deployment allows the core optimization algorithms to reside on machines with GPUs or other high-powered computational resources, while a local deployment will impose strong computational constraints.
 
-The heart of the architecture is the core testbed Application Programming Interface (API) that manages requests and responses with a human user via a reverse proxy.
+The heart of the architecture is the core testbed Application Programming Interface (:term:`API`) that manages requests and responses with a human user via a reverse proxy.
 The backend Data Storage component hosts datasets, registered models, and experiment results and metrics.
 It also stores the registered plug-ins, which are described in more detail below.
-As experiment jobs get submitted, the API registers them on the Redis queue, which is watched by a worker pool of Docker containers provisioned with all necessary environment dependencies.
+As experiment jobs get submitted, the :term:`API` registers them on the Redis queue, which is watched by a worker pool of Docker containers provisioned with all necessary environment dependencies.
 These worker containers run the plugins interacting with the MLflow Tracking Service to coordinate job dependencies and record statistics, metrics, and any generated artifacts.
-The user may then interact with the MLflow service directly to access a user-friendly dashboard with relevant results, or they may use the API to mediate access.
+The user may then interact with the MLflow service directly to access a user-friendly dashboard with relevant results, or they may use the :term:`API` to mediate access.
 The architecture is built entirely from open-source resources making it easy for others to extend and improve upon.
 
 .. figure:: /images/experiment-components.svg
@@ -142,18 +141,18 @@ Level 1—The Newcomer
 
 Level 2—The Analyst
    These are individuals who want to analyze a wider variety of scenarios.
-   They will be able to interface with the testbed's RESTful (**RE**\ presentational **S**\ tate **T**\ ransfer) API to create new experiments from existing entry points.
+   They will be able to interface with the testbed's :term:`REST` (**RE**\ presentational **S**\ tate **T**\ ransfer) :term:`API` to create new experiments from existing entry points.
    They will also learn to create custom entry points from the built-in task plugins.
    They must know how to customize the testbed's code templates; thus a basic knowledge of scripting or programming is required.
 
 Level 3—The Researcher
    These are individuals who want to run experiments using novel metrics, algorithms, and analytical techniques.
-   They will be able to implement their own "in-house" task plugins and Software Development Kit (SDK) plugins to create novel entry points that rely on custom algorithms.
+   They will be able to implement their own "in-house" task plugins and Software Development Kit (:term:`SDK`) plugins to create novel entry points that rely on custom algorithms.
    They will need to understand the testbed's plugin architecture to extend it with new functionality.
    They, therefore, require a solid background in scripting or programming.
 
 Level 4—The Developer
    These are individuals who want to expand the testbed's core capabilities by contributing to the distribution.
-   They will add new features by implementing built-in task plugins, RESTful API endpoints, SDK modules, and architecture extensions.
+   They will add new features by implementing built-in task plugins, :term:`REST` :term:`API` endpoints, :term:`SDK` modules, and architecture extensions.
    These individuals will have a deep understanding of how the testbed's architectural and software components work together.
    They will be able to write reusable code and program applications that conform to coding best practices.

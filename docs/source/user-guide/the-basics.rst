@@ -20,6 +20,8 @@
 The Basics
 ==========
 
+.. include:: /_glossary_note.rst
+
 The primary use case for Dioptra is the running, tracking, and organizing of machine learning security experiments using the open-source technologies and architectures found in real-world AI applications.
 The Testbed supports this by providing the following capabilities,
 
@@ -29,7 +31,7 @@ The Testbed supports this by providing the following capabilities,
 These capabilities rely on four types of components:
 
 Testbed REST API
-   The Testbed REST API is the heart of the micro-services architecture and is used to register experiments, submit jobs, log experimental results and artifacts, and access the model registry.
+   The Testbed :term:`REST` :term:`API` is the heart of the micro-services architecture and is used to register experiments, submit jobs, log experimental results and artifacts, and access the model registry.
 
 Task Plugins System
    The task plugins are the low-level building blocks of an experiment that can be installed and updated in the Testbed with zero downtime.
@@ -66,8 +68,8 @@ The above diagram illustrates the three steps of the Testbed job submission proc
 #. Package the entry point files into a tarball or zip archive
 #. Submit the job by uploading the entry point archive and your parameter choices to the Testbed API
 
-After submission, a job's status can be monitored by querying the Testbed API or by accessing the MLFlow dashboard [1]_ using a web browser.
-The Testbed API and MLFlow dashboard can also be used to review a job's results and download its artifacts for local inspection.
+After submission, a job's status can be monitored by querying the Testbed :term:`API` or by accessing the MLFlow dashboard [1]_ using a web browser.
+The Testbed :term:`API` and MLFlow dashboard can also be used to review a job's results and download its artifacts for local inspection.
 
 .. Footnotes
 

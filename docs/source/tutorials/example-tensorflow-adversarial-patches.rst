@@ -20,6 +20,8 @@
 Tensorflow Adversarial Patch
 ============================
 
+.. include:: /_glossary_note.rst
+
 .. warning::
 
    Some of the demos assume that you have access to an on-prem deployment of Dioptra that provides a copy of the Fruits360 and ImageNet datasets and a CUDA-compatible GPU.
@@ -28,12 +30,12 @@ Tensorflow Adversarial Patch
 This demo provides three different versions of the adversarial patch attack on separate image classification datasets and model architectures.
 The three available Jupyter notebooks explore the following poisoning attacks:
 
--  ``demo-mnist-patches.ipynb``: Applies adversarial patch attack on the MNIST dataset. Includes preprocessing and adversarial training defenses.
+-  ``demo-mnist-patches.ipynb``: Applies adversarial patch attack on the :term:`MNIST` dataset. Includes preprocessing and adversarial training defenses.
 -  ``demo-fruits360-patches.ipynb``: Applies adversarial patch attack on Fruits360 dataset. Includes adversarial training defenses.
 -  ``demo-imagenet-patches.ipynb``: Applies attack on the ImageNet dataset. Uses a pretrained model with the ``init`` entrypoint, rather than train a new model with the ``train`` entrypoint.
 
 Users are welcome to run the demos in any order.
-The MNIST demo takes the shortest time to complete and contains an additional set of defense examples.
+The :term:`MNIST` demo takes the shortest time to complete and contains an additional set of defense examples.
 For more information regarding attack and defense parameters, please see the attack and defense sections of the `MLflow Entrypoint Overview <#MLflow-Entrypoint-Overview>`__ section.
 
 Users can also explore the following preprocessing defenses from their associated defense entry points:
@@ -57,7 +59,7 @@ Once you have downloaded the images, navigate to this example’s directory usin
 
    make demo
 
-The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
+The startup sequence will take more time to finish the first time you use this demo, as you will need to download the :term:`MNIST` dataset, initialize the Testbed :term:`API` database, and synchronize the task plugins to the S3 storage.
 Once the startup process completes, open up your web browser and enter ``http://localhost:38888`` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10 to 15 more seconds and try again).
 Double click the ``work`` folder and open the ``demo-mnist-patches.ipynb`` file.
 From here, follow the provided instructions to run the demo provided in the Jupyter notebook.

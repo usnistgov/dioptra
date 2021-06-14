@@ -20,6 +20,8 @@
 Tensorflow Backdoor Poisoning
 =============================
 
+.. include:: /_glossary_note.rst
+
 This demo provides three different versions of a backdoor poisoning attack with image preprocessing defense.
 The three available ipython demos explore the following poisoning attacks:
 
@@ -50,7 +52,7 @@ Once you have downloaded the images, navigate to this example’s directory usin
 
    make demo
 
-The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
+The startup sequence will take more time to finish the first time you use this demo, as you will need to download the :term:`MNIST` dataset, initialize the Testbed :term:`API` database, and synchronize the task plugins to the S3 storage.
 Once the startup process completes, open up your web browser and enter ``http://localhost:38888`` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10 to 15 more seconds and try again).
 Double click the ``work`` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
 **Don’t forget to update the ``DATASET_DIR`` variable to be: ``DATASET_DIR = "/nfs/data"``.**

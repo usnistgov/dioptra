@@ -20,6 +20,8 @@
 Generics Plugin System
 ======================
 
+.. include:: /_glossary_note.rst
+
 What are generics?
 ------------------
 

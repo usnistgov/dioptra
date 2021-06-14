@@ -20,12 +20,14 @@
 Tensorflow MNIST Feature Squeezing
 ==================================
 
+.. include:: /_glossary_note.rst
+
 Introduction
 ------------
 
 .. warning::
 
-   Some of the attacks in this demo, *deepfool* and *CW* in particular, are computationally expensive and will take a very long to complete if run using the CPUs found in a typical personal computer.
+   Some of the attacks in this demo, *deepfool* and *:term:`CW`* in particular, are computationally expensive and will take a very long to complete if run using the CPUs found in a typical personal computer.
    For this reason, it is highly recommended that you run these demos on a CUDA-compatible GPU.
 
 The demo provided in the Jupyter notebook ``demo.ipynb`` uses Dioptra to run experiments that investigate the effectiveness of the feature-squeezing defense against a series of evasion attacks against a neural network model.
@@ -40,7 +42,7 @@ Navigate to the tab below that best describes your setup in order to proceed.
 
    .. include:: snippets/common-local-setup-instructions.rst
 
-   The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
+   The startup sequence will take more time to finish the first time you use this demo, as you will need to download the :term:`MNIST` dataset, initialize the Testbed term:`API` database, and synchronize the task plugins to the S3 storage.
 
    .. include:: snippets/common-setup-instructions.rst
 

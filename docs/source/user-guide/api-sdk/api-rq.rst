@@ -20,6 +20,8 @@
 rq
 ==
 
+.. include:: /_glossary_note.rst
+
 Tasks
 -----
 

@@ -20,7 +20,9 @@
 PyTorch MNIST Membership Inference
 ==================================
 
-The demo provided in the Jupyter notebook ``demo.ipynb`` uses Dioptra to run experiments that investigate the membership inference attack when launched on a neural network model trained on the MNIST dataset.
+.. include:: /_glossary_note.rst
+
+The demo provided in the Jupyter notebook ``demo.ipynb`` uses Dioptra to run experiments that investigate the membership inference attack when launched on a neural network model trained on the :term:`MNIST` dataset.
 
 Using this Demo
 ---------------
@@ -32,7 +34,7 @@ Navigate to the tab below that best describes your setup in order to proceed.
 
    .. include:: snippets/common-local-setup-instructions.rst
 
-   The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
+   The startup sequence will take more time to finish the first time you use this demo, as you will need to download the :term:`MNIST` dataset, initialize the Testbed term:`API` database, and synchronize the task plugins to the S3 storage.
 
    .. include:: snippets/common-setup-instructions.rst
 

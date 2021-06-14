@@ -20,6 +20,8 @@
 Building Development Docker Images
 ==================================
 
+.. include:: /_glossary_note.rst
+
 **NOTE**: The following steps are intended for developers that are using a branch that is **NOT** the *master* branch of the repository. If you are using the *master* branch please see :ref:`quickstart-build-images`.
 
 .. _dev-guide-build-branch-images-step-1:

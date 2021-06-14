@@ -15,22 +15,6 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _api-task-plugins-builtins-backend_configs:
+.. note::
 
-backend_configs
-===============
-
-.. include:: /_glossary_note.rst
-
-.. automodule:: securingai_builtins.backend_configs
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-tensorflow.py
--------------
-
-.. automodule:: securingai_builtins.backend_configs.tensorflow
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   See the :doc:`/glossary` for the meaning of the acronyms used in this guide.
