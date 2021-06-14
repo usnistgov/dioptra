@@ -107,7 +107,7 @@ Building Development Docker Images
 
    **NOTE**: Alternatively, use the same commands as in :ref:`Building the Docker Images for Separate Branches: Step 1 <dev-guide-build-branch-images-step-1>`.
 
-9. Repeat steps 5-8 for each example that will be run on the current branch.
+9. Repeat steps 5 through 8 for each example that will be run on the current branch.
 
 10. Build all the Docker images for in the project.
 

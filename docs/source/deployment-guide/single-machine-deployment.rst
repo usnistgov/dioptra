@@ -208,7 +208,7 @@ Our deployment used the following:
 .. code-block:: yaml
 
    services:
-     # Block 1: CPUs 0-3
+     # Block 1: CPUs 0 to 3
      redis:
        cpuset: 0-3
        cpu_shares: 1024
@@ -225,7 +225,7 @@ Our deployment used the following:
        cpuset: 0-3
        cpu_shares: 1024
 
-     # Block 2: CPUs 10-14
+     # Block 2: CPUs 10 to 14
      tfcpu-01:
        cpuset: 10-14
        cpu_shares: 1024
@@ -233,7 +233,7 @@ Our deployment used the following:
        cpuset: 10-14
        cpu_shares: 1024
 
-     # Block 3: CPUs 15-19
+     # Block 3: CPUs 15 to 19
      tfcpu-02:
        cpuset: 15-19
        cpu_shares: 1024
@@ -241,7 +241,7 @@ Our deployment used the following:
        cpuset: 15-19
        cpu_shares: 1024
 
-     # Block 4: CPUs 4-19
+     # Block 4: CPUs 4 to 19
      tfgpu-01:
        cpuset: 4-19
        cpu_shares: 512
@@ -255,9 +255,9 @@ Our deployment used the following:
        cpuset: 4-19
        cpu_shares: 512
 
-So, as we can see, in this arrangement the GPU Workers in Block 4 have exclusive access to CPUs 4-9, but also share CPUs 10-19 with Blocks 2 and 3.
+So, as we can see, in this arrangement the GPU Workers in Block 4 have exclusive access to CPUs 4 to 9, but also share CPUs 10 to 19 with Blocks 2 and 3.
 The ``cpu_shares`` parameter controls the container's CPU priority when CPU resources are in high demand and only relative differences are meaningful.
-So, for example, this means that the Workers in Block 2 have twice the CPU priority that the Workers in Block 4 have when using CPUS 10-14.
+So, for example, this means that the Workers in Block 2 have twice the CPU priority that the Workers in Block 4 have when using CPUS 10 to 14.
 
 Tune the CPU and GPU allocations to suit your circumstances and needs.
 

@@ -34,7 +34,7 @@ Once you have downloaded the images, navigate to this directory using the termin
    make demo
 
 The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
-Once the startup process completes, open up your web browser and enter http://localhost:38888 in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+Once the startup process completes, open up your web browser and enter http://localhost:38888 in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10 to 15 more seconds and try again).
 Double click the ``work`` folder and open the ``demo.ipynb`` file.
 From here, follow the provided instructions to run the demo provided in the Jupyter notebook.
 
@@ -189,7 +189,7 @@ If it does, then it just returns info about the queue, if it doesn’t, it then 
    response_queue
 
 Next, we need to train our model.
-Depending on the specs of your computer, training either the shallow net model or the LeNet-5 model on a CPU can take 10-20 minutes or longer to complete.
+Depending on the specs of your computer, training either the shallow net model or the LeNet-5 model on a CPU can take 10 to 20 minutes or longer to complete.
 If you are fortunate enough to have access to a dedicated GPU, then the training time will be much shorter.
 
 .. code-block::

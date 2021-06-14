@@ -150,7 +150,7 @@ This demo implements a portion of the feature squeezing defense described in the
 In the case of color images, this defense is applied uniformly across each color channel.
 For example, setting the bit-depth to 2 on an RGB image will set the max color depth of Red, Blue, and Green all to 2.
 
---bit-depth int  An integer between 1-8 that defines the color depth of the squeezed image. [default: 8]
+--bit-depth int  An integer between 1 and 8 that defines the color depth of the squeezed image. [default: 8]
 
 Viewing Results and Downloading Images
 --------------------------------------
