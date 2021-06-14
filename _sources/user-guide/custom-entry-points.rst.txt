@@ -20,6 +20,8 @@
 Creating a New Entry Point
 ==========================
 
+.. include:: /_glossary_note.rst
+
 What are the basic steps?
 -------------------------
 

@@ -20,4 +20,6 @@
 Testbed Architecture Design Guide
 =================================
 
+.. include:: /_glossary_note.rst
+
 Coming soon!

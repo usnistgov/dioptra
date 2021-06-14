@@ -20,6 +20,8 @@
 cryptography
 ============
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: mitre.securingai.sdk.cryptography
    :members:
    :undoc-members:

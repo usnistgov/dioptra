@@ -45,7 +45,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Entry Points" href="entry-points.html" />
-    <link rel="prev" title="PyTorch MNIST Membership Inference" href="../tutorials/example-pytorch-mnist-membership-inference.html" />
+    <link rel="prev" title="Setup Tips for Newcomers" href="../getting-started/newcomer-tips.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
     
@@ -80,6 +80,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -94,58 +101,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../getting-started/newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -287,6 +242,58 @@
  <li class="toctree-l1">
   <a class="reference internal" href="api-reference-restapi.html">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -498,6 +505,10 @@
                 
   <div class="section" id="the-basics">
 <span id="user-guide-the-basics"></span><h1>The Basics<a class="headerlink" href="#the-basics" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
 <p>The primary use case for Dioptra is the running, tracking, and organizing of machine learning security experiments using the open-source technologies and architectures found in real-world AI applications.
 The Testbed supports this by providing the following capabilities,</p>
 <ol class="arabic simple">
@@ -506,7 +517,7 @@ The Testbed supports this by providing the following capabilities,</p>
 </ol>
 <p>These capabilities rely on four types of components:</p>
 <dl class="simple">
-<dt>Testbed REST API</dt><dd><p>The Testbed REST API is the heart of the micro-services architecture and is used to register experiments, submit jobs, log experimental results and artifacts, and access the model registry.</p>
+<dt>Testbed REST API</dt><dd><p>The Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> is the heart of the micro-services architecture and is used to register experiments, submit jobs, log experimental results and artifacts, and access the model registry.</p>
 </dd>
 <dt>Task Plugins System</dt><dd><p>The task plugins are the low-level building blocks of an experiment that can be installed and updated in the Testbed with zero downtime.</p>
 </dd>
@@ -536,8 +547,8 @@ The entry point executables are themselves run by a Testbed worker, which is a m
 <li><p>Package the entry point files into a tarball or zip archive</p></li>
 <li><p>Submit the job by uploading the entry point archive and your parameter choices to the Testbed API</p></li>
 </ol>
-<p>After submission, a job’s status can be monitored by querying the Testbed API or by accessing the MLFlow dashboard <a class="footnote-reference brackets" href="#id2" id="id1">1</a> using a web browser.
-The Testbed API and MLFlow dashboard can also be used to review a job’s results and download its artifacts for local inspection.</p>
+<p>After submission, a job’s status can be monitored by querying the Testbed <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> or by accessing the MLFlow dashboard <a class="footnote-reference brackets" href="#id2" id="id1">1</a> using a web browser.
+The Testbed <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> and MLFlow dashboard can also be used to review a job’s results and download its artifacts for local inspection.</p>
 <dl class="footnote brackets">
 <dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p>The MLFlow dashboard is a web app provided by the MLFlow Tracking service. Whether or not it can be accessed depends on the details of your deployment.</p>
@@ -552,7 +563,7 @@ The Testbed API and MLFlow dashboard can also be used to review a job’s result
         
         <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="../tutorials/example-pytorch-mnist-membership-inference.html" title="previous page">PyTorch MNIST Membership Inference</a>
+    <a class='left-prev' id="prev-link" href="../getting-started/newcomer-tips.html" title="previous page">Setup Tips for Newcomers</a>
     <a class='right-next' id="next-link" href="entry-points.html" title="next page">Entry Points</a>
 
         </div>
@@ -564,6 +575,13 @@ The Testbed API and MLFlow dashboard can also be used to review a job’s result
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

@@ -78,6 +78,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -92,58 +99,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../getting-started/newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -285,6 +240,58 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../user-guide/api-reference-restapi.html">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -484,8 +491,8 @@
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#audience">
-   Audience
+  <a class="reference internal nav-link" href="#target-audience">
+   Target Audience
   </a>
  </li>
  <li class="toc-h1 nav-item toc-entry">
@@ -517,32 +524,33 @@
   <div class="section" id="summary">
 <h1>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h1>
 <p>Our systems increasingly rely on Machine Learning (ML) algorithms and models to perform essential functions.
-As users of these systems, we must implicitly trust the models are working as designed.
-Establishing the trustworthiness of an ML model is especially hard because the inner workings are essentially opaque to an outside observer.
+As users of these systems, we must implicitly trust that the models are working as designed.
+Establishing the trustworthiness of an ML model is especially hard, because the inner workings are essentially opaque to an outside observer.
 Ideally the models we rely on would be transparent, free from bias, explainable, and secure.
 Research has shown that ML models are vulnerable to a variety of adversarial attacks that cause them to misbehave in ways that provide benefit to the adversary.
-This has sparked a competition between defenses attempting to mitigate attacks and ever novel attacks that defeat the defenses.
-This poses a growing challenge for securing ML systems.</p>
+This has sparked a competition between defenses attempting to mitigate
+attacks and ever novel attacks that defeat the defenses, and this competition poses a growing challenge for securing ML systems.</p>
 <p>In this changing landscape it is extremely difficult to develop a principled approach to evaluating the strengths and weaknesses of defenses.
 While much work has been done to evaluate techniques within a narrow range of conditions, there is a challenge in developing more robust metrics that account for the diversity of attacks that might be mounted against it.
-Questions of the generalizability of an algorithm across a range of attacks, or the transferability of a technique across models or datasets must naturally consider the full range of possible conditions.</p>
-<p>The NCCoE has built an experimentation testbed to begin to address the broader challenge of evaluation for attacks and defenses.
+Questions about the generalizability of an algorithm across a range of attacks or the transferability of a technique across models or datasets must naturally consider the full range of possible conditions.</p>
+<p>The National Institute of Standards and Technology (NIST) National
+Cybersecurity Center of Excellence (NCCoE) has built an experimentation testbed to begin to address the broader challenge of evaluation for attacks and defenses.
 The testbed aims to facilitate security evaluations of ML algorithms under a diverse set of conditions.
-To that end, it has a modular design enabling researchers to easily swap in alternative datasets, models, attacks, and defenses.
-The result is an ability to advance the metrology needed to ultimately help secure our ML-enabled systems.</p>
+To that end, the testbed has a modular design enabling researchers to easily swap in alternative datasets, models, attacks, and defenses.
+The result is the ability to advance the metrology needed to ultimately help secure ML-enabled systems.</p>
 </div>
 <div class="section" id="context">
 <h1>Context<a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h1>
-<p>While there is a large variety of types of attacks against ML algorithms, NIST Internal Report 8269 identifies three broad categories: Evasion, Poisoning, and Oracle.
+<p>While there are a large variety of types of attacks against ML algorithms, NIST Internal Report 8269 identifies three broad categories: Evasion, Poisoning, and Oracle.
 In Evasion attacks, an adversary manipulates the test data (sometimes by altering the physical environment) in order to cause the ML model to misbehave.
 Poisoning attacks alter the training data used to create or maintain a model with the intention of causing it to learn incorrect associations.
 Oracle attacks attempt to “reverse engineer” a model to learn about details of the training set used to create it, or specific model parameters to replicate the model.</p>
 <div class="figure align-default">
 <img alt="../_images/overview-image-attack-examples.png" src="../_images/overview-image-attack-examples.png" />
 </div>
-<p>In the case of image classification, attacks can manifest in many different ways ranging from the addition of noise that is difficult for humans to detect in the training or testing images, to the inclusion of colorful “patches” that are noticeable by a human observer but can be printed and placed in the physical environment to alter the images entering the classifier.</p>
-<p>There is an equal variety in the types of defenses researchers have developed to mitigate the effectiveness of attacks.
-These range from altering the training paradigm for generating models, to techniques that pre-process test data in an attempt to eliminate any carefully crafted alterations added by an adversary.
+<p>In the case of image classification, attacks can manifest in many different ways ranging from the addition of noise which is difficult for humans to detect in the training or testing images, to the inclusion of colorful “patches,” which are noticeable by a human observer and can be printed and placed in the physical environment to alter the images entering the classifier.</p>
+<p>There are an equal variety in the types of defenses researchers have developed to mitigate the effectiveness of attacks.
+These types range from altering the training paradigm for generating models to techniques that pre-process test data in an attempt to eliminate any carefully crafted alterations added by an adversary.
 Just as with attacks, defenses can be deployed at any stage of the ML development pipeline.
 The simplified diagrams of the development pipeline below depict some examples.</p>
 <div class="figure align-default" style="width: 49%">
@@ -551,46 +559,47 @@ The simplified diagrams of the development pipeline below depict some examples.<
 <div class="figure align-default" style="width: 49%">
 <img alt="../_images/overview-defense-interfaces.png" src="../_images/overview-defense-interfaces.png" />
 </div>
-<p>The sheer variety of attacks and defenses results in a combinatorial explosion of possible combinations of attacks, defenses, model architectures, and datasets.
-This creates a challenge for evaluating the effectiveness of defenses against the full array of attacks it may face.
+<p>The sheer variety of attacks and defenses results in a combinatorial
+explosion of possible combinations of attacks, defenses, model architectures, and datasets, which creates a challenge for evaluating the effectiveness of defenses against the full array of attacks it may face.
 Dioptra, the NCCoE’s machine learning security testbed, addresses this challenge by making it easier for researchers to explore the set of possible combinations.</p>
 </div>
-<div class="section" id="audience">
-<h1>Audience<a class="headerlink" href="#audience" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="target-audience">
+<h1>Target Audience<a class="headerlink" href="#target-audience" title="Permalink to this headline">¶</a></h1>
 <p>We envision an audience with a wide variety of familiarity with and expertise in machine learning.
 Newcomers to the platform will be able to run the included demonstrations of attacks and defenses even if they have very little programming experience.</p>
 <p>The testbed offers new opportunities for analysts in organizations using ML-enabled products.
-For example, the inclusion of testing as part of the build pipeline for 1<sup>st</sup> party developers would help promote more robust products.
-Similarly, 2<sup>nd</sup> party consumers of such products might leverage the testbed as part of a verification or risk assessment process.
-In both cases it allows them to test a product against a range of attacks, thereby helping to understand what types of threats are most harmful.</p>
-<p>We also envision it as an asset to ML researchers developing new solutions.
-The testbed will allow them to evaluate the security of any new techniques they develop by running them through their paces.
+For example, the inclusion of testing as part of the build pipeline for first-party developers would help promote more robust products.
+Similarly, second-party consumers of such products might leverage the testbed as part of a verification or risk assessment process.
+In both cases, the testbed allows users to test a product against a range of attacks, thereby helping them understand what types of threats are most harmful.</p>
+<p>We also envision Dioptra as an asset to ML researchers in developing new solutions.
+The testbed will allow them to evaluate the security of any new techniques they develop by running those techniques through their paces.
 For example, we envision new defenses being tested against a wider array of attacks than is typically found in the literature.
-Similarly, it can facilitate “parameter sweeping” to better understand the degree to which small changes in parameters can affect an algorithm.
+Similarly, it can facilitate “parameter sweeping” to help developers better understand the degree to which small changes in parameters can affect an algorithm.
 It also affords an opportunity to replicate and benchmark well-known results from the research literature.
 This ability to repeat experiments to reproduce results is critical for creating and validating reliable metrics.</p>
 </div>
 <div class="section" id="scope">
 <h1>Scope<a class="headerlink" href="#scope" title="Permalink to this headline">¶</a></h1>
 <p>The testbed is specifically focused on adversarial attacks against the ML algorithms themselves and defensive techniques designed to mitigate the attacks.
-In that spirit, the testbed is not originally designed to embed ML algorithms into a larger system context.
+In that spirit, the testbed presently is not designed to embed ML algorithms into a larger system context.
 For instance, an automated checkout system based on classifying images of products would require additional engineering.
 Defenses that could be applied to the surrounding system are currently out of scope.
 Similarly, the initial focus has been on image classification algorithms due to the prevalence of available information about attacks and defenses against such algorithms.
 There is nothing about the architecture that inherently limits the scope to computer vision, and it would be relatively straightforward to include algorithms using different modalities such as speech recognition or natural language processing.</p>
-<p>It comes packaged with about 10 built-in demonstrations of attacks and defenses from the literature combined in various ways.
-The attacks include the Fast Gradient Method evasion attack, the Poison Frogs poisoning attack, and a membership inference oracle attack among others.
+<p>Dioptra comes packaged with about 10 built-in demonstrations of attacks and defenses from the literature that have been combined in various ways.
+The attacks include the Fast Gradient Method evasion attack, the Poison Frogs poisoning attack, and a membership inference Oracle attack among others.
 Defenses include feature squeezing, adversarial training, and jpeg compression among others.
-We anticipate this list will grow with time, and we encourage users to contribute back to the project other algorithms as they are developed.</p>
+We anticipate this list will grow with time, and we encourage users to
+contribute other algorithms to the project as they are developed.</p>
 </div>
 <div class="section" id="assumptions-system-requirements">
 <h1>Assumptions / System Requirements<a class="headerlink" href="#assumptions-system-requirements" title="Permalink to this headline">¶</a></h1>
 <p>Most of the built-in demonstrations in the testbed assume the testbed is deployed on Unix-based operating systems (e.g., Linux, MacOS).
 Those familiar with the Windows Subsystem for Linux (WSL) should be able to deploy it on Windows, but this mode is not explicitly supported at this time.
 Most included demos perform computationally intensive calculations requiring access to significant computational resources such as Graphics Processing Units (GPUs).
-The architecture has been tested on a DGX server with 4 GPUs.
-The demonstrations also rely on publicly available datasets such as MNIST handwritten digits, ImageNet, and Fruits360 that are not part of the testbed distribution.
-The built-in demonstrations assume that relevant datasets have already been obtained and saved in testbed’s Data Storage container.</p>
+The architecture has been tested on a <a class="reference internal" href="../glossary.html#term-NVIDIA-DGX"><span class="xref std std-term">NVIDIA DGX</span></a> server with 4 GPUs.
+The demonstrations also rely on publicly available datasets such as <a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> handwritten digits, ImageNet, and Fruits360 that are not part of the testbed distribution.
+The built-in demonstrations assume that relevant datasets have already been obtained and saved in the testbed’s Data Storage container.</p>
 </div>
 <div class="section" id="architecture-overview">
 <h1>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permalink to this headline">¶</a></h1>
@@ -599,12 +608,12 @@ The built-in demonstrations assume that relevant datasets have already been obta
 <p>The testbed is built on a microservices architecture.
 It is designed to be deployed across several physical machines but is equally deployable on a local laptop.
 The distributed deployment allows the core optimization algorithms to reside on machines with GPUs or other high-powered computational resources, while a local deployment will impose strong computational constraints.</p>
-<p>The heart of the architecture is the core testbed API that manages requests and responses with a human user via a reverse proxy.
-The backend Data Storage component hosts datasets, registered models, and experiment results &amp; metrics.
-It also stores the registered plug-ins which are described in more detail below.
-As experiment jobs get submitted, the API registers them on the Redis queue which is watched by a worker pool of Docker containers provisioned with all necessary environment dependencies.
+<p>The heart of the architecture is the core testbed Application Programming Interface (<a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>) that manages requests and responses with a human user via a reverse proxy.
+The backend Data Storage component hosts datasets, registered models, and experiment results and metrics.
+It also stores the registered plug-ins, which are described in more detail below.
+As experiment jobs get submitted, the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> registers them on the Redis queue, which is watched by a worker pool of Docker containers provisioned with all necessary environment dependencies.
 These worker containers run the plugins interacting with the MLflow Tracking Service to coordinate job dependencies and record statistics, metrics, and any generated artifacts.
-The user may then interact with the MLflow service directly to access a user-friendly dashboard with relevant results, or they may use the API to mediate access.
+The user may then interact with the MLflow service directly to access a user-friendly dashboard with relevant results, or they may use the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> to mediate access.
 The architecture is built entirely from open-source resources making it easy for others to extend and improve upon.</p>
 <div class="figure align-default">
 <img alt="../_images/experiment-components.svg" src="../_images/experiment-components.svg" /></div>
@@ -615,25 +624,25 @@ Entry points are larger functional units that consist of various ways to wire to
 This enables users of different levels of experience and expertise to interact with the testbed.
 We envision four primary user levels.</p>
 <dl class="simple">
-<dt>Level 1—The Newcomer</dt><dd><p>These are individuals with little or no hand-on experience with the testbed.
+<dt>Level 1—The Newcomer</dt><dd><p>These individuals have little or no hands-on experience with the testbed.
 They will be able to read the documentation and run the provided demos to learn how to use the testbed.
 They will be able to alter the parameters of the provided demos to create slight variants of the existing experiments.
-Their skill set can be wide spectrum.
+These users can have a wide variety of skill sets.
 They need not be familiar with the technologies the testbed uses, nor do they have to have much experience with scripting or programming.</p>
 </dd>
 <dt>Level 2—The Analyst</dt><dd><p>These are individuals who want to analyze a wider variety of scenarios.
-They will be able to interface with the testbed’s RESTful API to create new experiments from existing entry points.
+They will be able to interface with the testbed’s <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> (<strong>RE</strong>presentational <strong>S</strong>tate <strong>T</strong>ransfer) <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> to create new experiments from existing entry points.
 They will also learn to create custom entry points from the built-in task plugins.
-They must know how to customize the testbed’s code templates, thus a basic knowledge of scripting or programming is required.</p>
+They must know how to customize the testbed’s code templates; thus a basic knowledge of scripting or programming is required.</p>
 </dd>
 <dt>Level 3—The Researcher</dt><dd><p>These are individuals who want to run experiments using novel metrics, algorithms, and analytical techniques.
-They will be able to implement their own “in-house” task plugins and SDK plugins to create novel entry points that rely on custom algorithms.
+They will be able to implement their own “in-house” task plugins and Software Development Kit (<a class="reference internal" href="../glossary.html#term-SDK"><span class="xref std std-term">SDK</span></a>) plugins to create novel entry points that rely on custom algorithms.
 They will need to understand the testbed’s plugin architecture to extend it with new functionality.
-They therefore require a solid background in scripting or programming.</p>
+They, therefore, require a solid background in scripting or programming.</p>
 </dd>
-<dt>Level 4—The Developer</dt><dd><p>These are individuals that want to expand the testbed’s core capabilities by contributing to the distribution.
-They will add new features by implementing built-in task plugins, RESTful API endpoints, SDK modules, and architecture extensions.
-These individuals will have a deep understanding of the how the testbed’s architectural and software components work together.
+<dt>Level 4—The Developer</dt><dd><p>These are individuals who want to expand the testbed’s core capabilities by contributing to the distribution.
+They will add new features by implementing built-in task plugins, <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> endpoints, <a class="reference internal" href="../glossary.html#term-SDK"><span class="xref std std-term">SDK</span></a> modules, and architecture extensions.
+These individuals will have a deep understanding of how the testbed’s architectural and software components work together.
 They will be able to write reusable code and program applications that conform to coding best practices.</p>
 </dd>
 </dl>
@@ -655,6 +664,13 @@ They will be able to write reusable code and program applications that conform t
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

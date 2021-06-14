@@ -80,6 +80,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -94,58 +101,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../getting-started/newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -287,6 +242,58 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../user-guide/api-reference-restapi.html">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -505,11 +512,15 @@
                 
   <div class="section" id="how-to-obtain-common-datasets">
 <span id="deployment-guide-obtaining-datasets"></span><h1>How to Obtain Common Datasets<a class="headerlink" href="#how-to-obtain-common-datasets" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
 <p>This guide provides instructions on how to obtain common datasets to use for an on-premises deployment.</p>
 <div class="section" id="kaggle-datasets">
 <h2>Kaggle Datasets<a class="headerlink" href="#kaggle-datasets" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://www.kaggle.com">Kaggle</a> is a website and a company that provides a platform for hosting data science competitions and publishing public datasets.
-We recommend using their API to help with automating the download of any datasets from the site for an on-premises deployment.
+We recommend using their <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> to help with automating the download of any datasets from the site for an on-premises deployment.
 In order to run all of the examples distributed with Dioptra, you will need to download the following datasets and challenges from <a class="reference external" href="https://www.kaggle.com">Kaggle</a>:</p>
 <ul class="simple">
 <li><p><strong>Fruits360 Classification Dataset:</strong> <a class="reference external" href="https://www.kaggle.com/moltean/fruits">https://www.kaggle.com/moltean/fruits</a></p></li>
@@ -518,18 +529,18 @@ In order to run all of the examples distributed with Dioptra, you will need to d
 <div class="section" id="setup">
 <h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
 <p>Register an account with Kaggle at <a class="reference external" href="https://www.kaggle.com/">https://www.kaggle.com/</a> so that you can access their content.
-Next, install the Python <code class="docutils literal notranslate"><span class="pre">kaggle</span></code> package so that you can use Python to access the API,</p>
+Next, install the Python <code class="docutils literal notranslate"><span class="pre">kaggle</span></code> package so that you can use Python to access the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="5f1a16f4-df71-45a8-8946-948f386e6792" name="e7dbff24-c670-440a-b044-16e3fb1b4246" type="radio">
-</input><label class="tabbed-label" for="5f1a16f4-df71-45a8-8946-948f386e6792">
+<input checked="checked" id="7ce6b213-daa4-4f29-9d40-2e0606d97844" name="10d6add3-4559-42c7-a841-f3d4ea6dfbaa" type="radio">
+</input><label class="tabbed-label" for="7ce6b213-daa4-4f29-9d40-2e0606d97844">
 Pip</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># User-level install</span>
 python -m pip install --user kaggle
 </pre></div>
 </div>
 </div>
-<input id="38be5918-8d2e-4ac2-bd3e-564a38e91aea" name="e7dbff24-c670-440a-b044-16e3fb1b4246" type="radio">
-</input><label class="tabbed-label" for="38be5918-8d2e-4ac2-bd3e-564a38e91aea">
+<input id="faa86719-1239-4dcf-ad8b-0ce02d55fd6a" name="10d6add3-4559-42c7-a841-f3d4ea6dfbaa" type="radio">
+</input><label class="tabbed-label" for="faa86719-1239-4dcf-ad8b-0ce02d55fd6a">
 Conda + Pip</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Conda virtual environment install</span>
 conda create -n kaggle <span class="nv">python</span><span class="o">=</span><span class="m">3</span> pip
@@ -539,10 +550,10 @@ python -m pip install kaggle
 </div>
 </div>
 </div>
-<p>Finally, you will need to generate a Kaggle API Token for authentication purposes by following these steps,</p>
+<p>Finally, you will need to generate a Kaggle <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> Token for authentication purposes by following these steps,</p>
 <ol class="arabic simple">
 <li><p>From your Kaggle account page go to <code class="docutils literal notranslate"><span class="pre">Account</span></code> settings (upper right corner of Kaggle site after login)</p></li>
-<li><p>Navigate to the <code class="docutils literal notranslate"><span class="pre">API</span></code> section and click on the <strong>Create New API Token</strong> button to generate an API token and download it as a <code class="docutils literal notranslate"><span class="pre">kaggle.json</span></code> file</p></li>
+<li><p>Navigate to the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> section and click on the <strong>Create New API Token</strong> button to generate an term:<cite>API</cite> token and download it as a <code class="docutils literal notranslate"><span class="pre">kaggle.json</span></code> file</p></li>
 <li><p>Create a <code class="docutils literal notranslate"><span class="pre">~/.kaggle</span></code> folder in your home directory if it does not already exist and move the <code class="docutils literal notranslate"><span class="pre">kaggle.json</span></code> file you downloaded into the <code class="docutils literal notranslate"><span class="pre">~/.kaggle</span></code> directory</p></li>
 <li><p>Restrict the access permissions for the <code class="docutils literal notranslate"><span class="pre">kaggle.json</span></code> file by running <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">600</span> <span class="pre">~/.kaggle/kaggle.json</span></code>.</p></li>
 </ol>
@@ -601,6 +612,13 @@ rm imagenet_object_localization_patched2019.tar.gz
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

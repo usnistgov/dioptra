@@ -20,6 +20,8 @@
 utilities
 =========
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: mitre.securingai.sdk.utilities
    :members:
    :undoc-members:

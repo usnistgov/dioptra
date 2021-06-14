@@ -80,6 +80,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -94,58 +101,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../getting-started/newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="current nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-mnist-classifier.html">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-imagenet-resnet50-fgm.html">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -287,6 +242,58 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../user-guide/api-reference-restapi.html">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -540,11 +547,15 @@
                 
   <div class="section" id="tensorflow-mnist-feature-squeezing">
 <span id="tutorials-example-tensorflow-mnist-feature-squeezing"></span><h1>Tensorflow MNIST Feature Squeezing<a class="headerlink" href="#tensorflow-mnist-feature-squeezing" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Some of the attacks in this demo, <em>deepfool</em> and <em>CW</em> in particular, are computationally expensive and will take a very long to complete if run using the CPUs found in a typical personal computer.
+<p>Some of the attacks in this demo, <em>deepfool</em> and <em>:term:`CW`</em> in particular, are computationally expensive and will take a very long to complete if run using the CPUs found in a typical personal computer.
 For this reason, it is highly recommended that you run these demos on a CUDA-compatible GPU.</p>
 </div>
 <p>The demo provided in the Jupyter notebook <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> uses Dioptra to run experiments that investigate the effectiveness of the feature-squeezing defense against a series of evasion attacks against a neural network model.</p>
@@ -554,16 +565,16 @@ For this reason, it is highly recommended that you run these demos on a CUDA-com
 <p>The steps for getting your environment ready to run this demo depend on whether you intend to run the demo locally (i.e. on your personal computer) or on an existing on-prem deployment.
 Navigate to the tab below that best describes your setup in order to proceed.</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="a6061cd5-38c5-47b4-8b49-ec0d7ef02d2c" name="5ca3e38c-86c4-4692-9600-64bd06949185" type="radio">
-</input><label class="tabbed-label" for="a6061cd5-38c5-47b4-8b49-ec0d7ef02d2c">
+<input checked="checked" id="4f2ca345-d65b-4d5a-adf6-121b4bfc7a7b" name="a9e4e8a2-e59f-4e9a-a50c-977d833399df" type="radio">
+</input><label class="tabbed-label" for="4f2ca345-d65b-4d5a-adf6-121b4bfc7a7b">
 Local</label><div class="tabbed-content docutils">
 <p>Everything you need to run this demo locally is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
 Once you have downloaded the images, stay in the terminal and navigate to this example’s directory and run the demo startup sequence,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make demo
 </pre></div>
 </div>
-<p>The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.</p>
-<p>Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+<p>The startup sequence will take more time to finish the first time you use this demo, as you will need to download the <a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> dataset, initialize the Testbed term:<cite>API</cite> database, and synchronize the task plugins to the S3 storage.</p>
+<p>Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10 to 15 more seconds and try again).
 Double click the <code class="docutils literal notranslate"><span class="pre">work</span></code> folder and open the <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> file.</p>
 <p>Before doing anything else, take the time to set your user id in the first code block.</p>
 <div class="admonition note">
@@ -585,15 +596,15 @@ Generally speaking, each pair contains an pipeline representing an undefended at
 </div>
 <p>If you were watching the output logs, you will need to press <kbd class="kbd docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
 </div>
-<input id="37f88029-24d6-4f2b-ab6a-1e03beb90f57" name="5ca3e38c-86c4-4692-9600-64bd06949185" type="radio">
-</input><label class="tabbed-label" for="37f88029-24d6-4f2b-ab6a-1e03beb90f57">
+<input id="8ebfaeec-140f-4a4e-a2ac-045d02effaa5" name="a9e4e8a2-e59f-4e9a-a50c-977d833399df" type="radio">
+</input><label class="tabbed-label" for="8ebfaeec-140f-4a4e-a2ac-045d02effaa5">
 On-Prem Deployment</label><div class="tabbed-content docutils">
 <p>To run the demo on an on-prem deployment, all you need to do is download and start the <strong>jupyter</strong> service defined in this example’s <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file.
 Open a terminal and navigate to this example’s directory and run the <strong>jupyter</strong> startup sequence,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make jupyter
 </pre></div>
 </div>
-<p>Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+<p>Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10 to 15 more seconds and try again).
 Double click the <code class="docutils literal notranslate"><span class="pre">work</span></code> folder and open the <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> file.</p>
 <p>Before doing anything else, take the time to set your user id in the first code block.</p>
 <div class="admonition note">
@@ -730,7 +741,7 @@ In the case of color images, this defense is applied uniformly across each color
 For example, setting the bit-depth to 2 on an RGB image will set the max color depth of Red, Blue, and Green all to 2.</p>
 <dl class="option-list">
 <dt><kbd><span class="option">--bit-depth <var>int</var></span></kbd></dt>
-<dd><p>An integer between 1-8 that defines the color depth of the squeezed image. [default: 8]</p>
+<dd><p>An integer between 1 and 8 that defines the color depth of the squeezed image. [default: 8]</p>
 </dd>
 </dl>
 </div>
@@ -767,6 +778,13 @@ If you wish to download sample images, you can get them by doing the following:<
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

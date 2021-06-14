@@ -20,6 +20,8 @@
 Tensorflow ImageNet Pixel Threshold
 ===================================
 
+.. include:: /_glossary_note.rst
+
 .. warning::
 
    This demo assumes that you have access to an on-prem deployment of Dioptra that provides a copy of the ImageNet dataset and a CUDA-compatible GPU.

@@ -80,6 +80,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -94,58 +101,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../getting-started/newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="current nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-mnist-feature-squeezing.html">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-imagenet-resnet50-fgm.html">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -287,6 +242,58 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../user-guide/api-reference-restapi.html">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -523,7 +530,11 @@
                 
   <div class="section" id="first-steps-mnist-tensorflow-classifier">
 <span id="tutorials-example-tensorflow-mnist-classifier"></span><h1>First Steps - MNIST Tensorflow Classifier<a class="headerlink" href="#first-steps-mnist-tensorflow-classifier" title="Permalink to this headline">¶</a></h1>
-<p>This demo provides a practical example that you can run on your personal computer to see how Dioptra can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
+<p>This demo provides a practical example that you can run on your personal computer to see how Dioptra can be used to run a simple experiment on the transferability of the <a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a> evasion attack between two neural network architectures.
 It can be used as a basic template for crafting your own custom scripts to run within the testbed.</p>
 <div class="section" id="getting-started">
 <h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
@@ -532,8 +543,8 @@ Once you have downloaded the images, navigate to this directory using the termin
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make demo
 </pre></div>
 </div>
-<p>The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
-Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+<p>The startup sequence will take more time to finish the first time you use this demo, as you will need to download the <a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> dataset, initialize the Testbed term:<cite>API</cite> database, and synchronize the task plugins to the S3 storage.
+Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10 to 15 more seconds and try again).
 Double click the <code class="docutils literal notranslate"><span class="pre">work</span></code> folder and open the <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> file.
 From here, follow the provided instructions to run the demo provided in the Jupyter notebook.</p>
 <p>To watch the output logs for the Tensorflow worker containers as you step through the demo, run <code class="docutils literal notranslate"><span class="pre">docker-compose</span> <span class="pre">logs</span> <span class="pre">-f</span> <span class="pre">tfcpu-01</span> <span class="pre">tfcpu-02</span></code> in your terminal.</p>
@@ -590,8 +601,8 @@ If you were watching the output logs, you will need to press <kbd class="kbd doc
 </div>
 <div class="section" id="dataset">
 <h2>Dataset<a class="headerlink" href="#dataset" title="Permalink to this headline">¶</a></h2>
-<p>We obtained a copy of the MNIST dataset as part of the startup process invoked by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">demo</span></code>.
-The training and testing images for the MNIST dataset are stored within the <code class="docutils literal notranslate"><span class="pre">data/</span></code> directory as PNG files that are organized into the following folder structure,</p>
+<p>We obtained a copy of the <a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> dataset as part of the startup process invoked by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">demo</span></code>.
+The training and testing images for the <a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> dataset are stored within the <code class="docutils literal notranslate"><span class="pre">data/</span></code> directory as PNG files that are organized into the following folder structure,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>data
 ├── testing
 │   ├── 0
@@ -632,7 +643,7 @@ A high-level schematic showing how all of the images connect together to form th
 <div class="section" id="submit-and-run-jobs">
 <h2>Submit and run jobs<a class="headerlink" href="#submit-and-run-jobs" title="Permalink to this headline">¶</a></h2>
 <p>The entrypoints that we will be running in this example are implemented in the Python source files under <code class="docutils literal notranslate"><span class="pre">src/</span></code> and the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file.
-To run these entrypoints within the testbed architecture, we need to package those files up into an archive and submit it to the Testbed RESTful API to create a new job.
+To run these entrypoints within the testbed architecture, we need to package those files up into an archive and submit it to the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> term:<cite>API</cite> to create a new job.
 For convenience, the <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> provides a rule for creating the archive file for this example, just run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">workflows</span></code>,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%%bash
 
@@ -641,8 +652,8 @@ make workflows
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">workflows</span></code> was invoked as part of the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">demo</span></code> startup procedure, so unless you edited the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file or one of the files under <code class="docutils literal notranslate"><span class="pre">src/</span></code>, you will likely see a message of <em>make: Nothing to be done for ‘workflows’</em>.</p>
-<p>To connect with the endpoint, we will use a client class defined in the <code class="docutils literal notranslate"><span class="pre">utils.py</span></code> file that is able to connect with the Testbed RESTful API using the HTTP protocol.
-We connect using the client below, which uses the environment variable <code class="docutils literal notranslate"><span class="pre">AI_RESTAPI_URI</span></code> to figure out how to connect to the Testbed RESTful API,</p>
+<p>To connect with the endpoint, we will use a client class defined in the <code class="docutils literal notranslate"><span class="pre">utils.py</span></code> file that is able to connect with the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> term:<cite>API</cite> using the <a class="reference internal" href="../glossary.html#term-HTTP"><span class="xref std std-term">HTTP</span></a> protocol.
+We connect using the client below, which uses the environment variable <code class="docutils literal notranslate"><span class="pre">AI_RESTAPI_URI</span></code> to figure out how to connect to the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">restapi_client</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">SecuringAIClient</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -669,7 +680,7 @@ If it does, then it just returns info about the queue, if it doesn’t, it then 
 </pre></div>
 </div>
 <p>Next, we need to train our model.
-Depending on the specs of your computer, training either the shallow net model or the LeNet-5 model on a CPU can take 10-20 minutes or longer to complete.
+Depending on the specs of your computer, training either the shallow net model or the LeNet-5 model on a CPU can take 10 to 20 minutes or longer to complete.
 If you are fortunate enough to have access to a dedicated GPU, then the training time will be much shorter.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Submit training job for the shallow network architecture</span>
 <span class="n">response_shallow_train</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span>
@@ -704,7 +715,7 @@ If you are fortunate enough to have access to a dedicated GPU, then the training
 <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">response_le_net_train</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Now that we have two trained models (the shallow network and the LeNet-5 network), next we will apply the fast-gradient method (FGM) evasion attack on the shallow network to generate adversarial images.
+<p>Now that we have two trained models (the shallow network and the LeNet-5 network), next we will apply the <a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a> evasion attack on the shallow network to generate adversarial images.
 Then, after we have the adversarial images, we will use them to evaluate some standard machine learning metrics against both models.
 This will give us a sense of the transferability of the attacks between models.</p>
 <p>This specific workflow is an example of jobs that contain dependencies, as the metric evaluation jobs cannot start until the adversarial image generation jobs have completed.
@@ -712,8 +723,8 @@ The testbed allows users to declare one-to-many job dependencies like this, whic
 The code below illustrates this by doing the following:</p>
 <ol class="arabic simple">
 <li><p>A job is submitted that generates adversarial images based on the shallow net architecture (entry point <strong>fgm</strong>).</p></li>
-<li><p>We wait until the job starts and a MLFlow identifier is assigned, which we check by polling the API until we see the id appear.</p></li>
-<li><p>Once we have an id returned to us from the API, we queue up the metrics evaluation jobs and declare the job dependency using the <code class="docutils literal notranslate"><span class="pre">depends_on</span></code> option.</p></li>
+<li><p>We wait until the job starts and a MLFlow identifier is assigned, which we check by polling the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> until we see the id appear.</p></li>
+<li><p>Once we have an id returned to us from the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>, we queue up the metrics evaluation jobs and declare the job dependency using the <code class="docutils literal notranslate"><span class="pre">depends_on</span></code> option.</p></li>
 <li><p>The message “Dependent jobs submitted” will display once everything is queued up.</p></li>
 </ol>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mlflow_run_id_is_not_known</span><span class="p">(</span><span class="n">response_fgm</span><span class="p">):</span>
@@ -787,7 +798,7 @@ We should see the status of the jobs shift from “queued” to “started” an
 <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">response_le_net_infer_shallow_net</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We can similiarly run an FGM-based evasion attack using the LeNet-5 architecture as our starting point.
+<p>We can similiarly run an <a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a>-based evasion attack using the LeNet-5 architecture as our starting point.
 The following code is very similar to the code we just saw, all we’ve done is swap out the entry point keyword argument that requests the shallow net architecture with a version that requests the LeNet-5 architecture.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">response_fgm_le_net</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">submit_job</span><span class="p">(</span>
     <span class="n">workflows_file</span><span class="o">=</span><span class="n">WORKFLOWS_TAR_GZ</span><span class="p">,</span>
@@ -838,7 +849,7 @@ The following code is very similar to the code we just saw, all we’ve done is 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dependent jobs submitted&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Like before, we can monitor the status of the dependent jobs by querying the API using the code block below.</p>
+<p>Like before, we can monitor the status of the dependent jobs by querying the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> using the code block below.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">response_shallow_net_infer_le_net_fgm</span> <span class="o">=</span> <span class="n">restapi_client</span><span class="o">.</span><span class="n">get_job_by_id</span><span class="p">(</span>
     <span class="n">response_shallow_net_infer_le_net_fgm</span><span class="p">[</span><span class="s2">&quot;jobId&quot;</span><span class="p">]</span>
 <span class="p">)</span>
@@ -855,7 +866,7 @@ The following code is very similar to the code we just saw, all we’ve done is 
 </div>
 <div class="section" id="querying-the-mlflow-tracking-service">
 <h2>Querying the MLFlow Tracking Service<a class="headerlink" href="#querying-the-mlflow-tracking-service" title="Permalink to this headline">¶</a></h2>
-<p>Currently the Testbed API can only be used to register experiments and start jobs, so if users wish to extract their results programmatically, they can use the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.tracking.html#mlflow.tracking.MlflowClient" title="(in MLflow v1.17.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MlflowClient</span></code></a> class from the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#module-mlflow" title="(in MLflow v1.17.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mlflow</span></code></a> Python package to connect and query their results.
+<p>Currently the Testbed <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> can only be used to register experiments and start jobs, so if users wish to extract their results programmatically, they can use the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.tracking.html#mlflow.tracking.MlflowClient" title="(in MLflow v1.17.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MlflowClient</span></code></a> class from the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#module-mlflow" title="(in MLflow v1.17.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mlflow</span></code></a> Python package to connect and query their results.
 Since we captured the run ids generated by MLFlow, we can easily retrieve the data logged about one of our jobs and inspect the results.
 To start the client, we simply need to run,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mlflow_client</span> <span class="o">=</span> <span class="n">MlflowClient</span><span class="p">()</span>
@@ -863,7 +874,7 @@ To start the client, we simply need to run,</p>
 </div>
 <p>The client uses the environment variable <code class="docutils literal notranslate"><span class="pre">MLFLOW_TRACKING_URI</span></code> to figure out how to connect to the MLFlow Tracking Service, which we configured near the top of this notebook.
 To query the results of one of our runs, we just need to pass the run id to the client’s <code class="docutils literal notranslate"><span class="pre">get_run()</span></code> method.
-As an example, let’s query the run results for the FGM attack applied to the LeNet-5 architecture,</p>
+As an example, let’s query the run results for the <a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a> attack applied to the LeNet-5 architecture,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fgm_run_le_net</span> <span class="o">=</span> <span class="n">mlflow_client</span><span class="o">.</span><span class="n">get_run</span><span class="p">(</span><span class="n">response_fgm_le_net</span><span class="p">[</span><span class="s2">&quot;mlflowRunId&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -907,6 +918,13 @@ For example, to review the collected metrics, we just use,</p>
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

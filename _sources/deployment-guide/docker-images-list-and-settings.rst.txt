@@ -20,11 +20,13 @@
 Docker Images List and Settings
 ===============================
 
+.. include:: /_glossary_note.rst
+
 Nginx
 -----
 
 Nginx is an open-source web server that serves as a reverse proxy in the Testbed architecture.
-It receives HTTP requests originating from outside the Testbed network and routes the traffic to the appropriate service.
+It receives :term:`HTTP` requests originating from outside the Testbed network and routes the traffic to the appropriate service.
 
 Command
 ~~~~~~~
@@ -45,7 +47,7 @@ Command
 MLFlow Tracking
 ---------------
 
-The MLFlow Tracking service is an API and UI for logging and querying parameters, metrics, and output files when running your experiments.
+The MLFlow Tracking service is an :term:`API` and UI for logging and querying parameters, metrics, and output files when running your experiments.
 
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
@@ -71,8 +73,8 @@ Command
 .. rubric:: Options
 
 --conda-env               Conda environment (default: ``'mitre-securing-ai'``)
---backend-store-uri       URI to which to persist experiment and run data. Acceptable URIs are SQLAlchemy-compatible database connection strings (e.g. 'sqlite:///path/to/file.db') or local filesystem URIs (e.g. ``'file:///absolute/path/to/directory'``). (default: ``'sqlite:////work/mlruns/mlflow-tracking.db'``)
---default-artifact-root   Local or S3 URI to store artifacts, for new experiments. Note that this flag does not impact already-created experiments. Default: Within file store, if a file:/ URI is provided. If a sql backend is used, then this option is required. (default: ``'file:///work/artifacts'``)
+--backend-store-uri       |URI| to which to persist experiment and run data. Acceptable |URI|\s are SQLAlchemy-compatible database connection strings (e.g. 'sqlite:///path/to/file.db') or local filesystem |URI|\s (e.g. ``'file:///absolute/path/to/directory'``). (default: ``'sqlite:////work/mlruns/mlflow-tracking.db'``)
+--default-artifact-root   Local or S3 |URI| to store artifacts, for new experiments. Note that this flag does not impact already-created experiments. Default: Within file store, if a ``file:/`` |URI| is provided. If a sql backend is used, then this option is required. (default: ``'file:///work/artifacts'``)
 --gunicorn-opts           Additional command line options forwarded to gunicorn processes. (no default)
 --host                    The network address to listen on. Use 0.0.0.0 to bind to all addresses if you want to access the tracking server from other machines. (default: ``'0.0.0.0'``)
 --port                    The port to listen on. (default: ``'5000'``)
@@ -82,13 +84,13 @@ Command
 REST API
 --------
 
-The REST API service is an API for registering experiments and submitting jobs to the Testbed.
+The :term:`REST` :term:`API` service is an :term:`API` for registering experiments and submitting jobs to the Testbed.
 
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
 
 | :kbd:`AI_RESTAPI_DATABASE_URI`
-The URI to use to connect to the REST API database.
+The |URI| to use to connect to the :term:`REST` :term:`API` database.
 (default: ``'$(pwd)/securingai.db'``)
 
 | :kbd:`AI_RESTAPI_ENV`
@@ -98,7 +100,7 @@ Must be 'prod', 'dev', or 'test'.
 
 | :kbd:`AI_DEPLOY_SECRET_KEY`
 Secret key used by Flask to sign cookies.
-While cookies are not used when accessing the REST API, per best practices this should still be changed to a long, random value.
+While cookies are not used when accessing the :term:`REST` :term:`API`, per best practices this should still be changed to a long, random value.
 (default: ``'deploy123'``)
 
 | :kbd:`AWS_ACCESS_KEY_ID`
@@ -110,13 +112,13 @@ The password for accessing S3 storage.
 Must match ``MINIO_ROOT_PASSWORD`` set for the Minio image.
 
 | :kbd:`MLFLOW_TRACKING_URI`
-The URI to use for connecting to the MLFlow Tracking service.
+The |URI| to use for connecting to the MLFlow Tracking service.
 
 | :kbd:`MLFLOW_S3_ENDPOINT_URL`
 The URL endpoint for accessing the S3 storage.
 
 | :kbd:`RQ_REDIS_URI`
-The ``redis://`` URI to the Redis queue.
+The ``redis://`` |URI| to the Redis queue.
 
 Command
 ~~~~~~~
@@ -147,10 +149,10 @@ Directory to use for syncing the task plugins.
 (default: ``'/work/plugins'``)
 
 | :kbd:`AI_PLUGINS_S3_URI`
-The S3 URI to the directory containing the builtin plugins
+The S3 |URI| to the directory containing the builtin plugins
 
 | :kbd:`AI_RESTAPI_DATABASE_URI`
-The URI to use to connect to the REST API database.
+The |URI| to use to connect to the :term:`REST` :term:`API` database.
 (default: ``'$(pwd)/securingai.db'``)
 
 | :kbd:`AWS_ACCESS_KEY_ID`
@@ -162,13 +164,13 @@ The password for accessing S3 storage.
 Must match ``MINIO_ROOT_PASSWORD`` set for the Minio image.
 
 | :kbd:`MLFLOW_TRACKING_URI`
-The URI to use for connecting to the MLFlow Tracking service.
+The |URI| to use for connecting to the MLFlow Tracking service.
 
 | :kbd:`MLFLOW_S3_ENDPOINT_URL`
 The URL endpoint for accessing the S3 storage.
 
 | :kbd:`RQ_REDIS_URI`
-The ``redis://`` URI to the Redis queue.
+The ``redis://`` |URI| to the Redis queue.
 
 Command
 ~~~~~~~
@@ -237,3 +239,7 @@ Command
 
 --appendonly       Persist data using an append only file. Accepts ``'yes'`` or ``'no'``. (default: ``'no'``)
 --appendfilename   The name of the append only file. (default: ``'appendonly.aof'``)
+
+.. Aliases
+
+.. |URI| replace:: :term:`URI`

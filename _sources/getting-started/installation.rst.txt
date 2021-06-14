@@ -20,6 +20,8 @@
 Installation Guide
 ==================
 
+.. include:: /_glossary_note.rst
+
 This installation guide is divided into three parts, with the first part covering system requirements, the second part covering how to install the ``mitre-securing-ai`` Python package, and the third part covering how to setup a personal computer for test-driving the Dioptra architecture locally.
 General instructions on how to deploy the Testbed in an on-premises server can be found in the sections under **Deployment Guide**.
 
@@ -168,7 +170,7 @@ Using Pre-made Configuration Files to Create a Conda Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Throughout the project codebase, there are a multitude of files named `environment.yml`.
-These `YAML <https://en.wikipedia.org/wiki/YAML>`_ files or rather configuration files can be used as parameters when `creating a Conda Environment <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__.
+These :term:`YAML` files, or rather configuration files, can be used as parameters when `creating a Conda Environment <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__.
 
 Demo-specific instructions for creating a suitable environment will be provided in the examples contained within :ref:`tutorial-index`, but the following example outlines the generic steps that can be taken to `create a Conda Environment <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`__:
 

@@ -80,6 +80,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -94,58 +101,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../getting-started/newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -287,6 +242,58 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../user-guide/api-reference-restapi.html">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -515,12 +522,16 @@
                 
   <div class="section" id="single-machine-deployment">
 <span id="deployment-guide-single-machine"></span><h1>Single Machine Deployment<a class="headerlink" href="#single-machine-deployment" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
 <p>We recommend the use of the <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code> tool to orchestrate Testbed deployments on a single machine.
 The <a class="reference external" href="https://docs.docker.com/compose/">tool’s home page</a> provides an excellent summary of what it is and what it does.
 For convenience, we quote the summary below,</p>
 <blockquote>
 <div><p>Compose is a tool for defining and running multi-container Docker applications.
-With Compose, you use a YAML file to configure your application’s services.
+With Compose, you use a <a class="reference internal" href="../glossary.html#term-YAML"><span class="xref std std-term">YAML</span></a> file to configure your application’s services.
 Then, with a single command, you create and start all the services from your configuration.
 To learn more about all the features of Compose, see the <a class="reference external" href="https://docs.docker.com/compose/#features">list of features</a>.</p>
 <p>Compose works in all environments: production, staging, development, testing, as well as CI workflows. You can learn more about each case in <a class="reference external" href="https://docs.docker.com/compose/#common-use-cases">Common Use Cases</a>.</p>
@@ -554,7 +565,7 @@ You can alternatively run <code class="docutils literal notranslate"><span class
 </div></blockquote>
 <div class="section" id="sample-deployment">
 <h2>Sample Deployment<a class="headerlink" href="#sample-deployment" title="Permalink to this headline">¶</a></h2>
-<p>The sample <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file contained in the dropdown menu below is a copy of our single-machine Testbed deployment, which was for an Nvidia DGX workstation with the following specifications,</p>
+<p>The sample <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file contained in the dropdown menu below is a copy of our single-machine Testbed deployment, which was for an <a class="reference internal" href="../glossary.html#term-NVIDIA-DGX"><span class="xref std std-term">NVIDIA DGX</span></a> workstation with the following specifications,</p>
 <dl class="simple">
 <dt>CPU</dt><dd><p>Intel Xeon Processor with 20 physical cores at 2.2GHz</p>
 </dd>
@@ -1008,7 +1019,7 @@ You will need root access to the machine in order to proceed, run <code class="d
 <p>We store our deployment <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file at the path <code class="docutils literal notranslate"><span class="pre">/etc/securing-ai/lab-deployment/docker-compose.yml</span></code> and set the folder permissions so that non-root users cannot access the file.</p>
 <div class="section" id="create-application-folders-on-host">
 <h3>Create Application Folders on Host<a class="headerlink" href="#create-application-folders-on-host" title="Permalink to this headline">¶</a></h3>
-<p>The data generated by the Minio, MLFlow Tracking, Redis, and REST API services will be mapped to the host machine’s filesystem via bind mounts.
+<p>The data generated by the Minio, MLFlow Tracking, Redis, and <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> term:<cite>API</cite> services will be mapped to the host machine’s filesystem via bind mounts.
 We placed these folders for our deployment under the directory <code class="docutils literal notranslate"><span class="pre">/var/securing-ai/lab-deployment</span></code>, which looks as follows,</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/var/securing-ai/lab-deployment
 ├── minio
@@ -1056,8 +1067,8 @@ chmod <span class="m">0700</span> /var/securing-ai/lab-deployment/redis
 <p class="rubric">Configure the dataset volume</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">nfs-datasets</span></code> volume will need to be updated based on the details of your deployment,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="7da55969-6637-4af6-97ff-3fcfa773e25d" name="6902ff52-32a4-4b2a-92eb-f01289bdc385" type="radio">
-</input><label class="tabbed-label" for="7da55969-6637-4af6-97ff-3fcfa773e25d">
+<input checked="checked" id="be0e8b8d-b59e-4664-9132-dcb3fe7d56ba" name="4cfa8540-ea4f-4157-8e36-1e60e8a70673" type="radio">
+</input><label class="tabbed-label" for="be0e8b8d-b59e-4664-9132-dcb3fe7d56ba">
 Datasets on NFS share</label><div class="tabbed-content docutils">
 <p>The following Docker volume assumes that the NFS share is the directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code> on a device with the IP address <code class="docutils literal notranslate"><span class="pre">192.168.1.20</span></code>.
 Update it to match the details of your NFS share.</p>
@@ -1070,8 +1081,8 @@ Update it to match the details of your NFS share.</p>
 </pre></div>
 </div>
 </div>
-<input id="4cb59020-a9b1-4bd8-91f2-7badaeeccf68" name="6902ff52-32a4-4b2a-92eb-f01289bdc385" type="radio">
-</input><label class="tabbed-label" for="4cb59020-a9b1-4bd8-91f2-7badaeeccf68">
+<input id="fa264642-eb72-456d-9dca-8285e215f4a9" name="4cfa8540-ea4f-4157-8e36-1e60e8a70673" type="radio">
+</input><label class="tabbed-label" for="fa264642-eb72-456d-9dca-8285e215f4a9">
 Datasets in local directory</label><div class="tabbed-content docutils">
 <p>The following Docker volume assumes that the data is stored in the local directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code>.
 Update this to match the folder where you store your datasets.</p>
@@ -1107,7 +1118,7 @@ The GPUs are zero-indexed, so for example, if you have 2 GPUs, then the first on
 <p>To allocate the CPUs, we use the <code class="docutils literal notranslate"><span class="pre">cpuset</span></code> and <code class="docutils literal notranslate"><span class="pre">cpu_shares</span></code> options.
 Our deployment used the following:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span>
-  <span class="c1"># Block 1: CPUs 0-3</span>
+  <span class="c1"># Block 1: CPUs 0 to 3</span>
   <span class="nt">redis</span><span class="p">:</span>
     <span class="nt">cpuset</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0-3</span>
     <span class="nt">cpu_shares</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1024</span>
@@ -1124,7 +1135,7 @@ Our deployment used the following:</p>
     <span class="nt">cpuset</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0-3</span>
     <span class="nt">cpu_shares</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1024</span>
 
-  <span class="c1"># Block 2: CPUs 10-14</span>
+  <span class="c1"># Block 2: CPUs 10 to 14</span>
   <span class="nt">tfcpu-01</span><span class="p">:</span>
     <span class="nt">cpuset</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10-14</span>
     <span class="nt">cpu_shares</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1024</span>
@@ -1132,7 +1143,7 @@ Our deployment used the following:</p>
     <span class="nt">cpuset</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10-14</span>
     <span class="nt">cpu_shares</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1024</span>
 
-  <span class="c1"># Block 3: CPUs 15-19</span>
+  <span class="c1"># Block 3: CPUs 15 to 19</span>
   <span class="nt">tfcpu-02</span><span class="p">:</span>
     <span class="nt">cpuset</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">15-19</span>
     <span class="nt">cpu_shares</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1024</span>
@@ -1140,7 +1151,7 @@ Our deployment used the following:</p>
     <span class="nt">cpuset</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">15-19</span>
     <span class="nt">cpu_shares</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1024</span>
 
-  <span class="c1"># Block 4: CPUs 4-19</span>
+  <span class="c1"># Block 4: CPUs 4 to 19</span>
   <span class="nt">tfgpu-01</span><span class="p">:</span>
     <span class="nt">cpuset</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4-19</span>
     <span class="nt">cpu_shares</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">512</span>
@@ -1155,15 +1166,15 @@ Our deployment used the following:</p>
     <span class="nt">cpu_shares</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">512</span>
 </pre></div>
 </div>
-<p>So, as we can see, in this arrangement the GPU Workers in Block 4 have exclusive access to CPUs 4-9, but also share CPUs 10-19 with Blocks 2 and 3.
+<p>So, as we can see, in this arrangement the GPU Workers in Block 4 have exclusive access to CPUs 4 to 9, but also share CPUs 10 to 19 with Blocks 2 and 3.
 The <code class="docutils literal notranslate"><span class="pre">cpu_shares</span></code> parameter controls the container’s CPU priority when CPU resources are in high demand and only relative differences are meaningful.
-So, for example, this means that the Workers in Block 2 have twice the CPU priority that the Workers in Block 4 have when using CPUS 10-14.</p>
+So, for example, this means that the Workers in Block 2 have twice the CPU priority that the Workers in Block 4 have when using CPUS 10 to 14.</p>
 <p>Tune the CPU and GPU allocations to suit your circumstances and needs.</p>
 </div>
 <div class="section" id="initializations">
 <h3>Initializations<a class="headerlink" href="#initializations" title="Permalink to this headline">¶</a></h3>
 <p class="rubric">Initialize the REST API database</p>
-<p>The REST API database must be initialized as follows before you start using it,</p>
+<p>The <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> term:<cite>API</cite> database must be initialized as follows before you start using it,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the database</span>
 docker-compose run --rm restapi --upgrade-db
 
@@ -1216,6 +1227,13 @@ docker-compose down
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

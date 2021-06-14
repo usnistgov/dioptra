@@ -80,6 +80,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -94,58 +101,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../getting-started/newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -287,6 +242,58 @@
  <li class="toctree-l1">
   <a class="reference internal" href="api-reference-restapi.html">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -520,6 +527,10 @@
                 
   <div class="section" id="entry-points">
 <span id="user-guide-entry-points"></span><h1>Entry Points<a class="headerlink" href="#entry-points" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>Instructions for how to create your own entry points are available in the <a class="reference internal" href="custom-entry-points.html"><span class="doc">Creating a New Entry Point guide</span></a>.</p>
@@ -533,17 +544,17 @@ Entry points are the fundamental unit of work within the Testbed, where each job
 Dioptra derives its modularity in part by establishing a convention for how to compose new entry points.
 The convention is identifying related units of work, for example applying one out of many evasion attacks to generate a batch of adversarial images, and then ensuring they are interchangeable with one another by implementing the corresponding executable scripts to share a common set of inputs and outputs.
 This guided the construction of all the example experiments distributed as part of this project.
-The SDK library and the task plugins system are both provided to help Testbed users apply this convention to their own experiments.</p>
+The <a class="reference internal" href="../glossary.html#term-SDK"><span class="xref std std-term">SDK</span></a> library and the task plugins system are both provided to help Testbed users apply this convention to their own experiments.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This particular usage for the term <em>entry point</em> <a class="reference external" href="https://mlflow.org/docs/latest/projects.html#overview">originates with the MLFlow library</a>, and we have adopted for this project since Dioptra uses <a class="reference external" href="https://mlflow.org">MLFlow</a> on the backend to provide job tracking capabilities.</p>
 </div>
-<p>Each implementation of a Testbed entry point requires, at minimum, two separate files, a YAML formatted <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file, and an executable Python script that can set its internal parameters via command-line options (e.g. <a class="reference external" href="https://docs.python.org/3/library/argparse.html#module-argparse" title="(in Python v3.9)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> and <a class="reference external" href="https://click.palletsprojects.com/en/7.x/api/#module-click" title="(in Click v7.x)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">click</span></code></a>).
+<p>Each implementation of a Testbed entry point requires, at minimum, two separate files, a <a class="reference internal" href="../glossary.html#term-YAML"><span class="xref std std-term">YAML</span></a> formatted <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file, and an executable Python script that can set its internal parameters via command-line options (e.g. <a class="reference external" href="https://docs.python.org/3/library/argparse.html#module-argparse" title="(in Python v3.9)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> and <a class="reference external" href="https://click.palletsprojects.com/en/7.x/api/#module-click" title="(in Click v7.x)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">click</span></code></a>).
 These files are the topics of the following sections.</p>
 </div>
 <div class="section" id="mlproject-specifications">
 <h2>MLproject Specifications<a class="headerlink" href="#mlproject-specifications" title="Permalink to this headline">¶</a></h2>
-<p>As was mentioned before, the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file is a plain text file in YAML syntax that declares an entry point’s executable command and its available parameters.
+<p>As was mentioned before, the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file is a plain text file in <a class="reference internal" href="../glossary.html#term-YAML"><span class="xref std std-term">YAML</span></a> syntax that declares an entry point’s executable command and its available parameters.
 An example of an <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file is below,</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">My Project</span>
 
@@ -598,12 +609,12 @@ The parameter will be checked if it is a number at runtime.</p>
 </dd>
 <dt>path</dt><dd><p>A path on the local file system.
 Any relative <code class="docutils literal notranslate"><span class="pre">path</span></code> parameters will be converted to absolute paths.
-Any paths passed as distributed storage URIs (<code class="docutils literal notranslate"><span class="pre">s3://</span></code>, <code class="docutils literal notranslate"><span class="pre">dbfs://</span></code>, <code class="docutils literal notranslate"><span class="pre">gs://</span></code>, etc.) will be downloaded to local files.
+Any paths passed as distributed storage <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a>s (<code class="docutils literal notranslate"><span class="pre">s3://</span></code>, <code class="docutils literal notranslate"><span class="pre">dbfs://</span></code>, <code class="docutils literal notranslate"><span class="pre">gs://</span></code>, etc.) will be downloaded to local files.
 Use this type for programs that can only read local files.</p>
 </dd>
-<dt>uri</dt><dd><p>A URI for data either in a local or distributed storage system.
+<dt>uri</dt><dd><p>A <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> for data either in a local or distributed storage system.
 Relative paths are converted to absolute paths, as in the <cite>path</cite> type.
-Use this type for programs that know how to read from distributed storage (e.g., programs that use the <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/boto3.html#module-boto3" title="(in Boto3 Docs v1.17.92)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">boto3</span></code></a> package to directly access S3 storage).</p>
+Use this type for programs that know how to read from distributed storage (e.g., programs that use the <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/boto3.html#module-boto3" title="(in Boto3 Docs v1.17.94)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">boto3</span></code></a> package to directly access S3 storage).</p>
 </dd>
 </dl>
 </div>
@@ -613,7 +624,7 @@ Use this type for programs that know how to read from distributed storage (e.g.,
 However, if users wish to make use of the Testbed’s powerful job tracking and task plugin capabilities, they will need to adopt the Testbed’s standard for writing entry point scripts outlined in this section.</p>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
-<p>The Testbed SDK, in a planned future release, will be extending the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> specification to facilitate the templated generation of entry point scripts.
+<p>The Testbed <a class="reference internal" href="../glossary.html#term-SDK"><span class="xref std std-term">SDK</span></a>, in a planned future release, will be extending the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> specification to facilitate the templated generation of entry point scripts.
 Users will have an easier to migrating their scripts to this new approach if they follow the Testbed’s standard for entry point scripts when <a class="reference internal" href="custom-entry-points.html"><span class="doc">creating their own entry points</span></a>.</p>
 </div>
 <div class="section" id="setting-parameters">
@@ -753,6 +764,13 @@ The anatomy of this call will be discussed in the <a class="reference internal" 
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

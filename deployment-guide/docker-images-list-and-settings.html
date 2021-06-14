@@ -80,6 +80,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -94,58 +101,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../getting-started/newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -287,6 +242,58 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../user-guide/api-reference-restapi.html">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -580,10 +587,14 @@
                 
   <div class="section" id="docker-images-list-and-settings">
 <span id="deployment-guide-docker-images-list-and-settings"></span><h1>Docker Images List and Settings<a class="headerlink" href="#docker-images-list-and-settings" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
 <div class="section" id="nginx">
 <h2>Nginx<a class="headerlink" href="#nginx" title="Permalink to this headline">¶</a></h2>
 <p>Nginx is an open-source web server that serves as a reverse proxy in the Testbed architecture.
-It receives HTTP requests originating from outside the Testbed network and routes the traffic to the appropriate service.</p>
+It receives <a class="reference internal" href="../glossary.html#term-HTTP"><span class="xref std std-term">HTTP</span></a> requests originating from outside the Testbed network and routes the traffic to the appropriate service.</p>
 <div class="section" id="command">
 <h3>Command<a class="headerlink" href="#command" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE [OPTIONS]
@@ -614,7 +625,7 @@ It receives HTTP requests originating from outside the Testbed network and route
 </div>
 <div class="section" id="mlflow-tracking">
 <h2>MLFlow Tracking<a class="headerlink" href="#mlflow-tracking" title="Permalink to this headline">¶</a></h2>
-<p>The MLFlow Tracking service is an API and UI for logging and querying parameters, metrics, and output files when running your experiments.</p>
+<p>The MLFlow Tracking service is an <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> and UI for logging and querying parameters, metrics, and output files when running your experiments.</p>
 <div class="section" id="environment-variables">
 <h3>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h3>
 <div class="line-block">
@@ -643,10 +654,10 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <dd><p>Conda environment (default: <code class="docutils literal notranslate"><span class="pre">'mitre-securing-ai'</span></code>)</p>
 </dd>
 <dt><kbd><span class="option">--backend-store-uri</span></kbd></dt>
-<dd><p>URI to which to persist experiment and run data. Acceptable URIs are SQLAlchemy-compatible database connection strings (e.g. ‘sqlite:///path/to/file.db’) or local filesystem URIs (e.g. <code class="docutils literal notranslate"><span class="pre">'file:///absolute/path/to/directory'</span></code>). (default: <code class="docutils literal notranslate"><span class="pre">'sqlite:////work/mlruns/mlflow-tracking.db'</span></code>)</p>
+<dd><p><a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to which to persist experiment and run data. Acceptable <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a>s are SQLAlchemy-compatible database connection strings (e.g. ‘sqlite:///path/to/file.db’) or local filesystem <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a>s (e.g. <code class="docutils literal notranslate"><span class="pre">'file:///absolute/path/to/directory'</span></code>). (default: <code class="docutils literal notranslate"><span class="pre">'sqlite:////work/mlruns/mlflow-tracking.db'</span></code>)</p>
 </dd>
 <dt><kbd><span class="option">--default-artifact-root</span></kbd></dt>
-<dd><p>Local or S3 URI to store artifacts, for new experiments. Note that this flag does not impact already-created experiments. Default: Within file store, if a <a class="reference external" href="file:/">file:/</a> URI is provided. If a sql backend is used, then this option is required. (default: <code class="docutils literal notranslate"><span class="pre">'file:///work/artifacts'</span></code>)</p>
+<dd><p>Local or S3 <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to store artifacts, for new experiments. Note that this flag does not impact already-created experiments. Default: Within file store, if a <code class="docutils literal notranslate"><span class="pre">file:/</span></code> <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> is provided. If a sql backend is used, then this option is required. (default: <code class="docutils literal notranslate"><span class="pre">'file:///work/artifacts'</span></code>)</p>
 </dd>
 <dt><kbd><span class="option">--gunicorn-opts</span></kbd></dt>
 <dd><p>Additional command line options forwarded to gunicorn processes. (no default)</p>
@@ -668,13 +679,13 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 </div>
 <div class="section" id="rest-api">
 <h2>REST API<a class="headerlink" href="#rest-api" title="Permalink to this headline">¶</a></h2>
-<p>The REST API service is an API for registering experiments and submitting jobs to the Testbed.</p>
+<p>The <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service is an <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> for registering experiments and submitting jobs to the Testbed.</p>
 <div class="section" id="id2">
 <h3>Environment Variables<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">AI_RESTAPI_DATABASE_URI</kbd></div>
 </div>
-<p>The URI to use to connect to the REST API database.
+<p>The <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to use to connect to the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> database.
 (default: <code class="docutils literal notranslate"><span class="pre">'$(pwd)/securingai.db'</span></code>)</p>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">AI_RESTAPI_ENV</kbd></div>
@@ -686,7 +697,7 @@ Must be ‘prod’, ‘dev’, or ‘test’.
 <div class="line"><kbd class="kbd docutils literal notranslate">AI_DEPLOY_SECRET_KEY</kbd></div>
 </div>
 <p>Secret key used by Flask to sign cookies.
-While cookies are not used when accessing the REST API, per best practices this should still be changed to a long, random value.
+While cookies are not used when accessing the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>, per best practices this should still be changed to a long, random value.
 (default: <code class="docutils literal notranslate"><span class="pre">'deploy123'</span></code>)</p>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">AWS_ACCESS_KEY_ID</kbd></div>
@@ -701,7 +712,7 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">MLFLOW_TRACKING_URI</kbd></div>
 </div>
-<p>The URI to use for connecting to the MLFlow Tracking service.</p>
+<p>The <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to use for connecting to the MLFlow Tracking service.</p>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">MLFLOW_S3_ENDPOINT_URL</kbd></div>
 </div>
@@ -709,7 +720,7 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">RQ_REDIS_URI</kbd></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">redis://</span></code> URI to the Redis queue.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">redis://</span></code> <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to the Redis queue.</p>
 </div>
 <div class="section" id="id3">
 <h3>Command<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
@@ -750,11 +761,11 @@ The Testbed Workers come in different flavors, with each one provisioned to supp
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">AI_PLUGINS_S3_URI</kbd></div>
 </div>
-<p>The S3 URI to the directory containing the builtin plugins</p>
+<p>The S3 <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to the directory containing the builtin plugins</p>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">AI_RESTAPI_DATABASE_URI</kbd></div>
 </div>
-<p>The URI to use to connect to the REST API database.
+<p>The <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to use to connect to the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> database.
 (default: <code class="docutils literal notranslate"><span class="pre">'$(pwd)/securingai.db'</span></code>)</p>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">AWS_ACCESS_KEY_ID</kbd></div>
@@ -769,7 +780,7 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">MLFLOW_TRACKING_URI</kbd></div>
 </div>
-<p>The URI to use for connecting to the MLFlow Tracking service.</p>
+<p>The <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to use for connecting to the MLFlow Tracking service.</p>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">MLFLOW_S3_ENDPOINT_URL</kbd></div>
 </div>
@@ -777,7 +788,7 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">RQ_REDIS_URI</kbd></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">redis://</span></code> URI to the Redis queue.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">redis://</span></code> <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to the Redis queue.</p>
 </div>
 <div class="section" id="id5">
 <h3>Command<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
@@ -873,6 +884,13 @@ The ellipses syntax <code class="docutils literal notranslate"><span class="pre"
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

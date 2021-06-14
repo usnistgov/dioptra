@@ -45,7 +45,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Setup Tips for Newcomers" href="newcomer-tips.html" />
-    <link rel="prev" title="What is Dioptra?" href="../index.html" />
+    <link rel="prev" title="Glossary" href="../glossary.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
     
@@ -80,6 +80,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -94,58 +101,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -287,6 +242,58 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../user-guide/api-reference-restapi.html">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -537,6 +544,10 @@
                 
   <div class="section" id="installation-guide">
 <span id="getting-started-installation"></span><h1>Installation Guide<a class="headerlink" href="#installation-guide" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
 <p>This installation guide is divided into three parts, with the first part covering system requirements, the second part covering how to install the <code class="docutils literal notranslate"><span class="pre">mitre-securing-ai</span></code> Python package, and the third part covering how to setup a personal computer for test-driving the Dioptra architecture locally.
 General instructions on how to deploy the Testbed in an on-premises server can be found in the sections under <strong>Deployment Guide</strong>.</p>
 <div class="section" id="package-installation">
@@ -557,8 +568,8 @@ General instructions on how to deploy the Testbed in an on-premises server can b
 The easiest way to accomplish this is using the pre-built configuration files included in the project codebase to create a <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environment</a>.</p>
 <p>There are two install options to start using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environments</a>,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="010a7b39-399b-4fb4-b429-3ffad54fd2d8" name="3705b0d7-0887-4799-a7d5-9f9b90428b50" type="radio">
-</input><label class="tabbed-label" for="010a7b39-399b-4fb4-b429-3ffad54fd2d8">
+<input checked="checked" id="03957f55-0eaf-4c19-8fee-b973c79d4afe" name="4f4758e5-2c7d-4d2e-a2dd-fd6311b20a80" type="radio">
+</input><label class="tabbed-label" for="03957f55-0eaf-4c19-8fee-b973c79d4afe">
 Anaconda installation</label><div class="tabbed-content docutils">
 <p>The following links will provide a installation package for version 2020.11 of <a class="reference external" href="https://docs.anaconda.com/">Anaconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
@@ -568,8 +579,8 @@ Anaconda installation</label><div class="tabbed-content docutils">
 </ul>
 <p>If your host machine does not meet the <span class="xref std std-ref">quickstart-system-requirements</span>, then go to the <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda Installation Documents</a> for more help.</p>
 </div>
-<input id="343a40c8-533c-40c5-9340-548c8d70542e" name="3705b0d7-0887-4799-a7d5-9f9b90428b50" type="radio">
-</input><label class="tabbed-label" for="343a40c8-533c-40c5-9340-548c8d70542e">
+<input id="c6585055-4b99-40b5-bdfb-7c8988f1b866" name="4f4758e5-2c7d-4d2e-a2dd-fd6311b20a80" type="radio">
+</input><label class="tabbed-label" for="c6585055-4b99-40b5-bdfb-7c8988f1b866">
 Miniconda installation</label><div class="tabbed-content docutils">
 <p>The following links will provide a installation package for the latest version of <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
@@ -617,18 +628,18 @@ If performance becomes an issue when using a virtual machine, consider increasin
 <span id="quickstart-clone-repository"></span><h3>Clone the Repository<a class="headerlink" href="#clone-the-repository" title="Permalink to this headline">¶</a></h3>
 <p>To clone the repository, open a new <strong>Terminal</strong> session for your operating system,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="2cb747f3-5ada-469c-81fa-c1eebef7baa7" name="3919cb53-4e71-4ea6-add3-cfc1c624d2fb" type="radio">
-</input><label class="tabbed-label" for="2cb747f3-5ada-469c-81fa-c1eebef7baa7">
+<input checked="checked" id="20c18bd8-0252-4e17-b9ee-3e29dd5e1667" name="19906ac4-949b-46fd-83c2-b4a50fb433ab" type="radio">
+</input><label class="tabbed-label" for="20c18bd8-0252-4e17-b9ee-3e29dd5e1667">
 Windows</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">windows</kbd> + <kbd class="kbd docutils literal notranslate">r</kbd> to open <strong>Run</strong>, then type <code class="docutils literal notranslate"><span class="pre">wsl</span></code> into the search bar and click <em>OK</em> to start a <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/">Windows Subsystem for Linux</a> session.</p>
 </div>
-<input id="6f6fb754-9f0e-4528-83f1-3d8e1dc9894c" name="3919cb53-4e71-4ea6-add3-cfc1c624d2fb" type="radio">
-</input><label class="tabbed-label" for="6f6fb754-9f0e-4528-83f1-3d8e1dc9894c">
+<input id="759e31d6-88d7-4c32-98c6-fc76d14cad8b" name="19906ac4-949b-46fd-83c2-b4a50fb433ab" type="radio">
+</input><label class="tabbed-label" for="759e31d6-88d7-4c32-98c6-fc76d14cad8b">
 MacOS</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">command</kbd> + <kbd class="kbd docutils literal notranslate">space</kbd> to open the <strong>Spotlight Search</strong>, type <code class="docutils literal notranslate"><span class="pre">Terminal</span></code> into the search bar, and click the <em>Terminal</em> application under <em>Top Hit</em> at the top of your results.</p>
 </div>
-<input id="026922e1-59a6-4601-98c3-1ef1529739c6" name="3919cb53-4e71-4ea6-add3-cfc1c624d2fb" type="radio">
-</input><label class="tabbed-label" for="026922e1-59a6-4601-98c3-1ef1529739c6">
+<input id="72165063-4e48-4521-87e4-9b0e191e3bdf" name="19906ac4-949b-46fd-83c2-b4a50fb433ab" type="radio">
+</input><label class="tabbed-label" for="72165063-4e48-4521-87e4-9b0e191e3bdf">
 Linux</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">ctrl</kbd> + <kbd class="kbd docutils literal notranslate">alt</kbd> + <kbd class="kbd docutils literal notranslate">t</kbd> to open the <strong>Terminal</strong>.</p>
 </div>
@@ -651,15 +662,15 @@ For this reason, WSL and MacOS users are both encouraged to create and clone the
 </div>
 <p>Clone the repository to your local computer,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="ae539dcd-afd0-4a4b-893b-a80295f76b3e" name="0a35f8eb-2a34-4204-ac22-2d291d5d70d0" type="radio">
-</input><label class="tabbed-label" for="ae539dcd-afd0-4a4b-893b-a80295f76b3e">
+<input checked="checked" id="7b215a5a-4ff6-447d-8916-b81ac6b58d14" name="a114622d-65b2-4858-bf8c-b203326b1a89" type="radio">
+</input><label class="tabbed-label" for="7b215a5a-4ff6-447d-8916-b81ac6b58d14">
 Clone with HTTPS</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/usnistgov/dioptra.git
 </pre></div>
 </div>
 </div>
-<input id="8326756e-f9e2-435b-bdb3-ca3323c32114" name="0a35f8eb-2a34-4204-ac22-2d291d5d70d0" type="radio">
-</input><label class="tabbed-label" for="8326756e-f9e2-435b-bdb3-ca3323c32114">
+<input id="bf588a9b-54fb-447f-ab0e-e8b349c5912b" name="a114622d-65b2-4858-bf8c-b203326b1a89" type="radio">
+</input><label class="tabbed-label" for="bf588a9b-54fb-447f-ab0e-e8b349c5912b">
 Clone with SSH</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:usnistgov/dioptra.git
 </pre></div>
@@ -675,7 +686,7 @@ Clone with SSH</label><div class="tabbed-content docutils">
 <div class="section" id="using-pre-made-configuration-files-to-create-a-conda-environment">
 <span id="quickstart-config-environment"></span><h3>Using Pre-made Configuration Files to Create a Conda Environment<a class="headerlink" href="#using-pre-made-configuration-files-to-create-a-conda-environment" title="Permalink to this headline">¶</a></h3>
 <p>Throughout the project codebase, there are a multitude of files named <cite>environment.yml</cite>.
-These <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> files or rather configuration files can be used as parameters when <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands">creating a Conda Environment</a>.</p>
+These <a class="reference internal" href="../glossary.html#term-YAML"><span class="xref std std-term">YAML</span></a> files, or rather configuration files, can be used as parameters when <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands">creating a Conda Environment</a>.</p>
 <p>Demo-specific instructions for creating a suitable environment will be provided in the examples contained within <a class="reference external" href="https://docs.python.org/3/tutorial/index.html#tutorial-index" title="(in Python v3.9)"><span>The Python Tutorial</span></a>, but the following example outlines the generic steps that can be taken to <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands">create a Conda Environment</a>:</p>
 <ol class="arabic">
 <li><p>Navigate to the directory where the desired <em>environment.yml</em> (the pre-made configuration file) file is located.</p>
@@ -726,7 +737,7 @@ These are most current images that are pre-built to be used by the <em>master</e
         
         <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="../index.html" title="previous page">What is Dioptra?</a>
+    <a class='left-prev' id="prev-link" href="../glossary.html" title="previous page">Glossary</a>
     <a class='right-next' id="next-link" href="newcomer-tips.html" title="next page">Setup Tips for Newcomers</a>
 
         </div>
@@ -738,6 +749,13 @@ These are most current images that are pre-built to be used by the <em>master</e
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

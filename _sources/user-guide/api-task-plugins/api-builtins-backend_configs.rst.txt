@@ -20,6 +20,8 @@
 backend_configs
 ===============
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: securingai_builtins.backend_configs
    :members:
    :undoc-members:

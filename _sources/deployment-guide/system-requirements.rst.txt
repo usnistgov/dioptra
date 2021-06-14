@@ -20,6 +20,8 @@
 System Requirements
 ===================
 
+.. include:: /_glossary_note.rst
+
 Single Machine
 --------------
 

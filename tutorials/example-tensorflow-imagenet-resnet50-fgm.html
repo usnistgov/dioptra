@@ -80,6 +80,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -94,58 +101,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../getting-started/newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="current nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-mnist-classifier.html">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-mnist-feature-squeezing.html">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -287,6 +242,58 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../user-guide/api-reference-restapi.html">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -515,12 +522,16 @@
                 
   <div class="section" id="tensorflow-imagenet-resnet50-fgm">
 <span id="tutorials-example-tensorflow-imagenet-resnet50-fgm"></span><h1>Tensorflow ImageNet Resnet50 FGM<a class="headerlink" href="#tensorflow-imagenet-resnet50-fgm" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>This demo assumes that you have access to an on-prem deployment of Dioptra that provides a copy of the ImageNet dataset and a CUDA-compatible GPU.
 This demo cannot be run on a typical personal computer.</p>
 </div>
-<p>The demo provided in the Jupyter notebook <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> contains an example of the FGM attack on the ResNet50 architecture with optional defense entry points.
+<p>The demo provided in the Jupyter notebook <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> contains an example of the <a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a> attack on the ResNet50 architecture with optional defense entry points.
 Users can also explore the following preprocessing defenses from their associated defense entry points:</p>
 <ul class="simple">
 <li><p><strong>Spatial Smoothing:</strong> Smooths out an image by passing a median filter through neighboring pixel values in images.</p></li>
@@ -534,7 +545,7 @@ Open a terminal and navigate to this example’s directory and run the <strong>j
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make jupyter
 </pre></div>
 </div>
-<p>Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+<p>Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10 to 15 more seconds and try again).
 Double click the <code class="docutils literal notranslate"><span class="pre">work</span></code> folder and open the <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> file.
 From here, follow the provided instructions to run the demo provided in the Jupyter notebook.</p>
 <p>When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code> on the command-line.</p>
@@ -622,7 +633,7 @@ From here, follow the provided instructions to run the demo provided in the Jupy
 <div class="section" id="fgm-attack-entry-points">
 <h3>FGM Attack Entry Points<a class="headerlink" href="#fgm-attack-entry-points" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">fgm</span></code>: Applies the FGM evasion attack on a dataset based on a given trained model.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">fgm</span></code>: Applies the <a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a> evasion attack on a dataset based on a given trained model.</p>
 <ul>
 <li><p>Parameters:</p>
 <ul>
@@ -633,7 +644,7 @@ From here, follow the provided instructions to run the demo provided in the Jupy
 <li><p><code class="docutils literal notranslate"><span class="pre">eps</span></code>: A positive floating point value specifying attack step size.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">eps_step</span></code>: A positive floating point value specifying size of input variation for minimal perturbation computation.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">minimal</span></code>: If 1, compute the minimal perturbation using eps_step for the step size and eps for the maximum perturbation.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">norm</span></code>: Specifies FGM attack norm for generating adversarial perturbations. Choices are <code class="docutils literal notranslate"><span class="pre">inf</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, and <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm</span></code>: Specifies <a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a> attack norm for generating adversarial perturbations. Choices are <code class="docutils literal notranslate"><span class="pre">inf</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, and <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Specifies an integer seed value for controlling randomized tensorflow behavior.</p></li>
 </ul>
 </li>
@@ -730,6 +741,13 @@ From here, follow the provided instructions to run the demo provided in the Jupy
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

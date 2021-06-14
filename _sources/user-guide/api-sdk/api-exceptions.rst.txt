@@ -20,6 +20,8 @@
 exceptions
 ==========
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: mitre.securingai.sdk.exceptions
    :members:
    :undoc-members:

@@ -20,6 +20,8 @@
 Testbed SDK API Reference
 =========================
 
+.. include:: /_glossary_note.rst
+
 .. toctree::
    :hidden:
    :maxdepth: -1

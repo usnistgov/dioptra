@@ -44,7 +44,7 @@
     <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="System Requirements" href="../deployment-guide/system-requirements.html" />
+    <link rel="next" title="Hello World!" href="../tutorials/example-basic-mlflow-demo.html" />
     <link rel="prev" title="cryptography" href="api-sdk/api-cryptography.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
@@ -80,6 +80,13 @@
   </a>
  </li>
 </ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../glossary.html">
+   Glossary
+  </a>
+ </li>
+</ul>
 <p class="caption">
  <span class="caption-text">
   Getting Started
@@ -94,58 +101,6 @@
  <li class="toctree-l1">
   <a class="reference internal" href="../getting-started/newcomer-tips.html">
    Setup Tips for Newcomers
-  </a>
- </li>
-</ul>
-<p class="caption">
- <span class="caption-text">
-  Tutorials and Examples
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
-   Hello World!
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
-   First Steps - MNIST Tensorflow Classifier
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
-   Tensorflow MNIST Feature Squeezing
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
-   Tensorflow MNIST Model Inversion
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
-   Tensorflow Adversarial Patch
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
-   Tensorflow Backdoor Poisoning
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
-   Tensorflow ImageNet Resnet50 FGM
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
-   Tensorflow ImageNet Pixel Threshold
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
-   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -287,6 +242,58 @@
  <li class="toctree-l1 current active">
   <a class="current reference internal" href="#">
    Testbed REST API Reference
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Tutorials and Examples
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">
+   Hello World!
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">
+   First Steps - MNIST Tensorflow Classifier
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">
+   Tensorflow MNIST Feature Squeezing
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">
+   Tensorflow MNIST Model Inversion
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">
+   Tensorflow Adversarial Patch
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">
+   Tensorflow Backdoor Poisoning
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">
+   Tensorflow ImageNet Resnet50 FGM
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">
+   Tensorflow ImageNet Pixel Threshold
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">
+   PyTorch MNIST Membership Inference
   </a>
  </li>
 </ul>
@@ -539,13 +546,17 @@
                 
   <div class="section" id="testbed-rest-api-reference">
 <span id="user-guide-api-reference-restapi"></span><h1>Testbed REST API Reference<a class="headerlink" href="#testbed-rest-api-reference" title="Permalink to this headline">¶</a></h1>
-<p>This page documents the endpoints and available HTTP methods for the Dioptra REST API.
-In addition to using this page, it is highly recommended that Testbed users also use the Swagger documentation that the REST API service automatically generates at runtime, which presents all of this page’s information in an interactive format.
-To access the Swagger documentation, just navigate to the web URL for the Testbed REST API service (omit the <code class="docutils literal notranslate"><span class="pre">/api</span></code> part at the end of the web address).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
+<p>This page documents the endpoints and available <a class="reference internal" href="../glossary.html#term-HTTP"><span class="xref std std-term">HTTP</span></a> methods for the Dioptra <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>.
+In addition to using this page, it is highly recommended that Testbed users also use the Swagger documentation that the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service automatically generates at runtime, which presents all of this page’s information in an interactive format.
+To access the Swagger documentation, just navigate to the web URL for the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service (omit the <code class="docutils literal notranslate"><span class="pre">/api</span></code> part at the end of the web address).</p>
 <div class="figure align-default" id="id5" style="width: 100%">
-<img alt="An animation clicking and scrolling through the contents of the Dioptra REST API Swagger documentation." src="../_images/swagger-docs-testbed-rest-api.gif" />
-<p class="caption"><span class="caption-text">An animated tour of the automatically generated Swagger documentation for the Dioptra REST API.
-Several of the Testbed demos that you can run on a personal computer publish the REST API service at the address <a class="reference external" href="http://localhost:30080">http://localhost:30080</a>.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+<img alt="An animation clicking and scrolling through the contents of the Dioptra :term:`REST` :term:`API` Swagger documentation." src="../_images/swagger-docs-testbed-rest-api.gif" />
+<p class="caption"><span class="caption-text">An animated tour of the automatically generated Swagger documentation for the Dioptra <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>.
+Several of the Testbed demos that you can run on a personal computer publish the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service at the address <a class="reference external" href="http://localhost:30080">http://localhost:30080</a>.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
 </div>
 <div class="section" id="experiment">
 <h2>Experiment<a class="headerlink" href="#experiment" title="Permalink to this headline">¶</a></h2>
@@ -846,17 +857,17 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <dt class="field-odd">Response JSON Object</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>[].createdOn</strong> (<em>string</em>) – The date and time the job was created.</p></li>
-<li><p><strong>[].dependsOn</strong> (<em>string</em>) – A UUID for a previously submitted job to set as a dependency for the current job.</p></li>
+<li><p><strong>[].dependsOn</strong> (<em>string</em>) – A <a class="reference internal" href="../glossary.html#term-UUID"><span class="xref std std-term">UUID</span></a> for a previously submitted job to set as a dependency for the current job.</p></li>
 <li><p><strong>[].entryPoint</strong> (<em>string</em>) – The name of the entry point in the MLproject file to run.</p></li>
 <li><p><strong>[].entryPointKwargs</strong> (<em>string</em>) – A string listing parameter values to pass to the entry point for the job. The list of parameters is specified using the following format: <cite>“-P param1=value1 -P param2=value2”</cite>.</p></li>
 <li><p><strong>[].experimentId</strong> (<em>integer</em>) – An integer identifying a registered experiment.</p></li>
-<li><p><strong>[].jobId</strong> (<em>string</em>) – A UUID that identifies the job.</p></li>
+<li><p><strong>[].jobId</strong> (<em>string</em>) – A <a class="reference internal" href="../glossary.html#term-UUID"><span class="xref std std-term">UUID</span></a> that identifies the job.</p></li>
 <li><p><strong>[].lastModified</strong> (<em>string</em>) – The date and time the job was last modified.</p></li>
-<li><p><strong>[].mlflowRunId</strong> (<em>string</em>) – A UUID that identifies the MLFLow run associated with the job.</p></li>
+<li><p><strong>[].mlflowRunId</strong> (<em>string</em>) – A <a class="reference internal" href="../glossary.html#term-UUID"><span class="xref std std-term">UUID</span></a> that identifies the MLFLow run associated with the job.</p></li>
 <li><p><strong>[].queueId</strong> (<em>integer</em>) – An integer identifying a registered queue.</p></li>
 <li><p><strong>[].status</strong> (<em>string</em>) – The current status of the job. The allowed values are: queued, started, deferred, finished, failed.</p></li>
 <li><p><strong>[].timeout</strong> (<em>string</em>) – The maximum alloted time for a job before it times out and is stopped.</p></li>
-<li><p><strong>[].workflowUri</strong> (<em>string</em>) – The URI pointing to the tarball archive or zip file uploaded with the job.</p></li>
+<li><p><strong>[].workflowUri</strong> (<em>string</em>) – The <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> pointing to the tarball archive or zip file uploaded with the job.</p></li>
 </ul>
 </dd>
 </dl>
@@ -884,24 +895,24 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <li><p><strong>timeout</strong> – The maximum alloted time for a job before it times out and is stopped. If omitted, the job timeout will default to 24 hours.</p></li>
 <li><p><strong>entry_point</strong> – <em>(required)</em> The name of the entry point in the MLproject file to run.</p></li>
 <li><p><strong>entry_point_kwargs</strong> – A list of entry point parameter values to use for the job. The list is a string with the following format: <cite>“-P param1=value1 -P param2=value2”</cite>. If omitted, the default values in the MLproject file will be used.</p></li>
-<li><p><strong>depends_on</strong> – A job UUID to set as a dependency for this new job. The new job will not run until this job completes successfully. If omitted, then the new job will start as soon as computing resources are available.</p></li>
+<li><p><strong>depends_on</strong> – A job <a class="reference internal" href="../glossary.html#term-UUID"><span class="xref std std-term">UUID</span></a> to set as a dependency for this new job. The new job will not run until this job completes successfully. If omitted, then the new job will start as soon as computing resources are available.</p></li>
 <li><p><strong>workflow</strong> – <em>(required)</em> A tarball archive or zip file containing, at a minimum, a MLproject file and its associated entry point scripts.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Response JSON Object</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>createdOn</strong> (<em>string</em>) – The date and time the job was created.</p></li>
-<li><p><strong>dependsOn</strong> (<em>string</em>) – A UUID for a previously submitted job to set as a dependency for the current job.</p></li>
+<li><p><strong>dependsOn</strong> (<em>string</em>) – A <a class="reference internal" href="../glossary.html#term-UUID"><span class="xref std std-term">UUID</span></a> for a previously submitted job to set as a dependency for the current job.</p></li>
 <li><p><strong>entryPoint</strong> (<em>string</em>) – The name of the entry point in the MLproject file to run.</p></li>
 <li><p><strong>entryPointKwargs</strong> (<em>string</em>) – A string listing parameter values to pass to the entry point for the job. The list of parameters is specified using the following format: <cite>“-P param1=value1 -P param2=value2”</cite>.</p></li>
 <li><p><strong>experimentId</strong> (<em>integer</em>) – An integer identifying a registered experiment.</p></li>
-<li><p><strong>jobId</strong> (<em>string</em>) – A UUID that identifies the job.</p></li>
+<li><p><strong>jobId</strong> (<em>string</em>) – A <a class="reference internal" href="../glossary.html#term-UUID"><span class="xref std std-term">UUID</span></a> that identifies the job.</p></li>
 <li><p><strong>lastModified</strong> (<em>string</em>) – The date and time the job was last modified.</p></li>
-<li><p><strong>mlflowRunId</strong> (<em>string</em>) – A UUID that identifies the MLFLow run associated with the job.</p></li>
+<li><p><strong>mlflowRunId</strong> (<em>string</em>) – A <a class="reference internal" href="../glossary.html#term-UUID"><span class="xref std std-term">UUID</span></a> that identifies the MLFLow run associated with the job.</p></li>
 <li><p><strong>queueId</strong> (<em>integer</em>) – An integer identifying a registered queue.</p></li>
 <li><p><strong>status</strong> (<em>string</em>) – The current status of the job. The allowed values are: queued, started, deferred, finished, failed.</p></li>
 <li><p><strong>timeout</strong> (<em>string</em>) – The maximum alloted time for a job before it times out and is stopped.</p></li>
-<li><p><strong>workflowUri</strong> (<em>string</em>) – The URI pointing to the tarball archive or zip file uploaded with the job.</p></li>
+<li><p><strong>workflowUri</strong> (<em>string</em>) – The <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> pointing to the tarball archive or zip file uploaded with the job.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1308,7 +1319,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
         <div class='prev-next-bottom'>
             
     <a class='left-prev' id="prev-link" href="api-sdk/api-cryptography.html" title="previous page">cryptography</a>
-    <a class='right-next' id="next-link" href="../deployment-guide/system-requirements.html" title="next page">System Requirements</a>
+    <a class='right-next' id="next-link" href="../tutorials/example-basic-mlflow-demo.html" title="next page">Hello World!</a>
 
         </div>
         
@@ -1319,6 +1330,13 @@ Several of the Testbed demos that you can run on a personal computer publish the
     <div class="container">
       <p>
         
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
       </p>
     </div>
 </footer>

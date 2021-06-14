@@ -20,7 +20,9 @@
 First Steps - MNIST Tensorflow Classifier
 =========================================
 
-This demo provides a practical example that you can run on your personal computer to see how Dioptra can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
+.. include:: /_glossary_note.rst
+
+This demo provides a practical example that you can run on your personal computer to see how Dioptra can be used to run a simple experiment on the transferability of the :term:`FGM` evasion attack between two neural network architectures.
 It can be used as a basic template for crafting your own custom scripts to run within the testbed.
 
 Getting started
@@ -33,8 +35,8 @@ Once you have downloaded the images, navigate to this directory using the termin
 
    make demo
 
-The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
-Once the startup process completes, open up your web browser and enter http://localhost:38888 in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
+The startup sequence will take more time to finish the first time you use this demo, as you will need to download the :term:`MNIST` dataset, initialize the Testbed term:`API` database, and synchronize the task plugins to the S3 storage.
+Once the startup process completes, open up your web browser and enter http://localhost:38888 in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10 to 15 more seconds and try again).
 Double click the ``work`` folder and open the ``demo.ipynb`` file.
 From here, follow the provided instructions to run the demo provided in the Jupyter notebook.
 
@@ -96,8 +98,8 @@ Below we import the necessary Python modules and ensure the proper environment v
 Dataset
 -------
 
-We obtained a copy of the MNIST dataset as part of the startup process invoked by ``make demo``.
-The training and testing images for the MNIST dataset are stored within the ``data/`` directory as PNG files that are organized into the following folder structure,
+We obtained a copy of the :term:`MNIST` dataset as part of the startup process invoked by ``make demo``.
+The training and testing images for the :term:`MNIST` dataset are stored within the ``data/`` directory as PNG files that are organized into the following folder structure,
 
 ::
 
@@ -143,7 +145,7 @@ Submit and run jobs
 -------------------
 
 The entrypoints that we will be running in this example are implemented in the Python source files under ``src/`` and the ``MLproject`` file.
-To run these entrypoints within the testbed architecture, we need to package those files up into an archive and submit it to the Testbed RESTful API to create a new job.
+To run these entrypoints within the testbed architecture, we need to package those files up into an archive and submit it to the Testbed :term:`REST` term:`API` to create a new job.
 For convenience, the ``Makefile`` provides a rule for creating the archive file for this example, just run ``make workflows``,
 
 .. code:: bash
@@ -155,8 +157,8 @@ For convenience, the ``Makefile`` provides a rule for creating the archive file 
 
 ``make workflows`` was invoked as part of the ``make demo`` startup procedure, so unless you edited the ``MLproject`` file or one of the files under ``src/``, you will likely see a message of *make: Nothing to be done for ‘workflows’*.
 
-To connect with the endpoint, we will use a client class defined in the ``utils.py`` file that is able to connect with the Testbed RESTful API using the HTTP protocol.
-We connect using the client below, which uses the environment variable ``AI_RESTAPI_URI`` to figure out how to connect to the Testbed RESTful API,
+To connect with the endpoint, we will use a client class defined in the ``utils.py`` file that is able to connect with the Testbed :term:`REST` term:`API` using the :term:`HTTP` protocol.
+We connect using the client below, which uses the environment variable ``AI_RESTAPI_URI`` to figure out how to connect to the Testbed :term:`REST` :term:`API`,
 
 .. code-block::
 
@@ -189,7 +191,7 @@ If it does, then it just returns info about the queue, if it doesn’t, it then 
    response_queue
 
 Next, we need to train our model.
-Depending on the specs of your computer, training either the shallow net model or the LeNet-5 model on a CPU can take 10-20 minutes or longer to complete.
+Depending on the specs of your computer, training either the shallow net model or the LeNet-5 model on a CPU can take 10 to 20 minutes or longer to complete.
 If you are fortunate enough to have access to a dedicated GPU, then the training time will be much shorter.
 
 .. code-block::
@@ -226,7 +228,7 @@ If you are fortunate enough to have access to a dedicated GPU, then the training
    print("")
    pprint.pprint(response_le_net_train)
 
-Now that we have two trained models (the shallow network and the LeNet-5 network), next we will apply the fast-gradient method (FGM) evasion attack on the shallow network to generate adversarial images.
+Now that we have two trained models (the shallow network and the LeNet-5 network), next we will apply the :term:`FGM` evasion attack on the shallow network to generate adversarial images.
 Then, after we have the adversarial images, we will use them to evaluate some standard machine learning metrics against both models.
 This will give us a sense of the transferability of the attacks between models.
 
@@ -235,8 +237,8 @@ The testbed allows users to declare one-to-many job dependencies like this, whic
 The code below illustrates this by doing the following:
 
 #. A job is submitted that generates adversarial images based on the shallow net architecture (entry point **fgm**).
-#. We wait until the job starts and a MLFlow identifier is assigned, which we check by polling the API until we see the id appear.
-#. Once we have an id returned to us from the API, we queue up the metrics evaluation jobs and declare the job dependency using the ``depends_on`` option.
+#. We wait until the job starts and a MLFlow identifier is assigned, which we check by polling the :term:`API` until we see the id appear.
+#. Once we have an id returned to us from the :term:`API`, we queue up the metrics evaluation jobs and declare the job dependency using the ``depends_on`` option.
 #. The message "Dependent jobs submitted" will display once everything is queued up.
 
 .. code-block::
@@ -313,7 +315,7 @@ We should see the status of the jobs shift from "queued" to "started" and eventu
    print("")
    pprint.pprint(response_le_net_infer_shallow_net)
 
-We can similiarly run an FGM-based evasion attack using the LeNet-5 architecture as our starting point.
+We can similiarly run an :term:`FGM`\-based evasion attack using the LeNet-5 architecture as our starting point.
 The following code is very similar to the code we just saw, all we’ve done is swap out the entry point keyword argument that requests the shallow net architecture with a version that requests the LeNet-5 architecture.
 
 .. code-block::
@@ -366,7 +368,7 @@ The following code is very similar to the code we just saw, all we’ve done is 
 
    print("Dependent jobs submitted")
 
-Like before, we can monitor the status of the dependent jobs by querying the API using the code block below.
+Like before, we can monitor the status of the dependent jobs by querying the :term:`API` using the code block below.
 
 .. code-block::
 
@@ -386,7 +388,7 @@ Congratulations, you’ve just run your first experiment using Dioptra!
 Querying the MLFlow Tracking Service
 ------------------------------------
 
-Currently the Testbed API can only be used to register experiments and start jobs, so if users wish to extract their results programmatically, they can use the :py:class:`~mlflow.tracking.MlflowClient` class from the :py:mod:`mlflow` Python package to connect and query their results.
+Currently the Testbed :term:`API` can only be used to register experiments and start jobs, so if users wish to extract their results programmatically, they can use the :py:class:`~mlflow.tracking.MlflowClient` class from the :py:mod:`mlflow` Python package to connect and query their results.
 Since we captured the run ids generated by MLFlow, we can easily retrieve the data logged about one of our jobs and inspect the results.
 To start the client, we simply need to run,
 
@@ -396,7 +398,7 @@ To start the client, we simply need to run,
 
 The client uses the environment variable ``MLFLOW_TRACKING_URI`` to figure out how to connect to the MLFlow Tracking Service, which we configured near the top of this notebook.
 To query the results of one of our runs, we just need to pass the run id to the client’s ``get_run()`` method.
-As an example, let’s query the run results for the FGM attack applied to the LeNet-5 architecture,
+As an example, let’s query the run results for the :term:`FGM` attack applied to the LeNet-5 architecture,
 
 .. code-block::
 

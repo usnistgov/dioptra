@@ -20,6 +20,8 @@
 attacks
 =======
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: securingai_builtins.attacks
    :members:
    :undoc-members:

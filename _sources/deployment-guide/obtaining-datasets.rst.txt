@@ -20,13 +20,15 @@
 How to Obtain Common Datasets
 =============================
 
+.. include:: /_glossary_note.rst
+
 This guide provides instructions on how to obtain common datasets to use for an on-premises deployment.
 
 Kaggle Datasets
 ---------------
 
 Kaggle_ is a website and a company that provides a platform for hosting data science competitions and publishing public datasets.
-We recommend using their API to help with automating the download of any datasets from the site for an on-premises deployment.
+We recommend using their :term:`API` to help with automating the download of any datasets from the site for an on-premises deployment.
 In order to run all of the examples distributed with Dioptra, you will need to download the following datasets and challenges from Kaggle_:
 
 -  **Fruits360 Classification Dataset:** https://www.kaggle.com/moltean/fruits
@@ -38,7 +40,7 @@ Setup
 ~~~~~
 
 Register an account with Kaggle at https://www.kaggle.com/ so that you can access their content.
-Next, install the Python ``kaggle`` package so that you can use Python to access the API,
+Next, install the Python ``kaggle`` package so that you can use Python to access the :term:`API`,
 
 .. tabbed:: Pip
 
@@ -56,10 +58,10 @@ Next, install the Python ``kaggle`` package so that you can use Python to access
       conda activate kaggle
       python -m pip install kaggle
 
-Finally, you will need to generate a Kaggle API Token for authentication purposes by following these steps,
+Finally, you will need to generate a Kaggle :term:`API` Token for authentication purposes by following these steps,
 
 #. From your Kaggle account page go to ``Account`` settings (upper right corner of Kaggle site after login)
-#. Navigate to the ``API`` section and click on the **Create New API Token** button to generate an API token and download it as a ``kaggle.json`` file
+#. Navigate to the :term:`API` section and click on the **Create New API Token** button to generate an term:`API` token and download it as a ``kaggle.json`` file
 #. Create a ``~/.kaggle`` folder in your home directory if it does not already exist and move the ``kaggle.json`` file you downloaded into the ``~/.kaggle`` directory
 #. Restrict the access permissions for the ``kaggle.json`` file by running ``chmod 600 ~/.kaggle/kaggle.json``.
 
