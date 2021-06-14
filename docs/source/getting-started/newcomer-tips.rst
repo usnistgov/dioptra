@@ -20,6 +20,8 @@
 Setup Tips for Newcomers
 ========================
 
+.. include:: /_glossary_note.rst
+
 .. Purpose: Beginner guides and tips for installing and configuring external software used in the project and avoiding common setup pitfalls (Anaconda, Docker Desktop, Windows Subsystem for Linux 2)
 
 Coming soon!

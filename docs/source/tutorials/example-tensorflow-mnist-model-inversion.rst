@@ -20,12 +20,14 @@
 Tensorflow MNIST Model Inversion
 ================================
 
+.. include:: /_glossary_note.rst
+
 .. warning::
 
    The attack used in this demo is computationally expensive and will take a very long to complete if run using the CPUs found in a typical personal computer.
    For this reason, it is highly recommended that you run these demos on a CUDA-compatible GPU.
 
-The demo provided in the Jupyter notebook ``demo.ipynb`` uses Dioptra to run experiments that investigate the model inversion attack when launched on a neural network model trained on the MNIST dataset.
+The demo provided in the Jupyter notebook ``demo.ipynb`` uses Dioptra to run experiments that investigate the model inversion attack when launched on a neural network model trained on the :term:`MNIST` dataset.
 
 Using this Demo
 ---------------
@@ -37,7 +39,7 @@ Navigate to the tab below that best describes your setup in order to proceed.
 
    .. include:: snippets/common-local-setup-instructions.rst
 
-   The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
+   The startup sequence will take more time to finish the first time you use this demo, as you will need to download the :term:`MNIST` dataset, initialize the Testbed term:`API` database, and synchronize the task plugins to the S3 storage.
 
    .. include:: snippets/common-setup-instructions.rst
 
@@ -73,7 +75,7 @@ Attacks
 
 Model Inversion (MIFACE) is an attack which attempts to discover a generic representative image of each class of the training set.
 In the original paper, this was applied to facial recognition, where the attack would attempt to discover what a face looked like, given access to the model and the name of the person (where each person was their own class).
-In this example, it is instead applied to MNIST handwritten data, and the attack attempts to discover a representative handwritten digit which might be considered an average of the training set's images for that class, without having access to the training set.
+In this example, it is instead applied to :term:`MNIST` handwritten data, and the attack attempts to discover a representative handwritten digit which might be considered an average of the training set's images for that class, without having access to the training set.
 
 Model Inversion
 ^^^^^^^^^^^^^^^

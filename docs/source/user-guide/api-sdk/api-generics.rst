@@ -20,6 +20,8 @@
 generics
 ========
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: mitre.securingai.sdk.generics
    :members:
    :undoc-members:

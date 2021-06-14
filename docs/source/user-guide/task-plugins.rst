@@ -20,6 +20,8 @@
 Task Plugins
 ============
 
+.. include:: /_glossary_note.rst
+
 .. tip::
 
    Instructions for how to create your own task plugins are available in the :doc:`Custom Task Plugins guide <custom-task-plugins>`.
@@ -127,7 +129,7 @@ Discovery
 
 The directory where the Testbed Worker syncs the latest copies of the plugins from S3 must be added to Python's system path so that PyPlugs can search for them.
 However, modifying the Python system path must be done with care to ensure that you will still be able to import your other installed packages and avoid creating dependency conflicts.
-For this reason, the Testbed SDK provides the :py:func:`~mitre.securingai.sdk.plugin_dirs` function, which modifies the Python system path within a temporary context, see the example below,
+For this reason, the Testbed :term:`SDK` provides the :py:func:`~mitre.securingai.sdk.plugin_dirs` function, which modifies the Python system path within a temporary context, see the example below,
 
 .. code-block::
 

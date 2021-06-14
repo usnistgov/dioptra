@@ -20,6 +20,8 @@
 Custom Task Plugins
 ===================
 
+.. include:: /_glossary_note.rst
+
 When designing a custom example, you may be required to create a new task plugin in order to effect specific behaviors not included in the core plugins.
 
 Task Organization: Built-in Tasks

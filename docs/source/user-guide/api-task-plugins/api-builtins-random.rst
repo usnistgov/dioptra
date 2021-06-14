@@ -20,6 +20,8 @@
 random
 ======
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: securingai_builtins.random
    :members:
    :undoc-members:

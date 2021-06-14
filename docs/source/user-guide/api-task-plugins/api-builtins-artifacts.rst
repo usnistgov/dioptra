@@ -20,6 +20,8 @@
 artifacts
 =========
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: securingai_builtins.artifacts
    :members:
    :undoc-members:

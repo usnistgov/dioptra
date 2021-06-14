@@ -20,6 +20,8 @@
 Task Plugins Management
 =======================
 
+.. include:: /_glossary_note.rst
+
 There are two tasks associated with managing the task plugins on a Testbed deployment, which are reviewed in the sections below.
 
 Initial Configuration

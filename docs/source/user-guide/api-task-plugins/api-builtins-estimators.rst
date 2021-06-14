@@ -20,6 +20,8 @@
 estimators
 ==========
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: securingai_builtins.estimators
    :members:
    :undoc-members:

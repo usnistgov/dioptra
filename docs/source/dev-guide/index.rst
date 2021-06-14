@@ -20,6 +20,8 @@
 Getting Involved / Contributing
 ===============================
 
+.. include:: /_glossary_note.rst
+
 Please follow the guidelines linked below when contributing to this project.
 
 .. toctree::

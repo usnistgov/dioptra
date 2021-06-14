@@ -20,16 +20,18 @@
 Testbed REST API Reference
 ==========================
 
-This page documents the endpoints and available HTTP methods for the Dioptra REST API.
-In addition to using this page, it is highly recommended that Testbed users also use the Swagger documentation that the REST API service automatically generates at runtime, which presents all of this page's information in an interactive format.
-To access the Swagger documentation, just navigate to the web URL for the Testbed REST API service (omit the ``/api`` part at the end of the web address).
+.. include:: /_glossary_note.rst
+
+This page documents the endpoints and available :term:`HTTP` methods for the Dioptra :term:`REST` :term:`API`.
+In addition to using this page, it is highly recommended that Testbed users also use the Swagger documentation that the :term:`REST` :term:`API` service automatically generates at runtime, which presents all of this page's information in an interactive format.
+To access the Swagger documentation, just navigate to the web URL for the Testbed :term:`REST` :term:`API` service (omit the ``/api`` part at the end of the web address).
 
 .. figure:: ../images/swagger-docs-testbed-rest-api.gif
    :figwidth: 100%
-   :alt: An animation clicking and scrolling through the contents of the Dioptra REST API Swagger documentation.
+   :alt: An animation clicking and scrolling through the contents of the Dioptra :term:`REST` :term:`API` Swagger documentation.
 
-   An animated tour of the automatically generated Swagger documentation for the Dioptra REST API.
-   Several of the Testbed demos that you can run on a personal computer publish the REST API service at the address http://localhost:30080.
+   An animated tour of the automatically generated Swagger documentation for the Dioptra :term:`REST` :term:`API`.
+   Several of the Testbed demos that you can run on a personal computer publish the :term:`REST` :term:`API` service at the address http://localhost:30080.
 
 Experiment
 ----------
@@ -106,17 +108,17 @@ The following is the list of endpoints under the ``/api/job/`` namespace.
    :status 200: Success
    :reqheader X-Fields: An optional fields mask
    :>json string [].createdOn: The date and time the job was created.
-   :>json string [].dependsOn: A UUID for a previously submitted job to set as a dependency for the current job.
+   :>json string [].dependsOn: A :term:`UUID` for a previously submitted job to set as a dependency for the current job.
    :>json string [].entryPoint: The name of the entry point in the MLproject file to run.
    :>json string [].entryPointKwargs: A string listing parameter values to pass to the entry point for the job. The list of parameters is specified using the following format: `"-P param1=value1 -P param2=value2"`.
    :>json integer [].experimentId: An integer identifying a registered experiment.
-   :>json string [].jobId: A UUID that identifies the job.
+   :>json string [].jobId: A :term:`UUID` that identifies the job.
    :>json string [].lastModified: The date and time the job was last modified.
-   :>json string [].mlflowRunId: A UUID that identifies the MLFLow run associated with the job.
+   :>json string [].mlflowRunId: A :term:`UUID` that identifies the MLFLow run associated with the job.
    :>json integer [].queueId: An integer identifying a registered queue.
    :>json string [].status: The current status of the job. The allowed values are: queued, started, deferred, finished, failed.
    :>json string [].timeout: The maximum alloted time for a job before it times out and is stopped.
-   :>json string [].workflowUri: The URI pointing to the tarball archive or zip file uploaded with the job.
+   :>json string [].workflowUri: The :term:`URI` pointing to the tarball archive or zip file uploaded with the job.
 
 .. http:post:: /api/job/
 
@@ -129,20 +131,20 @@ The following is the list of endpoints under the ``/api/job/`` namespace.
    :form timeout: The maximum alloted time for a job before it times out and is stopped. If omitted, the job timeout will default to 24 hours.
    :form entry_point: *(required)* The name of the entry point in the MLproject file to run.
    :form entry_point_kwargs: A list of entry point parameter values to use for the job. The list is a string with the following format: `"-P param1=value1 -P param2=value2"`. If omitted, the default values in the MLproject file will be used.
-   :form depends_on: A job UUID to set as a dependency for this new job. The new job will not run until this job completes successfully. If omitted, then the new job will start as soon as computing resources are available.
+   :form depends_on: A job :term:`UUID` to set as a dependency for this new job. The new job will not run until this job completes successfully. If omitted, then the new job will start as soon as computing resources are available.
    :form workflow: *(required)* A tarball archive or zip file containing, at a minimum, a MLproject file and its associated entry point scripts.
    :>json string createdOn: The date and time the job was created.
-   :>json string dependsOn: A UUID for a previously submitted job to set as a dependency for the current job.
+   :>json string dependsOn: A :term:`UUID` for a previously submitted job to set as a dependency for the current job.
    :>json string entryPoint: The name of the entry point in the MLproject file to run.
    :>json string entryPointKwargs: A string listing parameter values to pass to the entry point for the job. The list of parameters is specified using the following format: `"-P param1=value1 -P param2=value2"`.
    :>json integer experimentId: An integer identifying a registered experiment.
-   :>json string jobId: A UUID that identifies the job.
+   :>json string jobId: A :term:`UUID` that identifies the job.
    :>json string lastModified: The date and time the job was last modified.
-   :>json string mlflowRunId: A UUID that identifies the MLFLow run associated with the job.
+   :>json string mlflowRunId: A :term:`UUID` that identifies the MLFLow run associated with the job.
    :>json integer queueId: An integer identifying a registered queue.
    :>json string status: The current status of the job. The allowed values are: queued, started, deferred, finished, failed.
    :>json string timeout: The maximum alloted time for a job before it times out and is stopped.
-   :>json string workflowUri: The URI pointing to the tarball archive or zip file uploaded with the job.
+   :>json string workflowUri: The :term:`URI` pointing to the tarball archive or zip file uploaded with the job.
 
 .. openapi:: api-restapi/openapi.yml
    :include:

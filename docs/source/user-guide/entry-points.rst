@@ -38,6 +38,8 @@
 Entry Points
 ============
 
+.. include:: /_glossary_note.rst
+
 .. tip::
 
    Instructions for how to create your own entry points are available in the :doc:`Creating a New Entry Point guide <custom-entry-points>`.
@@ -52,19 +54,19 @@ Entry points are the fundamental unit of work within the Testbed, where each job
 Dioptra derives its modularity in part by establishing a convention for how to compose new entry points.
 The convention is identifying related units of work, for example applying one out of many evasion attacks to generate a batch of adversarial images, and then ensuring they are interchangeable with one another by implementing the corresponding executable scripts to share a common set of inputs and outputs.
 This guided the construction of all the example experiments distributed as part of this project.
-The SDK library and the task plugins system are both provided to help Testbed users apply this convention to their own experiments.
+The :term:`SDK` library and the task plugins system are both provided to help Testbed users apply this convention to their own experiments.
 
 .. note::
 
    This particular usage for the term *entry point* `originates with the MLFlow library <https://mlflow.org/docs/latest/projects.html#overview>`_, and we have adopted for this project since Dioptra uses MLFlow_ on the backend to provide job tracking capabilities.
 
-Each implementation of a Testbed entry point requires, at minimum, two separate files, a YAML formatted ``MLproject`` file, and an executable Python script that can set its internal parameters via command-line options (e.g. :py:mod:`argparse` and :py:mod:`click`).
+Each implementation of a Testbed entry point requires, at minimum, two separate files, a :term:`YAML` formatted ``MLproject`` file, and an executable Python script that can set its internal parameters via command-line options (e.g. :py:mod:`argparse` and :py:mod:`click`).
 These files are the topics of the following sections.
 
 MLproject Specifications
 ------------------------
 
-As was mentioned before, the ``MLproject`` file is a plain text file in YAML syntax that declares an entry point's executable command and its available parameters.
+As was mentioned before, the ``MLproject`` file is a plain text file in :term:`YAML` syntax that declares an entry point's executable command and its available parameters.
 An example of an ``MLproject`` file is below,
 
 .. code-block:: yaml
@@ -130,11 +132,11 @@ float
 path
    A path on the local file system.
    Any relative ``path`` parameters will be converted to absolute paths.
-   Any paths passed as distributed storage URIs (``s3://``, ``dbfs://``, ``gs://``, etc.) will be downloaded to local files.
+   Any paths passed as distributed storage |URI|\s (``s3://``, ``dbfs://``, ``gs://``, etc.) will be downloaded to local files.
    Use this type for programs that can only read local files.
 
 uri
-   A URI for data either in a local or distributed storage system.
+   A |URI| for data either in a local or distributed storage system.
    Relative paths are converted to absolute paths, as in the `path` type.
    Use this type for programs that know how to read from distributed storage (e.g., programs that use the :py:mod:`boto3` package to directly access S3 storage).
 
@@ -146,7 +148,7 @@ However, if users wish to make use of the Testbed's powerful job tracking and ta
 
 .. attention::
 
-   The Testbed SDK, in a planned future release, will be extending the ``MLproject`` specification to facilitate the templated generation of entry point scripts.
+   The Testbed :term:`SDK`, in a planned future release, will be extending the ``MLproject`` specification to facilitate the templated generation of entry point scripts.
    Users will have an easier to migrating their scripts to this new approach if they follow the Testbed's standard for entry point scripts when :doc:`creating their own entry points <custom-entry-points>`.
 
 Setting Parameters
@@ -285,3 +287,7 @@ The anatomy of this call will be discussed in the :doc:`next section of the user
 
 .. _MLFlow: https://mlflow.org
 .. _Prefect: https://www.prefect.io
+
+.. Aliases
+
+.. |URI| replace:: :term:`URI`

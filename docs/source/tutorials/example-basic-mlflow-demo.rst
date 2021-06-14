@@ -20,6 +20,8 @@
 Hello World!
 ============
 
+.. include:: /_glossary_note.rst
+
 This demo provides a baseline skeleton example for user entry point customization and job submission.
 It can be used as a basic template for crafting your own demos to run within the architecture.
 
@@ -115,7 +117,7 @@ Submit and run jobs
 -------------------
 
 The entrypoints that we will be running in this example are implemented in the Python source files under ``src/`` and the ``MLproject`` file.
-To run these entrypoints within the testbed architecture, we need to package those files up into an archive and submit it to the Testbed RESTful API to create a new job.
+To run these entrypoints within the testbed architecture, we need to package those files up into an archive and submit it to the Testbed :term:`REST` :term:`API` to create a new job.
 For convenience, the ``Makefile`` provides a rule for creating the archive file for this example, just run ``make workflows``,
 
 .. code:: bash
@@ -125,8 +127,8 @@ For convenience, the ``Makefile`` provides a rule for creating the archive file 
     # Create the workflows.tar.gz file
     make workflows
 
-To connect with the endpoint, we will use a client class defined in the ``utils.py`` file that is able to connect with the Testbed RESTful API using the HTTP protocol.
-We connect using the client below, which uses the environment variable ``AI_RESTAPI_URI`` to figure out how to connect to the Testbed RESTful API,
+To connect with the endpoint, we will use a client class defined in the ``utils.py`` file that is able to connect with the Testbed :term:`REST` :term:`API` using the :term:`HTTP` protocol.
+We connect using the client below, which uses the environment variable ``AI_RESTAPI_URI`` to figure out how to connect to the Testbed :term:`REST` :term:`API`,
 
 .. code:: python3
 

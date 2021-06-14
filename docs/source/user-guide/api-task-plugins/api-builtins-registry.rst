@@ -20,6 +20,8 @@
 registry
 ========
 
+.. include:: /_glossary_note.rst
+
 .. automodule:: securingai_builtins.registry
    :members:
    :undoc-members:

@@ -20,6 +20,8 @@
 Merge Request Guidelines
 ------------------------
 
+.. include:: /_glossary_note.rst
+
 Please follow these steps to submit a contribution using a merge request:
 
 -  Clone the repository to your local computer:

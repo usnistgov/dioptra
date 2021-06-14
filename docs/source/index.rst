@@ -18,6 +18,8 @@
 What is Dioptra?
 ================
 
+.. include:: /_glossary_note.rst
+
 .. note::
 
    The project was recently renamed from its internal name of **Securing AI Testbed** to **Dioptra**, and updating all usages of the old name is a work-in-progress.
@@ -37,6 +39,12 @@ Points of Contact
 
 Email us: ai-nccoe@nist.gov
 
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
+
+   glossary
 
 .. toctree::
    :hidden:
