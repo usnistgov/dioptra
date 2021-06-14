@@ -53,6 +53,15 @@
 *********************************************/
 
 main.bd-content {
+    footer.footer {
+        .container {
+            .disclaimer {
+                font-size: 90%;
+                font-style: italic;
+            }
+        }
+    }
+
     #main-content {
 
         // auto-doc, see: https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#directive-autoattribute
