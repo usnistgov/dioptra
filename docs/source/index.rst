@@ -49,21 +49,6 @@ Email us: ai-nccoe@nist.gov
 .. toctree::
    :hidden:
    :maxdepth: -1
-   :caption: Tutorials and Examples
-
-   tutorials/example-basic-mlflow-demo
-   tutorials/example-tensorflow-mnist-classifier
-   tutorials/example-tensorflow-mnist-feature-squeezing
-   tutorials/example-tensorflow-mnist-model-inversion
-   tutorials/example-tensorflow-adversarial-patches
-   tutorials/example-tensorflow-backdoor-poisoning
-   tutorials/example-tensorflow-imagenet-resnet50-fgm
-   tutorials/example-tensorflow-imagenet-pixel-threshold
-   tutorials/example-pytorch-mnist-membership-inference
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
    :caption: User Guide
 
    user-guide/the-basics
@@ -75,6 +60,21 @@ Email us: ai-nccoe@nist.gov
    user-guide/task-plugins-collection
    user-guide/api-reference-sdk
    user-guide/api-reference-restapi
+
+.. toctree::
+   :hidden:
+   :maxdepth: -1
+   :caption: Tutorials and Examples
+
+   tutorials/example-basic-mlflow-demo
+   tutorials/example-tensorflow-mnist-classifier
+   tutorials/example-tensorflow-mnist-feature-squeezing
+   tutorials/example-tensorflow-mnist-model-inversion
+   tutorials/example-tensorflow-adversarial-patches
+   tutorials/example-tensorflow-backdoor-poisoning
+   tutorials/example-tensorflow-imagenet-resnet50-fgm
+   tutorials/example-tensorflow-imagenet-pixel-threshold
+   tutorials/example-pytorch-mnist-membership-inference
 
 .. toctree::
    :hidden:
