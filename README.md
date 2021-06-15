@@ -1,7 +1,8 @@
 # Dioptra
 
-The project documentation is in the `docs` folder and compiled using Sphinx.
-To build the documentation locally, make sure you have Docker installed and try to pull the builder images:
+The project documentation is available at https://pages.nist.gov/dioptra/.
+
+To build the documentation locally, they are in the `docs` folder and compiled using Sphinx, make sure you have Docker installed and try to pull the builder images:
 
     make pull-latest-ci
 
