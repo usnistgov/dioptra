@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 
 <html>
@@ -40,15 +42,25 @@
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/jquery.visible.js"></script>
+    <script src="../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../_static/applyLeaveNotice.js"></script>
+    <script src="../_static/smoothNavScroll.js"></script>
     <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Task Plugins Management" href="task-plugins-management.html" />
     <link rel="prev" title="Docker Images List and Settings" href="docker-images-list-and-settings.html" />
+    
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
     
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
@@ -1067,8 +1079,8 @@ chmod <span class="m">0700</span> /var/securing-ai/lab-deployment/redis
 <p class="rubric">Configure the dataset volume</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">nfs-datasets</span></code> volume will need to be updated based on the details of your deployment,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="be0e8b8d-b59e-4664-9132-dcb3fe7d56ba" name="4cfa8540-ea4f-4157-8e36-1e60e8a70673" type="radio">
-</input><label class="tabbed-label" for="be0e8b8d-b59e-4664-9132-dcb3fe7d56ba">
+<input checked="checked" id="70b95bf7-7da4-42f9-aea6-9f8f9b9a7afd" name="f8a8753a-db9a-4b51-a6d9-da0b2766d4ae" type="radio">
+</input><label class="tabbed-label" for="70b95bf7-7da4-42f9-aea6-9f8f9b9a7afd">
 Datasets on NFS share</label><div class="tabbed-content docutils">
 <p>The following Docker volume assumes that the NFS share is the directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code> on a device with the IP address <code class="docutils literal notranslate"><span class="pre">192.168.1.20</span></code>.
 Update it to match the details of your NFS share.</p>
@@ -1081,8 +1093,8 @@ Update it to match the details of your NFS share.</p>
 </pre></div>
 </div>
 </div>
-<input id="fa264642-eb72-456d-9dca-8285e215f4a9" name="4cfa8540-ea4f-4157-8e36-1e60e8a70673" type="radio">
-</input><label class="tabbed-label" for="fa264642-eb72-456d-9dca-8285e215f4a9">
+<input id="63e2ea97-f368-4d1c-baef-86c708f4b000" name="f8a8753a-db9a-4b51-a6d9-da0b2766d4ae" type="radio">
+</input><label class="tabbed-label" for="63e2ea97-f368-4d1c-baef-86c708f4b000">
 Datasets in local directory</label><div class="tabbed-content docutils">
 <p>The following Docker volume assumes that the data is stored in the local directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code>.
 Update this to match the folder where you store your datasets.</p>

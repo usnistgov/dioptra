@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 
 <html>
@@ -40,15 +42,25 @@
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/jquery.visible.js"></script>
+    <script src="../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../_static/applyLeaveNotice.js"></script>
+    <script src="../_static/smoothNavScroll.js"></script>
     <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="System Requirements" href="../deployment-guide/system-requirements.html" />
     <link rel="prev" title="Tensorflow ImageNet Pixel Threshold" href="example-tensorflow-imagenet-pixel-threshold.html" />
+    
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
     
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
@@ -520,8 +532,8 @@
 <p>The steps for getting your environment ready to run this demo depend on whether you intend to run the demo locally (i.e. on your personal computer) or on an existing on-prem deployment.
 Navigate to the tab below that best describes your setup in order to proceed.</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="9c7e9484-e87b-4df9-908c-59fbe9f61c5b" name="c55f7aaa-b73f-42fd-bd0f-fecfd93a8178" type="radio">
-</input><label class="tabbed-label" for="9c7e9484-e87b-4df9-908c-59fbe9f61c5b">
+<input checked="checked" id="c68069cc-963f-47d6-b199-4208a2fe79ec" name="6d33489d-acc2-4827-8752-7eb1ba8154df" type="radio">
+</input><label class="tabbed-label" for="c68069cc-963f-47d6-b199-4208a2fe79ec">
 Local</label><div class="tabbed-content docutils">
 <p>Everything you need to run this demo locally is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
 Once you have downloaded the images, stay in the terminal and navigate to this example’s directory and run the demo startup sequence,</p>
@@ -544,8 +556,8 @@ Running block 7 will run the membership inference attack on the <a class="refere
 </div>
 <p>If you were watching the output logs, you will need to press <kbd class="kbd docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
 </div>
-<input id="e3d15072-349d-4ca2-8229-d396c7c2a004" name="c55f7aaa-b73f-42fd-bd0f-fecfd93a8178" type="radio">
-</input><label class="tabbed-label" for="e3d15072-349d-4ca2-8229-d396c7c2a004">
+<input id="cf91c32b-41d6-4fc9-880e-2f8b3b2ce0af" name="6d33489d-acc2-4827-8752-7eb1ba8154df" type="radio">
+</input><label class="tabbed-label" for="cf91c32b-41d6-4fc9-880e-2f8b3b2ce0af">
 On-Prem Deployment</label><div class="tabbed-content docutils">
 <p>To run the demo on an on-prem deployment, all you need to do is download and start the <strong>jupyter</strong> service defined in this example’s <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file.
 Open a terminal and navigate to this example’s directory and run the <strong>jupyter</strong> startup sequence,</p>

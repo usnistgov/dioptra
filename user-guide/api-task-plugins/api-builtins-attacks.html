@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 
 <html>
@@ -40,15 +42,25 @@
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/togglebutton.js"></script>
+    <script src="../../_static/jquery.visible.js"></script>
+    <script src="../../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../../_static/applyLeaveNotice.js"></script>
+    <script src="../../_static/smoothNavScroll.js"></script>
     <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="backend_configs" href="api-builtins-backend_configs.html" />
     <link rel="prev" title="artifacts" href="api-builtins-artifacts.html" />
+    
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
     
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
@@ -540,7 +552,7 @@ each image.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_dir</strong> – The directory containing the clean test images.</p></li>
 <li><p><strong>adv_data_dir</strong> – The directory to use when saving the generated adversarial images.</p></li>
-<li><p><strong>keras_classifier</strong> – A trained <a class="reference external" href="https://adversarial-robustness-toolbox.readthedocs.io/en/latest/modules/estimators/classification.html#art.estimators.classification.KerasClassifier" title="(in Adversarial Robustness Toolbox v1.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasClassifier</span></code></a>.</p></li>
+<li><p><strong>keras_classifier</strong> – A trained <a class="reference external" href="https://adversarial-robustness-toolbox.readthedocs.io/en/latest/modules/estimators/classification.html#art.estimators.classification.KerasClassifier" title="(in Adversarial Robustness Toolbox v1.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasClassifier</span></code></a>.</p></li>
 <li><p><strong>image_size</strong> – A tuple of integers <cite>(height, width, channels)</cite> used to preprocess
 the images so that they all have the same dimensions and number of color
 channels. <cite>channels=3</cite> means RGB color images and <cite>channels=1</cite> means

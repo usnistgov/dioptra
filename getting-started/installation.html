@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 
 <html>
@@ -40,15 +42,25 @@
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/jquery.visible.js"></script>
+    <script src="../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../_static/applyLeaveNotice.js"></script>
+    <script src="../_static/smoothNavScroll.js"></script>
     <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Setup Tips for Newcomers" href="newcomer-tips.html" />
     <link rel="prev" title="Glossary" href="../glossary.html" />
+    
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
     
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
@@ -568,8 +580,8 @@ General instructions on how to deploy the Testbed in an on-premises server can b
 The easiest way to accomplish this is using the pre-built configuration files included in the project codebase to create a <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environment</a>.</p>
 <p>There are two install options to start using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environments</a>,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="03957f55-0eaf-4c19-8fee-b973c79d4afe" name="4f4758e5-2c7d-4d2e-a2dd-fd6311b20a80" type="radio">
-</input><label class="tabbed-label" for="03957f55-0eaf-4c19-8fee-b973c79d4afe">
+<input checked="checked" id="4136c969-2e1a-4fc9-b4d6-8ea4ee233545" name="907d21d2-deee-4b26-bf08-3f03c278f40d" type="radio">
+</input><label class="tabbed-label" for="4136c969-2e1a-4fc9-b4d6-8ea4ee233545">
 Anaconda installation</label><div class="tabbed-content docutils">
 <p>The following links will provide a installation package for version 2020.11 of <a class="reference external" href="https://docs.anaconda.com/">Anaconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
@@ -579,8 +591,8 @@ Anaconda installation</label><div class="tabbed-content docutils">
 </ul>
 <p>If your host machine does not meet the <span class="xref std std-ref">quickstart-system-requirements</span>, then go to the <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda Installation Documents</a> for more help.</p>
 </div>
-<input id="c6585055-4b99-40b5-bdfb-7c8988f1b866" name="4f4758e5-2c7d-4d2e-a2dd-fd6311b20a80" type="radio">
-</input><label class="tabbed-label" for="c6585055-4b99-40b5-bdfb-7c8988f1b866">
+<input id="f0e0d770-edc5-4fb4-ad00-fffe731bb2ee" name="907d21d2-deee-4b26-bf08-3f03c278f40d" type="radio">
+</input><label class="tabbed-label" for="f0e0d770-edc5-4fb4-ad00-fffe731bb2ee">
 Miniconda installation</label><div class="tabbed-content docutils">
 <p>The following links will provide a installation package for the latest version of <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
@@ -628,18 +640,18 @@ If performance becomes an issue when using a virtual machine, consider increasin
 <span id="quickstart-clone-repository"></span><h3>Clone the Repository<a class="headerlink" href="#clone-the-repository" title="Permalink to this headline">¶</a></h3>
 <p>To clone the repository, open a new <strong>Terminal</strong> session for your operating system,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="20c18bd8-0252-4e17-b9ee-3e29dd5e1667" name="19906ac4-949b-46fd-83c2-b4a50fb433ab" type="radio">
-</input><label class="tabbed-label" for="20c18bd8-0252-4e17-b9ee-3e29dd5e1667">
+<input checked="checked" id="cbdbe14e-0f28-4644-8655-8a8ae0df77bc" name="662c8966-7f5a-4e63-883f-078a2c35e943" type="radio">
+</input><label class="tabbed-label" for="cbdbe14e-0f28-4644-8655-8a8ae0df77bc">
 Windows</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">windows</kbd> + <kbd class="kbd docutils literal notranslate">r</kbd> to open <strong>Run</strong>, then type <code class="docutils literal notranslate"><span class="pre">wsl</span></code> into the search bar and click <em>OK</em> to start a <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/">Windows Subsystem for Linux</a> session.</p>
 </div>
-<input id="759e31d6-88d7-4c32-98c6-fc76d14cad8b" name="19906ac4-949b-46fd-83c2-b4a50fb433ab" type="radio">
-</input><label class="tabbed-label" for="759e31d6-88d7-4c32-98c6-fc76d14cad8b">
+<input id="1dd18197-5f40-4357-bb78-559e1352d999" name="662c8966-7f5a-4e63-883f-078a2c35e943" type="radio">
+</input><label class="tabbed-label" for="1dd18197-5f40-4357-bb78-559e1352d999">
 MacOS</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">command</kbd> + <kbd class="kbd docutils literal notranslate">space</kbd> to open the <strong>Spotlight Search</strong>, type <code class="docutils literal notranslate"><span class="pre">Terminal</span></code> into the search bar, and click the <em>Terminal</em> application under <em>Top Hit</em> at the top of your results.</p>
 </div>
-<input id="72165063-4e48-4521-87e4-9b0e191e3bdf" name="19906ac4-949b-46fd-83c2-b4a50fb433ab" type="radio">
-</input><label class="tabbed-label" for="72165063-4e48-4521-87e4-9b0e191e3bdf">
+<input id="e3386e2a-6140-48b2-97d7-9c4952eb05e4" name="662c8966-7f5a-4e63-883f-078a2c35e943" type="radio">
+</input><label class="tabbed-label" for="e3386e2a-6140-48b2-97d7-9c4952eb05e4">
 Linux</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">ctrl</kbd> + <kbd class="kbd docutils literal notranslate">alt</kbd> + <kbd class="kbd docutils literal notranslate">t</kbd> to open the <strong>Terminal</strong>.</p>
 </div>
@@ -662,15 +674,15 @@ For this reason, WSL and MacOS users are both encouraged to create and clone the
 </div>
 <p>Clone the repository to your local computer,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="7b215a5a-4ff6-447d-8916-b81ac6b58d14" name="a114622d-65b2-4858-bf8c-b203326b1a89" type="radio">
-</input><label class="tabbed-label" for="7b215a5a-4ff6-447d-8916-b81ac6b58d14">
+<input checked="checked" id="3cd1ebd7-da66-4db6-b249-1e944a9203de" name="1f26e579-d44d-4f5e-8863-1827ef9f5e21" type="radio">
+</input><label class="tabbed-label" for="3cd1ebd7-da66-4db6-b249-1e944a9203de">
 Clone with HTTPS</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/usnistgov/dioptra.git
 </pre></div>
 </div>
 </div>
-<input id="bf588a9b-54fb-447f-ab0e-e8b349c5912b" name="a114622d-65b2-4858-bf8c-b203326b1a89" type="radio">
-</input><label class="tabbed-label" for="bf588a9b-54fb-447f-ab0e-e8b349c5912b">
+<input id="0081612a-fef1-4f9e-918b-04ff7414bda0" name="1f26e579-d44d-4f5e-8863-1827ef9f5e21" type="radio">
+</input><label class="tabbed-label" for="0081612a-fef1-4f9e-918b-04ff7414bda0">
 Clone with SSH</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:usnistgov/dioptra.git
 </pre></div>
