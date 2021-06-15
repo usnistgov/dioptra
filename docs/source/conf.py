@@ -102,6 +102,13 @@ html_static_path = ["_static"]
 
 html_css_files = ["securing-ai-testbed.css"]
 
+html_js_files = [
+    "jquery.visible.js",
+    "jquery.leaveNotice-nist.js",
+    "applyLeaveNotice.js",
+    "smoothNavScroll.js",
+]
+
 html_theme_options = {
     "repository_url": "https://github.com/usnistgov/dioptra",
     "repository_branch": "master",
