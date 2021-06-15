@@ -53,6 +53,20 @@
 *********************************************/
 
 main.bd-content {
+    .topbar {
+        .topbar-contents {
+            .bd-toc {
+                position: relative;
+            }
+        }
+    }
+
+    .topbar-transparent {
+        background-color: unset;
+        box-shadow: unset;
+        transition: down 0.1s;
+    }
+
     footer.footer {
         .container {
             .disclaimer {
