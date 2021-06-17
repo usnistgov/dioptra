@@ -93,7 +93,9 @@ def create_image_dataset(
         - |flow_from_directory|
         - :py:class:`~tensorflow.keras.preprocessing.image.DirectoryIterator`
     """
-    color_mode: str = "color" if image_size[2] == 3 else "grayscale"
+    color_mode: str = (
+        "rgb" if image_size[2] == 3 else "rgba" if image_size[2] == 4 else "grayscale"
+    )
     target_size: Tuple[int, int] = image_size[:2]
 
     data_generator: ImageDataGenerator = ImageDataGenerator(
