@@ -28,9 +28,9 @@
     <link rel="stylesheet" href="../../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/securing-ai-testbed.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/securing-ai-testbed.css" />
     
   <link rel="preload" as="script" href="../../_static/js/index.1c5a1a01449ed65a7b51.js">
 
@@ -38,16 +38,15 @@
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <script src="../../_static/jquery.visible.js"></script>
     <script src="../../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../../_static/applyLeaveNotice.js"></script>
     <script src="../../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="data" href="api-builtins-data.html" />
@@ -521,7 +520,7 @@
 <p>A task plugin module for initializing and configuring Tensorflow.</p>
 <dl class="py function">
 <dt id="securingai_builtins.backend_configs.tensorflow.init_tensorflow">
-<code class="sig-name descname">init_tensorflow</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="p">:</span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a><a class="reference internal" href="../../_modules/securingai_builtins/backend_configs/tensorflow.html#init_tensorflow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#securingai_builtins.backend_configs.tensorflow.init_tensorflow" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">init_tensorflow</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><span class="pre">None</span></a><a class="reference internal" href="../../_modules/securingai_builtins/backend_configs/tensorflow.html#init_tensorflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.backend_configs.tensorflow.init_tensorflow" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes Tensorflow to ensure compatibility and reproducibility.</p>
 <p>This task plugin <strong>must</strong> be run before any other features from Tensorflow are used.
 It disables Tensorflow’s eager execution, which is not compatible with the Testbed’s

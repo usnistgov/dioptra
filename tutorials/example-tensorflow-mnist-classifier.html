@@ -28,9 +28,9 @@
     <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     
   <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
 
@@ -38,16 +38,15 @@
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/language_data.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Tensorflow MNIST Feature Squeezing" href="example-tensorflow-mnist-feature-squeezing.html" />
@@ -561,7 +560,7 @@ Double click the <code class="docutils literal notranslate"><span class="pre">wo
 From here, follow the provided instructions to run the demo provided in the Jupyter notebook.</p>
 <p>To watch the output logs for the Tensorflow worker containers as you step through the demo, run <code class="docutils literal notranslate"><span class="pre">docker-compose</span> <span class="pre">logs</span> <span class="pre">-f</span> <span class="pre">tfcpu-01</span> <span class="pre">tfcpu-02</span></code> in your terminal.</p>
 <p>When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code> on the command-line.
-If you were watching the output logs, you will need to press <kbd class="kbd docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
+If you were watching the output logs, you will need to press <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The contents that follows is also found in the corresponding Jupyter notebook for this demo.</p>
@@ -878,7 +877,7 @@ The following code is very similar to the code we just saw, all we’ve done is 
 </div>
 <div class="section" id="querying-the-mlflow-tracking-service">
 <h2>Querying the MLFlow Tracking Service<a class="headerlink" href="#querying-the-mlflow-tracking-service" title="Permalink to this headline">¶</a></h2>
-<p>Currently the Testbed <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> can only be used to register experiments and start jobs, so if users wish to extract their results programmatically, they can use the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.tracking.html#mlflow.tracking.MlflowClient" title="(in MLflow v1.17.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MlflowClient</span></code></a> class from the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#module-mlflow" title="(in MLflow v1.17.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mlflow</span></code></a> Python package to connect and query their results.
+<p>Currently the Testbed <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> can only be used to register experiments and start jobs, so if users wish to extract their results programmatically, they can use the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.tracking.html#mlflow.tracking.MlflowClient" title="(in MLflow v1.18.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MlflowClient</span></code></a> class from the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#module-mlflow" title="(in MLflow v1.18.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mlflow</span></code></a> Python package to connect and query their results.
 Since we captured the run ids generated by MLFlow, we can easily retrieve the data logged about one of our jobs and inspect the results.
 To start the client, we simply need to run,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mlflow_client</span> <span class="o">=</span> <span class="n">MlflowClient</span><span class="p">()</span>

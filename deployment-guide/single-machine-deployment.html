@@ -28,9 +28,9 @@
     <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     
   <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
 
@@ -38,16 +38,15 @@
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/language_data.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Task Plugins Management" href="task-plugins-management.html" />
@@ -1079,8 +1078,8 @@ chmod <span class="m">0700</span> /var/securing-ai/lab-deployment/redis
 <p class="rubric">Configure the dataset volume</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">nfs-datasets</span></code> volume will need to be updated based on the details of your deployment,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="70b95bf7-7da4-42f9-aea6-9f8f9b9a7afd" name="f8a8753a-db9a-4b51-a6d9-da0b2766d4ae" type="radio">
-</input><label class="tabbed-label" for="70b95bf7-7da4-42f9-aea6-9f8f9b9a7afd">
+<input checked="checked" id="15bcd6c7-4c3c-47a3-bbd8-d95a5b53cfaf" name="9939cef1-bb72-4ec0-9efe-fe71f1676fa3" type="radio">
+</input><label class="tabbed-label" for="15bcd6c7-4c3c-47a3-bbd8-d95a5b53cfaf">
 Datasets on NFS share</label><div class="tabbed-content docutils">
 <p>The following Docker volume assumes that the NFS share is the directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code> on a device with the IP address <code class="docutils literal notranslate"><span class="pre">192.168.1.20</span></code>.
 Update it to match the details of your NFS share.</p>
@@ -1093,8 +1092,8 @@ Update it to match the details of your NFS share.</p>
 </pre></div>
 </div>
 </div>
-<input id="63e2ea97-f368-4d1c-baef-86c708f4b000" name="f8a8753a-db9a-4b51-a6d9-da0b2766d4ae" type="radio">
-</input><label class="tabbed-label" for="63e2ea97-f368-4d1c-baef-86c708f4b000">
+<input id="255ed7db-5058-42b9-92ca-3627fa4beb0c" name="9939cef1-bb72-4ec0-9efe-fe71f1676fa3" type="radio">
+</input><label class="tabbed-label" for="255ed7db-5058-42b9-92ca-3627fa4beb0c">
 Datasets in local directory</label><div class="tabbed-content docutils">
 <p>The following Docker volume assumes that the data is stored in the local directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code>.
 Update this to match the folder where you store your datasets.</p>

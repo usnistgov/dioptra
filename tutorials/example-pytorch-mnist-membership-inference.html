@@ -28,9 +28,9 @@
     <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     
   <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
 
@@ -38,16 +38,15 @@
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/language_data.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="System Requirements" href="../deployment-guide/system-requirements.html" />
@@ -532,8 +531,8 @@
 <p>The steps for getting your environment ready to run this demo depend on whether you intend to run the demo locally (i.e. on your personal computer) or on an existing on-prem deployment.
 Navigate to the tab below that best describes your setup in order to proceed.</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="c68069cc-963f-47d6-b199-4208a2fe79ec" name="6d33489d-acc2-4827-8752-7eb1ba8154df" type="radio">
-</input><label class="tabbed-label" for="c68069cc-963f-47d6-b199-4208a2fe79ec">
+<input checked="checked" id="7bc98c5c-f4d0-4905-8270-b067d9d03e56" name="7733ac20-3f4e-4191-9f2c-c5d9d257f7a2" type="radio">
+</input><label class="tabbed-label" for="7bc98c5c-f4d0-4905-8270-b067d9d03e56">
 Local</label><div class="tabbed-content docutils">
 <p>Everything you need to run this demo locally is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
 Once you have downloaded the images, stay in the terminal and navigate to this example’s directory and run the demo startup sequence,</p>
@@ -554,10 +553,10 @@ Running block 7 will run the membership inference attack on the <a class="refere
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make teardown
 </pre></div>
 </div>
-<p>If you were watching the output logs, you will need to press <kbd class="kbd docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
+<p>If you were watching the output logs, you will need to press <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
 </div>
-<input id="cf91c32b-41d6-4fc9-880e-2f8b3b2ce0af" name="6d33489d-acc2-4827-8752-7eb1ba8154df" type="radio">
-</input><label class="tabbed-label" for="cf91c32b-41d6-4fc9-880e-2f8b3b2ce0af">
+<input id="12881174-c48b-4a51-a378-c8a9e8bc541c" name="7733ac20-3f4e-4191-9f2c-c5d9d257f7a2" type="radio">
+</input><label class="tabbed-label" for="12881174-c48b-4a51-a378-c8a9e8bc541c">
 On-Prem Deployment</label><div class="tabbed-content docutils">
 <p>To run the demo on an on-prem deployment, all you need to do is download and start the <strong>jupyter</strong> service defined in this example’s <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file.
 Open a terminal and navigate to this example’s directory and run the <strong>jupyter</strong> startup sequence,</p>

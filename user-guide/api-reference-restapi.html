@@ -28,9 +28,9 @@
     <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     
   <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
 
@@ -38,16 +38,15 @@
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/language_data.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Hello World!" href="../tutorials/example-basic-mlflow-demo.html" />
@@ -578,7 +577,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <p>The following is the list of endpoints under the <code class="docutils literal notranslate"><span class="pre">/api/experiment/</span></code> namespace.</p>
 <dl class="http get">
 <dt id="get--api-experiment-">
-<code class="sig-name descname">GET </code><code class="sig-name descname">/api/experiment/</code><a class="headerlink" href="#get--api-experiment-" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/</span></code><a class="headerlink" href="#get--api-experiment-" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Gets a list of all registered experiments</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
@@ -604,7 +603,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http post">
 <dt id="post--api-experiment-">
-<code class="sig-name descname">POST </code><code class="sig-name descname">/api/experiment/</code><a class="headerlink" href="#post--api-experiment-" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">POST</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/</span></code><a class="headerlink" href="#post--api-experiment-" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Creates a new experiment via an experiment registration form</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
@@ -635,7 +634,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http delete">
 <dt id="delete--api-experiment-experimentId">
-<code class="sig-name descname">DELETE </code><code class="sig-name descname">/api/experiment/{experimentId}</code><a class="headerlink" href="#delete--api-experiment-experimentId" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/{experimentId}</span></code><a class="headerlink" href="#delete--api-experiment-experimentId" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Deletes an experiment by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -653,7 +652,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http get">
 <dt id="get--api-experiment-experimentId">
-<code class="sig-name descname">GET </code><code class="sig-name descname">/api/experiment/{experimentId}</code><a class="headerlink" href="#get--api-experiment-experimentId" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/{experimentId}</span></code><a class="headerlink" href="#get--api-experiment-experimentId" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Gets an experiment by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -684,7 +683,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http put">
 <dt id="put--api-experiment-experimentId">
-<code class="sig-name descname">PUT </code><code class="sig-name descname">/api/experiment/{experimentId}</code><a class="headerlink" href="#put--api-experiment-experimentId" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/{experimentId}</span></code><a class="headerlink" href="#put--api-experiment-experimentId" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Modifies an experiment by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -720,7 +719,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http delete">
 <dt id="delete--api-experiment-name-experimentName">
-<code class="sig-name descname">DELETE </code><code class="sig-name descname">/api/experiment/name/{experimentName}</code><a class="headerlink" href="#delete--api-experiment-name-experimentName" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/name/{experimentName}</span></code><a class="headerlink" href="#delete--api-experiment-name-experimentName" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Deletes an experiment by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -738,7 +737,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http get">
 <dt id="get--api-experiment-name-experimentName">
-<code class="sig-name descname">GET </code><code class="sig-name descname">/api/experiment/name/{experimentName}</code><a class="headerlink" href="#get--api-experiment-name-experimentName" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/name/{experimentName}</span></code><a class="headerlink" href="#get--api-experiment-name-experimentName" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Gets an experiment by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -769,7 +768,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http put">
 <dt id="put--api-experiment-name-experimentName">
-<code class="sig-name descname">PUT </code><code class="sig-name descname">/api/experiment/name/{experimentName}</code><a class="headerlink" href="#put--api-experiment-name-experimentName" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/name/{experimentName}</span></code><a class="headerlink" href="#put--api-experiment-name-experimentName" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Modifies an experiment by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -809,37 +808,37 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <p>The following error handlers are registered to the experiment endpoints.</p>
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.experiment.errors.ExperimentAlreadyExistsError">
-<em class="property">exception </em><code class="sig-name descname">ExperimentAlreadyExistsError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentAlreadyExistsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentAlreadyExistsError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentAlreadyExistsError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentAlreadyExistsError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The experiment name already exists.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError">
-<em class="property">exception </em><code class="sig-name descname">ExperimentMLFlowTrackingAlreadyExistsError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentMLFlowTrackingAlreadyExistsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingAlreadyExistsError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentMLFlowTrackingAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The experiment name already exists on the MLFlow Tracking backend.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.experiment.errors.ExperimentDoesNotExistError">
-<em class="property">exception </em><code class="sig-name descname">ExperimentDoesNotExistError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentDoesNotExistError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentDoesNotExistError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentDoesNotExistError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentDoesNotExistError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The requested experiment does not exist.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError">
-<em class="property">exception </em><code class="sig-name descname">ExperimentMLFlowTrackingDoesNotExistError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentMLFlowTrackingDoesNotExistError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingDoesNotExistError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentMLFlowTrackingDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The requested experiment is in our database but is not in MLFlow Tracking.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError">
-<em class="property">exception </em><code class="sig-name descname">ExperimentMLFlowTrackingRegistrationError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentMLFlowTrackingRegistrationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingRegistrationError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentMLFlowTrackingRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Experiment registration to the MLFlow Tracking backend has failed.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.experiment.errors.ExperimentRegistrationError">
-<em class="property">exception </em><code class="sig-name descname">ExperimentRegistrationError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentRegistrationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentRegistrationError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentRegistrationError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/experiment/errors.html#ExperimentRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.experiment.errors.ExperimentRegistrationError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The experiment registration form contains invalid parameters.</p>
 </dd></dl>
 
@@ -853,7 +852,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <p>The following is the list of endpoints under the <code class="docutils literal notranslate"><span class="pre">/api/job/</span></code> namespace.</p>
 <dl class="http get">
 <dt id="get--api-job-">
-<code class="sig-name descname">GET </code><code class="sig-name descname">/api/job/</code><a class="headerlink" href="#get--api-job-" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/job/</span></code><a class="headerlink" href="#get--api-job-" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Gets a list of all submitted jobs</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
@@ -887,7 +886,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http post">
 <dt id="post--api-job-">
-<code class="sig-name descname">POST </code><code class="sig-name descname">/api/job/</code><a class="headerlink" href="#post--api-job-" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">POST</span> </code><code class="sig-name descname"><span class="pre">/api/job/</span></code><a class="headerlink" href="#post--api-job-" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Creates a new job via a job submission form with an attached file</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
@@ -932,7 +931,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http get">
 <dt id="get--api-job-jobId">
-<code class="sig-name descname">GET </code><code class="sig-name descname">/api/job/{jobId}</code><a class="headerlink" href="#get--api-job-jobId" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/job/{jobId}</span></code><a class="headerlink" href="#get--api-job-jobId" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Gets a job by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -975,19 +974,19 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <p>The following error handlers are registered to the job endpoints.</p>
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.job.errors.JobDoesNotExistError">
-<em class="property">exception </em><code class="sig-name descname">JobDoesNotExistError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/job/errors.html#JobDoesNotExistError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.job.errors.JobDoesNotExistError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">JobDoesNotExistError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/job/errors.html#JobDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.job.errors.JobDoesNotExistError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The requested job does not exist.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.job.errors.JobSubmissionError">
-<em class="property">exception </em><code class="sig-name descname">JobSubmissionError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/job/errors.html#JobSubmissionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.job.errors.JobSubmissionError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">JobSubmissionError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/job/errors.html#JobSubmissionError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.job.errors.JobSubmissionError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The job submission form contains invalid parameters.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.job.errors.JobWorkflowUploadError">
-<em class="property">exception </em><code class="sig-name descname">JobWorkflowUploadError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/job/errors.html#JobWorkflowUploadError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.job.errors.JobWorkflowUploadError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">JobWorkflowUploadError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/job/errors.html#JobWorkflowUploadError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.job.errors.JobWorkflowUploadError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The service for storing the uploaded workfile file is unavailable.</p>
 </dd></dl>
 
@@ -1001,7 +1000,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <p>The following is the list of endpoints under the <code class="docutils literal notranslate"><span class="pre">/api/queue/</span></code> namespace.</p>
 <dl class="http get">
 <dt id="get--api-queue-">
-<code class="sig-name descname">GET </code><code class="sig-name descname">/api/queue/</code><a class="headerlink" href="#get--api-queue-" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/queue/</span></code><a class="headerlink" href="#get--api-queue-" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Gets a list of all registered queues</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
@@ -1027,7 +1026,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http post">
 <dt id="post--api-queue-">
-<code class="sig-name descname">POST </code><code class="sig-name descname">/api/queue/</code><a class="headerlink" href="#post--api-queue-" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">POST</span> </code><code class="sig-name descname"><span class="pre">/api/queue/</span></code><a class="headerlink" href="#post--api-queue-" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Creates a new queue via a queue registration form</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
@@ -1058,7 +1057,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http delete">
 <dt id="delete--api-queue-queueId">
-<code class="sig-name descname">DELETE </code><code class="sig-name descname">/api/queue/{queueId}</code><a class="headerlink" href="#delete--api-queue-queueId" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/queue/{queueId}</span></code><a class="headerlink" href="#delete--api-queue-queueId" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Deletes a queue by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1076,7 +1075,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http get">
 <dt id="get--api-queue-queueId">
-<code class="sig-name descname">GET </code><code class="sig-name descname">/api/queue/{queueId}</code><a class="headerlink" href="#get--api-queue-queueId" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/queue/{queueId}</span></code><a class="headerlink" href="#get--api-queue-queueId" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Gets a queue by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1107,7 +1106,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http put">
 <dt id="put--api-queue-queueId">
-<code class="sig-name descname">PUT </code><code class="sig-name descname">/api/queue/{queueId}</code><a class="headerlink" href="#put--api-queue-queueId" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/queue/{queueId}</span></code><a class="headerlink" href="#put--api-queue-queueId" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Modifies a queue by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1143,7 +1142,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http delete">
 <dt id="delete--api-queue-queueId-lock">
-<code class="sig-name descname">DELETE </code><code class="sig-name descname">/api/queue/{queueId}/lock</code><a class="headerlink" href="#delete--api-queue-queueId-lock" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/queue/{queueId}/lock</span></code><a class="headerlink" href="#delete--api-queue-queueId-lock" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Removes the lock from the queue (id reference) if it exists</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1161,7 +1160,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http put">
 <dt id="put--api-queue-queueId-lock">
-<code class="sig-name descname">PUT </code><code class="sig-name descname">/api/queue/{queueId}/lock</code><a class="headerlink" href="#put--api-queue-queueId-lock" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/queue/{queueId}/lock</span></code><a class="headerlink" href="#put--api-queue-queueId-lock" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Locks the queue (id reference) if it is unlocked</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1179,7 +1178,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http delete">
 <dt id="delete--api-queue-name-queueName">
-<code class="sig-name descname">DELETE </code><code class="sig-name descname">/api/queue/name/{queueName}</code><a class="headerlink" href="#delete--api-queue-name-queueName" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/queue/name/{queueName}</span></code><a class="headerlink" href="#delete--api-queue-name-queueName" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Deletes a queue by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1197,7 +1196,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http get">
 <dt id="get--api-queue-name-queueName">
-<code class="sig-name descname">GET </code><code class="sig-name descname">/api/queue/name/{queueName}</code><a class="headerlink" href="#get--api-queue-name-queueName" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/queue/name/{queueName}</span></code><a class="headerlink" href="#get--api-queue-name-queueName" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Gets a queue by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1228,7 +1227,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http put">
 <dt id="put--api-queue-name-queueName">
-<code class="sig-name descname">PUT </code><code class="sig-name descname">/api/queue/name/{queueName}</code><a class="headerlink" href="#put--api-queue-name-queueName" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/queue/name/{queueName}</span></code><a class="headerlink" href="#put--api-queue-name-queueName" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Modifies a queue by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1264,7 +1263,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http delete">
 <dt id="delete--api-queue-name-queueName-lock">
-<code class="sig-name descname">DELETE </code><code class="sig-name descname">/api/queue/name/{queueName}/lock</code><a class="headerlink" href="#delete--api-queue-name-queueName-lock" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/queue/name/{queueName}/lock</span></code><a class="headerlink" href="#delete--api-queue-name-queueName-lock" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Removes the lock from the queue (name reference) if it exists</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1282,7 +1281,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 
 <dl class="http put">
 <dt id="put--api-queue-name-queueName-lock">
-<code class="sig-name descname">PUT </code><code class="sig-name descname">/api/queue/name/{queueName}/lock</code><a class="headerlink" href="#put--api-queue-name-queueName-lock" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/queue/name/{queueName}/lock</span></code><a class="headerlink" href="#put--api-queue-name-queueName-lock" title="Permalink to this definition">¶</a></dt>
 <dd><p><strong>Locks the queue (name reference) if it is unlocked</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1304,19 +1303,19 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <p>The following error handlers are registered to the queue endpoints.</p>
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.queue.errors.QueueAlreadyExistsError">
-<em class="property">exception </em><code class="sig-name descname">QueueAlreadyExistsError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/queue/errors.html#QueueAlreadyExistsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.queue.errors.QueueAlreadyExistsError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">QueueAlreadyExistsError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/queue/errors.html#QueueAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.queue.errors.QueueAlreadyExistsError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The queue name already exists.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.queue.errors.QueueDoesNotExistError">
-<em class="property">exception </em><code class="sig-name descname">QueueDoesNotExistError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/queue/errors.html#QueueDoesNotExistError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.queue.errors.QueueDoesNotExistError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">QueueDoesNotExistError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/queue/errors.html#QueueDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.queue.errors.QueueDoesNotExistError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The requested queue does not exist.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt id="mitre.securingai.restapi.queue.errors.QueueRegistrationError">
-<em class="property">exception </em><code class="sig-name descname">QueueRegistrationError</code><a class="reference internal" href="../_modules/mitre/securingai/restapi/queue/errors.html#QueueRegistrationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mitre.securingai.restapi.queue.errors.QueueRegistrationError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">QueueRegistrationError</span></code><a class="reference internal" href="../_modules/mitre/securingai/restapi/queue/errors.html#QueueRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.restapi.queue.errors.QueueRegistrationError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The queue registration form contains invalid parameters.</p>
 </dd></dl>
 

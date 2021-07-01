@@ -28,9 +28,9 @@
     <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     
   <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
 
@@ -38,16 +38,15 @@
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/language_data.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/togglebutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Setup Tips for Newcomers" href="newcomer-tips.html" />
@@ -580,8 +579,8 @@ General instructions on how to deploy the Testbed in an on-premises server can b
 The easiest way to accomplish this is using the pre-built configuration files included in the project codebase to create a <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environment</a>.</p>
 <p>There are two install options to start using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environments</a>,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="4136c969-2e1a-4fc9-b4d6-8ea4ee233545" name="907d21d2-deee-4b26-bf08-3f03c278f40d" type="radio">
-</input><label class="tabbed-label" for="4136c969-2e1a-4fc9-b4d6-8ea4ee233545">
+<input checked="checked" id="abde9f25-2e62-45e0-a87e-3bfeb3955535" name="89b3ed2c-5d96-4afd-9866-4075b3daf27d" type="radio">
+</input><label class="tabbed-label" for="abde9f25-2e62-45e0-a87e-3bfeb3955535">
 Anaconda installation</label><div class="tabbed-content docutils">
 <p>The following links will provide a installation package for version 2020.11 of <a class="reference external" href="https://docs.anaconda.com/">Anaconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
@@ -591,8 +590,8 @@ Anaconda installation</label><div class="tabbed-content docutils">
 </ul>
 <p>If your host machine does not meet the <span class="xref std std-ref">quickstart-system-requirements</span>, then go to the <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda Installation Documents</a> for more help.</p>
 </div>
-<input id="f0e0d770-edc5-4fb4-ad00-fffe731bb2ee" name="907d21d2-deee-4b26-bf08-3f03c278f40d" type="radio">
-</input><label class="tabbed-label" for="f0e0d770-edc5-4fb4-ad00-fffe731bb2ee">
+<input id="c82302c5-7093-4215-8902-ad959eb325ad" name="89b3ed2c-5d96-4afd-9866-4075b3daf27d" type="radio">
+</input><label class="tabbed-label" for="c82302c5-7093-4215-8902-ad959eb325ad">
 Miniconda installation</label><div class="tabbed-content docutils">
 <p>The following links will provide a installation package for the latest version of <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
@@ -640,18 +639,18 @@ If performance becomes an issue when using a virtual machine, consider increasin
 <span id="quickstart-clone-repository"></span><h3>Clone the Repository<a class="headerlink" href="#clone-the-repository" title="Permalink to this headline">¶</a></h3>
 <p>To clone the repository, open a new <strong>Terminal</strong> session for your operating system,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="cbdbe14e-0f28-4644-8655-8a8ae0df77bc" name="662c8966-7f5a-4e63-883f-078a2c35e943" type="radio">
-</input><label class="tabbed-label" for="cbdbe14e-0f28-4644-8655-8a8ae0df77bc">
+<input checked="checked" id="8e499b57-e302-4e47-b121-830f11b5520f" name="82206be5-4d6f-4028-957b-40ca1de63bbc" type="radio">
+</input><label class="tabbed-label" for="8e499b57-e302-4e47-b121-830f11b5520f">
 Windows</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">windows</kbd> + <kbd class="kbd docutils literal notranslate">r</kbd> to open <strong>Run</strong>, then type <code class="docutils literal notranslate"><span class="pre">wsl</span></code> into the search bar and click <em>OK</em> to start a <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/">Windows Subsystem for Linux</a> session.</p>
 </div>
-<input id="1dd18197-5f40-4357-bb78-559e1352d999" name="662c8966-7f5a-4e63-883f-078a2c35e943" type="radio">
-</input><label class="tabbed-label" for="1dd18197-5f40-4357-bb78-559e1352d999">
+<input id="5584aa86-c29a-4af3-bbf6-a4c61a4c1843" name="82206be5-4d6f-4028-957b-40ca1de63bbc" type="radio">
+</input><label class="tabbed-label" for="5584aa86-c29a-4af3-bbf6-a4c61a4c1843">
 MacOS</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">command</kbd> + <kbd class="kbd docutils literal notranslate">space</kbd> to open the <strong>Spotlight Search</strong>, type <code class="docutils literal notranslate"><span class="pre">Terminal</span></code> into the search bar, and click the <em>Terminal</em> application under <em>Top Hit</em> at the top of your results.</p>
 </div>
-<input id="e3386e2a-6140-48b2-97d7-9c4952eb05e4" name="662c8966-7f5a-4e63-883f-078a2c35e943" type="radio">
-</input><label class="tabbed-label" for="e3386e2a-6140-48b2-97d7-9c4952eb05e4">
+<input id="b621900d-8d86-4658-afc0-52cec93f3a57" name="82206be5-4d6f-4028-957b-40ca1de63bbc" type="radio">
+</input><label class="tabbed-label" for="b621900d-8d86-4658-afc0-52cec93f3a57">
 Linux</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">ctrl</kbd> + <kbd class="kbd docutils literal notranslate">alt</kbd> + <kbd class="kbd docutils literal notranslate">t</kbd> to open the <strong>Terminal</strong>.</p>
 </div>
@@ -674,15 +673,15 @@ For this reason, WSL and MacOS users are both encouraged to create and clone the
 </div>
 <p>Clone the repository to your local computer,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="3cd1ebd7-da66-4db6-b249-1e944a9203de" name="1f26e579-d44d-4f5e-8863-1827ef9f5e21" type="radio">
-</input><label class="tabbed-label" for="3cd1ebd7-da66-4db6-b249-1e944a9203de">
+<input checked="checked" id="676c4b5d-c43d-4bfc-bc56-4c1b8be2d27f" name="6e356282-6499-46df-b6e5-42d947cc9f4c" type="radio">
+</input><label class="tabbed-label" for="676c4b5d-c43d-4bfc-bc56-4c1b8be2d27f">
 Clone with HTTPS</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/usnistgov/dioptra.git
 </pre></div>
 </div>
 </div>
-<input id="0081612a-fef1-4f9e-918b-04ff7414bda0" name="1f26e579-d44d-4f5e-8863-1827ef9f5e21" type="radio">
-</input><label class="tabbed-label" for="0081612a-fef1-4f9e-918b-04ff7414bda0">
+<input id="f9abb2f2-30fb-4f31-bf7e-e52386ced929" name="6e356282-6499-46df-b6e5-42d947cc9f4c" type="radio">
+</input><label class="tabbed-label" for="f9abb2f2-30fb-4f31-bf7e-e52386ced929">
 Clone with SSH</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:usnistgov/dioptra.git
 </pre></div>
