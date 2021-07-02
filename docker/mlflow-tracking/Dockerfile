@@ -122,7 +122,7 @@ RUN useradd -u ${AI_UID} -N -m -s /bin/bash -c "Securing AI Testbed user" ${AI_U
     mkdir -p /home/${AI_USER}/.aws/cli && \
     mkdir -p /home/${AI_USER}/.conda && \
     mkdir -p ${CONDA_DIR} && \
-    mkdir -p ${AI_WORKDIR} && \
+    mkdir -p ${AI_WORKDIR}/mlruns && \
     chown -R ${AI_UID}:${AI_GID} /home/${AI_USER} && \
     chown -R ${AI_UID}:${AI_GID} ${CONDA_DIR} && \
     chown -R ${AI_UID}:${AI_GID} ${AI_WORKDIR} && \
@@ -214,6 +214,7 @@ ENV CONDA_DIR ${CONDA_DIR}
 USER ${AI_UID}
 WORKDIR ${AI_WORKDIR}
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+VOLUME ["${AI_WORKDIR}/mlruns"]
 
 ARG OS_NAME=ubuntu
 ARG OS_VERSION
