@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import mlflow
 import structlog
-from prefect import task
 from structlog.stdlib import BoundLogger
 
 from mitre.securingai import pyplugs
@@ -50,7 +49,7 @@ except ImportError:  # pragma: nocover
     )
 
 
-@task
+@pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def load_wrapped_tensorflow_keras_classifier(

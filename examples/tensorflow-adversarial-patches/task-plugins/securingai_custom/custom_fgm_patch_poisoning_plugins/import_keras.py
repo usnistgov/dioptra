@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # This Software (Dioptra) is being made available as a public service by the
 # National Institute of Standards and Technology (NIST), an Agency of the United
 # States Department of Commerce. This software was developed in part by employees of
@@ -15,64 +14,52 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-
 from __future__ import annotations
 
-from types import FunctionType
-from typing import Callable, Dict, List, Optional, Tuple, Union
+import importlib
+from types import FunctionType, ModuleType
+from typing import Union
 
-import mlflow
-import numpy as np
-from prefect import task
-from tensorflow.keras.models import Model
+import structlog
+from structlog.stdlib import BoundLogger
 
-from mitre.securingai import pyplugs
-from mitre.securingai.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from mitre.securingai.sdk.exceptions import TensorflowDependencyError
 from mitre.securingai.sdk.utilities.decorators import require_package
 
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
 try:
-    from art.defences.trainer import AdversarialTrainerMadryPGD
-    from art.estimators.classification import KerasClassifier
-    from art.utils import to_categorical
+    from tensorflow.keras.callbacks import Callback
     from tensorflow.keras.metrics import Metric
-    from tensorflow.keras.models import Model
     from tensorflow.keras.optimizers import Optimizer
-except ImportError:
+
+except ImportError:  # pragma: nocover
     LOGGER.warn(
         "Unable to import one or more optional packages, functionality may be reduced",
-        package="art",
+        package="tensorflow",
     )
 
+KERAS_CALLBACKS: str = "tensorflow.keras.callbacks"
+KERAS_METRICS: str = "tensorflow.keras.metrics"
+KERAS_OPTIMIZERS: str = "tensorflow.keras.optimizers"
 
-@task
-@require_package("art", exc_type=ARTDependencyError)
+
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def create_Madry_PGD_model(
-    model: Model,
-    training_ds: DirectoryIterator,
-    eps: float,
-    eps_step: float,
-    learning_rate: float,
-    batch_size: int,
-    epochs: int,
-    optimizer: Optimizer,
-    metrics: List[Union[Metric, FunctionType]],
-) -> Model:
+def get_callback(callback_name: str) -> Callback:
+    keras_callbacks: ModuleType = importlib.import_module(KERAS_CALLBACKS)
+    callback: Callback = getattr(keras_callbacks, callback_name)
+    return callback
 
-    def_model = KerasClassifier(model)
-    proxy = AdversarialTrainerMadryPGD(
-        def_model, nb_epochs=epochs, eps=eps, eps_step=eps_step
-    )
-    x_train, y_train = training_ds.next()
-    proxy.fit(x_train, y_train)
 
-    model = def_model.model
-    model.compile(
-        loss="categorical_crossentropy",
-        optimizer=optimizer,
-        metrics=metrics,
-    )
-    return model
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def get_metric(metric_name: str) -> Union[Metric, FunctionType]:
+    keras_metrics: ModuleType = importlib.import_module(KERAS_METRICS)
+    metric: Metric = getattr(keras_metrics, metric_name)
+    return metric
+
+
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def get_optimizer(optimizer_name: str) -> Optimizer:
+    keras_optimizers: ModuleType = importlib.import_module(KERAS_OPTIMIZERS)
+    optimizer: Optimizer = getattr(keras_optimizers, optimizer_name)
+    return optimizer

@@ -23,8 +23,6 @@ from typing import Any, Dict, List
 import click
 import mlflow
 import structlog
-from data_tensorflow_updated import create_image_dataset
-from estimators_keras_classifiers_updated import init_classifier
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
@@ -48,6 +46,7 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
 _PLUGINS_IMPORT_PATH: str = "securingai_builtins"
 CALLBACKS: List[Dict[str, Any]] = [
     {
@@ -248,7 +247,10 @@ def init_train_flow() -> Flow:
         callbacks_list = get_model_callbacks(
             CALLBACKS, upstream_tasks=[init_tensorflow_results]
         )
-        testing_ds = create_image_dataset(
+        testing_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
             data_dir=testing_dir,
             subset=None,
             image_size=image_size,
@@ -266,7 +268,10 @@ def init_train_flow() -> Flow:
             ds=testing_ds,
         )
         # TODO: Swap to pyplugs in next update.
-        classifier = init_classifier(
+        classifier = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "estimators_keras_classifiers",
+            "init_classifier",
             model_architecture=model_architecture,
             optimizer=optimizer,
             metrics=metrics,

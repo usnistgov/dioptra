@@ -20,7 +20,6 @@ from types import FunctionType
 from typing import Callable, Dict, List, Tuple, Union
 
 import structlog
-from prefect import task
 from structlog.stdlib import BoundLogger
 
 from mitre.securingai import pyplugs
@@ -52,7 +51,7 @@ except ImportError:  # pragma: nocover
     )
 
 
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def init_classifier(
     model_architecture: str,
