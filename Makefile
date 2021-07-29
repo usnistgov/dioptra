@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-.PHONY: beautify build-all build-ci build-testbed build-mlflow-tracking build-nginx build-python-build build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-sphinx build-tensorflow build-tensorflow-cpu build-tensorflow-gpu build-tox ci-deps clean code-check code-pkg conda-env docker-deps docs help hooks pull-latest pull-latest-ci pull-latest-hub pull-latest-testbed tag-latest-ci tag-latest-testbed tests tests-integration tests-unit tox
+.PHONY: beautify build-all build-ci build-testbed build-mlflow-tracking build-nginx build-python-build build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-sphinx build-tensorflow build-tensorflow-cpu build-tensorflow-gpu build-tox clean code-check code-pkg conda-env docker-deps docs help hooks pull-latest pull-latest-ci pull-latest-hub pull-latest-testbed tag-latest-ci tag-latest-testbed tests tests-integration tests-unit tox
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -O extglob -o pipefail -c
@@ -49,7 +49,6 @@ PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = securing-ai-testbed
 PROJECT_PREFIX = securing-ai
 PROJECT_BUILD_DIR = build
-PROJECT_CI_DIR = ci
 PROJECT_DOCS_DIR = docs
 PROJECT_DOCKER_DIR = docker
 PROJECT_DOCKER_SRC_DIR = $(PROJECT_DOCKER_DIR)/src
@@ -78,9 +77,7 @@ PYTEST = $(PY) -m pytest
 RM = rm
 TOX = tox
 
-CI_VERSION_VARS_YML = $(PROJECT_CI_DIR)/gitlab-ci-version-vars.yml
 CONTAINER_VARS_FILE = container-vars.mk
-GITLAB_CI_FILE = .gitlab-ci.yml
 MAKEFILE_FILE = Makefile
 PRE_COMMIT_CONFIG_FILE = .pre-commit-config.yaml
 SETUP_CFG_FILE = setup.cfg
@@ -386,25 +383,6 @@ $(call run_docker,\
     $(strip $(2)))
 endef
 
-define generate_gitlab_ci_version_vars
-( $(call run_yq,\
-    --no-colors\
-    --prettyPrint\
-    eval\
-    --null-input\
-    --unwrapScalar=false\
-    '{"variables": {\
-        "OS_VERSION": "$(CONTAINER_OS_VERSION)"$(COMMA)\
-        "OS_VERSION_NUMBER": "$(CONTAINER_OS_VERSION_NUMBER)"$(COMMA)\
-        "OS_BUILD_NUMBER": "$(CONTAINER_OS_BUILD_NUMBER)"$(COMMA)\
-        "PROJECT_VERSION": "$(PROJECT_VERSION)"$(COMMA)\
-        "MINICONDA_VERSION": "$(CONTAINER_MINICONDA_VERSION)"$(COMMA)\
-        "PYTORCH_VERSION": "$(CONTAINER_PYTORCH_VERSION)"$(COMMA)\
-        "SPHINX_VERSION": "$(CONTAINER_SPHINX_VERSION)"$(COMMA)\
-        "TENSORFLOW2_VERSION": "$(CONTAINER_TENSORFLOW2_VERSION)"\
-    }}',) ) >$(strip $(1))
-endef
-
 define save_sentinel_file
 @touch $(1)
 endef
@@ -571,9 +549,6 @@ build-tensorflow-gpu: $(CONTAINER_TENSORFLOW2_GPU_BUILD_SENTINEL)
 ## Build the Tox Docker images
 build-tox: $(CONTAINER_TOX_PY37_BUILD_SENTINEL) $(CONTAINER_TOX_PY38_BUILD_SENTINEL)
 
-## Generate configuration files for GitLab CI
-ci-deps: $(CI_VERSION_VARS_YML)
-
 ## Remove temporary files
 clean: ; $(call cleanup)
 
@@ -640,9 +615,6 @@ $(BEAUTIFY_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_T
 	$(call run_isort,$(CODE_SECURINGAI_BUILTINS_DIR))
 	$(call run_isort,$(PROJECT_TESTS_DIR))
 	$(call save_sentinel_file,$@)
-
-$(CI_VERSION_VARS_YML): $(VERSION_VARS_FILE)
-	$(call generate_gitlab_ci_version_vars,$@)
 
 $(CODE_INTEGRATION_TESTS_SENTINEL): $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
 ifneq ($(strip $(CODE_INTEGRATION_TESTS_FILES)),)
