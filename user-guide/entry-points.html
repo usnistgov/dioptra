@@ -25,7 +25,7 @@
 
     
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.e8e5499552300ddf5d7adccae7cc3b70.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
@@ -625,7 +625,7 @@ Use this type for programs that can only read local files.</p>
 </dd>
 <dt>uri</dt><dd><p>A <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> for data either in a local or distributed storage system.
 Relative paths are converted to absolute paths, as in the <cite>path</cite> type.
-Use this type for programs that know how to read from distributed storage (e.g., programs that use the <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/boto3.html#module-boto3" title="(in Boto3 Docs v1.17.103)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">boto3</span></code></a> package to directly access S3 storage).</p>
+Use this type for programs that know how to read from distributed storage (e.g., programs that use the <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/boto3.html#module-boto3" title="(in Boto3 Docs v1.18.9)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">boto3</span></code></a> package to directly access S3 storage).</p>
 </dd>
 </dl>
 </div>
@@ -703,7 +703,7 @@ Testbed users are encouraged to peruse the Click documentation to learn more abo
 </div>
 <div class="section" id="mlflow-tracking-runs">
 <h3>MLFlow - Tracking Runs<a class="headerlink" href="#mlflow-tracking-runs" title="Permalink to this headline">¶</a></h3>
-<p>Every entry point script needs to invoke <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.start_run" title="(in MLflow v1.18.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.start_run()</span></code></a> to create an active run context for MLFlow and it should be done near the top of their entry point function.
+<p>Every entry point script needs to invoke <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.start_run" title="(in MLflow v1.19.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.start_run()</span></code></a> to create an active run context for MLFlow and it should be done near the top of their entry point function.
 This context is needed when logging results and artifacts to the MLFlow Tracking service.
 The following example shows how this context would be started in the <code class="docutils literal notranslate"><span class="pre">train()</span></code> function from the previous section,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mlflow</span>
@@ -721,8 +721,8 @@ The following example shows how this context would be started in the <code class
     <span class="k">return</span> <span class="n">state</span>
 </pre></div>
 </div>
-<p>Within this context block, the <code class="docutils literal notranslate"><span class="pre">active_run</span></code> variable will contain a <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.entities.html#mlflow.entities.Run" title="(in MLflow v1.18.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">mlflow.entities.Run</span></code></a> object that provides metadata about the run that is useful to have available.
-MLFlow functions like <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_param" title="(in MLflow v1.18.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_param()</span></code></a>, <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_metric" title="(in MLflow v1.18.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_metric()</span></code></a>, and <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_artifact" title="(in MLflow v1.18.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_artifact()</span></code></a> will be able to infer the current run automatically and be able to log their data to the appropriate place.
+<p>Within this context block, the <code class="docutils literal notranslate"><span class="pre">active_run</span></code> variable will contain a <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.entities.html#mlflow.entities.Run" title="(in MLflow v1.19.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">mlflow.entities.Run</span></code></a> object that provides metadata about the run that is useful to have available.
+MLFlow functions like <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_param" title="(in MLflow v1.19.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_param()</span></code></a>, <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_metric" title="(in MLflow v1.19.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_metric()</span></code></a>, and <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_artifact" title="(in MLflow v1.19.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_artifact()</span></code></a> will be able to infer the current run automatically and be able to log their data to the appropriate place.
 Please note that the <code class="docutils literal notranslate"><span class="pre">init_flow()</span></code> function is <a class="reference internal" href="#entry-points-prefect-task-execution"><span class="std std-ref">introduced in the following section</span></a>.</p>
 <p>Testbed users are encouraged to peruse the MLflow Tracking documentation to learn more about the tracking context and the kinds of things you can do when its active: <a class="reference external" href="https://mlflow.org/docs/latest/tracking.html">https://mlflow.org/docs/latest/tracking.html</a>.</p>
 </div>
