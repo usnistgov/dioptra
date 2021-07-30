@@ -56,6 +56,8 @@ ENV LANGUAGE C.UTF-8
 ENV LC_ALL C.UTF-8
 
 RUN apt-get update && \
+    echo "===> Upgrade existing packages...." && \
+    apt-get -y upgrade && \
     echo "===> Installing ca-certificates curl git gosu libbz2-1.0 liblz4-1 liblzma5 libsnappy1v5 libzstd1 unzip wget zlib1g...." && \
     apt-get install -yq --no-install-recommends \
     ca-certificates \
