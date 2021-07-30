@@ -31,18 +31,6 @@ CONTAINER_SPHINX_CONDA_ENV_FILES =
 CONTAINER_SPHINX_INCLUDE_FILES =
 CONTAINER_SPHINX_SCRIPTS =
 
-# Tox (Python 3.7) --------------------------------------------------------------
-
-CONTAINER_TOX_PY37_CONDA_ENV_FILES =
-CONTAINER_TOX_PY37_INCLUDE_FILES =
-CONTAINER_TOX_PY37_SCRIPTS =
-
-# Tox (Python 3.8) --------------------------------------------------------------
-
-CONTAINER_TOX_PY38_CONDA_ENV_FILES =
-CONTAINER_TOX_PY38_INCLUDE_FILES =
-CONTAINER_TOX_PY38_SCRIPTS =
-
 #################################################################################
 # DIOPTRA TESTBED IMAGES                                                        #
 #################################################################################
