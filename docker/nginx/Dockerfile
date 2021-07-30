@@ -14,11 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-ARG OS_NAME=ubuntu
-ARG OS_VERSION
-ARG OS_BUILD_NUMBER
-
-FROM ${OS_NAME}:${OS_VERSION}-${OS_BUILD_NUMBER}
+FROM ubuntu:latest
 
 USER root
 
@@ -100,20 +96,3 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 ENV AI_USER ${AI_USER}
 ENV AI_UID ${AI_UID}
 ENV AI_GID ${AI_GID}
-
-ARG OS_NAME=ubuntu
-ARG OS_VERSION
-ARG OS_VERSION_NUMBER
-ARG OS_BUILD_NUMBER
-ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
-ARG PROJECT_VERSION
-
-LABEL securingai.docker=true
-LABEL securingai.docker.os.name=${OS_NAME}
-LABEL securingai.docker.os.version.name=${OS_VERSION}
-LABEL securingai.docker.os.version.number=${OS_VERSION_NUMBER}
-LABEL securingai.docker.os.build=${OS_BUILD_NUMBER}
-LABEL securingai.docker.project.component=${PROJECT_COMPONENT}
-LABEL securingai.docker.project.component.maintainer=${MAINTAINER}
-LABEL securingai.docker.project.component.parent=none
-LABEL securingai.docker.project.version=${PROJECT_VERSION}
