@@ -29,14 +29,11 @@ on:
       - "main"
 
 env:
-  OS_VERSION: focal
-  OS_VERSION_NUMBER: "20.04"
-  OS_BUILD_NUMBER: "20210713"
-  PROJECT_VERSION: 0.0.0
+  CODE_PKG_VERSION: 0.0.0
   PROJECT_PREFIX: securing-ai
-  MINICONDA_VERSION: 4.9.2
+  MINICONDA3_PREFIX: Miniconda3-py37_
+  MINICONDA_VERSION: 4.10.3
   PYTORCH_VERSION: 1.7.1
-  SPHINX_VERSION: 3.3.1
   TENSORFLOW2_VERSION: 2.1.0
 
 jobs:
@@ -94,10 +91,19 @@ jobs:
             type=schedule
             type=ref,event=branch
             type=ref,event=pr
+            type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
             type=sha,format=long,prefix=,suffix=
+          labels: |
+            maintainer=NCCoE Artificial Intelligence Team <ai-nccoe@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>
+            org.opencontainers.image.title=${{ matrix.dioptra-app }}
+            org.opencontainers.image.description=Provides the ${{ matrix.dioptra-app }} microservice within the Dioptra architecture.
+            org.opencontainers.image.vendor=National Institute of Standards and Technology
+            org.opencontainers.image.licenses=NIST-PD OR CC-BY-4.0
+            org.opencontainers.image.documentation=https://pages.nist.gov/dioptra
+            org.opencontainers.image.authors=NCCoE Artificial Intelligence Team <ai-nccoe@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Cory Miniter <jminiter@mitre.org>, Howard Huang <hhuang@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Paul Rowe <prowe@mitre.org>
 
       - name: set up docker qemu
         uses: docker/setup-qemu-action@v1
@@ -127,18 +133,16 @@ jobs:
           push: false
           file: docker/${{ matrix.dioptra-app }}/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache-${{ matrix.dioptra-app }}
           cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.dioptra-app }}-new
           build-args: |
+            CODE_PKG_VERSION=${{ env.CODE_PKG_VERSION }}
+            MINICONDA3_PREFIX=${{ env.MINICONDA3_PREFIX }}
             MINICONDA_VERSION=${{ env.MINICONDA_VERSION }}
-            OS_VERSION=${{ env.OS_VERSION }}
-            OS_VERSION_NUMBER=${{ env.OS_VERSION_NUMBER }}
-            OS_BUILD_NUMBER=${{ env.OS_BUILD_NUMBER }}
             PROJECT_COMPONENT=${{ matrix.dioptra-app }}
-            PROJECT_VERSION=${{ env.PROJECT_VERSION }}
             PROJECT_PREFIX=${{ env.PROJECT_PREFIX }}
             PYTORCH_VERSION=${{ env.PYTORCH_VERSION }}
-            SPHINX_VERSION=${{ env.SPHINX_VERSION }}
             TENSORFLOW2_VERSION=${{ env.TENSORFLOW2_VERSION }}
 
       - name: build and push
@@ -149,19 +153,17 @@ jobs:
           push: false
           file: docker/${{ matrix.dioptra-app }}/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           no-cache: true
           pull: true
           cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.dioptra-app }}-new
           build-args: |
+            CODE_PKG_VERSION=${{ env.CODE_PKG_VERSION }}
+            MINICONDA3_PREFIX=${{ env.MINICONDA3_PREFIX }}
             MINICONDA_VERSION=${{ env.MINICONDA_VERSION }}
-            OS_VERSION=${{ env.OS_VERSION }}
-            OS_VERSION_NUMBER=${{ env.OS_VERSION_NUMBER }}
-            OS_BUILD_NUMBER=${{ env.OS_BUILD_NUMBER }}
             PROJECT_COMPONENT=${{ matrix.dioptra-app }}
-            PROJECT_VERSION=${{ env.PROJECT_VERSION }}
             PROJECT_PREFIX=${{ env.PROJECT_PREFIX }}
             PYTORCH_VERSION=${{ env.PYTORCH_VERSION }}
-            SPHINX_VERSION=${{ env.SPHINX_VERSION }}
             TENSORFLOW2_VERSION=${{ env.TENSORFLOW2_VERSION }}
 
       # Temp fix
@@ -183,15 +185,12 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.dioptra-app }}-new
           outputs: type=docker,dest=/tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
           build-args: |
+            CODE_PKG_VERSION=${{ env.CODE_PKG_VERSION }}
+            MINICONDA3_PREFIX=${{ env.MINICONDA3_PREFIX }}
             MINICONDA_VERSION=${{ env.MINICONDA_VERSION }}
-            OS_VERSION=${{ env.OS_VERSION }}
-            OS_VERSION_NUMBER=${{ env.OS_VERSION_NUMBER }}
-            OS_BUILD_NUMBER=${{ env.OS_BUILD_NUMBER }}
             PROJECT_COMPONENT=${{ matrix.dioptra-app }}
-            PROJECT_VERSION=${{ env.PROJECT_VERSION }}
             PROJECT_PREFIX=${{ env.PROJECT_PREFIX }}
             PYTORCH_VERSION=${{ env.PYTORCH_VERSION }}
-            SPHINX_VERSION=${{ env.SPHINX_VERSION }}
             TENSORFLOW2_VERSION=${{ env.TENSORFLOW2_VERSION }}
 
       # Temp fix
