@@ -79,13 +79,3 @@ ENV LIBRARY_PATH /home/${AI_USER}/.local/lib${LIBRARY_PATH:+:${LIBRARY_PATH}}
 
 USER ${AI_UID}
 WORKDIR ${AI_WORKDIR}
-
-ARG MAINTAINER="James Glasbrenner <jglasbrenner@mitre.org>"
-ARG PROJECT_COMPONENT
-
-LABEL securingai.docker=true
-LABEL securingai.docker.os.name=debian
-LABEL securingai.docker.os.version.name=buster
-LABEL securingai.docker.os.version.number=10
-LABEL securingai.docker.project.component=${PROJECT_COMPONENT}
-LABEL securingai.docker.project.component.maintainer=${MAINTAINER}
