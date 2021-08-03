@@ -15,7 +15,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-
 import os
 from pathlib import Path
 from typing import Dict, List
@@ -24,7 +23,6 @@ import click
 import mlflow
 import numpy as np
 import structlog
-from pixelthreshold import create_pt_dataset
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
@@ -41,6 +39,8 @@ from mitre.securingai.sdk.utilities.logging import (
 )
 
 _PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
+
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
     {"name": "l_1_norm", "func": "l_1_norm"},
@@ -140,7 +140,7 @@ def pt_attack(
     batch_size,
     th,
     es,
-    seed,
+    seed
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
@@ -154,7 +154,7 @@ def pt_attack(
         batch_size=batch_size,
         th=th,
         es=es,
-        seed=seed,
+        seed=seed
     )
 
     with mlflow.start_run() as active_run:  # noqa: F841
@@ -171,7 +171,7 @@ def pt_attack(
                 batch_size=batch_size,
                 th=th,
                 es=es,
-                seed=seed,
+                seed=seed
             )
         )
 
@@ -251,22 +251,10 @@ def init_pt_flow() -> Flow:
             "get_distance_metric_list",
             request=DISTANCE_METRICS,
         )
-        ##        distance_metrics = pyplugs.call_task(
-        ##            f"{_PLUGINS_IMPORT_PATH}.attacks",
-        ##            "pixelthreshold",
-        ##            "create_pt_dataset",
-        ##            data_dir=testing_dir,
-        ##            keras_classifier=keras_classifier,
-        ##            distance_metrics_list=distance_metrics_list,
-        ##            adv_data_dir=adv_data_dir,
-        ##            batch_size=batch_size,
-        ##            image_size=image_size,
-        ##            th=th,
-        ##            es=es,
-        ##            upstream_tasks=[make_directories_results],
-        ##        )
-
-        distance_metrics = create_pt_dataset(
+        distance_metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.pixel_threshold",
+            "pixelthreshold",
+            "create_pt_dataset",
             data_dir=testing_dir,
             keras_classifier=keras_classifier,
             distance_metrics_list=distance_metrics_list,

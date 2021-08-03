@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+
 """A task plugin module for the Pixel Threshold evasion attack.
 
 The Pixel Threshold [kotyan2019]_ is an evasion attack that attempts to
@@ -39,6 +40,7 @@ References:
 .. |pt_art| replace:: `Pixel Threshold <https://https://adversarial-robustness-toolbox.
         readthedocs.io/en/latest/modules/attacks/evasion.html#pixelattack>`__
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -49,8 +51,8 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-from prefect import task
 from structlog.stdlib import BoundLogger
+from prefect import task
 
 from mitre.securingai import pyplugs
 from mitre.securingai.sdk.exceptions import (
@@ -82,8 +84,7 @@ except ImportError:  # pragma: nocover
     )
 
 
-# @pyplugs.register
-@task
+@pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_pt_dataset(
@@ -96,14 +97,11 @@ def create_pt_dataset(
     batch_size: int = 32,
     label_mode: str = "categorical",
     th: int = 1,
-    es: int = 0,
+    es: int = 0
 ) -> pd.DataFrame:
     """Generates an adversarial dataset using the Pixel Threshold attack.
-
     This attack attempts to evade a classifier by changing a set number of
     pixels below a certain threshold.
-
-
     Args:
         data_dir: A string representing the path to the training and testing data.
         adv_data_dir: A string representing the path to where adversarial images
@@ -127,7 +125,10 @@ def create_pt_dataset(
     adv_data_dir = Path(adv_data_dir)
 
     attack = _init_pt(
-        keras_classifier=keras_classifier, batch_size=batch_size, th=th, es=es
+        keras_classifier=keras_classifier,
+        batch_size=batch_size,
+        th=th,
+        es=es
     )
 
     data_generator: ImageDataGenerator = ImageDataGenerator(rescale=rescale)
@@ -189,7 +190,9 @@ def create_pt_dataset(
 def _init_pt(
     keras_classifier: KerasClassifier, batch_size: int, **kwargs
 ) -> PixelAttack:
-    attack: PixelAttack = PixelAttack(classifier=keras_classifier, **kwargs)
+    attack: PixelAttack = PixelAttack(
+        classifier=keras_classifier, **kwargs
+    )
     return attack
 
 
