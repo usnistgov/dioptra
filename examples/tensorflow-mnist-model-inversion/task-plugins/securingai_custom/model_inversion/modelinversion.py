@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -56,8 +57,7 @@ except ImportError:  # pragma: nocover
         package="tensorflow",
     )
 
-# @pyplugs.register
-@task
+@pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def infer_model_inversion(
@@ -85,13 +85,11 @@ def infer_model_inversion(
         threshold=threshold,
         learning_rate=learning_rate,
     )
-
+    
     attack_inferred = attack.infer(None, y=np.arange(classes))
-
+    
     for c in np.arange(classes):
-        _save_adv_batch(
-            [attack_inferred[c]], adv_data_dir, c, "inferred" + str(c) + ".png"
-        )
+        _save_adv_batch([attack_inferred[c]], adv_data_dir, c, 'inferred' + str(c) + '.png')
 
     return None
 
@@ -99,15 +97,25 @@ def infer_model_inversion(
 def _init_miface(
     keras_classifier: KerasClassifier, batch_size: int, **kwargs
 ) -> MIFace:
-    attack: MIFace = MIFace(keras_classifier, batch_size=batch_size, **kwargs)
+    attack: MIFace = MIFace(
+        keras_classifier, batch_size=batch_size, **kwargs
+    )
     return attack
 
 
 def _save_adv_batch(adv_batch, adv_data_dir, y, filename) -> None:
     for batch_image_num, adv_image in enumerate(adv_batch):
-        adv_image_path = adv_data_dir / f"{y}" / f"adv_{filename}"
+        adv_image_path = (
+            adv_data_dir
+            / f"{y}"
+            / f"adv_{filename}"
+        )
         LOGGER.warn(adv_image_path)
         if not adv_image_path.parent.exists():
             adv_image_path.parent.mkdir(parents=True)
 
         save_img(path=str(adv_image_path), x=adv_image)
+
+
+
+
