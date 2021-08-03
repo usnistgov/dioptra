@@ -15,7 +15,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-
 import os
 from pathlib import Path
 from typing import Any, Dict, List
@@ -26,12 +25,6 @@ import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-from tasks import (
-    evaluate_metrics_tensorflow,
-    get_model_callbacks,
-    get_optimizer,
-    get_performance_metrics,
-)
 
 from mitre.securingai import pyplugs
 from mitre.securingai.sdk.utilities.contexts import plugin_dirs
@@ -45,6 +38,7 @@ from mitre.securingai.sdk.utilities.logging import (
 )
 
 _PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
 CALLBACKS: List[Dict[str, Any]] = [
     {
         "name": "EarlyStopping",
@@ -237,16 +231,29 @@ def init_train_flow() -> Flow:
                 dataset_seed=dataset_seed,
             ),
         )
-        optimizer = get_optimizer(
+        
+        optimizer = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "get_optimizer",
             optimizer_name,
             learning_rate=learning_rate,
-            upstream_tasks=[init_tensorflow_results],
+            upstream_tasks=[init_tensorflow_results]
         )
-        metrics = get_performance_metrics(
-            PERFORMANCE_METRICS, upstream_tasks=[init_tensorflow_results]
+        
+        metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "get_performance_metrics",
+            PERFORMANCE_METRICS,
+            upstream_tasks=[init_tensorflow_results]
         )
-        callbacks_list = get_model_callbacks(
-            CALLBACKS, upstream_tasks=[init_tensorflow_results]
+        callbacks_list = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "get_model_callbacks",
+            CALLBACKS,
+            upstream_tasks=[init_tensorflow_results]
         )
         training_ds = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.data",
@@ -314,9 +321,15 @@ def init_train_flow() -> Flow:
                 verbose=2,
             ),
         )
-        classifier_performance_metrics = evaluate_metrics_tensorflow(
-            classifier=classifier, dataset=testing_ds, upstream_tasks=[history]
+        classifier_performance_metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "evaluate_metrics_tensorflow",
+            classifier=classifier,
+            dataset=testing_ds,
+            upstream_tasks=[history]
         )
+        
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",

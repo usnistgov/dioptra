@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-.PHONY: clean data demo help initdb jupyter plugins services teardown teardown-docker-compose teardown-docker-volumes teardown-docker-compose-sentinel workflows
+.PHONY: clean custom-plugins custom-plugins-evaluation custom-plugins-pixel-threshold data demo help initdb jupyter plugins services teardown teardown-docker-compose teardown-docker-volumes teardown-docker-compose-sentinel workflows
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
@@ -46,6 +46,7 @@ endif
 EXAMPLE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 EXAMPLE_NAME = mnist-pixel-threshold
 EXAMPLE_CONDA_ENV_NAME = mnist-pixel-threshold
+EXAMPLE_CUSTOM_PLUGINS_DIR = task-plugins
 EXAMPLE_DATA_DIR = data
 EXAMPLE_JUPYTER_DIR = jupyter
 EXAMPLE_MINIO_DATA_DIR = s3
@@ -72,6 +73,10 @@ CODE_WORKFLOW_FILE = MLproject
 PLUGINS_BUILTINS_DIR := $(EXAMPLE_PLUGINS_DIR)/securingai_builtins
 PLUGINS_SRC_FILES := $(wildcard $(PLUGINS_BUILTINS_DIR)/*/*.py)
 
+PLUGINS_CUSTOM_DIR := $(EXAMPLE_CUSTOM_PLUGINS_DIR)/securingai_custom
+CUSTOM_PLUGIN_EVALUATION_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/evaluation/*.py)
+CUSTOM_PLUGIN_PIXEL_THRESHOLD_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/pixel_threshold/*.py)
+
 JUPYTER_INSTALL_PACKAGES_SCRIPT = $(EXAMPLE_JUPYTER_DIR)/before-notebook.d/install-packages.sh
 
 RESTAPI_DATABASE = $(EXAMPLE_RESTAPI_DATA_DIR)/securingai.db
@@ -82,6 +87,8 @@ S3_WORKFLOW_BUCKET = workflow
 
 MAKEFILE_FILE = Makefile
 DATA_DOWNLOAD_FILE = $(EXAMPLE_DATA_DIR)/download_data.py
+CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE = custom-plugins-evaluation.tar.gz
+CUSTOM_TASK_PLUGINS_PIXEL_THRESHOLD_TARBALL_FILE = custom-plugins-pixel-threshold.tar.gz
 WORKFLOWS_TARBALL_FILE = workflows.tar.gz
 
 DOCKER_VOLUME_PREFIX := $(shell basename $(EXAMPLE_DIR))
@@ -118,6 +125,8 @@ $(FIND) . \( -name "*.py[co]" -and -not -path "./.tox*" \) -type f -exec $(RM) -
 $(FIND) . -name ".ipynb_checkpoints" -type d -exec $(RM) -rf {} +
 $(RM) -rf $(EXAMPLE_DIR)/.mypy_cache
 $(RM) -rf $(EXAMPLE_DIR)/$(WORKFLOWS_TARBALL_FILE)
+$(RM) -rf $(EXAMPLE_DIR)/$(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE)
+$(RM) -rf $(EXAMPLE_DIR)/$(CUSTOM_TASK_PLUGINS_PIXEL_THRESHOLD_TARBALL_FILE)
 endef
 
 define download_data
@@ -158,7 +167,7 @@ mkdir -p "$(strip $(1))"
 endef
 
 define make_tarball
-$(TAR) czf $(1) $(2)
+$(TAR) $(3) -czf $(1) $(2)
 endef
 
 define run_docker
@@ -209,6 +218,15 @@ endef
 ## Remove temporary files
 clean: ; $(call cleanup)
 
+## Create custom plugins tarballs
+custom-plugins: custom-plugins-evaluation custom-plugins-pixel-threshold
+
+## Create custom evaluation plugins tarball
+custom-plugins-evaluation: $(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE)
+
+## Create custom pixel threshold plugins tarball
+custom-plugins-evaluation: $(CUSTOM_TASK_PLUGINS_PIXEL_THRESHOLD_TARBALL_FILE)
+
 ## Download and prepare MNIST dataset
 data: $(TRAINING_DATASET_SENTINEL) $(TESTING_DATASET_SENTINEL)
 
@@ -241,6 +259,14 @@ $(EXAMPLE_MINIO_DATA_DIR): ; $(call make_subdirectory,$@) ; $(call chmod,0777,$@
 $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR): ; $(call make_subdirectory,$@) ; $(call chmod,0777,$@)
 $(EXAMPLE_REDIS_DATA_DIR): ; $(call make_subdirectory,$@) ; $(call chmod,0777,$@)
 $(EXAMPLE_RESTAPI_DATA_DIR): ; $(call make_subdirectory,$@) ; $(call chmod,0777,$@)
+
+$(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE): $(CUSTOM_PLUGIN_EVALUATION_SRC_FILES)
+	$(call make_tarball,$@,$(addprefix evaluation/,$(notdir $(CUSTOM_PLUGIN_EVALUATION_SRC_FILES))),-C $(PLUGINS_CUSTOM_DIR))
+	$(call chmod,644,$(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE))
+	
+$(CUSTOM_TASK_PLUGINS_PIXEL_THRESHOLD_TARBALL_FILE): $(CUSTOM_PLUGIN_PIXEL_THRESHOLD_SRC_FILES)
+	$(call make_tarball,$@,$(addprefix pixel_threshold/,$(notdir $(CUSTOM_PLUGIN_PIXEL_THRESHOLD_SRC_FILES))),-C $(PLUGINS_CUSTOM_DIR))
+	$(call chmod,644,$(CUSTOM_TASK_PLUGINS_PIXEL_THRESHOLD_TARBALL_FILE))
 
 $(DOCKER_COMPOSE_SENTINEL): $(PLUGINS_SENTINEL) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
 	$(call run_docker_compose,up -d mlflow-tracking nginx redis restapi)
@@ -281,7 +307,7 @@ $(TESTING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE) | $(EXAMPLE_MINIO_DATA_DIR) $
 	$(call save_sentinel_file,$@)
 
 $(WORKFLOWS_TARBALL_FILE): $(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE)
-	$(call make_tarball,$@,$(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE))
+	$(call make_tarball,$@,$(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE),)
 	$(call chmod,644,$(WORKFLOWS_TARBALL_FILE))
 
 teardown-docker-compose:
