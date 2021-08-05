@@ -24,9 +24,6 @@ from typing import Any, Dict, List, Optional
 import click
 import mlflow
 import structlog
-from attacks_poison_updated import create_adv_embedding_model
-from data_tensorflow_updated import create_image_dataset
-from estimators_keras_classifiers_updated import init_classifier
 from mlflow.tracking import MlflowClient
 from prefect import Flow, Parameter, case
 from prefect.utilities.logging import get_logger as get_prefect_logger
@@ -50,6 +47,7 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
 _PLUGINS_IMPORT_PATH: str = "securingai_builtins"
 CALLBACKS: List[Dict[str, Any]] = [
     {
@@ -407,7 +405,10 @@ def init_train_flow() -> Flow:
             CALLBACKS, upstream_tasks=[init_tensorflow_results]
         )
 
-        training_ds = create_image_dataset(
+        training_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
             data_dir=training_dir,
             subset="training",
             image_size=image_size,
@@ -419,7 +420,10 @@ def init_train_flow() -> Flow:
             imagenet_preprocessing=imagenet_preprocessing,
             set_to_max_size=True,
         )
-        validation_ds = create_image_dataset(
+        validation_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
             data_dir=training_dir,
             subset="validation",
             image_size=image_size,
@@ -430,7 +434,10 @@ def init_train_flow() -> Flow:
             rescale=rescale,
             imagenet_preprocessing=imagenet_preprocessing,
         )
-        testing_ds = create_image_dataset(
+        testing_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
             data_dir=testing_dir,
             subset=None,
             image_size=image_size,
@@ -455,7 +462,10 @@ def init_train_flow() -> Flow:
         # Update mlflow
         # Update example
 
-        classifier = init_classifier(
+        classifier = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "estimators_keras_classifiers",
+            "init_classifier",
             model_architecture=model_architecture,
             optimizer=optimizer,
             metrics=metrics,
@@ -464,7 +474,10 @@ def init_train_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
         )
 
-        classifier = create_adv_embedding_model(
+        classifier = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "attacks_poison",
+            "create_adv_embedding_model",
             model=classifier,
             training_ds=training_ds,
             target_class_id=target_class_id,

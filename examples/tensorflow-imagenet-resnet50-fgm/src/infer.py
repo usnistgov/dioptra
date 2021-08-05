@@ -23,7 +23,6 @@ import click
 import mlflow
 import mlflow.tensorflow
 import structlog
-from data_tensorflow_updated import create_image_dataset
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
@@ -40,6 +39,7 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
 _PLUGINS_IMPORT_PATH: str = "securingai_builtins"
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -215,8 +215,10 @@ def init_infer_flow() -> Flow:
             filepath=adv_tar_path,
         )
 
-        # TODO: Transfer to load_tensorflow_keras_classifier
-        adv_ds = create_image_dataset(
+        adv_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
             data_dir=adv_data_dir,
             subset=None,
             validation_split=None,
