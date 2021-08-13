@@ -16,22 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
 #################################################################################
-# CONTINUOUS INTEGRATION IMAGES                                                 #
-#################################################################################
-
-# python-build ------------------------------------------------------------------
-
-CONTAINER_PYTHON_BUILD_CONDA_ENV_FILES =
-CONTAINER_PYTHON_BUILD_INCLUDE_FILES =
-CONTAINER_PYTHON_BUILD_SCRIPTS =
-
-# Sphinx ------------------------------------------------------------------------
-
-CONTAINER_SPHINX_CONDA_ENV_FILES =
-CONTAINER_SPHINX_INCLUDE_FILES =
-CONTAINER_SPHINX_SCRIPTS =
-
-#################################################################################
 # DIOPTRA TESTBED IMAGES                                                        #
 #################################################################################
 
@@ -40,9 +24,9 @@ CONTAINER_SPHINX_SCRIPTS =
 CONTAINER_MLFLOW_TRACKING_CONDA_ENV_FILES =\
     $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/environment-mlflow-tracking.yml
 CONTAINER_MLFLOW_TRACKING_INCLUDE_FILES =\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/aws-config\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/bash.bashrc\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/dot-condarc
+    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/aws-config\
+    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/bash.bashrc\
+    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/dot-condarc
 CONTAINER_MLFLOW_TRACKING_SCRIPTS =\
     $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/entrypoint-mlflow-tracking.sh\
     $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/fix-permissions.sh\
@@ -164,3 +148,41 @@ CONTAINER_TENSORFLOW2_GPU_SCRIPTS =\
     $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/s3-sync.sh\
     $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/secure-container.sh\
     $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/unpack-archive.sh
+
+# Legacy MLFlow Tracking (1.12.1) -----------------------------------------------
+
+CONTAINER_MLFLOW_TRACKING1_12_1_CONDA_ENV_FILES =\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/environment-mlflow-tracking.yml
+CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_FILES =\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/aws-config\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/bash.bashrc\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/dot-condarc
+CONTAINER_MLFLOW_TRACKING_SCRIPTS =\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/entrypoint-mlflow-tracking.sh\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/fix-permissions.sh\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/parse-uri.sh\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/s3-cp.sh\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/s3-mb.sh\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/s3-sync.sh\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/secure-container.sh\
+    $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/unpack-archive.sh
+
+# Legacy Tensorflow v2.1.0 (CPU) ------------------------------------------------
+
+CONTAINER_TENSORFLOW21_CPU_CONDA_ENV_FILES =\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/environment-worker.yml
+CONTAINER_TENSORFLOW21_CPU_INCLUDE_FILES =\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/aws-config\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/bash.bashrc\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/dot-condarc\
+    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
+CONTAINER_TENSORFLOW21_CPU_SCRIPTS =\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/entrypoint-worker.sh\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/fix-permissions.sh\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/parse-uri.sh\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/run-mlflow-job.sh\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/s3-cp.sh\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/s3-mb.sh\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/s3-sync.sh\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/secure-container.sh\
+    $(CONTAINER_TENSORFLOW21_CPU_INCLUDE_DIR)/unpack-archive.sh
