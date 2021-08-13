@@ -108,7 +108,7 @@ ARG CONDA_DIR=/opt/conda
 ARG PROJECT_COMPONENT
 ARG PROJECT_PREFIX
 
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/fix-permissions.sh /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/fix-permissions.sh /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh
 
 RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh /usr/local/bin/fix-permissions.sh
@@ -126,8 +126,8 @@ RUN useradd -u ${AI_UID} -N -m -s /bin/bash -c "Securing AI Testbed user" ${AI_U
     chmod g+w /etc/passwd && \
     fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
 
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/aws-config /etc/${PROJECT_PREFIX}/docker/aws-config
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/dot-condarc /etc/${PROJECT_PREFIX}/docker/dot-condarc
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/aws-config /etc/${PROJECT_PREFIX}/docker/aws-config
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/dot-condarc /etc/${PROJECT_PREFIX}/docker/dot-condarc
 
 RUN chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/dot-condarc && \
     chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/aws-config && \
@@ -140,14 +140,14 @@ RUN chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/dot-condarc && \
 USER ${AI_UID}
 
 ARG MINICONDA_VERSION
-ARG MINICONDA3_PREFIX
+ARG MINICONDA3_PY37_PREFIX=Miniconda3-py37_
 ARG PYTHON_VERSION=default
 
 RUN echo "===> Installing Miniconda3 version ${MINICONDA_VERSION} to ${CONDA_DIR}...." && \
     cd /tmp && \
-    wget -qO "/tmp/${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" "https://repo.continuum.io/miniconda/${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" && \
-    bash ${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p ${CONDA_DIR} && \
-    rm ${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    wget -qO "/tmp/${MINICONDA3_PY37_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" "https://repo.continuum.io/miniconda/${MINICONDA3_PY37_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" && \
+    bash ${MINICONDA3_PY37_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p ${CONDA_DIR} && \
+    rm ${MINICONDA3_PY37_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh && \
     if [ ! ${PYTHON_VERSION} = 'default' ]; then ${CONDA_DIR}/condabin/conda install -y python=$PYTHON_VERSION; fi && \
     ${CONDA_DIR}/condabin/conda install -q -y conda && \
     ${CONDA_DIR}/condabin/conda install -q -y pip && \
@@ -160,7 +160,7 @@ RUN echo "===> Installing Miniconda3 version ${MINICONDA_VERSION} to ${CONDA_DIR
     rm -rf /home/${AI_USER}/.cache/yarn && \
     fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
 
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/environment-worker.yml /etc/${PROJECT_PREFIX}/docker/environment-worker.yml
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/environment-worker.yml /etc/${PROJECT_PREFIX}/docker/environment-worker.yml
 
 RUN echo "===> Installing base dependencies in conda environment of ${PROJECT_COMPONENT} image...." && \
     cp /etc/${PROJECT_PREFIX}/docker/environment-worker.yml /tmp/environment-worker.yml && \
@@ -175,24 +175,16 @@ RUN echo "===> Installing base dependencies in conda environment of ${PROJECT_CO
     echo "===> Fixing directory permissions...." && \
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
-ARG PYTORCH_VERSION
-
 ARG AI_CONDA_ENV=mitre-securing-ai
-ARG PYTORCH_CUDATOOLKIT_VERSION=11.1
+ARG TENSORFLOW210_BUILD=mkl_py37h80a91df_0
+ARG TENSORFLOW210_VERSION=2.1.0
 
 RUN ${CONDA_DIR}/condabin/conda config --set channel_priority flexible
 
-RUN echo "===> Installing PyTorch (GPU) library...." && \
-    ${CONDA_DIR}/condabin/conda install -n ${AI_CONDA_ENV} -c defaults -c pytorch -c nvidia -q -y \
-    cudatoolkit=${PYTORCH_CUDATOOLKIT_VERSION} \
-    pytorch=${PYTORCH_VERSION} \
-    tensorboard \
-    torchaudio \
-    torchvision && \
-    echo "===> Installing dependencies using pip...." && \
-    ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
-    pip install --no-cache-dir \
-    pytorch-lightning && \
+RUN echo "===> Installing Tensorflow (CPU) library...."; \
+    ${CONDA_DIR}/condabin/conda install -n ${AI_CONDA_ENV} -q -y \
+    tensorflow=${TENSORFLOW210_VERSION}=${TENSORFLOW210_BUILD} \
+    tensorflow-estimator=${TENSORFLOW210_VERSION} && \
     echo "===> Cleaning/pruning directories...." && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
@@ -220,15 +212,15 @@ RUN echo "===> Installing Securing AI code module...." && \
 
 USER root
 
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/${PROJECT_PREFIX}/docker/bash.bashrc
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-worker.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-worker.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/parse-uri.sh /etc/${PROJECT_PREFIX}/docker/parse-uri.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-cp.sh /etc/${PROJECT_PREFIX}/docker/s3-cp.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-mb.sh /etc/${PROJECT_PREFIX}/docker/s3-mb.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-sync.sh /etc/${PROJECT_PREFIX}/docker/s3-sync.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
-COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/${PROJECT_PREFIX}/docker/bash.bashrc
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-worker.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-worker.sh
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/parse-uri.sh /etc/${PROJECT_PREFIX}/docker/parse-uri.sh
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh /etc/${PROJECT_PREFIX}/docker/run-mlflow-job.sh
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-cp.sh /etc/${PROJECT_PREFIX}/docker/s3-cp.sh
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-mb.sh /etc/${PROJECT_PREFIX}/docker/s3-mb.sh
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-sync.sh /etc/${PROJECT_PREFIX}/docker/s3-sync.sh
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
+COPY docker/legacy/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh
 
 RUN chmod 0644 /etc/${PROJECT_PREFIX}/docker/bash.bashrc && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-worker.sh && \
@@ -258,8 +250,6 @@ ENV AI_RESTAPI_ENV prod
 ENV AI_WORKDIR ${AI_WORKDIR}
 ENV AI_PLUGIN_DIR ${AI_WORKDIR}/plugins
 ENV CONDA_DIR ${CONDA_DIR}
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 
 USER ${AI_UID}
 WORKDIR ${AI_WORKDIR}

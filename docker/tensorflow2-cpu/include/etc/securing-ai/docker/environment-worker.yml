@@ -18,50 +18,51 @@ name: mitre-securing-ai
 channels:
   - defaults
 dependencies:
-  - bottleneck=1.3.*
-  - click=7.1.*
-  - cloudpickle=1.6.*
-  - cython=0.29.*
-  - dask=2.30.*
-  - docker-py=4.3.*
-  - entrypoints=0.3
-  - gitpython=3.1.*
-  - gunicorn=20.0.*
-  - h5py=2.10.0
-  - jinja2=2.11.*
-  - joblib=0.17.*
-  - matplotlib=3.3.*
-  - mkl=2020.2
-  - nose=1.3.*
-  - numexpr=2.7.*
-  - numpy=1.19.*
-  - pandas=1.1.*
-  - passlib=1.7.*
-  - pillow=8.0.*
+  - bottleneck
+  - click>=7.1.*,<8.0 # mlflow/prefect requirement
+  - cloudpickle>=1.3.0 # prefect requirement
+  - cython
+  - dask>=2.17.0 # prefect requirement
+  - docker-py>=4.0.0 # mlflow requirement
+  - entrypoints # mlflow requirement
+  - gitpython>=2.1.0 # mlflow requirement
+  - gunicorn # mlflow requirement
+  - h5py=2.10.0 # tensorflow requirement
+  - importlib_metadata>=3.7.0 # mlflow requirement
+  - jinja2
+  - joblib
+  - matplotlib
+  - mkl
+  - nose
+  - numexpr
+  - numpy>=1.18.0 # adversarial-robustness-toolbox requirement
+  - packaging # mlflow requirement
+  - pandas>=1.0.1 # mlflow/prefect requirement
+  - pillow
   - pip
-  - protobuf=3.13.0.1
-  - psutil=5.7.*
-  - psycopg2=2.8.*
-  - pycodestyle=2.6.*
-  - pytables=3.6.*
-  - python-dateutil=2.8.*
-  - python=3.7.*
-  - pytz=2020.1
-  - pyyaml=5.3.1
-  - redis-py=3.5.*
-  - requests=2.25.0
-  - scipy=1.5.*
-  - scikit-learn=0.23.*
-  - simplejson=3.17.*
-  - six=1.13.0
-  - sqlalchemy=1.3.13
-  - sqlparse=0.4.*
-  - werkzeug=1.0.*
+  - protobuf>=3.7.0 # mlflow requirement
+  - psutil
+  - psycopg2
+  - pycodestyle
+  - pytables
+  - python-dateutil>=2.7.0 # prefect requirement
+  - python=3.9.*
+  - pytz>=2018.7 # mlflow requirement
+  - pyyaml>=5.1 # mlflow requirement
+  - redis-py>=3.2.1 # prefect requirement
+  - requests>=2.20,<2.26 # prefect requirement
+  - scipy>=1.4.1 # adversarial-robustness-toolbox requirement
+  - scikit-learn=0.24.2
+  - simplejson
+  - six # adversarial-robustness-toolbox requirement
+  - sqlalchemy # mlflow requirement
+  - sqlparse>=0.3.1 # mlflow requirement
+  - werkzeug
   - pip:
-      - adversarial-robustness-toolbox==1.5.1
+      - adversarial-robustness-toolbox==1.7.*
       - alembic<=1.4.1
-      - boto3>=1.16.0
-      - databricks-cli==0.13.0
+      - boto3 # mlflow requirement
+      - databricks-cli>=0.8.7 # mlflow requirement
       - flask-accepts>=0.17.0,<1
       - Flask-Injector>=0.12.0,<1
       - Flask-JWT-Extended>=3.24.0,<4
@@ -69,17 +70,18 @@ dependencies:
       - flask-restx>=0.2.0,<1
       - Flask-SQLAlchemy>=2.4.0,<3
       - Flask-WTF>=0.14.3,<1
-      - Flask>=1.1.0,<2
-      - gorilla==0.3.0
+      - Flask>=1.1.0,<2 # mlflow requirement
+      - gorilla
       - marshmallow>=3.9.0,<4
-      - mlflow==1.12.1
+      - mlflow==1.*
       - mnist>=0.2.2
       - multimethod>=1.5
-      - prefect==0.14.*
-      - prometheus-flask-exporter==0.18.1
+      - passlib
+      - prefect==0.15.*
+      - prometheus-flask-exporter # mlflow requirement
       - pyarrow>=2.0.0
       - python-json-logger>=2.0.0
-      - querystring-parser>=1.2.0
+      - querystring-parser # mlflow requirement
       - rich>=9.1.0
       - rq>=1.5.0
       - structlog>=20.2.0

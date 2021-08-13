@@ -8,21 +8,17 @@ echo "IMAGE_TAG=${IMAGE_TAG}"
 echo "CODE_PKG_VERSION=${CODE_PKG_VERSION}"
 echo "PROJECT_COMPONENT=${PROJECT_COMPONENT}"
 echo "PROJECT_PREFIX=${PROJECT_PREFIX}"
-echo "MINICONDA3_PREFIX=${MINICONDA3_PREFIX}"
 echo "MINICONDA_VERSION=${MINICONDA_VERSION}"
-echo "PYTORCH_VERSION=${PYTORCH_VERSION}"
-echo "SPHINX_VERSION=${SPHINX_VERSION}"
-echo "TENSORFLOW2_VERSION=${TENSORFLOW2_VERSION}"
 echo ""
 
 prefix=${PROJECT_PREFIX}
 
 echo ""
-echo "Building ${prefix}/${PROJECT_COMPONENT}"
+echo "Building legacy ${prefix}/${PROJECT_COMPONENT}"
 echo "=========================================="
 echo ""
 
-DOCKERFILE="docker/${PROJECT_COMPONENT}/Dockerfile"
+DOCKERFILE="docker/legacy/${PROJECT_COMPONENT}/Dockerfile"
 BUILD_CONTEXT="."
 BUILD_ARGS=""
 IMAGE_NAME="${prefix}/${PROJECT_COMPONENT}"
@@ -37,14 +33,10 @@ if [[ -e ${DOCKERFILE} ]]; then
     --build-arg CODE_PKG_VERSION=${CODE_PKG_VERSION} \
     --build-arg PROJECT_COMPONENT=${PROJECT_COMPONENT} \
     --build-arg PROJECT_PREFIX=${PROJECT_PREFIX} \
-    --build-arg MINICONDA3_PREFIX=${MINICONDA3_PREFIX} \
     --build-arg MINICONDA_VERSION=${MINICONDA_VERSION} \
-    --build-arg PYTORCH_VERSION=${PYTORCH_VERSION} \
-    --build-arg SPHINX_VERSION=${SPHINX_VERSION} \
-    --build-arg TENSORFLOW2_VERSION=${TENSORFLOW2_VERSION} \
     --label "maintainer=NCCoE Artificial Intelligence Team <ai-nccoe@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>" \
     --label "org.opencontainers.image.title=${PROJECT_COMPONENT}" \
-    --label "org.opencontainers.image.description=Provides the ${PROJECT_COMPONENT} microservice within the Dioptra architecture." \
+    --label "org.opencontainers.image.description=Legacy build of a microservice within the Dioptra architecture for testing purposes." \
     --label "org.opencontainers.image.authors=NCCoE Artificial Intelligence Team <ai-nccoe@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Cory Miniter <jminiter@mitre.org>, Howard Huang <hhuang@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Paul Rowe <prowe@mitre.org>" \
     --label "org.opencontainers.image.vendor=National Institute of Standards and Technology" \
     --label "org.opencontainers.image.url=https://github.com/usnistgov/dioptra" \
