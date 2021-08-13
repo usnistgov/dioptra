@@ -25,11 +25,13 @@ PathLike = List[Union[str, Path]]
 
 class Timer(object):
     def __init__(self, timeout: Optional[float] = None) -> None:
-        self._elapsed = None
+        self.start = timeit.default_timer()
+        self._elapsed: Optional[float] = None
         self._timeout = timeout
 
     def __enter__(self) -> Timer:
         self.start = timeit.default_timer()
+        self._elapsed = None
         return self
 
     def __exit__(self, *args) -> None:

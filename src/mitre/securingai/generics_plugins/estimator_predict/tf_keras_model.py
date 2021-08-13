@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Union
 
 import numpy as np
 import structlog
@@ -103,9 +103,17 @@ def keras_model_predict_label(
     )
 
     if prediction.shape[1] > 1:
-        return np.argmax(prediction, axis=1)
+        labels: Union[np.integer, np.ndarray] = np.argmax(prediction, axis=1)
 
-    return (prediction.flatten() >= 0.5).astype(int)
+        if isinstance(labels, np.integer):
+            raise RuntimeError(
+                "Label prediction should return an array, not an integer."
+            )
+
+        return labels
+
+    flattened_labels: np.ndarray = (prediction.flatten() >= 0.5).astype(int)
+    return flattened_labels
 
 
 def _null_predict(*args, **kwargs) -> np.ndarray:
