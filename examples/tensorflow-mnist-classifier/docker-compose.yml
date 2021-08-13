@@ -77,7 +77,7 @@ services:
     restart: always
     hostname: minio
     container_name: minio
-    command: server /data
+    command: server /data --console-address ":9001"
     cpu_shares: 256
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -91,6 +91,7 @@ services:
       - lab_deployment_backend
     ports:
       - "39000:9000/tcp"
+      - "39001:9001/tcp"
     volumes:
       - minio-data:/data
 
