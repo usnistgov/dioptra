@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-.PHONY: beautify build-all build-ci build-testbed build-mlflow-tracking build-nginx build-python-build build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-sphinx build-tensorflow build-tensorflow-cpu build-tensorflow-gpu clean code-check code-pkg conda-env docker-deps docs help hooks pull-latest pull-latest-ci pull-latest-hub pull-latest-testbed tag-latest-ci tag-latest-testbed tests tests-integration tests-unit tox
+.PHONY: beautify build-all build-legacy build-mlflow-tracking build-nginx build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-tensorflow build-tensorflow-cpu build-tensorflow-gpu clean code-check code-pkg conda-env docker-deps docs help hooks pull-latest tag-latest tests tests-integration tests-unit tox
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -O extglob -o pipefail -c
@@ -72,7 +72,7 @@ ISORT = isort
 MV = mv
 MYPY = mypy
 PRE_COMMIT = pre-commit
-PY ?= python3.8
+PY ?= python3
 PYTEST = $(PY) -m pytest
 RM = rm
 TOX = $(PY) -m tox
@@ -154,7 +154,7 @@ else
 endif
 CONDA = conda
 CONDA_CHANNELS = -c defaults
-CONDA_ENV_BASE := python=3.8 pip setuptools wheel
+CONDA_ENV_BASE := python=3.9 pip setuptools wheel
 ifeq ($(DETECTED_OS),Darwin)
     CONDA_ENV_BASE +=
 endif
@@ -162,16 +162,14 @@ CONDA_ENV_FILE = environment.yml
 CONDA_ENV_NAME = $(PROJECT_NAME)
 CONDA_ENV_PIP =
 
-ARTIFACTORY_PREFIX = artifacts.mitre.org:8200
-ARTIFACTORY_UNTRUSTED_PREFIX = $(ARTIFACTORY_PREFIX)/untrusted-mitrewide-overwritable
+NO_CACHE ?=
+DOCKER_NO_CACHE = $(if $(NO_CACHE),--no-cache,)
 
 DOCKER_HUB_IMAGES_LATEST =\
     matejak/argbash:latest\
     minio/minio:latest\
     postgres:latest\
     redis:latest
-CI_IMAGES_LATEST =
-TESTBED_IMAGES_LATEST =
 
 BEAUTIFY_SENTINEL = $(PROJECT_BUILD_DIR)/.beautify.sentinel
 CODE_PACKAGING_SENTINEL = $(PROJECT_BUILD_DIR)/.code-packaging.sentinel
@@ -212,8 +210,7 @@ $(RM) -f $(CODE_PACKAGING_SENTINEL)
 endef
 
 define create_conda_env
-bash -lc "\
-$(CONDA) create -n $(CONDA_ENV_NAME) $(CONDA_CHANNELS) -y $(CONDA_ENV_BASE)"
+bash -lc "$(CONDA) create -n $(1) $(CONDA_CHANNELS) -y $(CONDA_ENV_BASE)"
 endef
 
 define docker_image_tag
@@ -222,6 +219,12 @@ endef
 
 define make_subdirectory
 mkdir -p "$(strip $(1))"
+endef
+
+define run_in_conda_env
+bash -lc "$(3)$(CONDA) activate $(1) &&\
+$(2) &&\
+$(CONDA) deactivate"
 endef
 
 define get_host_user_id
@@ -233,15 +236,7 @@ $(shell id -g)
 endef
 
 define package_code
-$(call run_docker,\
-    run\
-    -t\
-    --rm\
-    -e PIP_CACHE_DIR=/work/.pip-cache\
-    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
-    -v $(PROJECT_DIR):/work\
-    $(CONTAINER_PYTHON_BUILD_IMAGE_LATEST)\
-    /usr/local/bin/python -m build -sw)
+$(call run_in_conda_env,$(CONDA_ENV_NAME),$(PY) -m build -sw,)
 endef
 
 define pull_docker_hub_images
@@ -252,18 +247,8 @@ define pull_docker_hub_images
     echo "";)
 endef
 
-define pull_mitre_docker_images
-@$(foreach image,$(1),\
-    echo "Pulling image $(image) from the MITRE Artifactory";\
-    echo "=================================================";\
-    $(DOCKER) pull $(strip $(2))/$(image) || exit 1;\
-    $(DOCKER) tag $(strip $(2))/$(image) $(image) || exit 1;\
-    $(DOCKER) rmi $(strip $(2))/$(image) || exit 1;\
-    echo "";)
-endef
-
 define pre_commit_cmd
-$(PRE_COMMIT) $(1)
+$(call run_in_conda_env,$(CONDA_ENV_NAME),$(PRE_COMMIT) $(1),)
 endef
 
 define run_argbash
@@ -290,7 +275,20 @@ MINICONDA_VERSION=$(CONTAINER_MINICONDA_VERSION)\
 PYTORCH_VERSION=$(CONTAINER_PYTORCH_VERSION)\
 SPHINX_VERSION=$(CONTAINER_SPHINX_VERSION)\
 TENSORFLOW2_VERSION=$(CONTAINER_TENSORFLOW2_VERSION)\
+TENSORFLOW2_BUILD=$(CONTAINER_TENSORFLOW2_BUILD)\
+DOCKER_NO_CACHE=$(DOCKER_NO_CACHE)\
 docker/build.sh
+endef
+
+define run_legacy_build_script
+CORES=$(CORES)\
+IMAGE_TAG=$(strip $(2))\
+CODE_PKG_VERSION=$(CODE_PKG_VERSION)\
+PROJECT_PREFIX=$(PROJECT_PREFIX)\
+PROJECT_COMPONENT=$(strip $(1))\
+MINICONDA_VERSION=$(CONTAINER_MINICONDA_VERSION)\
+DOCKER_NO_CACHE=$(DOCKER_NO_CACHE)\
+docker/legacy/build.sh
 endef
 
 define run_docker
@@ -298,48 +296,35 @@ $(DOCKER) $(1)
 endef
 
 define run_flake8
-$(FLAKE8) $(1)
+$(call run_in_conda_env,$(CONDA_ENV_NAME),$(FLAKE8) $(1),)
 endef
 
 define run_isort
-$(ISORT) $(1)
+$(call run_in_conda_env,$(CONDA_ENV_NAME),$(ISORT) $(1),)
 endef
 
 define run_mypy
-$(MYPY) $(1)
+$(call run_in_conda_env,$(CONDA_ENV_NAME),$(MYPY) $(1),)
 endef
 
 define run_pip_install
-bash -lc "\
-$(CONDA) activate $(CONDA_ENV_NAME) &&\
-$(PIP) install $(1) &&\
-$(CONDA) deactivate"
+$(call run_in_conda_env,$(1),$(PIP) install $(2),)
 endef
 
 define run_pytest
-$(PYTEST) --import-mode=importlib $(1)
+$(call run_in_conda_env,$(CONDA_ENV_NAME),$(PYTEST) --import-mode=importlib $(1),)
 endef
 
 define run_python_black
-$(BLACK) $(1)
+$(call run_in_conda_env,$(CONDA_ENV_NAME),$(BLACK) $(1),)
 endef
 
 define run_sphinx_build
-$(call run_docker,\
-    run\
-    -t\
-    --rm\
-    -v $(PROJECT_DIR):/docs\
-    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
-    $(CONTAINER_SPHINX_IMAGE_LATEST)\
-    sphinx-build\
-    -b html\
-    $(strip $(1))\
-    $(strip $(2)))
+$(call run_in_conda_env,$(1),$(PY) -m sphinx-build -b html $(strip $(2)) $(strip $(3)),)
 endef
 
 define run_tox
-$(TOX) $(1)
+$(call run_in_conda_env,$(1),PIP_CACHE_DIR=$(CODE_PIP_CACHE_DIR) $(PY) -m $(TOX) $(2),)
 endef
 
 define run_yq
@@ -371,8 +356,7 @@ $(shell echo $(1) | tr '[:lower:]' '[:upper:]')
 endef
 
 define update_conda_env
-bash -lc "\
-$(CONDA) env update --file $(CONDA_ENV_FILE)"
+bash -lc "$(CONDA) env update --file $(1)"
 endef
 
 define build_docker_image_recipe
@@ -424,7 +408,7 @@ CONTAINER_$(strip $(1))_BUILD_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(
 CONTAINER_$(strip $(1))_BUILD_LATEST_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-latest.sentinel
 CONTAINER_CONDA_ENV_FILES += $$(CONTAINER_$(1)_CONDA_ENV_FILES)
 CONTAINER_SCRIPTS += $$(CONTAINER_$(strip $(1))_SCRIPTS)
-$(strip $(4))_IMAGES_LATEST += $$(CONTAINER_$(strip $(1))_IMAGE_LATEST)
+DOCKER_HUB_IMAGES_LATEST += $(if $(strip $(4)),$$(CONTAINER_$(strip $(1))_IMAGE_LATEST),)
 endef
 
 define generate_docker_image_pipeline
@@ -452,19 +436,52 @@ $(eval $(call generate_docker_image_pipeline,\
 	$$(CONTAINER_$(1)_CONDA_ENV_FILES)))
 endef
 
+define build_legacy_docker_image_recipe
+$(strip $(1)): $(strip $(2)) | $$(PROJECT_BUILD_DIR)
+	$(call run_legacy_build_script,$(3),$(4))
+	$(call save_sentinel_file,$$@)
+endef
+
+define define_legacy_docker_image_sentinel_vars
+CONTAINER_$(strip $(1))_COMPONENT_NAME = $(strip $(3))
+CONTAINER_$(strip $(1))_IMAGE = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):$$($(strip $(2)))
+CONTAINER_$(strip $(1))_DIR = $$(PROJECT_DOCKER_DIR)/legacy/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)
+CONTAINER_$(strip $(1))_INCLUDE_DIR = $$(CONTAINER_$(strip $(1))_DIR)/include/etc/$$(PROJECT_PREFIX)/docker
+CONTAINER_$(strip $(1))_DOCKERFILE = $$(CONTAINER_$(strip $(1))_DIR)/Dockerfile
+CONTAINER_$(strip $(1))_BUILD_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-legacy-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-$$($(strip $(2))).sentinel
+endef
+
+define generate_legacy_docker_image_pipeline
+$(eval $(call build_legacy_docker_image_recipe,$(1),$(strip $(strip $(2) $(5)) $(6)),$(3),$(4)))
+endef
+
+define generate_legacy_full_docker_image_vars
+$(eval $(call define_legacy_docker_image_sentinel_vars,$(1),$(2),$(3)))
+endef
+
+define generate_legacy_full_docker_image_recipe
+$(eval $(call generate_legacy_docker_image_pipeline,\
+	$$(CONTAINER_$(1)_BUILD_SENTINEL),\
+	$$($(2)) $$(CONTAINER_$(1)_DOCKERFILE) $$(CONTAINER_$(1)_INCLUDE_FILES),\
+	$$(CONTAINER_$(1)_COMPONENT_NAME),\
+	$$($(3)),\
+	$$(CONTAINER_$(1)_SCRIPTS),\
+	$$(CONTAINER_$(1)_CONDA_ENV_FILES)))
+endef
+
 #################################################################################
 # AUTO-GENERATED GLOBALS                                                        #
 #################################################################################
 
-$(call generate_full_docker_image_vars,SPHINX,CONTAINER_IMAGE_TAG,sphinx,CI)
-$(call generate_full_docker_image_vars,MLFLOW_TRACKING,CONTAINER_IMAGE_TAG,mlflow-tracking,TESTBED)
-$(call generate_full_docker_image_vars,NGINX,CONTAINER_IMAGE_TAG,nginx,TESTBED)
-$(call generate_full_docker_image_vars,RESTAPI,CONTAINER_IMAGE_TAG,restapi,TESTBED)
-$(call generate_full_docker_image_vars,PYTHON_BUILD,CONTAINER_IMAGE_TAG,python-build,CI)
-$(call generate_full_docker_image_vars,PYTORCH_CPU,CONTAINER_IMAGE_TAG,pytorch-cpu,TESTBED)
-$(call generate_full_docker_image_vars,PYTORCH_GPU,CONTAINER_IMAGE_TAG,pytorch-gpu,TESTBED)
-$(call generate_full_docker_image_vars,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG,tensorflow2-cpu,TESTBED)
-$(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tensorflow2-gpu,TESTBED)
+$(call generate_full_docker_image_vars,MLFLOW_TRACKING,CONTAINER_IMAGE_TAG,mlflow-tracking,)
+$(call generate_full_docker_image_vars,NGINX,CONTAINER_IMAGE_TAG,nginx,)
+$(call generate_full_docker_image_vars,RESTAPI,CONTAINER_IMAGE_TAG,restapi,)
+$(call generate_full_docker_image_vars,PYTORCH_CPU,CONTAINER_IMAGE_TAG,pytorch-cpu,)
+$(call generate_full_docker_image_vars,PYTORCH_GPU,CONTAINER_IMAGE_TAG,pytorch-gpu,)
+$(call generate_full_docker_image_vars,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG,tensorflow2-cpu,)
+$(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tensorflow2-gpu,)
+$(call generate_legacy_full_docker_image_vars,MLFLOW_TRACKING1_12_1,CONTAINER_IMAGE_TAG,mlflow-tracking1-12-1)
+$(call generate_legacy_full_docker_image_vars,TENSORFLOW21_CPU,CONTAINER_IMAGE_TAG,tensorflow21-cpu)
 
 #################################################################################
 # PROJECT RULES                                                                 #
@@ -473,23 +490,17 @@ $(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tenso
 ## Reformat code
 beautify: $(BEAUTIFY_SENTINEL)
 
-## Build all Docker images in project
-build-all: build-ci build-testbed
-
-## Build all continuous integration (CI) images
-build-ci: build-python-build build-sphinx
-
 ## Build all Dioptra Testbed images
-build-testbed: build-nginx build-mlflow-tracking build-restapi build-pytorch build-tensorflow
+build-all: build-nginx build-mlflow-tracking build-restapi build-pytorch build-tensorflow
+
+## Build the legacy Testbed images
+build-legacy: $(CONTAINER_MLFLOW_TRACKING1_12_1_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW21_CPU_BUILD_SENTINEL)
 
 ## Build the MLFlow Tracking Docker image
 build-mlflow-tracking: $(CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL)
 
 ## Build the nginx Docker image
 build-nginx: $(CONTAINER_NGINX_BUILD_SENTINEL)
-
-## Build the Python Build Docker image
-build-python-build: $(CONTAINER_PYTHON_BUILD_BUILD_SENTINEL)
 
 ## Build the PyTorch Docker images
 build-pytorch: build-pytorch-cpu build-pytorch-gpu
@@ -502,9 +513,6 @@ build-pytorch-gpu: $(CONTAINER_PYTORCH_GPU_BUILD_SENTINEL)
 
 ## Build the restapi Docker image
 build-restapi: $(CONTAINER_RESTAPI_BUILD_SENTINEL)
-
-## Build the Sphinx image
-build-sphinx: $(CONTAINER_SPHINX_BUILD_SENTINEL)
 
 ## Build the Tensorflow Docker images
 build-tensorflow: build-tensorflow-cpu build-tensorflow-gpu
@@ -536,23 +544,11 @@ docs: $(DOCS_SENTINEL)
 ## Install pre-commit hooks
 hooks: $(PRE_COMMIT_HOOKS_SENTINEL)
 
-## Pull latest images from the MITRE artifactory and retag
-pull-latest: pull-latest-hub pull-latest-ci pull-latest-testbed
-
-## Pull latest CI images from the MITRE artifactory and retag
-pull-latest-ci: ; $(call pull_mitre_docker_images,$(CI_IMAGES_LATEST),$(ARTIFACTORY_UNTRUSTED_PREFIX))
-
-## Pull latest vendor images from Docker Hub
-pull-latest-hub: ; $(call pull_docker_hub_images,$(DOCKER_HUB_IMAGES_LATEST))
-
-## Pull latest Testbed images from the MITRE artifactory and retag
-pull-latest-testbed: ; $(call pull_mitre_docker_images,$(TESTBED_IMAGES_LATEST),$(ARTIFACTORY_UNTRUSTED_PREFIX))
-
-## Manually set "latest" tag on all continuous integration (CI) images
-tag-latest-ci: $(CONTAINER_PYTHON_BUILD_BUILD_LATEST_SENTINEL) $(CONTAINER_SPHINX_BUILD_LATEST_SENTINEL)
+## Pull latest Docker images from Docker Hub
+pull-latest: ; $(call pull_docker_hub_images,$(DOCKER_HUB_IMAGES_LATEST))
 
 ## Manually set "latest" tag on all Dioptra Testbed images
-tag-latest-testbed: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL) $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL) $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL)
+tag-latest: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL) $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL) $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW21_CPU_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW21_GPU_BUILD_SENTINEL)
 
 ## Run all tests
 tests: tests-unit tests-integration
@@ -575,9 +571,7 @@ $(CODE_PIP_CACHE_DIR): ; $(call make_subdirectory,$@)
 
 $(BEAUTIFY_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
 	$(call run_python_black,$(PROJECT_SRC_SECURINGAI_DIR) $(PROJECT_TESTS_DIR) $(CODE_SECURINGAI_BUILTINS_DIR))
-	$(call run_isort,$(PROJECT_SRC_SECURINGAI_DIR))
-	$(call run_isort,$(CODE_SECURINGAI_BUILTINS_DIR))
-	$(call run_isort,$(PROJECT_TESTS_DIR))
+	$(call run_isort,$(PROJECT_SRC_SECURINGAI_DIR) $(CODE_SECURINGAI_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
 	$(call save_sentinel_file,$@)
 
 $(CODE_INTEGRATION_TESTS_SENTINEL): $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
@@ -599,26 +593,26 @@ $(CODE_PACKAGING_SENTINEL): $(VERSION_VARS_FILE) $(CODE_PACKAGING_FILES) $(CODE_
 	@echo "$(CODE_PKG_NAME) packaged for distribution in $(CODE_BUILD_DIR)"
 
 $(CONDA_CREATE_SENTINEL): | $(PROJECT_BUILD_DIR)
-	$(call create_conda_env)
+	$(call create_conda_env,$(CONDA_ENV_NAME))
 	$(call save_sentinel_file,$@)
 
 $(CONDA_UPDATE_SENTINEL): $(CONDA_ENV_FILE) | $(PROJECT_BUILD_DIR)
-	$(call update_conda_env)
+	$(call update_conda_env,$(CONDA_ENV_FILE))
 	$(call save_sentinel_file,$@)
 
 $(CONDA_ENV_PIP_INSTALL_SENTINEL): $(MAKEFILE_FILE) | $(PROJECT_BUILD_DIR)
 ifdef CONDA_ENV_PIP
-	$(call run_pip_install,$(subst ",,$(CONDA_ENV_PIP)))
+	$(call run_pip_install,$(CONDA_ENV_NAME),$(subst ",,$(CONDA_ENV_PIP)))
 endif
 	$(call save_sentinel_file,$@)
 
 $(CONDA_ENV_DEV_INSTALL_SENTINEL): | $(PROJECT_BUILD_DIR)
-	$(call run_pip_install,-e .)
+	$(call run_pip_install,$(CONDA_ENV_NAME),-e .)
 	$(call save_sentinel_file,$@)
 
 $(DOCS_SENTINEL): $(DOCS_FILES) $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) | $(PROJECT_BUILD_DIR)
 	@$(RM) -rf $(DOCS_BUILD_DIR)
-	$(call run_sphinx_build,$(DOCS_SOURCE_DIR),$(DOCS_BUILD_DIR))
+	$(call run_sphinx_build,$(CONDA_ENV_NAME),$(DOCS_SOURCE_DIR),$(DOCS_BUILD_DIR))
 	@$(RM) -rf $(PROJECT_DOCS_DIR)/mlruns
 	$(call save_sentinel_file,$@)
 
@@ -636,26 +630,26 @@ $(TYPE_CHECK_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT
 	$(call save_sentinel_file,$@)
 
 $(TOX_UNIT_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_UNIT_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_tox,)
+	$(call run_tox,$(CONDA_ENV_NAME),)
 	$(call save_sentinel_file,$@)
 
 $(TOX_INTEGRATION_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_tox,-e integration)
+	$(call run_tox,$(CONDA_ENV_NAME),-e integration)
 	$(call save_sentinel_file,$@)
 
 #################################################################################
 # AUTO-GENERATED PROJECT BUILD RECEIPES                                         #
 #################################################################################
 
-$(call generate_full_docker_image_recipe,SPHINX,,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,MLFLOW_TRACKING,,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,NGINX,,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,PYTHON_BUILD,,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,RESTAPI,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,PYTORCH_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,PYTORCH_GPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,TENSORFLOW2_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,TENSORFLOW2_GPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
+$(call generate_legacy_full_docker_image_recipe,MLFLOW_TRACKING1_12_1,,CONTAINER_IMAGE_TAG)
+$(call generate_legacy_full_docker_image_recipe,TENSORFLOW21_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 
 #################################################################################
 # Self Documenting Commands                                                     #
