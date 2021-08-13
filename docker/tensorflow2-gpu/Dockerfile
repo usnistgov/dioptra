@@ -175,14 +175,13 @@ RUN echo "===> Installing base dependencies in conda environment of ${PROJECT_CO
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
 ARG AI_CONDA_ENV=mitre-securing-ai
-ARG TENSORFLOW2_BUILD=h0d30ee6_0
 ARG TENSORFLOW2_VERSION
 
 RUN ${CONDA_DIR}/condabin/conda config --set channel_priority flexible
 
 RUN echo "===> Installing Tensorflow (GPU) library...."; \
     ${CONDA_DIR}/condabin/conda install -n ${AI_CONDA_ENV} -q -y \
-    tensorflow-gpu=${TENSORFLOW2_VERSION}=${TENSORFLOW2_BUILD} \
+    tensorflow-gpu=${TENSORFLOW2_VERSION} \
     tensorflow-estimator=${TENSORFLOW2_VERSION} && \
     echo "===> Cleaning/pruning directories...." && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \

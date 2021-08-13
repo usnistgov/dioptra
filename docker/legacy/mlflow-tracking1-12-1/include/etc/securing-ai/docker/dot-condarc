@@ -1,0 +1,4 @@
+auto_update_conda: false
+channel_priority: strict
+show_channel_urls: true
+
