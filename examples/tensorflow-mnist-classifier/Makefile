@@ -61,7 +61,7 @@ DOCKER = docker
 DOCKER_COMPOSE = docker-compose
 FIND = find
 MV = mv
-PY ?= python3.7
+PY ?= python3
 RM = rm
 TAR = tar
 
