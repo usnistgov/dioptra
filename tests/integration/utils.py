@@ -18,7 +18,7 @@ import subprocess
 import time
 from pathlib import Path
 from posixpath import join as urljoin
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional, Union
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -26,7 +26,7 @@ from docker.client import DockerClient
 
 from tests.utils import Timer
 
-PathLike = List[Union[str, Path]]
+PathLike = Union[str, Path]
 
 
 class TestbedAPIClient(object):
@@ -116,22 +116,22 @@ class TestbedAPIClient(object):
         task_plugin_name_query: str = urljoin(self.task_plugin_custom_endpoint, name)
         return requests.get(task_plugin_name_query).json()
 
-    def list_experiments(self) -> List[Dict[str, Any]]:
+    def list_experiments(self):
         return requests.get(self.experiment_endpoint).json()
 
-    def list_jobs(self) -> List[Dict[str, Any]]:
+    def list_jobs(self):
         return requests.get(self.job_endpoint).json()
 
-    def list_queues(self) -> List[Dict[str, Any]]:
+    def list_queues(self):
         return requests.get(self.queue_endpoint).json()
 
-    def list_all_task_plugins(self) -> List[Dict[str, Any]]:
+    def list_all_task_plugins(self):
         return requests.get(self.task_plugin_endpoint).json()
 
-    def list_builtin_task_plugins(self) -> List[Dict[str, Any]]:
+    def list_builtin_task_plugins(self):
         return requests.get(self.task_plugin_builtins_endpoint).json()
 
-    def list_custom_task_plugins(self) -> List[Dict[str, Any]]:
+    def list_custom_task_plugins(self):
         return requests.get(self.task_plugin_custom_endpoint).json()
 
     def lock_queue(self, name: str):
@@ -142,7 +142,7 @@ class TestbedAPIClient(object):
         queue_name_query: str = urljoin(self.queue_endpoint, "name", name, "lock")
         return requests.delete(queue_name_query).json()
 
-    def register_experiment(self, name: str) -> Dict[str, Any]:
+    def register_experiment(self, name: str):
         experiment_registration_form = {"name": name}
 
         response = requests.post(
@@ -152,7 +152,7 @@ class TestbedAPIClient(object):
 
         return response.json()
 
-    def register_queue(self, name: str = "tensorflow_cpu") -> Dict[str, Any]:
+    def register_queue(self, name: str = "tensorflow_cpu"):
         queue_registration_form = {"name": name}
 
         response = requests.post(
@@ -171,7 +171,7 @@ class TestbedAPIClient(object):
         depends_on: Optional[str] = None,
         queue: str = "tensorflow_cpu",
         timeout: str = "24h",
-    ) -> Dict[str, Any]:
+    ):
         job_form = {
             "experiment_name": experiment_name,
             "queue": queue,
@@ -202,7 +202,7 @@ class TestbedAPIClient(object):
         custom_plugin_name: str,
         custom_plugin_file: PathLike,
         collection: str = "securingai_custom",
-    ) -> Dict[str, Any]:
+    ):
         plugin_upload_form = {
             "task_plugin_name": custom_plugin_name,
             "collection": collection,
@@ -211,11 +211,11 @@ class TestbedAPIClient(object):
         custom_plugin_file = Path(custom_plugin_file)
 
         with custom_plugin_file.open("rb") as f:
-            custom_plugin_file = {"task_plugin_file": (custom_plugin_file.name, f)}
+            request_files = {"task_plugin_file": (custom_plugin_file.name, f)}
             response = requests.post(
                 self.task_plugin_endpoint,
                 data=plugin_upload_form,
-                files=custom_plugin_file,
+                files=request_files,
             )
 
         return response.json()

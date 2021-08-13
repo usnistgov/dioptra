@@ -61,7 +61,7 @@ def docker_client():
 
 
 @pytest.fixture
-def workflows_tar_gz(tmp_path_factory) -> Path:
+def workflows_tar_gz(tmp_path_factory):
     hello_world_dir = tmp_path_factory.mktemp("hello_world", numbered=False)
 
     workflows_tar_gz_path: Path = hello_world_dir / "workflows.tar.gz"

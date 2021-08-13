@@ -251,8 +251,8 @@ def _flatten_batch(X: np.ndarray) -> np.ndarray:
     Returns:
         A :py:class:`numpy.ndarray` containing a batch of one-dimensional arrays.
     """
-    num_samples = X.shape[0]
-    num_matrix_elements = np.prod(X.shape[1:])
+    num_samples: int = X.shape[0]
+    num_matrix_elements: int = int(np.prod(X.shape[1:]))
     return X.reshape((num_samples, num_matrix_elements))
 
 
@@ -272,7 +272,7 @@ def _matrix_difference_l_norm(y_true, y_pred, order) -> np.ndarray:
         - :py:func:`numpy.linalg.norm`
     """
     y_diff: np.ndarray = _flatten_batch(y_true - y_pred)
-    y_diff_l_norm: float = np.linalg.norm(y_diff, axis=1, ord=order)
+    y_diff_l_norm: np.ndarray = np.linalg.norm(y_diff, axis=1, ord=order)
     return y_diff_l_norm
 
 
@@ -280,8 +280,7 @@ def _normalize_batch(X: np.ndarray, order: int) -> np.ndarray:
     """Normalizes a batch of matrices by their norms.
 
     Args:
-        X: A numpy array to be normalized.
-        X: A batch of matrices.
+        X: A batch of matrices to be normalized.
         order: The order of the norm used for normalization, see
             :py:func:`numpy.linalg.norm` for the full list of available norms.
 
@@ -291,10 +290,10 @@ def _normalize_batch(X: np.ndarray, order: int) -> np.ndarray:
     See Also:
         - :py:func:`numpy.linalg.norm`
     """
-    X_l_norm = np.linalg.norm(X, axis=1, ord=order)
-    num_samples = X_l_norm.shape[0]
-
-    return X / X_l_norm.reshape((num_samples, 1))
+    X_l_norm: np.ndarray = np.linalg.norm(X, axis=1, ord=order)
+    num_samples: int = X_l_norm.shape[0]
+    normalized_batch: np.ndarray = X / X_l_norm.reshape((num_samples, 1))
+    return normalized_batch
 
 
 DISTANCE_METRICS_REGISTRY: Dict[str, Callable[..., Any]] = dict(
