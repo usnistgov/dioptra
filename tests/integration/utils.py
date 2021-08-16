@@ -228,6 +228,37 @@ def destroy_volumes(client: DockerClient, prefix: str) -> None:
         v.remove()
 
 
+def initialize_minio(
+    compose_file: PathLike,
+    minio_endpoint_alias: str,
+    minio_root_user: str,
+    minio_root_password: str,
+    plugins_builtins_dir: str,
+) -> None:
+    subprocess.check_call(
+        f'docker-compose -f {compose_file} run --rm mc -c "'
+        f"mc alias set {minio_endpoint_alias} http://minio:9000 "
+        f"{minio_root_user} {minio_root_password} && mc mb "
+        f"{minio_endpoint_alias}/plugins {minio_endpoint_alias}/workflow && "
+        f"mc mirror --overwrite --remove /task-plugins/{plugins_builtins_dir}/ "
+        f"{minio_endpoint_alias}/plugins/{plugins_builtins_dir}"
+        '"',
+        shell=True,
+    )
+
+
+def upload_mnist_images(
+    compose_file: PathLike, mnist_data_dir: str, dest_dir: str
+) -> None:
+    subprocess.check_call(
+        f"docker-compose -f {compose_file} up -d mnist-data-helper && "
+        f"docker cp {mnist_data_dir}/training mnist-data-helper:{dest_dir}/training && "
+        f"docker cp {mnist_data_dir}/testing mnist-data-helper:{dest_dir}/testing && "
+        f"docker-compose -f {compose_file} down",
+        shell=True,
+    )
+
+
 def print_docker_logs(compose_file: PathLike) -> None:
     subprocess.check_call(
         [

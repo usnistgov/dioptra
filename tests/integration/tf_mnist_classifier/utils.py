@@ -20,6 +20,12 @@ from testinfra.host import Host
 
 
 @dataclass
+class LegacyTestbedHosts(object):
+    mlflow_tracking1_12_1: Host
+    tf210cpu_01: Host
+
+
+@dataclass
 class TestbedHosts(object):
     minio: Host
     mlflow_tracking: Host

@@ -29,11 +29,15 @@ from tests.integration.utils import (
     run_docker_service,
     start_docker_services,
     stop_docker_services,
+    upload_mnist_images,
     wait_for_healthy_status,
 )
 
 CONFTEST_DIR = Path(__file__).absolute().parent
 WORKFLOWS_DIR = CONFTEST_DIR / "workflows"
+CUSTOM_PLUGINS_EVALUATION_DIR = (
+    CONFTEST_DIR / "task_plugins" / "securingai_custom" / "evaluation"
+)
 MINIO_ENDPOINT_ALIAS = "minio"
 MINIO_ROOT_USER = "minio"
 MINIO_ROOT_PASSWORD = "minio123"
@@ -41,13 +45,46 @@ PLUGINS_BUILTINS_DIR = "securingai_builtins"
 
 
 @pytest.fixture
-def workflows_tar_gz(tmp_path_factory):
-    hello_world_dir = tmp_path_factory.mktemp("hello_world", numbered=False)
+def custom_plugins_evaluation_tar_gz(tmp_path_factory):
+    custom_plugins_evaluation_tar_gz_dir = tmp_path_factory.mktemp(
+        "tf_mnist_classifier_custom_plugins_evaluation", numbered=False
+    )
+    custom_plugins_evaluation_tar_gz_path: Path = (
+        custom_plugins_evaluation_tar_gz_dir / "custom-plugins-evaluation.tar.gz"
+    )
 
-    workflows_tar_gz_path: Path = hello_world_dir / "workflows.tar.gz"
+    with tarfile.open(
+        name=str(custom_plugins_evaluation_tar_gz_path), mode="w:gz"
+    ) as f:
+        for datafile in (
+            CUSTOM_PLUGINS_EVALUATION_DIR / "__init__.py",
+            CUSTOM_PLUGINS_EVALUATION_DIR / "import_keras.py",
+            CUSTOM_PLUGINS_EVALUATION_DIR / "tensorflow.py",
+        ):
+            with datafile.open(mode="rb") as f_data:
+                tarinfo = tarfile.TarInfo(name=f"evaluation/{datafile.name}")
+                tarinfo.size = len(f_data.read())
+                f_data.seek(0)
+                f.addfile(tarinfo=tarinfo, fileobj=f_data)
+
+    yield custom_plugins_evaluation_tar_gz_path
+
+
+@pytest.fixture
+def workflows_tar_gz(tmp_path_factory):
+    workflows_tar_gz_dir = tmp_path_factory.mktemp(
+        "tf_mnist_classifier_workflows", numbered=False
+    )
+
+    workflows_tar_gz_path: Path = workflows_tar_gz_dir / "workflows.tar.gz"
 
     with tarfile.open(name=str(workflows_tar_gz_path), mode="w:gz") as f:
-        for datafile in (WORKFLOWS_DIR / "MLproject", WORKFLOWS_DIR / "hello_world.py"):
+        for datafile in (
+            WORKFLOWS_DIR / "MLproject",
+            WORKFLOWS_DIR / "train.py",
+            WORKFLOWS_DIR / "fgm.py",
+            WORKFLOWS_DIR / "infer.py",
+        ):
             with datafile.open(mode="rb") as f_data:
                 tarinfo = tarfile.TarInfo(name=datafile.name)
                 tarinfo.size = len(f_data.read())
@@ -58,7 +95,7 @@ def workflows_tar_gz(tmp_path_factory):
 
 
 @pytest.fixture
-def testbed_hosts(request, docker_client):
+def testbed_hosts(request, mnist_data_dir, docker_client):
     # Declare path to docker-compose.yml file
     docker_compose_file: Path = CONFTEST_DIR / "docker-compose.yml"
 
@@ -67,6 +104,13 @@ def testbed_hosts(request, docker_client):
     destroy_volumes(client=docker_client, prefix="hello_world_")
 
     try:
+        # Copy MNIST images into Docker volume
+        upload_mnist_images(
+            compose_file=docker_compose_file,
+            mnist_data_dir=str(mnist_data_dir),
+            dest_dir="/nfs/data",
+        )
+
         # Start and initialize the Minio service
         start_docker_services(compose_file=docker_compose_file, services=["minio"])
         wait_for_healthy_status(docker_client=docker_client, container_names=["minio"])
@@ -123,4 +167,4 @@ def testbed_hosts(request, docker_client):
         # Teardown
         print_docker_logs(compose_file=docker_compose_file)
         stop_docker_services(compose_file=docker_compose_file)
-        destroy_volumes(client=docker_client, prefix="hello_world_")
+        destroy_volumes(client=docker_client, prefix="tf_mnist_classifier_")

@@ -14,16 +14,52 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from dataclasses import dataclass
+from pathlib import Path
 
-from testinfra.host import Host
+import pytest
+from mlflow.tracking import MlflowClient
+
+import docker
+from tests.integration.download_data import download_data
+from tests.integration.utils import TestbedAPIClient
+
+TESTBED_CACHE_DIR: Path = Path("/tmp") / "testbed-cache"
 
 
-@dataclass
-class TestbedHosts(object):
-    minio: Host
-    mlflow_tracking: Host
-    nginx: Host
-    redis: Host
-    restapi: Host
-    tfcpu_01: Host
+@pytest.fixture
+def mlflow_client(monkeypatch):
+    monkeypatch.setenv("MLFLOW_TRACKING_URI", "http://localhost:35000")
+    return MlflowClient()
+
+
+@pytest.fixture
+def testbed_client():
+    return TestbedAPIClient()
+
+
+@pytest.fixture
+def docker_client():
+    c = docker.client.from_env()
+    yield c
+    c.close()
+
+
+@pytest.fixture
+def mnist_data_dir(tmp_path_factory):
+    mnist_data_dir = tmp_path_factory.mktemp("mnist_data_dir", numbered=False)
+
+    try:
+        download_data(
+            [
+                "--cache-dir",
+                f"{TESTBED_CACHE_DIR / 'mnist'}",
+                "--data-dir",
+                str(mnist_data_dir),
+            ]
+        )
+
+    except SystemExit as e:
+        if e.code != 0:
+            raise e
+
+    return str(mnist_data_dir)
