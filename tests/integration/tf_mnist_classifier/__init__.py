@@ -14,16 +14,3 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from dataclasses import dataclass
-
-from testinfra.host import Host
-
-
-@dataclass
-class TestbedHosts(object):
-    minio: Host
-    mlflow_tracking: Host
-    nginx: Host
-    redis: Host
-    restapi: Host
-    tfcpu_01: Host
