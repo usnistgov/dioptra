@@ -31,10 +31,10 @@ on:
 env:
   CODE_PKG_VERSION: 0.0.0
   PROJECT_PREFIX: securing-ai
-  MINICONDA3_PREFIX: Miniconda3-py37_
+  MINICONDA3_PREFIX: Miniconda3-py39_
   MINICONDA_VERSION: 4.10.3
-  PYTORCH_VERSION: 1.7.1
-  TENSORFLOW2_VERSION: 2.1.0
+  PYTORCH_VERSION: 1.9.*
+  TENSORFLOW2_VERSION: 2.4.1
 
 jobs:
   package-code:
@@ -207,21 +207,105 @@ jobs:
           name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
           path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
 
-  integration-test:
+  build-docker-legacy-images:
     runs-on: ubuntu-20.04
-    needs: build-docker-dioptra-apps
+    needs: package-code
     strategy:
       matrix:
-        tox-env:
-          - integration-hello-world
+        dioptra-app:
+          - mlflow-tracking1-12-1
+          - tensorflow21-cpu
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: setup python 3.8
+      - name: set up docker qemu
+        uses: docker/setup-qemu-action@v1
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: cache docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache-${{ matrix.dioptra-app }}
+          key: ${{ runner.os }}-buildx-${{ matrix.dioptra-app }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ matrix.dioptra-app }}-
+
+      - name: download packaged source code
+        uses: actions/download-artifact@v2
+        with:
+          name: build-code-package
+          path: dist
+
+      - name: build and export legacy images for integration testing
+        uses: docker/build-push-action@v2
+        if: ${{ github.event_name != 'schedule' }}
+        with:
+          context: .
+          push: false
+          file: docker/legacy/${{ matrix.dioptra-app }}/Dockerfile
+          tags: ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev
+          cache-from: type=local,src=/tmp/.buildx-cache-${{ matrix.dioptra-app }}
+          cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.dioptra-app }}-new
+          outputs: type=docker,dest=/tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
+          build-args: |
+            CODE_PKG_VERSION=${{ env.CODE_PKG_VERSION }}
+            MINICONDA_VERSION=${{ env.MINICONDA_VERSION }}
+            PROJECT_COMPONENT=${{ matrix.dioptra-app }}
+            PROJECT_PREFIX=${{ env.PROJECT_PREFIX }}
+
+      - name: build and export legacy images for integration testing
+        uses: docker/build-push-action@v2
+        if: ${{ github.event_name == 'schedule' }}
+        with:
+          context: .
+          push: false
+          file: docker/legacy/${{ matrix.dioptra-app }}/Dockerfile
+          tags: ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev
+          no-cache: true
+          pull: true
+          cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.dioptra-app }}-new
+          outputs: type=docker,dest=/tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
+          build-args: |
+            CODE_PKG_VERSION=${{ env.CODE_PKG_VERSION }}
+            MINICONDA_VERSION=${{ env.MINICONDA_VERSION }}
+            PROJECT_COMPONENT=${{ matrix.dioptra-app }}
+            PROJECT_PREFIX=${{ env.PROJECT_PREFIX }}
+
+      # Temp fix
+      # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
+      - name: move docker build cache
+        run: |
+          rm -rf /tmp/.buildx-cache-${{ matrix.dioptra-app }}
+          mv /tmp/.buildx-cache-${{ matrix.dioptra-app }}-new /tmp/.buildx-cache-${{ matrix.dioptra-app }}
+
+      - name: archive the docker integration testing images
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
+          path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
+
+  integration-test:
+    runs-on: ubuntu-20.04
+    needs:
+      - build-docker-dioptra-apps
+      - build-docker-legacy-images
+    strategy:
+      matrix:
+        tox-env:
+          - integration-hello-world
+          - integration-tf-mnist-classifier
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: setup python 3.9
         uses: actions/setup-python@v2
         with:
-          python-version: "3.8"
+          python-version: "3.9"
 
       - name: upgrade pip
         run: |
@@ -279,6 +363,14 @@ jobs:
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_tensorflow2-cpu_dev.tar
+
+      - name: cache the mnist dataset download
+        uses: actions/cache@v2
+        with:
+          path: /tmp/testbed-cache/mnist
+          key: ${{ runner.os }}-testbed-cache-mnist
+          restore-keys: |
+            ${{ runner.os }}-testbed-cache-mnist
 
       - name: run ${{ matrix.tox-env }} test
         run: tox -e ${{ matrix.tox-env }}
