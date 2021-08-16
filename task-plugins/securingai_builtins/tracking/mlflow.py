@@ -25,8 +25,19 @@ import structlog
 from structlog.stdlib import BoundLogger
 
 from mitre.securingai import pyplugs
+from mitre.securingai.sdk.exceptions import TensorflowDependencyError
+from mitre.securingai.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+try:
+    from tensorflow.keras.models import Sequential
+
+except ImportError:  # pragma: nocover
+    LOGGER.warn(
+        "Unable to import one or more optional packages, functionality may be reduced",
+        package="tensorflow",
+    )
 
 
 @pyplugs.register
@@ -69,3 +80,20 @@ def log_parameters(parameters: Dict[str, float]) -> None:
             parameter_name=parameter_name,
             parameter_value=parameter_value,
         )
+
+
+@pyplugs.register
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def log_tensorflow_keras_estimator(estimator: Sequential, model_dir: str) -> None:
+    """Logs a Keras estimator trained during the current run to the MLFlow registry.
+
+    Args:
+        estimator: A trained Keras estimator.
+        model_dir: The relative artifact directory where MLFlow should save the
+            model.
+    """
+    mlflow.keras.log_model(keras_model=estimator, artifact_path=model_dir)
+    LOGGER.info(
+        "Tensorflow Keras model logged to tracking server",
+        model_dir=model_dir,
+    )

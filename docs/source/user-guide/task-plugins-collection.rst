@@ -177,6 +177,7 @@ Tracking
 
    mlflow.log_metrics
    mlflow.log_parameters
+   mlflow.log_tensorflow_keras_estimator
 
 .. Substitutions
 
