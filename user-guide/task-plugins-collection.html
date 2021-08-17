@@ -25,7 +25,7 @@
 
     
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/sphinx-book-theme.e8e5499552300ddf5d7adccae7cc3b70.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.5f77b4aec8189eecf79907ce328c390d.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
@@ -595,7 +595,7 @@
 <td><p>Downloads an artifact file or directory from a previous MLFlow run.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api-task-plugins/api-builtins-artifacts.html#securingai_builtins.artifacts.mlflow.upload_data_frame_artifact" title="securingai_builtins.artifacts.mlflow.upload_data_frame_artifact"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mlflow.upload_data_frame_artifact</span></code></a>(…[, …])</p></td>
-<td><p>Uploads a <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> as an artifact of the active MLFlow run.</p></td>
+<td><p>Uploads a <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> as an artifact of the active MLFlow run.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api-task-plugins/api-builtins-artifacts.html#securingai_builtins.artifacts.mlflow.upload_directory_as_tarball_artifact" title="securingai_builtins.artifacts.mlflow.upload_directory_as_tarball_artifact"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mlflow.upload_directory_as_tarball_artifact</span></code></a>(…)</p></td>
 <td><p>Archives a directory and uploads it as an artifact of the active MLFlow run.</p></td>
@@ -860,6 +860,9 @@
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api-task-plugins/api-builtins-tracking.html#securingai_builtins.tracking.mlflow.log_parameters" title="securingai_builtins.tracking.mlflow.log_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mlflow.log_parameters</span></code></a>(parameters)</p></td>
 <td><p>Logs parameters to the MLFlow Tracking service for the current run.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-task-plugins/api-builtins-tracking.html#securingai_builtins.tracking.mlflow.log_tensorflow_keras_estimator" title="securingai_builtins.tracking.mlflow.log_tensorflow_keras_estimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mlflow.log_tensorflow_keras_estimator</span></code></a>(…)</p></td>
+<td><p>Logs a Keras estimator trained during the current run to the MLFlow registry.</p></td>
 </tr>
 </tbody>
 </table>

@@ -25,7 +25,7 @@
 
     
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../../../_static/sphinx-book-theme.e8e5499552300ddf5d7adccae7cc3b70.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/sphinx-book-theme.5f77b4aec8189eecf79907ce328c390d.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
@@ -505,8 +505,19 @@
 <span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
 
 <span class="kn">from</span> <span class="nn">mitre.securingai</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span> <span class="nn">mitre.securingai.sdk.exceptions</span> <span class="kn">import</span> <span class="n">TensorflowDependencyError</span>
+<span class="kn">from</span> <span class="nn">mitre.securingai.sdk.utilities.decorators</span> <span class="kn">import</span> <span class="n">require_package</span>
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">Sequential</span>
+
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: nocover</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s2">&quot;Unable to import one or more optional packages, functionality may be reduced&quot;</span><span class="p">,</span>
+        <span class="n">package</span><span class="o">=</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
 
 
 <div class="viewcode-block" id="log_metrics"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-tracking.html#securingai_builtins.tracking.mlflow.log_metrics">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
@@ -549,6 +560,23 @@
             <span class="n">parameter_name</span><span class="o">=</span><span class="n">parameter_name</span><span class="p">,</span>
             <span class="n">parameter_value</span><span class="o">=</span><span class="n">parameter_value</span><span class="p">,</span>
         <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="log_tensorflow_keras_estimator"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-tracking.html#securingai_builtins.tracking.mlflow.log_tensorflow_keras_estimator">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
+<span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">log_tensorflow_keras_estimator</span><span class="p">(</span><span class="n">estimator</span><span class="p">:</span> <span class="n">Sequential</span><span class="p">,</span> <span class="n">model_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Logs a Keras estimator trained during the current run to the MLFlow registry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        estimator: A trained Keras estimator.</span>
+<span class="sd">        model_dir: The relative artifact directory where MLFlow should save the</span>
+<span class="sd">            model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mlflow</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">log_model</span><span class="p">(</span><span class="n">keras_model</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span> <span class="n">artifact_path</span><span class="o">=</span><span class="n">model_dir</span><span class="p">)</span>
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Tensorflow Keras model logged to tracking server&quot;</span><span class="p">,</span>
+        <span class="n">model_dir</span><span class="o">=</span><span class="n">model_dir</span><span class="p">,</span>
+    <span class="p">)</span></div>
 </pre></div>
 
               </div>
