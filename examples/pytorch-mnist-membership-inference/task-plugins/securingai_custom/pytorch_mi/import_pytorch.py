@@ -1,4 +1,3 @@
-#!/bin/bash
 # This Software (Dioptra) is being made available as a public service by the
 # National Institute of Standards and Technology (NIST), an Agency of the United
 # States Department of Commerce. This software was developed in part by employees of
@@ -12,8 +11,35 @@
 # being made available under the Creative Commons Attribution 4.0 International
 # license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
 # of the software developed or licensed by NIST.
-#
-# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
-# https://creativecommons.org/licenses/by/4.0/legalcode
 
-pip install --no-cache-dir 'alembic==1.4.1' 'boto3' 'mlflow==1.12.1' 'structlog>=20.2.0'
+from __future__ import annotations
+
+import importlib
+from types import FunctionType, ModuleType
+from typing import Union
+
+import structlog
+from structlog.stdlib import BoundLogger
+
+from mitre.securingai.sdk.exceptions import TensorflowDependencyError
+from mitre.securingai.sdk.utilities.decorators import require_package
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+try:
+    from torch.optim import Optimizer
+
+except ImportError:  # pragma: nocover
+    LOGGER.warn(
+        "Unable to import one or more optional packages, functionality may be reduced",
+        package="torch",
+    )
+
+PYTORCH_OPTIMIZERS: str = "torch.optim"
+
+def get_optimizer(optimizer_name: str) -> Optimizer:
+    pytorch_optimizers: ModuleType = importlib.import_module(PYTORCH_OPTIMIZERS)
+    optimizer: Optimizer = getattr(pytorch_optimizers, optimizer_name)
+    return optimizer
+
+

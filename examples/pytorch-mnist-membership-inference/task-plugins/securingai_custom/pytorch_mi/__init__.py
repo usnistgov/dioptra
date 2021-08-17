@@ -1,4 +1,3 @@
-#!/bin/bash
 # This Software (Dioptra) is being made available as a public service by the
 # National Institute of Standards and Technology (NIST), an Agency of the United
 # States Department of Commerce. This software was developed in part by employees of
@@ -15,5 +14,3 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-
-pip install --no-cache-dir 'alembic==1.4.1' 'boto3' 'mlflow==1.12.1' 'structlog>=20.2.0'

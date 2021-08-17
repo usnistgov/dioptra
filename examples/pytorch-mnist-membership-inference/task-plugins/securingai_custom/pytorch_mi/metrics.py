@@ -19,20 +19,19 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import numpy as np
-from scipy.stats import wasserstein_distance
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
+    roc_auc_score,
     precision_score,
     recall_score,
-    roc_auc_score,
 )
 from sklearn.metrics.pairwise import paired_distances
+from scipy.stats import wasserstein_distance
 
 
 def accuracy(y_true, y_pred, **kwargs):
     return accuracy_score(y_true=y_true, y_pred=y_pred, **kwargs)
-
 
 def membership_guess_accuracy(y_true, y_pred, **kwargs):
     return accuracy_score(y_true=y_true, y_pred=y_pred, **kwargs)
