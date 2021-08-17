@@ -214,6 +214,7 @@ jobs:
       matrix:
         dioptra-app:
           - mlflow-tracking1-12-1
+          - restapi-py37
           - tensorflow21-cpu
 
     steps:
@@ -298,6 +299,7 @@ jobs:
         tox-env:
           - integration-hello-world
           - integration-tf-mnist-classifier
+          - integration-legacy-migration
 
     steps:
       - uses: actions/checkout@v2
@@ -351,6 +353,27 @@ jobs:
           name: ${{ env.PROJECT_PREFIX }}-tensorflow2-cpu-dev-image
           path: /tmp
 
+      - name: download the mlflow-tracking1-12-1 legacy docker integration testing image
+        if: ${{ matrix.tox-env == 'integration-legacy-migration' }}
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-mlflow-tracking1-12-1-dev-image
+          path: /tmp
+
+      - name: download the restapi-py37 legacy docker integration testing image
+        if: ${{ matrix.tox-env == 'integration-legacy-migration' }}
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-restapi-py37-dev-image
+          path: /tmp
+
+      - name: download the tensorflow21-cpu legacy docker integration testing image
+        if: ${{ matrix.tox-env == 'integration-legacy-migration' }}
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-tensorflow21-cpu-dev-image
+          path: /tmp
+
       - name: set up docker qemu
         uses: docker/setup-qemu-action@v1
 
@@ -363,6 +386,13 @@ jobs:
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_tensorflow2-cpu_dev.tar
+
+      - name: load the integration testing legacy docker images
+        if: ${{ matrix.tox-env == 'integration-legacy-migration' }}
+        run: |
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking1-12-1_dev.tar
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_restapi-py37_dev.tar
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_tensorflow21-cpu_dev.tar
 
       - name: cache the mnist dataset download
         uses: actions/cache@v2
