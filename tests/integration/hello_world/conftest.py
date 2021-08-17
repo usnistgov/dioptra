@@ -42,7 +42,7 @@ PLUGINS_BUILTINS_DIR = "securingai_builtins"
 
 @pytest.fixture
 def workflows_tar_gz(tmp_path_factory):
-    hello_world_dir = tmp_path_factory.mktemp("hello_world", numbered=False)
+    hello_world_dir = tmp_path_factory.mktemp("hello_world")
 
     workflows_tar_gz_path: Path = hello_world_dir / "workflows.tar.gz"
 
