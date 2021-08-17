@@ -21,7 +21,16 @@ from subprocess import CalledProcessError
 import pytest
 import testinfra
 
-from tests.integration.tf_mnist_classifier.utils import TestbedHosts
+from tests.integration.legacy_migration.migrate_s3 import migrate_s3
+from tests.integration.legacy_migration.utils import (
+    TestbedHosts,
+    download_minio_bucket_data,
+    initialize_testbed_rest_api,
+    run_train_entrypoint_job,
+    sync_from_minio_bucket,
+    sync_to_minio_bucket,
+    upload_minio_bucket_data,
+)
 from tests.integration.utils import (
     destroy_volumes,
     initialize_minio,
@@ -93,27 +102,36 @@ def workflows_tar_gz(tmp_path_factory):
 
 
 @pytest.fixture
-def testbed_hosts(request, mnist_data_dir, docker_client):
+def train_entrypoint_response(
+    request,
+    mnist_data_dir,
+    docker_client,
+    testbed_client,
+    custom_plugins_evaluation_tar_gz,
+    workflows_tar_gz,
+):
     # Declare path to docker-compose.yml file
-    docker_compose_file: Path = CONFTEST_DIR / "docker-compose.yml"
+    legacy_docker_compose_file: Path = CONFTEST_DIR / "docker-compose.legacy.yml"
 
     # Stop any containers and remove any volumes from previous integration tests
-    stop_docker_services(compose_file=docker_compose_file)
-    destroy_volumes(client=docker_client, prefix="tf_mnist_classifier_")
+    stop_docker_services(compose_file=legacy_docker_compose_file)
+    destroy_volumes(client=docker_client, prefix="legacy_migration_")
 
     try:
         # Copy MNIST images into Docker volume
         upload_mnist_images(
-            compose_file=docker_compose_file,
+            compose_file=legacy_docker_compose_file,
             mnist_data_dir=str(mnist_data_dir),
             dest_dir="/nfs/data",
         )
 
         # Start and initialize the Minio service
-        start_docker_services(compose_file=docker_compose_file, services=["minio"])
+        start_docker_services(
+            compose_file=legacy_docker_compose_file, services=["minio"]
+        )
         wait_for_healthy_status(docker_client=docker_client, container_names=["minio"])
         initialize_minio(
-            compose_file=docker_compose_file,
+            compose_file=legacy_docker_compose_file,
             minio_endpoint_alias=MINIO_ENDPOINT_ALIAS,
             minio_root_user=MINIO_ROOT_USER,
             minio_root_password=MINIO_ROOT_PASSWORD,
@@ -122,9 +140,129 @@ def testbed_hosts(request, mnist_data_dir, docker_client):
 
         # Initialize REST API database
         run_docker_service(
-            compose_file=docker_compose_file, service="restapi-db-upgrade"
+            compose_file=legacy_docker_compose_file, service="restapi-db-upgrade"
         )
 
+        # Start the legacy docker-compose stack
+        start_docker_services(
+            compose_file=legacy_docker_compose_file,
+            services=[
+                "minio",
+                "mlflow-tracking",
+                "nginx",
+                "redis",
+                "restapi",
+                "tfcpu-01",
+            ],
+        )
+        wait_for_healthy_status(
+            docker_client=docker_client,
+            container_names=[
+                "minio",
+                "mlflow-tracking",
+                "redis",
+                "restapi",
+                "nginx",
+            ],
+        )
+
+        # Register experiment namespace, worker queue, and upload custom task plugins
+        # via the Testbed REST API
+        initialize_testbed_rest_api(
+            testbed_client=testbed_client,
+            custom_plugins_evaluation_tar_gz=custom_plugins_evaluation_tar_gz,
+        )
+
+        # Run train entrypoint job
+        response_shallow_train = run_train_entrypoint_job(
+            testbed_client=testbed_client, workflows_tar_gz=workflows_tar_gz
+        )
+
+    except (RuntimeError, TimeoutError, CalledProcessError):
+        raise
+
+    finally:
+        # Teardown
+        # print_docker_logs(compose_file=legacy_docker_compose_file)
+        stop_docker_services(compose_file=legacy_docker_compose_file)
+
+    return response_shallow_train
+
+
+@pytest.fixture
+def migrate_s3_files(
+    docker_client,
+    train_entrypoint_response,
+    tmp_path_factory,
+):
+    minio_bucket_data_dir = tmp_path_factory.mktemp("minio_bucket_data", numbered=False)
+
+    # Declare path to docker-compose.yml file
+    docker_compose_file: Path = CONFTEST_DIR / "docker-compose.yml"
+
+    # Stop any containers from previous integration tests
+    stop_docker_services(compose_file=docker_compose_file)
+
+    try:
+        # Upgrade the MLFlow Tracking database
+        run_docker_service(
+            compose_file=docker_compose_file, service="mlflow-tracking-db-upgrade"
+        )
+
+        # Sync Minio Bucket Data to Temporary Dir
+        sync_from_minio_bucket(
+            compose_file=docker_compose_file,
+            minio_endpoint_alias=MINIO_ENDPOINT_ALIAS,
+            minio_root_user=MINIO_ROOT_USER,
+            minio_root_password=MINIO_ROOT_PASSWORD,
+            bucket="mlflow-tracking",
+            dest_dir="/minio-bucket-data/old",
+        )
+        download_minio_bucket_data(
+            compose_file=docker_compose_file,
+            minio_bucket_data_dir=str(minio_bucket_data_dir),
+            target_dir="old",
+        )
+
+        # Migration Script
+        migrate_s3(minio_bucket_data_dir)
+
+        # Sync Temporary Dir
+        upload_minio_bucket_data(
+            compose_file=docker_compose_file,
+            minio_bucket_data_dir=str(minio_bucket_data_dir),
+            target_dir="new",
+        )
+        sync_to_minio_bucket(
+            compose_file=docker_compose_file,
+            minio_endpoint_alias=MINIO_ENDPOINT_ALIAS,
+            minio_root_user=MINIO_ROOT_USER,
+            minio_root_password=MINIO_ROOT_PASSWORD,
+            bucket="mlflow-tracking",
+            src_dir="/minio-bucket-data/new",
+        )
+
+    except (RuntimeError, TimeoutError, CalledProcessError):
+        raise
+
+    finally:
+        # Teardown
+        print_docker_logs(compose_file=docker_compose_file)
+        stop_docker_services(compose_file=docker_compose_file)
+
+
+@pytest.fixture
+def testbed_hosts(
+    docker_client,
+    migrate_s3_files,
+):
+    # Declare path to docker-compose.yml file
+    docker_compose_file: Path = CONFTEST_DIR / "docker-compose.yml"
+
+    # Stop any containers from previous integration tests
+    stop_docker_services(compose_file=docker_compose_file)
+
+    try:
         # Start the docker-compose stack for integration testing
         start_docker_services(
             compose_file=docker_compose_file,
@@ -165,4 +303,4 @@ def testbed_hosts(request, mnist_data_dir, docker_client):
         # Teardown
         print_docker_logs(compose_file=docker_compose_file)
         stop_docker_services(compose_file=docker_compose_file)
-        destroy_volumes(client=docker_client, prefix="tf_mnist_classifier_")
+        destroy_volumes(client=docker_client, prefix="legacy_migration_")
