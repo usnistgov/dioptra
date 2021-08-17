@@ -21,7 +21,7 @@ from subprocess import CalledProcessError
 import pytest
 import testinfra
 
-from tests.integration.hello_world.utils import TestbedHosts
+from tests.integration.tf_mnist_classifier.utils import TestbedHosts
 from tests.integration.utils import (
     destroy_volumes,
     initialize_minio,
@@ -101,7 +101,7 @@ def testbed_hosts(request, mnist_data_dir, docker_client):
 
     # Stop any containers and remove any volumes from previous integration tests
     stop_docker_services(compose_file=docker_compose_file)
-    destroy_volumes(client=docker_client, prefix="hello_world_")
+    destroy_volumes(client=docker_client, prefix="tf_mnist_classifier_")
 
     try:
         # Copy MNIST images into Docker volume
