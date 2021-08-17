@@ -481,6 +481,7 @@ $(call generate_full_docker_image_vars,PYTORCH_GPU,CONTAINER_IMAGE_TAG,pytorch-g
 $(call generate_full_docker_image_vars,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG,tensorflow2-cpu,)
 $(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tensorflow2-gpu,)
 $(call generate_legacy_full_docker_image_vars,MLFLOW_TRACKING1_12_1,CONTAINER_IMAGE_TAG,mlflow-tracking1-12-1)
+$(call generate_legacy_full_docker_image_vars,RESTAPI_PY37,CONTAINER_IMAGE_TAG,restapi-py37)
 $(call generate_legacy_full_docker_image_vars,TENSORFLOW21_CPU,CONTAINER_IMAGE_TAG,tensorflow21-cpu)
 
 #################################################################################
@@ -494,7 +495,7 @@ beautify: $(BEAUTIFY_SENTINEL)
 build-all: build-nginx build-mlflow-tracking build-restapi build-pytorch build-tensorflow
 
 ## Build the legacy Testbed images
-build-legacy: $(CONTAINER_MLFLOW_TRACKING1_12_1_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW21_CPU_BUILD_SENTINEL)
+build-legacy: $(CONTAINER_RESTAPI_PY37_BUILD_SENTINEL) $(CONTAINER_MLFLOW_TRACKING1_12_1_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW21_CPU_BUILD_SENTINEL)
 
 ## Build the MLFlow Tracking Docker image
 build-mlflow-tracking: $(CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL)
@@ -649,6 +650,7 @@ $(call generate_full_docker_image_recipe,PYTORCH_GPU,CODE_PACKAGING_SENTINEL,CON
 $(call generate_full_docker_image_recipe,TENSORFLOW2_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,TENSORFLOW2_GPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 $(call generate_legacy_full_docker_image_recipe,MLFLOW_TRACKING1_12_1,,CONTAINER_IMAGE_TAG)
+$(call generate_legacy_full_docker_image_recipe,RESTAPI_PY37,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 $(call generate_legacy_full_docker_image_recipe,TENSORFLOW21_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 
 #################################################################################
