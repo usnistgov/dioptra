@@ -57,7 +57,7 @@ except ImportError:  # pragma: nocover
     )
 
 
-@task
+@pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_adversarial_patches(
@@ -139,7 +139,7 @@ def create_adversarial_patches(
     return
 
 
-@task
+@pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_adversarial_patch_dataset(

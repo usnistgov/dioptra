@@ -24,10 +24,8 @@ import click
 import mlflow
 import numpy as np
 import structlog
-from attacks_poison_updated import create_adversarial_poison_data
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
-from registry_art_updated import load_wrapped_tensorflow_keras_classifier
 from structlog.stdlib import BoundLogger
 
 from mitre.securingai import pyplugs
@@ -41,6 +39,7 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
 _PLUGINS_IMPORT_PATH: str = "securingai_builtins"
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
@@ -245,7 +244,10 @@ def generate_poison_data() -> Flow:
             request=DISTANCE_METRICS,
         )
 
-        distance_metrics = create_adversarial_poison_data(
+        distance_metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "attacks_poison",
+            "create_adversarial_poison_data",
             data_dir=testing_dir,
             distance_metrics_list=distance_metrics_list,
             adv_data_dir=adv_data_dir,

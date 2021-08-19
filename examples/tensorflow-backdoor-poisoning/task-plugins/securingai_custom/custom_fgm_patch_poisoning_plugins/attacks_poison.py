@@ -72,7 +72,7 @@ except ImportError:  # pragma: nocover
     )
 
 
-@task
+@pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_adv_embedding_model(
@@ -126,7 +126,7 @@ def create_adv_embedding_model(
     return model
 
 
-@task
+@pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_adversarial_poison_data(
@@ -249,7 +249,7 @@ def create_adversarial_poison_data(
     return pd.DataFrame(distance_metrics_)
 
 
-@task
+@pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_adversarial_clean_poison_dataset(

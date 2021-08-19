@@ -24,7 +24,6 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-from prefect import task
 from structlog.stdlib import BoundLogger
 
 from mitre.securingai import pyplugs
@@ -146,7 +145,7 @@ def log_distance_metrics(distance_metrics_):
         LOGGER.info("logged distance-based metric", metric_name=metric_name)
 
 
-@task
+@pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_defended_dataset(

@@ -16,32 +16,24 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-import mlflow
+from typing import Optional, Tuple
+
 import structlog
 from prefect import task
 from structlog.stdlib import BoundLogger
+from tensorflow.keras.applications.imagenet_utils import preprocess_input
 
 from mitre.securingai import pyplugs
-from mitre.securingai.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from mitre.securingai.sdk.exceptions import TensorflowDependencyError
 from mitre.securingai.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from art.estimators.classification import KerasClassifier
-
-except ImportError:  # pragma: nocover
-    LOGGER.warn(
-        "Unable to import one or more optional packages, functionality may be reduced",
-        package="art",
+    from tensorflow.keras.preprocessing.image import (
+        DirectoryIterator,
+        ImageDataGenerator,
     )
-
-
-try:
-    from tensorflow.keras.models import Sequential
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -49,36 +41,47 @@ except ImportError:  # pragma: nocover
         package="tensorflow",
     )
 
-
-@task
-@require_package("art", exc_type=ARTDependencyError)
+# Adding imagenet preprocessing option for pre-trained Imagenet estimators.
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def load_wrapped_tensorflow_keras_classifier(
-    name: str,
-    version: int,
-    clip_values: Tuple = None,
+def create_image_dataset(
+    data_dir: str,
+    subset: Optional[str],
+    image_size: Tuple[int, int, int],
+    seed: int,
+    rescale: float = 1.0 / 255,
+    validation_split: Optional[float] = 0.2,
+    batch_size: int = 32,
+    label_mode: str = "categorical",
     imagenet_preprocessing: bool = False,
-) -> KerasClassifier:
+) -> DirectoryIterator:
+    color_mode: str = "rgb" if image_size[2] == 3 else "grayscale"
+    target_size: Tuple[int, int] = image_size[:2]
 
-    uri = f"models:/{name}/{version}"
-    LOGGER.info("Load Keras classifier from model registry", uri=uri)
-    keras_classifier = mlflow.keras.load_model(uri)
     if imagenet_preprocessing:
-        mean_b = 103.939
-        mean_g = 116.779
-        mean_r = 123.680
-
-        wrapped_keras_classifier = KerasClassifier(
-            model=keras_classifier,
-            clip_values=clip_values,
-            preprocessing=([mean_b, mean_g, mean_r], 1),
+        data_generator: ImageDataGenerator = ImageDataGenerator(
+            rescale=rescale,
+            validation_split=validation_split,
+            preprocessing_function=preprocess_input,
         )
     else:
-        wrapped_keras_classifier = KerasClassifier(
-            model=keras_classifier, clip_values=clip_values
+        data_generator: ImageDataGenerator = ImageDataGenerator(
+            rescale=rescale,
+            validation_split=validation_split,
         )
-    LOGGER.info(
-        "Wrap Keras classifier for compatibility with Adversarial Robustness Toolbox"
+
+    return data_generator.flow_from_directory(
+        directory=data_dir,
+        target_size=target_size,
+        color_mode=color_mode,
+        class_mode=label_mode,
+        batch_size=batch_size,
+        seed=seed,
+        subset=subset,
     )
 
-    return wrapped_keras_classifier
+
+@pyplugs.register
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def get_n_classes_from_directory_iterator(ds: DirectoryIterator) -> int:
+    return len(ds.class_indices)
