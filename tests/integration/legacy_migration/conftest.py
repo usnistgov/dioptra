@@ -18,18 +18,15 @@ import tarfile
 from pathlib import Path
 from subprocess import CalledProcessError
 
+import boto3
 import pytest
 import testinfra
 
 from tests.integration.legacy_migration.migrate_s3 import migrate_s3
 from tests.integration.legacy_migration.utils import (
     TestbedHosts,
-    download_minio_bucket_data,
     initialize_testbed_rest_api,
     run_train_entrypoint_job,
-    sync_from_minio_bucket,
-    sync_to_minio_bucket,
-    upload_minio_bucket_data,
 )
 from tests.integration.utils import (
     destroy_volumes,
@@ -50,6 +47,7 @@ CUSTOM_PLUGINS_EVALUATION_DIR = (
 MINIO_ENDPOINT_ALIAS = "minio"
 MINIO_ROOT_USER = "minio"
 MINIO_ROOT_PASSWORD = "minio123"
+MINIO_SERVICE_HOST = "http://localhost:39000"
 PLUGINS_BUILTINS_DIR = "securingai_builtins"
 
 
@@ -99,6 +97,23 @@ def workflows_tar_gz(tmp_path_factory):
                 f.addfile(tarinfo=tarinfo, fileobj=f_data)
 
     yield workflows_tar_gz_path
+
+
+@pytest.fixture
+def s3_resource(monkeypatch):
+    monkeypatch.setenv("NODE_TLS_REJECT_UNAUTHORIZED", "0")
+
+    try:
+        # Attempt to connect to minio server with boto3.
+        yield boto3.resource(
+            "s3",
+            endpoint_url=MINIO_SERVICE_HOST,
+            aws_access_key_id=MINIO_ROOT_USER,
+            aws_secret_access_key=MINIO_ROOT_PASSWORD,
+        )
+
+    finally:
+        monkeypatch.delenv("NODE_TLS_REJECT_UNAUTHORIZED")
 
 
 @pytest.fixture
@@ -183,7 +198,6 @@ def train_entrypoint_response(
 
     finally:
         # Teardown
-        # print_docker_logs(compose_file=legacy_docker_compose_file)
         stop_docker_services(compose_file=legacy_docker_compose_file)
 
     return response_shallow_train
@@ -192,11 +206,9 @@ def train_entrypoint_response(
 @pytest.fixture
 def migrate_s3_files(
     docker_client,
+    s3_resource,
     train_entrypoint_response,
-    tmp_path_factory,
 ):
-    minio_bucket_data_dir = tmp_path_factory.mktemp("minio_bucket_data", numbered=False)
-
     # Declare path to docker-compose.yml file
     docker_compose_file: Path = CONFTEST_DIR / "docker-compose.yml"
 
@@ -209,38 +221,12 @@ def migrate_s3_files(
             compose_file=docker_compose_file, service="mlflow-tracking-db-upgrade"
         )
 
-        # Sync Minio Bucket Data to Temporary Dir
-        sync_from_minio_bucket(
-            compose_file=docker_compose_file,
-            minio_endpoint_alias=MINIO_ENDPOINT_ALIAS,
-            minio_root_user=MINIO_ROOT_USER,
-            minio_root_password=MINIO_ROOT_PASSWORD,
-            bucket="mlflow-tracking",
-            dest_dir="/minio-bucket-data/old",
-        )
-        download_minio_bucket_data(
-            compose_file=docker_compose_file,
-            minio_bucket_data_dir=str(minio_bucket_data_dir),
-            target_dir="old",
-        )
+        # Start and initialize the Minio service
+        start_docker_services(compose_file=docker_compose_file, services=["minio"])
+        wait_for_healthy_status(docker_client=docker_client, container_names=["minio"])
 
         # Migration Script
-        migrate_s3(minio_bucket_data_dir)
-
-        # Sync Temporary Dir
-        upload_minio_bucket_data(
-            compose_file=docker_compose_file,
-            minio_bucket_data_dir=str(minio_bucket_data_dir),
-            target_dir="new",
-        )
-        sync_to_minio_bucket(
-            compose_file=docker_compose_file,
-            minio_endpoint_alias=MINIO_ENDPOINT_ALIAS,
-            minio_root_user=MINIO_ROOT_USER,
-            minio_root_password=MINIO_ROOT_PASSWORD,
-            bucket="mlflow-tracking",
-            src_dir="/minio-bucket-data/new",
-        )
+        migrate_s3(s3_resource)
 
     except (RuntimeError, TimeoutError, CalledProcessError):
         raise
