@@ -20,6 +20,7 @@ from subprocess import CalledProcessError
 
 import pytest
 import testinfra
+import boto3
 
 from tests.integration.legacy_migration.migrate_s3 import migrate_s3
 from tests.integration.legacy_migration.utils import (
@@ -30,6 +31,7 @@ from tests.integration.legacy_migration.utils import (
     sync_from_minio_bucket,
     sync_to_minio_bucket,
     upload_minio_bucket_data,
+    connect_to_minio_server,
 )
 from tests.integration.utils import (
     destroy_volumes,
@@ -211,38 +213,20 @@ def migrate_s3_files(
             compose_file=docker_compose_file, service="mlflow-tracking-db-upgrade"
         )
 
-        # Sync Minio Bucket Data to Temporary Dir
-        sync_from_minio_bucket(
-            compose_file=docker_compose_file,
-            minio_endpoint_alias=MINIO_ENDPOINT_ALIAS,
+        # Start and initialize the Minio service
+        start_docker_services(
+            compose_file=docker_compose_file, services=["minio"]
+        )
+        wait_for_healthy_status(docker_client=docker_client, container_names=["minio"])
+
+        # Setup boto3 connection to minio server:
+        s3_resource = connect_to_minio_server(
+            minio_endpoint_url="http://localhost:39000",
             minio_root_user=MINIO_ROOT_USER,
             minio_root_password=MINIO_ROOT_PASSWORD,
-            bucket="mlflow-tracking",
-            dest_dir="/minio-bucket-data/old",
         )
-        download_minio_bucket_data(
-            compose_file=docker_compose_file,
-            minio_bucket_data_dir=str(minio_bucket_data_dir),
-            target_dir="old",
-        )
-
         # Migration Script
-        migrate_s3(minio_bucket_data_dir)
-
-        # Sync Temporary Dir
-        upload_minio_bucket_data(
-            compose_file=docker_compose_file,
-            minio_bucket_data_dir=str(minio_bucket_data_dir),
-            target_dir="new",
-        )
-        sync_to_minio_bucket(
-            compose_file=docker_compose_file,
-            minio_endpoint_alias=MINIO_ENDPOINT_ALIAS,
-            minio_root_user=MINIO_ROOT_USER,
-            minio_root_password=MINIO_ROOT_PASSWORD,
-            bucket="mlflow-tracking",
-            src_dir="/minio-bucket-data/new",
-        )
+        migrate_s3(s3_resource)
 
     except (RuntimeError, TimeoutError, CalledProcessError):
         raise
