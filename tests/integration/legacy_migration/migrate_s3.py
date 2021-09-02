@@ -17,25 +17,24 @@
 import os
 import shutil
 from pathlib import Path
+import boto3
 
 import yaml
 
 TARGET_FILES = set(["conda.yaml", "MLmodel", "keras_module.txt", "save_format.txt"])
 
+def _find_s3_files(s3, target_filenames):
+    # Look through all bucket files, and place matching file objects with associated target file.
+    target_s3_files = {target : [x for bucket in s3.buckets.all() for x in bucket.objects.all() if target in x.key] for target in target_filenames}
+    return target_s3_files
 
-def migrate_s3(root_dir):
-    shutil.copytree(src=str(root_dir / "old"), dst=str(root_dir / "new"))
-    migration_dir = str(root_dir / "new")
-
-    filepaths = _find_files(migration_dir, TARGET_FILES)
-    model_data_dir = Path(filepaths["keras_module.txt"]).parent
-
-    _update_conda_yaml(filepaths["conda.yaml"])
-    _update_mlmodel_yaml(filepaths["MLmodel"])
-    _update_keras_module(filepaths["keras_module.txt"])
-    _update_save_format(
-        filepaths.get("save_format.txt", str(model_data_dir / "save_format.txt"))
-    )
+def migrate_s3(s3_resource):
+    s3_files = _find_s3_files(s3, TARGET_FILES)
+    #model_data_dir = Path(filepaths["keras_module.txt"]).parent
+    _update_s3_file_conda_yml(s3_files['conda.yaml'])
+    _update_s3_file_save_format(s3_files['save_format.txt'])
+    _update_s3_keras_module(s3_files['keras_module.txt'])
+    _update_s3_mlmodel_yaml(s3_files['MLmodel'])
 
 
 def _dump_yaml_file(obj, filepath):
@@ -50,16 +49,20 @@ def _load_yaml_file(filepath):
     return data
 
 
-def _find_files(root_dir, target_filenames):
-    filepaths = {}
+def _load_yaml_file_from_s3(s3_object):
+    return yaml.safe_load(s3_object.get()['Body'].read().decode('utf-8'))
 
-    for dirpath, _, filenames in os.walk(root_dir):
-        captured_filenames = [x for x in filenames if x in target_filenames]
 
-        for filename in captured_filenames:
-            filepaths[filename] = Path(dirpath) / filename
+def _dump_yaml_file_into_s3(s3_object, yaml_file):
+    s3_object.put(Body=yaml.dump(data=yaml_file, Dumper=yaml.Dumper))
 
-    return filepaths
+
+def _load_txt_file_from_s3(s3_object):
+    return s3_object.get()['Body'].read().decode('utf-8')
+
+
+def _upload_txt_file_into_s3(s3_object, txt):
+    s3_object.put(Body=txt)
 
 
 def _update_save_format(filepath):
@@ -67,41 +70,53 @@ def _update_save_format(filepath):
         f.write("h5")
 
 
-def _update_keras_module(filepath):
-    with open(filepath, "wt") as f:
-        f.write("tensorflow.keras")
+def _update_s3_keras_module(keras_module_files):
+    for s3_object in keras_module_files:
+        file_txt = _load_txt_file_from_s3(s3_object)
+        if not ("tensorflow.keras" in file_txt):
+            file_txt = "tensorflow.keras"
+            _upload_txt_file_into_s3(s3_object, file_txt)
 
 
-def _update_mlmodel_yaml(filepath):
-    mlmodel_yaml = _load_yaml_file(filepath)
-    mlmodel_yaml["flavors"]["keras"]["keras_module"] = "tensorflow.keras"
-    mlmodel_yaml["flavors"]["keras"]["keras_version"] = "2.4.0"
-    mlmodel_yaml["flavors"]["python_function"]["python_version"] = "3.9"
-    _dump_yaml_file(mlmodel_yaml, filepath)
+def _update_s3_file_save_format(save_format_files):
+    for s3_object in save_format_files:
+        file_txt = _load_txt_file_from_s3(s3_object)
+        if not ("h5" in file_txt) and "tf" in file_txt:
+            file_txt = "h5"
+            _upload_txt_file_into_s3(s3_object, file_txt)
 
 
-def _update_conda_yaml(filepath):
-    conda_yaml = _load_yaml_file(filepath)
-    dependencies = conda_yaml["dependencies"]
+def _update_s3_mlmodel_yaml(mlmodel_yaml_files):
+    for s3_object in mlmodel_yaml_files:
+        mlmodel_yaml = _load_yaml_file_from_s3(s3_object)
+        if "keras" in mlmodel_yaml["flavors"]:
+            mlmodel_yaml["flavors"]["keras"]["keras_module"] = "tensorflow.keras"
+            mlmodel_yaml["flavors"]["keras"]["keras_version"] = "2.4.0"
+            mlmodel_yaml["flavors"]["python_function"]["python_version"] = "3.9"
+            _dump_yaml_file_into_s3(s3_object, mlmodel_yaml)
 
-    dependencies_new = []
-    for dep in dependencies:
-        if isinstance(dep, str) and "python" in dep:
-            dependencies_new.append("python=3.9")
 
-        elif isinstance(dep, dict):
-            dependencies_new.append(
-                {
-                    "pip": [
-                        "tensorflow==2.4.1" if "tensorflow" in x else x
-                        for x in dep["pip"]
-                    ]
-                }
-            )
+def _update_s3_file_conda_yml(conda_yml_files):
+    for s3_object in conda_yml_files:
+        conda_yaml = _load_yaml_file_from_s3(s3_object)
+        dependencies = conda_yaml["dependencies"]
+        dependencies_new = []
+        for dep in dependencies:
+            if isinstance(dep, str) and "python" in dep:
+                dependencies_new.append("python=3.9")
 
-        else:
-            dependencies_new.append(dep)
+            elif isinstance(dep, dict):
+                dependencies_new.append(
+                    {
+                        "pip": [
+                            "tensorflow==2.4.1" if "tensorflow" in x else x
+                            for x in dep["pip"]
+                        ]
+                    }
+                )
+            else:
+                dependencies_new.append(dep)
 
-    conda_yaml["dependencies"] = dependencies_new
+        conda_yaml["dependencies"] = dependencies_new
+        _dump_yaml_file_into_s3(s3_object, conda_yaml)
 
-    _dump_yaml_file(conda_yaml, filepath)
