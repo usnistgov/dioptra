@@ -15,6 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import subprocess
+import boto3
+import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -94,6 +96,20 @@ def run_train_entrypoint_job(testbed_client, workflows_tar_gz):
 
     return response_shallow_train
 
+def connect_to_minio_server(
+    minio_endpoint_url: str,
+    minio_root_user: str,
+    minio_root_password: str,
+    ):
+    os.environ["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
+    # Attempt to connect to minio server with boto3.
+    s3_resource = boto3.resource(
+        "s3",
+        endpoint_url=minio_endpoint_url,
+        aws_access_key_id=minio_root_user,
+        aws_secret_access_key=minio_root_password,
+    )
+    return s3_resource
 
 def sync_from_minio_bucket(
     compose_file: PathLike,
