@@ -312,7 +312,7 @@ def init_poison_flow() -> Flow:
         )
 
         keras_classifier = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
             "registry_art",
             "load_wrapped_tensorflow_keras_classifier",
             name=model_name,
@@ -329,7 +329,7 @@ def init_poison_flow() -> Flow:
             request=DISTANCE_METRICS,
         )
         distance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
             "attacks_poison",
             "create_adversarial_clean_poison_dataset",
             data_dir=testing_dir,

@@ -322,7 +322,7 @@ def init_gen_patch_flow() -> Flow:
         )
 
         keras_classifier = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
             "registry_art",
             "load_wrapped_tensorflow_keras_classifier",
             name=model_name,
@@ -332,7 +332,7 @@ def init_gen_patch_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
         )
         patch_dir = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
             "attacks_patch",
             "create_adversarial_patches",
             data_dir=testing_dir,

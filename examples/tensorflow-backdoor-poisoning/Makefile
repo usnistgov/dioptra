@@ -74,7 +74,7 @@ PLUGINS_BUILTINS_DIR := $(EXAMPLE_PLUGINS_DIR)/securingai_builtins
 PLUGINS_SRC_FILES := $(wildcard $(PLUGINS_BUILTINS_DIR)/*/*.py)
 
 PLUGINS_CUSTOM_DIR := $(EXAMPLE_CUSTOM_PLUGINS_DIR)/securingai_custom
-CUSTOM_PLUGIN_EVALUATION_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/custom_fgm_patch_poisoning_plugins/*.py)
+CUSTOM_PLUGIN_EVALUATION_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/custom_poisoning_plugins/*.py)
 
 JUPYTER_INSTALL_PACKAGES_SCRIPT = $(EXAMPLE_JUPYTER_DIR)/before-notebook.d/install-packages.sh
 
@@ -255,7 +255,7 @@ $(EXAMPLE_REDIS_DATA_DIR): ; $(call make_subdirectory,$@) ; $(call chmod,0777,$@
 $(EXAMPLE_RESTAPI_DATA_DIR): ; $(call make_subdirectory,$@) ; $(call chmod,0777,$@)
 
 $(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE): $(CUSTOM_PLUGIN_EVALUATION_SRC_FILES)
-	$(call make_tarball,$@,$(addprefix custom_fgm_patch_poisoning_plugins/,$(notdir $(CUSTOM_PLUGIN_EVALUATION_SRC_FILES))),-C $(PLUGINS_CUSTOM_DIR))
+	$(call make_tarball,$@,$(addprefix custom_poisoning_plugins/,$(notdir $(CUSTOM_PLUGIN_EVALUATION_SRC_FILES))),-C $(PLUGINS_CUSTOM_DIR))
 	$(call chmod,644,$(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE))
 
 $(DOCKER_COMPOSE_SENTINEL): $(PLUGINS_SENTINEL) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)

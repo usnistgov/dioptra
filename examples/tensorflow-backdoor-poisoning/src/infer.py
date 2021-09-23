@@ -26,7 +26,6 @@ import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-from tasks import evaluate_metrics_tensorflow
 
 from mitre.securingai import pyplugs
 from mitre.securingai.sdk.utilities.contexts import plugin_dirs
@@ -39,8 +38,8 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
-_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
 _PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
@@ -216,7 +215,7 @@ def init_infer_flow() -> Flow:
         )
 
         adv_ds = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
             "data_tensorflow",
             "create_image_dataset",
             data_dir=adv_data_dir,
@@ -238,8 +237,12 @@ def init_infer_flow() -> Flow:
             version=model_version,
             upstream_tasks=[init_tensorflow_results],
         )
-        classifier_performance_metrics = evaluate_metrics_tensorflow(
-            classifier=classifier, dataset=adv_ds
+        classifier_performance_metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "tensorflow",
+            "evaluate_metrics_tensorflow",
+            classifier=classifier,
+            dataset=adv_ds,
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",

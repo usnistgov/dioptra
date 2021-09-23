@@ -19,6 +19,7 @@ from __future__ import annotations
 from types import FunctionType
 from typing import Any, Dict, List, Union
 
+import mlflow
 import structlog
 from structlog.stdlib import BoundLogger
 
@@ -33,6 +34,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 try:
     from tensorflow.keras.callbacks import Callback
     from tensorflow.keras.metrics import Metric
+    from tensorflow.keras.models import Model
     from tensorflow.keras.optimizers import Optimizer
 
 except ImportError:  # pragma: nocover
@@ -40,6 +42,21 @@ except ImportError:  # pragma: nocover
         "Unable to import one or more optional packages, functionality may be reduced",
         package="tensorflow",
     )
+
+
+@pyplugs.register
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def register_init_model(active_run, name, model_dir, model) -> Model:
+    LOGGER.info(
+        "registering initialized model",
+        active_run=active_run,
+        name=name,
+        model_dir=model_dir,
+    )
+    mlflow.keras.log_model(
+        keras_model=model, artifact_path=model_dir, registered_model_name=name
+    )
+    return model
 
 
 @pyplugs.register

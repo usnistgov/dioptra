@@ -318,7 +318,7 @@ def init_guassian_augmentation_flow() -> Flow:
             request=DISTANCE_METRICS,
         )
         distance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
             "defenses_image_preprocessing",
             "create_defended_dataset",
             def_type="gaussian_augmentation",

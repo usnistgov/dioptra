@@ -19,21 +19,22 @@ from __future__ import annotations
 from types import FunctionType
 from typing import Any, Dict, List, Union
 
-import import_keras
 import mlflow
 import structlog
-from prefect import task
 from structlog.stdlib import BoundLogger
-from tensorflow.keras.models import Model
 
+from mitre.securingai import pyplugs
 from mitre.securingai.sdk.exceptions import TensorflowDependencyError
 from mitre.securingai.sdk.utilities.decorators import require_package
+
+from . import import_keras
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
     from tensorflow.keras.callbacks import Callback
     from tensorflow.keras.metrics import Metric
+    from tensorflow.keras.models import Model
     from tensorflow.keras.optimizers import Optimizer
 
 except ImportError:  # pragma: nocover
@@ -43,11 +44,11 @@ except ImportError:  # pragma: nocover
     )
 
 
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def register_init_model(active_run, name, model_dir, model) -> Model:
     LOGGER.info(
-        "registering initialized model",
+        "registering model",
         active_run=active_run,
         name=name,
         model_dir=model_dir,
@@ -58,26 +59,20 @@ def register_init_model(active_run, name, model_dir, model) -> Model:
     return model
 
 
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def evaluate_metrics_tensorflow(classifier, dataset) -> Dict[str, float]:
-    LOGGER.info("evaluating classification metrics using adversarial images")
-    result = classifier.evaluate(dataset, verbose=1)
-    adv_metrics = dict(zip(classifier.metrics_names, result))
-    LOGGER.info(
-        "computation of classification metrics for adversarial images complete",
-        **adv_metrics,
-    )
-    return adv_metrics
+    result = classifier.evaluate(dataset, verbose=0)
+    return dict(zip(classifier.metrics_names, result))
 
 
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def get_optimizer(optimizer: str, learning_rate: float) -> Optimizer:
     return import_keras.get_optimizer(optimizer)(learning_rate)
 
 
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def get_model_callbacks(callbacks_list: List[Dict[str, Any]]) -> List[Callback]:
     return [
@@ -86,7 +81,7 @@ def get_model_callbacks(callbacks_list: List[Dict[str, Any]]) -> List[Callback]:
     ]
 
 
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def get_performance_metrics(
     metrics_list: List[Dict[str, Any]]

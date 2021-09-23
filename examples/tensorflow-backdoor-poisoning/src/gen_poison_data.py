@@ -245,7 +245,7 @@ def generate_poison_data() -> Flow:
         )
 
         distance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
             "attacks_poison",
             "create_adversarial_poison_data",
             data_dir=testing_dir,

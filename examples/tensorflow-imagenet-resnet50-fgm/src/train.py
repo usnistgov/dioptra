@@ -26,12 +26,6 @@ import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-from tasks import (
-    evaluate_metrics_tensorflow,
-    get_model_callbacks,
-    get_optimizer,
-    get_performance_metrics,
-)
 
 from mitre.securingai import pyplugs
 from mitre.securingai.sdk.utilities.contexts import plugin_dirs
@@ -44,8 +38,8 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
-_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
 _PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "securingai_custom"
 CALLBACKS: List[Dict[str, Any]] = [
     {
         "name": "EarlyStopping",
@@ -169,6 +163,11 @@ def train(
         seed=seed,
     )
 
+    if imagenet_preprocessing:
+        rescale = 1.0
+    else:
+        rescale = 1.0 / 255
+
     mlflow.autolog()
 
     with mlflow.start_run() as active_run:
@@ -187,10 +186,10 @@ def train(
                 optimizer_name=optimizer,
                 validation_split=validation_split,
                 imagenet_preprocessing=imagenet_preprocessing,
+                rescale=rescale,
                 seed=seed,
             )
         )
-
     return state
 
 
@@ -209,6 +208,7 @@ def init_train_flow() -> Flow:
             optimizer_name,
             validation_split,
             imagenet_preprocessing,
+            rescale,
             seed,
         ) = (
             Parameter("active_run"),
@@ -223,6 +223,7 @@ def init_train_flow() -> Flow:
             Parameter("optimizer_name"),
             Parameter("validation_split"),
             Parameter("imagenet_preprocessing"),
+            Parameter("rescale"),
             Parameter("seed"),
         )
         seed, rng = pyplugs.call_task(
@@ -251,23 +252,28 @@ def init_train_flow() -> Flow:
                 dataset_seed=dataset_seed,
             ),
         )
-        optimizer = get_optimizer(
-            optimizer_name,
+        optimizer = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "tensorflow",
+            "get_optimizer",
+            optimizer=optimizer_name,
             learning_rate=learning_rate,
             upstream_tasks=[init_tensorflow_results],
         )
-        metrics = get_performance_metrics(
-            PERFORMANCE_METRICS, upstream_tasks=[init_tensorflow_results]
+        metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "tensorflow",
+            "get_performance_metrics",
+            metrics_list=PERFORMANCE_METRICS,
+            upstream_tasks=[init_tensorflow_results],
         )
-        callbacks_list = get_model_callbacks(
-            CALLBACKS, upstream_tasks=[init_tensorflow_results]
+        callbacks_list = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "tensorflow",
+            "get_model_callbacks",
+            callbacks_list=CALLBACKS,
+            upstream_tasks=[init_tensorflow_results],
         )
-
-        if imagenet_preprocessing:
-            rescale = 1.0
-        else:
-            rescale = 1.0 / 255
-
         training_ds = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
             "data_tensorflow",
@@ -316,7 +322,6 @@ def init_train_flow() -> Flow:
             "get_n_classes_from_directory_iterator",
             ds=training_ds,
         )
-        # TODO: Swap to pyplugs in next update.
         classifier = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
             "estimators_keras_classifiers",
@@ -341,14 +346,27 @@ def init_train_flow() -> Flow:
                 verbose=2,
             ),
         )
-        classifier_performance_metrics = evaluate_metrics_tensorflow(
-            classifier=classifier, dataset=testing_ds, upstream_tasks=[history]
+        classifier_performance_metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            "tensorflow",
+            "evaluate_metrics_tensorflow",
+            classifier=classifier,
+            dataset=testing_ds,
+            upstream_tasks=[history],
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
             "log_metrics",
             metrics=classifier_performance_metrics,
+        )
+        logged_tensorflow_keras_estimator = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.tracking",
+            "mlflow",
+            "log_tensorflow_keras_estimator",
+            estimator=classifier,
+            model_dir="model",
+            upstream_tasks=[history],
         )
         model_version = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.registry",
@@ -357,7 +375,7 @@ def init_train_flow() -> Flow:
             active_run=active_run,
             name=register_model_name,
             model_dir="model",
-            upstream_tasks=[history],
+            upstream_tasks=[logged_tensorflow_keras_estimator],
         )
 
     return flow
