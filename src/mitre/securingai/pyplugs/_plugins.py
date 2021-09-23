@@ -223,22 +223,22 @@ def info(package: str, plugin: str, func: Optional[str] = None) -> PluginInfo:
     try:
         plugin_info = _PLUGINS[package][plugin]
 
-    except KeyError:
+    except KeyError as exc:
         raise UnknownPluginError(
             f"Could not find any plug-in named {plugin!r} inside {package!r}. "
             "Use pyplugs.register to register functions as plug-ins"
-        )
+        ) from exc
 
     func = next(iter(plugin_info.keys())) if func is None else func
 
     try:
         return plugin_info[func]
 
-    except KeyError:
+    except KeyError as exc:
         raise UnknownPluginFunctionError(
             f"Could not find any function named {func!r} inside '{package}.{plugin}'. "
             "Use pyplugs.register to register plug-in functions"
-        )
+        ) from exc
 
 
 @expose

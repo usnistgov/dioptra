@@ -90,8 +90,8 @@ class ExperimentService(object):
                 str
             ] = self._mlflow_tracking_service.create_experiment(experiment_name)
 
-        except RestException:
-            raise ExperimentMLFlowTrackingRegistrationError
+        except RestException as exc:
+            raise ExperimentMLFlowTrackingRegistrationError from exc
 
         if experiment_id is None:
             raise ExperimentMLFlowTrackingAlreadyExistsError

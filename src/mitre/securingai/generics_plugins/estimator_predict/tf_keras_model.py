@@ -62,13 +62,13 @@ def _(estimator: Model, x: Any, pred_type: str, **kwargs) -> np.ndarray:
             **kwargs,
         )
 
-    except EstimatorPredictGenericPredTypeError:
+    except EstimatorPredictGenericPredTypeError as exc:
         LOGGER.exception(
             "Unknown pred_type argument for estimator_predict function.",
             estimator="tensorflow.keras.Model",
             pred_type=pred_type,
         )
-        raise EstimatorPredictGenericPredTypeError
+        raise exc
 
     return prediction
 
