@@ -85,7 +85,9 @@ def verify_payload(payload: bytes, signature: bytes, public_key: RSAPublicKey) -
         )
 
     except InvalidSignature:
-        raise InvalidSignature("Payload and/or signature files failed verification")
+        raise InvalidSignature(
+            "Payload and/or signature files failed verification"
+        ) from None
 
     return True
 
