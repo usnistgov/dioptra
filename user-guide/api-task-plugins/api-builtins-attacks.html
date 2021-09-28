@@ -25,7 +25,7 @@
 
     
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/sphinx-book-theme.5f77b4aec8189eecf79907ce328c390d.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
@@ -76,13 +76,14 @@
     <a class="navbar-brand text-wrap" href="../../index.html">
       
       
+      
       <h1 class="site-logo" id="site-title">Dioptra 0.0.0 documentation</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
         <ul class="nav bd-sidenav">
  <li class="toctree-l1">
@@ -491,7 +492,7 @@
             <div class="tocsection onthispage pt-5 pb-3">
                 <i class="fas fa-list"></i> Contents
             </div>
-            <nav id="bd-toc-nav">
+            <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#module-securingai_builtins.attacks.fgm">
@@ -551,7 +552,7 @@ each image.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_dir</strong> – The directory containing the clean test images.</p></li>
 <li><p><strong>adv_data_dir</strong> – The directory to use when saving the generated adversarial images.</p></li>
-<li><p><strong>keras_classifier</strong> – A trained <a class="reference external" href="https://adversarial-robustness-toolbox.readthedocs.io/en/latest/modules/estimators/classification.html#art.estimators.classification.KerasClassifier" title="(in Adversarial Robustness Toolbox v1.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasClassifier</span></code></a>.</p></li>
+<li><p><strong>keras_classifier</strong> – A trained <a class="reference external" href="https://adversarial-robustness-toolbox.readthedocs.io/en/latest/modules/estimators/classification.html#art.estimators.classification.KerasClassifier" title="(in Adversarial Robustness Toolbox v1.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasClassifier</span></code></a>.</p></li>
 <li><p><strong>image_size</strong> – A tuple of integers <cite>(height, width, channels)</cite> used to preprocess
 the images so that they all have the same dimensions and number of color
 channels. <cite>channels=3</cite> means RGB color images and <cite>channels=1</cite> means
@@ -579,7 +580,7 @@ step size and <cite>eps</cite> for the maximum perturbation. The default is <cit
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> containing the full distribution of the
+<dd class="field-even"><p>A <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.3.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> containing the full distribution of the
 calculated distance metrics.</p>
 </dd>
 </dl>
@@ -598,12 +599,32 @@ calculated distance metrics.</p>
               </div>
               
         
-        <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="api-builtins-artifacts.html" title="previous page">artifacts</a>
-    <a class='right-next' id="next-link" href="api-builtins-backend_configs.html" title="next page">backend_configs</a>
 
-        </div>
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="api-builtins-artifacts.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title">artifacts</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="api-builtins-backend_configs.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title">backend_configs</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
         
         </div>
     </div>

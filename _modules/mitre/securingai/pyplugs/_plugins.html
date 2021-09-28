@@ -25,7 +25,7 @@
 
     
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../../../../_static/sphinx-book-theme.5f77b4aec8189eecf79907ce328c390d.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
@@ -74,13 +74,14 @@
     <a class="navbar-brand text-wrap" href="../../../../index.html">
       
       
+      
       <h1 class="site-logo" id="site-title">Dioptra 0.0.0 documentation</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
         <ul class="nav bd-sidenav">
  <li class="toctree-l1">
@@ -703,22 +704,22 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">plugin_info</span> <span class="o">=</span> <span class="n">_PLUGINS</span><span class="p">[</span><span class="n">package</span><span class="p">][</span><span class="n">plugin</span><span class="p">]</span>
 
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">UnknownPluginError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Could not find any plug-in named </span><span class="si">{</span><span class="n">plugin</span><span class="si">!r}</span><span class="s2"> inside </span><span class="si">{</span><span class="n">package</span><span class="si">!r}</span><span class="s2">. &quot;</span>
             <span class="s2">&quot;Use pyplugs.register to register functions as plug-ins&quot;</span>
-        <span class="p">)</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
 
     <span class="n">func</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">plugin_info</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">func</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">plugin_info</span><span class="p">[</span><span class="n">func</span><span class="p">]</span>
 
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">UnknownPluginFunctionError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Could not find any function named </span><span class="si">{</span><span class="n">func</span><span class="si">!r}</span><span class="s2"> inside &#39;</span><span class="si">{</span><span class="n">package</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">plugin</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
             <span class="s2">&quot;Use pyplugs.register to register plug-in functions&quot;</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span></div>
 
 
 <div class="viewcode-block" id="exists"><a class="viewcode-back" href="../../../../user-guide/api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.exists">[docs]</a><span class="nd">@expose</span>
@@ -873,10 +874,14 @@
               </div>
               
         
-        <div class='prev-next-bottom'>
             
 
-        </div>
+
+
+<div class='prev-next-bottom'>
+    
+
+</div>
         
         </div>
     </div>
