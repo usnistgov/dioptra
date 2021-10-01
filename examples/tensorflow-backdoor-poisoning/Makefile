@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-.PHONY: clean custom-plugins custom-plugins-evaluation data demo help initdb jupyter plugins services teardown teardown-docker-compose teardown-docker-volumes teardown-docker-compose-sentinel workflows
+.PHONY: clean help jupyter custom-plugins custom-plugins-evaluation teardown teardown-docker-compose teardown-docker-volumes teardown-docker-compose-sentinel workflows
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
