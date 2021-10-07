@@ -215,7 +215,7 @@ def init_infer_flow() -> Flow:
         )
 
         adv_ds = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "data_tensorflow",
             "create_image_dataset",
             data_dir=adv_data_dir,
@@ -238,7 +238,7 @@ def init_infer_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
         )
         classifier_performance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "tensorflow",
             "evaluate_metrics_tensorflow",
             classifier=classifier,

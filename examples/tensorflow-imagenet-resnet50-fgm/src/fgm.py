@@ -302,7 +302,7 @@ def init_fgm_flow() -> Flow:
         )
 
         keras_classifier = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "registry_art",
             "load_wrapped_tensorflow_keras_classifier",
             name=model_name,
@@ -319,7 +319,7 @@ def init_fgm_flow() -> Flow:
         )
 
         distance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "attacks_fgm",
             "create_adversarial_fgm_dataset",
             data_dir=testing_dir,

@@ -308,7 +308,7 @@ def init_jpeg_compression_flow() -> Flow:
             request=DISTANCE_METRICS,
         )
         distance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "defenses_image_preprocessing",
             "create_defended_dataset",
             def_type="jpeg_compression",

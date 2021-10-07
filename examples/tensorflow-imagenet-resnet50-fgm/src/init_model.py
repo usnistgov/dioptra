@@ -229,7 +229,7 @@ def init_train_flow() -> Flow:
             ),
         )
         optimizer = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "tensorflow",
             "get_optimizer",
             optimizer=optimizer_name,
@@ -237,21 +237,21 @@ def init_train_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
         )
         metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "tensorflow",
             "get_performance_metrics",
             metrics_list=PERFORMANCE_METRICS,
             upstream_tasks=[init_tensorflow_results],
         )
         callbacks_list = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "tensorflow",
             "get_model_callbacks",
             callbacks_list=CALLBACKS,
             upstream_tasks=[init_tensorflow_results],
         )
         testing_ds = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "data_tensorflow",
             "create_image_dataset",
             data_dir=testing_dir,
@@ -271,7 +271,7 @@ def init_train_flow() -> Flow:
             ds=testing_ds,
         )
         classifier = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "estimators_keras_classifiers",
             "init_classifier",
             model_architecture=model_architecture,
@@ -283,7 +283,7 @@ def init_train_flow() -> Flow:
             training=False,
         )
         classifier_performance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "tensorflow",
             "evaluate_metrics_tensorflow",
             classifier=classifier,
@@ -296,7 +296,7 @@ def init_train_flow() -> Flow:
             metrics=classifier_performance_metrics,
         )
         model_storage = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "tensorflow",
             "register_init_model",
             model=classifier,

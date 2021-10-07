@@ -63,13 +63,13 @@ CODE_SRC_FILES := $(wildcard $(EXAMPLE_SRC_DIR)/*.py)
 CODE_WORKFLOW_FILE = MLproject
 
 PLUGINS_CUSTOM_DIR := $(EXAMPLE_CUSTOM_PLUGINS_DIR)/securingai_custom
-CUSTOM_PLUGIN_EVALUATION_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/custom_poisoning_plugins/*.py)
+CUSTOM_PLUGIN_POISONING_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/custom_poisoning_plugins/*.py)
 
 JUPYTER_INSTALL_PACKAGES_SCRIPT = $(EXAMPLE_JUPYTER_DIR)/before-notebook.d/install-packages.sh
 
 MAKEFILE_FILE = Makefile
 
-CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE = custom-plugins-evaluation.tar.gz
+CUSTOM_TASK_PLUGINS_POISONING_TARBALL_FILE = custom-plugins-poisoning.tar.gz
 WORKFLOWS_TARBALL_FILE = workflows.tar.gz
 
 DOCKER_VOLUME_PREFIX := $(shell basename $(EXAMPLE_DIR))
@@ -98,7 +98,7 @@ $(FIND) . \( -name "*.py[co]" -and -not -path "./.tox*" \) -type f -exec $(RM) -
 $(FIND) . -name ".ipynb_checkpoints" -type d -exec $(RM) -rf {} +
 $(RM) -rf $(EXAMPLE_DIR)/.mypy_cache
 $(RM) -rf $(EXAMPLE_DIR)/$(WORKFLOWS_TARBALL_FILE)
-$(RM) -rf $(EXAMPLE_DIR)/$(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE)
+$(RM) -rf $(EXAMPLE_DIR)/$(CUSTOM_TASK_PLUGINS_POISONING_TARBALL_FILE)
 endef
 
 define get_host_user_id
@@ -148,7 +148,7 @@ clean: ; $(call cleanup)
 custom-plugins: custom-plugins-evaluation
 
 ## Create custom evaluation plugins tarball
-custom-plugins-evaluation: $(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE)
+custom-plugins-evaluation: $(CUSTOM_TASK_PLUGINS_POISONING_TARBALL_FILE)
 
 ## Launch the jupyter lab service
 jupyter: $(JUPYTER_SENTINEL)
@@ -163,9 +163,9 @@ workflows: $(WORKFLOWS_TARBALL_FILE)
 # PROJECT SUPPORT RULES                                                         #
 #################################################################################
 
-$(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE): $(CUSTOM_PLUGIN_EVALUATION_SRC_FILES)
-	$(call make_tarball,$@,$(addprefix custom_poisoning_plugins/,$(notdir $(CUSTOM_PLUGIN_EVALUATION_SRC_FILES))),-C $(PLUGINS_CUSTOM_DIR))
-	$(call chmod,644,$(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE))
+$(CUSTOM_TASK_PLUGINS_POISONING_TARBALL_FILE): $(CUSTOM_PLUGIN_POISONING_SRC_FILES)
+	$(call make_tarball,$@,$(addprefix custom_poisoning_plugins/,$(notdir $(CUSTOM_PLUGIN_POISONING_SRC_FILES))),-C $(PLUGINS_CUSTOM_DIR))
+	$(call chmod,644,$(CUSTOM_TASK_PLUGINS_POISONING_TARBALL_FILE))
 
 
 $(JUPYTER_SENTINEL): | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)

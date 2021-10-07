@@ -253,7 +253,7 @@ def init_train_flow() -> Flow:
             ),
         )
         optimizer = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "tensorflow",
             "get_optimizer",
             optimizer=optimizer_name,
@@ -261,21 +261,21 @@ def init_train_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
         )
         metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "tensorflow",
             "get_performance_metrics",
             metrics_list=PERFORMANCE_METRICS,
             upstream_tasks=[init_tensorflow_results],
         )
         callbacks_list = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "tensorflow",
             "get_model_callbacks",
             callbacks_list=CALLBACKS,
             upstream_tasks=[init_tensorflow_results],
         )
         training_ds = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "data_tensorflow",
             "create_image_dataset",
             data_dir=training_dir,
@@ -289,7 +289,7 @@ def init_train_flow() -> Flow:
             imagenet_preprocessing=imagenet_preprocessing,
         )
         validation_ds = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "data_tensorflow",
             "create_image_dataset",
             data_dir=training_dir,
@@ -303,7 +303,7 @@ def init_train_flow() -> Flow:
             imagenet_preprocessing=imagenet_preprocessing,
         )
         testing_ds = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "data_tensorflow",
             "create_image_dataset",
             data_dir=testing_dir,
@@ -323,7 +323,7 @@ def init_train_flow() -> Flow:
             ds=training_ds,
         )
         classifier = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "estimators_keras_classifiers",
             "init_classifier",
             model_architecture=model_architecture,
@@ -347,7 +347,7 @@ def init_train_flow() -> Flow:
             ),
         )
         classifier_performance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_patch_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "tensorflow",
             "evaluate_metrics_tensorflow",
             classifier=classifier,
