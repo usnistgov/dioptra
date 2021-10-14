@@ -324,7 +324,7 @@ $(call run_in_conda_env,$(1),$(PY) -m sphinx-build -b html $(strip $(2)) $(strip
 endef
 
 define run_tox
-$(call run_in_conda_env,$(1),PIP_CACHE_DIR=$(CODE_PIP_CACHE_DIR) $(PY) -m $(TOX) $(2),)
+$(call run_in_conda_env,$(1),PIP_CACHE_DIR=$(CODE_PIP_CACHE_DIR) $(TOX) $(2),)
 endef
 
 define run_yq
