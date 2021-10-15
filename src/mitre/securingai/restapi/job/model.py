@@ -204,7 +204,7 @@ class JobForm(FlaskForm):
             .filter(
                 Queue.name == standardized_name,
                 QueueLock.queue_id == None,  # noqa: E711
-                Queue.is_deleted == False,
+                Queue.is_deleted == False,  # noqa: E712
             )
             .first()
         )

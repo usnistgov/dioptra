@@ -137,7 +137,10 @@ class QueueService(object):
 
         return (  # type: ignore
             Queue.query.outerjoin(QueueLock, Queue.queue_id == QueueLock.queue_id)
-            .filter(QueueLock.queue_id == None, Queue.is_deleted == False)  # noqa: E711
+            .filter(
+                QueueLock.queue_id == None,  # noqa: E711
+                Queue.is_deleted == False,  # noqa: E712
+            )
             .all()
         )
 
@@ -184,7 +187,7 @@ class QueueService(object):
             .filter(
                 Queue.queue_id == queue_id,
                 QueueLock.queue_id == None,  # noqa: E711
-                Queue.is_deleted == False,
+                Queue.is_deleted == False,  # noqa: E712
             )
             .first()
         )
@@ -200,7 +203,7 @@ class QueueService(object):
             .filter(
                 Queue.name == queue_name,
                 QueueLock.queue_id == None,  # noqa: E711
-                Queue.is_deleted == False,
+                Queue.is_deleted == False,  # noqa: E712
             )
             .first()
         )
