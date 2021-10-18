@@ -42,7 +42,7 @@ except ImportError:  # pragma: nocover
     )
 
 # Adding imagenet preprocessing option for pre-trained Imagenet estimators.
-@task
+@pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_image_dataset(
     data_dir: str,
