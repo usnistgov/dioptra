@@ -166,13 +166,13 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "python": ("https://docs.python.org/3/", None),
-    "sqlalchemy": ("https://docs.sqlalchemy.org/en/13/", None),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
-    "sklearn": ("https://scikit-learn.org/0.23/", None),
+    "sklearn": ("https://scikit-learn.org/0.24/", None),
     "structlog": ("https://www.structlog.org/en/stable/", None),
     "tensorflow": (
-        "https://www.tensorflow.org/versions/r2.1/api_docs/python/",
-        "tf21_py_objects.inv",
+        "https://www.tensorflow.org/versions/r2.4/api_docs/python/",
+        "tf24_py_objects.inv",
     ),
 }
 
