@@ -15,11 +15,16 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-.. _dev-guide-design-sdk:
+.. _dev-guide-restapi:
 
-Testbed SDK Design Guide
-========================
+REST API Developer's Guide
+==========================
 
 .. include:: /_glossary_note.rst
 
-Coming soon!
+This document is for developers that plan to contribute to the Dioptra :term:`REST` :term:`API`.
+Its goal is to establish guidelines for developing new endpoints and maintaining existing ones by explaining the design decisions underpinning the :term:`REST` :term:`API` code.
+
+.. attention::
+
+   This section is under construction.
