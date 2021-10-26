@@ -103,6 +103,4 @@ Email us: ai-nccoe@nist.gov
 
    dev-guide/index
    dev-guide/programming-style
-   dev-guide/design-architecture
-   dev-guide/design-restapi
-   dev-guide/design-sdk
+   dev-guide/restapi

@@ -385,18 +385,8 @@
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference internal" href="../../dev-guide/design-architecture.html">
-   Testbed Architecture Design Guide
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../../dev-guide/design-restapi.html">
-   Testbed REST API Design Guide
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../../dev-guide/design-sdk.html">
-   Testbed SDK Design Guide
+  <a class="reference internal" href="../../dev-guide/restapi.html">
+   REST API Developer’s Guide
   </a>
  </li>
 </ul>
@@ -526,7 +516,7 @@
 <p>Neural network image classifiers implemented in Tensorflow/Keras.</p>
 <dl class="py function">
 <dt id="securingai_builtins.estimators.keras_classifiers.init_classifier">
-<code class="sig-name descname"><span class="pre">init_classifier</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_architecture</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/optimizers/Optimizer" title="(in TensorFlow v2.1)"><span class="pre">tf.keras.optimizers.Optimizer</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/metrics/Metric" title="(in TensorFlow v2.1)"><span class="pre">tf.keras.metrics.Metric</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">function</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_classes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'categorical_crossentropy'</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tensorflow.keras.models.Sequential</span><a class="reference internal" href="../../_modules/securingai_builtins/estimators/keras_classifiers.html#init_classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.estimators.keras_classifiers.init_classifier" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">init_classifier</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_architecture</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/optimizers/Optimizer" title="(in TensorFlow v2.4)"><span class="pre">tf.keras.optimizers.Optimizer</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/metrics/Metric" title="(in TensorFlow v2.4)"><span class="pre">tf.keras.metrics.Metric</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">function</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_classes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'categorical_crossentropy'</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tensorflow.keras.models.Sequential</span><a class="reference internal" href="../../_modules/securingai_builtins/estimators/keras_classifiers.html#init_classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.estimators.keras_classifiers.init_classifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes an untrained neural network image classifier for Tensorflow/Keras.</p>
 <p>The <cite>model_architecture</cite> argument is used to select a neural network architecture
 from the architecture registry. The string passed to <cite>model_architecture</cite> must match
@@ -540,10 +530,10 @@ one of the following,</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_architecture</strong> – The neural network architecture to use.</p></li>
-<li><p><strong>optimizer</strong> – A Keras <a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/optimizers/Optimizer" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code></a> providing an
+<li><p><strong>optimizer</strong> – A Keras <a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/optimizers/Optimizer" title="(in TensorFlow v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code></a> providing an
 algorithm to use to train the estimator, such as
-<a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/optimizers/SGD" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">SGD</span></code></a> and
-<a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/optimizers/Adam" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adam</span></code></a>.</p></li>
+<code class="xref py py-class docutils literal notranslate"><span class="pre">SGD</span></code> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Adam</span></code>.</p></li>
 <li><p><strong>metrics</strong> – A list of metrics to be evaluated by the model during training and
 testing.</p></li>
 <li><p><strong>input_shape</strong> – A shape tuple of integers, not including the batch size, specifying
@@ -552,20 +542,20 @@ architecture registry follows the convention <cite>(height, width, channels)</ci
 <li><p><strong>n_classes</strong> – The number of target labels in the dataset.</p></li>
 <li><p><strong>loss</strong> – A string specifying the loss function to be minimized during training. The
 string must match the name of one of the loss functions in the
-<a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/losses" title="(in TensorFlow v2.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tf.keras.losses</span></code></a> module. The default is
+<a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/losses" title="(in TensorFlow v2.4)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tf.keras.losses</span></code></a> module. The default is
 <cite>“categorical_crossentropy”</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A compiled <a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
+<dd class="field-even"><p>A compiled <a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
 </dd>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/losses" title="(in TensorFlow v2.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tf.keras.losses</span></code></a></p></li>
-<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/optimizers" title="(in TensorFlow v2.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tf.keras.optimizers</span></code></a></p></li>
-<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/losses" title="(in TensorFlow v2.4)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tf.keras.losses</span></code></a></p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/optimizers" title="(in TensorFlow v2.4)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tf.keras.optimizers</span></code></a></p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
 </ul>
 </div>
 </dd></dl>
@@ -584,13 +574,13 @@ architecture registry follows the convention <cite>(height, width, channels)</ci
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
 </dd>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
 </ul>
 </div>
 </dd></dl>
@@ -609,13 +599,13 @@ architecture registry follows the convention <cite>(height, width, channels)</ci
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
 </dd>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
 </ul>
 </div>
 </dd></dl>
@@ -634,13 +624,13 @@ architecture registry follows the convention <cite>(height, width, channels)</ci
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> object.</p>
 </dd>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.1/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/Sequential" title="(in TensorFlow v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tf.keras.Sequential</span></code></a></p></li>
 </ul>
 </div>
 </dd></dl>

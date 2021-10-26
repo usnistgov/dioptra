@@ -385,18 +385,8 @@
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference internal" href="../dev-guide/design-architecture.html">
-   Testbed Architecture Design Guide
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../dev-guide/design-restapi.html">
-   Testbed REST API Design Guide
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="../dev-guide/design-sdk.html">
-   Testbed SDK Design Guide
+  <a class="reference internal" href="../dev-guide/restapi.html">
+   REST API Developer’s Guide
   </a>
  </li>
 </ul>
@@ -577,8 +567,8 @@ For this reason, it is highly recommended that you run these demos on a CUDA-com
 <p>The steps for getting your environment ready to run this demo depend on whether you intend to run the demo locally (i.e. on your personal computer) or on an existing on-prem deployment.
 Navigate to the tab below that best describes your setup in order to proceed.</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="0662744c-481c-4b30-856d-1fdd7569c7ce" name="9f14b3c0-470d-4d4a-b5f5-f432184a0a7d" type="radio">
-</input><label class="tabbed-label" for="0662744c-481c-4b30-856d-1fdd7569c7ce">
+<input checked="checked" id="e5fe6d91-9d6a-437f-b87e-d351b7fe12df" name="4e01710c-b57f-44c6-afbd-c3640997b47b" type="radio">
+</input><label class="tabbed-label" for="e5fe6d91-9d6a-437f-b87e-d351b7fe12df">
 Local</label><div class="tabbed-content docutils">
 <p>Everything you need to run this demo locally is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
 Once you have downloaded the images, stay in the terminal and navigate to this example’s directory and run the demo startup sequence,</p>
@@ -608,8 +598,8 @@ Generally speaking, each pair contains an pipeline representing an undefended at
 </div>
 <p>If you were watching the output logs, you will need to press <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
 </div>
-<input id="cc35c0d4-8f06-44b8-ae63-7b50dbc765cb" name="9f14b3c0-470d-4d4a-b5f5-f432184a0a7d" type="radio">
-</input><label class="tabbed-label" for="cc35c0d4-8f06-44b8-ae63-7b50dbc765cb">
+<input id="a9e7265a-7db9-4cf5-a8e2-1e7a917e68c6" name="4e01710c-b57f-44c6-afbd-c3640997b47b" type="radio">
+</input><label class="tabbed-label" for="a9e7265a-7db9-4cf5-a8e2-1e7a917e68c6">
 On-Prem Deployment</label><div class="tabbed-content docutils">
 <p>To run the demo on an on-prem deployment, all you need to do is download and start the <strong>jupyter</strong> service defined in this example’s <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file.
 Open a terminal and navigate to this example’s directory and run the <strong>jupyter</strong> startup sequence,</p>
