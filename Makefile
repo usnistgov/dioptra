@@ -75,6 +75,7 @@ PRE_COMMIT = pre-commit
 PY ?= python3
 PYTEST = $(PY) -m pytest
 RM = rm
+SPHINX_BUILD = sphinx-build
 TOX = $(PY) -m tox
 
 CONTAINER_VARS_FILE = container-vars.mk
@@ -320,7 +321,7 @@ $(call run_in_conda_env,$(CONDA_ENV_NAME),$(BLACK) $(1),)
 endef
 
 define run_sphinx_build
-$(call run_in_conda_env,$(1),$(PY) -m sphinx-build -b html $(strip $(2)) $(strip $(3)),)
+$(call run_in_conda_env,$(1),$(SPHINX_BUILD) -b html $(strip $(2)) $(strip $(3)),)
 endef
 
 define run_tox
