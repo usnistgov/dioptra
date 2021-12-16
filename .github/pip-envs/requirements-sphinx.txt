@@ -6,6 +6,7 @@ Flask-SQLAlchemy>=2.4.0,<3
 Flask-WTF>=0.14.3,<1
 markdown
 marshmallow>=3.9.0,<4
+mistune>=0.8.0,<1
 multimethod>=1.5
 plantuml-markdown
 pymdown-extensions
