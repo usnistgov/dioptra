@@ -111,7 +111,7 @@ dependencies:
       - mlflow>=1.12.0,<2
       - mnist>=0.2.2
       - multimethod>=1.5
-      - mypy>=0.900
+      - mypy>=0.920
       - passlib
       - plantuml-markdown
       - pre-commit
@@ -150,6 +150,7 @@ dependencies:
       - types-ipaddress
       - types-Jinja2
       - types-python-dateutil
+      - types-PyYAML
       - types-redis
       - types-requests
       - types-Werkzeug
