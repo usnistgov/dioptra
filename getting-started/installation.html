@@ -9,8 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Installation Guide &#8212; Dioptra 0.0.0 documentation</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet" />
-  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="../_static/css/theme.css" rel="stylesheet">
+  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
 
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -53,7 +53,10 @@
     <link rel="prev" title="Glossary" href="../glossary.html" />
     
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
     
 
     <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
@@ -570,8 +573,8 @@ General instructions on how to deploy the Testbed in an on-premises server can b
 The easiest way to accomplish this is using the pre-built configuration files included in the project codebase to create a <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environment</a>.</p>
 <p>There are two install options to start using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environments</a>,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="7432075d-5af4-4f0d-ad5b-3f0c9f368937" name="d3159ab8-e274-422d-8304-6ca940490e34" type="radio">
-</input><label class="tabbed-label" for="7432075d-5af4-4f0d-ad5b-3f0c9f368937">
+<input checked="checked" id="49af0c38-2862-4e69-af62-390fd69a36ed" name="adb631a2-daab-4acb-b170-1cf305fabee4" type="radio">
+</input><label class="tabbed-label" for="49af0c38-2862-4e69-af62-390fd69a36ed">
 Anaconda installation</label><div class="tabbed-content docutils">
 <p>The following links will provide a installation package for version 2020.11 of <a class="reference external" href="https://docs.anaconda.com/">Anaconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
@@ -581,8 +584,8 @@ Anaconda installation</label><div class="tabbed-content docutils">
 </ul>
 <p>If your host machine does not meet the <span class="xref std std-ref">quickstart-system-requirements</span>, then go to the <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda Installation Documents</a> for more help.</p>
 </div>
-<input id="fe75a933-f71a-4774-86ef-7f5345f8bd85" name="d3159ab8-e274-422d-8304-6ca940490e34" type="radio">
-</input><label class="tabbed-label" for="fe75a933-f71a-4774-86ef-7f5345f8bd85">
+<input id="cb2ded28-d54e-4aec-b126-8a365e8b32f1" name="adb631a2-daab-4acb-b170-1cf305fabee4" type="radio">
+</input><label class="tabbed-label" for="cb2ded28-d54e-4aec-b126-8a365e8b32f1">
 Miniconda installation</label><div class="tabbed-content docutils">
 <p>The following links will provide a installation package for the latest version of <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
@@ -630,18 +633,18 @@ If performance becomes an issue when using a virtual machine, consider increasin
 <span id="quickstart-clone-repository"></span><h3>Clone the Repository<a class="headerlink" href="#clone-the-repository" title="Permalink to this headline">¶</a></h3>
 <p>To clone the repository, open a new <strong>Terminal</strong> session for your operating system,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="4811e673-cda7-4b13-bb4f-ba730360c070" name="638f8e48-b72d-41fb-8a63-6b78f32fd502" type="radio">
-</input><label class="tabbed-label" for="4811e673-cda7-4b13-bb4f-ba730360c070">
+<input checked="checked" id="6fafc21f-8786-467b-b848-4b73fd41bcd8" name="e02ba9ad-6499-4a4d-a122-3f9eab2d7d1e" type="radio">
+</input><label class="tabbed-label" for="6fafc21f-8786-467b-b848-4b73fd41bcd8">
 Windows</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">windows</kbd> + <kbd class="kbd docutils literal notranslate">r</kbd> to open <strong>Run</strong>, then type <code class="docutils literal notranslate"><span class="pre">wsl</span></code> into the search bar and click <em>OK</em> to start a <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/">Windows Subsystem for Linux</a> session.</p>
 </div>
-<input id="f85394a4-2f0a-4915-ab27-0e527de4f14d" name="638f8e48-b72d-41fb-8a63-6b78f32fd502" type="radio">
-</input><label class="tabbed-label" for="f85394a4-2f0a-4915-ab27-0e527de4f14d">
+<input id="3717256a-00ef-4101-84c1-e80159c2524e" name="e02ba9ad-6499-4a4d-a122-3f9eab2d7d1e" type="radio">
+</input><label class="tabbed-label" for="3717256a-00ef-4101-84c1-e80159c2524e">
 MacOS</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">command</kbd> + <kbd class="kbd docutils literal notranslate">space</kbd> to open the <strong>Spotlight Search</strong>, type <code class="docutils literal notranslate"><span class="pre">Terminal</span></code> into the search bar, and click the <em>Terminal</em> application under <em>Top Hit</em> at the top of your results.</p>
 </div>
-<input id="bed69b00-309a-4563-b815-7a1fdd8fd741" name="638f8e48-b72d-41fb-8a63-6b78f32fd502" type="radio">
-</input><label class="tabbed-label" for="bed69b00-309a-4563-b815-7a1fdd8fd741">
+<input id="3dda9c61-3888-411a-88a8-86ef3dbd7cc0" name="e02ba9ad-6499-4a4d-a122-3f9eab2d7d1e" type="radio">
+</input><label class="tabbed-label" for="3dda9c61-3888-411a-88a8-86ef3dbd7cc0">
 Linux</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">ctrl</kbd> + <kbd class="kbd docutils literal notranslate">alt</kbd> + <kbd class="kbd docutils literal notranslate">t</kbd> to open the <strong>Terminal</strong>.</p>
 </div>
@@ -664,15 +667,15 @@ For this reason, WSL and MacOS users are both encouraged to create and clone the
 </div>
 <p>Clone the repository to your local computer,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="33d516e9-77cc-4681-947e-691ea223e8a5" name="4b352b7b-ff78-4cbe-9b9c-9f9fd97ba6b5" type="radio">
-</input><label class="tabbed-label" for="33d516e9-77cc-4681-947e-691ea223e8a5">
+<input checked="checked" id="e18e90d0-5720-4fb0-89cd-878b89912411" name="772b069c-fb15-4a40-b596-fa105d65350d" type="radio">
+</input><label class="tabbed-label" for="e18e90d0-5720-4fb0-89cd-878b89912411">
 Clone with HTTPS</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/usnistgov/dioptra.git
 </pre></div>
 </div>
 </div>
-<input id="eaa1012d-05dd-45d6-97f3-a497910aad2d" name="4b352b7b-ff78-4cbe-9b9c-9f9fd97ba6b5" type="radio">
-</input><label class="tabbed-label" for="eaa1012d-05dd-45d6-97f3-a497910aad2d">
+<input id="2280faa6-e5eb-4f5a-9128-ef8ed1781815" name="772b069c-fb15-4a40-b596-fa105d65350d" type="radio">
+</input><label class="tabbed-label" for="2280faa6-e5eb-4f5a-9128-ef8ed1781815">
 Clone with SSH</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:usnistgov/dioptra.git
 </pre></div>
@@ -737,31 +740,22 @@ These are most current images that are pre-built to be used by the <em>master</e
               </div>
               
         
-            
-
-
-
-<div class='prev-next-bottom'>
-    
-    <div id="prev">
-        <a class="left-prev" href="../glossary.html" title="previous page">
-            <i class="prevnext-label fas fa-angle-left"></i>
-            <div class="prevnext-info">
-                <p class="prevnext-label">previous</p>
-                <p class="prevnext-title">Glossary</p>
-            </div>
-        </a>
+            <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="../glossary.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Glossary</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="newcomer-tips.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Setup Tips for Newcomers</p>
     </div>
-     <div id="next">
-        <a class="right-next" href="newcomer-tips.html" title="next page">
-            <div class="prevnext-info">
-                <p class="prevnext-label">next</p>
-                <p class="prevnext-title">Setup Tips for Newcomers</p>
-            </div>
-            <i class="prevnext-label fas fa-angle-right"></i>
-        </a>
-     </div>
-
+    <i class="fas fa-angle-right"></i>
+    </a>
 </div>
         
         </div>
@@ -787,8 +781,7 @@ These are most current images that are pre-built to be used by the <em>master</e
       </div>
     </div>
   
-  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
 
-  
   </body>
 </html>

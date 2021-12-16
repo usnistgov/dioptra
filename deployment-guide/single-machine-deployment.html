@@ -9,8 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Single Machine Deployment &#8212; Dioptra 0.0.0 documentation</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet" />
-  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="../_static/css/theme.css" rel="stylesheet">
+  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
 
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -53,7 +53,10 @@
     <link rel="prev" title="Docker Images List and Settings" href="docker-images-list-and-settings.html" />
     
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
     
 
     <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
@@ -1069,8 +1072,8 @@ chmod <span class="m">0700</span> /var/securing-ai/lab-deployment/redis
 <p class="rubric">Configure the dataset volume</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">nfs-datasets</span></code> volume will need to be updated based on the details of your deployment,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="c10e1774-5fe1-4946-b141-31fc2c3fd6fa" name="efdd3163-802b-45de-bab4-4aa9f77eb484" type="radio">
-</input><label class="tabbed-label" for="c10e1774-5fe1-4946-b141-31fc2c3fd6fa">
+<input checked="checked" id="9526cfe6-1c37-43b0-9526-5b9fb9e837ce" name="62b5c837-c777-4e71-bba8-741661522b9b" type="radio">
+</input><label class="tabbed-label" for="9526cfe6-1c37-43b0-9526-5b9fb9e837ce">
 Datasets on NFS share</label><div class="tabbed-content docutils">
 <p>The following Docker volume assumes that the NFS share is the directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code> on a device with the IP address <code class="docutils literal notranslate"><span class="pre">192.168.1.20</span></code>.
 Update it to match the details of your NFS share.</p>
@@ -1083,8 +1086,8 @@ Update it to match the details of your NFS share.</p>
 </pre></div>
 </div>
 </div>
-<input id="dd50fe20-77f5-404a-84c3-4d7865207672" name="efdd3163-802b-45de-bab4-4aa9f77eb484" type="radio">
-</input><label class="tabbed-label" for="dd50fe20-77f5-404a-84c3-4d7865207672">
+<input id="05488d00-da86-43cf-9ee3-615edc5478bc" name="62b5c837-c777-4e71-bba8-741661522b9b" type="radio">
+</input><label class="tabbed-label" for="05488d00-da86-43cf-9ee3-615edc5478bc">
 Datasets in local directory</label><div class="tabbed-content docutils">
 <p>The following Docker volume assumes that the data is stored in the local directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code>.
 Update this to match the folder where you store your datasets.</p>
@@ -1215,31 +1218,22 @@ docker-compose down
               </div>
               
         
-            
-
-
-
-<div class='prev-next-bottom'>
-    
-    <div id="prev">
-        <a class="left-prev" href="docker-images-list-and-settings.html" title="previous page">
-            <i class="prevnext-label fas fa-angle-left"></i>
-            <div class="prevnext-info">
-                <p class="prevnext-label">previous</p>
-                <p class="prevnext-title">Docker Images List and Settings</p>
-            </div>
-        </a>
+            <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="docker-images-list-and-settings.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Docker Images List and Settings</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="task-plugins-management.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Task Plugins Management</p>
     </div>
-     <div id="next">
-        <a class="right-next" href="task-plugins-management.html" title="next page">
-            <div class="prevnext-info">
-                <p class="prevnext-label">next</p>
-                <p class="prevnext-title">Task Plugins Management</p>
-            </div>
-            <i class="prevnext-label fas fa-angle-right"></i>
-        </a>
-     </div>
-
+    <i class="fas fa-angle-right"></i>
+    </a>
 </div>
         
         </div>
@@ -1265,8 +1259,7 @@ docker-compose down
       </div>
     </div>
   
-  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
 
-  
   </body>
 </html>
