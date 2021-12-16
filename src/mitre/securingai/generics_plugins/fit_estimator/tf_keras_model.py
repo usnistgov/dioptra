@@ -56,7 +56,7 @@ def _(estimator: Model, x: Any, **kwargs) -> History:
     return history
 
 
-@fit_estimator.register  # type: ignore
+@fit_estimator.register
 def _(estimator: Model, x: Any, y: Any, **kwargs) -> History:
     LOGGER.info(
         "Dispatch generic function",
