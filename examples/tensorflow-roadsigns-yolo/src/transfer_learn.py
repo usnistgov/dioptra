@@ -226,12 +226,11 @@ def init_train_flow() -> Flow:
             f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
         )
         init_tensorflow_results = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.backend_configs",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.backend_configs",
             "tensorflow",
             "init_tensorflow",
             seed=tensorflow_global_seed,
         )
-
         log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
