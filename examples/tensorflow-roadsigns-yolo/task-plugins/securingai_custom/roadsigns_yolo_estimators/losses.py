@@ -36,53 +36,96 @@ except ImportError:  # pragma: nocover
 COORD_WEIGHT = 5
 NOOBJ_WEIGHT = 0.5
 
+@tf.function
+_
+
 # source: https://github.com/GiaKhangLuu/YOLOv1_from_scratch
+@tf.function
 def yolo_loss(y_true, y_pred):
+    y_true = tf.Variable(y_true)
+    y_pred = tf.Variable(y_pred)
+
     # Get xywh, cfd, class
     true_cellbox = y_true[:, :, :, :4]
     true_obj = y_true[:, :, :, 4]
     true_cls = y_true[:, :, :, 5:]
 
-    n_classes = int(true_cls.shape[-1])
-    n_bounding_boxes = int((y_pred.shape[-1] - n_classes) / 5)
+    n_classes = tf.cast(tf.shape(true_cls)[-1], dtype=tf.int32)
+    n_bounding_boxes = tf.cast((tf.shape(y_pred)[-1] - n_classes) / 5, dtype=tf.int32)
+    elems_range = tf.range(n_bounding_boxes, dtype=tf.float32)
 
-    pred_cellboxes = []
-    pred_objs = []
+    # pred_cellboxes = []
+    # pred_objs = []
 
-    for i in range(n_bounding_boxes):
-        pred_cellboxes.append(y_pred[:, :, :, (5 * i) : (5 * i + 4)])
-        pred_objs.append(y_pred[:, :, :, (5 * i + 4)])
+    # pred_cellboxes = tf.TensorArray(tf.float32, size=n_bounding_boxes)
+    # pred_objs = tf.TensorArray(tf.float32, size=n_bounding_boxes)
+
+    # for i in range(n_bounding_boxes):
+    #     pred_cellboxes.append(y_pred[:, :, :, (5 * i) : (5 * i + 4)])
+    #     pred_objs.append(y_pred[:, :, :, (5 * i + 4)])
+
+    # for i in tf.range(n_bounding_boxes):
+    #     pred_cellboxes.write(i, y_pred[:, :, :, (5 * i) : (5 * i + 4)])
+    #     pred_objs.write(i, y_pred[:, :, :, (5 * i + 4)])
+
+    # tf.map_fn(fn=lambda i: pred_cellboxes.write(i, y_pred[:, :, :, (5 * i) : (5 * i + 4)]), elems=tf.range(n_bounding_boxes))
+    # tf.map_fn(fn=lambda i: pred_objs.write(i, y_pred[:, :, :, (5 * i + 4)]), elems=tf.range(n_bounding_boxes))
+
+    # pred_cellboxes = pred_cellboxes.stack()
+    # pred_objs = pred_objs.stack()
+
+    pred_cellboxes = tf.map_fn(fn=lambda i: y_pred[:, :, :, (5 * tf.cast(i, dtype=tf.int32)) : (5 * tf.cast(i, dtype=tf.int32) + 4)], elems=elems_range)
+    pred_objs = tf.map_fn(fn=lambda i: y_pred[:, :, :, (5 * tf.cast(i, dtype=tf.int32) + 4)], elems=elems_range)
 
     pred_cls = y_pred[:, :, :, (5 * n_bounding_boxes) :]
 
     # Convert cell box to corner bbox to compute iou
     true_corner_bbox = convert_cellbox_to_corner_bbox(true_cellbox, true_obj)
 
-    pred_corner_bboxes = []
-    for pred_cellbox in pred_cellboxes:
-        pred_corner_bboxes.append(convert_cellbox_to_corner_bbox(pred_cellbox))
+    # pred_corner_bboxes = []
+    # for pred_cellbox in pred_cellboxes:
+    #     pred_corner_bboxes.append(convert_cellbox_to_corner_bbox(pred_cellbox))
+
+    # pred_corner_bboxes = tf.TensorArray(tf.float32, size=n_bounding_boxes)
+    # for i in tf.range(n_bounding_boxes):
+    #     pred_corner_bboxes.write(i, convert_cellbox_to_corner_bbox(pred_cellboxes[i]))
+
+    # pred_corner_bboxes = pred_corner_bboxes.stack()
+
+    # tf.map_fn(fn=lambda i: pred_corner_bboxes.write(i, convert_cellbox_to_corner_bbox(pred_cellboxes[i])), elems=tf.range(n_bounding_boxes))
+    pred_corner_bboxes = tf.map_fn(fn=lambda i: convert_cellbox_to_corner_bbox(pred_cellboxes[tf.cast(i, dtype=tf.int32)]), elems=elems_range)
 
     # Compute iou
-    iou_boxes = []
-    for pred_corner_bbox in pred_corner_bboxes:
-        iou_boxes.append(iou(pred_corner_bbox, true_corner_bbox))
+    # iou_boxes = []
+    # for pred_corner_bbox in pred_corner_bboxes:
+    #     iou_boxes.append(iou(pred_corner_bbox, true_corner_bbox))
+    # iou_boxes = tf.TensorArray(tf.float32, size=n_bounding_boxes)
+    # for i in tf.range(n_bounding_boxes):
+    #     iou_boxes.write(i, iou(pred_corner_bboxes[i], true_corner_bbox))
+
+    # tf.map_fn(fn=lambda i: iou_boxes.write(i, iou(pred_corner_bboxes[i], true_corner_bbox)), elems=tf.range(n_bounding_boxes))
+    # iou_boxes = iou_boxes.stack()
+
+    iou_boxes = tf.map_fn(fn=lambda i: iou(pred_corner_bboxes[tf.cast(i, dtype=tf.int32)], true_corner_bbox), elems=elems_range)
 
     # Get the highest iou
-    ious = tf.stack(iou_boxes, axis=-1)
+    ious = tf.transpose(iou_boxes, [1, 2, 3, 0])
+    # ious = tf.stack(iou_boxes.stack(), axis=-1)
+    
     best_iou = tf.cast(tf.math.argmax(ious, axis=-1), dtype=tf.float32)
 
     # Compute xy and wh losses
     xy_loss = compute_xy_loss(
         true_cellbox[:, :, :, :2],
-        pred_cellboxes[0][:, :, :, :2],
-        pred_cellboxes[1][:, :, :, :2],
+        pred_cellboxes[0, :, :, :, :2],
+        pred_cellboxes[1, :, :, :, :2],
         true_obj,
         best_iou,
     )
     wh_loss = compute_wh_loss(
         true_cellbox[:, :, :, 2:],
-        pred_cellboxes[0][:, :, :, 2:],
-        pred_cellboxes[1][:, :, :, 2:],
+        pred_cellboxes[0, :, :, :, :2],
+        pred_cellboxes[1, :, :, :, :2],
         true_obj,
         best_iou,
     )

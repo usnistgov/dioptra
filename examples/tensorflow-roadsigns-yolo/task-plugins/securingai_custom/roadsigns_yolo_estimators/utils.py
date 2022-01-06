@@ -55,24 +55,32 @@ def convert_cellbox_to_xywh(cellbox, mask=None):
     y_offset = cellbox[:, :, :, 1]
     w_h = cellbox[:, :, :, 2:]
 
-    num_w_cells = x_offset.shape[-1]
-    num_h_cells = x_offset.shape[-2]
+    num_w_cells = tf.shape(x_offset)[-1]
+    num_h_cells = tf.shape(x_offset)[-2]
 
     # w_cell_indices: [[0, 1, 2, ...], [0, 1, 2, ...], ...]
     # Use w_cell_indices to convert x_offset of a particular grid cell
     # location to x_center
-    w_cell_indices = np.array(range(num_w_cells))
-    w_cell_indices = np.broadcast_to(w_cell_indices, x_offset.shape[-2:])
+    # w_cell_indices = np.array(range(num_w_cells))
+    # w_cell_indices = np.broadcast_to(w_cell_indices, tf.shape(x_offset)[-2:])
+
+    w_cell_indices = tf.range(num_w_cells)
+    w_cell_indices = tf.broadcast_to(w_cell_indices, tf.shape(x_offset)[-2:])
+    w_cell_indices = tf.cast(w_cell_indices, dtype=tf.float32)
 
     # h_cell_indices: [[0, 0, 0, ...], [1, 1, 1, ...], [2, 2, 2, ...], ....]
     # Use h_cell_indices to convert y_offset of a particular grid cell
     # location to y_center
-    h_cell_indices = np.array(range(num_h_cells))
-    h_cell_indices = np.repeat(h_cell_indices, 7, 0).reshape(x_offset.shape[-2:])
+    # h_cell_indices = np.array(range(num_h_cells))
+    # h_cell_indices = np.repeat(h_cell_indices, 7, 0).reshape(tf.shape(x_offset)[-2:])
     # h_cell_indices = np.broadcast_to(h_cell_indices, x_offset.shape)
 
-    x_center = (x_offset + w_cell_indices) / num_w_cells
-    y_center = (y_offset + h_cell_indices) / num_h_cells
+    h_cell_indices = tf.range(num_h_cells)
+    h_cell_indices = tf.reshape(tf.repeat(h_cell_indices, 7, 0), tf.shape(x_offset)[-2:])
+    h_cell_indices = tf.cast(h_cell_indices, dtype=tf.float32)
+
+    x_center = (x_offset + w_cell_indices) / tf.cast(num_w_cells, dtype=tf.float32)
+    y_center = (y_offset + h_cell_indices) / tf.cast(num_h_cells, dtype=tf.float32)
 
     if mask is not None:
         x_center *= mask
