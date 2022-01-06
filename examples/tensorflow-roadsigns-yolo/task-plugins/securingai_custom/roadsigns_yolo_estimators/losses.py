@@ -36,9 +36,6 @@ except ImportError:  # pragma: nocover
 COORD_WEIGHT = 5
 NOOBJ_WEIGHT = 0.5
 
-@tf.function
-_
-
 # source: https://github.com/GiaKhangLuu/YOLOv1_from_scratch
 @tf.function
 def yolo_loss(y_true, y_pred):
@@ -74,8 +71,19 @@ def yolo_loss(y_true, y_pred):
     # pred_cellboxes = pred_cellboxes.stack()
     # pred_objs = pred_objs.stack()
 
-    pred_cellboxes = tf.map_fn(fn=lambda i: y_pred[:, :, :, (5 * tf.cast(i, dtype=tf.int32)) : (5 * tf.cast(i, dtype=tf.int32) + 4)], elems=elems_range)
-    pred_objs = tf.map_fn(fn=lambda i: y_pred[:, :, :, (5 * tf.cast(i, dtype=tf.int32) + 4)], elems=elems_range)
+    pred_cellboxes = tf.map_fn(
+        fn=lambda i: y_pred[
+            :,
+            :,
+            :,
+            (5 * tf.cast(i, dtype=tf.int32)) : (5 * tf.cast(i, dtype=tf.int32) + 4),
+        ],
+        elems=elems_range,
+    )
+    pred_objs = tf.map_fn(
+        fn=lambda i: y_pred[:, :, :, (5 * tf.cast(i, dtype=tf.int32) + 4)],
+        elems=elems_range,
+    )
 
     pred_cls = y_pred[:, :, :, (5 * n_bounding_boxes) :]
 
@@ -93,7 +101,12 @@ def yolo_loss(y_true, y_pred):
     # pred_corner_bboxes = pred_corner_bboxes.stack()
 
     # tf.map_fn(fn=lambda i: pred_corner_bboxes.write(i, convert_cellbox_to_corner_bbox(pred_cellboxes[i])), elems=tf.range(n_bounding_boxes))
-    pred_corner_bboxes = tf.map_fn(fn=lambda i: convert_cellbox_to_corner_bbox(pred_cellboxes[tf.cast(i, dtype=tf.int32)]), elems=elems_range)
+    pred_corner_bboxes = tf.map_fn(
+        fn=lambda i: convert_cellbox_to_corner_bbox(
+            pred_cellboxes[tf.cast(i, dtype=tf.int32)]
+        ),
+        elems=elems_range,
+    )
 
     # Compute iou
     # iou_boxes = []
@@ -106,12 +119,17 @@ def yolo_loss(y_true, y_pred):
     # tf.map_fn(fn=lambda i: iou_boxes.write(i, iou(pred_corner_bboxes[i], true_corner_bbox)), elems=tf.range(n_bounding_boxes))
     # iou_boxes = iou_boxes.stack()
 
-    iou_boxes = tf.map_fn(fn=lambda i: iou(pred_corner_bboxes[tf.cast(i, dtype=tf.int32)], true_corner_bbox), elems=elems_range)
+    iou_boxes = tf.map_fn(
+        fn=lambda i: iou(
+            pred_corner_bboxes[tf.cast(i, dtype=tf.int32)], true_corner_bbox
+        ),
+        elems=elems_range,
+    )
 
     # Get the highest iou
     ious = tf.transpose(iou_boxes, [1, 2, 3, 0])
     # ious = tf.stack(iou_boxes.stack(), axis=-1)
-    
+
     best_iou = tf.cast(tf.math.argmax(ious, axis=-1), dtype=tf.float32)
 
     # Compute xy and wh losses
