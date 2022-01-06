@@ -51,17 +51,8 @@ CALLBACKS: List[Dict[str, Any]] = [
         "parameters": {
             "monitor": "val_loss",
             "min_delta": 1e-2,
-            "patience": 5,
+            "patience": 20,
             "restore_best_weights": True,
-        },
-    },
-    {
-        "name": "ModelCheckpoint",
-        "parameters": {
-            "filepath": "checkpoints/model.{epoch:02d}-{val_loss:.2f}.hdf5",
-            "monitor": "val_loss",
-            "save_weights_only": True,
-            "save_best_only": True,
         },
     },
 ]
