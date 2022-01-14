@@ -27,6 +27,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
     from tensorflow.keras.layers import (
+        Activation,
         AveragePooling2D,
         BatchNormalization,
         Conv2D,
@@ -59,7 +60,7 @@ def attach_classifier_output_layers(
     input_shape: Optional[Tuple[int, int, int]] = None,
     conv_layer_specs: Optional[List[Dict[str, Any]]] = None,
     output_layer_spec: Optional[List[Dict[str, Any]]] = None,
-    transition_strategy: str = "flatten",
+    transition_strategy: Optional[str] = "flatten",
 ):
     if conv_layer_specs is None:
         conv_layer_specs = []
@@ -93,35 +94,37 @@ def attach_classifier_output_layers(
         if spec.get("dropout", 0) > 0:
             x = Dropout(rate=spec["dropout"])(x)
 
-    transition_layers = dict(
-        avgpool=GlobalAveragePooling2D(),
-        flatten=Flatten(),
-        maxpool=GlobalMaxPool2D(),
-    )
-    x = transition_layers[transition_strategy.lower()](x)
-
-    # dense layers:
-    for idx, spec in enumerate(dense_layer_specs, start=1):
-        activation = (
-            LeakyReLU(alpha=0.1)
-            if spec.get("activation") == "leaky"
-            else spec.get("activation")
+    if transition_strategy is not None:
+        transition_layers = dict(
+            avgpool=GlobalAveragePooling2D(),
+            flatten=Flatten(),
+            maxpool=GlobalMaxPool2D(),
         )
-        x = Dense(
-            units=spec["units"], activation=activation, name=f"output_dense_{idx}"
-        )(x)
+        x = transition_layers[transition_strategy.lower()](x)
 
-        if spec.get("dropout", 0) > 0:
-            x = Dropout(rate=spec["dropout"])(x)
+        # dense layers:
+        for idx, spec in enumerate(dense_layer_specs, start=1):
+            activation = (
+                LeakyReLU(alpha=0.1)
+                if spec.get("activation") == "leaky"
+                else spec.get("activation")
+            )
+            x = Dense(
+                units=spec["units"], activation=activation, name=f"output_dense_{idx}"
+            )(x)
 
-    # output layer:
+            if spec.get("dropout", 0) > 0:
+                x = Dropout(rate=spec["dropout"])(x)
+
+        # output layer:
+        x = Dense(n_classes, name="predictions")(x)
+
     activation = (
         LeakyReLU(alpha=0.1)
         if output_layer_spec.get("activation", "linear") == "leaky"
-        else output_layer_spec.get("activation", "linear")
+        else Activation(output_layer_spec.get("activation", "linear"))
     )
-    x = Dense(n_classes, activation=activation, name="predictions")(x)
-    x = Softmax()(x)
+    x = activation(x)
 
     return x
 
@@ -134,7 +137,7 @@ def attach_yolo_v1_object_detector_layers(
     n_bounding_boxes: int = 2,
     grid_size: int = 7,
     conv_layer_specs: Optional[List[Dict[str, Any]]] = None,
-    transition_strategy: str = "flatten",
+    transition_strategy: Optional[str] = "flatten",
 ):
     if conv_layer_specs is None:
         conv_layer_specs = []
@@ -143,10 +146,11 @@ def attach_yolo_v1_object_detector_layers(
     for idx, spec in enumerate(conv_layer_specs, start=1):
         conv_2d_params = dict(
             filters=spec.get("filters", 1024),
-            kernel_size=(3, 3),
+            kernel_size=spec.get("kernel_size", (3, 3)),
             strides=spec["strides"],
-            padding="same",
+            padding=spec.get("padding", "same"),
             name=f"output_conv_{idx}",
+            use_bias=spec.get("use_bias", True),
         )
 
         if idx == 1:
@@ -171,24 +175,27 @@ def attach_yolo_v1_object_detector_layers(
         flatten=Flatten(),
         maxpool=GlobalMaxPool2D(),
     )
-    x = transition_layers[transition_strategy.lower()](x)
 
-    for idx, spec in enumerate(dense_layer_specs, start=1):
-        activation = (
-            LeakyReLU(alpha=0.1)
-            if spec.get("activation") == "leaky"
-            else spec.get("activation")
-        )
+    if transition_strategy is not None:
+        x = transition_layers[transition_strategy.lower()](x)
+
+        for idx, spec in enumerate(dense_layer_specs, start=1):
+            activation = (
+                LeakyReLU(alpha=0.1)
+                if spec.get("activation") == "leaky"
+                else spec.get("activation")
+            )
+            x = Dense(
+                units=spec["units"], activation=activation, name=f"output_dense_{idx}"
+            )(x)
+
+            if spec.get("dropout", 0) > 0:
+                x = Dropout(rate=spec["dropout"])(x)
+
+        # output layer:
         x = Dense(
-            units=spec["units"], activation=activation, name=f"output_dense_{idx}"
+            grid_size * grid_size * (n_bounding_boxes * 5 + n_classes),
+            name="predictions",
         )(x)
-
-        if spec.get("dropout", 0) > 0:
-            x = Dropout(rate=spec["dropout"])(x)
-
-    # output layer:
-    x = Dense(
-        grid_size * grid_size * (n_bounding_boxes * 5 + n_classes), name="predictions"
-    )(x)
 
     return x

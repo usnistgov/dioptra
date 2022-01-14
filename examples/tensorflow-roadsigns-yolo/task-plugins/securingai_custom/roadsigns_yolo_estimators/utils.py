@@ -16,20 +16,21 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-import numpy as np
-import structlog
-from structlog.stdlib import BoundLogger
+# import numpy as np
+# import structlog
+# from structlog.stdlib import BoundLogger
 
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
+# LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
     import tensorflow as tf
 
 except ImportError:  # pragma: nocover
-    LOGGER.warn(
-        "Unable to import one or more optional packages, functionality may be reduced",
-        package="tensorflow",
-    )
+    pass
+    # LOGGER.warn(
+    #     "Unable to import one or more optional packages, functionality may be reduced",
+    #     package="tensorflow",
+    # )
 
 
 # source: https://github.com/GiaKhangLuu/YOLOv1_from_scratch
@@ -76,7 +77,9 @@ def convert_cellbox_to_xywh(cellbox, mask=None):
     # h_cell_indices = np.broadcast_to(h_cell_indices, x_offset.shape)
 
     h_cell_indices = tf.range(num_h_cells)
-    h_cell_indices = tf.reshape(tf.repeat(h_cell_indices, 7, 0), tf.shape(x_offset)[-2:])
+    h_cell_indices = tf.reshape(
+        tf.repeat(h_cell_indices, 7, 0), tf.shape(x_offset)[-2:]
+    )
     h_cell_indices = tf.cast(h_cell_indices, dtype=tf.float32)
 
     x_center = (x_offset + w_cell_indices) / tf.cast(num_w_cells, dtype=tf.float32)
@@ -114,6 +117,8 @@ def convert_to_xywh(bboxes):
 def convert_bboxes_to_tensor(
     bboxes, classes, img_width, img_height, n_classes, grid_size=7
 ):
+    import numpy as np
+
     target = np.zeros(shape=(grid_size, grid_size, 5 + n_classes), dtype=np.float32)
 
     for idx, bbox in enumerate(bboxes):

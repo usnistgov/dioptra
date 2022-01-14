@@ -14,240 +14,384 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
+import tensorflow as tf
+from tensorflow.keras.losses import Loss
 
-import structlog
-from structlog.stdlib import BoundLogger
-
-from .utils import convert_cellbox_to_corner_bbox
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
-try:
-    import tensorflow as tf
-
-except ImportError:  # pragma: nocover
-    LOGGER.warn(
-        "Unable to import one or more optional packages, functionality may be reduced",
-        package="tensorflow",
-    )
-
-
-COORD_WEIGHT = 5
-NOOBJ_WEIGHT = 0.5
 
 # source: https://github.com/GiaKhangLuu/YOLOv1_from_scratch
-@tf.function
-def yolo_loss(y_true, y_pred):
-    y_true = tf.Variable(y_true)
-    y_pred = tf.Variable(y_pred)
+class YOLOLoss(Loss):
+    def call(self, y_true, y_pred):
+        n_bounding_boxes = self._get_n_bounding_boxes(y_pred)
+        grid_shape = self._get_grid_shape(y_pred)
 
-    # Get xywh, cfd, class
-    true_cellbox = y_true[:, :, :, :4]
-    true_obj = y_true[:, :, :, 4]
-    true_cls = y_true[:, :, :, 5:]
+        # Get ground truth
+        true_cellbox = self._get_true_cellbox(y_true, n_bounding_boxes)
+        true_obj = self._get_true_obj(y_true, n_bounding_boxes)
+        true_cls = self._get_true_cls(y_true, n_bounding_boxes)
 
-    n_classes = tf.cast(tf.shape(true_cls)[-1], dtype=tf.int32)
-    n_bounding_boxes = tf.cast((tf.shape(y_pred)[-1] - n_classes) / 5, dtype=tf.int32)
-    elems_range = tf.range(n_bounding_boxes, dtype=tf.float32)
+        # Get predictions
+        pred_cellboxes = self._get_pred_cellboxes(y_pred)
+        pred_objs = self._get_pred_objs(y_pred)
+        pred_cls = self._get_pred_cls(y_pred)
 
-    # pred_cellboxes = []
-    # pred_objs = []
+        # Convert cell box to corner bbox to compute iou
+        true_corner_bbox = self._convert_cellbox_to_corner_bbox_masked(
+            true_cellbox, grid_shape, true_obj
+        )
+        pred_corner_bboxes = self._convert_cellbox_to_corner_bbox(
+            pred_cellboxes, grid_shape
+        )
 
-    # pred_cellboxes = tf.TensorArray(tf.float32, size=n_bounding_boxes)
-    # pred_objs = tf.TensorArray(tf.float32, size=n_bounding_boxes)
+        # Get the highest iou
+        ious = self._iou(pred_corner_bboxes, true_corner_bbox)
+        pred_responsible_cellboxes_mask = self._get_pred_responsible_cellboxes_mask(
+            ious, n_bounding_boxes
+        )
 
-    # for i in range(n_bounding_boxes):
-    #     pred_cellboxes.append(y_pred[:, :, :, (5 * i) : (5 * i + 4)])
-    #     pred_objs.append(y_pred[:, :, :, (5 * i + 4)])
+        # Build the 1obj_ij mask
+        obj_responsible_cellboxes_mask = true_obj * pred_responsible_cellboxes_mask
 
-    # for i in tf.range(n_bounding_boxes):
-    #     pred_cellboxes.write(i, y_pred[:, :, :, (5 * i) : (5 * i + 4)])
-    #     pred_objs.write(i, y_pred[:, :, :, (5 * i + 4)])
+        # Build the 1noobj_ij mask
+        no_obj_responsible_cellboxes_mask = (
+            1 - true_obj
+        ) * pred_responsible_cellboxes_mask
 
-    # tf.map_fn(fn=lambda i: pred_cellboxes.write(i, y_pred[:, :, :, (5 * i) : (5 * i + 4)]), elems=tf.range(n_bounding_boxes))
-    # tf.map_fn(fn=lambda i: pred_objs.write(i, y_pred[:, :, :, (5 * i + 4)]), elems=tf.range(n_bounding_boxes))
+        # Compute xy and wh losses
+        xy_loss = self._compute_xy_loss(
+            true_cellbox[..., :2],
+            pred_cellboxes[..., :2],
+            obj_responsible_cellboxes_mask,
+        )
+        wh_loss = self._compute_wh_loss(
+            true_cellbox[..., 2:],
+            pred_cellboxes[..., 2:],
+            obj_responsible_cellboxes_mask,
+        )
 
-    # pred_cellboxes = pred_cellboxes.stack()
-    # pred_objs = pred_objs.stack()
+        # Compute obj. loss
+        obj_loss = self._compute_obj_loss(
+            true_obj, pred_objs, obj_responsible_cellboxes_mask
+        )
 
-    pred_cellboxes = tf.map_fn(
-        fn=lambda i: y_pred[
-            :,
-            :,
-            :,
-            (5 * tf.cast(i, dtype=tf.int32)) : (5 * tf.cast(i, dtype=tf.int32) + 4),
-        ],
-        elems=elems_range,
-    )
-    pred_objs = tf.map_fn(
-        fn=lambda i: y_pred[:, :, :, (5 * tf.cast(i, dtype=tf.int32) + 4)],
-        elems=elems_range,
-    )
+        # Compute no obj. loss
+        no_obj_loss = self._compute_no_obj_loss(
+            true_obj, pred_objs, no_obj_responsible_cellboxes_mask
+        )
 
-    pred_cls = y_pred[:, :, :, (5 * n_bounding_boxes) :]
+        # Compute class distribution loss
+        cls_loss = self._compute_class_dist_loss(
+            true_cls, pred_cls, obj_responsible_cellboxes_mask
+        )
 
-    # Convert cell box to corner bbox to compute iou
-    true_corner_bbox = convert_cellbox_to_corner_bbox(true_cellbox, true_obj)
+        COORD_WEIGHT = 5.0
+        NOOBJ_WEIGHT = 0.5
 
-    # pred_corner_bboxes = []
-    # for pred_cellbox in pred_cellboxes:
-    #     pred_corner_bboxes.append(convert_cellbox_to_corner_bbox(pred_cellbox))
+        yolo_loss = (
+            COORD_WEIGHT * (xy_loss + wh_loss)
+            + obj_loss
+            + NOOBJ_WEIGHT * no_obj_loss
+            + cls_loss
+        )
 
-    # pred_corner_bboxes = tf.TensorArray(tf.float32, size=n_bounding_boxes)
-    # for i in tf.range(n_bounding_boxes):
-    #     pred_corner_bboxes.write(i, convert_cellbox_to_corner_bbox(pred_cellboxes[i]))
+        return yolo_loss
 
-    # pred_corner_bboxes = pred_corner_bboxes.stack()
+    def _convert_cellbox_to_corner_bbox(self, cellbox, grid_shape):
+        bbox = self._convert_cellbox_to_xywh(cellbox, grid_shape)
+        x = bbox[..., 0]
+        y = bbox[..., 1]
+        w = bbox[..., 2]
+        h = bbox[..., 3]
 
-    # tf.map_fn(fn=lambda i: pred_corner_bboxes.write(i, convert_cellbox_to_corner_bbox(pred_cellboxes[i])), elems=tf.range(n_bounding_boxes))
-    pred_corner_bboxes = tf.map_fn(
-        fn=lambda i: convert_cellbox_to_corner_bbox(
-            pred_cellboxes[tf.cast(i, dtype=tf.int32)]
-        ),
-        elems=elems_range,
-    )
+        x_min = x - (w / 2.0)
+        y_min = y - (h / 2.0)
+        x_max = x + (w / 2.0)
+        y_max = y + (h / 2.0)
 
-    # Compute iou
-    # iou_boxes = []
-    # for pred_corner_bbox in pred_corner_bboxes:
-    #     iou_boxes.append(iou(pred_corner_bbox, true_corner_bbox))
-    # iou_boxes = tf.TensorArray(tf.float32, size=n_bounding_boxes)
-    # for i in tf.range(n_bounding_boxes):
-    #     iou_boxes.write(i, iou(pred_corner_bboxes[i], true_corner_bbox))
+        corner_box = tf.stack([x_min, y_min, x_max, y_max], axis=-1)
 
-    # tf.map_fn(fn=lambda i: iou_boxes.write(i, iou(pred_corner_bboxes[i], true_corner_bbox)), elems=tf.range(n_bounding_boxes))
-    # iou_boxes = iou_boxes.stack()
+        return corner_box
 
-    iou_boxes = tf.map_fn(
-        fn=lambda i: iou(
-            pred_corner_bboxes[tf.cast(i, dtype=tf.int32)], true_corner_bbox
-        ),
-        elems=elems_range,
-    )
+    def _convert_cellbox_to_corner_bbox_masked(self, cellbox, grid_shape, mask):
+        bbox = self._convert_cellbox_to_xywh_masked(cellbox, grid_shape, mask)
+        x = bbox[..., 0]
+        y = bbox[..., 1]
+        w = bbox[..., 2]
+        h = bbox[..., 3]
 
-    # Get the highest iou
-    ious = tf.transpose(iou_boxes, [1, 2, 3, 0])
-    # ious = tf.stack(iou_boxes.stack(), axis=-1)
+        x_min = x - (w / 2.0)
+        y_min = y - (h / 2.0)
+        x_max = x + (w / 2.0)
+        y_max = y + (h / 2.0)
 
-    best_iou = tf.cast(tf.math.argmax(ious, axis=-1), dtype=tf.float32)
+        corner_box = tf.stack([x_min, y_min, x_max, y_max], axis=-1)
 
-    # Compute xy and wh losses
-    xy_loss = compute_xy_loss(
-        true_cellbox[:, :, :, :2],
-        pred_cellboxes[0, :, :, :, :2],
-        pred_cellboxes[1, :, :, :, :2],
-        true_obj,
-        best_iou,
-    )
-    wh_loss = compute_wh_loss(
-        true_cellbox[:, :, :, 2:],
-        pred_cellboxes[0, :, :, :, :2],
-        pred_cellboxes[1, :, :, :, :2],
-        true_obj,
-        best_iou,
-    )
+        return corner_box
 
-    # Compute obj. loss
-    obj_loss = compute_obj_loss(true_obj, pred_objs[0], pred_objs[1], best_iou)
+    @staticmethod
+    def _convert_cellbox_to_xywh(cellbox, grid_shape):
+        x_offset = cellbox[..., 0]
+        y_offset = cellbox[..., 1]
+        w_h = cellbox[..., 2:]
 
-    # Compute no obj. loss
-    no_obj_loss = compute_no_obj_loss(true_obj, pred_objs[0], pred_objs[1])
+        num_w_cells = grid_shape[1]
+        num_h_cells = grid_shape[0]
 
-    # Compute class distribution loss
-    cls_loss = compute_class_dist_loss(true_cls, pred_cls, true_obj)
+        # w_cell_indices: [[0, 1, 2, ...], [0, 1, 2, ...], ...]
+        # Use w_cell_indices to convert x_offset of a particular grid cell
+        # location to x_center
+        w_cell_indices = tf.range(num_w_cells)
+        w_cell_indices = tf.reshape(
+            tf.repeat(w_cell_indices, num_h_cells, 0), grid_shape
+        )
+        w_cell_indices = tf.broadcast_to(
+            w_cell_indices, tf.roll(tf.shape(x_offset), axis=-1, shift=1)
+        )
+        w_cell_indices = tf.transpose(
+            w_cell_indices,
+            tf.roll(tf.range(tf.size(tf.shape(w_cell_indices))), axis=-1, shift=-1),
+        )
+        w_cell_indices = tf.cast(w_cell_indices, dtype=tf.float32)
 
-    yolo_loss = (
-        COORD_WEIGHT * (xy_loss + wh_loss)
-        + obj_loss
-        + NOOBJ_WEIGHT * no_obj_loss
-        + cls_loss
-    )
+        # h_cell_indices: [[0, 0, 0, ...], [1, 1, 1, ...], [2, 2, 2, ...], ....]
+        # Use h_cell_indices to convert y_offset of a particular grid cell
+        # location to y_center
+        h_cell_indices = tf.range(num_h_cells)
+        h_cell_indices = tf.broadcast_to(
+            h_cell_indices, tf.roll(tf.shape(x_offset), axis=-1, shift=1)
+        )
+        h_cell_indices = tf.transpose(
+            h_cell_indices,
+            tf.roll(tf.range(tf.size(tf.shape(h_cell_indices))), axis=-1, shift=-1),
+        )
+        h_cell_indices = tf.cast(h_cell_indices, dtype=tf.float32)
 
-    return yolo_loss
+        x_center = (x_offset + w_cell_indices) / tf.cast(num_w_cells, dtype=tf.float32)
+        y_center = (y_offset + h_cell_indices) / tf.cast(num_h_cells, dtype=tf.float32)
 
+        x_y = tf.stack([x_center, y_center], axis=-1)
 
-def compute_xy_loss(target_xy, box1_xy, box2_xy, mask, best_iou):
-    sse_xy_1 = tf.reduce_sum(tf.square(target_xy - box1_xy), axis=-1)
-    sse_xy_2 = tf.reduce_sum(tf.square(target_xy - box2_xy), axis=-1)
+        bbox = tf.concat([x_y, w_h], axis=-1)
 
-    xy_predictor_1 = sse_xy_1 * mask * (1 - best_iou)
-    xy_predictor_2 = sse_xy_2 * mask * best_iou
-    xy_predictor = xy_predictor_1 + xy_predictor_2
+        return bbox
 
-    xy_loss = tf.reduce_mean(tf.reduce_sum(xy_predictor, axis=(1, 2)))
+    @staticmethod
+    def _convert_cellbox_to_xywh_masked(cellbox, grid_shape, mask):
+        x_offset = cellbox[..., 0]
+        y_offset = cellbox[..., 1]
+        w_h = cellbox[..., 2:]
 
-    return xy_loss
+        num_w_cells = grid_shape[1]
+        num_h_cells = grid_shape[0]
 
+        # w_cell_indices: [[0, 1, 2, ...], [0, 1, 2, ...], ...]
+        # Use w_cell_indices to convert x_offset of a particular grid cell
+        # location to x_center
+        w_cell_indices = tf.range(num_w_cells)
+        w_cell_indices = tf.reshape(
+            tf.repeat(w_cell_indices, num_h_cells, 0), grid_shape
+        )
+        w_cell_indices = tf.broadcast_to(
+            w_cell_indices, tf.roll(tf.shape(x_offset), axis=-1, shift=1)
+        )
+        w_cell_indices = tf.transpose(
+            w_cell_indices,
+            tf.roll(tf.range(tf.size(tf.shape(w_cell_indices))), axis=-1, shift=-1),
+        )
+        w_cell_indices = tf.cast(w_cell_indices, dtype=tf.float32)
 
-def compute_wh_loss(target_wh, box1_wh, box2_wh, mask, best_iou):
-    target_wh = tf.sqrt(target_wh)
-    box1_wh, box2_wh = tf.sqrt(tf.abs(box1_wh)), tf.sqrt(tf.abs(box2_wh))
+        # h_cell_indices: [[0, 0, 0, ...], [1, 1, 1, ...], [2, 2, 2, ...], ....]
+        # Use h_cell_indices to convert y_offset of a particular grid cell
+        # location to y_center
+        h_cell_indices = tf.range(num_h_cells)
+        h_cell_indices = tf.broadcast_to(
+            h_cell_indices, tf.roll(tf.shape(x_offset), axis=-1, shift=1)
+        )
+        h_cell_indices = tf.transpose(
+            h_cell_indices,
+            tf.roll(tf.range(tf.size(tf.shape(h_cell_indices))), axis=-1, shift=-1),
+        )
+        h_cell_indices = tf.cast(h_cell_indices, dtype=tf.float32)
 
-    sse_wh_1 = tf.reduce_sum(tf.square(target_wh - box1_wh), axis=-1)
-    sse_wh_2 = tf.reduce_sum(tf.square(target_wh - box2_wh), axis=-1)
+        x_center = (x_offset + w_cell_indices) / tf.cast(num_w_cells, dtype=tf.float32)
+        y_center = (y_offset + h_cell_indices) / tf.cast(num_h_cells, dtype=tf.float32)
 
-    wh_predictor_1 = sse_wh_1 * mask * (1 - best_iou)
-    wh_predictor_2 = sse_wh_2 * mask * best_iou
-    wh_predictor = wh_predictor_1 + wh_predictor_2
+        x_center *= mask
+        y_center *= mask
 
-    wh_loss = tf.reduce_mean(tf.reduce_sum(wh_predictor, axis=(1, 2)))
+        x_y = tf.stack([x_center, y_center], axis=-1)
 
-    return wh_loss
+        bbox = tf.concat([x_y, w_h], axis=-1)
 
+        return bbox
 
-def compute_obj_loss(target_obj, box1_obj, box2_obj, best_iou):
-    pred_obj_1 = box1_obj * target_obj * (1 - best_iou)
-    pred_obj_2 = box2_obj * target_obj * best_iou
-    pred_obj = pred_obj_1 + pred_obj_2
+    @staticmethod
+    def _compute_xy_loss(target_xy, boxes_xy, mask):
+        sse_xy = tf.reduce_sum(tf.square(target_xy - boxes_xy), axis=-1)
+        xy_predictor = tf.reduce_sum(mask * sse_xy, axis=-1)
+        xy_predictor_shape_indices = tf.range(tf.size(tf.shape(xy_predictor)))
+        xy_loss = tf.reduce_mean(
+            tf.reduce_sum(xy_predictor, axis=xy_predictor_shape_indices[-2:])
+        )
 
-    sqrt_err_obj = tf.square(target_obj - pred_obj)
+        return xy_loss
 
-    obj_loss = tf.reduce_mean(tf.reduce_sum(sqrt_err_obj, axis=(1, 2)))
+    @staticmethod
+    def _compute_wh_loss(target_wh, boxes_wh, mask):
+        target_wh = tf.sqrt(target_wh)
+        boxes_wh = tf.sqrt(tf.abs(boxes_wh))
 
-    return obj_loss
+        sse_wh = tf.reduce_sum(tf.square(target_wh - boxes_wh), axis=-1)
+        wh_predictor = tf.reduce_sum(mask * sse_wh, axis=-1)
+        wh_predictor_shape_indices = tf.range(tf.size(tf.shape(wh_predictor)))
+        wh_loss = tf.reduce_mean(
+            tf.reduce_sum(wh_predictor, axis=wh_predictor_shape_indices[-2:])
+        )
 
+        return wh_loss
 
-def compute_no_obj_loss(target_obj, box1_obj, box2_obj):
-    target_no_obj_mask = 1 - target_obj
+    @staticmethod
+    def _compute_obj_loss(target_obj, pred_obj, mask):
+        sqrt_err_obj = tf.reduce_sum(mask * tf.square(target_obj - pred_obj), axis=-1)
+        sqrt_err_obj_shape_indices = tf.range(tf.size(tf.shape(sqrt_err_obj)))
+        obj_loss = tf.reduce_mean(
+            tf.reduce_sum(sqrt_err_obj, axis=sqrt_err_obj_shape_indices[-2:])
+        )
 
-    pred_no_obj_1 = box1_obj * target_no_obj_mask
-    pred_no_obj_2 = box2_obj * target_no_obj_mask
+        return obj_loss
 
-    sqr_err_no_obj_1 = tf.square((target_obj * target_no_obj_mask) - pred_no_obj_1)
-    sqr_err_no_obj_2 = tf.square((target_obj * target_no_obj_mask) - pred_no_obj_2)
-    sqr_err_no_obj = sqr_err_no_obj_1 + sqr_err_no_obj_2
+    @staticmethod
+    def _compute_no_obj_loss(target_obj, pred_obj, mask):
+        sqrt_err_no_obj = tf.reduce_sum(
+            mask * tf.square(target_obj - pred_obj), axis=-1
+        )
+        sqrt_err_no_obj_shape_indices = tf.range(tf.size(tf.shape(sqrt_err_no_obj)))
+        no_obj_loss = tf.reduce_mean(
+            tf.reduce_sum(sqrt_err_no_obj, axis=sqrt_err_no_obj_shape_indices[-2:])
+        )
 
-    no_obj_loss = tf.reduce_mean(tf.reduce_sum(sqr_err_no_obj, axis=(1, 2)))
+        return no_obj_loss
 
-    return no_obj_loss
+    @staticmethod
+    def _compute_class_dist_loss(target_cls, pred_cls, mask):
+        sse_cls = mask * tf.reduce_sum(tf.square(target_cls - pred_cls), axis=-1)
+        sse_cls_shape_indices = tf.range(tf.size(tf.shape(sse_cls)))
+        cls_loss = tf.reduce_mean(
+            tf.reduce_sum(sse_cls, axis=sse_cls_shape_indices[-2:])
+        )
 
+        return cls_loss
 
-def compute_class_dist_loss(target_cls, pred_cls, mask):
-    sse_cls = tf.reduce_sum(tf.square(target_cls - pred_cls), axis=-1)
-    sse_cls = sse_cls * mask
+    @staticmethod
+    def _iou(box_1, box_2):
+        # Find the intersection coordinate
+        x1 = tf.maximum(box_1[..., 0], box_2[..., 0])
+        y1 = tf.maximum(box_1[..., 1], box_2[..., 1])
+        x2 = tf.minimum(box_1[..., 2], box_2[..., 2])
+        y2 = tf.minimum(box_1[..., 3], box_2[..., 3])
 
-    cls_loss = tf.reduce_mean(tf.reduce_sum(sse_cls, axis=(1, 2)))
+        # Compute area
+        inter_area = tf.maximum(0.0, x2 - x1) * tf.maximum(0.0, y2 - y1)
+        box_1_area = tf.abs(
+            (box_1[..., 2] - box_1[..., 0]) * (box_1[..., 3] - box_1[..., 1])
+        )
+        box_2_area = tf.abs(
+            (box_2[..., 2] - box_1[..., 0]) * (box_2[..., 3] - box_1[..., 1])
+        )
 
-    return cls_loss
+        return inter_area / (box_1_area + box_2_area - inter_area)
 
+    @staticmethod
+    def _get_n_classes(tensor):
+        return tf.cast(tf.shape(tensor)[-1] - 5, dtype=tf.int32)
 
-def iou(box_1, box_2):
-    # Find the intersection coordinate
-    x1 = tf.maximum(box_1[:, :, :, 0], box_2[:, :, :, 0])
-    y1 = tf.maximum(box_1[:, :, :, 1], box_2[:, :, :, 1])
-    x2 = tf.minimum(box_1[:, :, :, 2], box_2[:, :, :, 2])
-    y2 = tf.minimum(box_1[:, :, :, 3], box_2[:, :, :, 3])
+    @staticmethod
+    def _get_n_bounding_boxes(tensor):
+        return tf.cast(tf.shape(tensor)[-2], dtype=tf.int32)
 
-    # Compute area
-    inter_area = tf.maximum(0.0, x2 - x1) * tf.maximum(0.0, y2 - y1)
-    box_1_area = tf.abs(
-        (box_1[:, :, :, 2] - box_1[:, :, :, 0])
-        * (box_1[:, :, :, 3] - box_1[:, :, :, 1])
-    )
-    box_2_area = tf.abs(
-        (box_2[:, :, :, 2] - box_1[:, :, :, 0])
-        * (box_2[:, :, :, 3] - box_1[:, :, :, 1])
-    )
+    @staticmethod
+    def _get_grid_shape(tensor):
+        return tf.cast(tf.shape(tensor)[-4:-2], dtype=tf.int32)
 
-    return inter_area / (box_1_area + box_2_area - inter_area)
+    @staticmethod
+    def _get_true_cellbox(tensor, n_bounding_boxes):
+        true_cellbox = tensor[..., :4]
+        true_cellbox_shape = tf.cast(tf.shape(true_cellbox), dtype=tf.int32)
+        true_cellbox_shape_indices = (
+            tf.range(tf.size(true_cellbox_shape), dtype=tf.int32) + 1
+        )
+        return tf.transpose(
+            tf.broadcast_to(
+                true_cellbox,
+                tf.concat([[n_bounding_boxes], true_cellbox_shape], axis=-1),
+            ),
+            tf.concat(
+                [true_cellbox_shape_indices[:-1], [0], true_cellbox_shape_indices[-1:]],
+                axis=-1,
+            ),
+        )
+
+    @staticmethod
+    def _get_true_obj(tensor, n_bounding_boxes):
+        true_obj = tensor[..., 4]
+        true_obj_shape = tf.cast(tf.shape(true_obj), dtype=tf.int32)
+        true_obj_shape_indices = tf.range(tf.size(true_obj_shape), dtype=tf.int32) + 1
+        return tf.transpose(
+            tf.broadcast_to(
+                true_obj,
+                tf.concat([[n_bounding_boxes], true_obj_shape], axis=-1),
+            ),
+            tf.concat([true_obj_shape_indices, [0]], axis=-1),
+        )
+
+    @staticmethod
+    def _get_true_cls(tensor, n_bounding_boxes):
+        true_cls = tensor[..., 5:]
+        true_cls_shape = tf.cast(tf.shape(true_cls), dtype=tf.int32)
+        true_cls_shape_indices = tf.range(tf.size(true_cls_shape), dtype=tf.int32) + 1
+        return tf.transpose(
+            tf.broadcast_to(
+                true_cls,
+                tf.concat([[n_bounding_boxes], true_cls_shape], axis=-1),
+            ),
+            tf.concat(
+                [true_cls_shape_indices[:-1], [0], true_cls_shape_indices[-1:]], axis=-1
+            ),
+        )
+
+    @staticmethod
+    def _get_pred_cellboxes(tensor):
+        return tensor[..., :4]
+
+    @staticmethod
+    def _get_pred_objs(tensor):
+        return tensor[..., 4]
+
+    @staticmethod
+    def _get_pred_cls(tensor):
+        return tensor[..., 5:]
+
+    @staticmethod
+    def _get_best_iou(ious, n_bounding_boxes):
+        best_iou = tf.cast(tf.math.argmax(ious, axis=-1), dtype=tf.int32)
+
+        best_iou_shape = tf.cast(tf.shape(best_iou), dtype=tf.int32)
+        best_iou_indices = tf.range(tf.size(best_iou_shape) + 1, dtype=tf.int32)
+
+        return tf.transpose(
+            tf.broadcast_to(
+                best_iou, tf.concat([[n_bounding_boxes], best_iou_shape], axis=-1)
+            ),
+            tf.roll(best_iou_indices, axis=-1, shift=-1),
+        )
+
+    @staticmethod
+    def _get_bounding_box_indices(n_bounding_boxes, shape):
+        return tf.broadcast_to(tf.range(n_bounding_boxes, dtype=tf.int32), shape)
+
+    def _get_pred_responsible_cellboxes_mask(self, ious, n_bounding_boxes):
+        best_iou = self._get_best_iou(ious, n_bounding_boxes)
+        bounding_box_indices = self._get_bounding_box_indices(
+            n_bounding_boxes, tf.cast(tf.shape(best_iou), dtype=tf.int32)
+        )
+
+        return tf.cast(bounding_box_indices == best_iou, dtype=tf.float32)

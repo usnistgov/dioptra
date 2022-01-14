@@ -63,6 +63,11 @@ def _coerce_comma_separated_ints(ctx, param, value):
     return tuple(int(x.strip()) for x in value.split(","))
 
 
+def _coerce_str_to_bool(ctx, param, value):
+    return value.lower() == "true"
+    return tuple(int(x.strip()) for x in value.split(","))
+
+
 @click.command()
 @click.option(
     "--data-dir",
@@ -81,9 +86,16 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Dimensions for the input images",
 )
 @click.option(
+    "--skip-finetune",
+    type=click.Choice(["True", "False"], case_sensitive=False),
+    callback=_coerce_str_to_bool,
+    help="Skip finetuning the pre-trained model weights after transfer learning.",
+    default="True",
+)
+@click.option(
     "--model-architecture",
-    type=click.Choice(["mobilenet_v2", "tiny_yolo"], case_sensitive=False),
-    default="mobilenet_v2",
+    type=click.Choice(["mobilenetv2", "tiny_yolo"], case_sensitive=False),
+    default="mobilenetv2",
     help="Model architecture",
 )
 @click.option(
@@ -135,6 +147,7 @@ def _coerce_comma_separated_ints(ctx, param, value):
 def train(
     data_dir,
     image_size,
+    skip_finetune,
     model_architecture,
     epochs,
     batch_size,
@@ -149,6 +162,7 @@ def train(
         entry_point="transfer_learn",
         data_dir=data_dir,
         image_size=image_size,
+        skip_finetune=skip_finetune,
         model_architecture=model_architecture,
         epochs=epochs,
         batch_size=batch_size,
@@ -166,6 +180,7 @@ def train(
                 active_run=active_run,
                 training_dir=data_dir,
                 image_size=image_size,
+                skip_finetune=skip_finetune,
                 model_architecture=model_architecture,
                 epochs=epochs,
                 batch_size=batch_size,
@@ -186,6 +201,7 @@ def init_train_flow() -> Flow:
             active_run,
             training_dir,
             image_size,
+            skip_finetune,
             model_architecture,
             epochs,
             batch_size,
@@ -198,6 +214,7 @@ def init_train_flow() -> Flow:
             Parameter("active_run"),
             Parameter("training_dir"),
             Parameter("image_size"),
+            Parameter("skip_finetune"),
             Parameter("model_architecture"),
             Parameter("epochs"),
             Parameter("batch_size"),
@@ -218,6 +235,7 @@ def init_train_flow() -> Flow:
         )
         init_tensorflow_results = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.backend_configs",
+            # f"{_PLUGINS_IMPORT_PATH}.backend_configs",
             "tensorflow",
             "init_tensorflow",
             seed=tensorflow_global_seed,
@@ -280,13 +298,39 @@ def init_train_flow() -> Flow:
                 verbose=2,
             ),
         )
+        finetune_optimizer = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "get_optimizer",
+            optimizer=optimizer_name,
+            learning_rate=1e-5,
+            upstream_tasks=[history],
+        )
+        finetune_history = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
+            "finetuning",
+            "finetune",
+            estimator=object_detector,
+            model_architecture=model_architecture,
+            optimizer=finetune_optimizer,
+            skip=skip_finetune,
+            x=training_ds,
+            fit_kwargs=dict(
+                nb_epochs=epochs,
+                validation_data=validation_ds,
+                callbacks=callbacks_list,
+                verbose=2,
+            ),
+            upstream_tasks=[history],
+        )
         logged_tensorflow_keras_estimator = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.tracking",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
             "log_tensorflow_keras_estimator",
             estimator=object_detector,
             model_dir="model",
-            upstream_tasks=[history],
+            log_model_kwargs={"custom_objects": {"YOLOLoss": object_detector}},
+            upstream_tasks=[finetune_history],
         )
         model_version = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.registry",

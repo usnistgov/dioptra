@@ -21,7 +21,8 @@ entry_points:
     parameters:
       data_dir: { type: path, default: "/nfs/data" }
       image_size: { type: string, default: "448,448,3" }
-      model_architecture: { type: string, default: "mobilenet_v2" }
+      skip_finetune: { type: string, default: "True" }
+      model_architecture: { type: string, default: "mobilenetv2" }
       epochs: { type: float, default: 300 }
       batch_size: { type: float, default: 16 }
       register_model_name: { type: string, default: "" }
@@ -33,6 +34,7 @@ entry_points:
       python src/transfer_learn.py
       --data-dir {data_dir}
       --image-size {image_size}
+      --skip-finetune {skip_finetune}
       --model-architecture {model_architecture}
       --epochs {epochs}
       --batch-size {batch_size}
@@ -40,4 +42,21 @@ entry_points:
       --learning-rate {learning_rate}
       --optimizer {optimizer}
       --validation-split {validation_split}
+      --seed {seed}
+
+  infer:
+    parameters:
+      data_dir: { type: path, default: "/nfs/data" }
+      image_size: { type: string, default: "448,448,3" }
+      model_name: { type: string, default: "mobilenetv2" }
+      model_version: { type: string, default: "1" }
+      batch_size: { type: float, default: 16 }
+      seed: { type: float, default: -1 }
+    command: >
+      python src/infer.py
+      --data-dir {data_dir}
+      --image-size {image_size}
+      --model-name {model_name}
+      --model-version {model_version}
+      --batch-size {batch_size}
       --seed {seed}

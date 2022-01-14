@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-.PHONY: clean help jupyter custom-plugins custom-plugins-backend-configs custom-plugins-evaluation custom-plugins-roadsigns-yolo-estimators teardown teardown-docker-compose teardown-docker-volumes teardown-docker-compose-sentinel workflows
+.PHONY: clean help jupyter custom-plugins custom-plugins-backend-configs custom-plugins-evaluation custom-plugins-roadsigns-yolo-estimators custom-plugins-tracking teardown teardown-docker-compose teardown-docker-volumes teardown-docker-compose-sentinel workflows
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
@@ -66,6 +66,7 @@ PLUGINS_CUSTOM_DIR := $(EXAMPLE_CUSTOM_PLUGINS_DIR)/securingai_custom
 CUSTOM_PLUGIN_BACKEND_CONFIGS_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/backend_configs/*.py)
 CUSTOM_PLUGIN_EVALUATION_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/evaluation/*.py)
 CUSTOM_PLUGIN_ROADSIGNS_YOLO_ESTIMATORS_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/roadsigns_yolo_estimators/*.py)
+CUSTOM_PLUGIN_TRACKING_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/tracking/*.py)
 
 JUPYTER_INSTALL_PACKAGES_SCRIPT = $(EXAMPLE_JUPYTER_DIR)/before-notebook.d/install-packages.sh
 
@@ -74,6 +75,7 @@ MAKEFILE_FILE = Makefile
 CUSTOM_TASK_PLUGINS_BACKEND_CONFIGS_TARBALL_FILE = custom-plugins-backend-configs.tar.gz
 CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE = custom-plugins-evaluation.tar.gz
 CUSTOM_TASK_PLUGINS_ROADSIGNS_YOLO_ESTIMATORS_TARBALL_FILE = custom-plugins-roadsigns-yolo-estimators.tar.gz
+CUSTOM_TASK_PLUGINS_TRACKING_TARBALL_FILE = custom-plugins-tracking.tar.gz
 WORKFLOWS_TARBALL_FILE = workflows.tar.gz
 
 DOCKER_VOLUME_PREFIX := $(shell basename $(EXAMPLE_DIR))
@@ -102,8 +104,10 @@ $(FIND) . \( -name "*.py[co]" -and -not -path "./.tox*" \) -type f -exec $(RM) -
 $(FIND) . -name ".ipynb_checkpoints" -type d -exec $(RM) -rf {} +
 $(RM) -rf $(EXAMPLE_DIR)/.mypy_cache
 $(RM) -rf $(EXAMPLE_DIR)/$(WORKFLOWS_TARBALL_FILE)
+$(RM) -rf $(EXAMPLE_DIR)/$(CUSTOM_TASK_PLUGINS_BACKEND_CONFIGS_TARBALL_FILE)
 $(RM) -rf $(EXAMPLE_DIR)/$(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE)
 $(RM) -rf $(EXAMPLE_DIR)/$(CUSTOM_TASK_PLUGINS_ROADSIGNS_YOLO_ESTIMATORS_TARBALL_FILE)
+$(RM) -rf $(EXAMPLE_DIR)/$(CUSTOM_TASK_PLUGINS_TRACKING_TARBALL_FILE)
 endef
 
 define get_host_user_id
@@ -150,7 +154,7 @@ endef
 clean: ; $(call cleanup)
 
 ## Create custom plugins tarballs
-custom-plugins: custom-plugins-backend-configs custom-plugins-evaluation custom-plugins-roadsigns-yolo-estimators
+custom-plugins: custom-plugins-backend-configs custom-plugins-evaluation custom-plugins-roadsigns-yolo-estimators custom-plugins-tracking
 
 ## Create custom backend-configs plugins tarball
 custom-plugins-backend-configs: $(CUSTOM_TASK_PLUGINS_BACKEND_CONFIGS_TARBALL_FILE)
@@ -160,6 +164,9 @@ custom-plugins-evaluation: $(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE)
 
 ## Create custom roadsigns-yolo-estimators plugins tarball
 custom-plugins-roadsigns-yolo-estimators: $(CUSTOM_TASK_PLUGINS_ROADSIGNS_YOLO_ESTIMATORS_TARBALL_FILE)
+
+## Create custom tracking plugins tarball
+custom-plugins-tracking: $(CUSTOM_TASK_PLUGINS_TRACKING_TARBALL_FILE)
 
 ## Launch the jupyter lab service
 jupyter: $(JUPYTER_SENTINEL)
@@ -185,6 +192,10 @@ $(CUSTOM_TASK_PLUGINS_EVALUATION_TARBALL_FILE): $(CUSTOM_PLUGIN_EVALUATION_SRC_F
 $(CUSTOM_TASK_PLUGINS_ROADSIGNS_YOLO_ESTIMATORS_TARBALL_FILE): $(CUSTOM_PLUGIN_ROADSIGNS_YOLO_ESTIMATORS_SRC_FILES)
 	$(call make_tarball,$@,$(addprefix roadsigns_yolo_estimators/,$(notdir $(CUSTOM_PLUGIN_ROADSIGNS_YOLO_ESTIMATORS_SRC_FILES))),-C $(PLUGINS_CUSTOM_DIR))
 	$(call chmod,644,$(CUSTOM_TASK_PLUGINS_ROADSIGNS_YOLO_ESTIMATORS_TARBALL_FILE))
+
+$(CUSTOM_TASK_PLUGINS_TRACKING_TARBALL_FILE): $(CUSTOM_PLUGIN_TRACKING_SRC_FILES)
+	$(call make_tarball,$@,$(addprefix tracking/,$(notdir $(CUSTOM_PLUGIN_TRACKING_SRC_FILES))),-C $(PLUGINS_CUSTOM_DIR))
+	$(call chmod,644,$(CUSTOM_TASK_PLUGINS_TRACKING_TARBALL_FILE))
 
 $(JUPYTER_SENTINEL):
 	$(call chmod,0755,$(JUPYTER_INSTALL_PACKAGES_SCRIPT))

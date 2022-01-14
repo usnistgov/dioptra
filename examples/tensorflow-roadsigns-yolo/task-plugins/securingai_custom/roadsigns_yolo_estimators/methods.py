@@ -40,8 +40,9 @@ except ImportError:  # pragma: nocover
 
 # source: https://github.com/GiaKhangLuu/YOLOv1_from_scratch
 @pyplugs.register
+@pyplugs.task_nout(4)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def post_process_tensor_output(pred_tensor_output):
+def post_process_tensor_output(pred_tensor_output, n_classes):
     pred_box_1 = pred_tensor_output[..., :4]
     pred_cfd_1 = pred_tensor_output[..., 4]
     pred_box_2 = pred_tensor_output[..., 5:9]
@@ -62,10 +63,12 @@ def post_process_tensor_output(pred_tensor_output):
     boxes = tf.concat([box1, box2], axis=1)
 
     scores1 = tf.reshape(
-        tf.expand_dims(pred_cfd_1, axis=-1) * pred_cls_dist, shape=(-1, 7 * 7, 3)
+        tf.expand_dims(pred_cfd_1, axis=-1) * pred_cls_dist,
+        shape=(-1, 7 * 7, n_classes),
     )
     scores2 = tf.reshape(
-        tf.expand_dims(pred_cfd_2, axis=-1) * pred_cls_dist, shape=(-1, 7 * 7, 3)
+        tf.expand_dims(pred_cfd_2, axis=-1) * pred_cls_dist,
+        shape=(-1, 7 * 7, n_classes),
     )
     scores = tf.concat([scores1, scores2], axis=1)
 
