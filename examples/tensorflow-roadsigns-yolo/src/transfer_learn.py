@@ -51,8 +51,45 @@ CALLBACKS: List[Dict[str, Any]] = [
         "parameters": {
             "monitor": "val_loss",
             "min_delta": 1e-2,
-            "patience": 20,
+            "patience": 40,
             "restore_best_weights": True,
+        },
+    },
+    {
+        "name": "ReduceLROnPlateau",
+        "parameters": {
+            "monitor": "val_loss",
+            "factor": 0.1,
+            "cooldown": 5,
+            "patience": 10,
+            "min_lr": 0,
+        },
+    },
+]
+FINETUNE_CALLBACKS: List[Dict[str, Any]] = [
+    {
+        "name": "CSVLogger",
+        "parameters": {
+            "filename": "finetune_training_log.csv",
+        },
+    },
+    {
+        "name": "EarlyStopping",
+        "parameters": {
+            "monitor": "val_loss",
+            "min_delta": 1e-2,
+            "patience": 40,
+            "restore_best_weights": True,
+        },
+    },
+    {
+        "name": "ReduceLROnPlateau",
+        "parameters": {
+            "monitor": "val_loss",
+            "factor": 0.1,
+            "cooldown": 5,
+            "patience": 10,
+            "min_lr": 0,
         },
     },
 ]
@@ -65,7 +102,6 @@ def _coerce_comma_separated_ints(ctx, param, value):
 
 def _coerce_str_to_bool(ctx, param, value):
     return value.lower() == "true"
-    return tuple(int(x.strip()) for x in value.split(","))
 
 
 @click.command()
@@ -86,10 +122,23 @@ def _coerce_str_to_bool(ctx, param, value):
     help="Dimensions for the input images",
 )
 @click.option(
+    "--grid-size",
+    type=click.INT,
+    help="Grid resolution to use for object detector.",
+    default=7,
+)
+@click.option(
     "--skip-finetune",
     type=click.Choice(["True", "False"], case_sensitive=False),
     callback=_coerce_str_to_bool,
     help="Skip finetuning the pre-trained model weights after transfer learning.",
+    default="True",
+)
+@click.option(
+    "--augment",
+    type=click.Choice(["True", "False"], case_sensitive=False),
+    callback=_coerce_str_to_bool,
+    help="Apply the data augmentation pipeline to the training images.",
     default="True",
 )
 @click.option(
@@ -147,7 +196,9 @@ def _coerce_str_to_bool(ctx, param, value):
 def train(
     data_dir,
     image_size,
+    grid_size,
     skip_finetune,
+    augment,
     model_architecture,
     epochs,
     batch_size,
@@ -162,7 +213,9 @@ def train(
         entry_point="transfer_learn",
         data_dir=data_dir,
         image_size=image_size,
+        grid_size=grid_size,
         skip_finetune=skip_finetune,
+        augment=augment,
         model_architecture=model_architecture,
         epochs=epochs,
         batch_size=batch_size,
@@ -180,7 +233,9 @@ def train(
                 active_run=active_run,
                 training_dir=data_dir,
                 image_size=image_size,
+                grid_size=grid_size,
                 skip_finetune=skip_finetune,
+                augment=augment,
                 model_architecture=model_architecture,
                 epochs=epochs,
                 batch_size=batch_size,
@@ -201,7 +256,9 @@ def init_train_flow() -> Flow:
             active_run,
             training_dir,
             image_size,
+            grid_size,
             skip_finetune,
+            augment,
             model_architecture,
             epochs,
             batch_size,
@@ -214,7 +271,9 @@ def init_train_flow() -> Flow:
             Parameter("active_run"),
             Parameter("training_dir"),
             Parameter("image_size"),
+            Parameter("grid_size"),
             Parameter("skip_finetune"),
+            Parameter("augment"),
             Parameter("model_architecture"),
             Parameter("epochs"),
             Parameter("batch_size"),
@@ -271,9 +330,11 @@ def init_train_flow() -> Flow:
             "create_object_detection_dataset",
             root_directory=training_dir,
             image_size=image_size,
+            grid_size=grid_size,
             seed=dataset_seed,
             validation_split=validation_split,
             batch_size=batch_size,
+            augment=augment,
             upstream_tasks=[init_tensorflow_results],
         )
         object_detector = pyplugs.call_task(
@@ -283,6 +344,7 @@ def init_train_flow() -> Flow:
             model_architecture=model_architecture,
             optimizer=optimizer,
             n_classes=n_classes,
+            grid_size=grid_size,
             upstream_tasks=[init_tensorflow_results],
         )
         history = pyplugs.call_task(
@@ -306,6 +368,13 @@ def init_train_flow() -> Flow:
             learning_rate=1e-5,
             upstream_tasks=[history],
         )
+        finetune_callbacks_list = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "get_model_callbacks",
+            callbacks_list=FINETUNE_CALLBACKS,
+            upstream_tasks=[history],
+        )
         finetune_history = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
             "finetuning",
@@ -318,7 +387,7 @@ def init_train_flow() -> Flow:
             fit_kwargs=dict(
                 nb_epochs=epochs,
                 validation_data=validation_ds,
-                callbacks=callbacks_list,
+                callbacks=finetune_callbacks_list,
                 verbose=2,
             ),
             upstream_tasks=[history],
@@ -340,6 +409,20 @@ def init_train_flow() -> Flow:
             name=register_model_name,
             model_dir="model",
             upstream_tasks=[logged_tensorflow_keras_estimator],
+        )
+        log_training_csv = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "upload_file_as_artifact",
+            artifact_path="training_log.csv",
+            upstream_tasks=[history],
+        )
+        log_finetune_training_csv = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "upload_file_as_artifact",
+            artifact_path="finetune_training_log.csv",
+            upstream_tasks=[finetune_history],
         )
 
     return flow
