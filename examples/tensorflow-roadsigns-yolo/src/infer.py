@@ -64,6 +64,12 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Dimensions for the input images",
 )
 @click.option(
+    "--grid-size",
+    type=click.INT,
+    help="Grid resolution to use for object detector.",
+    default=7,
+)
+@click.option(
     "--model-name",
     type=click.STRING,
     help="Name of model to load from registry",
@@ -88,6 +94,7 @@ def _coerce_comma_separated_ints(ctx, param, value):
 def infer(
     data_dir,
     image_size,
+    grid_size,
     model_name,
     model_version,
     batch_size,
@@ -98,6 +105,7 @@ def infer(
         entry_point="infer",
         data_dir=data_dir,
         image_size=image_size,
+        grid_size=grid_size,
         model_name=model_name,
         model_version=model_version,
         batch_size=batch_size,
@@ -110,6 +118,7 @@ def infer(
             parameters=dict(
                 training_dir=data_dir,
                 image_size=image_size,
+                grid_size=grid_size,
                 model_name=model_name,
                 model_version=model_version,
                 batch_size=batch_size,
@@ -122,16 +131,10 @@ def infer(
 
 def init_infer_flow() -> Flow:
     with Flow("Train Model") as flow:
-        (
-            training_dir,
-            image_size,
-            model_name,
-            model_version,
-            batch_size,
-            seed,
-        ) = (
+        (training_dir, image_size, grid_size, model_name, model_version, batch_size, seed,) = (
             Parameter("training_dir"),
             Parameter("image_size"),
+            Parameter("grid_size"),
             Parameter("model_name"),
             Parameter("model_version"),
             Parameter("batch_size"),
@@ -165,6 +168,7 @@ def init_infer_flow() -> Flow:
             "create_object_detection_testing_dataset",
             root_directory=training_dir,
             image_size=image_size,
+            grid_size=grid_size,
             batch_size=batch_size,
             upstream_tasks=[init_tensorflow_results],
         )
@@ -183,13 +187,13 @@ def init_infer_flow() -> Flow:
             estimator=object_detector,
             x=testing_ds,
         )
-        boxes, scores, classes, nums = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
-            "methods",
-            "post_process_tensor_output",
-            pred_tensor_output=predictions,
-            n_classes=n_classes,
-        )
+        # boxes, scores, classes, nums = pyplugs.call_task(
+        #     f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
+        #     "methods",
+        #     "post_process_tensor_output",
+        #     pred_tensor_output=predictions,
+        #     n_classes=n_classes,
+        # )
         predictions_serialized = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
             "data",
@@ -198,38 +202,38 @@ def init_infer_flow() -> Flow:
             output_dir="object_detection_predictions",
             output_filename="predictions.npy",
         )
-        boxes_serialized = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
-            "data",
-            "serialize_tensor_to_npy",
-            tensor=boxes,
-            output_dir="object_detection_predictions",
-            output_filename="boxes.npy",
-        )
-        scores_serialized = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
-            "data",
-            "serialize_tensor_to_npy",
-            tensor=scores,
-            output_dir="object_detection_predictions",
-            output_filename="scores.npy",
-        )
-        classes_serialized = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
-            "data",
-            "serialize_tensor_to_npy",
-            tensor=classes,
-            output_dir="object_detection_predictions",
-            output_filename="classes.npy",
-        )
-        nums_serialized = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
-            "data",
-            "serialize_tensor_to_npy",
-            tensor=nums,
-            output_dir="object_detection_predictions",
-            output_filename="nums.npy",
-        )
+        # boxes_serialized = pyplugs.call_task(
+        #     f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
+        #     "data",
+        #     "serialize_tensor_to_npy",
+        #     tensor=boxes,
+        #     output_dir="object_detection_predictions",
+        #     output_filename="boxes.npy",
+        # )
+        # scores_serialized = pyplugs.call_task(
+        #     f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
+        #     "data",
+        #     "serialize_tensor_to_npy",
+        #     tensor=scores,
+        #     output_dir="object_detection_predictions",
+        #     output_filename="scores.npy",
+        # )
+        # classes_serialized = pyplugs.call_task(
+        #     f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
+        #     "data",
+        #     "serialize_tensor_to_npy",
+        #     tensor=classes,
+        #     output_dir="object_detection_predictions",
+        #     output_filename="classes.npy",
+        # )
+        # nums_serialized = pyplugs.call_task(
+        #     f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
+        #     "data",
+        #     "serialize_tensor_to_npy",
+        #     tensor=nums,
+        #     output_dir="object_detection_predictions",
+        #     output_filename="nums.npy",
+        # )
         upload_directory_results = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
             "mlflow",
@@ -238,10 +242,10 @@ def init_infer_flow() -> Flow:
             tarball_filename="object_detection_predictions.tar.gz",
             upstream_tasks=[
                 predictions_serialized,
-                boxes_serialized,
-                scores_serialized,
-                classes_serialized,
-                nums_serialized,
+                # boxes_serialized,
+                # scores_serialized,
+                # classes_serialized,
+                # nums_serialized,
             ],
         )
 
