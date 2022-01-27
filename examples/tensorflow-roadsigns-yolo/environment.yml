@@ -38,6 +38,7 @@ dependencies:
   - joblib
   - jupyter
   - jupyterlab
+  - lxml
   - matplotlib
   - mkl
   - nodejs
