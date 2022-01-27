@@ -74,7 +74,6 @@ def init_object_detector(
         n_classes=n_classes,
         n_bounding_boxes=n_bounding_boxes,
         grid_size=grid_size,
-        transition_strategy=transition_strategy,
         bbox_transition_strategy=bbox_transition_strategy,
         classification_transition_strategy=classification_transition_strategy,
     )
@@ -184,16 +183,14 @@ def mobilenet_v2(
         n_bounding_boxes=n_bounding_boxes,
         grid_size=grid_size,
         conv_layer_specs=bbox_conv_layer_specs,
-        output_layer_spec="sigmoid",
+        output_layer_spec={"activation": "sigmoid"},
         transition_strategy=bbox_transition_strategy,
     )
     classification_detector = attach_classifier_output_layers(
         x,
-        input_shape=x.shape[1:],
-        dense_layer_specs=classification_dense_layer_specs,
         n_classes=n_classes,
-        n_bounding_boxes=n_bounding_boxes,
-        grid_size=grid_size,
+        dense_layer_specs=classification_dense_layer_specs,
+        input_shape=x.shape[1:],
         conv_layer_specs=classification_conv_layer_specs,
         transition_strategy=classification_transition_strategy,
     )
