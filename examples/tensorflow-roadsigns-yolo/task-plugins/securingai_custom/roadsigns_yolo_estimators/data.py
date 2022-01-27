@@ -30,6 +30,7 @@ from structlog.stdlib import BoundLogger
 
 from mitre.securingai import pyplugs
 from mitre.securingai.sdk.exceptions import TensorflowDependencyError
+from mitre.securingai.sdk.exceptions.base import BaseTaskPluginError
 from mitre.securingai.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -44,6 +45,10 @@ except ImportError:  # pragma: nocover
         "Unable to import one or more optional packages, functionality may be reduced",
         package="tensorflow",
     )
+
+
+class YOLOBoundingBoxGridError(BaseTaskPluginError):
+    """Unable to place bounding box within the YOLO grid."""
 
 
 @contextmanager
@@ -70,15 +75,9 @@ def redirect_print(new_target: Optional[IO] = None) -> Iterator[None]:
 def data_augmentations(seed=None):
     return iaa.Sequential(
         [
-            iaa.Fliplr(0.5),  # horizontal flips
-            iaa.Flipud(0.2),  # vertical flips
-            iaa.Sometimes(0.5, iaa.Crop(percent=(0, 0.1))),  # random crops
-            # Make some images brighter and some darker.
-            # In 20% of all cases, we sample the multiplier once per channel,
-            # which can end up changing the color of the images.
-            # iaa.Multiply((0.8, 1.2), per_channel=0.2),
-            # Apply affine transformations to each image.
-            # Scale/zoom them, translate/move them, rotate them and shear them.
+            iaa.Fliplr(0.5),
+            iaa.Flipud(0.2),
+            iaa.Sometimes(0.5, iaa.Crop(percent=(0, 0.1))),
             iaa.Sometimes(
                 0.5,
                 iaa.Affine(
@@ -106,13 +105,10 @@ def data_augmentations(seed=None):
                     ]
                 ),
             ),
-            # Change brightness of images (50-150% of original value).
             iaa.Sometimes(0.5, iaa.Multiply((0.5, 1.5), per_channel=0.5)),
-            # Improve or worsen the contrast of images.
             iaa.Sometimes(0.5, iaa.LinearContrast((0.5, 2.0), per_channel=0.5)),
             iaa.Sometimes(0.5, iaa.Grayscale(alpha=(0.0, 1.0))),
         ],
-        # apply augmenters in random order
         random_order=True,
         seed=seed,
     )
@@ -120,7 +116,7 @@ def data_augmentations(seed=None):
 
 # source: https://github.com/GiaKhangLuu/YOLOv1_from_scratch
 @pyplugs.register
-@pyplugs.task_nout(3)
+@pyplugs.task_nout(2)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_object_detection_dataset(
     root_directory,
@@ -129,10 +125,10 @@ def create_object_detection_dataset(
     images_dirname="images",
     annotations_dirname="annotations",
     grid_size=7,
-    validation_split: int = 5,
     batch_size: int = 32,
     augment: bool = True,
-) -> Tuple[Dataset, Dataset, int]:
+    shuffle: bool = False,
+) -> Tuple[Dataset, int]:
     augment_seed = seed + 2 if seed is not None else None
     augmenters = data_augmentations(seed=augment_seed)
 
@@ -142,10 +138,72 @@ def create_object_detection_dataset(
 
         image = tf.io.read_file(image_filepath)
         image = tf.io.decode_image(image, channels=channels, expand_animations=False)
-        image = tf.image.convert_image_dtype(image, tf.float32)
         image = tf.image.resize(image, target_size)
+        image = tf.cast(image, dtype=tf.float32)
 
         return image, target
+
+    def generate_augmented_image_and_target(
+        image, bbs, img_shape, classes, n_classes, grid_size
+    ):
+        num_retries = 0
+        image = image.astype("uint8")
+
+        while True:
+            if num_retries >= 5:
+                LOGGER.info(
+                    "Unable to generate compatible augmented bounding box after "
+                    "multiple attempts, reverting to the original image and bounding "
+                    "box. ",
+                    num_retries=num_retries,
+                )
+                augmented_image = image
+                augmented_bbs_coords = [
+                    (x.x1_int, x.y1_int, x.x2_int, x.y2_int) for x in bbs
+                ]
+                augmented_bboxes = convert_to_xywh(
+                    augmented_bbs_coords, img_shape[1], img_shape[0]
+                )
+                augmented_target = convert_bboxes_to_tensor(
+                    bboxes=augmented_bboxes,
+                    classes=classes,
+                    n_classes=n_classes,
+                    grid_size=grid_size,
+                )
+
+                break
+
+            augmented_image, augmented_bbs = augmenters(image=image, bounding_boxes=bbs)
+
+            augmented_bbs_coords = [
+                (x.x1_int, x.y1_int, x.x2_int, x.y2_int)
+                for x in augmented_bbs.remove_out_of_image().clip_out_of_image()
+            ]
+
+            augmented_bboxes = convert_to_xywh(
+                augmented_bbs_coords, img_shape[1], img_shape[0]
+            )
+
+            try:
+                augmented_target = convert_bboxes_to_tensor(
+                    bboxes=augmented_bboxes,
+                    classes=classes,
+                    n_classes=n_classes,
+                    grid_size=grid_size,
+                )
+                break
+
+            except YOLOBoundingBoxGridError:
+                LOGGER.info(
+                    "Augmented bounding box is incompatiable with the YOLO grid, regenerating...",
+                    augmented_bboxes=augmented_bboxes,
+                    num_retries=num_retries,
+                    img_shape=img_shape,
+                    grid_size=grid_size,
+                )
+                num_retries += 1
+
+        return augmented_image, augmented_target
 
     def augment_data(image, labels):
         img_shape = np.shape(image)
@@ -174,26 +232,231 @@ def create_object_detection_dataset(
             classes[x, y] for x, y in zip(bbox_x_idx.tolist(), bbox_y_idx.tolist())
         ]
 
-        augmented_image, augmented_bbs = augmenters(
-            image=(image * 255).astype("uint8"), bounding_boxes=bbs
-        )
-        augmented_bbs_coords = [
-            (x.x1_int, x.y1_int, x.x2_int, x.y2_int)
-            for x in augmented_bbs.remove_out_of_image().clip_out_of_image()
-        ]
-        augmented_bboxes = convert_to_xywh(
-            augmented_bbs_coords, img_shape[1], img_shape[0]
-        )
-        augmented_target = convert_bboxes_to_tensor(
-            bboxes=augmented_bboxes,
+        augmented_image, augmented_target = generate_augmented_image_and_target(
+            image=image,
+            bbs=bbs,
+            img_shape=img_shape,
             classes=classes,
             n_classes=len(distinct_classes),
             grid_size=grid_size,
         )
 
-        return (augmented_image / 255.0).astype("float32"), np.array(
-            augmented_target
-        ).astype("float32")
+        return augmented_image.astype("float32"), np.array(augmented_target).astype("float32")
+
+    @tf.function(
+        input_signature=[
+            tf.TensorSpec(None, tf.float32),
+            tf.TensorSpec(None, tf.float32),
+        ]
+    )
+    def augment_fn(image, labels):
+        return tf.numpy_function(
+            augment_data, [image, labels], [tf.float32, tf.float32]
+        )
+
+    images_directory = Path(root_directory) / images_dirname
+    annotations_directory = Path(root_directory) / annotations_dirname
+    images_filepaths = sorted([str(x) for x in images_directory.resolve().glob("*")])
+
+    annotations_classes = []
+    bounding_boxes = []
+    image_widths = []
+    image_heights = []
+    targets = []
+    annotations_filepaths = []
+    distinct_classes = set()
+
+    num_bounding_boxes = 0
+
+    for filepath in images_filepaths:
+        annotation_filename = Path(filepath).with_suffix(".xml").name
+        annotation_filepath = annotations_directory / annotation_filename
+        annotations_filepaths.append(str(annotation_filepath))
+        bboxes, classes, image_width, image_height = extract_annotation_file(
+            annotations_filepath=annotation_filepath,
+            image_filepath=filepath,
+        )
+
+        annotations_classes.append(classes)
+        bounding_boxes.append(bboxes)
+        image_heights.append(image_height)
+        image_widths.append(image_width)
+
+        num_bounding_boxes += len(bboxes)
+        distinct_classes = distinct_classes | set(classes)
+
+    distinct_classes = sorted(list(distinct_classes))
+
+    print(
+        f"Found {len(images_filepaths)} images and {num_bounding_boxes} "
+        f"bounding boxes belonging to {len(distinct_classes)} classes."
+    )
+
+    for bboxes, classes, image_width, image_height in zip(
+        bounding_boxes, annotations_classes, image_widths, image_heights
+    ):
+        targets.append(
+            convert_bboxes_to_tensor(
+                bboxes=bboxes,
+                classes=[distinct_classes.index(x) for x in classes],
+                n_classes=len(distinct_classes),
+                grid_size=grid_size,
+            )
+        )
+
+    # Train/validation split source: https://stackoverflow.com/a/60503037
+    autotune = tf.data.AUTOTUNE
+    dataset = Dataset.from_tensor_slices(
+        (
+            tf.convert_to_tensor(images_filepaths, dtype=tf.string),
+            tf.convert_to_tensor(targets, dtype=tf.float32),
+        )
+    )
+
+    dataset = dataset.map(parse_image)
+
+    if shuffle:
+        dataset = dataset.shuffle(
+            buffer_size=8 * batch_size, seed=seed, reshuffle_each_iteration=True
+        )
+
+    if augment:
+        dataset = dataset.map(augment_fn)
+
+    dataset = dataset.batch(batch_size).prefetch(autotune)
+
+    return dataset, len(distinct_classes)
+
+
+# source: https://github.com/GiaKhangLuu/YOLOv1_from_scratch
+@pyplugs.register
+@pyplugs.task_nout(3)
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def create_train_val_object_detection_dataset(
+    root_directory,
+    image_size: Tuple[int, int, int],
+    seed: Optional[int] = None,
+    images_dirname="images",
+    annotations_dirname="annotations",
+    grid_size=7,
+    validation_split: int = 5,
+    batch_size: int = 32,
+    augment: bool = True,
+) -> Tuple[Dataset, Dataset, int]:
+    augment_seed = seed + 2 if seed is not None else None
+    augmenters = data_augmentations(seed=augment_seed)
+
+    def parse_image(image_filepath, target):
+        target_size: List[int, int] = [x for x in image_size[:2]]
+        channels: int = image_size[2]
+
+        image = tf.io.read_file(image_filepath)
+        image = tf.io.decode_image(image, channels=channels, expand_animations=False)
+        # image = tf.image.convert_image_dtype(image, tf.uint8)
+        image = tf.image.resize(image, target_size)
+        image = tf.cast(image, dtype=tf.float32)
+
+        return image, target
+
+    def generate_augmented_image_and_target(
+        image, bbs, img_shape, classes, n_classes, grid_size
+    ):
+        num_retries = 0
+        image = image.astype("uint8")
+
+        while True:
+            if num_retries >= 5:
+                LOGGER.info(
+                    "Unable to generate compatible augmented bounding box after "
+                    "multiple attempts, reverting to the original image and bounding "
+                    "box. ",
+                    num_retries=num_retries,
+                )
+                augmented_image = image
+                augmented_bbs_coords = [
+                    (x.x1_int, x.y1_int, x.x2_int, x.y2_int) for x in bbs
+                ]
+                augmented_bboxes = convert_to_xywh(
+                    augmented_bbs_coords, img_shape[1], img_shape[0]
+                )
+                augmented_target = convert_bboxes_to_tensor(
+                    bboxes=augmented_bboxes,
+                    classes=classes,
+                    n_classes=n_classes,
+                    grid_size=grid_size,
+                )
+
+                break
+
+            augmented_image, augmented_bbs = augmenters(image=image, bounding_boxes=bbs)
+
+            augmented_bbs_coords = [
+                (x.x1_int, x.y1_int, x.x2_int, x.y2_int)
+                for x in augmented_bbs.remove_out_of_image().clip_out_of_image()
+            ]
+
+            augmented_bboxes = convert_to_xywh(
+                augmented_bbs_coords, img_shape[1], img_shape[0]
+            )
+
+            try:
+                augmented_target = convert_bboxes_to_tensor(
+                    bboxes=augmented_bboxes,
+                    classes=classes,
+                    n_classes=n_classes,
+                    grid_size=grid_size,
+                )
+                break
+
+            except YOLOBoundingBoxGridError:
+                LOGGER.info(
+                    "Augmented bounding box is incompatiable with the YOLO grid, regenerating...",
+                    augmented_bboxes=augmented_bboxes,
+                    num_retries=num_retries,
+                    img_shape=img_shape,
+                    grid_size=grid_size,
+                )
+                num_retries += 1
+
+        return augmented_image, augmented_target
+
+    def augment_data(image, labels):
+        img_shape = np.shape(image)
+        corner_bboxes = convert_cellbox_to_corner_bbox_numpy(
+            labels[..., :4], np.array([grid_size, grid_size], dtype="int32")
+        )
+        true_obj = labels[..., 4]
+        bbox_x_idx, bbox_y_idx = np.nonzero(true_obj)
+
+        bbs = BoundingBoxesOnImage(
+            [
+                BoundingBox(
+                    x1=corner_bboxes[x, y, 0] * img_shape[1],
+                    y1=corner_bboxes[x, y, 1] * img_shape[0],
+                    x2=corner_bboxes[x, y, 2] * img_shape[1],
+                    y2=corner_bboxes[x, y, 3] * img_shape[0],
+                )
+                for x, y in zip(bbox_x_idx.tolist(), bbox_y_idx.tolist())
+            ],
+            shape=img_shape,
+        )
+
+        true_cls = labels[..., 5:]
+        classes = np.argmax(true_cls, axis=-1)
+        classes = [
+            classes[x, y] for x, y in zip(bbox_x_idx.tolist(), bbox_y_idx.tolist())
+        ]
+
+        augmented_image, augmented_target = generate_augmented_image_and_target(
+            image=image,
+            bbs=bbs,
+            img_shape=img_shape,
+            classes=classes,
+            n_classes=len(distinct_classes),
+            grid_size=grid_size,
+        )
+
+        return augmented_image.astype("float32"), np.array(augmented_target).astype("float32")
 
     @tf.function(
         input_signature=[
@@ -309,8 +572,9 @@ def create_object_detection_testing_dataset(
 
         image = tf.io.read_file(image_filepath)
         image = tf.io.decode_image(image, channels=channels, expand_animations=False)
-        image = tf.image.convert_image_dtype(image, tf.float32)
+        # image = tf.image.convert_image_dtype(image, tf.uint8)
         image = tf.image.resize(image, target_size)
+        image = tf.cast(image, dtype=tf.float32)
 
         return image, target
 
@@ -461,6 +725,9 @@ def convert_bboxes_to_tensor(bboxes, classes, n_classes, grid_size=7):
         # Determine cell i, j of bounding box
         i = int(y_center / cell_h)
         j = int(x_center / cell_w)
+
+        if i >= grid_size or j >= grid_size:
+            raise YOLOBoundingBoxGridError
 
         # Compute value of x_center and y_center in cell
         x = (x_center / cell_w) - j
