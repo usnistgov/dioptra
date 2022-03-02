@@ -45,7 +45,7 @@ jobs:
   package-code:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: setup python 3.9
         uses: actions/setup-python@v2
@@ -84,7 +84,7 @@ jobs:
           - tensorflow2-gpu
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: set docker metadata
         id: meta
@@ -238,7 +238,7 @@ jobs:
           - tensorflow21-cpu
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: set up docker qemu
         uses: docker/setup-qemu-action@v1
@@ -322,7 +322,7 @@ jobs:
           - integration-legacy-migration
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: setup python 3.9
         uses: actions/setup-python@v2
