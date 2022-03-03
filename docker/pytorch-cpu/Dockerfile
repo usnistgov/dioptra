@@ -176,30 +176,49 @@ RUN echo "===> Installing base dependencies in conda environment of ${PROJECT_CO
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
 ARG PYTORCH_VERSION
+ARG PYTORCH_TORCHVISION_VERSION
+ARG PYTORCH_TORCHAUDIO_VERSION
 
 ARG AI_CONDA_ENV=mitre-securing-ai
 
-RUN ${CONDA_DIR}/condabin/conda config --set channel_priority flexible
+USER root
 
-RUN echo "===> Installing PyTorch (CPU) library...." && \
-    ${CONDA_DIR}/condabin/conda install -n ${AI_CONDA_ENV} -c defaults -c pytorch -q -y \
-    cpuonly \
-    pytorch=${PYTORCH_VERSION} \
-    tensorboard \
-    torchaudio \
-    torchvision && \
-    echo "===> Installing dependencies using pip...." && \
-    ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
+RUN echo "===> Installing compilers...." && \
+    apt-get update && \
+    apt-get install -yq --no-install-recommends build-essential && \
+    echo "===> Installing PyTorch (CPU) library...." && \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
     pip install --no-cache-dir \
+    torch==${PYTORCH_VERSION}+cpu \
+    torchvision==${PYTORCH_TORCHVISION_VERSION}+cpu \
+    torchaudio==${PYTORCH_TORCHAUDIO_VERSION}+cpu \
+    -f https://download.pytorch.org/whl/cpu/torch_stable.html && \
+    echo "===> Installing tensorboard and pytorch-lightning libraries...." && \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
+    pip install --no-cache-dir \
+    tensorboard \
     pytorch-lightning && \
+    echo "===> Installing Detectron2 library...." && \
+    DETECTRON_DOWNLOAD_URL="https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch$(echo ${PYTORCH_VERSION} | ( IFS='.'; read a b c && echo $a.$b ))/index.html" && \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
+    pip install --no-cache-dir \
+    detectron2 \
+    -f $DETECTRON_DOWNLOAD_URL && \
+    echo "===> Remove compilers...." && \
+    apt-get remove -yq --purge build-essential && \
+    apt-get autoremove -yq && \
+    apt-get clean && \
     echo "===> Cleaning/pruning directories...." && \
-    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
-    find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
-    ${CONDA_DIR}/condabin/conda clean -afy && \
-    rm -rf /home/${AI_USER}/.cache/pip && \
-    rm -rf /home/${AI_USER}/.cache/yarn && \
+    gosu ${AI_UID}:${AI_GID} find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+    gosu ${AI_UID}:${AI_GID} find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda clean -afy && \
+    gosu ${AI_UID}:${AI_GID} rm -rf /home/${AI_USER}/.cache/pip && \
+    gosu ${AI_UID}:${AI_GID} rm -rf /home/${AI_USER}/.cache/yarn && \
+    rm -rf /var/lib/apt/lists/* && \
     echo "===> Fixing directory permissions...." && \
-    fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+    gosu ${AI_UID}:${AI_GID} fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+
+USER ${AI_UID}
 
 ARG CODE_PKG_VERSION
 

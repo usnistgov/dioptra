@@ -46,7 +46,9 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-FROM ubuntu:latest
+ARG TENSORFLOW_NVIDIA_CUDA_VERSION
+
+FROM nvidia/cuda:${TENSORFLOW_NVIDIA_CUDA_VERSION}
 
 USER root
 
@@ -54,6 +56,20 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 ENV LC_ALL C.UTF-8
+
+# The MITRE certs are necessary to install in order for wget to work
+ADD http://pki.mitre.org/MITRE%20BA%20ROOT.crt /usr/local/share/ca-certificates/MITRE-BA-ROOT.crt
+ADD http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt /usr/local/share/ca-certificates/MITRE-BA-NPE-CA-3-1.crt
+ADD http://pki.mitre.org/MITRE-chain.txt /usr/local/share/ca-certificates/MITRE-chain.pem
+
+RUN cat /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/MITRE-chain.pem >/etc/ssl/certs/ca-certificates-plus-mitre.pem && \
+    /usr/sbin/update-ca-certificates
+
+ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates-plus-mitre.pem
 
 RUN apt-get update && \
     echo "===> Upgrade existing packages...." && \
@@ -74,20 +90,6 @@ RUN apt-get update && \
     zlib1g && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
-# The MITRE certs are necessary to install in order for wget to work
-ADD http://pki.mitre.org/MITRE%20BA%20ROOT.crt /usr/local/share/ca-certificates/MITRE-BA-ROOT.crt
-ADD http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt /usr/local/share/ca-certificates/MITRE-BA-NPE-CA-3-1.crt
-ADD http://pki.mitre.org/MITRE-chain.txt /usr/local/share/ca-certificates/MITRE-chain.pem
-
-RUN cat /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/MITRE-chain.pem >/etc/ssl/certs/ca-certificates-plus-mitre.pem && \
-    /usr/sbin/update-ca-certificates
-
-ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
-ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
-ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates-plus-mitre.pem
-ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
-ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates-plus-mitre.pem
 
 ARG AWSCLI_DOWNLOAD_URL=https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
 ARG AWSCLI_INSTALL_DIR=/opt/aws-cli
@@ -175,22 +177,33 @@ RUN echo "===> Installing base dependencies in conda environment of ${PROJECT_CO
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
 ARG AI_CONDA_ENV=mitre-securing-ai
-ARG TENSORFLOW2_VERSION
+ARG TENSORFLOW_VERSION
 
-RUN ${CONDA_DIR}/condabin/conda config --set channel_priority flexible
+USER root
 
-RUN echo "===> Installing Tensorflow (GPU) library...."; \
-    ${CONDA_DIR}/condabin/conda install -n ${AI_CONDA_ENV} -q -y \
-    tensorflow-gpu=${TENSORFLOW2_VERSION} \
-    tensorflow-estimator=${TENSORFLOW2_VERSION} && \
+RUN echo "===> Installing compilers...." && \
+    apt-get update && \
+    apt-get install -yq --no-install-recommends build-essential && \
+    echo "===> Installing Tensorflow (GPU) library...."; \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
+    pip install --no-cache-dir \
+    pycocotools \
+    tensorflow==${TENSORFLOW_VERSION} && \
+    echo "===> Remove compilers...." && \
+    apt-get remove -yq --purge build-essential && \
+    apt-get autoremove -yq && \
+    apt-get clean && \
     echo "===> Cleaning/pruning directories...." && \
-    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
-    find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
-    ${CONDA_DIR}/condabin/conda clean -afy && \
-    rm -rf /home/${AI_USER}/.cache/yarn && \
-    rm -rf /home/${AI_USER}/.cache/pip && \
+    gosu ${AI_UID}:${AI_GID} find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+    gosu ${AI_UID}:${AI_GID} find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda clean -afy && \
+    gosu ${AI_UID}:${AI_GID} rm -rf /home/${AI_USER}/.cache/yarn && \
+    gosu ${AI_UID}:${AI_GID} rm -rf /home/${AI_USER}/.cache/pip && \
+    rm -rf /var/lib/apt/lists/* && \
     echo "===> Fixing directory permissions...." && \
-    fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+    gosu ${AI_UID}:${AI_GID} fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+
+USER ${AI_UID}
 
 ARG CODE_PKG_VERSION
 
@@ -249,8 +262,6 @@ ENV AI_RESTAPI_ENV prod
 ENV AI_WORKDIR ${AI_WORKDIR}
 ENV AI_PLUGIN_DIR ${AI_WORKDIR}/plugins
 ENV CONDA_DIR ${CONDA_DIR}
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 
 USER ${AI_UID}
 WORKDIR ${AI_WORKDIR}
