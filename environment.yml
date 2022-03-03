@@ -37,58 +37,52 @@ dependencies:
   - gitpython>=2.1.0 # mlflow requirement
   - gunicorn
   - h5py=2.10.0 # tensorflow requirement
-  - importlib_metadata>=3.7.0 # mlflow requirement
   - ipython
   - isort>=5.6.0
   - jinja2>=2.11.0,<3
   - joblib
   - jupyter
-  - markupsafe
+  - markupsafe=2.0.1
   - matplotlib
   - networkx
   - nose
   - numexpr
   - numpy>=1.18.0 # adversarial-robustness-toolbox requirement
   - packaging=20.* # mlflow requirement
-  - pandas>=1.0.1
+  - pandas>=1.1.0
   - pillow
   - pip
   - protobuf>=3.7.0 # mlflow requirement
   - psutil
   - psycopg2
-  - pycodestyle
-  - pydocstyle
   - pymysql
   - pyodbc
   - pytables
-  - pytest>=6
-  - python-dateutil>=2.7.0 # prefect requirement
-  - python-jsonrpc-server=0.3.4
+  - pytest>=6,<7
+  - python-dateutil>=2.8.0 # prefect requirement
   - python=3.9.*
   - pytz
   - pytz>=2018.7 # mlflow requirement
   - pyyaml=5.3.1 # mlflow requirement
   - pyzmq
   - redis-py>=3.2.1
-  - requests=2.24.*
-  - scikit-learn=0.24.2
+  - requests>=2.25.0
+  - scikit-learn>=1.0.0,<1.1.0
   - scipy>=1.4.1 # adversarial-robustness-toolbox requirement
   - setuptools
   - simplejson
   - six
-  - sphinx>=3.3.0,<4
   - sqlalchemy
   - sqlparse>=0.3.1 # mlflow requirement
   - toml
   - twine
-  - urllib3=1.25.*
+  - urllib3>=1.26.0
   - watchdog=0.10.4
-  - werkzeug
   - wheel
   - pip:
-      - adversarial-robustness-toolbox==1.7.*
+      - adversarial-robustness-toolbox==1.9.*
       - alembic<=1.4.1
-      - black>=20.8b1
+      - black>=20.8b1,<22
       - boto3
       - build
       - commitizen
@@ -105,19 +99,21 @@ dependencies:
       - Flask>=1.1.0,<2
       - freezegun
       - gorilla
+      - imgaug>=0.4.0,<1
       - injector>=0.18.0
       - markdown
       - marshmallow>=3.9.0,<4
       - mlflow>=1.12.0,<2
-      - mnist>=0.2.2
       - multimethod>=1.5
       - mypy>=0.920
       - passlib
       - plantuml-markdown
       - pre-commit
-      - prefect==0.15.*
+      - prefect>=1.0.*,<1.1.0
       - prometheus-flask-exporter
       - pyarrow
+      - pycodestyle
+      - pydocstyle
       - pymdown-extensions
       - pytest-cov
       - pytest-datadir
@@ -128,8 +124,7 @@ dependencies:
       - rich>=9.1.0
       - rq>=1.5.0
       - rstcheck
-      - snooty
-      - snooty-lextudio
+      - sphinx>=3.3.0
       - sphinx-autobuild
       - sphinx-autodoc-typehints
       - sphinx-book-theme
@@ -154,6 +149,7 @@ dependencies:
       - types-redis
       - types-requests
       - types-Werkzeug
-      - typing-extensions==3.7.4.3
-      - ujson==1.35
+      - typing-extensions>=3.7.4.3
+      - ujson
       - web-compile
+      - werkzeug>=1.0.0,<2
