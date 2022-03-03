@@ -176,22 +176,33 @@ RUN echo "===> Installing base dependencies in conda environment of ${PROJECT_CO
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
 ARG AI_CONDA_ENV=mitre-securing-ai
-ARG TENSORFLOW2_VERSION
+ARG TENSORFLOW_VERSION
 
-RUN ${CONDA_DIR}/condabin/conda config --set channel_priority flexible
+USER root
 
-RUN echo "===> Installing Tensorflow (CPU) library...."; \
-    ${CONDA_DIR}/condabin/conda install -n ${AI_CONDA_ENV} -q -y \
-    tensorflow=${TENSORFLOW2_VERSION} \
-    tensorflow-estimator=${TENSORFLOW2_VERSION} && \
+RUN echo "===> Installing compilers...." && \
+    apt-get update && \
+    apt-get install -yq --no-install-recommends build-essential && \
+    echo "===> Installing Tensorflow (CPU) library...."; \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
+    pip install --no-cache-dir \
+    pycocotools \
+    tensorflow-cpu==${TENSORFLOW_VERSION} && \
+    echo "===> Remove compilers...." && \
+    apt-get remove -yq --purge build-essential && \
+    apt-get autoremove -yq && \
+    apt-get clean && \
     echo "===> Cleaning/pruning directories...." && \
-    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
-    find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
-    ${CONDA_DIR}/condabin/conda clean -afy && \
-    rm -rf /home/${AI_USER}/.cache/pip && \
-    rm -rf /home/${AI_USER}/.cache/yarn && \
+    gosu ${AI_UID}:${AI_GID} find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+    gosu ${AI_UID}:${AI_GID} find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda clean -afy && \
+    gosu ${AI_UID}:${AI_GID} rm -rf /home/${AI_USER}/.cache/yarn && \
+    gosu ${AI_UID}:${AI_GID} rm -rf /home/${AI_USER}/.cache/pip && \
+    rm -rf /var/lib/apt/lists/* && \
     echo "===> Fixing directory permissions...." && \
-    fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+    gosu ${AI_UID}:${AI_GID} fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+
+USER ${AI_UID}
 
 ARG CODE_PKG_VERSION
 

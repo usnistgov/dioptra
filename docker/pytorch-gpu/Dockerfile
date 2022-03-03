@@ -46,7 +46,9 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-FROM ubuntu:latest
+ARG PYTORCH_NVIDIA_CUDA_VERSION
+
+FROM nvidia/cuda:${PYTORCH_NVIDIA_CUDA_VERSION}
 
 USER root
 
@@ -54,6 +56,20 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 ENV LC_ALL C.UTF-8
+
+# The MITRE certs are necessary to install in order for wget to work
+ADD http://pki.mitre.org/MITRE%20BA%20ROOT.crt /usr/local/share/ca-certificates/MITRE-BA-ROOT.crt
+ADD http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt /usr/local/share/ca-certificates/MITRE-BA-NPE-CA-3-1.crt
+ADD http://pki.mitre.org/MITRE-chain.txt /usr/local/share/ca-certificates/MITRE-chain.pem
+
+RUN cat /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/MITRE-chain.pem >/etc/ssl/certs/ca-certificates-plus-mitre.pem && \
+    /usr/sbin/update-ca-certificates
+
+ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates-plus-mitre.pem
 
 RUN apt-get update && \
     echo "===> Upgrade existing packages...." && \
@@ -74,20 +90,6 @@ RUN apt-get update && \
     zlib1g && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
-# The MITRE certs are necessary to install in order for wget to work
-ADD http://pki.mitre.org/MITRE%20BA%20ROOT.crt /usr/local/share/ca-certificates/MITRE-BA-ROOT.crt
-ADD http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt /usr/local/share/ca-certificates/MITRE-BA-NPE-CA-3-1.crt
-ADD http://pki.mitre.org/MITRE-chain.txt /usr/local/share/ca-certificates/MITRE-chain.pem
-
-RUN cat /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/MITRE-chain.pem >/etc/ssl/certs/ca-certificates-plus-mitre.pem && \
-    /usr/sbin/update-ca-certificates
-
-ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
-ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
-ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates-plus-mitre.pem
-ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
-ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates-plus-mitre.pem
 
 ARG AWSCLI_DOWNLOAD_URL=https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
 ARG AWSCLI_INSTALL_DIR=/opt/aws-cli
@@ -176,31 +178,51 @@ RUN echo "===> Installing base dependencies in conda environment of ${PROJECT_CO
     fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
 
 ARG PYTORCH_VERSION
+ARG PYTORCH_CUDA_VERSION
+ARG PYTORCH_TORCHVISION_VERSION
+ARG PYTORCH_TORCHAUDIO_VERSION
 
 ARG AI_CONDA_ENV=mitre-securing-ai
-ARG PYTORCH_CUDATOOLKIT_VERSION=11.1
 
-RUN ${CONDA_DIR}/condabin/conda config --set channel_priority flexible
+USER root
 
-RUN echo "===> Installing PyTorch (GPU) library...." && \
-    ${CONDA_DIR}/condabin/conda install -n ${AI_CONDA_ENV} -c defaults -c pytorch -c nvidia -q -y \
-    cudatoolkit=${PYTORCH_CUDATOOLKIT_VERSION} \
-    pytorch=${PYTORCH_VERSION} \
-    tensorboard \
-    torchaudio \
-    torchvision && \
-    echo "===> Installing dependencies using pip...." && \
+RUN echo "===> Installing compilers...." && \
+    apt-get update && \
+    apt-get install -yq --no-install-recommends build-essential && \
+    echo "===> Installing PyTorch (GPU) library...." && \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
+    pip install --no-cache-dir \
+    torch==${PYTORCH_VERSION}+${PYTORCH_CUDA_VERSION} \
+    torchvision==${PYTORCH_TORCHVISION_VERSION}+${PYTORCH_CUDA_VERSION} \
+    torchaudio==${PYTORCH_TORCHAUDIO_VERSION}+${PYTORCH_CUDA_VERSION} \
+    -f https://download.pytorch.org/whl/${PYTORCH_CUDA_VERSION}/torch_stable.html && \
+    echo "===> Installing tensorboard and pytorch-lightning libraries...." && \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
     ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
     pip install --no-cache-dir \
+    tensorboard \
     pytorch-lightning && \
+    echo "===> Installing Detectron2 library...." && \
+    DETECTRON_DOWNLOAD_URL="https://dl.fbaipublicfiles.com/detectron2/wheels/${PYTORCH_CUDA_VERSION}/torch$(echo ${PYTORCH_VERSION} | ( IFS='.'; read a b c && echo $a.$b ))/index.html" && \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
+    pip install --no-cache-dir \
+    detectron2 \
+    -f $DETECTRON_DOWNLOAD_URL && \
+    echo "===> Remove compilers...." && \
+    apt-get remove -yq --purge build-essential && \
+    apt-get autoremove -yq && \
+    apt-get clean && \
     echo "===> Cleaning/pruning directories...." && \
-    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
-    find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
-    ${CONDA_DIR}/condabin/conda clean -afy && \
-    rm -rf /home/${AI_USER}/.cache/pip && \
-    rm -rf /home/${AI_USER}/.cache/yarn && \
+    gosu ${AI_UID}:${AI_GID} find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+    gosu ${AI_UID}:${AI_GID} find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
+    gosu ${AI_UID}:${AI_GID} ${CONDA_DIR}/condabin/conda clean -afy && \
+    gosu ${AI_UID}:${AI_GID} rm -rf /home/${AI_USER}/.cache/pip && \
+    gosu ${AI_UID}:${AI_GID} rm -rf /home/${AI_USER}/.cache/yarn && \
+    rm -rf /var/lib/apt/lists/* && \
     echo "===> Fixing directory permissions...." && \
-    fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+    gosu ${AI_UID}:${AI_GID} fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+
+USER ${AI_UID}
 
 ARG CODE_PKG_VERSION
 
@@ -258,8 +280,6 @@ ENV AI_RESTAPI_ENV prod
 ENV AI_WORKDIR ${AI_WORKDIR}
 ENV AI_PLUGIN_DIR ${AI_WORKDIR}/plugins
 ENV CONDA_DIR ${CONDA_DIR}
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 
 USER ${AI_UID}
 WORKDIR ${AI_WORKDIR}
