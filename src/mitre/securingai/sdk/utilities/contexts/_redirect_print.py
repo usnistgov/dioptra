@@ -14,7 +14,34 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._plugin_dirs import plugin_dirs
-from ._redirect_print import redirect_print
+from __future__ import annotations
 
-__all__ = ["plugin_dirs", "redirect_print"]
+import builtins
+from contextlib import contextmanager
+from typing import IO, Iterator, Optional
+
+import structlog
+from structlog.stdlib import BoundLogger
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+
+@contextmanager
+def redirect_print(new_target: Optional[IO] = None) -> Iterator[None]:
+    def new_print(*args, **kwargs) -> None:
+        sep: str = kwargs.get("sep", " ")
+        print_str: str = sep.join(args)
+
+        if new_target is not None:
+            new_target.write(print_str)
+
+        return None
+
+    original_print = builtins.print
+
+    try:
+        builtins.print = new_print
+        yield
+
+    finally:
+        builtins.print = original_print
