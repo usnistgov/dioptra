@@ -324,17 +324,18 @@ def init_train_flow() -> Flow:
             callbacks_list=CALLBACKS,
             upstream_tasks=[init_tensorflow_results],
         )
-        training_ds, validation_ds, n_classes = pyplugs.call_task(
+        training_ds, validation_ds, testing_ds = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.roadsigns_yolo_estimators",
             "data",
             "create_object_detection_dataset",
-            root_directory=training_dir,
             image_size=image_size,
-            grid_size=grid_size,
-            seed=dataset_seed,
-            validation_split=validation_split,
+            grid_shape=grid_shape,
+            labels=label,
+            training_directory=training_dir,
+            validation_directory=validation_dir,
+            annotation_format=annotation_format,
             batch_size=batch_size,
-            augment=augment,
+            shuffle_seed=dataset_seed,
             upstream_tasks=[init_tensorflow_results],
         )
         object_detector = pyplugs.call_task(

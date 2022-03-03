@@ -14,7 +14,12 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+"""Neural network object detectors implemented in Tensorflow/Keras."""
+
 from __future__ import annotations
+
+from types import FunctionType
+from typing import Dict, List, Optional, Tuple, Union
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -22,14 +27,19 @@ from structlog.stdlib import BoundLogger
 from mitre.securingai import pyplugs
 from mitre.securingai.sdk.exceptions import TensorflowDependencyError
 from mitre.securingai.sdk.utilities.decorators import require_package
-
-from .utils import convert_cellbox_to_corner_bbox
+from mitre.securingai.sdk.object_detection.architectures import (
+    MobileNetV2YOLOV1Detector,
+    MobileNetV2SimpleYOLOV1Detector,
+    MobileNetV2TwoHeadedYOLOV1Detector,
+)
+from mitre.securingai.sdk.object_detection.losses import YOLOV1Loss
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    import tensorflow as tf
-    from tensorflow.image import combined_non_max_suppression
+    from tensorflow.keras import Model
+    from tensorflow.keras.metrics import Metric
+    from tensorflow.keras.optimizers import Optimizer
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -38,47 +48,34 @@ except ImportError:  # pragma: nocover
     )
 
 
-# source: https://github.com/GiaKhangLuu/YOLOv1_from_scratch
 @pyplugs.register
-@pyplugs.task_nout(4)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def post_process_tensor_output(pred_tensor_output, n_classes):
-    pred_box_1 = pred_tensor_output[..., :4]
-    pred_cfd_1 = pred_tensor_output[..., 4]
-    pred_box_2 = pred_tensor_output[..., 5:9]
-    pred_cfd_2 = pred_tensor_output[..., 9]
-    pred_cls_dist = pred_tensor_output[..., 10:]
-
-    pred_corner_bbox_1 = convert_cellbox_to_corner_bbox(pred_box_1)
-    pred_corner_bbox_2 = convert_cellbox_to_corner_bbox(pred_box_2)
-
-    # To use combined_nms() method from TF we must change
-    # [x1, y1, x2, y2] to [y1, x1, y2, x2]
-    box1 = tf.reshape(
-        tf.gather(pred_corner_bbox_1, [1, 0, 3, 2], axis=-1), shape=(-1, 7 * 7, 1, 4)
+def init_yolo_v1_detectors(
+    model_architecture: str,
+    optimizer: Optimizer,
+    n_bounding_boxes: int,
+    n_classes: int,
+    loss: str = "yolo_v1_loss",
+    metrics: Optional[List[Union[Metric, FunctionType]]] = None,
+    input_shape: Optional[Tuple[int, int, int]] = None,
+) -> Model:
+    object_detector: Model = YOLO_V1_DETECTORS_REGISTRY[model_architecture](
+        input_shape=input_shape,
+        n_bounding_boxes=n_bounding_boxes,
+        n_classes=n_classes,
     )
-    box2 = tf.reshape(
-        tf.gather(pred_corner_bbox_2, [1, 0, 3, 2], axis=-1), shape=(-1, 7 * 7, 1, 4)
-    )
-    boxes = tf.concat([box1, box2], axis=1)
-
-    scores1 = tf.reshape(
-        tf.expand_dims(pred_cfd_1, axis=-1) * pred_cls_dist,
-        shape=(-1, 7 * 7, n_classes),
-    )
-    scores2 = tf.reshape(
-        tf.expand_dims(pred_cfd_2, axis=-1) * pred_cls_dist,
-        shape=(-1, 7 * 7, n_classes),
-    )
-    scores = tf.concat([scores1, scores2], axis=1)
-
-    boxes, scores, classes, nums = combined_non_max_suppression(
-        boxes,
-        scores,
-        max_output_size_per_class=10,
-        max_total_size=49,
-        iou_threshold=0.5,
-        score_threshold=0.5,
+    object_detector_loss = YOLOV1Loss() if loss == "yolo_v1_loss" else loss
+    object_detector.compile(
+        loss=object_detector_loss,
+        optimizer=optimizer,
+        metrics=metrics if metrics else None,
     )
 
-    return boxes, scores, classes, nums
+    return object_detector
+
+
+YOLO_V1_DETECTORS_REGISTRY: Dict[str, Model] = dict(
+    mobilenetv2_yolo_v1_detector=MobileNetV2YOLOV1Detector,
+    mobilenetv2_simple_yolo_v1_detector=MobileNetV2SimpleYOLOV1Detector,
+    mobilenetv2_two_headed_yolo_v1_detector=MobileNetV2TwoHeadedYOLOV1Detector,
+)

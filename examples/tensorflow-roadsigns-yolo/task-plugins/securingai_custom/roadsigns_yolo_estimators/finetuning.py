@@ -10,8 +10,7 @@ from structlog.stdlib import BoundLogger
 
 from mitre.securingai import pyplugs
 from mitre.securingai.sdk.generics import fit_estimator
-
-from .losses import YOLOLoss
+from mitre.securingai.sdk.object_detection.losses import YOLOV1Loss
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -29,10 +28,9 @@ except ImportError:  # pragma: nocover
 @pyplugs.register
 def finetune(
     estimator: Any,
-    model_architecture: str,
     optimizer: Optimizer,
     metrics: Optional[List[Union[Metric, FunctionType]]] = None,
-    loss: str = "yolo_loss",
+    loss: str = "yolo_v1_loss",
     skip: bool = True,
     x: Any = None,
     y: Any = None,
@@ -42,11 +40,9 @@ def finetune(
         return None
 
     fit_kwargs = fit_kwargs or {}
-    finetune_loss = YOLOLoss() if loss == "yolo_loss" else loss
-    base_model_name = [x.name for x in estimator.layers if model_architecture in x.name]
+    finetune_loss = YOLOV1Loss() if loss == "yolo_v1_loss" else loss
 
-    base_model = estimator.get_layer(base_model_name[0])
-    base_model.trainable = True
+    estimator.backbone.trainable = True
     estimator.compile(
         loss=finetune_loss,
         optimizer=optimizer,
