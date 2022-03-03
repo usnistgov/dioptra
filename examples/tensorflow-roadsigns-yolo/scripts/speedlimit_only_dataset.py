@@ -77,7 +77,7 @@ def walk_dirs_and_soft_link_images_and_render_xml(
 
     dest_dir = Path(dest_dir)
     dest_training_dir: Path = dest_dir / "training"
-    dest_evaluation_dir: Path = dest_dir / "evaluation"
+    dest_evaluation_dir: Path = dest_dir / "validation"
     dest_testing_dir: Path = dest_dir / "testing"
 
     dest_training_images_dir: Path = dest_training_dir / images_dirname
@@ -96,12 +96,12 @@ def walk_dirs_and_soft_link_images_and_render_xml(
 
     dest_images_dirs: Dict[str, Path] = dict(
         training=dest_training_images_dir,
-        evaluation=dest_evaluation_images_dir,
+        validation=dest_evaluation_images_dir,
         testing=dest_testing_images_dir,
     )
     dest_annotations_dirs: Dict[str, Path] = dict(
         training=dest_training_annotations_dir,
-        evaluation=dest_evaluation_annotations_dir,
+        validation=dest_evaluation_annotations_dir,
         testing=dest_testing_annotations_dir,
     )
 
@@ -174,9 +174,6 @@ def extract_roadsigns_annotation_data_from_xml(tree):
         for x in tree.findall(".//object")
     ]
 
-    # contains_only_speedlimit = [x["name"] == "speedlimit" for x in objects]
-
-    # if contains_only_speedlimit and all(contains_only_speedlimit):
     return dict(
         image_file=image_file,
         image_width=image_width,
@@ -184,8 +181,6 @@ def extract_roadsigns_annotation_data_from_xml(tree):
         image_depth=image_depth,
         image_objects=objects,
     )
-
-    # return None
 
 
 def extract_gtsdb_annotation_data_from_xml(tree):
@@ -196,9 +191,13 @@ def extract_gtsdb_annotation_data_from_xml(tree):
         if object_id in speedlimit_ids:
             return "speedlimit"
 
+        if object_id in stop_ids:
+            return "stop"
+
         return object_name
 
     speedlimit_ids = {0, 1, 2, 3, 4, 5, 7, 8}
+    stop_ids = {14}
 
     image_file = tree.find(".//filename").text.strip()
     image_width = tree.find(".//size/width").text.strip()
@@ -417,7 +416,7 @@ def to_source_dest_mappings(
         }
 
 
-def make_speedlimit_only_filelist(
+def make_speedlimit_stop_only_filelist(
     roadsigns_images_dir: Union[str, Path],
     roadsigns_annotations_dir: Union[str, Path],
     gtsdb_images_dir: Union[str, Path],
@@ -426,19 +425,24 @@ def make_speedlimit_only_filelist(
     gtsdb_annotations = []
     roadsigns_annotations = []
 
+    roadsigns_images_dir = Path(roadsigns_images_dir)
+    roadsigns_annotations_dir = Path(roadsigns_annotations_dir)
+    gtsdb_images_dir = Path(gtsdb_images_dir)
+    gtsdb_annotations_dir = Path(gtsdb_annotations_dir)
+
     for fp in gtsdb_annotations_dir.glob("*.xml"):
         gtsdb_annotations.append(extract_gtsdb_annotation_data_from_xml(load_xml(fp)[1]))
 
     for fp in roadsigns_annotations_dir.glob("*.xml"):
         roadsigns_annotations.append(extract_roadsigns_annotation_data_from_xml(load_xml(fp)[1]))
 
-    gtsdb_speedlimit_only_annotations = []
-    roadsigns_speedlimit_only_annotations = []
+    gtsdb_speedlimit_stop_only_annotations = []
+    roadsigns_speedlimit_stop_only_annotations = []
 
     for annotation in gtsdb_annotations:
-        contains_only_speedlimit = [x["name"] == "speedlimit" for x in annotation["image_objects"]]
-        if contains_only_speedlimit and all(contains_only_speedlimit):
-            gtsdb_speedlimit_only_annotations.append({
+        contains_only_speedlimit_stop = [x["name"] in {"speedlimit", "stop"} for x in annotation["image_objects"]]
+        if contains_only_speedlimit_stop and all(contains_only_speedlimit_stop):
+            gtsdb_speedlimit_stop_only_annotations.append({
                 "annotation_file": str((gtsdb_annotations_dir / annotation["image_file"]).with_suffix(".xml")),
                 "image_file": str(gtsdb_images_dir / annotation["image_file"]),
                 "image_track": "00000",
@@ -447,9 +451,9 @@ def make_speedlimit_only_filelist(
             })
 
     for annotation in roadsigns_annotations:
-        contains_only_speedlimit = [x["name"] == "speedlimit" for x in annotation["image_objects"]]
-        if contains_only_speedlimit and all(contains_only_speedlimit):
-            roadsigns_speedlimit_only_annotations.append({
+        contains_only_speedlimit_stop = [x["name"] in {"speedlimit", "stop"} for x in annotation["image_objects"]]
+        if contains_only_speedlimit_stop and all(contains_only_speedlimit_stop):
+            roadsigns_speedlimit_stop_only_annotations.append({
                 "annotation_file": str((roadsigns_annotations_dir / annotation["image_file"]).with_suffix(".xml")),
                 "image_file": str(roadsigns_images_dir / annotation["image_file"]),
                 "image_track": annotation["image_file"].rstrip(".png").split("_")[0],
@@ -458,6 +462,6 @@ def make_speedlimit_only_filelist(
             })
 
     return list(itertools.chain(
-        gtsdb_speedlimit_only_annotations,
-        roadsigns_speedlimit_only_annotations,
+        gtsdb_speedlimit_stop_only_annotations,
+        roadsigns_speedlimit_stop_only_annotations,
     ))
