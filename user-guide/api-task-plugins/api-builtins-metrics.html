@@ -25,7 +25,7 @@
 
     
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
+    <link rel="stylesheet" href="../../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
@@ -40,9 +40,12 @@
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
+    <script >let toggleHintShow = 'Click to show';</script>
+    <script >let toggleHintHide = 'Click to hide';</script>
+    <script >let toggleOpenOnPrint = 'true';</script>
     <script src="../../_static/togglebutton.js"></script>
     <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script src="../../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <script src="../../_static/jquery.visible.js"></script>
     <script src="../../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../../_static/applyLeaveNotice.js"></script>
@@ -73,7 +76,12 @@
     <div class="container-xl">
       <div class="row">
           
-<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
     
         <div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../../index.html">
@@ -419,22 +427,22 @@
 
 
           
+<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<div class="sbt-scroll-pixel-helper"></div>
 <main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
     
     <div class="topbar container-xl fixed-top">
     <div class="topbar-contents row">
         <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
         <div class="col pl-md-4 topbar-main">
-            
-            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
-                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
-                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
-                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
-                <i class="fas fa-bars"></i>
-                <i class="fas fa-arrow-left"></i>
-                <i class="fas fa-arrow-up"></i>
-            </button>
-            
+            <div class="topbar-left">
+                
+                <label class="nav-toggle-button" for="__navigation">
+                    <div class="visually-hidden">Toggle navigation</div>
+                    <i class="fas fa-bars"></i>
+                </label>
+                
+            </div>
             
 <div class="dropdown-buttons-trigger">
     <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
@@ -449,7 +457,7 @@
                 data-placement="left">.rst</button></a>
         <!-- Download PDF via print -->
         <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
-            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+                onclick="printPdf(this)" data-toggle="tooltip" data-placement="left">.pdf</button>
     </div>
 </div>
 
@@ -480,7 +488,7 @@
         </div>
 
         <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show">
+        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
             
             <div class="tocsection onthispage pt-5 pb-3">
                 <i class="fas fa-list"></i> Contents
@@ -510,7 +518,40 @@
 </div>
     <div id="main-content" class="row">
         <div class="col-12 col-md-9 pl-md-3 pr-md-0">
-        
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>metrics</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-securingai_builtins.metrics.distance">
+   distance.py
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-securingai_builtins.metrics.performance">
+   performance.py
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-securingai_builtins.metrics.exceptions">
+   exceptions.py
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            
               <div>
                 
   <div class="section" id="metrics">
@@ -524,7 +565,7 @@
 <p>A task plugin module for getting functions from a distance metric registry.</p>
 <dl class="py function">
 <dt id="securingai_builtins.metrics.distance.get_distance_metric_list">
-<code class="sig-name descname"><span class="pre">get_distance_metric_list</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">…</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#get_distance_metric_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.get_distance_metric_list" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_distance_metric_list</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">…</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#get_distance_metric_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.get_distance_metric_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets multiple distance metric functions from the registry.</p>
 <p>The following metrics are available in the registry,</p>
 <ul class="simple">
@@ -553,7 +594,7 @@ function.</p>
 
 <dl class="py function">
 <dt id="securingai_builtins.metrics.distance.get_distance_metric">
-<code class="sig-name descname"><span class="pre">get_distance_metric</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">…</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#get_distance_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.get_distance_metric" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_distance_metric</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">…</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#get_distance_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.get_distance_metric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets a distance metric function from the registry.</p>
 <p>The following metrics are available in the registry,</p>
 <ul class="simple">
@@ -578,7 +619,7 @@ The string must match one of the names of the metrics in the registry.</p>
 
 <dl class="py function">
 <dt id="securingai_builtins.metrics.distance.l_inf_norm">
-<code class="sig-name descname"><span class="pre">l_inf_norm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#l_inf_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.l_inf_norm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">l_inf_norm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#l_inf_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.l_inf_norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the L<sub>∞</sub> norm between a batch of two matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -588,14 +629,14 @@ The string must match one of the names of the metrics in the registry.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of L<sub>∞</sub> norms.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of L<sub>∞</sub> norms.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="securingai_builtins.metrics.distance.l_1_norm">
-<code class="sig-name descname"><span class="pre">l_1_norm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#l_1_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.l_1_norm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">l_1_norm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#l_1_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.l_1_norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the L<sub>1</sub> norm between a batch of two matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -605,14 +646,14 @@ The string must match one of the names of the metrics in the registry.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of L<sub>1</sub> norms.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of L<sub>1</sub> norms.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="securingai_builtins.metrics.distance.l_2_norm">
-<code class="sig-name descname"><span class="pre">l_2_norm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#l_2_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.l_2_norm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">l_2_norm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#l_2_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.l_2_norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the L<sub>2</sub> norm between a batch of two matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -622,14 +663,14 @@ The string must match one of the names of the metrics in the registry.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of L<sub>2</sub> norms.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of L<sub>2</sub> norms.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="securingai_builtins.metrics.distance.paired_cosine_similarities">
-<code class="sig-name descname"><span class="pre">paired_cosine_similarities</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#paired_cosine_similarities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.paired_cosine_similarities" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">paired_cosine_similarities</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#paired_cosine_similarities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.paired_cosine_similarities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the cosine similarity between a batch of two matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -639,14 +680,14 @@ The string must match one of the names of the metrics in the registry.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of cosine similarities.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of cosine similarities.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="securingai_builtins.metrics.distance.paired_euclidean_distances">
-<code class="sig-name descname"><span class="pre">paired_euclidean_distances</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#paired_euclidean_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.paired_euclidean_distances" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">paired_euclidean_distances</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#paired_euclidean_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.paired_euclidean_distances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the Euclidean distance between a batch of two matrices.</p>
 <p>The Euclidean distance is equivalent to the L<sub>2</sub> norm.</p>
 <dl class="field-list simple">
@@ -657,14 +698,14 @@ The string must match one of the names of the metrics in the registry.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of euclidean distances.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of euclidean distances.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="securingai_builtins.metrics.distance.paired_manhattan_distances">
-<code class="sig-name descname"><span class="pre">paired_manhattan_distances</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#paired_manhattan_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.paired_manhattan_distances" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">paired_manhattan_distances</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#paired_manhattan_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.paired_manhattan_distances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the Manhattan distance between a batch of two matrices.</p>
 <p>The Manhattan distance is equivalent to the L<sub>1</sub> norm.</p>
 <dl class="field-list simple">
@@ -675,14 +716,14 @@ The string must match one of the names of the metrics in the registry.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of Manhattan distances.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of Manhattan distances.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="securingai_builtins.metrics.distance.paired_wasserstein_distances">
-<code class="sig-name descname"><span class="pre">paired_wasserstein_distances</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#paired_wasserstein_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.paired_wasserstein_distances" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">paired_wasserstein_distances</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/metrics/distance.html#paired_wasserstein_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.metrics.distance.paired_wasserstein_distances" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the Wasserstein distance between a batch of two matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -692,13 +733,13 @@ The string must match one of the names of the metrics in the registry.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of Wasserstein distances.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of Wasserstein distances.</p>
 </dd>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/reference/generated/scipy.stats.wasserstein_distance.html#scipy.stats.wasserstein_distance" title="(in SciPy v1.7.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.stats.wasserstein_distance()</span></code></a></p></li>
+<li><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wasserstein_distance.html#scipy.stats.wasserstein_distance" title="(in SciPy v1.8.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.stats.wasserstein_distance()</span></code></a></p></li>
 </ul>
 </div>
 </dd></dl>
@@ -959,8 +1000,8 @@ average of the recall of each class for the multiclass task.</p>
 
               </div>
               
-        
-            <!-- Previous / next buttons -->
+            
+                <!-- Previous / next buttons -->
 <div class='prev-next-area'> 
     <a class='left-prev' id="prev-link" href="api-builtins-estimators.html" title="previous page">
         <i class="fas fa-angle-left"></i>
@@ -977,7 +1018,7 @@ average of the recall of each class for the multiclass task.</p>
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-        
+            
         </div>
     </div>
     

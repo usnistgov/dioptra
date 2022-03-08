@@ -25,7 +25,7 @@
 
     
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
@@ -40,9 +40,12 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
+    <script >let toggleHintShow = 'Click to show';</script>
+    <script >let toggleHintHide = 'Click to hide';</script>
+    <script >let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
     <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
@@ -73,7 +76,12 @@
     <div class="container-xl">
       <div class="row">
           
-<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
     
         <div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
@@ -419,22 +427,22 @@
 
 
           
+<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<div class="sbt-scroll-pixel-helper"></div>
 <main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
     
     <div class="topbar container-xl fixed-top">
     <div class="topbar-contents row">
         <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
         <div class="col pl-md-4 topbar-main">
-            
-            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
-                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
-                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
-                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
-                <i class="fas fa-bars"></i>
-                <i class="fas fa-arrow-left"></i>
-                <i class="fas fa-arrow-up"></i>
-            </button>
-            
+            <div class="topbar-left">
+                
+                <label class="nav-toggle-button" for="__navigation">
+                    <div class="visually-hidden">Toggle navigation</div>
+                    <i class="fas fa-bars"></i>
+                </label>
+                
+            </div>
             
 <div class="dropdown-buttons-trigger">
     <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
@@ -449,7 +457,7 @@
                 data-placement="left">.rst</button></a>
         <!-- Download PDF via print -->
         <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
-            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+                onclick="printPdf(this)" data-toggle="tooltip" data-placement="left">.pdf</button>
     </div>
 </div>
 
@@ -480,7 +488,7 @@
         </div>
 
         <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show">
+        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
             
             <div class="tocsection onthispage pt-5 pb-3">
                 <i class="fas fa-list"></i> Contents
@@ -527,7 +535,57 @@
 </div>
     <div id="main-content" class="row">
         <div class="col-12 col-md-9 pl-md-3 pr-md-0">
-        
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Entry Points</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#what-is-an-entry-point">
+   What is an Entry Point?
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#mlproject-specifications">
+   MLproject Specifications
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#executable-script">
+   Executable Script
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#setting-parameters">
+     Setting Parameters
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mlflow-tracking-runs">
+     MLFlow - Tracking Runs
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#prefect-task-execution">
+     Prefect - Task Execution
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            
               <div>
                 
   <div class="section" id="entry-points">
@@ -561,25 +619,25 @@ These files are the topics of the following sections.</p>
 <h2>MLproject Specifications<a class="headerlink" href="#mlproject-specifications" title="Permalink to this headline">¶</a></h2>
 <p>As was mentioned before, the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file is a plain text file in <a class="reference internal" href="../glossary.html#term-YAML"><span class="xref std std-term">YAML</span></a> syntax that declares an entry point’s executable command and its available parameters.
 An example of an <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file is below,</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">My Project</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">My Project</span><span class="w"></span>
 
-<span class="nt">entry_points</span><span class="p">:</span>
-  <span class="nt">train</span><span class="p">:</span>
-    <span class="nt">parameters</span><span class="p">:</span>
-      <span class="nt">data_dir</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span> <span class="nv">path</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span> <span class="s">&quot;/nfs/data&quot;</span> <span class="p p-Indicator">}</span>
-      <span class="nt">image_size</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span> <span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span> <span class="s">&quot;28,28,1&quot;</span> <span class="p p-Indicator">}</span>
-    <span class="nt">command</span><span class="p">:</span> <span class="p p-Indicator">&gt;</span>
-      <span class="no">python src/train.py</span>
-      <span class="no">--data-dir {data_dir}</span>
-      <span class="no">--image-size {image_size}</span>
-  <span class="nt">infer</span><span class="p">:</span>
-    <span class="nt">parameters</span><span class="p">:</span>
-      <span class="nt">run_id</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span> <span class="nv">string</span> <span class="p p-Indicator">}</span>
-      <span class="nt">image_size</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span> <span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span> <span class="s">&quot;28,28,1&quot;</span> <span class="p p-Indicator">}</span>
-    <span class="nt">command</span><span class="p">:</span> <span class="p p-Indicator">&gt;</span>
-      <span class="no">python src/infer.py</span>
-      <span class="no">--run-id {run_id}</span>
-      <span class="no">--image-size {image_size}</span>
+<span class="nt">entry_points</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">train</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">data_dir</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">path</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/nfs/data&quot;</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">      </span><span class="nt">image_size</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;28,28,1&quot;</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="no">python src/train.py</span><span class="w"></span>
+<span class="w">      </span><span class="no">--data-dir {data_dir}</span><span class="w"></span>
+<span class="w">      </span><span class="no">--image-size {image_size}</span><span class="w"></span>
+<span class="w">  </span><span class="nt">infer</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">run_id</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">      </span><span class="nt">image_size</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;28,28,1&quot;</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span><span class="w"></span>
+<span class="w">      </span><span class="no">python src/infer.py</span><span class="w"></span>
+<span class="w">      </span><span class="no">--run-id {run_id}</span><span class="w"></span>
+<span class="w">      </span><span class="no">--image-size {image_size}</span><span class="w"></span>
 </pre></div>
 </div>
 <p>As we can see, there are two entry points in this <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file, <cite>train</cite> and <cite>infer</cite>.
@@ -589,18 +647,18 @@ If we submit a job that selects the <cite>train</cite> entry point and use its d
 </div>
 <p>Users should note that each of the declared parameters must specify a data type.
 You can specify just the data type by writing the following in your <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file,</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">parameter_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">data_type</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">parameter_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">data_type</span><span class="w"></span>
 </pre></div>
 </div>
 <p>A default value, in contrast, is not required, but users are encouraged to try and provide one wherever possible.
 There are two equivalent ways to specify both a data type and a default value in the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file,</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Short syntax</span>
-<span class="nt">parameter_name</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span> <span class="nv">data_type</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span> <span class="nv">value</span><span class="p p-Indicator">}</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Short syntax</span><span class="w"></span>
+<span class="nt">parameter_name</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="nv">data_type</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">value</span><span class="p p-Indicator">}</span><span class="w"></span>
 
-<span class="c1"># Long syntax</span>
-<span class="nt">parameter_name</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">data_type</span>
-  <span class="nt">default</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="c1"># Long syntax</span><span class="w"></span>
+<span class="nt">parameter_name</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">data_type</span><span class="w"></span>
+<span class="w">  </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file supports four parameter types, some of which are handled in a special way (for example, the <cite>path</cite> data type will download certain files to local storage).
@@ -619,7 +677,7 @@ Use this type for programs that can only read local files.</p>
 </dd>
 <dt>uri</dt><dd><p>A <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> for data either in a local or distributed storage system.
 Relative paths are converted to absolute paths, as in the <cite>path</cite> type.
-Use this type for programs that know how to read from distributed storage (e.g., programs that use the <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/boto3.html#module-boto3" title="(in Boto3 Docs v1.20.24)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">boto3</span></code></a> package to directly access S3 storage).</p>
+Use this type for programs that know how to read from distributed storage (e.g., programs that use the <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/boto3.html#module-boto3" title="(in Boto3 Docs v1.21.14)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">boto3</span></code></a> package to directly access S3 storage).</p>
 </dd>
 </dl>
 </div>
@@ -697,7 +755,7 @@ Testbed users are encouraged to peruse the Click documentation to learn more abo
 </div>
 <div class="section" id="mlflow-tracking-runs">
 <h3>MLFlow - Tracking Runs<a class="headerlink" href="#mlflow-tracking-runs" title="Permalink to this headline">¶</a></h3>
-<p>Every entry point script needs to invoke <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.start_run" title="(in MLflow v1.22.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.start_run()</span></code></a> to create an active run context for MLFlow and it should be done near the top of their entry point function.
+<p>Every entry point script needs to invoke <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.start_run" title="(in MLflow v1.24.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.start_run()</span></code></a> to create an active run context for MLFlow and it should be done near the top of their entry point function.
 This context is needed when logging results and artifacts to the MLFlow Tracking service.
 The following example shows how this context would be started in the <code class="docutils literal notranslate"><span class="pre">train()</span></code> function from the previous section,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mlflow</span>
@@ -715,8 +773,8 @@ The following example shows how this context would be started in the <code class
     <span class="k">return</span> <span class="n">state</span>
 </pre></div>
 </div>
-<p>Within this context block, the <code class="docutils literal notranslate"><span class="pre">active_run</span></code> variable will contain a <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.entities.html#mlflow.entities.Run" title="(in MLflow v1.22.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">mlflow.entities.Run</span></code></a> object that provides metadata about the run that is useful to have available.
-MLFlow functions like <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_param" title="(in MLflow v1.22.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_param()</span></code></a>, <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_metric" title="(in MLflow v1.22.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_metric()</span></code></a>, and <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_artifact" title="(in MLflow v1.22.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_artifact()</span></code></a> will be able to infer the current run automatically and be able to log their data to the appropriate place.
+<p>Within this context block, the <code class="docutils literal notranslate"><span class="pre">active_run</span></code> variable will contain a <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.entities.html#mlflow.entities.Run" title="(in MLflow v1.24.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">mlflow.entities.Run</span></code></a> object that provides metadata about the run that is useful to have available.
+MLFlow functions like <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_param" title="(in MLflow v1.24.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_param()</span></code></a>, <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_metric" title="(in MLflow v1.24.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_metric()</span></code></a>, and <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_artifact" title="(in MLflow v1.24.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_artifact()</span></code></a> will be able to infer the current run automatically and be able to log their data to the appropriate place.
 Please note that the <code class="docutils literal notranslate"><span class="pre">init_flow()</span></code> function is <a class="reference internal" href="#entry-points-prefect-task-execution"><span class="std std-ref">introduced in the following section</span></a>.</p>
 <p>Testbed users are encouraged to peruse the MLflow Tracking documentation to learn more about the tracking context and the kinds of things you can do when its active: <a class="reference external" href="https://mlflow.org/docs/latest/tracking.html">https://mlflow.org/docs/latest/tracking.html</a>.</p>
 </div>
@@ -754,8 +812,8 @@ The anatomy of this call will be discussed in the <a class="reference internal" 
 
               </div>
               
-        
-            <!-- Previous / next buttons -->
+            
+                <!-- Previous / next buttons -->
 <div class='prev-next-area'> 
     <a class='left-prev' id="prev-link" href="the-basics.html" title="previous page">
         <i class="fas fa-angle-left"></i>
@@ -772,7 +830,7 @@ The anatomy of this call will be discussed in the <a class="reference internal" 
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-        
+            
         </div>
     </div>
     
