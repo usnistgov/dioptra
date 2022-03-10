@@ -1,4 +1,5 @@
 import random
+import re
 from pathlib import Path
 
 import numpy as np
@@ -66,8 +67,12 @@ def paste_patch_on_image(image, patch_filepath, image_shape, patch_scale=0.30):
     return np.array(image_wrapped.convert("RGB"))
 
 
+def make_coco_results_list_element(image_id, x, y, width, height, category_id, score):
+    return {"image_id": int(image_id), "category_id": int(category_id), "bbox": [float(x), float(y), float(width), float(height)], "score": float(score)}
+
+
 def get_predicted_bbox_image_batch(
-    model, image, input_image_shape, bbox_nms, patch_filepath=None, patch_scale=0.30
+    model, image, input_image_shape, bbox_nms, patch_filepath=None, patch_scale=0.30, data_filenames=None, data_filename_id=0
 ):
     label_mapper = {0: "crosswalk", 1: "speedlimit", 2: "stop", 3: "trafficlight"}
     # label_mapper = {0: "speedlimit", 1: "stop"}
@@ -87,18 +92,33 @@ def get_predicted_bbox_image_batch(
         )
 
     for image_id in range(8):
-        final_bboxes = [
-            BoundingBox(
-                x1=x[1] * x_shape,
-                y1=x[0] * y_shape,
-                x2=x[3] * x_shape,
-                y2=x[2] * y_shape,
-                label=label_mapper.get(label_id, str(label_id)),
+        data_filename = None
+        coco_image_id = None
+        final_bboxes = []
+        coco_results = []
+
+        if data_filenames is not None:
+            data_filename = Path(data_filenames[data_filename_id])
+            coco_image_id = int(re.match(r"\d+?_road(?P<digits>\d+?)\.png", data_filename.name).groupdict()["digits"])
+            data_filename_id += 1
+
+
+        for x, label_id, score in zip(
+            finalout[0][image_id].numpy(), finalout[2][image_id].numpy(), finalout[1][image_id].numpy()
+        ):
+            final_bboxes.append(
+                BoundingBox(
+                    x1=x[1] * x_shape,
+                    y1=x[0] * y_shape,
+                    x2=x[3] * x_shape,
+                    y2=x[2] * y_shape,
+                    label=label_mapper.get(label_id, str(label_id)),
+                )
             )
-            for x, label_id in zip(
-                finalout[0][image_id].numpy(), finalout[2][image_id].numpy()
-            )
-        ]
+
+            if image_id is not None:
+                coco_results.append(make_coco_results_list_element(image_id=coco_image_id, x=x[1], y=x[0], width=(x[3] - x[1]), height=(x[2] - x[0]), category_id=label_id, score=score))
+
         final_bboxes_image = BoundingBoxesOnImage(final_bboxes, shape=input_image_shape)
 
         yield final_bboxes_image.clip_out_of_image().draw_on_image(
@@ -113,22 +133,28 @@ def get_predicted_bbox_image_batch(
             image_id
         ], pred_labels[
             image_id
-        ]
+        ], coco_results
 
         if patch_filepath is not None:
-            patched_final_bboxes = [
-                BoundingBox(
-                    x1=x[1] * x_shape,
-                    y1=x[0] * y_shape,
-                    x2=x[3] * x_shape,
-                    y2=x[2] * y_shape,
-                    label=label_mapper.get(label_id, str(label_id)),
+            patched_final_bboxes = []
+            patched_coco_results = []
+
+            for x, label_id, score in zip(
+                patched_finalout[0][image_id].numpy(), patched_finalout[2][image_id].numpy(), patched_finalout[1][image_id].numpy()
+            ):
+                patched_final_bboxes.append(
+                    BoundingBox(
+                        x1=x[1] * x_shape,
+                        y1=x[0] * y_shape,
+                        x2=x[3] * x_shape,
+                        y2=x[2] * y_shape,
+                        label=label_mapper.get(label_id, str(label_id)),
+                    )
                 )
-                for x, label_id in zip(
-                    patched_finalout[0][image_id].numpy(),
-                    patched_finalout[2][image_id].numpy(),
-                )
-            ]
+
+                if image_id is not None:
+                    patched_coco_results.append(make_coco_results_list_element(image_id=coco_image_id, x=x[1], y=x[0], width=(x[3] - x[1]), height=(x[2] - x[0]), category_id=label_id, score=score))
+
             patched_final_bboxes_image = BoundingBoxesOnImage(
                 patched_final_bboxes, shape=input_image_shape
             )
@@ -149,12 +175,13 @@ def get_predicted_bbox_image_batch(
                 image_id
             ], patched_pred_labels[
                 image_id
-            ]
+            ], patched_coco_results
 
 
 def get_predicted_bbox_images(
-    data, model, input_image_shape, bbox_nms, patch_filepath=None, patch_scale=0.30
+    data, model, input_image_shape, bbox_nms, patch_filepath=None, patch_scale=0.30, data_filenames=None
 ):
+    data_filename_id = 0
     for image, _ in data:
         for (
             pred_image,
@@ -164,11 +191,13 @@ def get_predicted_bbox_images(
             pred_num_detections,
             pred_conf,
             pred_labels_proba,
+            coco_results
         ) in get_predicted_bbox_image_batch(
-            model, image, input_image_shape, bbox_nms, patch_filepath, patch_scale
+            model, image, input_image_shape, bbox_nms, patch_filepath, patch_scale, data_filenames, data_filename_id
         ):
-            yield pred_image, pred_boxes, pred_scores, pred_labels, pred_num_detections, pred_conf, pred_labels_proba
+            yield pred_image, pred_boxes, pred_scores, pred_labels, pred_num_detections, pred_conf, pred_labels_proba, coco_results
 
+        data_filename_id += 8
 
 def finetune(
     train_data,
@@ -235,7 +264,13 @@ efficientnet_bbox_grid_iou = TensorflowBoundingBoxesBatchedGridIOU.on_grid_shape
 efficientnet_bbox_nms = TensorflowBoundingBoxesYOLOV1NMS.on_grid_shape(
     efficientnet_model.output_grid_shape,
     max_output_size_per_class=10,
-    iou_threshold=0.5,
+    iou_threshold=0.2,
+    score_threshold=0.6,
+)
+efficientnet_testing_bbox_nms = TensorflowBoundingBoxesYOLOV1NMS.on_grid_shape(
+    efficientnet_model.output_grid_shape,
+    max_output_size_per_class=10,
+    iou_threshold=0.2,
     score_threshold=0.6,
 )
 efficientnet_yolo_loss = YOLOV1Loss(bbox_grid_iou=efficientnet_bbox_grid_iou)
@@ -274,6 +309,9 @@ efficientnet_data = TensorflowObjectDetectionData.create(
 efficientnet_training_data = efficientnet_data.training_dataset
 efficientnet_validation_data = efficientnet_data.validation_dataset
 efficientnet_testing_data = efficientnet_data.testing_dataset
+efficientnet_training_data_filepaths = efficientnet_data.training_images_filepaths
+efficientnet_validation_data_filepaths = efficientnet_data.validation_images_filepaths
+efficientnet_testing_data_filepaths = efficientnet_data.testing_images_filepaths
 
 mobilenetv2_data = TensorflowObjectDetectionData.create(
     image_dimensions=input_image_shape,
