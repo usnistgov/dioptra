@@ -81,6 +81,7 @@ RUN apt-get update && \
     git \
     gosu \
     libbz2-1.0 \
+    libgl1 \
     liblz4-1 \
     liblzma5 \
     libsnappy1v5 \
