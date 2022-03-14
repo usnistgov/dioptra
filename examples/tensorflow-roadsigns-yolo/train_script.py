@@ -13,10 +13,7 @@ from mitre.securingai.sdk.object_detection.data import TensorflowObjectDetection
 from mitre.securingai.sdk.object_detection.bounding_boxes.iou import (
     TensorflowBoundingBoxesBatchedGridIOU,
 )
-from mitre.securingai.sdk.object_detection.architectures import (
-    EfficientNetTwoHeadedYOLOV1Detector,
-    MobileNetV2TwoHeadedYOLOV1Detector,
-)
+from mitre.securingai.sdk.object_detection.architectures import YOLOV1ObjectDetector
 from mitre.securingai.sdk.object_detection.losses import YOLOV1Loss
 from mitre.securingai.sdk.object_detection.bounding_boxes.nms import (
     TensorflowBoundingBoxesYOLOV1NMS,
@@ -62,7 +59,8 @@ def paste_patch_on_image(image, patch_filepath, image_shape, patch_scale=0.30):
     patch_x = random.randint(0, int(image_width * (1 - patch_scale)))
     patch_y = random.randint(0, int(image_height * (1 - patch_scale)))
 
-    image_wrapped.paste(patch_image, (patch_x, patch_y), mask=patch_image)
+    # image_wrapped.paste(patch_image, (patch_x, patch_y), mask=patch_image)
+    image_wrapped.paste(patch_image, (patch_x, patch_y))
 
     return np.array(image_wrapped.convert("RGB"))
 
@@ -252,11 +250,11 @@ training_dir = Path("data/Road-Sign-Detection-v2").resolve()
 validation_dir = None
 testing_dir = Path("data/Road-Sign-Detection-v2").resolve()
 
-# efficientnet_model = EfficientNetTwoHeadedYOLOV1Detector(
-#     flavor="B0", input_shape=input_image_shape, n_bounding_boxes=2, n_classes=2
+# efficientnet_model = YOLOV1ObjectDetector(
+#     input_shape=input_image_shape, n_bounding_boxes=2, n_classes=2, backbone="efficientnetb0", detector="two_headed",
 # )
-efficientnet_model = EfficientNetTwoHeadedYOLOV1Detector(
-    flavor="B1", input_shape=input_image_shape, n_bounding_boxes=2, n_classes=4
+efficientnet_model = YOLOV1ObjectDetector(
+    input_shape=input_image_shape, n_bounding_boxes=2, n_classes=4, backbone="efficientnetb1", detector="two_headed",
 )
 efficientnet_bbox_grid_iou = TensorflowBoundingBoxesBatchedGridIOU.on_grid_shape(
     efficientnet_model.output_grid_shape
@@ -274,25 +272,6 @@ efficientnet_testing_bbox_nms = TensorflowBoundingBoxesYOLOV1NMS.on_grid_shape(
     score_threshold=0.6,
 )
 efficientnet_yolo_loss = YOLOV1Loss(bbox_grid_iou=efficientnet_bbox_grid_iou)
-# mobilenetv2_model = MobileNetV2TwoHeadedYOLOV1Detector(
-#     input_shape=input_image_shape, n_bounding_boxes=2, n_classes=2
-# )
-mobilenetv2_model = MobileNetV2TwoHeadedYOLOV1Detector(
-    input_shape=input_image_shape, n_bounding_boxes=2, n_classes=4
-)
-# mobilenetv2_model = MobileNetV2TwoHeadedYOLOV1Detector(
-#     input_shape=input_image_shape, n_bounding_boxes=2, n_classes=2
-# )
-mobilenetv2_bbox_grid_iou = TensorflowBoundingBoxesBatchedGridIOU.on_grid_shape(
-    mobilenetv2_model.output_grid_shape
-)
-mobilenetv2_bbox_nms = TensorflowBoundingBoxesYOLOV1NMS.on_grid_shape(
-    mobilenetv2_model.output_grid_shape,
-    max_output_size_per_class=10,
-    iou_threshold=0.5,
-    score_threshold=0.5,
-)
-mobilenetv2_yolo_loss = YOLOV1Loss(bbox_grid_iou=mobilenetv2_bbox_grid_iou)
 
 efficientnet_data = TensorflowObjectDetectionData.create(
     image_dimensions=input_image_shape,
@@ -306,25 +285,11 @@ efficientnet_data = TensorflowObjectDetectionData.create(
     # augmentations="imgaug_light",
     batch_size=8,
 )
+
 efficientnet_training_data = efficientnet_data.training_dataset
 efficientnet_validation_data = efficientnet_data.validation_dataset
 efficientnet_testing_data = efficientnet_data.testing_dataset
+
 efficientnet_training_data_filepaths = efficientnet_data.training_images_filepaths
 efficientnet_validation_data_filepaths = efficientnet_data.validation_images_filepaths
 efficientnet_testing_data_filepaths = efficientnet_data.testing_images_filepaths
-
-mobilenetv2_data = TensorflowObjectDetectionData.create(
-    image_dimensions=input_image_shape,
-    grid_shape=mobilenetv2_model.output_grid_shape,
-    labels=["crosswalk", "speedlimit", "stop", "trafficlight"],
-    # labels=["speedlimit", "stop"],
-    training_directory=str(training_dir),
-    # validation_directory=str(validation_dir),
-    testing_directory=str(testing_dir),
-    augmentations="imgaug_minimal",
-    # augmentations="imgaug_light",
-    batch_size=8,
-)
-mobilenetv2_training_data = mobilenetv2_data.training_dataset
-mobilenetv2_validation_data = mobilenetv2_data.validation_dataset
-mobilenetv2_testing_data = mobilenetv2_data.testing_dataset
