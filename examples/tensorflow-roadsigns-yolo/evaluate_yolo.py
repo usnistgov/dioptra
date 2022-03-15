@@ -1,3 +1,4 @@
+import argparse
 import json
 import random
 import re
@@ -39,19 +40,25 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 CHECKPOINTS_DIR = Path("checkpoints")
 MODELS_DIR = Path("models") / "efficientnetb1_twoheaded"
 PATCHES_DIR = Path("patches")
-RESULTS_JSON_FILE = Path("roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-predictions.json")
-RESULTS_PICKLE_FILE = Path("roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-mAP.pkl")
-COCO_LABELS_FILE = Path("data") / "Road-Sign-Detection-v2" / "coco.json"
-MODEL_WEIGHTS = (
-    MODELS_DIR
-    / "roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights.hdf5"
-)
+# MODEL_WEIGHTS = (
+#     MODELS_DIR
+#     / "roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights.hdf5"
+# )
 
-CONFLUENCE_THRESHOLD = 0.85
-SCORE_THRESHOLD = 0.50
-MIN_DETECTION_SCORE = 0.75
-PRE_ALGORITHM_THRESHOLD = 0.25
-FORCE_PREDICTION = True
+# BATCH_SIZE = 32
+# CONFLUENCE_THRESHOLD = 0.85
+# SCORE_THRESHOLD = 0.50
+# MIN_DETECTION_SCORE = 0.75
+# PRE_ALGORITHM_THRESHOLD = 0.25
+# FORCE_PREDICTION = True
+
+INPUT_IMAGE_SHAPE = (448, 448, 3)
+# TRAINING_DIR = (Path("data") / "Road-Sign-Detection-v2-balanced-div" / "training").resolve()
+# TESTING_DIR = (Path("data") / "Road-Sign-Detection-v2-balanced-div" / "testing").resolve()
+# COCO_TRAINING_LABELS_FILE = Path("data") / "Road-Sign-Detection-v2-balanced-div" / "training" / "coco.json"
+# COCO_TESTING_LABELS_FILE = Path("data") / "Road-Sign-Detection-v2-balanced-div" / "testing" / "coco.json"
+# RESULTS_TESTING_JSON_FILE = Path("roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-predictions.json")
+# RESULTS_TESTING_PICKLE_FILE = Path("roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-mAP.pkl")
 
 set_logging_level("INFO")
 configure_structlog()
@@ -153,6 +160,7 @@ def get_predicted_bbox_image_batch(
     image,
     input_image_shape,
     bbox_nms,
+    batch_size,
     patch_filepath=None,
     patch_scale=0.30,
     data_filenames=None,
@@ -174,7 +182,7 @@ def get_predicted_bbox_image_batch(
             patched_pred_bbox, patched_pred_conf, patched_pred_labels
         )
 
-    for image_id in range(8):
+    for image_id in range(batch_size):
         data_filename = None
         coco_image_id = None
         final_bboxes = []
@@ -293,6 +301,7 @@ def get_predicted_bbox_images(
     model,
     input_image_shape,
     bbox_nms,
+    batch_size,
     patch_filepath=None,
     patch_scale=0.30,
     data_filenames=None,
@@ -313,6 +322,7 @@ def get_predicted_bbox_images(
             image,
             input_image_shape,
             bbox_nms,
+            batch_size,
             patch_filepath,
             patch_scale,
             data_filenames,
@@ -320,150 +330,189 @@ def get_predicted_bbox_images(
         ):
             yield pred_image, pred_boxes, pred_scores, pred_labels, pred_num_detections, pred_conf, pred_labels_proba, coco_results
 
-        data_filename_id += 8
+        data_filename_id += batch_size
 
 
-####
-input_image_shape = (448, 448, 3)
-training_dir = Path("data/Road-Sign-Detection-v2").resolve()
-testing_dir = Path("data/Road-Sign-Detection-v2").resolve()
+def evaluate(data, model, input_image_shape, bbox_postprocess, testing_dir, data_filenames, output_results_file, data_coco_labels_file, output_coco_results_file, batch_size, patch_filepath=None):
+    full_coco_results = []
+    iterations_count = 0
+    predictions_testing_data = get_predicted_bbox_images(
+        data=data,
+        model=model,
+        input_image_shape=input_image_shape,
+        bbox_nms=bbox_postprocess,
+        batch_size=batch_size,
+        patch_filepath=patch_filepath,
+        data_filenames=data_filenames,
+    )
 
-efficientnet_model = YOLOV1ObjectDetector(
-    input_shape=input_image_shape,
-    n_bounding_boxes=2,
-    n_classes=4,
-    backbone="efficientnetb1",
-    detector="two_headed",
-)
-efficientnet_bbox_grid_iou = TensorflowBoundingBoxesBatchedGridIOU.on_grid_shape(
-    efficientnet_model.output_grid_shape
-)
-efficientnet_bbox_confluence = TensorflowBoundingBoxesYOLOV1Confluence.on_grid_shape(
-    efficientnet_model.output_grid_shape,
-    confluence_threshold=CONFLUENCE_THRESHOLD,
-    score_threshold=SCORE_THRESHOLD,
-    min_detection_score=MIN_DETECTION_SCORE,
-    pre_algorithm_threshold=PRE_ALGORITHM_THRESHOLD,
-    force_prediction=FORCE_PREDICTION,
-)
-efficientnet_yolo_loss = YOLOV1Loss(bbox_grid_iou=efficientnet_bbox_grid_iou)
+    while True:
+        try:
+            (
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                coco_results,
+            ) = next(predictions_testing_data)
+            xml_annotations_filepath = (
+                testing_dir
+                / "annotations"
+                / Path(data_filenames[iterations_count])
+                .with_suffix(".xml")
+                .name
+            )
+            xml_annotation_data = extract_roadsigns_annotation_data_from_xml(
+                load_xml(xml_annotations_filepath)[1]
+            )
+            img_width = int(xml_annotation_data["image_width"])
+            img_height = int(xml_annotation_data["image_height"])
 
-efficientnet_data = TensorflowObjectDetectionData.create(
-    image_dimensions=input_image_shape,
-    grid_shape=efficientnet_model.output_grid_shape,
-    labels=["crosswalk", "speedlimit", "stop", "trafficlight"],
-    training_directory=str(training_dir),
-    testing_directory=str(testing_dir),
-    augmentations="imgaug_minimal",
-    batch_size=32,
-)
+            for result in coco_results:
+                bbox = [
+                    result["bbox"][0] * img_width,
+                    result["bbox"][1] * img_height,
+                    result["bbox"][2] * img_width,
+                    result["bbox"][3] * img_height,
+                ]
+                result["bbox"] = bbox
 
-efficientnet_training_data = efficientnet_data.training_dataset
-efficientnet_testing_data = efficientnet_data.testing_dataset
+            full_coco_results.extend(coco_results)
 
-efficientnet_training_data_filepaths = efficientnet_data.training_images_filepaths
-efficientnet_testing_data_filepaths = efficientnet_data.testing_images_filepaths
+            if iterations_count % 10 == 0:
+                print(iterations_count)
 
-####
+            iterations_count += 1
 
-efficientnet_model.build(
-    (None, input_image_shape[0], input_image_shape[1], input_image_shape[2])
-)
-efficientnet_model.backbone.trainable = True
-efficientnet_model.load_weights(str(MODEL_WEIGHTS))
+        except (StopIteration, IndexError):
+            break
 
-full_coco_results = []
-iterations_count = 0
-predictions_for_metrics_spindle30 = get_predicted_bbox_images(
-    data=efficientnet_testing_data,
-    model=efficientnet_model,
-    input_image_shape=input_image_shape,
-    bbox_nms=efficientnet_bbox_confluence,
-    patch_filepath=None,
-    data_filenames=efficientnet_testing_data_filepaths,
-)
+    full_coco_results2 = []
 
-while True:
-    try:
-        (
-            pred_image,
-            pred_boxes,
-            pred_scores,
-            pred_labels,
-            pred_num_detections,
-            pred_conf,
-            pred_labels_proba,
-            coco_results,
-        ) = next(predictions_for_metrics_spindle30)
-        xml_annotations_filepath = (
-            testing_dir
-            / "annotations"
-            / Path(efficientnet_testing_data_filepaths[iterations_count])
-            .with_suffix(".xml")
-            .name
-        )
-        xml_annotation_data = extract_roadsigns_annotation_data_from_xml(
-            load_xml(xml_annotations_filepath)[1]
-        )
-        img_width = int(xml_annotation_data["image_width"])
-        img_height = int(xml_annotation_data["image_height"])
+    for result in full_coco_results:
+        if not result["score"] < 1e-6:
+            result_dict = {}
+            for k, v in result.items():
+                if k == "category_id":
+                    result_dict[k] = int(v)
 
-        for result in coco_results:
-            bbox = [
-                result["bbox"][0] * img_width,
-                result["bbox"][1] * img_height,
-                result["bbox"][2] * img_width,
-                result["bbox"][3] * img_height,
-            ]
-            result["bbox"] = bbox
+                elif k == "image_id":
+                    result_dict[k] = int(v)
 
-        full_coco_results.extend(coco_results)
+                elif k == "bbox":
+                    result_dict[k] = [round(float(x), 1) for x in v]
 
-        if iterations_count % 10 == 0:
-            print(iterations_count)
+                elif k == "score":
+                    result_dict[k] = round(float(v), 6)
 
-        iterations_count += 1
+                else:
+                    result_dict[k] = v
 
-    except (StopIteration, IndexError):
-        break
+            full_coco_results2.append(result_dict)
 
-full_coco_results2 = []
+    full_coco_results2 = sorted(
+        full_coco_results2, key=lambda x: (x["image_id"], x["score"])
+    )
 
-for result in full_coco_results:
-    if not result["score"] < 1e-6:
-        result_dict = {}
-        for k, v in result.items():
-            if k == "category_id":
-                result_dict[k] = int(v)
+    with output_results_file.open("wt") as f:
+        json.dump(obj=full_coco_results2, fp=f)
 
-            elif k == "image_id":
-                result_dict[k] = int(v)
+    coco_gt = COCO(str(data_coco_labels_file))
+    coco_dt = coco_gt.loadRes(str(output_results_file))
+    coco_annotation_type = "bbox"
 
-            elif k == "bbox":
-                result_dict[k] = [round(float(x), 1) for x in v]
+    coco_eval = COCOeval(coco_gt, coco_dt, coco_annotation_type)
+    coco_eval.evaluate()
+    coco_eval.accumulate()
+    coco_eval.summarize()
 
-            elif k == "score":
-                result_dict[k] = round(float(v), 6)
+    with output_coco_results_file.open("wb") as f:
+        pickle.dump(obj=coco_eval, file=f)
 
-            else:
-                result_dict[k] = v
+    return full_coco_results2, coco_gt, coco_dt, coco_eval
 
-        full_coco_results2.append(result_dict)
 
-full_coco_results2 = sorted(
-    full_coco_results2, key=lambda x: (x["image_id"], x["score"])
-)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Model evaluation.")
+    parser.add_argument("--batch-size", default=32, type=int)
+    parser.add_argument("--confluence-threshold", default=0.85, type=float)
+    parser.add_argument("--score-threshold", default=0.50, type=float)
+    parser.add_argument("--min-detection-score", default=0.75, type=float)
+    parser.add_argument("--pre-algorithm-threshold", default=0.25, type=float)
+    parser.add_argument("--force-prediction", default=True, type=bool)
+    parser.add_argument("--finetuned", default=True, type=bool)
+    parser.add_argument("--training-dir", default="data/Road-Sign-Detection-v2-balanced-div/training", type=str)
+    parser.add_argument("--testing-dir", default="data/Road-Sign-Detection-v2-balanced-div/testing", type=str)
+    parser.add_argument("--model-weights", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights.hdf5", type=str)
+    parser.add_argument("--results-json-file", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-predictions.json", type=str)
+    parser.add_argument("--results-pickle-file", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-mAP.pkl", type=str)
+    args = parser.parse_args()
 
-with RESULTS_JSON_FILE.open("wt") as f:
-    json.dump(obj=full_coco_results2, fp=f)
+    TRAINING_DIR = Path(args.training_dir).resolve()
+    TESTING_DIR = Path(args.testing_dir).resolve()
+    MODEL_WEIGHTS = MODELS_DIR / args.model_weights
+    COCO_TRAINING_LABELS_FILE = TRAINING_DIR / "coco.json"
+    COCO_TESTING_LABELS_FILE = TESTING_DIR / "coco.json"
 
-coco_gt = COCO(str(COCO_LABELS_FILE))
-coco_dt = coco_gt.loadRes(str(RESULTS_JSON_FILE))
-coco_annotation_type = "bbox"
+    efficientnet_model = YOLOV1ObjectDetector(
+        input_shape=INPUT_IMAGE_SHAPE,
+        n_bounding_boxes=2,
+        n_classes=4,
+        backbone="efficientnetb1",
+        detector="two_headed",
+    )
+    efficientnet_bbox_grid_iou = TensorflowBoundingBoxesBatchedGridIOU.on_grid_shape(
+        efficientnet_model.output_grid_shape
+    )
+    efficientnet_bbox_confluence = TensorflowBoundingBoxesYOLOV1Confluence.on_grid_shape(
+        efficientnet_model.output_grid_shape,
+        confluence_threshold=args.confluence_threshold,
+        score_threshold=args.score_threshold,
+        min_detection_score=args.min_detection_score,
+        pre_algorithm_threshold=args.pre_algorithm_threshold,
+        force_prediction=args.force_prediction,
+    )
+    efficientnet_yolo_loss = YOLOV1Loss(bbox_grid_iou=efficientnet_bbox_grid_iou)
 
-coco_eval = COCOeval(coco_gt, coco_dt, coco_annotation_type)
-coco_eval.evaluate()
-coco_eval.summarize()
+    efficientnet_data = TensorflowObjectDetectionData.create(
+        image_dimensions=INPUT_IMAGE_SHAPE,
+        grid_shape=efficientnet_model.output_grid_shape,
+        labels=["crosswalk", "speedlimit", "stop", "trafficlight"],
+        training_directory=str(TRAINING_DIR),
+        testing_directory=str(TESTING_DIR),
+        augmentations="imgaug_minimal",
+        batch_size=args.batch_size,
+    )
 
-with RESULTS_PICKLE_FILE.open("wb") as f:
-    pickle.dump(obj=coco_eval, file=f)
+    efficientnet_training_data = efficientnet_data.training_dataset
+    efficientnet_testing_data = efficientnet_data.testing_dataset
+
+    efficientnet_training_data_filepaths = efficientnet_data.training_images_filepaths
+    efficientnet_testing_data_filepaths = efficientnet_data.testing_images_filepaths
+
+    ####
+
+    efficientnet_model.build(
+        (None, INPUT_IMAGE_SHAPE[0], INPUT_IMAGE_SHAPE[1], INPUT_IMAGE_SHAPE[2])
+    )
+
+    if args.finetuned:
+        efficientnet_model.backbone.trainable = True
+
+    efficientnet_model.load_weights(str(MODEL_WEIGHTS))
+
+    full_coco_results2, coco_gt, coco_dt, coco_eval = evaluate(
+        data=efficientnet_testing_data,
+        model=efficientnet_model,
+        input_image_shape=INPUT_IMAGE_SHAPE,
+        bbox_postprocess=efficientnet_bbox_confluence,
+        testing_dir=TESTING_DIR,
+        data_filenames=efficientnet_testing_data_filepaths,
+        output_results_file=args.results_json_file,
+        data_coco_labels_file=COCO_TESTING_LABELS_FILE,
+        output_coco_results_file=args.results_pickle_file,
+        batch_size=args.batch_size,
+    )
