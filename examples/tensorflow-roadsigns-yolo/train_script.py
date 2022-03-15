@@ -15,8 +15,9 @@ from mitre.securingai.sdk.object_detection.bounding_boxes.iou import (
 )
 from mitre.securingai.sdk.object_detection.architectures import YOLOV1ObjectDetector
 from mitre.securingai.sdk.object_detection.losses import YOLOV1Loss
-from mitre.securingai.sdk.object_detection.bounding_boxes.nms import (
+from mitre.securingai.sdk.object_detection.bounding_boxes.postprocessing import (
     TensorflowBoundingBoxesYOLOV1NMS,
+    TensorflowBoundingBoxesYOLOV1Confluence,
 )
 
 
@@ -78,14 +79,14 @@ def get_predicted_bbox_image_batch(
     y_shape = input_image_shape[0]
 
     pred_bbox, pred_conf, pred_labels = model(image)
-    finalout = bbox_nms.combined_non_max_suppression(pred_bbox, pred_conf, pred_labels)
+    finalout = bbox_nms.postprocess(pred_bbox, pred_conf, pred_labels)
 
     if patch_filepath is not None:
         patched_image = paste_patches_on_images(
             image, patch_filepath, input_image_shape, patch_scale
         )
         patched_pred_bbox, patched_pred_conf, patched_pred_labels = model(patched_image)
-        patched_finalout = bbox_nms.combined_non_max_suppression(
+        patched_finalout = bbox_nms.postprocess(
             patched_pred_bbox, patched_pred_conf, patched_pred_labels
         )
 
@@ -241,8 +242,8 @@ def train(
     )
 
 
-# input_image_shape = (448, 448, 3)
-input_image_shape = (224, 224, 3)
+input_image_shape = (448, 448, 3)
+# input_image_shape = (224, 224, 3)
 # training_dir = Path("data/speedlimit_stop/training").resolve()
 # validation_dir = Path("data/speedlimit_stop/validation").resolve()
 # testing_dir = Path("data/speedlimit_stop/testing").resolve()
@@ -262,7 +263,7 @@ efficientnet_bbox_grid_iou = TensorflowBoundingBoxesBatchedGridIOU.on_grid_shape
 efficientnet_bbox_nms = TensorflowBoundingBoxesYOLOV1NMS.on_grid_shape(
     efficientnet_model.output_grid_shape,
     max_output_size_per_class=10,
-    iou_threshold=0.2,
+    iou_threshold=0.25,
     score_threshold=0.6,
 )
 efficientnet_testing_bbox_nms = TensorflowBoundingBoxesYOLOV1NMS.on_grid_shape(
@@ -270,6 +271,20 @@ efficientnet_testing_bbox_nms = TensorflowBoundingBoxesYOLOV1NMS.on_grid_shape(
     max_output_size_per_class=10,
     iou_threshold=0.2,
     score_threshold=0.6,
+)
+efficientnet_bbox_confluence = TensorflowBoundingBoxesYOLOV1Confluence.on_grid_shape(
+    efficientnet_model.output_grid_shape,
+    confluence_threshold=0.80,
+    score_threshold=0.6,
+    gaussian=False,
+    sigma=0.5,
+)
+efficientnet_testing_bbox_confluence = TensorflowBoundingBoxesYOLOV1Confluence.on_grid_shape(
+    efficientnet_model.output_grid_shape,
+    confluence_threshold=0.80,
+    score_threshold=0.6,
+    gaussian=False,
+    sigma=0.5,
 )
 efficientnet_yolo_loss = YOLOV1Loss(bbox_grid_iou=efficientnet_bbox_grid_iou)
 
