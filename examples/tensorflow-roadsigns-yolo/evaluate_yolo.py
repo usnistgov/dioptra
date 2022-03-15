@@ -435,6 +435,26 @@ def evaluate(data, model, input_image_shape, bbox_postprocess, testing_dir, data
     return full_coco_results2, coco_gt, coco_dt, coco_eval
 
 
+def encode_coco_stats(coco_eval, output_file):
+    results = (
+        f"Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = {coco_eval.stats[0]}\n"
+        f"Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = {coco_eval.stats[1]}\n"
+        f"Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = {coco_eval.stats[2]}\n"
+        f"Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = {coco_eval.stats[3]}\n"
+        f"Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = {coco_eval.stats[4]}\n"
+        f"Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = {coco_eval.stats[5]}\n"
+        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = {coco_eval.stats[6]}\n"
+        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = {coco_eval.stats[7]}\n"
+        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = {coco_eval.stats[8]}\n"
+        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = {coco_eval.stats[9]}\n"
+        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = {coco_eval.stats[10]}\n"
+        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = {coco_eval.stats[11]}\n"
+    )
+
+    with Path(output_file).open("wt") as f:
+        f.write(results)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Model evaluation.")
     parser.add_argument("--batch-size", default=32, type=int)
@@ -511,8 +531,10 @@ if __name__ == "__main__":
         bbox_postprocess=efficientnet_bbox_confluence,
         testing_dir=TESTING_DIR,
         data_filenames=efficientnet_testing_data_filepaths,
-        output_results_file=args.results_json_file,
+        output_results_file=Path(args.results_json_file),
         data_coco_labels_file=COCO_TESTING_LABELS_FILE,
-        output_coco_results_file=args.results_pickle_file,
+        output_coco_results_file=Path(args.results_pickle_file),
         batch_size=args.batch_size,
     )
+
+    encode_coco_stats(coco_eval, Path(args.results_pickle_file).with_suffix(".txt"))
