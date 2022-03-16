@@ -138,6 +138,7 @@ class ModifiedRobustDPatch(RobustDPatch):
             raise ValueError("The patch (partially) lies outside the cropped image.")
 
         learning_rate = self.learning_rate
+        patch_change = 0.0
 
         for i_step in trange(
             self.max_iter, desc="RobustDPatch iteration", disable=not self.verbose
@@ -147,7 +148,6 @@ class ModifiedRobustDPatch(RobustDPatch):
 
             num_batches = math.ceil(x.shape[0] / self.batch_size)
             patch_gradients_old = np.zeros_like(self._patch)
-            patch_change = 0.0
 
             if i_step % self.lr_decay_schedule == 0 and self.lr_decay_size < 1.0:
                 learning_rate *= self.lr_decay_size
