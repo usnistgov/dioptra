@@ -67,7 +67,7 @@ if __name__ == "__main__":
     parser.add_argument("--max-iter", default=300, type=int)
     parser.add_argument("--learning-rate", default=1.0, type=float)
     parser.add_argument("--resume", action="store_true")
-    parser.add_argument("--image-id", default=1, type=int)
+    parser.add_argument("--image-id", default=0, type=int)
     args = parser.parse_args()
 
     DATA_DIR = Path(args.data_dir).resolve()
@@ -157,13 +157,23 @@ if __name__ == "__main__":
         verbose=False,
     )
 
-    x = images[args.image_id:args.image_id + 1].numpy()
-    y = (
-        y_pred[0][args.image_id:args.image_id + 1],
-        y_pred[1][args.image_id:args.image_id + 1],
-        y_pred[2][args.image_id:args.image_id + 1],
-        y_pred[3][args.image_id:args.image_id + 1],
-    )
+    if image_id >= 0:
+        x = images[args.image_id:args.image_id + 1].numpy()
+        y = (
+            y_pred[0][args.image_id:args.image_id + 1],
+            y_pred[1][args.image_id:args.image_id + 1],
+            y_pred[2][args.image_id:args.image_id + 1],
+            y_pred[3][args.image_id:args.image_id + 1],
+        )
+
+    else:
+        x = images[0:abs(args.image_id)].numpy()
+        y = (
+            y_pred[0][0:abs(args.image_id)],
+            y_pred[1][0:abs(args.image_id)],
+            y_pred[2][0:abs(args.image_id)],
+            y_pred[3][0:abs(args.image_id)],
+        )
 
     if args.resume:
         patch = np.load(str(PATCHES_DIR / args.patch))
