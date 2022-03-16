@@ -157,7 +157,7 @@ if __name__ == "__main__":
         verbose=False,
     )
 
-    if image_id >= 0:
+    if args.image_id >= 0:
         x = images[args.image_id:args.image_id + 1].numpy()
         y = (
             y_pred[0][args.image_id:args.image_id + 1],
