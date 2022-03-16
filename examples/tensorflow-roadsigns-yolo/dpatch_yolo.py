@@ -10,6 +10,8 @@ from art.attacks.evasion import RobustDPatch
 from structlog.stdlib import BoundLogger
 from tensorflow.keras.optimizers import Adam
 
+from dpatch_robust import ModifiedRobustDPatch
+
 # Import from Dioptra SDK
 from mitre.securingai.sdk.utilities.logging import (
     configure_structlog,
@@ -64,8 +66,12 @@ if __name__ == "__main__":
     parser.add_argument("--data-dir", default="data/Road-Sign-Detection-v2-balanced-div/testing", type=str)
     parser.add_argument("--model-weights", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights.hdf5", type=str)
     parser.add_argument("--patch", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-robust-dpatch.npy", type=str)
-    parser.add_argument("--max-iter", default=300, type=int)
-    parser.add_argument("--learning-rate", default=1.0, type=float)
+    parser.add_argument("--patch-size", default=60, type=int)
+    parser.add_argument("--max-iter", default=100000, type=int)
+    parser.add_argument("--learning-rate", default=0.1, type=float)
+    parser.add_argument("--lr-decay-size", default=0.95, type=float)
+    parser.add_argument("--lr-decay-schedule", default=5000, type=int)
+    parser.add_argument("--momentum", default=0.9, type=float)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--image-id", default=0, type=int)
     args = parser.parse_args()
@@ -144,13 +150,16 @@ if __name__ == "__main__":
         tf.concat(pred_bboxes_no_object_mask, axis=0),
     )
 
-    dpatch_attack = RobustDPatch(
+    dpatch_attack = ModifiedRobustDPatch(
         estimator=wrapped_model,
         brightness_range=[1.0, 1.0],
         rotation_weights=[1, 0, 0, 0],
-        patch_shape=[60, 60, 3],
+        patch_shape=[args.patch_size, args.patch_size, 3],
         sample_size=1,
         learning_rate=args.learning_rate,
+        lr_decay_size=args.lr_decay_size,
+        lr_decay_schedule=args.lr_decay_schedule,
+        momentum=args.momentum,
         max_iter=1,
         batch_size=1 if args.image_id >= 0 else args.batch_size,
         targeted=False,
