@@ -40,25 +40,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 CHECKPOINTS_DIR = Path("checkpoints")
 MODELS_DIR = Path("models") / "efficientnetb1_twoheaded"
 PATCHES_DIR = Path("patches")
-# MODEL_WEIGHTS = (
-#     MODELS_DIR
-#     / "roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights.hdf5"
-# )
-
-# BATCH_SIZE = 32
-# CONFLUENCE_THRESHOLD = 0.85
-# SCORE_THRESHOLD = 0.50
-# MIN_DETECTION_SCORE = 0.75
-# PRE_ALGORITHM_THRESHOLD = 0.25
-# FORCE_PREDICTION = True
-
 INPUT_IMAGE_SHAPE = (448, 448, 3)
-# TRAINING_DIR = (Path("data") / "Road-Sign-Detection-v2-balanced-div" / "training").resolve()
-# TESTING_DIR = (Path("data") / "Road-Sign-Detection-v2-balanced-div" / "testing").resolve()
-# COCO_TRAINING_LABELS_FILE = Path("data") / "Road-Sign-Detection-v2-balanced-div" / "training" / "coco.json"
-# COCO_TESTING_LABELS_FILE = Path("data") / "Road-Sign-Detection-v2-balanced-div" / "testing" / "coco.json"
-# RESULTS_TESTING_JSON_FILE = Path("roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-predictions.json")
-# RESULTS_TESTING_PICKLE_FILE = Path("roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-mAP.pkl")
 
 set_logging_level("INFO")
 configure_structlog()
@@ -115,11 +97,11 @@ def extract_roadsigns_annotation_data_from_xml(tree):
     )
 
 
-def paste_patches_on_images(image_batch, patch_filepath, image_shape, patch_scale=0.30):
+def paste_patches_on_images(image_batch, patch_filepath, image_shape, patch_scale=None, random_location=False):
     patched_image_batch = []
     for image in image_batch.numpy():
         patched_image = paste_patch_on_image(
-            image.astype("uint8"), patch_filepath, image_shape, patch_scale
+            image.astype("uint8"), patch_filepath, image_shape, patch_scale, random_location
         )
         patched_image_batch.append(np.expand_dims(patched_image, axis=0))
 
@@ -128,19 +110,30 @@ def paste_patches_on_images(image_batch, patch_filepath, image_shape, patch_scal
     return tf.convert_to_tensor(patched_image_batch.astype("float32"))
 
 
-def paste_patch_on_image(image, patch_filepath, image_shape, patch_scale=0.30):
+def paste_patch_on_image(image, patch_filepath, image_shape, patch_scale=None, random_location=False):
     image_height = image_shape[0]
     image_width = image_shape[1]
 
-    patch_image = Image.open(str(patch_filepath)).resize(
-        (int(image_width * patch_scale), int(image_height * patch_scale))
-    )
-    image_wrapped = Image.fromarray(image).copy().convert("RGBA")
+    if Path(patch_filepath).suffix == ".npy":
+        patch_image = Image.fromarray(np.load(str(patch_filepath)).astype("uint8")).copy()
 
-    patch_x = random.randint(0, int(image_width * (1 - patch_scale)))
-    patch_y = random.randint(0, int(image_height * (1 - patch_scale)))
+    else:
+        patch_image = Image.open(str(patch_filepath))
 
-    # image_wrapped.paste(patch_image, (patch_x, patch_y), mask=patch_image)
+    if patch_scale is not None:
+        patch_image = patch_image.resize(
+            (int(image_width * patch_scale), int(image_height * patch_scale))
+        )
+
+    image_wrapped = Image.fromarray(image).copy()
+    patch_x = 0
+    patch_y = 0
+
+    if random_location:
+        patch_scale = 0 if patch_scale is None else patch_scale
+        patch_x = random.randint(0, int(image_width * (1 - patch_scale)))
+        patch_y = random.randint(0, int(image_height * (1 - patch_scale)))
+
     image_wrapped.paste(patch_image, (patch_x, patch_y))
 
     return np.array(image_wrapped.convert("RGB"))
@@ -170,9 +163,6 @@ def get_predicted_bbox_image_batch(
     x_shape = input_image_shape[1]
     y_shape = input_image_shape[0]
 
-    pred_bbox, pred_conf, pred_labels = model(image)
-    finalout = bbox_nms.postprocess(pred_bbox, pred_conf, pred_labels)
-
     if patch_filepath is not None:
         patched_image = paste_patches_on_images(
             image, patch_filepath, input_image_shape, patch_scale
@@ -185,8 +175,6 @@ def get_predicted_bbox_image_batch(
     for image_id in range(batch_size):
         data_filename = None
         coco_image_id = None
-        final_bboxes = []
-        coco_results = []
 
         if data_filenames is not None:
             data_filename = Path(data_filenames[data_filename_id])
@@ -196,50 +184,6 @@ def get_predicted_bbox_image_batch(
                 ).groupdict()["digits"]
             )
             data_filename_id += 1
-
-        for x, label_id, score in zip(
-            finalout[0][image_id].numpy(),
-            finalout[2][image_id].numpy(),
-            finalout[1][image_id].numpy(),
-        ):
-            final_bboxes.append(
-                BoundingBox(
-                    x1=x[1] * x_shape,
-                    y1=x[0] * y_shape,
-                    x2=x[3] * x_shape,
-                    y2=x[2] * y_shape,
-                    label=label_mapper.get(label_id, str(label_id)),
-                )
-            )
-
-            if image_id is not None:
-                coco_results.append(
-                    make_coco_results_list_element(
-                        image_id=coco_image_id,
-                        x=x[1],
-                        y=x[0],
-                        width=(x[3] - x[1]),
-                        height=(x[2] - x[0]),
-                        category_id=label_id,
-                        score=score,
-                    )
-                )
-
-        final_bboxes_image = BoundingBoxesOnImage(final_bboxes, shape=input_image_shape)
-
-        yield final_bboxes_image.clip_out_of_image().draw_on_image(
-            image=image[image_id].numpy().astype("uint8")
-        ), finalout[0][image_id], finalout[1][image_id], finalout[2][
-            image_id
-        ], finalout[
-            3
-        ][
-            image_id
-        ], pred_conf[
-            image_id
-        ], pred_labels[
-            image_id
-        ], coco_results
 
         if patch_filepath is not None:
             patched_final_bboxes = []
@@ -467,8 +411,9 @@ if __name__ == "__main__":
     parser.add_argument("--training-dir", default="data/Road-Sign-Detection-v2-balanced-div/training", type=str)
     parser.add_argument("--testing-dir", default="data/Road-Sign-Detection-v2-balanced-div/testing", type=str)
     parser.add_argument("--model-weights", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights.hdf5", type=str)
-    parser.add_argument("--results-json-file", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-predictions.json", type=str)
-    parser.add_argument("--results-pickle-file", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-mAP.pkl", type=str)
+    parser.add_argument("--patch", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-robust-dpatch.npy", type=str)
+    parser.add_argument("--results-json-file", default="robust-dpatch-roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-predictions.json", type=str)
+    parser.add_argument("--results-pickle-file", default="robust-dpatch-roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-mAP.pkl", type=str)
     args = parser.parse_args()
 
     TRAINING_DIR = Path(args.training_dir).resolve()
@@ -503,7 +448,7 @@ if __name__ == "__main__":
         labels=["crosswalk", "speedlimit", "stop", "trafficlight"],
         training_directory=str(TRAINING_DIR),
         testing_directory=str(TESTING_DIR),
-        augmentations="imgaug_minimal",
+        augmentations=None,
         batch_size=args.batch_size,
     )
 
@@ -535,6 +480,7 @@ if __name__ == "__main__":
         data_coco_labels_file=COCO_TESTING_LABELS_FILE,
         output_coco_results_file=Path(args.results_pickle_file),
         batch_size=args.batch_size,
+        patch_filepath=PATCHES_DIR / args.patch,
     )
 
     encode_coco_stats(coco_eval, Path(args.results_pickle_file).with_suffix(".txt"))
