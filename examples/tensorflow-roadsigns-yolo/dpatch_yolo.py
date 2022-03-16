@@ -152,7 +152,7 @@ if __name__ == "__main__":
         sample_size=1,
         learning_rate=args.learning_rate,
         max_iter=1,
-        batch_size=1,
+        batch_size=1 if args.image_id >= 0 else args.batch_size,
         targeted=False,
         verbose=False,
     )
