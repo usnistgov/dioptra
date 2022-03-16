@@ -10,7 +10,7 @@ from art.attacks.evasion import RobustDPatch
 from structlog.stdlib import BoundLogger
 from tensorflow.keras.optimizers import Adam
 
-from dpatch_robust import ModifiedRobustDPatch
+from dpatch_robust import ModifiedRobustDPatch, SGDRobustDPatch
 
 # Import from Dioptra SDK
 from mitre.securingai.sdk.utilities.logging import (
@@ -73,7 +73,9 @@ if __name__ == "__main__":
     parser.add_argument("--lr-decay-schedule", default=5000, type=int)
     parser.add_argument("--momentum", default=0.9, type=float)
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--sgd", action="store_true")
     parser.add_argument("--image-id", default=0, type=int)
+    parser.add_argument("--all-images", action="store_true")
     args = parser.parse_args()
 
     DATA_DIR = Path(args.data_dir).resolve()
@@ -150,23 +152,50 @@ if __name__ == "__main__":
         tf.concat(pred_bboxes_no_object_mask, axis=0),
     )
 
-    dpatch_attack = ModifiedRobustDPatch(
-        estimator=wrapped_model,
-        brightness_range=[1.0, 1.0],
-        rotation_weights=[1, 0, 0, 0],
-        patch_shape=[args.patch_size, args.patch_size, 3],
-        sample_size=1,
-        learning_rate=args.learning_rate,
-        lr_decay_size=args.lr_decay_size,
-        lr_decay_schedule=args.lr_decay_schedule,
-        momentum=args.momentum,
-        max_iter=1,
-        batch_size=1 if args.image_id >= 0 else args.batch_size,
-        targeted=False,
-        verbose=False,
-    )
+    if args.sgd:
+        dpatch_attack = SGDRobustDPatch(
+            estimator=wrapped_model,
+            brightness_range=[1.0, 1.0],
+            rotation_weights=[1, 0, 0, 0],
+            patch_shape=[args.patch_size, args.patch_size, 3],
+            sample_size=1,
+            learning_rate=args.learning_rate,
+            lr_decay_size=args.lr_decay_size,
+            lr_decay_schedule=args.lr_decay_schedule,
+            momentum=args.momentum,
+            max_iter=1,
+            batch_size=1 if args.image_id >= 0 else args.batch_size,
+            targeted=False,
+            verbose=False,
+        )
 
-    if args.image_id >= 0:
+    else:
+        dpatch_attack = ModifiedRobustDPatch(
+            estimator=wrapped_model,
+            brightness_range=[1.0, 1.0],
+            rotation_weights=[1, 0, 0, 0],
+            patch_shape=[args.patch_size, args.patch_size, 3],
+            sample_size=1,
+            learning_rate=args.learning_rate,
+            lr_decay_size=args.lr_decay_size,
+            lr_decay_schedule=args.lr_decay_schedule,
+            momentum=args.momentum,
+            max_iter=1,
+            batch_size=1 if args.image_id >= 0 else args.batch_size,
+            targeted=False,
+            verbose=False,
+        )
+
+    if args.all_images:
+        x = images.numpy()
+        y = (
+            y_pred[0],
+            y_pred[1],
+            y_pred[2],
+            y_pred[3],
+        )
+
+    elif args.image_id >= 0:
         x = images[args.image_id:args.image_id + 1].numpy()
         y = (
             y_pred[0][args.image_id:args.image_id + 1],
