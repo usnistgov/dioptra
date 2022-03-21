@@ -33,7 +33,7 @@ class ModifiedRobustDPatch(RobustDPatch):
         targeted: bool = False,
         verbose: bool = True,
     ):
-        """Create an instance of the :class:`.RobustDPatch`.
+        """Create an instance of the :class:`.ModifiedRobustDPatch`.
 
         Args:
             estimator: A trained object detector.
@@ -264,7 +264,7 @@ class SGDRobustDPatch(RobustDPatch):
         targeted: bool = False,
         verbose: bool = True,
     ):
-        """Create an instance of the :class:`.RobustDPatch`.
+        """Create an instance of the :class:`.SGDRobustDPatch`.
 
         Args:
             estimator: A trained object detector.

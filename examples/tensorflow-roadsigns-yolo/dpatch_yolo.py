@@ -68,10 +68,13 @@ if __name__ == "__main__":
     parser.add_argument("--patch", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-robust-dpatch.npy", type=str)
     parser.add_argument("--patch-size", default=60, type=int)
     parser.add_argument("--max-iter", default=100000, type=int)
+    parser.add_argument("--sample-size", default=1, type=int)
     parser.add_argument("--learning-rate", default=0.1, type=float)
     parser.add_argument("--lr-decay-size", default=0.95, type=float)
     parser.add_argument("--lr-decay-schedule", default=5000, type=int)
     parser.add_argument("--momentum", default=0.9, type=float)
+    parser.add_argument("--brightness-range", default=[1.0, 1.0], nargs=2, type=float)
+    parser.add_argument("--rotation-weights", default=[1.0, 0.0, 0.0, 0.0], nargs=4, type=float)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--sgd", action="store_true")
     parser.add_argument("--image-id", default=0, type=int)
@@ -155,10 +158,10 @@ if __name__ == "__main__":
     if args.sgd:
         dpatch_attack = SGDRobustDPatch(
             estimator=wrapped_model,
-            brightness_range=[1.0, 1.0],
-            rotation_weights=[1, 0, 0, 0],
+            brightness_range=args.brightness_range,
+            rotation_weights=args.rotation_weights,
             patch_shape=[args.patch_size, args.patch_size, 3],
-            sample_size=1,
+            sample_size=args.sample_size,
             learning_rate=args.learning_rate,
             lr_decay_size=args.lr_decay_size,
             lr_decay_schedule=args.lr_decay_schedule,
@@ -172,10 +175,10 @@ if __name__ == "__main__":
     else:
         dpatch_attack = ModifiedRobustDPatch(
             estimator=wrapped_model,
-            brightness_range=[1.0, 1.0],
-            rotation_weights=[1, 0, 0, 0],
+            brightness_range=args.brightness_range,
+            rotation_weights=args.rotation_weights,
             patch_shape=[args.patch_size, args.patch_size, 3],
-            sample_size=1,
+            sample_size=args.sample_size,
             learning_rate=args.learning_rate,
             lr_decay_size=args.lr_decay_size,
             lr_decay_schedule=args.lr_decay_schedule,
