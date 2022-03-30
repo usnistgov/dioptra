@@ -87,7 +87,7 @@ def wrap_keras_classifier(model, clip_values, imagenet_preprocessing):
         return KerasClassifier(
             model=keras_model,
             clip_values=clip_values,
-            preprocessing=([mean_b, mean_g, mean_r], 1),
+            preprocessing=(np.array([mean_b, mean_g, mean_r]), np.array([1.0, 1.0, 1.0])),
         )
     else:
         return KerasClassifier(model=keras_model, clip_values=clip_values)
