@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import mlflow
 import structlog
+import numpy as np
 from structlog.stdlib import BoundLogger
 
 from mitre.securingai import pyplugs
@@ -70,7 +71,7 @@ def load_wrapped_tensorflow_keras_classifier(
         wrapped_keras_classifier = KerasClassifier(
             model=keras_classifier,
             clip_values=clip_values,
-            preprocessing=([mean_b, mean_g, mean_r], 1),
+            preprocessing=(np.array([mean_b, mean_g, mean_r]), np.array([1.0, 1.0, 1.0])),
         )
     else:
         wrapped_keras_classifier = KerasClassifier(
