@@ -1,3 +1,11 @@
+checkpoints/
+checkpoints-speedlimit-stop-only/
 data/
 models/
 object_detection_predictions/
+patches/
+patched_images/
+*.pkl
+*.json
+*.txt
+*.csv
