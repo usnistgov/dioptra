@@ -1,4 +1,5 @@
 import argparse
+import csv
 import json
 import random
 import re
@@ -11,6 +12,7 @@ import lxml
 import numpy as np
 import structlog
 import tensorflow as tf
+from art.defences.preprocessor import JpegCompression, SpatialSmoothing
 from imgaug.augmentables import BoundingBox, BoundingBoxesOnImage
 from lxml.etree import ElementTree, XMLParser, XMLSyntaxError
 from PIL import Image
@@ -33,32 +35,11 @@ from mitre.securingai.sdk.object_detection.bounding_boxes.postprocessing import 
     TensorflowBoundingBoxesYOLOV1Confluence,
 )
 
-# Create random number generator
-rng = np.random.default_rng(249572366621)
-
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 CHECKPOINTS_DIR = Path("checkpoints")
 MODELS_DIR = Path("models") / "efficientnetb1_twoheaded"
 PATCHES_DIR = Path("patches")
-# MODEL_WEIGHTS = (
-#     MODELS_DIR
-#     / "roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights.hdf5"
-# )
-
-# BATCH_SIZE = 32
-# CONFLUENCE_THRESHOLD = 0.85
-# SCORE_THRESHOLD = 0.50
-# MIN_DETECTION_SCORE = 0.75
-# PRE_ALGORITHM_THRESHOLD = 0.25
-# FORCE_PREDICTION = True
-
 INPUT_IMAGE_SHAPE = (448, 448, 3)
-# TRAINING_DIR = (Path("data") / "Road-Sign-Detection-v2-balanced-div" / "training").resolve()
-# TESTING_DIR = (Path("data") / "Road-Sign-Detection-v2-balanced-div" / "testing").resolve()
-# COCO_TRAINING_LABELS_FILE = Path("data") / "Road-Sign-Detection-v2-balanced-div" / "training" / "coco.json"
-# COCO_TESTING_LABELS_FILE = Path("data") / "Road-Sign-Detection-v2-balanced-div" / "testing" / "coco.json"
-# RESULTS_TESTING_JSON_FILE = Path("roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-predictions.json")
-# RESULTS_TESTING_PICKLE_FILE = Path("roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-mAP.pkl")
 
 set_logging_level("INFO")
 configure_structlog()
@@ -115,6 +96,18 @@ def extract_roadsigns_annotation_data_from_xml(tree):
     )
 
 
+def apply_preprocessing_defences(image_batch, preprocessing_defences=None):
+    if preprocessing_defences is None:
+        return image_batch
+
+    image_batch = image_batch.numpy().astype("uint8")
+
+    for defence in preprocessing_defences:
+        image_batch, _ = defence(image_batch)
+
+    return tf.convert_to_tensor(image_batch.astype("float32"))
+
+
 def paste_patches_on_images(image_batch, patch_filepath, image_shape, patch_scale=0.30):
     patched_image_batch = []
     for image in image_batch.numpy():
@@ -165,17 +158,24 @@ def get_predicted_bbox_image_batch(
     patch_scale=0.30,
     data_filenames=None,
     data_filename_id=0,
+    preprocessing_defences=None,
 ):
     label_mapper = {0: "crosswalk", 1: "speedlimit", 2: "stop", 3: "trafficlight"}
     x_shape = input_image_shape[1]
     y_shape = input_image_shape[0]
 
-    pred_bbox, pred_conf, pred_labels = model(image)
+    unpatched_image = apply_preprocessing_defences(
+        image, preprocessing_defences
+    )
+    pred_bbox, pred_conf, pred_labels = model(unpatched_image)
     finalout = bbox_nms.postprocess(pred_bbox, pred_conf, pred_labels)
 
     if patch_filepath is not None:
         patched_image = paste_patches_on_images(
             image, patch_filepath, input_image_shape, patch_scale
+        )
+        patched_image = apply_preprocessing_defences(
+            patched_image, preprocessing_defences
         )
         patched_pred_bbox, patched_pred_conf, patched_pred_labels = model(patched_image)
         patched_finalout = bbox_nms.postprocess(
@@ -228,7 +228,7 @@ def get_predicted_bbox_image_batch(
         final_bboxes_image = BoundingBoxesOnImage(final_bboxes, shape=input_image_shape)
 
         yield final_bboxes_image.clip_out_of_image().draw_on_image(
-            image=image[image_id].numpy().astype("uint8")
+            image=unpatched_image[image_id].numpy().astype("uint8")
         ), finalout[0][image_id], finalout[1][image_id], finalout[2][
             image_id
         ], finalout[
@@ -305,6 +305,7 @@ def get_predicted_bbox_images(
     patch_filepath=None,
     patch_scale=0.30,
     data_filenames=None,
+    preprocessing_defences=None,
 ):
     data_filename_id = 0
     for image, _ in data:
@@ -327,13 +328,14 @@ def get_predicted_bbox_images(
             patch_scale,
             data_filenames,
             data_filename_id,
+            preprocessing_defences,
         ):
             yield pred_image, pred_boxes, pred_scores, pred_labels, pred_num_detections, pred_conf, pred_labels_proba, coco_results
 
         data_filename_id += batch_size
 
 
-def evaluate(data, model, input_image_shape, bbox_postprocess, testing_dir, data_filenames, output_results_file, data_coco_labels_file, output_coco_results_file, batch_size, patch_filepath=None):
+def evaluate(data, model, input_image_shape, bbox_postprocess, testing_dir, data_filenames, output_results_file, data_coco_labels_file, output_coco_results_file, batch_size, patch_filepath=None, preprocessing_defences=None):
     full_coco_results = []
     iterations_count = 0
     predictions_testing_data = get_predicted_bbox_images(
@@ -344,6 +346,7 @@ def evaluate(data, model, input_image_shape, bbox_postprocess, testing_dir, data
         batch_size=batch_size,
         patch_filepath=patch_filepath,
         data_filenames=data_filenames,
+        preprocessing_defences=preprocessing_defences,
     )
 
     while True:
@@ -435,24 +438,35 @@ def evaluate(data, model, input_image_shape, bbox_postprocess, testing_dir, data
     return full_coco_results2, coco_gt, coco_dt, coco_eval
 
 
-def encode_coco_stats(coco_eval, output_file):
-    results = (
-        f"Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = {coco_eval.stats[0]}\n"
-        f"Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = {coco_eval.stats[1]}\n"
-        f"Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = {coco_eval.stats[2]}\n"
-        f"Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = {coco_eval.stats[3]}\n"
-        f"Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = {coco_eval.stats[4]}\n"
-        f"Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = {coco_eval.stats[5]}\n"
-        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = {coco_eval.stats[6]}\n"
-        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = {coco_eval.stats[7]}\n"
-        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = {coco_eval.stats[8]}\n"
-        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = {coco_eval.stats[9]}\n"
-        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = {coco_eval.stats[10]}\n"
-        f"Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = {coco_eval.stats[11]}\n"
-    )
+def encode_coco_stats(coco_eval, output_file, dataset, patch="None", defense="None"):
+    header = [
+        "dataset",
+        "patch",
+        "defense",
+        "AP@IoU=0.50:0.95|area=all|maxDets=100",
+        "AP@IoU=0.50|area=all|maxDets=100",
+        "AP@IoU=0.75|area=all|maxDets=100",
+        "AP@IoU=0.50:0.95|area=small|maxDets=100",
+        "AP@IoU=0.50:0.95|area=medium|maxDets=100",
+        "AP@IoU=0.50:0.95|area=large|maxDets=100",
+        "AR@IoU=0.50:0.95|area=all|maxDets=1",
+        "AR@IoU=0.50:0.95|area=all|maxDets=10",
+        "AR@IoU=0.50:0.95|area=all|maxDets=100",
+        "AR@IoU=0.50:0.95|area=small|maxDets=100",
+        "AR@IoU=0.50:0.95|area=medium|maxDets=100",
+        "AR@IoU=0.50:0.95|area=large|maxDets=100",
+    ]
 
-    with Path(output_file).open("wt") as f:
-        f.write(results)
+    file_exists = Path(output_file).exists()
+
+    with Path(output_file).open("at") as f:
+        csv_writer = csv.writer(f)
+
+        if not file_exists:
+            csv_writer.writerow(header)
+
+        data_row = [dataset, patch, defense] + coco_eval.stats.tolist()
+        csv_writer.writerow(data_row)
 
 
 if __name__ == "__main__":
@@ -464,11 +478,16 @@ if __name__ == "__main__":
     parser.add_argument("--pre-algorithm-threshold", default=0.25, type=float)
     parser.add_argument("--force-prediction", action="store_true")
     parser.add_argument("--finetuned", action="store_true")
+    parser.add_argument("--preprocessing", nargs="*", default=[], type=str)
     parser.add_argument("--training-dir", default="data/Road-Sign-Detection-v2-balanced-div/training", type=str)
     parser.add_argument("--testing-dir", default="data/Road-Sign-Detection-v2-balanced-div/testing", type=str)
+    parser.add_argument("--dataset-name", default="testing", type=str)
     parser.add_argument("--model-weights", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights.hdf5", type=str)
-    parser.add_argument("--results-json-file", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-predictions.json", type=str)
-    parser.add_argument("--results-pickle-file", default="roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-mAP.pkl", type=str)
+    parser.add_argument("--results-json-file", default="results/roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-predictions.json", type=str)
+    parser.add_argument("--results-pickle-file", default="results/roadsigns-448x448x3-yolov1-efficientnetb1-twoheaded-finetuned-weights-mAP.pkl", type=str)
+    parser.add_argument(
+        "--results-coco-eval-file", default="dpatch_experiments_results.csv", type=str
+    )
     args = parser.parse_args()
 
     TRAINING_DIR = Path(args.training_dir).resolve()
@@ -515,6 +534,18 @@ if __name__ == "__main__":
 
     ####
 
+    defence_registry = {
+        "JpegCompression": JpegCompression(clip_values=(0, 255)),
+        "SpatialSmoothing": SpatialSmoothing(window_size=3),
+    }
+    preprocessing_defences = []
+
+    for defence_name in args.preprocessing:
+        defence = defence_registry.get(defence_name)
+
+        if defence is not None:
+            preprocessing_defences.append(defence)
+
     efficientnet_model.build(
         (None, INPUT_IMAGE_SHAPE[0], INPUT_IMAGE_SHAPE[1], INPUT_IMAGE_SHAPE[2])
     )
@@ -523,6 +554,8 @@ if __name__ == "__main__":
         efficientnet_model.backbone.trainable = True
 
     efficientnet_model.load_weights(str(MODEL_WEIGHTS))
+
+    print(args)
 
     full_coco_results2, coco_gt, coco_dt, coco_eval = evaluate(
         data=efficientnet_testing_data,
@@ -535,6 +568,15 @@ if __name__ == "__main__":
         data_coco_labels_file=COCO_TESTING_LABELS_FILE,
         output_coco_results_file=Path(args.results_pickle_file),
         batch_size=args.batch_size,
+        preprocessing_defences=preprocessing_defences or None,
     )
 
-    encode_coco_stats(coco_eval, Path(args.results_pickle_file).with_suffix(".txt"))
+    defenses_used = (
+        ",".join(args.preprocessing) if args.preprocessing else "None"
+    )
+    encode_coco_stats(
+        coco_eval,
+        Path(args.results_coco_eval_file),
+        dataset=args.dataset_name,
+        defense=defenses_used,
+    )
