@@ -31,7 +31,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @pyplugs.register
-def draw_random_integer(rng: RNGenerator, low: int = 0, high: int = 2 ** 31 - 1) -> int:
+def draw_random_integer(rng: RNGenerator, low: int = 0, high: int = 2**31 - 1) -> int:
     """Returns a random integer from `low` (inclusive) to `high` (exclusive).
 
     The integer is sampled from a uniform distribution.
@@ -59,7 +59,7 @@ def draw_random_integer(rng: RNGenerator, low: int = 0, high: int = 2 ** 31 - 1)
 def draw_random_integers(
     rng: RNGenerator,
     low: int = 0,
-    high: int = 2 ** 31 - 1,
+    high: int = 2**31 - 1,
     size: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> np.ndarray:
     """Returns random integers from `low` (inclusive) to `high` (exclusive).
