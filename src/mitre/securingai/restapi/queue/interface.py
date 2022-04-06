@@ -18,6 +18,7 @@
 
 .. |Queue| replace:: :py:class:`~.model.Queue`
 """
+from __future__ import annotations
 
 import datetime
 

@@ -15,10 +15,32 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Binding configurations to shared services using dependency injection."""
+from __future__ import annotations
 
 from typing import Any, Callable, List
 
-from injector import Binder
+from flask_injector import request
+from injector import Binder, Module, provider
+from mlflow.tracking import MlflowClient
+
+from .schema import ExperimentRegistrationFormSchema
+
+
+class ExperimentRegistrationFormSchemaModule(Module):
+    @provider
+    def provide_experiment_registration_form_schema_module(
+        self,
+    ) -> ExperimentRegistrationFormSchema:
+        return ExperimentRegistrationFormSchema()
+
+
+class MLFlowClientModule(Module):
+    @request
+    @provider
+    def provide_mlflow_client_module(
+        self,
+    ) -> MlflowClient:
+        return MlflowClient()
 
 
 def bind_dependencies(binder: Binder) -> None:
@@ -37,4 +59,5 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
         modules: A list of callables used for configuring the dependency injection
             environment.
     """
-    pass
+    modules.append(ExperimentRegistrationFormSchemaModule)
+    modules.append(MLFlowClientModule)

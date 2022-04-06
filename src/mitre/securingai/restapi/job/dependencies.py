@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Binding configurations to shared services using dependency injection."""
+from __future__ import annotations
 
 import os
 from dataclasses import dataclass
@@ -27,6 +28,14 @@ from injector import Binder, Module, provider
 from redis import Redis
 
 from mitre.securingai.restapi.shared.rq.service import RQService
+
+from .schema import JobFormSchema
+
+
+class JobFormSchemaModule(Module):
+    @provider
+    def provide_job_form_schema_module(self) -> JobFormSchema:
+        return JobFormSchema()
 
 
 @dataclass
@@ -83,4 +92,5 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
         modules: A list of callables used for configuring the dependency injection
             environment.
     """
+    modules.append(JobFormSchemaModule)
     modules.append(RQServiceModule)

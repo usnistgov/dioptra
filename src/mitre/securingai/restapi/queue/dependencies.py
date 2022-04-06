@@ -15,10 +15,21 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Binding configurations to shared services using dependency injection."""
+from __future__ import annotations
 
 from typing import Any, Callable, List
 
-from injector import Binder
+from injector import Binder, Module, provider
+
+from .schema import QueueRegistrationFormSchema
+
+
+class QueueRegistrationFormSchemaModule(Module):
+    @provider
+    def provide_queue_registration_form_schema_module(
+        self,
+    ) -> QueueRegistrationFormSchema:
+        return QueueRegistrationFormSchema()
 
 
 def bind_dependencies(binder: Binder) -> None:
@@ -37,4 +48,4 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
         modules: A list of callables used for configuring the dependency injection
             environment.
     """
-    pass
+    modules.append(QueueRegistrationFormSchemaModule)

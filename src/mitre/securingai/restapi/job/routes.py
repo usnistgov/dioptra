@@ -19,6 +19,7 @@
 .. |Api| replace:: :py:class:`flask_restx.Api`
 .. |Flask| replace:: :py:class:`flask.Flask`
 """
+from __future__ import annotations
 
 from flask import Flask
 from flask_restx import Api

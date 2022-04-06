@@ -21,6 +21,7 @@
 .. |RequestParser| replace:: :py:class:`~flask_restx.reqparse.RequestParser`
 .. |Resource| replace:: :py:class:`~flask_restx.Resource`
 """
+from __future__ import annotations
 
 from typing import List
 

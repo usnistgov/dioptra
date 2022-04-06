@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """A module of reexports of the application's data models and forms."""
+from __future__ import annotations
 
 from .experiment.model import (
     Experiment,

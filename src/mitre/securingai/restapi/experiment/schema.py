@@ -21,6 +21,7 @@
 .. |ExperimentRegistrationFormData| replace:: \
    :py:class:`~.model.ExperimentRegistrationFormData`
 """
+from __future__ import annotations
 
 from typing import Any, Dict
 
