@@ -21,6 +21,7 @@
 .. |QueueRegistrationForm| replace:: :py:class:`~.model.QueueRegistrationForm`
 .. |QueueRegistrationFormData| replace:: :py:class:`~.model.QueueRegistrationFormData`
 """
+from __future__ import annotations
 
 from typing import Any, Dict
 

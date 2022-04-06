@@ -20,6 +20,7 @@
 :py:class:`~flask.Flask` object and wires up all the configurations and third-party
 dependencies.
 """
+from __future__ import annotations
 
 import uuid
 from typing import Any, Callable, List, Optional

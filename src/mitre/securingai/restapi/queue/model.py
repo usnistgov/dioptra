@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The data models for the queue endpoint objects."""
-
 from __future__ import annotations
 
 import datetime

@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the task plugin endpoints."""
+from __future__ import annotations
 
 import uuid
 from typing import List, Optional

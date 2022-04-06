@@ -14,6 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 import io
 import tarfile
 from typing import Any, BinaryIO, List
@@ -83,9 +85,19 @@ def task_plugin_archive():
 
 @pytest.fixture
 def dependency_modules() -> List[Any]:
+    from mitre.securingai.restapi.experiment.dependencies import (
+        ExperimentRegistrationFormSchemaModule,
+    )
     from mitre.securingai.restapi.job.dependencies import (
+        JobFormSchemaModule,
         RQServiceConfiguration,
         RQServiceModule,
+    )
+    from mitre.securingai.restapi.queue.dependencies import (
+        QueueRegistrationFormSchemaModule,
+    )
+    from mitre.securingai.restapi.task_plugin.dependencies import (
+        TaskPluginUploadFormSchemaModule,
     )
 
     def _bind_s3_service_configuration(binder: Binder) -> None:
@@ -106,7 +118,14 @@ def dependency_modules() -> List[Any]:
         )
         _bind_s3_service_configuration(binder)
 
-    return [configure, RQServiceModule()]
+    return [
+        configure,
+        ExperimentRegistrationFormSchemaModule(),
+        JobFormSchemaModule(),
+        QueueRegistrationFormSchemaModule(),
+        RQServiceModule(),
+        TaskPluginUploadFormSchemaModule(),
+    ]
 
 
 @pytest.fixture

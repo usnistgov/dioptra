@@ -20,6 +20,7 @@
 .. |TaskPluginUploadForm| replace:: :py:class:`~.model.TaskPluginUploadForm`
 .. |TaskPluginUploadFormData| replace:: :py:class:`~.model.TaskPluginUploadFormData`
 """
+from __future__ import annotations
 
 from typing import Any, Dict
 

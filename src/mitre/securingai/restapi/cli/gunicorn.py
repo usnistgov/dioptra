@@ -16,6 +16,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """A module for starting the gunicorn wsgi server."""
+from __future__ import annotations
 
 import os
 
