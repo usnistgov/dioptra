@@ -117,7 +117,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: cache docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.1
         with:
           path: /tmp/.buildx-cache-${{ matrix.dioptra-app }}
           key: ${{ runner.os }}-buildx-${{ matrix.dioptra-app }}-${{ github.sha }}
@@ -247,7 +247,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: cache docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.1
         with:
           path: /tmp/.buildx-cache-${{ matrix.dioptra-app }}
           key: ${{ runner.os }}-buildx-${{ matrix.dioptra-app }}-${{ github.sha }}
@@ -339,7 +339,7 @@ jobs:
         run: echo "::set-output name=dir::$(pip cache dir)"
 
       - name: cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.1
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini') }}
@@ -415,7 +415,7 @@ jobs:
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_tensorflow21-cpu_dev.tar
 
       - name: cache the mnist dataset download
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.1
         with:
           path: /tmp/testbed-cache/mnist
           key: ${{ runner.os }}-testbed-cache-mnist
