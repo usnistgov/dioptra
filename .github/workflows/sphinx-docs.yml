@@ -58,7 +58,7 @@ jobs:
         run: sphinx-build -b html docs/source docs/build
 
       - name: archive the documentation
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: docs-build
           path: docs/build
