@@ -125,7 +125,7 @@ jobs:
             ${{ runner.os }}-buildx-${{ matrix.dioptra-app }}-
 
       - name: download packaged source code
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: build-code-package
           path: dist
@@ -255,7 +255,7 @@ jobs:
             ${{ runner.os }}-buildx-${{ matrix.dioptra-app }}-
 
       - name: download packaged source code
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: build-code-package
           path: dist
@@ -350,46 +350,46 @@ jobs:
         run: python3 -m pip install tox
 
       - name: download the nginx docker integration testing image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-nginx-dev-image
           path: /tmp
 
       - name: download the mlflow-tracking docker integration testing image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-mlflow-tracking-dev-image
           path: /tmp
 
       - name: download the restapi docker integration testing image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-restapi-dev-image
           path: /tmp
 
       - name: download the tensorflow2-cpu docker integration testing image
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-tensorflow2-cpu-dev-image
           path: /tmp
 
       - name: download the mlflow-tracking1-12-1 legacy docker integration testing image
         if: ${{ matrix.tox-env == 'integration-legacy-migration' }}
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-mlflow-tracking1-12-1-dev-image
           path: /tmp
 
       - name: download the restapi-py37 legacy docker integration testing image
         if: ${{ matrix.tox-env == 'integration-legacy-migration' }}
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-restapi-py37-dev-image
           path: /tmp
 
       - name: download the tensorflow21-cpu legacy docker integration testing image
         if: ${{ matrix.tox-env == 'integration-legacy-migration' }}
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-tensorflow21-cpu-dev-image
           path: /tmp
