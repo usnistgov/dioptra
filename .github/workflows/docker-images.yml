@@ -64,7 +64,7 @@ jobs:
         run: python3 -m build -sw
 
       - name: archive the code package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: build-code-package
           path: dist
@@ -222,7 +222,7 @@ jobs:
           mv /tmp/.buildx-cache-${{ matrix.dioptra-app }}-new /tmp/.buildx-cache-${{ matrix.dioptra-app }}
 
       - name: archive the docker integration testing images
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
           path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
@@ -304,7 +304,7 @@ jobs:
           mv /tmp/.buildx-cache-${{ matrix.dioptra-app }}-new /tmp/.buildx-cache-${{ matrix.dioptra-app }}
 
       - name: archive the docker integration testing images
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
           path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
