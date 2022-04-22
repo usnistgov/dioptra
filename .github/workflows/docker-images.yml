@@ -157,7 +157,7 @@ jobs:
             TENSORFLOW_VERSION=${{ env.TENSORFLOW_VERSION }}
             TENSORFLOW_NVIDIA_CUDA_VERSION=${{ env.TENSORFLOW_NVIDIA_CUDA_VERSION }}
 
-      - name: build and push
+      - name: build and push (no cache)
         uses: docker/build-push-action@v2
         if: ${{ github.event_name == 'schedule' }}
         with:
@@ -191,7 +191,7 @@ jobs:
           rm -rf /tmp/.buildx-cache-${{ matrix.dioptra-app }}
           mv /tmp/.buildx-cache-${{ matrix.dioptra-app }}-new /tmp/.buildx-cache-${{ matrix.dioptra-app }}
 
-      - name: build and export images for integration testing
+      - name: build and export images for testing
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -223,11 +223,76 @@ jobs:
           rm -rf /tmp/.buildx-cache-${{ matrix.dioptra-app }}
           mv /tmp/.buildx-cache-${{ matrix.dioptra-app }}-new /tmp/.buildx-cache-${{ matrix.dioptra-app }}
 
-      - name: archive the docker integration testing images
+      - name: archive the testing images
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
           path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
+
+  container-test:
+    runs-on: ubuntu-20.04
+    needs:
+      - build-docker-dioptra-apps
+    strategy:
+      matrix:
+        dioptra-app:
+          - nginx
+          - mlflow-tracking
+          - restapi
+          - pytorch-cpu
+          - pytorch-gpu
+          - tensorflow2-cpu
+          - tensorflow2-gpu
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup python 3.9
+        uses: actions/setup-python@v3.1.1
+        with:
+          python-version: "3.9"
+
+      - name: upgrade pip
+        run: |
+          # install pip=>20.1 to use "pip cache dir"
+          python3 -m pip install --upgrade pip
+
+      - name: get pip cache dir
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: cache dependencies
+        uses: actions/cache@v3.0.2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: install dependencies
+        run: python3 -m pip install tox
+
+      - name: download the container image
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
+          path: /tmp
+
+      - name: set up docker qemu
+        uses: docker/setup-qemu-action@v1
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: load the container image
+        run: |
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
+          rm /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
+
+      - name: run ${{ matrix.tox-env }} test
+        run: tox -e containers
+        env:
+          DIOPTRA_TEST_CONTAINER: ${{ matrix.dioptra-app }}
 
   integration-test:
     runs-on: ubuntu-20.04
@@ -267,25 +332,25 @@ jobs:
       - name: install dependencies
         run: python3 -m pip install tox
 
-      - name: download the nginx docker integration testing image
+      - name: download the nginx testing image
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-nginx-dev-image
           path: /tmp
 
-      - name: download the mlflow-tracking docker integration testing image
+      - name: download the mlflow-tracking testing image
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-mlflow-tracking-dev-image
           path: /tmp
 
-      - name: download the restapi docker integration testing image
+      - name: download the restapi testing image
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-restapi-dev-image
           path: /tmp
 
-      - name: download the tensorflow2-cpu docker integration testing image
+      - name: download the tensorflow2-cpu testing image
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-tensorflow2-cpu-dev-image
@@ -297,14 +362,19 @@ jobs:
       - name: set up docker buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: load the integration testing docker images
+      - name: load the testing images
         run: |
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_nginx_dev.tar
+          rm /tmp/${{ env.PROJECT_PREFIX }}_nginx_dev.tar
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar
+          rm /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar
+          rm /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar
           docker load --input /tmp/${{ env.PROJECT_PREFIX }}_tensorflow2-cpu_dev.tar
+          rm /tmp/${{ env.PROJECT_PREFIX }}_tensorflow2-cpu_dev.tar
 
       - name: cache the mnist dataset download
+        if: ${{ matrix.tox-env != 'containers' }}
         uses: actions/cache@v3.0.2
         with:
           path: /tmp/dioptra-cache/mnist
