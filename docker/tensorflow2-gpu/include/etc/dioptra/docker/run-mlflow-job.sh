@@ -271,7 +271,7 @@ validate_builtin_plugins_s3_uri() {
     exit 1
   fi
 
-  if [[ ! -z $(s3_bucket_exists ${bucket} 2>&1) ]]; then
+  if ! s3_bucket_exists ${bucket} "dioptra_builtins/" &>/dev/null; then
     echo "${logname}: ERROR - S3 bucket for builtin plugins does not exist" 1>&2
     exit 1
   fi
@@ -297,7 +297,7 @@ validate_custom_plugins_s3_uri() {
     exit 1
   fi
 
-  if [[ ! -z $(s3_bucket_exists ${bucket} 2>&1) ]]; then
+  if ! s3_bucket_exists ${bucket} "dioptra_custom/" &>/dev/null; then
     echo "${logname}: ERROR - S3 bucket for custom plugins does not exist" 1>&2
     exit 1
   fi
@@ -310,17 +310,21 @@ validate_custom_plugins_s3_uri() {
 #   mlflow_s3_endpoint_url
 # Arguments:
 #   bucket
+#   prefix
 # Returns:
 #   None
 ###########################################################################################
 
 s3_bucket_exists() {
   local bucket=${1}
+  local prefix=${2}
 
   if [[ ! -z ${mlflow_s3_endpoint_url} ]]; then
-    aws --endpoint-url ${mlflow_s3_endpoint_url} s3api head-bucket --bucket ${bucket}
+    aws --endpoint-url ${mlflow_s3_endpoint_url} s3api list-objects-v2 --bucket ${bucket} \
+      --prefix ${prefix} --max-items 0 --no-cli-pager
   else
-    aws s3api head-bucket --bucket ${bucket}
+    aws s3api list-objects-v2 --bucket ${bucket} --prefix ${prefix} --max-items 0 \
+      --no-cli-pager
   fi
 }
 
