@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-FROM ubuntu:latest
+FROM ubuntu:focal
 
 USER root
 
@@ -40,8 +40,9 @@ RUN apt-get update && \
 ADD http://pki.mitre.org/MITRE%20BA%20ROOT.crt /usr/local/share/ca-certificates/MITRE-BA-ROOT.crt
 ADD http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt /usr/local/share/ca-certificates/MITRE-BA-NPE-CA-3-1.crt
 ADD http://pki.mitre.org/MITRE-chain.txt /usr/local/share/ca-certificates/MITRE-chain.pem
+ADD http://pki.mitre.org/ZScaler_Root.crt /usr/local/share/ca-certificates/ZScaler_Root.crt
 
-RUN cat /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/MITRE-chain.pem >/etc/ssl/certs/ca-certificates-plus-mitre.pem && \
+RUN cat /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/MITRE-chain.pem /usr/local/share/ca-certificates/ZScaler_Root.crt >/etc/ssl/certs/ca-certificates-plus-mitre.pem && \
     /usr/sbin/update-ca-certificates
 
 ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
