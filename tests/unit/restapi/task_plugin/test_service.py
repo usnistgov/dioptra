@@ -141,43 +141,36 @@ def test_delete_prefix(
 def test_get_all(
     s3_service: S3Service,
     task_plugin_service: TaskPluginService,
-    list_objects_v2_collections: Dict[str, Any],
     list_objects_v2_builtins: Dict[str, Any],
     list_objects_v2_custom: Dict[str, Any],
     list_objects_v2_builtins_artifacts: Dict[str, Any],
     list_objects_v2_builtins_attacks: Dict[str, Any],
     list_objects_v2_custom_new_plugin_one: Dict[str, Any],
     list_objects_v2_custom_new_plugin_two: Dict[str, Any],
-    monkeypatch: MonkeyPatch,
 ) -> None:
     list_objects_v2_expected_params1: Dict[str, Any] = {
         "Bucket": "plugins",
         "Delimiter": "/",
-        "Prefix": "/",
+        "Prefix": "dioptra_builtins/",
     }
     list_objects_v2_expected_params2: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Delimiter": "/",
-        "Prefix": "dioptra_builtins/",
+        "Prefix": "dioptra_builtins/artifacts/",
     }
     list_objects_v2_expected_params3: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Prefix": "dioptra_builtins/artifacts/",
-    }
-    list_objects_v2_expected_params4: Dict[str, Any] = {
-        "Bucket": "plugins",
         "Prefix": "dioptra_builtins/attacks/",
     }
-    list_objects_v2_expected_params5: Dict[str, Any] = {
+    list_objects_v2_expected_params4: Dict[str, Any] = {
         "Bucket": "plugins",
         "Delimiter": "/",
         "Prefix": "dioptra_custom/",
     }
-    list_objects_v2_expected_params6: Dict[str, Any] = {
+    list_objects_v2_expected_params5: Dict[str, Any] = {
         "Bucket": "plugins",
         "Prefix": "dioptra_custom/new_plugin_one/",
     }
-    list_objects_v2_expected_params7: Dict[str, Any] = {
+    list_objects_v2_expected_params6: Dict[str, Any] = {
         "Bucket": "plugins",
         "Prefix": "dioptra_custom/new_plugin_two/",
     }
@@ -185,40 +178,36 @@ def test_get_all(
     with Stubber(s3_service._client) as stubber:
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_collections,
+            list_objects_v2_builtins,
             list_objects_v2_expected_params1,
         )
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_builtins,
+            list_objects_v2_builtins_artifacts,
             list_objects_v2_expected_params2,
         )
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_builtins_artifacts,
+            list_objects_v2_builtins_attacks,
             list_objects_v2_expected_params3,
         )
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_builtins_attacks,
+            list_objects_v2_custom,
             list_objects_v2_expected_params4,
         )
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_custom,
+            list_objects_v2_custom_new_plugin_one,
             list_objects_v2_expected_params5,
         )
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_custom_new_plugin_one,
+            list_objects_v2_custom_new_plugin_two,
             list_objects_v2_expected_params6,
         )
-        stubber.add_response(
-            "list_objects_v2",
-            list_objects_v2_custom_new_plugin_two,
-            list_objects_v2_expected_params7,
-        )
         response_task_plugin: List[TaskPlugin] = task_plugin_service.get_all(
+            s3_collections_list=["dioptra_builtins", "dioptra_custom"],
             bucket="plugins"
         )
         stubber.assert_no_pending_responses()
