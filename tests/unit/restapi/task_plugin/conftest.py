@@ -84,23 +84,6 @@ def task_plugin_upload_form_data(
 
 
 @pytest.fixture
-def list_objects_v2_collections() -> Dict[str, Any]:
-    return {
-        "IsTruncated": False,
-        "Name": "plugins",
-        "Prefix": "/",
-        "Delimiter": "/",
-        "MaxKeys": 4500,
-        "CommonPrefixes": [
-            {"Prefix": "dioptra_builtins/"},
-            {"Prefix": "dioptra_custom/"},
-        ],
-        "EncodingType": "url",
-        "KeyCount": 2,
-    }
-
-
-@pytest.fixture
 def list_objects_v2_builtins() -> Dict[str, Any]:
     return {
         "IsTruncated": False,

@@ -116,20 +116,19 @@ class TaskPluginService(object):
 
         return [task_plugin]
 
-    def get_all(self, bucket: str = "plugins", **kwargs) -> List[TaskPlugin]:
+    def get_all(
+        self, s3_collections_list: List[str], bucket: str = "plugins", **kwargs
+    ) -> List[TaskPlugin]:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         log.info("Get all task plugins")
 
-        s3_collections_list: List[str] = self._s3_service.list_directories(
-            bucket=bucket,
-            prefix=self._s3_service.normalize_prefix("/", log=log),
-            log=log,
-        )
-
         task_plugins: List[TaskPlugin] = []
+
         for collection in s3_collections_list:
-            task_plugins.extend(self.get_all_in_collection(collection, log=log))
+            task_plugins.extend(
+                self.get_all_in_collection(collection, bucket=bucket, log=log)
+            )
 
         return task_plugins
 

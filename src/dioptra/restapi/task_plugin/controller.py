@@ -60,7 +60,9 @@ class TaskPluginResource(Resource):
         )
         log.info("Request received")
         return self._task_plugin_service.get_all(
-            bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"], log=log
+            s3_collections_list=["dioptra_builtins", "dioptra_custom"],
+            bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
+            log=log,
         )
 
     @api.expect(as_api_parser(api, TaskPluginUploadSchema))
