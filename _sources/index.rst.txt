@@ -37,7 +37,7 @@ What is Dioptra?
 Points of Contact
 -----------------
 
-Email us: ai-nccoe@nist.gov
+Email us: dioptra@nist.gov
 
 
 .. toctree::
