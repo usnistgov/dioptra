@@ -22,11 +22,13 @@ on:
   push:
     branches:
       - "main"
+      - "dev"
     tags:
       - "v*.*.*"
   pull_request:
     branches:
       - "main"
+      - "dev"
 
 env:
   CODE_PKG_VERSION: 0.0.0
