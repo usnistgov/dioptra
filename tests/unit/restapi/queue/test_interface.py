@@ -22,8 +22,8 @@ import pytest
 import structlog
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import Queue, QueueLock
-from mitre.securingai.restapi.queue.interface import (
+from dioptra.restapi.models import Queue, QueueLock
+from dioptra.restapi.queue.interface import (
     QueueInterface,
     QueueLockInterface,
     QueueUpdateInterface,

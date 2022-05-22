@@ -36,7 +36,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Example of a plug-in consisting of several parts"""
-from mitre.securingai import pyplugs
+from dioptra import pyplugs
 
 
 @pyplugs.register

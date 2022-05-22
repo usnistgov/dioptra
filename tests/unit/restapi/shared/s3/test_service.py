@@ -25,7 +25,7 @@ from botocore.stub import Stubber
 from dateutil.tz.tz import tzlocal, tzutc
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.shared.s3.service import S3Service
+from dioptra.restapi.shared.s3.service import S3Service
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -53,7 +53,7 @@ def list_objects_v2_plugin_artifacts_response() -> Dict[str, Any]:
         "IsTruncated": False,
         "Contents": [
             {
-                "Key": "securingai_custom/artifacts/__init__.py",
+                "Key": "dioptra_custom/artifacts/__init__.py",
                 "LastModified": datetime.datetime(
                     2021, 4, 26, 21, 2, 18, 688000, tzinfo=tzlocal()
                 ),
@@ -67,7 +67,7 @@ def list_objects_v2_plugin_artifacts_response() -> Dict[str, Any]:
                 },
             },
             {
-                "Key": "securingai_custom/artifacts/exceptions.py",
+                "Key": "dioptra_custom/artifacts/exceptions.py",
                 "LastModified": datetime.datetime(
                     2021, 4, 26, 21, 2, 18, 809000, tzinfo=tzlocal()
                 ),
@@ -81,7 +81,7 @@ def list_objects_v2_plugin_artifacts_response() -> Dict[str, Any]:
                 },
             },
             {
-                "Key": "securingai_custom/artifacts/mlflow.py",
+                "Key": "dioptra_custom/artifacts/mlflow.py",
                 "LastModified": datetime.datetime(
                     2021, 4, 26, 21, 2, 18, 818000, tzinfo=tzlocal()
                 ),
@@ -95,7 +95,7 @@ def list_objects_v2_plugin_artifacts_response() -> Dict[str, Any]:
                 },
             },
             {
-                "Key": "securingai_custom/artifacts/utils.py",
+                "Key": "dioptra_custom/artifacts/utils.py",
                 "LastModified": datetime.datetime(
                     2021, 4, 26, 21, 2, 18, 810000, tzinfo=tzlocal()
                 ),
@@ -110,7 +110,7 @@ def list_objects_v2_plugin_artifacts_response() -> Dict[str, Any]:
             },
         ],
         "Name": "plugins",
-        "Prefix": "securingai_custom/artifacts",
+        "Prefix": "dioptra_custom/artifacts",
         "Delimiter": "",
         "MaxKeys": 4500,
         "EncodingType": "url",
@@ -140,19 +140,19 @@ def list_objects_v2_common_prefix_response() -> Dict[str, Any]:
         },
         "IsTruncated": False,
         "Name": "plugins",
-        "Prefix": "securingai_builtins/",
+        "Prefix": "dioptra_builtins/",
         "Delimiter": "/",
         "MaxKeys": 4500,
         "CommonPrefixes": [
-            {"Prefix": "securingai_builtins/artifacts/"},
-            {"Prefix": "securingai_builtins/attacks/"},
-            {"Prefix": "securingai_builtins/backend_configs/"},
-            {"Prefix": "securingai_builtins/data/"},
-            {"Prefix": "securingai_builtins/estimators/"},
-            {"Prefix": "securingai_builtins/metrics/"},
-            {"Prefix": "securingai_builtins/random/"},
-            {"Prefix": "securingai_builtins/registry/"},
-            {"Prefix": "securingai_builtins/tracking/"},
+            {"Prefix": "dioptra_builtins/artifacts/"},
+            {"Prefix": "dioptra_builtins/attacks/"},
+            {"Prefix": "dioptra_builtins/backend_configs/"},
+            {"Prefix": "dioptra_builtins/data/"},
+            {"Prefix": "dioptra_builtins/estimators/"},
+            {"Prefix": "dioptra_builtins/metrics/"},
+            {"Prefix": "dioptra_builtins/random/"},
+            {"Prefix": "dioptra_builtins/registry/"},
+            {"Prefix": "dioptra_builtins/tracking/"},
         ],
         "EncodingType": "url",
         "KeyCount": 9,
@@ -212,7 +212,7 @@ def test_list_directories(
 ) -> None:
     list_objects_v2_expected_params: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Prefix": "securingai_builtins/",
+        "Prefix": "dioptra_builtins/",
         "Delimiter": "/",
     }
     expected_response: List[str] = [
@@ -234,7 +234,7 @@ def test_list_directories(
             list_objects_v2_expected_params,
         )
         service_response: List[str] = s3_service.list_directories(
-            bucket="plugins", prefix="securingai_builtins/"
+            bucket="plugins", prefix="dioptra_builtins/"
         )
         stubber.assert_no_pending_responses()
 
@@ -247,13 +247,13 @@ def test_list_objects(
 ) -> None:
     list_objects_v2_expected_params: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Prefix": "securingai_custom/",
+        "Prefix": "dioptra_custom/",
     }
     expected_response: List[str] = [
-        "securingai_custom/artifacts/__init__.py",
-        "securingai_custom/artifacts/exceptions.py",
-        "securingai_custom/artifacts/mlflow.py",
-        "securingai_custom/artifacts/utils.py",
+        "dioptra_custom/artifacts/__init__.py",
+        "dioptra_custom/artifacts/exceptions.py",
+        "dioptra_custom/artifacts/mlflow.py",
+        "dioptra_custom/artifacts/utils.py",
     ]
 
     with Stubber(s3_service._client) as stubber:
@@ -263,7 +263,7 @@ def test_list_objects(
             list_objects_v2_expected_params,
         )
         service_response: List[str] = s3_service.list_objects(
-            bucket="plugins", prefix="securingai_custom/"
+            bucket="plugins", prefix="dioptra_custom/"
         )
         stubber.assert_no_pending_responses()
 
@@ -312,7 +312,7 @@ def test_upload_directory(
 ) -> None:
     uri_list: List[str] = []
     data_json_uri: str = S3Service.as_uri(
-        bucket="plugins", key="securingai_custom/models/data.json"
+        bucket="plugins", key="dioptra_custom/models/data.json"
     )
 
     def mockuploadfile(*args, **kwargs) -> None:
@@ -326,7 +326,7 @@ def test_upload_directory(
         service_response: List[str] = s3_service.upload_directory(
             directory=task_plugins_dir,
             bucket="plugins",
-            prefix="securingai_custom",
+            prefix="dioptra_custom",
             include_suffixes=[".py"],
         )
 
@@ -347,13 +347,13 @@ def test_delete_prefix(
 
     list_objects_v2_expected_params: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Prefix": "securingai_custom/artifacts",
+        "Prefix": "dioptra_custom/artifacts",
     }
     expected_response: List[str] = [
-        "securingai_custom/artifacts/__init__.py",
-        "securingai_custom/artifacts/exceptions.py",
-        "securingai_custom/artifacts/mlflow.py",
-        "securingai_custom/artifacts/utils.py",
+        "dioptra_custom/artifacts/__init__.py",
+        "dioptra_custom/artifacts/exceptions.py",
+        "dioptra_custom/artifacts/mlflow.py",
+        "dioptra_custom/artifacts/utils.py",
     ]
 
     with Stubber(s3_service._client) as stubber, monkeypatch.context() as m:
@@ -365,7 +365,7 @@ def test_delete_prefix(
         )
         service_response: List[str] = s3_service.delete_prefix(
             bucket="plugins",
-            prefix="securingai_custom/artifacts",
+            prefix="dioptra_custom/artifacts",
         )
         stubber.assert_no_pending_responses()
 
@@ -375,18 +375,18 @@ def test_delete_prefix(
 def test_normalize_prefix(s3_service: S3Service) -> None:
     assert s3_service.normalize_prefix(prefix="/") == "/"
     assert (
-        s3_service.normalize_prefix(prefix="///securingai_builtins")
-        == "securingai_builtins/"
+        s3_service.normalize_prefix(prefix="///dioptra_builtins")
+        == "dioptra_builtins/"
     )
     assert (
-        s3_service.normalize_prefix(prefix="securingai_builtins")
-        == "securingai_builtins/"
+        s3_service.normalize_prefix(prefix="dioptra_builtins")
+        == "dioptra_builtins/"
     )
     assert (
-        s3_service.normalize_prefix(prefix="securingai_builtins/")
-        == "securingai_builtins/"
+        s3_service.normalize_prefix(prefix="dioptra_builtins/")
+        == "dioptra_builtins/"
     )
     assert (
-        s3_service.normalize_prefix(prefix="securingai_builtins//")
-        == "securingai_builtins/"
+        s3_service.normalize_prefix(prefix="dioptra_builtins//")
+        == "dioptra_builtins/"
     )

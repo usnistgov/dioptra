@@ -29,14 +29,14 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 def test_legacy_migration(
-    testbed_hosts,
-    testbed_client,
+    dioptra_hosts,
+    dioptra_client,
     mlflow_client,
     workflows_tar_gz,
     train_entrypoint_response,
 ):
     # Run "fgm" entrypoint job
-    response_fgm_shallow_net = testbed_client.submit_job(
+    response_fgm_shallow_net = dioptra_client.submit_job(
         workflows_file=str(workflows_tar_gz),
         experiment_name="mnist",
         entry_point="fgm",
@@ -47,12 +47,12 @@ def test_legacy_migration(
 
     while mlflow_run_id_is_not_known(response_fgm_shallow_net):
         time.sleep(1)
-        response_fgm_shallow_net = testbed_client.get_job_by_id(
+        response_fgm_shallow_net = dioptra_client.get_job_by_id(
             response_fgm_shallow_net["jobId"]
         )
 
     # Run "infer" entrypoint job
-    response_shallow_net_infer_shallow_net = testbed_client.submit_job(
+    response_shallow_net_infer_shallow_net = dioptra_client.submit_job(
         workflows_file=str(workflows_tar_gz),
         experiment_name="mnist",
         entry_point="infer",
@@ -70,10 +70,10 @@ def test_legacy_migration(
         response_shallow_net_infer_shallow_net
     ):
         time.sleep(1)
-        response_fgm_shallow_net = testbed_client.get_job_by_id(
+        response_fgm_shallow_net = dioptra_client.get_job_by_id(
             response_fgm_shallow_net["jobId"]
         )
-        response_shallow_net_infer_shallow_net = testbed_client.get_job_by_id(
+        response_shallow_net_infer_shallow_net = dioptra_client.get_job_by_id(
             response_shallow_net_infer_shallow_net["jobId"]
         )
 

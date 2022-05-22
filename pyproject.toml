@@ -42,10 +42,10 @@ name = "cz_conventional_commits"
 version = "0.0.0"
 changelog_file = "CHANGELOG.md"
 version_files = [
-    "src/mitre/securingai/mlflow_plugins/__version__.py",
-    "src/mitre/securingai/pyplugs/__version__.py",
-    "src/mitre/securingai/restapi/__version__.py",
-    "src/mitre/securingai/rq/__version__.py",
+    "src/dioptra/mlflow_plugins/__version__.py",
+    "src/dioptra/pyplugs/__version__.py",
+    "src/dioptra/restapi/__version__.py",
+    "src/dioptra/rq/__version__.py",
     ".github/workflows/docker-images.yml:CODE_PKG_VERSION",
     "docs/source/conf.py:release",
     "pyproject.toml:version",

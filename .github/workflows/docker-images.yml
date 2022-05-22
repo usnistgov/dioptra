@@ -32,7 +32,7 @@ on:
 
 env:
   CODE_PKG_VERSION: 0.0.0
-  PROJECT_PREFIX: securing-ai
+  PROJECT_PREFIX: dioptra
   MINICONDA3_PREFIX: Miniconda3-py39_
   MINICONDA_VERSION: 4.11.0
   PYTORCH_VERSION: 1.10.2
@@ -419,10 +419,10 @@ jobs:
       - name: cache the mnist dataset download
         uses: actions/cache@v3.0.2
         with:
-          path: /tmp/testbed-cache/mnist
-          key: ${{ runner.os }}-testbed-cache-mnist
+          path: /tmp/dioptra-cache/mnist
+          key: ${{ runner.os }}-dioptra-cache-mnist
           restore-keys: |
-            ${{ runner.os }}-testbed-cache-mnist
+            ${{ runner.os }}-dioptra-cache-mnist
 
       - name: run ${{ matrix.tox-env }} test
         run: tox -e ${{ matrix.tox-env }}

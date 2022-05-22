@@ -24,8 +24,8 @@ import testinfra
 
 from tests.integration.legacy_migration.migrate_s3 import migrate_s3
 from tests.integration.legacy_migration.utils import (
-    TestbedHosts,
-    initialize_testbed_rest_api,
+    DioptraHosts,
+    initialize_dioptra_rest_api,
     run_train_entrypoint_job,
 )
 from tests.integration.utils import (
@@ -42,13 +42,13 @@ from tests.integration.utils import (
 CONFTEST_DIR = Path(__file__).absolute().parent
 WORKFLOWS_DIR = CONFTEST_DIR / "workflows"
 CUSTOM_PLUGINS_EVALUATION_DIR = (
-    CONFTEST_DIR / "task_plugins" / "securingai_custom" / "evaluation"
+    CONFTEST_DIR / "task_plugins" / "dioptra_custom" / "evaluation"
 )
 MINIO_ENDPOINT_ALIAS = "minio"
 MINIO_ROOT_USER = "minio"
 MINIO_ROOT_PASSWORD = "minio123"
 MINIO_SERVICE_HOST = "http://localhost:39000"
-PLUGINS_BUILTINS_DIR = "securingai_builtins"
+PLUGINS_BUILTINS_DIR = "dioptra_builtins"
 
 
 @pytest.fixture
@@ -121,7 +121,7 @@ def train_entrypoint_response(
     request,
     mnist_data_dir,
     docker_client,
-    testbed_client,
+    dioptra_client,
     custom_plugins_evaluation_tar_gz,
     workflows_tar_gz,
 ):
@@ -182,15 +182,15 @@ def train_entrypoint_response(
         )
 
         # Register experiment namespace, worker queue, and upload custom task plugins
-        # via the Testbed REST API
-        initialize_testbed_rest_api(
-            testbed_client=testbed_client,
+        # via the Dioptra REST API
+        initialize_dioptra_rest_api(
+            dioptra_client=dioptra_client,
             custom_plugins_evaluation_tar_gz=custom_plugins_evaluation_tar_gz,
         )
 
         # Run train entrypoint job
         response_shallow_train = run_train_entrypoint_job(
-            testbed_client=testbed_client, workflows_tar_gz=workflows_tar_gz
+            dioptra_client=dioptra_client, workflows_tar_gz=workflows_tar_gz
         )
 
     except (RuntimeError, TimeoutError, CalledProcessError):
@@ -238,7 +238,7 @@ def migrate_s3_files(
 
 
 @pytest.fixture
-def testbed_hosts(
+def dioptra_hosts(
     docker_client,
     migrate_s3_files,
 ):
@@ -273,7 +273,7 @@ def testbed_hosts(
         )
 
         # return host connection to each service
-        yield TestbedHosts(
+        yield DioptraHosts(
             minio=testinfra.get_host("docker://minio"),
             mlflow_tracking=testinfra.get_host("docker://mlflow-tracking"),
             nginx=testinfra.get_host("docker://nginx"),

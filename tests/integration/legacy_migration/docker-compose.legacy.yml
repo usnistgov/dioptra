@@ -75,14 +75,14 @@ services:
       - ${PWD}/task-plugins:/task-plugins:ro
 
   restapi-db-upgrade:
-    image: securing-ai/restapi:dev
+    image: dioptra/restapi:dev
     hostname: restapi-db-upgrade
     container_name: restapi-db-upgrade
     command:
       - --upgrade-db
     environment:
-      AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-      AI_RESTAPI_ENV: prod
+      DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+      DIOPTRA_RESTAPI_ENV: prod
       AWS_ACCESS_KEY_ID: minio
       AWS_SECRET_ACCESS_KEY: minio123
       MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
@@ -102,7 +102,7 @@ services:
       - mnist-data:/nfs/data
 
   mlflow-tracking:
-    image: securing-ai/mlflow-tracking1-12-1:dev
+    image: dioptra/mlflow-tracking1-12-1:dev
     init: true
     restart: always
     hostname: mlflow-tracking
@@ -130,7 +130,7 @@ services:
       - mlflow-tracking-data:/work/mlruns
 
   nginx:
-    image: securing-ai/nginx:dev
+    image: dioptra/nginx:dev
     init: true
     restart: always
     hostname: nginx
@@ -160,7 +160,7 @@ services:
       - "30080:30080/tcp"
 
   restapi:
-    image: securing-ai/restapi-py37:dev
+    image: dioptra/restapi-py37:dev
     init: true
     restart: always
     hostname: restapi
@@ -174,8 +174,8 @@ services:
       timeout: 10s
       retries: 3
     environment:
-      AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-      AI_RESTAPI_ENV: prod
+      DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+      DIOPTRA_RESTAPI_ENV: prod
       AWS_ACCESS_KEY_ID: minio
       AWS_SECRET_ACCESS_KEY: minio123
       MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
@@ -188,16 +188,16 @@ services:
       - restapi-data:/work/data
 
   tfcpu-01:
-    image: securing-ai/tensorflow21-cpu:dev
+    image: dioptra/tensorflow21-cpu:dev
     init: true
     restart: always
     hostname: tfcpu-01
     container_name: tfcpu-01
     environment:
-      AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
-      AI_CUSTOM_PLUGINS_S3_URI: s3://plugins/securingai_custom
-      AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-      AI_RESTAPI_ENV: prod
+      DIOPTRA_PLUGINS_S3_URI: s3://plugins/dioptra_builtins
+      DIOPTRA_CUSTOM_PLUGINS_S3_URI: s3://plugins/dioptra_custom
+      DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+      DIOPTRA_RESTAPI_ENV: prod
       AWS_ACCESS_KEY_ID: minio
       AWS_SECRET_ACCESS_KEY: minio123
       MLFLOW_TRACKING_URI: http://mlflow-tracking:5000

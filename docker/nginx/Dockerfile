@@ -57,16 +57,16 @@ ARG PROJECT_PREFIX
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
 
-ARG AI_USER=securingai
-ARG AI_UID=39000
-ARG AI_GID=100
+ARG DIOPTRA_USER=dioptra
+ARG DIOPTRA_UID=39000
+ARG DIOPTRA_GID=100
 
 RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh /usr/local/bin/entrypoint.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh && \
     sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
-    useradd -u ${AI_UID} -N -M -s /bin/bash -c "Securing AI Testbed user" ${AI_USER} && \
+    useradd -u ${DIOPTRA_UID} -N -M -s /bin/bash -c "Dioptra user" ${DIOPTRA_USER} && \
     chmod g+w /etc/passwd
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/nginx.conf /etc/${PROJECT_PREFIX}/docker/nginx.conf
@@ -83,19 +83,19 @@ RUN mkdir -p /etc/nginx/conf.d && \
     chmod 0755 /var/cache/nginx && \
     chmod 0755 /var/lib/nginx && \
     chmod 0755 /var/log/nginx && \
-    chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/nginx.conf && \
-    chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/default.conf && \
-    chown -R ${AI_UID}:${AI_GID} /etc/nginx/conf.d && \
-    chown -R ${AI_UID}:${AI_GID} /var/cache/nginx && \
-    chown -R ${AI_UID}:${AI_GID} /var/lib/nginx && \
-    chown -R ${AI_UID}:${AI_GID} /var/log/nginx && \
+    chown ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/${PROJECT_PREFIX}/docker/nginx.conf && \
+    chown ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/${PROJECT_PREFIX}/docker/default.conf && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/nginx/conf.d && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/cache/nginx && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/lib/nginx && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/log/nginx && \
     ln -s /etc/${PROJECT_PREFIX}/docker/nginx.conf /etc/nginx/nginx.conf && \
     ln -s /etc/${PROJECT_PREFIX}/docker/default.conf /etc/nginx/conf.d/default.conf
 
-USER ${AI_UID}
+USER ${DIOPTRA_UID}
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-ENV AI_USER ${AI_USER}
-ENV AI_UID ${AI_UID}
-ENV AI_GID ${AI_GID}
+ENV DIOPTRA_USER ${DIOPTRA_USER}
+ENV DIOPTRA_UID ${DIOPTRA_UID}
+ENV DIOPTRA_GID ${DIOPTRA_GID}

@@ -28,10 +28,10 @@ from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.job.routes import BASE_ROUTE as JOB_BASE_ROUTE
-from mitre.securingai.restapi.job.service import JobService
-from mitre.securingai.restapi.models import Experiment, Job
-from mitre.securingai.restapi.shared.s3.service import S3Service
+from dioptra.restapi.job.routes import BASE_ROUTE as JOB_BASE_ROUTE
+from dioptra.restapi.job.service import JobService
+from dioptra.restapi.models import Experiment, Job
+from dioptra.restapi.shared.s3.service import S3Service
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

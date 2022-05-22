@@ -26,9 +26,9 @@ from IPython.display import HTML
 PathLike = List[Union[str, Path]]
 
 
-class SecuringAIClient(object):
+class DioptraClient(object):
     def __init__(self, address: Optional[str] = None) -> None:
-        address = f"{address}/api" if address else f"{os.environ['AI_RESTAPI_URI']}/api"
+        address = f"{address}/api" if address else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api"
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
 
     @property

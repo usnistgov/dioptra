@@ -33,9 +33,9 @@ from tasks import (
     get_performance_metrics,
 )
 
-from mitre.securingai import pyplugs
-from mitre.securingai.sdk.utilities.contexts import plugin_dirs
-from mitre.securingai.sdk.utilities.logging import (
+from dioptra import pyplugs
+from dioptra.sdk.utilities.contexts import plugin_dirs
+from dioptra.sdk.utilities.logging import (
     StderrLogStream,
     StdoutLogStream,
     attach_stdout_stream_handler,
@@ -44,7 +44,7 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
-_PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+_PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 CALLBACKS: List[Dict[str, Any]] = [
     {
         "name": "EarlyStopping",
@@ -339,8 +339,8 @@ def init_train_flow() -> Flow:
 
 
 if __name__ == "__main__":
-    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
-    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
+    log_level: str = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("DIOPTRA_JOB_LOG_AS_JSON") else False
 
     clear_logger_handlers(get_prefect_logger())
     attach_stdout_stream_handler(as_json)

@@ -70,9 +70,9 @@ Below we import the necessary Python modules and ensure the proper environment v
    # Default address for accessing the RESTful API service
    RESTAPI_ADDRESS = "http://localhost:30080"
 
-   # Set AI_RESTAPI_URI variable if not defined, used to connect to RESTful API service
-   if os.getenv("AI_RESTAPI_URI") is None:
-       os.environ["AI_RESTAPI_URI"] = RESTAPI_ADDRESS
+   # Set DIOPTRA_RESTAPI_URI variable if not defined, used to connect to RESTful API service
+   if os.getenv("DIOPTRA_RESTAPI_URI") is None:
+       os.environ["DIOPTRA_RESTAPI_URI"] = RESTAPI_ADDRESS
 
    # Default address for accessing the MLFlow Tracking server
    MLFLOW_TRACKING_URI = "http://localhost:35000"
@@ -158,11 +158,11 @@ For convenience, the ``Makefile`` provides a rule for creating the archive file 
 ``make workflows`` was invoked as part of the ``make demo`` startup procedure, so unless you edited the ``MLproject`` file or one of the files under ``src/``, you will likely see a message of *make: Nothing to be done for ‘workflows’*.
 
 To connect with the endpoint, we will use a client class defined in the ``utils.py`` file that is able to connect with the Testbed :term:`REST` term:`API` using the :term:`HTTP` protocol.
-We connect using the client below, which uses the environment variable ``AI_RESTAPI_URI`` to figure out how to connect to the Testbed :term:`REST` :term:`API`,
+We connect using the client below, which uses the environment variable ``DIOPTRA_RESTAPI_URI`` to figure out how to connect to the Testbed :term:`REST` :term:`API`,
 
 .. code-block::
 
-   restapi_client = utils.SecuringAIClient()
+   restapi_client = utils.DioptraClient()
 
 We need to register an experiment under which to collect our job runs.
 The code below checks if the relevant experiment named ``"mnist"`` exists.

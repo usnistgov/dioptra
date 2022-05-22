@@ -22,7 +22,7 @@ exceptions
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: mitre.securingai.sdk.exceptions
+.. automodule:: dioptra.sdk.exceptions
    :members:
    :undoc-members:
    :show-inheritance:

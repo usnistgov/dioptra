@@ -44,7 +44,7 @@ CHOWN_PERM =
 endif
 
 EXAMPLE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-EXAMPLE_NAME = mnist-pixel-threshold
+EXAMPLE_NAME = tensorflow-mnist-pixel-threshold
 EXAMPLE_CONDA_ENV_NAME = mnist-pixel-threshold
 EXAMPLE_CUSTOM_PLUGINS_DIR = task-plugins
 EXAMPLE_DATA_DIR = data
@@ -65,21 +65,21 @@ PY ?= python3
 RM = rm
 TAR = tar
 
-CONDA_ENV_NAME = mitre-securing-ai
+CONDA_ENV_NAME = dioptra
 
 CODE_SRC_FILES := $(wildcard $(EXAMPLE_SRC_DIR)/*.py)
 CODE_WORKFLOW_FILE = MLproject
 
-PLUGINS_BUILTINS_DIR := $(EXAMPLE_PLUGINS_DIR)/securingai_builtins
+PLUGINS_BUILTINS_DIR := $(EXAMPLE_PLUGINS_DIR)/dioptra_builtins
 PLUGINS_SRC_FILES := $(wildcard $(PLUGINS_BUILTINS_DIR)/*/*.py)
 
-PLUGINS_CUSTOM_DIR := $(EXAMPLE_CUSTOM_PLUGINS_DIR)/securingai_custom
+PLUGINS_CUSTOM_DIR := $(EXAMPLE_CUSTOM_PLUGINS_DIR)/dioptra_custom
 CUSTOM_PLUGIN_EVALUATION_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/evaluation/*.py)
 CUSTOM_PLUGIN_PIXEL_THRESHOLD_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/pixel_threshold/*.py)
 
 JUPYTER_INSTALL_PACKAGES_SCRIPT = $(EXAMPLE_JUPYTER_DIR)/before-notebook.d/install-packages.sh
 
-RESTAPI_DATABASE = $(EXAMPLE_RESTAPI_DATA_DIR)/securingai.db
+RESTAPI_DATABASE = $(EXAMPLE_RESTAPI_DATA_DIR)/dioptra.db
 RESTAPI_DATABASE_INIT_SCRIPT_FILE = initdb.py
 
 S3_PLUGINS_BUCKET = plugins
@@ -281,7 +281,7 @@ $(JUPYTER_SENTINEL): | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_
 
 $(PLUGINS_SENTINEL): $(PLUGINS_SRC_FILES) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
 	$(call s3_mb,$(S3_PLUGINS_BUCKET))
-	$(call s3_sync,$(shell dirname $(EXAMPLE_PLUGINS_DIR)),$(shell basename $(EXAMPLE_PLUGINS_DIR)),/$(shell basename $(EXAMPLE_PLUGINS_DIR))/$(shell basename $(PLUGINS_BUILTINS_DIR)),s3://$(S3_PLUGINS_BUCKET)/securingai_builtins)
+	$(call s3_sync,$(shell dirname $(EXAMPLE_PLUGINS_DIR)),$(shell basename $(EXAMPLE_PLUGINS_DIR)),/$(shell basename $(EXAMPLE_PLUGINS_DIR))/$(shell basename $(PLUGINS_BUILTINS_DIR)),s3://$(S3_PLUGINS_BUCKET)/dioptra_builtins)
 	$(call run_docker_compose,down)
 	$(call docker_remove_volume,$(DOCKER_LOCAL_VOLUMES))
 	$(call save_sentinel_file,$@)

@@ -22,7 +22,7 @@ registry
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: securingai_builtins.registry
+.. automodule:: dioptra_builtins.registry
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ registry
 art.py
 ------
 
-.. automodule:: securingai_builtins.registry.art
+.. automodule:: dioptra_builtins.registry.art
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,7 +38,7 @@ art.py
 mlflow.py
 ---------
 
-.. automodule:: securingai_builtins.registry.mlflow
+.. automodule:: dioptra_builtins.registry.mlflow
    :members:
    :undoc-members:
    :show-inheritance:

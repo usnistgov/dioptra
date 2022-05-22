@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
 #################################################################################
-# DIOPTRA TESTBED IMAGES                                                        #
+# DIOPTRA IMAGES                                                                #
 #################################################################################
 
 # MLFlow Tracking ---------------------------------------------------------------
@@ -179,7 +179,7 @@ CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_FILES =\
     $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/aws-config\
     $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/bash.bashrc\
     $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/dot-condarc
-CONTAINER_MLFLOW_TRACKING_SCRIPTS =\
+CONTAINER_MLFLOW_TRACKING1_12_1_SCRIPTS =\
     $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/entrypoint-mlflow-tracking.sh\
     $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/fix-permissions.sh\
     $(CONTAINER_MLFLOW_TRACKING1_12_1_INCLUDE_DIR)/parse-uri.sh\

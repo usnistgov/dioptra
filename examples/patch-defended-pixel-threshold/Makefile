@@ -41,8 +41,8 @@ else
 endif
 
 EXAMPLE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-EXAMPLE_NAME = tensorflow-mnist-classifier
-EXAMPLE_CONDA_ENV_NAME = securing-ai-lab-components
+EXAMPLE_NAME = patch-defended-pixel-threshold
+EXAMPLE_CONDA_ENV_NAME = patch-defended-pixel-threshold
 EXAMPLE_DATA_DIR = data
 EXAMPLE_SRC_DIR = src
 

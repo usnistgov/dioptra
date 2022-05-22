@@ -22,7 +22,7 @@ backend_configs
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: securingai_builtins.backend_configs
+.. automodule:: dioptra_builtins.backend_configs
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ backend_configs
 tensorflow.py
 -------------
 
-.. automodule:: securingai_builtins.backend_configs.tensorflow
+.. automodule:: dioptra_builtins.backend_configs.tensorflow
    :members:
    :undoc-members:
    :show-inheritance:

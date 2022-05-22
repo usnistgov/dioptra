@@ -38,25 +38,25 @@
        driver_opts:
          type: none
          o: bind
-         device: /var/securing-ai/lab-deployment/minio
+         device: /var/dioptra/lab-deployment/minio
      mlflow-tracking-data:
        driver: local
        driver_opts:
          type: none
          o: bind
-         device: /var/securing-ai/lab-deployment/mlflow-tracking
+         device: /var/dioptra/lab-deployment/mlflow-tracking
      redis-data:
        driver: local
        driver_opts:
          type: none
          o: bind
-         device: /var/securing-ai/lab-deployment/redis
+         device: /var/dioptra/lab-deployment/redis
      restapi-data:
        driver: local
        driver_opts:
          type: none
          o: bind
-         device: /var/securing-ai/lab-deployment/restapi
+         device: /var/dioptra/lab-deployment/restapi
 
    services:
      redis:
@@ -100,7 +100,7 @@
          - minio-data:/data
 
      mlflow-tracking:
-       image: securing-ai/mlflow-tracking:latest
+       image: dioptra/mlflow-tracking:latest
        init: true
        restart: always
        hostname: mlflow-tracking
@@ -130,7 +130,7 @@
          - mlflow-tracking-data:/work/mlruns
 
      nginx:
-       image: securing-ai/nginx:latest
+       image: dioptra/nginx:latest
        init: true
        restart: always
        hostname: nginx
@@ -162,7 +162,7 @@
          - "30080:30080/tcp"
 
      restapi:
-       image: securing-ai/restapi:latest
+       image: dioptra/restapi:latest
        init: true
        restart: always
        hostname: restapi
@@ -179,8 +179,8 @@
          timeout: 10s
          retries: 3
        environment:
-         AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-         AI_RESTAPI_ENV: prod
+         DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+         DIOPTRA_RESTAPI_ENV: prod
          AWS_ACCESS_KEY_ID: # Replace with desired username
          AWS_SECRET_ACCESS_KEY: # Replace with desired password
          MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
@@ -193,7 +193,7 @@
          - restapi-data:/work/data
 
      tfcpu-01:
-       image: securing-ai/tensorflow2-cpu:latest
+       image: dioptra/tensorflow2-cpu:latest
        init: true
        restart: always
        hostname: tfcpu-01
@@ -204,9 +204,9 @@
          - mlflow-tracking
          - redis
        environment:
-         AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
-         AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-         AI_RESTAPI_ENV: prod
+         DIOPTRA_PLUGINS_S3_URI: s3://plugins/dioptra_builtins
+         DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+         DIOPTRA_RESTAPI_ENV: prod
          AWS_ACCESS_KEY_ID: # Replace with desired username
          AWS_SECRET_ACCESS_KEY: # Replace with desired password
          MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
@@ -226,7 +226,7 @@
          - restapi-data:/work/data
 
      tfcpu-02:
-       image: securing-ai/tensorflow2-cpu:latest
+       image: dioptra/tensorflow2-cpu:latest
        init: true
        restart: always
        hostname: tfcpu-02
@@ -237,9 +237,9 @@
          - mlflow-tracking
          - redis
        environment:
-         AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
-         AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-         AI_RESTAPI_ENV: prod
+         DIOPTRA_PLUGINS_S3_URI: s3://plugins/dioptra_builtins
+         DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+         DIOPTRA_RESTAPI_ENV: prod
          AWS_ACCESS_KEY_ID: # Replace with desired username
          AWS_SECRET_ACCESS_KEY: # Replace with desired password
          MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
@@ -259,7 +259,7 @@
          - restapi-data:/work/data
 
      tfgpu-01:
-       image: securing-ai/tensorflow2-gpu:latest
+       image: dioptra/tensorflow2-gpu:latest
        init: true
        restart: always
        hostname: tfgpu-01
@@ -271,9 +271,9 @@
          - mlflow-tracking
          - redis
        environment:
-         AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
-         AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-         AI_RESTAPI_ENV: prod
+         DIOPTRA_PLUGINS_S3_URI: s3://plugins/dioptra_builtins
+         DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+         DIOPTRA_RESTAPI_ENV: prod
          AWS_ACCESS_KEY_ID: # Replace with desired username
          AWS_SECRET_ACCESS_KEY: # Replace with desired password
          MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
@@ -289,7 +289,7 @@
          - restapi-data:/work/data
 
      tfgpu-02:
-       image: securing-ai/tensorflow2-gpu:latest
+       image: dioptra/tensorflow2-gpu:latest
        init: true
        restart: always
        hostname: tfgpu-02
@@ -301,9 +301,9 @@
          - mlflow-tracking
          - redis
        environment:
-         AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
-         AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-         AI_RESTAPI_ENV: prod
+         DIOPTRA_PLUGINS_S3_URI: s3://plugins/dioptra_builtins
+         DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+         DIOPTRA_RESTAPI_ENV: prod
          AWS_ACCESS_KEY_ID: # Replace with desired username
          AWS_SECRET_ACCESS_KEY: # Replace with desired password
          MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
@@ -319,7 +319,7 @@
          - restapi-data:/work/data
 
      tfgpu-03:
-       image: securing-ai/tensorflow2-gpu:latest
+       image: dioptra/tensorflow2-gpu:latest
        init: true
        restart: always
        hostname: tfgpu-03
@@ -331,9 +331,9 @@
          - mlflow-tracking
          - redis
        environment:
-         AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
-         AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-         AI_RESTAPI_ENV: prod
+         DIOPTRA_PLUGINS_S3_URI: s3://plugins/dioptra_builtins
+         DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+         DIOPTRA_RESTAPI_ENV: prod
          AWS_ACCESS_KEY_ID: # Replace with desired username
          AWS_SECRET_ACCESS_KEY: # Replace with desired password
          MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
@@ -349,7 +349,7 @@
          - restapi-data:/work/data
 
      pytorchcpu-01:
-       image: securing-ai/pytorch-cpu:latest
+       image: dioptra/pytorch-cpu:latest
        init: true
        restart: always
        hostname: pytorchcpu-01
@@ -360,9 +360,9 @@
          - mlflow-tracking
          - redis
        environment:
-         AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
-         AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-         AI_RESTAPI_ENV: prod
+         DIOPTRA_PLUGINS_S3_URI: s3://plugins/dioptra_builtins
+         DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+         DIOPTRA_RESTAPI_ENV: prod
          AWS_ACCESS_KEY_ID: # Replace with desired username
          AWS_SECRET_ACCESS_KEY: # Replace with desired password
          MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
@@ -381,7 +381,7 @@
          - restapi-data:/work/data
 
      pytorchcpu-02:
-       image: securing-ai/pytorch-cpu:latest
+       image: dioptra/pytorch-cpu:latest
        init: true
        restart: always
        hostname: pytorchcpu-02
@@ -392,9 +392,9 @@
          - mlflow-tracking
          - redis
        environment:
-         AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
-         AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-         AI_RESTAPI_ENV: prod
+         DIOPTRA_PLUGINS_S3_URI: s3://plugins/dioptra_builtins
+         DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+         DIOPTRA_RESTAPI_ENV: prod
          AWS_ACCESS_KEY_ID: # Replace with desired username
          AWS_SECRET_ACCESS_KEY: # Replace with desired password
          MLFLOW_TRACKING_URI: http://mlflow-tracking:5000
@@ -413,7 +413,7 @@
          - restapi-data:/work/data
 
      pytorchgpu-01:
-       image: securing-ai/pytorch-gpu:latest
+       image: dioptra/pytorch-gpu:latest
        init: true
        restart: always
        hostname: pytorchgpu-01
@@ -425,9 +425,9 @@
          - mlflow-tracking
          - redis
        environment:
-         AI_PLUGINS_S3_URI: s3://plugins/securingai_builtins
-         AI_RESTAPI_DATABASE_URI: sqlite:////work/data/securingai.db
-         AI_RESTAPI_ENV: prod
+         DIOPTRA_PLUGINS_S3_URI: s3://plugins/dioptra_builtins
+         DIOPTRA_RESTAPI_DATABASE_URI: sqlite:////work/data/dioptra.db
+         DIOPTRA_RESTAPI_ENV: prod
          AWS_ACCESS_KEY_ID: # Replace with desired username
          AWS_SECRET_ACCESS_KEY: # Replace with desired password
          MLFLOW_TRACKING_URI: http://mlflow-tracking:5000

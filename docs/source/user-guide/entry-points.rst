@@ -58,7 +58,7 @@ The :term:`SDK` library and the task plugins system are both provided to help Te
 
 .. note::
 
-   This particular usage for the term *entry point* `originates with the MLFlow library <https://mlflow.org/docs/latest/projects.html#overview>`_, and we have adopted for this project since Dioptra uses MLFlow_ on the backend to provide job tracking capabilities.
+   This particular usage for the term *entry point* `originates with the MLFlow library <https://mlflow.org/docs/latest/projects.html#overview>`_, and we have adopted it for this project since Dioptra uses MLFlow_ on the backend to provide job tracking capabilities.
 
 Each implementation of a Testbed entry point requires, at minimum, two separate files, a :term:`YAML` formatted ``MLproject`` file, and an executable Python script that can set its internal parameters via command-line options (e.g. :py:mod:`argparse` and :py:mod:`click`).
 These files are the topics of the following sections.
@@ -149,7 +149,7 @@ However, if users wish to make use of the Testbed's powerful job tracking and ta
 .. attention::
 
    The Testbed :term:`SDK`, in a planned future release, will be extending the ``MLproject`` specification to facilitate the templated generation of entry point scripts.
-   Users will have an easier to migrating their scripts to this new approach if they follow the Testbed's standard for entry point scripts when :doc:`creating their own entry points <custom-entry-points>`.
+   Users will have an easier time migrating their scripts to this new approach if they follow the Testbed's standard for entry point scripts when :doc:`creating their own entry points <custom-entry-points>`.
 
 Setting Parameters
 ~~~~~~~~~~~~~~~~~~
@@ -163,8 +163,8 @@ The following is a short example based on the `train` entry point from the ``MLp
    import os
 
    import click
-   from mitre.securingai.sdk.utilities.contexts import plugin_dirs
-   from mitre.securingai.sdk.utilities.logging import (
+   from dioptra.sdk.utilities.contexts import plugin_dirs
+   from dioptra.sdk.utilities.logging import (
        StderrLogStream,
        StdoutLogStream,
        attach_stdout_stream_handler,
@@ -196,8 +196,8 @@ The following is a short example based on the `train` entry point from the ``MLp
 
 
    if __name__ == "__main__":
-       log_level = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
-       as_json = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
+       log_level = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")
+       as_json = True if os.getenv("DIOPTRA_JOB_LOG_AS_JSON") else False
    
        clear_logger_handlers(get_prefect_logger())
        attach_stdout_stream_handler(as_json)
@@ -224,7 +224,7 @@ MLFlow - Tracking Runs
 
 Every entry point script needs to invoke :py:func:`mlflow.start_run()` to create an active run context for MLFlow and it should be done near the top of their entry point function.
 This context is needed when logging results and artifacts to the MLFlow Tracking service.
-The following example shows how this context would be started in the ``train()`` function from the previous section,
+The following example shows how this context would be started in the ``train()`` function from the previous section.
 
 .. code-block:: python
 
@@ -246,7 +246,7 @@ Within this context block, the ``active_run`` variable will contain a :py:class:
 MLFlow functions like :py:func:`mlflow.log_param`, :py:func:`mlflow.log_metric`, and :py:func:`mlflow.log_artifact` will be able to infer the current run automatically and be able to log their data to the appropriate place.
 Please note that the ``init_flow()`` function is :ref:`introduced in the following section <entry-points-prefect-task-execution>`.
 
-Testbed users are encouraged to peruse the MLflow Tracking documentation to learn more about the tracking context and the kinds of things you can do when its active: https://mlflow.org/docs/latest/tracking.html.
+Testbed users are encouraged to peruse the MLflow Tracking documentation to learn more about the tracking context and the kinds of things you can do when it's active: https://mlflow.org/docs/latest/tracking.html.
 
 .. _entry-points-prefect-task-execution:
 
@@ -262,9 +262,9 @@ The following example shows the beginnings of a :py:class:`~prefect.Flow` contex
 .. code-block:: python
 
    from prefect import Flow, Parameter
-   from mitre.securingai import pyplugs
+   from dioptra import pyplugs
 
-   _PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+   _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 
 
    def init_flow() -> Flow:

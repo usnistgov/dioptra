@@ -22,7 +22,7 @@ attacks
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: securingai_builtins.attacks
+.. automodule:: dioptra_builtins.attacks
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ attacks
 fgm.py
 ------
 
-.. automodule:: securingai_builtins.attacks.fgm
+.. automodule:: dioptra_builtins.attacks.fgm
    :members:
    :undoc-members:
    :show-inheritance:

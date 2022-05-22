@@ -43,7 +43,7 @@
 
 import non_existent_package  # noqa
 
-from mitre.securingai import pyplugs
+from dioptra import pyplugs
 
 
 @pyplugs.register

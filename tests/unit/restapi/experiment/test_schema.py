@@ -24,11 +24,11 @@ import structlog
 from flask import Flask
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.experiment.schema import (
+from dioptra.restapi.experiment.schema import (
     ExperimentRegistrationFormSchema,
     ExperimentSchema,
 )
-from mitre.securingai.restapi.models import Experiment, ExperimentRegistrationForm
+from dioptra.restapi.models import Experiment, ExperimentRegistrationForm
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

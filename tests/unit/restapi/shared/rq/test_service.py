@@ -26,8 +26,8 @@ from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import Job
-from mitre.securingai.restapi.shared.rq.service import RQService
+from dioptra.restapi.models import Job
+from dioptra.restapi.shared.rq.service import RQService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -115,7 +115,7 @@ class MockRQQueue(object):
 
 @pytest.fixture
 def rq_service(dependency_injector, monkeypatch: MonkeyPatch) -> RQService:
-    import mitre.securingai.restapi.shared.rq.service as rq_service
+    import dioptra.restapi.shared.rq.service as rq_service
 
     monkeypatch.setattr(rq_service, "RQJob", MockRQJob)
     monkeypatch.setattr(rq_service, "RQQueue", MockRQQueue)

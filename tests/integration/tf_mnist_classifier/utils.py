@@ -20,7 +20,7 @@ from testinfra.host import Host
 
 
 @dataclass
-class TestbedHosts(object):
+class DioptraHosts(object):
     minio: Host
     mlflow_tracking: Host
     nginx: Host

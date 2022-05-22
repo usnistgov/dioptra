@@ -30,7 +30,7 @@ Building Development Docker Images
 
    .. code-block:: bash
 
-      cd path/to/secure-ai-lab-components
+      cd path/to/dioptra
 
    **NOTE**: You must substitute the code snippet ``path/to/`` with the true path for the project codebase on your device. This should be the same path used in :ref:`Clone the Repository: Step 2 <quickstart-clone-repository-step-2>`.
 
@@ -64,7 +64,7 @@ Building Development Docker Images
 
          git branch -a
 
-4. Pull the latest vendor, Continuous Integration (CI), and lab images from the MITRE artifactory and retag them.
+4. Pull the latest vendor, Continuous Integration (CI), and lab images and retag them.
 
    .. code-block:: sh
 
@@ -93,7 +93,7 @@ Building Development Docker Images
 
    .. code-block:: sh
 
-      sed -E -e 's/(securing-ai\/.*):latest/\1:dev/g' -i .backup docker-compose.yml
+      sed -E -e 's/(dioptra\/.*):latest/\1:dev/g' -i .backup docker-compose.yml
 
    **NOTE**: To revert the changes made to the configuration file use the command:
 
@@ -101,7 +101,7 @@ Building Development Docker Images
 
       mv docker-compose.yml.backup docker-compose.yml
 
-8. Navigate back to the root directory of the to the root directory of the project codebase.
+8. Navigate back to the root directory of the project codebase.
 
    .. code-block:: sh
 

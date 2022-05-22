@@ -22,7 +22,7 @@ metrics
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: securingai_builtins.metrics
+.. automodule:: dioptra_builtins.metrics
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ metrics
 distance.py
 -----------
 
-.. automodule:: securingai_builtins.metrics.distance
+.. automodule:: dioptra_builtins.metrics.distance
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,7 +38,7 @@ distance.py
 performance.py
 --------------
 
-.. automodule:: securingai_builtins.metrics.performance
+.. automodule:: dioptra_builtins.metrics.performance
    :members:
    :undoc-members:
    :show-inheritance:
@@ -46,7 +46,7 @@ performance.py
 exceptions.py
 --------------
 
-.. automodule:: securingai_builtins.metrics.exceptions
+.. automodule:: dioptra_builtins.metrics.exceptions
    :members:
    :undoc-members:
    :show-inheritance:

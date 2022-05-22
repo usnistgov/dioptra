@@ -79,17 +79,17 @@ Error Messages
 
 The following error handlers are registered to the experiment endpoints.
 
-.. autoexception:: mitre.securingai.restapi.experiment.errors.ExperimentAlreadyExistsError
+.. autoexception:: dioptra.restapi.experiment.errors.ExperimentAlreadyExistsError
 
-.. autoexception:: mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError
+.. autoexception:: dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError
 
-.. autoexception:: mitre.securingai.restapi.experiment.errors.ExperimentDoesNotExistError
+.. autoexception:: dioptra.restapi.experiment.errors.ExperimentDoesNotExistError
 
-.. autoexception:: mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError
+.. autoexception:: dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError
 
-.. autoexception:: mitre.securingai.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError
+.. autoexception:: dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError
 
-.. autoexception:: mitre.securingai.restapi.experiment.errors.ExperimentRegistrationError
+.. autoexception:: dioptra.restapi.experiment.errors.ExperimentRegistrationError
 
 Job
 ---
@@ -155,11 +155,11 @@ Error Messages
 
 The following error handlers are registered to the job endpoints.
 
-.. autoexception:: mitre.securingai.restapi.job.errors.JobDoesNotExistError
+.. autoexception:: dioptra.restapi.job.errors.JobDoesNotExistError
 
-.. autoexception:: mitre.securingai.restapi.job.errors.JobSubmissionError
+.. autoexception:: dioptra.restapi.job.errors.JobSubmissionError
 
-.. autoexception:: mitre.securingai.restapi.job.errors.JobWorkflowUploadError
+.. autoexception:: dioptra.restapi.job.errors.JobWorkflowUploadError
 
 Queue
 -----
@@ -207,8 +207,8 @@ Error Messages
 
 The following error handlers are registered to the queue endpoints.
 
-.. autoexception:: mitre.securingai.restapi.queue.errors.QueueAlreadyExistsError
+.. autoexception:: dioptra.restapi.queue.errors.QueueAlreadyExistsError
 
-.. autoexception:: mitre.securingai.restapi.queue.errors.QueueDoesNotExistError
+.. autoexception:: dioptra.restapi.queue.errors.QueueDoesNotExistError
 
-.. autoexception:: mitre.securingai.restapi.queue.errors.QueueRegistrationError
+.. autoexception:: dioptra.restapi.queue.errors.QueueRegistrationError

@@ -62,7 +62,7 @@ TAR = tar
 CODE_SRC_FILES := $(wildcard $(EXAMPLE_SRC_DIR)/*.py)
 CODE_WORKFLOW_FILE = MLproject
 
-PLUGINS_CUSTOM_DIR := $(EXAMPLE_CUSTOM_PLUGINS_DIR)/securingai_custom
+PLUGINS_CUSTOM_DIR := $(EXAMPLE_CUSTOM_PLUGINS_DIR)/dioptra_custom
 CUSTOM_PLUGIN_POISONING_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/custom_poisoning_plugins/*.py)
 
 JUPYTER_INSTALL_PACKAGES_SCRIPT = $(EXAMPLE_JUPYTER_DIR)/before-notebook.d/install-packages.sh

@@ -20,7 +20,7 @@ import datetime
 
 import pytest
 
-from mitre.securingai.restapi.models import Queue, QueueLock
+from dioptra.restapi.models import Queue, QueueLock
 
 
 @pytest.fixture
