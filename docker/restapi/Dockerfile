@@ -198,6 +198,9 @@ USER root
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/${PROJECT_PREFIX}/docker/bash.bashrc
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/init-copy.sh /etc/${PROJECT_PREFIX}/docker/init-copy.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/init-git-clone.sh /etc/${PROJECT_PREFIX}/docker/init-git-clone.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/init-set-permissions.sh /etc/${PROJECT_PREFIX}/docker/init-set-permissions.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/parse-uri.sh /etc/${PROJECT_PREFIX}/docker/parse-uri.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/s3-cp.sh /etc/${PROJECT_PREFIX}/docker/s3-cp.sh
@@ -216,6 +219,9 @@ RUN mkdir -p /etc/gunicorn && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/init-copy.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/init-git-clone.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/init-set-permissions.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/parse-uri.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/migrations/versions && \
@@ -228,6 +234,9 @@ RUN mkdir -p /etc/gunicorn && \
     rm /etc/bash.bashrc && \
     ln -s /etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/bash.bashrc && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /usr/local/bin/entrypoint.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/init-copy.sh /usr/local/bin/init-copy.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/init-git-clone.sh /usr/local/bin/init-git-clone.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/init-set-permissions.sh /usr/local/bin/init-set-permissions.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/gunicorn/gunicorn.conf.py && \
     ln -s /etc/${PROJECT_PREFIX}/docker/migrations ${DIOPTRA_WORKDIR}/migrations && \
     ln -s /etc/${PROJECT_PREFIX}/docker/parse-uri.sh /usr/local/bin/parse-uri.sh && \
