@@ -14,7 +14,28 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._plugin_dirs import plugin_dirs
-from ._redirect_print import redirect_print
+from __future__ import annotations
 
-__all__ = ["plugin_dirs", "redirect_print"]
+from abc import ABCMeta, abstractmethod
+
+
+class BoundingBoxesIOU(metaclass=ABCMeta):
+    @abstractmethod
+    def iou(self, bbox_corner1, bbox_corner2):
+        raise NotImplementedError
+
+
+class BoundingBoxesBatchedGridIOU(metaclass=ABCMeta):
+    @abstractmethod
+    def iou(self, bboxes_cell_xywh1, bbox_cell_xywh2):
+        raise NotImplementedError
+
+    @abstractmethod
+    def max_iou(self, bboxes_cell_xywh1, bbox_cell_xywh2):
+        raise NotImplementedError
+
+    @abstractmethod
+    def select_max_iou_bboxes(
+        self, bboxes_cell_xywh, bboxes_conf, bboxes_cell_xywh_ground_truth
+    ):
+        raise NotImplementedError

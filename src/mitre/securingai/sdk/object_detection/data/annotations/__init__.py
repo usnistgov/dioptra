@@ -14,7 +14,13 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._plugin_dirs import plugin_dirs
-from ._redirect_print import redirect_print
+from .annotation_data import AnnotationData
+from .encodings import AnnotationEncoding, NumpyAnnotationEncoding
+from .pascal_voc import PascalVOCAnnotationData
 
-__all__ = ["plugin_dirs", "redirect_print"]
+__all__ = [
+    "AnnotationData",
+    "AnnotationEncoding",
+    "NumpyAnnotationEncoding",
+    "PascalVOCAnnotationData",
+]

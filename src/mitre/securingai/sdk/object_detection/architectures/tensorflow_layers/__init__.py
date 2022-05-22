@@ -14,7 +14,17 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._plugin_dirs import plugin_dirs
-from ._redirect_print import redirect_print
+from .backbones import EfficientNetBackbone, MobileNetV2Backbone
+from .yolov1_detection import (
+    SimpleYOLOV1Detector,
+    TwoHeadedYOLOV1Detector,
+    YOLOV1Detector,
+)
 
-__all__ = ["plugin_dirs", "redirect_print"]
+__all__ = [
+    "EfficientNetBackbone",
+    "MobileNetV2Backbone",
+    "SimpleYOLOV1Detector",
+    "TwoHeadedYOLOV1Detector",
+    "YOLOV1Detector",
+]

@@ -14,7 +14,10 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._plugin_dirs import plugin_dirs
-from ._redirect_print import redirect_print
+from .object_detection_data import ObjectDetectionData
+from .tensorflow_backend import TensorflowObjectDetectionData
 
-__all__ = ["plugin_dirs", "redirect_print"]
+__all__ = [
+    "ObjectDetectionData",
+    "TensorflowObjectDetectionData",
+]

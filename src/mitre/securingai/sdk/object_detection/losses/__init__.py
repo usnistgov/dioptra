@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._plugin_dirs import plugin_dirs
-from ._redirect_print import redirect_print
+from .yolov1 import YOLOV1Loss
 
-__all__ = ["plugin_dirs", "redirect_print"]
+__all__ = ["YOLOV1Loss"]

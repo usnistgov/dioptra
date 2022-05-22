@@ -14,7 +14,18 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._plugin_dirs import plugin_dirs
-from ._redirect_print import redirect_print
+from .bounding_box_coordinates import BoundingBoxCoordinates, BoundingBoxesBatchedGrid
+from .numpy_backend import NumpyBoundingBoxCoordinates, NumpyBoundingBoxesBatchedGrid
+from .tensorflow_backend import (
+    TensorflowBoundingBoxCoordinates,
+    TensorflowBoundingBoxesBatchedGrid,
+)
 
-__all__ = ["plugin_dirs", "redirect_print"]
+__all__ = [
+    "BoundingBoxCoordinates",
+    "BoundingBoxesBatchedGrid",
+    "NumpyBoundingBoxesBatchedGrid",
+    "NumpyBoundingBoxCoordinates",
+    "TensorflowBoundingBoxCoordinates",
+    "TensorflowBoundingBoxesBatchedGrid",
+]

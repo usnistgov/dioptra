@@ -14,7 +14,15 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._plugin_dirs import plugin_dirs
-from ._redirect_print import redirect_print
+from .bounding_boxes_iou import BoundingBoxesBatchedGridIOU, BoundingBoxesIOU
+from .tensorflow_backend import (
+    TensorflowBoundingBoxesBatchedGridIOU,
+    TensorflowBoundingBoxesIOU,
+)
 
-__all__ = ["plugin_dirs", "redirect_print"]
+__all__ = [
+    "BoundingBoxesIOU",
+    "BoundingBoxesBatchedGridIOU",
+    "TensorflowBoundingBoxesIOU",
+    "TensorflowBoundingBoxesBatchedGridIOU",
+]

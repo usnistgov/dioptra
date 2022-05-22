@@ -14,7 +14,24 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._plugin_dirs import plugin_dirs
-from ._redirect_print import redirect_print
+from __future__ import annotations
 
-__all__ = ["plugin_dirs", "redirect_print"]
+from abc import ABCMeta, abstractmethod
+from typing import Dict, List, Tuple
+
+from .encodings import BoxesType, LabelsType
+
+
+class AnnotationData(metaclass=ABCMeta):
+    @property
+    @abstractmethod
+    def labels(self) -> Dict[str, int]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(self, y) -> Tuple[BoxesType, LabelsType]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def read_file(self, filepath) -> Tuple[List[List[float]], List[int]]:
+        raise NotImplementedError

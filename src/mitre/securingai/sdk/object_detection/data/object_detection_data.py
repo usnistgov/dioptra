@@ -14,7 +14,23 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._plugin_dirs import plugin_dirs
-from ._redirect_print import redirect_print
+from __future__ import annotations
 
-__all__ = ["plugin_dirs", "redirect_print"]
+from abc import ABCMeta, abstractmethod
+
+
+class ObjectDetectionData(metaclass=ABCMeta):
+    @property
+    @abstractmethod
+    def training_dataset(self):
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def validation_dataset(self):
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def testing_dataset(self):
+        raise NotImplementedError
