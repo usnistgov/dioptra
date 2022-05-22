@@ -22,7 +22,7 @@ data
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: securingai_builtins.data
+.. automodule:: dioptra_builtins.data
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ data
 tensorflow.py
 -------------
 
-.. automodule:: securingai_builtins.data.tensorflow
+.. automodule:: dioptra_builtins.data.tensorflow
    :members:
    :undoc-members:
    :show-inheritance:

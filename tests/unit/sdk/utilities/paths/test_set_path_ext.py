@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from mitre.securingai.sdk.utilities.paths import set_path_ext
+from dioptra.sdk.utilities.paths import set_path_ext
 
 
 @pytest.mark.parametrize("ext", ["csv", "csv.gz", "json"])

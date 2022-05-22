@@ -50,8 +50,8 @@ import sys
 import pytest
 from prefect import Flow
 
-from mitre.securingai import pyplugs
-from mitre.securingai.sdk.exceptions import (
+from dioptra import pyplugs
+from dioptra.sdk.exceptions import (
     UnknownPackageError,
     UnknownPluginError,
     UnknownPluginFunctionError,
@@ -87,8 +87,8 @@ def pyplugs_no_prefect(monkeypatch):
     monkeypatch.setitem(sys.modules, "prefect", None)
 
     return (
-        importlib.import_module("mitre.securingai.pyplugs"),
-        importlib.import_module("mitre.securingai.sdk.exceptions"),
+        importlib.import_module("dioptra.pyplugs"),
+        importlib.import_module("dioptra.sdk.exceptions"),
     )
 
 
@@ -99,10 +99,10 @@ def test_package_not_empty(plugin_package):
 
 
 def test_package_empty():
-    """Test that names() does not find plugins in the mitre.securingai.pyplugs
+    """Test that names() does not find plugins in the dioptra.pyplugs
     package.
     """
-    lib_plugins = pyplugs.names("mitre.securingai.pyplugs")
+    lib_plugins = pyplugs.names("dioptra.pyplugs")
     assert len(lib_plugins) == 0
 
 
@@ -115,7 +115,7 @@ def test_list_funcs(plugin_package):
 def test_package_non_existing():
     """Test that a non-existent package raises an appropriate error"""
     with pytest.raises(UnknownPackageError):
-        pyplugs.names("mitre.securingai.pyplugs.non_existent")
+        pyplugs.names("dioptra.pyplugs.non_existent")
 
 
 def test_plugin_exists(plugin_package):
@@ -181,7 +181,7 @@ def test_call_existing_plugin(plugin_package):
 def test_call_non_existing_plugin():
     """Test that calling a non-existing plugin raises an error"""
     with pytest.raises(UnknownPluginError):
-        pyplugs.call("mitre.securingai.pyplugs", "non_existent")
+        pyplugs.call("dioptra.pyplugs", "non_existent")
 
 
 def test_ordered_plugin(plugin_package):

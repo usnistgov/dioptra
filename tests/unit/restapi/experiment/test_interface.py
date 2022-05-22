@@ -22,11 +22,11 @@ import pytest
 import structlog
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.experiment.interface import (
+from dioptra.restapi.experiment.interface import (
     ExperimentInterface,
     ExperimentUpdateInterface,
 )
-from mitre.securingai.restapi.models import Experiment
+from dioptra.restapi.models import Experiment
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

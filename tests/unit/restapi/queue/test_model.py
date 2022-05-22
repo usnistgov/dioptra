@@ -22,7 +22,7 @@ import pytest
 import structlog
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import Queue, QueueLock, QueueRegistrationFormData
+from dioptra.restapi.models import Queue, QueueLock, QueueRegistrationFormData
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

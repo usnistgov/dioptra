@@ -26,7 +26,7 @@ from IPython.display import HTML, Image
 PathLike = List[Union[str, Path]]
 
 
-class SecuringAIClient(object):
+class DioptraClient(object):
     def __init__(self, address: str) -> None:
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
 

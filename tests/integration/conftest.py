@@ -21,9 +21,9 @@ from mlflow.tracking import MlflowClient
 
 import docker
 from tests.integration.download_data import download_data
-from tests.integration.utils import TestbedAPIClient
+from tests.integration.utils import TestDioptraClient
 
-TESTBED_CACHE_DIR: Path = Path("/tmp") / "testbed-cache"
+DIOPTRA_CACHE_DIR: Path = Path("/tmp") / "dioptra-cache"
 
 
 @pytest.fixture
@@ -33,8 +33,8 @@ def mlflow_client(monkeypatch):
 
 
 @pytest.fixture
-def testbed_client():
-    return TestbedAPIClient()
+def dioptra_client():
+    return TestDioptraClient()
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ def mnist_data_dir(tmp_path_factory):
         download_data(
             [
                 "--cache-dir",
-                f"{TESTBED_CACHE_DIR / 'mnist'}",
+                f"{DIOPTRA_CACHE_DIR / 'mnist'}",
                 "--data-dir",
                 str(mnist_data_dir),
             ]

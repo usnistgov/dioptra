@@ -31,9 +31,9 @@ What are the basic steps?
 
    When creating a new entrypoint, users may also find it helpful to create their own python task plugins in combination with existing builtin task plugins.
    Instructions for developing local and builtin tasks can be found in the following guide: :ref:`user-guide-custom-task-plugins`.
-   The following sections will assume that all task plugins already exist somewhere (either locally or as a builtin), and are ready to use for use in our entry point python script.
+   The following sections will assume that all task plugins already exist somewhere (either locally or as a builtin), and are ready for use in our entry point python script.
 
-Entry point development generally involves the creating Python script, that is then executed by its associated command within the MLproject file.
+Entry point development generally involves creating a Python script, that is then executed by its associated command within the MLproject file.
 
 The general development work can be divided as follows:
 
@@ -143,7 +143,7 @@ We should have something similar to the example below (after defining our :py:fu
 
 Here we can see that we've transferred the parameters for tasks A-C through into process_artifacts_flow's ``flow.run()`` call.
 
-This call will take in all job associated parameters needed for running each task and transfer it our flow pipeline.
+This call will take in all job associated parameters needed for running each task and transfer it to our flow pipeline.
 Users are also allowed to initialize and pass through additional parameter values as needed into the ``flow.run()`` call, such as the secondary parameters that can be set by default or calculated based on other input parameters.
 
 Developing the Python Entry Point Script: Creating a Flow Pipeline
@@ -151,7 +151,7 @@ Developing the Python Entry Point Script: Creating a Flow Pipeline
 
 Next, we will define the flow pipeline itself.
 We will start with the input parameters we need to provide to the current Flow.
-Here will define the name of each parameter and their associated parameter information:
+Here we will define the name of each parameter and their associated parameter information:
 
 .. code-block::
 
@@ -221,7 +221,7 @@ Users can refer to :ref:`user-guide-task-plugins-collection` to see our builtin 
 
 .. tip::
 
-   For this example, the input and output parameters link up nicely so that the task dependencies follow an ``task A->B->C`` in order.
+   For this example, the input and output parameters link up nicely so that the task dependencies follow ``task A->B->C`` in order.
    However, should any intermediate tasks not have preceding dependencies, they can be run out of order. Those will require their preceding tasks to be declared as well.
    Please refer to :ref:`user-guide-task-plugins` for more information.
 

@@ -29,10 +29,10 @@ from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
-from mitre.securingai.restapi.job.service import JobService
-from mitre.securingai.restapi.models import Job, JobFormData
-from mitre.securingai.restapi.shared.rq.service import RQService
-from mitre.securingai.restapi.shared.s3.service import S3Service
+from dioptra.restapi.job.service import JobService
+from dioptra.restapi.models import Job, JobFormData
+from dioptra.restapi.shared.rq.service import RQService
+from dioptra.restapi.shared.s3.service import S3Service
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

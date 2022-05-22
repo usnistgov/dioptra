@@ -17,7 +17,7 @@
 web-compile:
   sass:
     files:
-      docs/assets/scss/securing-ai-testbed.scss: docs/source/_static/securing-ai-testbed.css
+      docs/assets/scss/dioptra.scss: docs/source/_static/dioptra.css
     precision: 5
     sourcemap: false
     format: compressed

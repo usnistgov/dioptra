@@ -26,7 +26,7 @@ PathLike = Union[str, Path]
 
 
 @dataclass
-class TestbedHosts(object):
+class DioptraHosts(object):
     minio: Host
     mlflow_tracking: Host
     nginx: Host
@@ -35,28 +35,28 @@ class TestbedHosts(object):
     tfcpu_01: Host
 
 
-def initialize_testbed_rest_api(testbed_client, custom_plugins_evaluation_tar_gz):
+def initialize_dioptra_rest_api(dioptra_client, custom_plugins_evaluation_tar_gz):
     # Create experiment namespace
-    response_experiment = testbed_client.get_experiment_by_name(name="mnist")
+    response_experiment = dioptra_client.get_experiment_by_name(name="mnist")
 
     if response_experiment is None or "Not Found" in response_experiment.get(
         "message", []
     ):
-        response_experiment = testbed_client.register_experiment(name="mnist")
+        response_experiment = dioptra_client.register_experiment(name="mnist")
 
     # Register Tensorflow (CPU) worker queue
-    response_queue = testbed_client.get_queue_by_name(name="tensorflow_cpu")
+    response_queue = dioptra_client.get_queue_by_name(name="tensorflow_cpu")
 
     if response_queue is None or "Not Found" in response_queue.get("message", []):
-        response_queue = testbed_client.register_queue(name="tensorflow_cpu")
+        response_queue = dioptra_client.register_queue(name="tensorflow_cpu")
 
     # Register the evaluation custom plugin
-    response_custom_plugins = testbed_client.get_custom_task_plugin(name="evaluation")
+    response_custom_plugins = dioptra_client.get_custom_task_plugin(name="evaluation")
 
     if response_custom_plugins is None or "Not Found" in response_custom_plugins.get(
         "message", []
     ):
-        response_custom_plugins = testbed_client.upload_custom_plugin_package(
+        response_custom_plugins = dioptra_client.upload_custom_plugin_package(
             custom_plugin_name="evaluation",
             custom_plugin_file=str(custom_plugins_evaluation_tar_gz),
         )
@@ -72,8 +72,8 @@ def job_still_running(response):
     return response["status"] not in set(("failed", "finished"))
 
 
-def run_train_entrypoint_job(testbed_client, workflows_tar_gz):
-    response_shallow_train = testbed_client.submit_job(
+def run_train_entrypoint_job(dioptra_client, workflows_tar_gz):
+    response_shallow_train = dioptra_client.submit_job(
         workflows_file=str(workflows_tar_gz),
         experiment_name="mnist",
         entry_point="train",
@@ -88,7 +88,7 @@ def run_train_entrypoint_job(testbed_client, workflows_tar_gz):
 
     while job_still_running(response_shallow_train):
         time.sleep(1)
-        response_shallow_train = testbed_client.get_job_by_id(
+        response_shallow_train = dioptra_client.get_job_by_id(
             response_shallow_train["jobId"]
         )
 

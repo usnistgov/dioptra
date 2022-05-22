@@ -27,13 +27,13 @@ When designing a custom example, you may be required to create a new task plugin
 Task Organization: Built-in Tasks
 ---------------------------------
 
-Dioptra contains a number of builtin task plugins that can be executed across all available examples.
+Dioptra contains a number of built-in task plugins that can be executed across all available examples.
 They are stored in the following directories:
 
 .. code-block:: none
 
    task-plugins/
-       └── securingai_builtins
+       └── dioptra_builtins
            ├── artifacts
            |   ├── exceptions.py
            |   ├── mlflow.py
@@ -65,7 +65,7 @@ Please refer to :ref:`user-guide-task-plugins-collection` for more information r
 Task Organization: Local Tasks
 ------------------------------
 
-In general while built-in task plugins are located in the ``task-plugins/securingai_builtins`` folder, local tasks can be stored in the same way as local python functions in each example's src code folder.
+In general while built-in task plugins are located in the ``task-plugins/dioptra_builtins`` folder, local tasks can be stored in the same way as local python functions in each example's src code folder.
 
 For instance, in our previous guide on creating custom entry points we had a localized task called ``task_B`` which was stored in the python file ``custom_local_task_plugins.py``.
 
@@ -84,15 +84,15 @@ For additional examples on how these plugins are constructed, you can refer to `
 
 The following sections will now involve creating built-in and localized task plugins.
 
-Creating a Builtin Task
+Creating a Built-in Task
 -----------------------
 
-To create a builtin task, first the user must identify which builtin subdirectory (artifacts, attacks, etc.) should contain the new task.
+To create a built-in task, first the user must identify which built-in subdirectory (artifacts, attacks, etc.) should contain the new task.
 Once this is done, the task can be declared as follows:
 
 .. code-block::
 
-   from mitre.securingai import pyplugs
+   from dioptra import pyplugs
 
    @pyplugs.register
    def add_values(x, y):
@@ -117,18 +117,18 @@ For a slightly more complex task, consider the sample below, which will generate
 
        return result
 
-To access the builtin task from a given example, users will need to call the plugin-task using the following notation in their flow pipeline.
+To access the built-in task from a given example, users will need to call the plugin-task using the following notation in their flow pipeline.
 Note that we assumed these new tasks have been saved in a module named ``ops.py`` under the `data` task plugins directory:
 
 .. code-block:: python
 
-   from mitre.securingai import pyplugs
+   from dioptra import pyplugs
    ...
    def custom_flow() -> Flow:
        ...
        // Call new builtin task.
        result = pyplugs.call_task(
-           "securingai_builtins.data",
+           "dioptra_builtins.data",
            "ops",
            "add_values",
            x=input_x,

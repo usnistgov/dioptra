@@ -35,15 +35,15 @@ import os
 from pathlib import Path
 
 
-from mitre.securingai import pyplugs
+from dioptra import pyplugs
 from prefect import task
 from typing import Callable, Dict, List, Optional, Tuple, Union
 from data import create_image_dataset, download_image_archive
 from log import configure_stdlib_logger, configure_structlog_logger
 from models import load_model_in_registry
 from tensorflow.keras.preprocessing.image import save_img
-from mitre.securingai.sdk.utilities.decorators import require_package
-from mitre.securingai.sdk.exceptions import (
+from dioptra.sdk.utilities.decorators import require_package
+from dioptra.sdk.exceptions import (
     ARTDependencyError,
     TensorflowDependencyError,
 )

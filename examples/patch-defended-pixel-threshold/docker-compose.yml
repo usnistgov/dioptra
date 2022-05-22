@@ -45,7 +45,7 @@ services:
     networks:
       - jtsexton
   mlflow-tracking:
-    image: securing-ai/mlflow-tracking:0.0.0-1
+    image: dioptra/mlflow-tracking:0.0.0-1
     init: true
     restart: always
     hostname: mlflow-tracking
@@ -78,7 +78,7 @@ services:
     networks:
       - jtsexton
   tfcpu:
-    image: securing-ai/tensorflow2-cpu-py37:0.0.0-1
+    image: dioptra/tensorflow2-cpu-py37:0.0.0-1
     init: true
     restart: "no"
     hostname: tfcpu
@@ -104,7 +104,7 @@ services:
     networks:
       - jtsexton
   tfgpu:
-    image: securing-ai/tensorflow2-gpu-py37:0.0.0-1
+    image: dioptra/tensorflow2-gpu-py37:0.0.0-1
     init: true
     restart: "no"
     hostname: tfgpu

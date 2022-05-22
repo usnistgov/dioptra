@@ -23,7 +23,7 @@ import pytest
 import structlog
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import Job, JobFormData
+from dioptra.restapi.models import Job, JobFormData
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

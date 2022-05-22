@@ -101,10 +101,10 @@ RUN cd /tmp && \
     ./aws/install --install-dir ${AWSCLI_INSTALL_DIR} --bin-dir ${AWSCLI_BIN_DIR} && \
     rm -rf /tmp/aws
 
-ARG AI_USER=securingai
-ARG AI_UID=39000
-ARG AI_GID=100
-ARG AI_WORKDIR=/work
+ARG DIOPTRA_USER=dioptra
+ARG DIOPTRA_UID=39000
+ARG DIOPTRA_GID=100
+ARG DIOPTRA_WORKDIR=/work
 ARG CONDA_DIR=/opt/conda
 ARG PROJECT_COMPONENT
 ARG PROJECT_PREFIX
@@ -116,29 +116,29 @@ RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/fix-permissions.sh && \
 
 RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc
 
-RUN useradd -u ${AI_UID} -N -m -s /bin/bash -c "Securing AI Testbed user" ${AI_USER} && \
-    mkdir -p /home/${AI_USER}/.aws/cli && \
-    mkdir -p /home/${AI_USER}/.conda && \
+RUN useradd -u ${DIOPTRA_UID} -N -m -s /bin/bash -c "Dioptra user" ${DIOPTRA_USER} && \
+    mkdir -p /home/${DIOPTRA_USER}/.aws/cli && \
+    mkdir -p /home/${DIOPTRA_USER}/.conda && \
     mkdir -p ${CONDA_DIR} && \
-    mkdir -p ${AI_WORKDIR}/data && \
-    chown -R ${AI_UID}:${AI_GID} /home/${AI_USER} && \
-    chown -R ${AI_UID}:${AI_GID} ${CONDA_DIR} && \
-    chown -R ${AI_UID}:${AI_GID} ${AI_WORKDIR} && \
+    mkdir -p ${DIOPTRA_WORKDIR}/data && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /home/${DIOPTRA_USER} && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} ${CONDA_DIR} && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} ${DIOPTRA_WORKDIR} && \
     chmod g+w /etc/passwd && \
-    fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
+    fix-permissions.sh /home/${DIOPTRA_USER} ${DIOPTRA_WORKDIR} ${CONDA_DIR}
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/aws-config /etc/${PROJECT_PREFIX}/docker/aws-config
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/dot-condarc /etc/${PROJECT_PREFIX}/docker/dot-condarc
 
-RUN chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/dot-condarc && \
-    chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/aws-config && \
+RUN chown ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/${PROJECT_PREFIX}/docker/dot-condarc && \
+    chown ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/${PROJECT_PREFIX}/docker/aws-config && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/aws-config && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/dot-condarc && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/aws-config /home/${AI_USER}/.aws/config && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/dot-condarc /home/${AI_USER}/.condarc && \
-    fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
+    ln -s /etc/${PROJECT_PREFIX}/docker/aws-config /home/${DIOPTRA_USER}/.aws/config && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/dot-condarc /home/${DIOPTRA_USER}/.condarc && \
+    fix-permissions.sh /home/${DIOPTRA_USER} ${DIOPTRA_WORKDIR} ${CONDA_DIR}
 
-USER ${AI_UID}
+USER ${DIOPTRA_UID}
 
 ARG MINICONDA_VERSION
 ARG MINICONDA3_PREFIX
@@ -157,9 +157,9 @@ RUN echo "===> Installing Miniconda3 version ${MINICONDA_VERSION} to ${CONDA_DIR
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
     ${CONDA_DIR}/condabin/conda clean -a -f -y && \
-    rm -rf /home/${AI_USER}/.cache/pip && \
-    rm -rf /home/${AI_USER}/.cache/yarn && \
-    fix-permissions.sh /home/${AI_USER} ${AI_WORKDIR} ${CONDA_DIR}
+    rm -rf /home/${DIOPTRA_USER}/.cache/pip && \
+    rm -rf /home/${DIOPTRA_USER}/.cache/yarn && \
+    fix-permissions.sh /home/${DIOPTRA_USER} ${DIOPTRA_WORKDIR} ${CONDA_DIR}
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/environment-${PROJECT_COMPONENT}.yml /etc/${PROJECT_PREFIX}/docker/environment-${PROJECT_COMPONENT}.yml
 
@@ -171,28 +171,28 @@ RUN echo "===> Installing base dependencies in conda environment of ${PROJECT_CO
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
     ${CONDA_DIR}/condabin/conda clean -afy && \
-    rm -rf /home/${AI_USER}/.cache/pip && \
-    rm -rf /home/${AI_USER}/.cache/yarn && \
+    rm -rf /home/${DIOPTRA_USER}/.cache/pip && \
+    rm -rf /home/${DIOPTRA_USER}/.cache/yarn && \
     echo "===> Fixing directory permissions...." && \
-    fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+    fix-permissions.sh ${CONDA_DIR} ${DIOPTRA_WORKDIR} /home/${DIOPTRA_USER}
 
-ARG AI_CONDA_ENV=mitre-securing-ai
+ARG DIOPTRA_CONDA_ENV=dioptra
 ARG CODE_PKG_VERSION
 
-COPY dist/mitre_securing_ai-${CODE_PKG_VERSION}-py3-none-any.whl /etc/${PROJECT_PREFIX}/docker/mitre_securing_ai-${CODE_PKG_VERSION}-py3-none-any.whl
+COPY dist/dioptra-${CODE_PKG_VERSION}-py3-none-any.whl /etc/${PROJECT_PREFIX}/docker/dioptra-${CODE_PKG_VERSION}-py3-none-any.whl
 
-RUN echo "===> Installing Securing AI code module...." && \
-    ${CONDA_DIR}/condabin/conda run -n ${AI_CONDA_ENV} \
+RUN echo "===> Installing Dioptra code module...." && \
+    ${CONDA_DIR}/condabin/conda run -n ${DIOPTRA_CONDA_ENV} \
     pip install --no-cache-dir --no-deps \
-    /etc/${PROJECT_PREFIX}/docker/mitre_securing_ai-${CODE_PKG_VERSION}-py3-none-any.whl && \
+    /etc/${PROJECT_PREFIX}/docker/dioptra-${CODE_PKG_VERSION}-py3-none-any.whl && \
     echo "===> Cleaning/pruning directories...." && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
     ${CONDA_DIR}/condabin/conda clean -afy && \
-    rm -rf /home/${AI_USER}/.cache/pip && \
-    rm -rf /home/${AI_USER}/.cache/yarn && \
+    rm -rf /home/${DIOPTRA_USER}/.cache/pip && \
+    rm -rf /home/${DIOPTRA_USER}/.cache/yarn && \
     echo "===> Fixing directory permissions...." && \
-    fix-permissions.sh ${CONDA_DIR} ${AI_WORKDIR} /home/${AI_USER}
+    fix-permissions.sh ${CONDA_DIR} ${DIOPTRA_WORKDIR} /home/${DIOPTRA_USER}
 
 USER root
 
@@ -209,9 +209,9 @@ COPY src/migrations /etc/${PROJECT_PREFIX}/docker/migrations
 COPY wsgi.py /etc/${PROJECT_PREFIX}/docker/wsgi.py
 
 RUN mkdir -p /etc/gunicorn && \
-    chown -R ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/migrations && \
-    chown -R ${AI_UID}:${AI_GID} /etc/gunicorn && \
-    chown ${AI_UID}:${AI_GID} /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/${PROJECT_PREFIX}/docker/migrations && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/gunicorn && \
+    chown ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/bash.bashrc && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py && \
     chmod 0644 /etc/${PROJECT_PREFIX}/docker/wsgi.py && \
@@ -229,24 +229,24 @@ RUN mkdir -p /etc/gunicorn && \
     ln -s /etc/${PROJECT_PREFIX}/docker/bash.bashrc /etc/bash.bashrc && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-${PROJECT_COMPONENT}.sh /usr/local/bin/entrypoint.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/gunicorn.conf.py /etc/gunicorn/gunicorn.conf.py && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/migrations ${AI_WORKDIR}/migrations && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/migrations ${DIOPTRA_WORKDIR}/migrations && \
     ln -s /etc/${PROJECT_PREFIX}/docker/parse-uri.sh /usr/local/bin/parse-uri.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/s3-cp.sh /usr/local/bin/s3-cp.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/s3-mb.sh /usr/local/bin/s3-mb.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/s3-sync.sh /usr/local/bin/s3-sync.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/unpack-archive.sh /usr/local/bin/unpack-archive.sh && \
-    ln -s /etc/${PROJECT_PREFIX}/docker/wsgi.py ${AI_WORKDIR}/wsgi.py && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/wsgi.py ${DIOPTRA_WORKDIR}/wsgi.py && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
 
-ENV AI_USER ${AI_USER}
-ENV AI_UID ${AI_UID}
-ENV AI_GID ${AI_GID}
-ENV AI_RESTAPI_ENV prod
-ENV AI_WORKDIR ${AI_WORKDIR}
+ENV DIOPTRA_USER ${DIOPTRA_USER}
+ENV DIOPTRA_UID ${DIOPTRA_UID}
+ENV DIOPTRA_GID ${DIOPTRA_GID}
+ENV DIOPTRA_RESTAPI_ENV prod
+ENV DIOPTRA_WORKDIR ${DIOPTRA_WORKDIR}
 ENV CONDA_DIR ${CONDA_DIR}
 
-USER ${AI_UID}
-WORKDIR ${AI_WORKDIR}
+USER ${DIOPTRA_UID}
+WORKDIR ${DIOPTRA_WORKDIR}
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-VOLUME ["${AI_WORKDIR}/data"]
+VOLUME ["${DIOPTRA_WORKDIR}/data"]

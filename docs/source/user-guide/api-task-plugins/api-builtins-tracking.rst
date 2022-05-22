@@ -22,7 +22,7 @@ tracking
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: securingai_builtins.tracking
+.. automodule:: dioptra_builtins.tracking
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ tracking
 mlflow.py
 ---------
 
-.. automodule:: securingai_builtins.tracking.mlflow
+.. automodule:: dioptra_builtins.tracking.mlflow
    :members:
    :undoc-members:
    :show-inheritance:

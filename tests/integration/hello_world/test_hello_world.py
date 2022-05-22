@@ -23,24 +23,24 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 def test_hello_world(
-    docker_client, testbed_client, mlflow_client, workflows_tar_gz, testbed_hosts
+    docker_client, dioptra_client, mlflow_client, workflows_tar_gz, dioptra_hosts
 ):
     def job_still_running(response):
         return response["status"] not in set(("failed", "finished"))
 
-    response_experiment = testbed_client.get_experiment_by_name(name="hello_world")
+    response_experiment = dioptra_client.get_experiment_by_name(name="hello_world")
 
     if response_experiment is None or "Not Found" in response_experiment.get(
         "message", []
     ):
-        response_experiment = testbed_client.register_experiment(name="hello_world")
+        response_experiment = dioptra_client.register_experiment(name="hello_world")
 
-    response_queue = testbed_client.get_queue_by_name(name="tensorflow_cpu")
+    response_queue = dioptra_client.get_queue_by_name(name="tensorflow_cpu")
 
     if response_queue is None or "Not Found" in response_queue.get("message", []):
-        response_queue = testbed_client.register_queue(name="tensorflow_cpu")
+        response_queue = dioptra_client.register_queue(name="tensorflow_cpu")
 
-    response_hello_world = testbed_client.submit_job(
+    response_hello_world = dioptra_client.submit_job(
         workflows_file=str(workflows_tar_gz),
         experiment_name="hello_world",
         entry_point="hello_world",
@@ -48,7 +48,7 @@ def test_hello_world(
 
     while job_still_running(response_hello_world):
         time.sleep(1)
-        response_hello_world = testbed_client.get_job_by_id(
+        response_hello_world = dioptra_client.get_job_by_id(
             response_hello_world["jobId"]
         )
 

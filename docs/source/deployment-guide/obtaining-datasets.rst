@@ -40,7 +40,7 @@ Setup
 ~~~~~
 
 Register an account with Kaggle at https://www.kaggle.com/ so that you can access their content.
-Next, install the Python ``kaggle`` package so that you can use Python to access the :term:`API`,
+Next, install the Python ``kaggle`` package so that you can use Python to access the :term:`API`.
 
 .. tabbed:: Pip
 
@@ -61,7 +61,7 @@ Next, install the Python ``kaggle`` package so that you can use Python to access
 Finally, you will need to generate a Kaggle :term:`API` Token for authentication purposes by following these steps,
 
 #. From your Kaggle account page go to ``Account`` settings (upper right corner of Kaggle site after login)
-#. Navigate to the :term:`API` section and click on the **Create New API Token** button to generate an term:`API` token and download it as a ``kaggle.json`` file
+#. Navigate to the :term:`API` section and click on the **Create New API Token** button to generate an :term:`API` token and download it as a ``kaggle.json`` file
 #. Create a ``~/.kaggle`` folder in your home directory if it does not already exist and move the ``kaggle.json`` file you downloaded into the ``~/.kaggle`` directory
 #. Restrict the access permissions for the ``kaggle.json`` file by running ``chmod 600 ~/.kaggle/kaggle.json``.
 

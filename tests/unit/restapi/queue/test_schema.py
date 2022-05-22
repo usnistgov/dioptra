@@ -24,14 +24,14 @@ import structlog
 from flask import Flask
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import Queue, QueueRegistrationForm
-from mitre.securingai.restapi.queue.interface import (
+from dioptra.restapi.models import Queue, QueueRegistrationForm
+from dioptra.restapi.queue.interface import (
     QueueInterface,
     QueueLockInterface,
     QueueUpdateInterface,
 )
-from mitre.securingai.restapi.queue.model import QueueLock
-from mitre.securingai.restapi.queue.schema import (
+from dioptra.restapi.queue.model import QueueLock
+from dioptra.restapi.queue.schema import (
     QueueLockSchema,
     QueueNameUpdateSchema,
     QueueRegistrationFormSchema,

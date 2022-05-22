@@ -25,8 +25,8 @@ from flask import Flask
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
-from mitre.securingai.restapi.job.schema import JobFormSchema, JobSchema
-from mitre.securingai.restapi.models import Job, JobForm
+from dioptra.restapi.job.schema import JobFormSchema, JobSchema
+from dioptra.restapi.models import Job, JobForm
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

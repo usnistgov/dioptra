@@ -19,7 +19,7 @@ from __future__ import annotations
 import structlog
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import (
+from dioptra.restapi.models import (
     TaskPlugin,
     TaskPluginUploadForm,
     TaskPluginUploadFormData,

@@ -25,7 +25,7 @@ rq
 Tasks
 -----
 
-.. automodule:: mitre.securingai.rq.tasks
+.. automodule:: dioptra.rq.tasks
    :members:
    :undoc-members:
    :show-inheritance:

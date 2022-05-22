@@ -21,7 +21,7 @@ import pytest
 import structlog
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.shared.io_file.service import IOFileService
+from dioptra.restapi.shared.io_file.service import IOFileService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

@@ -50,7 +50,7 @@
 # m4_ignore(
 echo "This is just a script template, not the script (yet) - pass it to 'argbash' to fix this." >&2
 exit 11 #)Created by argbash-init v2.8.1
-# ARG_OPTIONAL_SINGLE([default-username],[],[Non-root username used during runtime],[securingai])
+# ARG_OPTIONAL_SINGLE([default-username],[],[Non-root username used during runtime],[dioptra])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
 # ARG_HELP([Secure Docker container at runtime\n])"
@@ -64,22 +64,22 @@ set -euo pipefail
 # Global parameters
 ###########################################################################################
 
-readonly ai_user="${AI_USER}"
-readonly ai_gid="${AI_GID}"
-readonly ai_group="${AI_GROUP-}"
-readonly ai_uid="${AI_UID}"
 readonly chown_extra="${CHOWN_EXTRA-}"
 readonly chown_home="${CHOWN_HOME-}"
 readonly chown_home_opts="${CHOWN_HOME_OPTS-}"
 readonly default_username="${_arg_default_username}"
+readonly dioptra_user="${DIOPTRA_USER}"
+readonly dioptra_gid="${DIOPTRA_GID}"
+readonly dioptra_group="${DIOPTRA_GROUP-}"
+readonly dioptra_uid="${DIOPTRA_UID}"
 readonly logname="Secure Container"
 
 ###########################################################################################
 # Change username from default (if it exists)
 #
 # Globals:
-#   ai_user
 #   default_username
+#   dioptra_user
 #   logname
 # Arguments:
 #   None
@@ -93,9 +93,9 @@ change_username() {
     echo $?
   )
 
-  if [[ ${username_check_exit_code} == 0 && ${ai_user} != ${default_username} ]]; then
-    echo "${logname}: set username to ${ai_user}"
-    usermod -d "/home/${ai_user}" -l "${ai_user}" ${default_username}
+  if [[ ${username_check_exit_code} == 0 && ${dioptra_user} != ${default_username} ]]; then
+    echo "${logname}: set username to ${dioptra_user}"
+    usermod -d "/home/${dioptra_user}" -l "${dioptra_user}" ${default_username}
   fi
 }
 
@@ -103,12 +103,12 @@ change_username() {
 # Fix permissions for provisioned storage, such as for NFS mounts
 #
 # Globals:
-#   ai_gid
-#   ai_uid
-#   ai_user
 #   chown_extra
 #   chown_home
 #   chown_home_opts
+#   dioptra_gid
+#   dioptra_uid
+#   dioptra_user
 #   logname
 # Arguments:
 #   None
@@ -118,14 +118,14 @@ change_username() {
 
 fix_storage_permissions() {
   if [[ ${chown_home} == 1 || ${chown_home} == yes ]]; then
-    echo "${logname}: changing ownership of /home/${ai_user} to ${ai_uid}:${ai_gid} with options '${chown_home_opts}'"
-    chown ${chown_home_opts} ${ai_uid}:${ai_gid} /home/${ai_user}
+    echo "${logname}: changing ownership of /home/${dioptra_user} to ${dioptra_uid}:${dioptra_gid} with options '${chown_home_opts}'"
+    chown ${chown_home_opts} ${dioptra_uid}:${dioptra_gid} /home/${dioptra_user}
   fi
 
   if [[ ! -z ${chown_extra} ]]; then
     for extra_dir in $(echo ${chown_extra} | tr ',' ' '); do
-      echo "${logname}: changing ownership of ${extra_dir} to ${ai_uid}:${ai_gid} with options '${chown_extra_OPTS}'"
-      chown ${chown_extra_OPTS} ${ai_uid}:${ai_gid} ${extra_dir}
+      echo "${logname}: changing ownership of ${extra_dir} to ${dioptra_uid}:${dioptra_gid} with options '${chown_extra_OPTS}'"
+      chown ${chown_extra_OPTS} ${dioptra_uid}:${dioptra_gid} ${extra_dir}
     done
   fi
 }
@@ -134,8 +134,8 @@ fix_storage_permissions() {
 # Update home and working directories if the username changed
 #
 # Globals:
-#   ai_user
 #   default_username
+#   dioptra_user
 #   logname
 # Arguments:
 #   None
@@ -144,15 +144,15 @@ fix_storage_permissions() {
 ###########################################################################################
 
 update_user_dirs() {
-  if [[ "${ai_user}" != "${default_username}" ]]; then
-    if [[ ! -e "/home/${ai_user}" ]]; then
-      echo "${logname}: relocating home dir to /home/${ai_user}"
-      mv "/home/${default_username}" "/home/${ai_user}" ||
-        ln -s "/home/${default_username}" "/home/${ai_user}"
+  if [[ "${dioptra_user}" != "${default_username}" ]]; then
+    if [[ ! -e "/home/${dioptra_user}" ]]; then
+      echo "${logname}: relocating home dir to /home/${dioptra_user}"
+      mv "/home/${default_username}" "/home/${dioptra_user}" ||
+        ln -s "/home/${default_username}" "/home/${dioptra_user}"
     fi
 
     if [[ "${PWD}/" == "/home/${default_username}/"* ]]; then
-      local newcwd="/home/${ai_user}/${PWD:13}"
+      local newcwd="/home/${dioptra_user}/${PWD:13}"
       echo "${logname}: setting CWD to ${newcwd}"
       cd "${newcwd}"
     fi
@@ -160,14 +160,14 @@ update_user_dirs() {
 }
 
 ###########################################################################################
-# Change UID:GID of ai_user to ai_uid:ai_gid if it does not match
+# Change UID:GID of dioptra_user to dioptra_uid:dioptra_gid if it does not match
 #
 # Globals:
-#   ai_gid
-#   ai_uid
-#   ai_group
-#   ai_user
 #   default_username
+#   dioptra_gid
+#   dioptra_group
+#   dioptra_uid
+#   dioptra_user
 #   logname
 # Arguments:
 #   None
@@ -176,15 +176,15 @@ update_user_dirs() {
 ###########################################################################################
 
 update_user_uid_gid() {
-  if [[ "${ai_uid}" != $(id -u ${ai_user}) || "${ai_gid}" != $(id -g ${ai_user}) ]]; then
-    echo "${logname}: set user ${ai_user} UID:GID to: ${ai_uid}:${ai_gid}"
+  if [[ "${dioptra_uid}" != $(id -u ${dioptra_user}) || "${dioptra_gid}" != $(id -g ${dioptra_user}) ]]; then
+    echo "${logname}: set user ${dioptra_user} UID:GID to: ${dioptra_uid}:${dioptra_gid}"
 
-    if [[ "${ai_gid}" != $(id -g ${ai_user}) ]]; then
-      groupadd -g ${ai_gid} -o ${ai_group:-${ai_user}}
+    if [[ "${dioptra_gid}" != $(id -g ${dioptra_user}) ]]; then
+      groupadd -g ${dioptra_gid} -o ${dioptra_group:-${dioptra_user}}
     fi
 
-    userdel ${ai_user}
-    useradd --home /home/${ai_user} -u ${ai_uid} -g ${ai_gid} -G 100 -l ${ai_user}
+    userdel ${dioptra_user}
+    useradd --home /home/${dioptra_user} -u ${dioptra_uid} -g ${dioptra_gid} -G 100 -l ${dioptra_user}
   fi
 }
 
@@ -201,9 +201,9 @@ update_user_uid_gid() {
 ###########################################################################################
 
 disable_sudo_permissions() {
-  if [[ -f /etc/sudoers.d/ai_user ]]; then
+  if [[ -f /etc/sudoers.d/dioptra_user ]]; then
     echo "${logname}: removing sudo permissions for ${default_username}"
-    sudo /bin/rm -f /etc/sudoers.d/ai_user
+    sudo /bin/rm -f /etc/sudoers.d/dioptra_user
   fi
 }
 
@@ -259,8 +259,8 @@ warn_if_home_read_only() {
 # Warn if uid/gid cannot be overriden.
 #
 # Globals:
-#   ai_gid
-#   ai_uid
+#   dioptra_gid
+#   dioptra_uid
 #   logname
 # Arguments:
 #   None
@@ -269,12 +269,12 @@ warn_if_home_read_only() {
 ###########################################################################################
 
 warn_if_no_override_uid_gid() {
-  if [[ ! -z "${ai_uid}" && "${ai_uid}" != "$(id -u)" ]]; then
-    echo "${logname}: container must be run as root to set \$AI_UID"
+  if [[ ! -z "${dioptra_uid}" && "${dioptra_uid}" != "$(id -u)" ]]; then
+    echo "${logname}: container must be run as root to set \$DIOPTRA_UID"
   fi
 
-  if [[ ! -z "${ai_gid}" && "${ai_gid}" != "$(id -g)" ]]; then
-    echo "${logname}: container must be run as root to set \$AI_GID"
+  if [[ ! -z "${dioptra_gid}" && "${dioptra_gid}" != "$(id -g)" ]]; then
+    echo "${logname}: container must be run as root to set \$DIOPTRA_GID"
   fi
 }
 
@@ -282,9 +282,9 @@ warn_if_no_override_uid_gid() {
 # Secure the container at runtime
 #
 # Globals:
-#   ai_gid
-#   ai_uid
 #   default_username
+#   dioptra_gid
+#   dioptra_uid
 # Arguments:
 #   None
 # Returns:
@@ -299,8 +299,8 @@ secure_container() {
     update_user_uid_gid
   else
     if [[ \
-      "${ai_uid}" == "$(id -u ${default_username})" && \
-      "${ai_gid}" == "$(id -g ${default_username})" ]]; then
+      "${dioptra_uid}" == "$(id -u ${default_username})" && \
+      "${dioptra_gid}" == "$(id -g ${default_username})" ]]; then
       ensure_runtime_user_in_passwd
       warn_if_home_read_only
     else

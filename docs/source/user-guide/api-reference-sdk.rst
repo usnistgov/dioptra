@@ -36,7 +36,7 @@ Testbed SDK API Reference
 generics
 --------
 
-.. currentmodule:: mitre.securingai.sdk.generics
+.. currentmodule:: dioptra.sdk.generics
 
 .. autosummary::
 
@@ -46,7 +46,7 @@ generics
 utilities
 ---------
 
-.. currentmodule:: mitre.securingai.sdk.utilities
+.. currentmodule:: dioptra.sdk.utilities
 
 .. autosummary::
 
@@ -63,7 +63,7 @@ utilities
 exceptions
 ----------
 
-.. currentmodule:: mitre.securingai.sdk.exceptions
+.. currentmodule:: dioptra.sdk.exceptions
 
 .. autosummary::
 
@@ -79,7 +79,7 @@ exceptions
 pyplugs
 -------
 
-.. currentmodule:: mitre.securingai
+.. currentmodule:: dioptra
 
 .. autosummary::
 
@@ -105,7 +105,7 @@ pyplugs
 rq
 --
 
-.. currentmodule:: mitre.securingai.rq
+.. currentmodule:: dioptra.rq
 
 .. autosummary::
 
@@ -114,7 +114,7 @@ rq
 cryptography
 ------------
 
-.. currentmodule:: mitre.securingai.sdk.cryptography
+.. currentmodule:: dioptra.sdk.cryptography
 
 .. autosummary::
 

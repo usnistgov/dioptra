@@ -29,7 +29,7 @@ from tests.utils import Timer
 PathLike = Union[str, Path]
 
 
-class TestbedAPIClient(object):
+class TestDioptraClient(object):
     def __init__(self, address: str = "http://localhost:30080") -> None:
         address = f"{address}/api"
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
@@ -58,7 +58,7 @@ class TestbedAPIClient(object):
             (
                 self._scheme,
                 self._netloc,
-                urljoin(self._path, "taskPlugin/securingai_builtins"),
+                urljoin(self._path, "taskPlugin/dioptra_builtins"),
                 "",
                 "",
                 "",
@@ -71,7 +71,7 @@ class TestbedAPIClient(object):
             (
                 self._scheme,
                 self._netloc,
-                urljoin(self._path, "taskPlugin/securingai_custom"),
+                urljoin(self._path, "taskPlugin/dioptra_custom"),
                 "",
                 "",
                 "",
@@ -201,7 +201,7 @@ class TestbedAPIClient(object):
         self,
         custom_plugin_name: str,
         custom_plugin_file: PathLike,
-        collection: str = "securingai_custom",
+        collection: str = "dioptra_custom",
     ):
         plugin_upload_form = {
             "task_plugin_name": custom_plugin_name,

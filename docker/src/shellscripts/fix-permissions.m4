@@ -64,7 +64,7 @@ set -euo pipefail
 # Global parameters
 ###########################################################################################
 
-readonly ai_gid="${AI_GID}"
+readonly dioptra_gid="${DIOPTRA_GID}"
 readonly directories=${_arg_directory[@]}
 readonly logname="Fix Permissions"
 
@@ -72,7 +72,7 @@ readonly logname="Fix Permissions"
 # Recursively set group ownership and permissions within a directory
 #
 # Globals:
-#   ai_gid
+#   dioptra_gid
 #   logname
 # Arguments:
 #   Path to a directory
@@ -83,14 +83,14 @@ readonly logname="Fix Permissions"
 set_permissions() {
   local directory="${1}"
 
-  echo "${logname}: set group ownership and permissions of ${directory} to GID=${ai_gid}"
+  echo "${logname}: set group ownership and permissions of ${directory} to GID=${dioptra_gid}"
 
   find "${directory}" \
     ! \( \
-    -group ${ai_gid} \
+    -group ${dioptra_gid} \
     -a -perm -g+rwX \
     \) \
-    -exec chgrp ${ai_gid} {} \; \
+    -exec chgrp ${dioptra_gid} {} \; \
     -exec chmod g+rwX {} \;
 }
 
@@ -121,16 +121,16 @@ set_setuid_setgid() {
 ###########################################################################################
 # Fix directory permissions
 #
-# After any installation, if a directory needs to be (human) user-writable, run this script
-# on it. It will make everything in the directory owned by the group $AI_GID and writable
-# by that group. Deployments that want to set a specific user id can preserve permissions
-# by adding the `--group-add users` line to `docker run`.
+# After any installation, if a directory needs to be (human) user-writable, run this
+# script on it. It will make everything in the directory owned by the group $DIOPTRA_GID
+# and writable by that group. Deployments that want to set a specific user id can
+# preserve permissions by adding the `--group-add users` line to `docker run`.
 #
 # Uses find to avoid touching files that already have the right permissions, which would
 # cause massive image explosion
 #
 # The right permissions are:
-#   group=$AI_GID
+#   group=$DIOPTRA_GID
 #   AND permissions include group rwX (directory-execute)
 #   AND directories have setuid,setgid bits set
 #

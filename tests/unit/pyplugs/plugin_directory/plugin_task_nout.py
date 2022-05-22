@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Example of a plug-in consisting of several parts"""
-from mitre.securingai import pyplugs
+from dioptra import pyplugs
 
 
 @pyplugs.register

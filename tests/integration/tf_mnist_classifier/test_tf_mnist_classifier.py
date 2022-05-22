@@ -25,11 +25,11 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 def test_tf_mnist_classifier(
     docker_client,
-    testbed_client,
+    dioptra_client,
     mlflow_client,
     custom_plugins_evaluation_tar_gz,
     workflows_tar_gz,
-    testbed_hosts,
+    dioptra_hosts,
 ):
     def job_still_running(response):
         return response["status"] not in set(("failed", "finished"))
@@ -40,32 +40,32 @@ def test_tf_mnist_classifier(
         )
 
     # Create experiment namespace
-    response_experiment = testbed_client.get_experiment_by_name(name="mnist")
+    response_experiment = dioptra_client.get_experiment_by_name(name="mnist")
 
     if response_experiment is None or "Not Found" in response_experiment.get(
         "message", []
     ):
-        response_experiment = testbed_client.register_experiment(name="mnist")
+        response_experiment = dioptra_client.register_experiment(name="mnist")
 
     # Register Tensorflow (CPU) worker queue
-    response_queue = testbed_client.get_queue_by_name(name="tensorflow_cpu")
+    response_queue = dioptra_client.get_queue_by_name(name="tensorflow_cpu")
 
     if response_queue is None or "Not Found" in response_queue.get("message", []):
-        response_queue = testbed_client.register_queue(name="tensorflow_cpu")
+        response_queue = dioptra_client.register_queue(name="tensorflow_cpu")
 
     # Register the evaluation custom plugin
-    response_custom_plugins = testbed_client.get_custom_task_plugin(name="evaluation")
+    response_custom_plugins = dioptra_client.get_custom_task_plugin(name="evaluation")
 
     if response_custom_plugins is None or "Not Found" in response_custom_plugins.get(
         "message", []
     ):
-        response_custom_plugins = testbed_client.upload_custom_plugin_package(
+        response_custom_plugins = dioptra_client.upload_custom_plugin_package(
             custom_plugin_name="evaluation",
             custom_plugin_file=str(custom_plugins_evaluation_tar_gz),
         )
 
     # Run "train" entrypoint job
-    response_shallow_train = testbed_client.submit_job(
+    response_shallow_train = dioptra_client.submit_job(
         workflows_file=str(workflows_tar_gz),
         experiment_name="mnist",
         entry_point="train",
@@ -80,12 +80,12 @@ def test_tf_mnist_classifier(
 
     while job_still_running(response_shallow_train):
         time.sleep(1)
-        response_shallow_train = testbed_client.get_job_by_id(
+        response_shallow_train = dioptra_client.get_job_by_id(
             response_shallow_train["jobId"]
         )
 
     # Run "fgm" entrypoint job
-    response_fgm_shallow_net = testbed_client.submit_job(
+    response_fgm_shallow_net = dioptra_client.submit_job(
         workflows_file=str(workflows_tar_gz),
         experiment_name="mnist",
         entry_point="fgm",
@@ -96,12 +96,12 @@ def test_tf_mnist_classifier(
 
     while mlflow_run_id_is_not_known(response_fgm_shallow_net):
         time.sleep(1)
-        response_fgm_shallow_net = testbed_client.get_job_by_id(
+        response_fgm_shallow_net = dioptra_client.get_job_by_id(
             response_fgm_shallow_net["jobId"]
         )
 
     # Run "infer" entrypoint job
-    response_shallow_net_infer_shallow_net = testbed_client.submit_job(
+    response_shallow_net_infer_shallow_net = dioptra_client.submit_job(
         workflows_file=str(workflows_tar_gz),
         experiment_name="mnist",
         entry_point="infer",
@@ -119,10 +119,10 @@ def test_tf_mnist_classifier(
         response_shallow_net_infer_shallow_net
     ):
         time.sleep(1)
-        response_fgm_shallow_net = testbed_client.get_job_by_id(
+        response_fgm_shallow_net = dioptra_client.get_job_by_id(
             response_fgm_shallow_net["jobId"]
         )
-        response_shallow_net_infer_shallow_net = testbed_client.get_job_by_id(
+        response_shallow_net_infer_shallow_net = dioptra_client.get_job_by_id(
             response_shallow_net_infer_shallow_net["jobId"]
         )
 

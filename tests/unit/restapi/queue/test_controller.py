@@ -27,9 +27,9 @@ from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import Queue
-from mitre.securingai.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
-from mitre.securingai.restapi.queue.service import QueueService
+from dioptra.restapi.models import Queue
+from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
+from dioptra.restapi.queue.service import QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

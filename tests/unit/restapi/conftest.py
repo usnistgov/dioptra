@@ -85,18 +85,16 @@ def task_plugin_archive():
 
 @pytest.fixture
 def dependency_modules() -> List[Any]:
-    from mitre.securingai.restapi.experiment.dependencies import (
+    from dioptra.restapi.experiment.dependencies import (
         ExperimentRegistrationFormSchemaModule,
     )
-    from mitre.securingai.restapi.job.dependencies import (
+    from dioptra.restapi.job.dependencies import (
         JobFormSchemaModule,
         RQServiceConfiguration,
         RQServiceModule,
     )
-    from mitre.securingai.restapi.queue.dependencies import (
-        QueueRegistrationFormSchemaModule,
-    )
-    from mitre.securingai.restapi.task_plugin.dependencies import (
+    from dioptra.restapi.queue.dependencies import QueueRegistrationFormSchemaModule
+    from dioptra.restapi.task_plugin.dependencies import (
         TaskPluginUploadFormSchemaModule,
     )
 
@@ -112,7 +110,7 @@ def dependency_modules() -> List[Any]:
             interface=RQServiceConfiguration,
             to=RQServiceConfiguration(
                 redis=Redis.from_url("redis://"),
-                run_mlflow="mitre.securingai.rq.tasks.run_mlflow_task",
+                run_mlflow="dioptra.rq.tasks.run_mlflow_task",
             ),
             scope=request,
         )
@@ -135,7 +133,7 @@ def dependency_injector(dependency_modules: List[Any]) -> Injector:
 
 @pytest.fixture
 def app(dependency_modules: List[Any]) -> Flask:
-    from mitre.securingai.restapi import create_app
+    from dioptra.restapi import create_app
 
     app: Flask = create_app(env="test", inject_dependencies=False)
     FlaskInjector(app=app, modules=dependency_modules)
@@ -145,7 +143,7 @@ def app(dependency_modules: List[Any]) -> Flask:
 
 @pytest.fixture
 def db(app: Flask) -> SQLAlchemy:
-    from mitre.securingai.restapi.app import db
+    from dioptra.restapi.app import db
 
     with app.app_context():
         db.drop_all()
@@ -157,7 +155,7 @@ def db(app: Flask) -> SQLAlchemy:
 
 @pytest.fixture(autouse=True)
 def seed_database(db):
-    from mitre.securingai.restapi.job.model import job_statuses
+    from dioptra.restapi.job.model import job_statuses
 
     db.session.execute(
         job_statuses.insert(),
