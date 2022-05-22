@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-.PHONY: beautify build-all build-legacy build-mlflow-tracking build-nginx build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-tensorflow build-tensorflow-cpu build-tensorflow-gpu clean code-check code-pkg conda-env docker-deps docs help hooks pull-latest tag-latest tests tests-integration tests-unit tox
+.PHONY: beautify build-all build-mlflow-tracking build-nginx build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-tensorflow build-tensorflow-cpu build-tensorflow-gpu clean code-check code-pkg conda-env docker-deps docs help hooks pull-latest tag-latest tests tests-integration tests-unit tox
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -O extglob -o pipefail -c
@@ -284,17 +284,6 @@ DOCKER_NO_CACHE=$(DOCKER_NO_CACHE)\
 docker/build.sh
 endef
 
-define run_legacy_build_script
-CORES=$(CORES)\
-IMAGE_TAG=$(strip $(2))\
-CODE_PKG_VERSION=$(CODE_PKG_VERSION)\
-PROJECT_PREFIX=$(PROJECT_PREFIX)\
-PROJECT_COMPONENT=$(strip $(1))\
-MINICONDA_VERSION=$(CONTAINER_MINICONDA_VERSION)\
-DOCKER_NO_CACHE=$(DOCKER_NO_CACHE)\
-docker/legacy/build.sh
-endef
-
 define run_docker
 $(DOCKER) $(1)
 endef
@@ -440,39 +429,6 @@ $(eval $(call generate_docker_image_pipeline,\
 	$$(CONTAINER_$(1)_CONDA_ENV_FILES)))
 endef
 
-define build_legacy_docker_image_recipe
-$(strip $(1)): $(strip $(2)) | $$(PROJECT_BUILD_DIR)
-	$(call run_legacy_build_script,$(3),$(4))
-	$(call save_sentinel_file,$$@)
-endef
-
-define define_legacy_docker_image_sentinel_vars
-CONTAINER_$(strip $(1))_COMPONENT_NAME = $(strip $(3))
-CONTAINER_$(strip $(1))_IMAGE = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):$$($(strip $(2)))
-CONTAINER_$(strip $(1))_DIR = $$(PROJECT_DOCKER_DIR)/legacy/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)
-CONTAINER_$(strip $(1))_INCLUDE_DIR = $$(CONTAINER_$(strip $(1))_DIR)/include/etc/$$(PROJECT_PREFIX)/docker
-CONTAINER_$(strip $(1))_DOCKERFILE = $$(CONTAINER_$(strip $(1))_DIR)/Dockerfile
-CONTAINER_$(strip $(1))_BUILD_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-legacy-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-$$($(strip $(2))).sentinel
-endef
-
-define generate_legacy_docker_image_pipeline
-$(eval $(call build_legacy_docker_image_recipe,$(1),$(strip $(strip $(2) $(5)) $(6)),$(3),$(4)))
-endef
-
-define generate_legacy_full_docker_image_vars
-$(eval $(call define_legacy_docker_image_sentinel_vars,$(1),$(2),$(3)))
-endef
-
-define generate_legacy_full_docker_image_recipe
-$(eval $(call generate_legacy_docker_image_pipeline,\
-	$$(CONTAINER_$(1)_BUILD_SENTINEL),\
-	$$($(2)) $$(CONTAINER_$(1)_DOCKERFILE) $$(CONTAINER_$(1)_INCLUDE_FILES),\
-	$$(CONTAINER_$(1)_COMPONENT_NAME),\
-	$$($(3)),\
-	$$(CONTAINER_$(1)_SCRIPTS),\
-	$$(CONTAINER_$(1)_CONDA_ENV_FILES)))
-endef
-
 #################################################################################
 # AUTO-GENERATED GLOBALS                                                        #
 #################################################################################
@@ -484,9 +440,6 @@ $(call generate_full_docker_image_vars,PYTORCH_CPU,CONTAINER_IMAGE_TAG,pytorch-c
 $(call generate_full_docker_image_vars,PYTORCH_GPU,CONTAINER_IMAGE_TAG,pytorch-gpu,)
 $(call generate_full_docker_image_vars,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG,tensorflow2-cpu,)
 $(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tensorflow2-gpu,)
-$(call generate_legacy_full_docker_image_vars,MLFLOW_TRACKING1_12_1,CONTAINER_IMAGE_TAG,mlflow-tracking1-12-1)
-$(call generate_legacy_full_docker_image_vars,RESTAPI_PY37,CONTAINER_IMAGE_TAG,restapi-py37)
-$(call generate_legacy_full_docker_image_vars,TENSORFLOW21_CPU,CONTAINER_IMAGE_TAG,tensorflow21-cpu)
 
 #################################################################################
 # PROJECT RULES                                                                 #
@@ -497,9 +450,6 @@ beautify: $(BEAUTIFY_SENTINEL)
 
 ## Build all Dioptra images
 build-all: build-nginx build-mlflow-tracking build-restapi build-pytorch build-tensorflow
-
-## Build the legacy images
-build-legacy: $(CONTAINER_RESTAPI_PY37_BUILD_SENTINEL) $(CONTAINER_MLFLOW_TRACKING1_12_1_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW21_CPU_BUILD_SENTINEL)
 
 ## Build the MLFlow Tracking Docker image
 build-mlflow-tracking: $(CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL)
@@ -653,9 +603,6 @@ $(call generate_full_docker_image_recipe,PYTORCH_CPU,CODE_PACKAGING_SENTINEL,CON
 $(call generate_full_docker_image_recipe,PYTORCH_GPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,TENSORFLOW2_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,TENSORFLOW2_GPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_legacy_full_docker_image_recipe,MLFLOW_TRACKING1_12_1,,CONTAINER_IMAGE_TAG)
-$(call generate_legacy_full_docker_image_recipe,RESTAPI_PY37,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_legacy_full_docker_image_recipe,TENSORFLOW21_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
 
 #################################################################################
 # Self Documenting Commands                                                     #
