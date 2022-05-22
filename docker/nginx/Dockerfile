@@ -55,6 +55,9 @@ ARG PROJECT_COMPONENT
 ARG PROJECT_PREFIX
 
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/init-copy.sh /etc/${PROJECT_PREFIX}/docker/init-copy.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/init-git-clone.sh /etc/${PROJECT_PREFIX}/docker/init-git-clone.sh
+COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/init-set-permissions.sh /etc/${PROJECT_PREFIX}/docker/init-set-permissions.sh
 COPY docker/${PROJECT_COMPONENT}/include/etc/${PROJECT_PREFIX}/docker/secure-container.sh /etc/${PROJECT_PREFIX}/docker/secure-container.sh
 
 ARG DIOPTRA_USER=dioptra
@@ -62,8 +65,14 @@ ARG DIOPTRA_UID=39000
 ARG DIOPTRA_GID=100
 
 RUN chmod 0755 /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/init-copy.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/init-git-clone.sh && \
+    chmod 0755 /etc/${PROJECT_PREFIX}/docker/init-set-permissions.sh && \
     chmod 0755 /etc/${PROJECT_PREFIX}/docker/secure-container.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/entrypoint-nginx.sh /usr/local/bin/entrypoint.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/init-copy.sh /usr/local/bin/init-copy.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/init-git-clone.sh /usr/local/bin/init-git-clone.sh && \
+    ln -s /etc/${PROJECT_PREFIX}/docker/init-set-permissions.sh /usr/local/bin/init-set-permissions.sh && \
     ln -s /etc/${PROJECT_PREFIX}/docker/secure-container.sh /usr/local/bin/secure-container.sh && \
     sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
     useradd -u ${DIOPTRA_UID} -N -M -s /bin/bash -c "Dioptra user" ${DIOPTRA_USER} && \
