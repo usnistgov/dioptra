@@ -375,18 +375,12 @@ def test_delete_prefix(
 def test_normalize_prefix(s3_service: S3Service) -> None:
     assert s3_service.normalize_prefix(prefix="/") == "/"
     assert (
-        s3_service.normalize_prefix(prefix="///dioptra_builtins")
-        == "dioptra_builtins/"
+        s3_service.normalize_prefix(prefix="///dioptra_builtins") == "dioptra_builtins/"
+    )
+    assert s3_service.normalize_prefix(prefix="dioptra_builtins") == "dioptra_builtins/"
+    assert (
+        s3_service.normalize_prefix(prefix="dioptra_builtins/") == "dioptra_builtins/"
     )
     assert (
-        s3_service.normalize_prefix(prefix="dioptra_builtins")
-        == "dioptra_builtins/"
-    )
-    assert (
-        s3_service.normalize_prefix(prefix="dioptra_builtins/")
-        == "dioptra_builtins/"
-    )
-    assert (
-        s3_service.normalize_prefix(prefix="dioptra_builtins//")
-        == "dioptra_builtins/"
+        s3_service.normalize_prefix(prefix="dioptra_builtins//") == "dioptra_builtins/"
     )

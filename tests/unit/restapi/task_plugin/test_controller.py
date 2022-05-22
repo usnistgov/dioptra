@@ -45,9 +45,7 @@ def test_task_plugin_resource_get(app: Flask, monkeypatch: MonkeyPatch) -> None:
     def mockgetall(self, *args, **kwargs) -> List[TaskPlugin]:
         LOGGER.info("Mocking TaskPluginService.get_all()")
         return [
-            TaskPlugin(
-                "artifacts", "dioptra_builtins", ["__init__.py", "mlflow.py"]
-            ),
+            TaskPlugin("artifacts", "dioptra_builtins", ["__init__.py", "mlflow.py"]),
             TaskPlugin("attacks", "dioptra_builtins", ["__init__.py", "fgm.py"]),
             TaskPlugin(
                 "new_plugin_one", "dioptra_custom", ["__init__.py", "plugin_one.py"]

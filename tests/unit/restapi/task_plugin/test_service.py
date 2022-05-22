@@ -133,9 +133,7 @@ def test_delete_prefix(
         stubber.assert_no_pending_responses()
 
     expected_response: List[TaskPlugin] = [
-        TaskPlugin(
-            "new_plugin_one", "dioptra_custom", ["__init__.py", "plugin_one.py"]
-        )
+        TaskPlugin("new_plugin_one", "dioptra_custom", ["__init__.py", "plugin_one.py"])
     ]
     assert response == expected_response
 
