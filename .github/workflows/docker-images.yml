@@ -113,7 +113,7 @@ jobs:
             org.opencontainers.image.authors=NCCoE Artificial Intelligence Team <ai-nccoe@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Cory Miniter <jminiter@mitre.org>, Howard Huang <hhuang@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Paul Rowe <prowe@mitre.org>
 
       - name: set up docker qemu
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       - name: set up docker buildx
         uses: docker/setup-buildx-action@v1
@@ -279,7 +279,7 @@ jobs:
           path: /tmp
 
       - name: set up docker qemu
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       - name: set up docker buildx
         uses: docker/setup-buildx-action@v1
@@ -357,7 +357,7 @@ jobs:
           path: /tmp
 
       - name: set up docker qemu
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       - name: set up docker buildx
         uses: docker/setup-buildx-action@v1
