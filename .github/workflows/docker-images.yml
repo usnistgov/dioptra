@@ -133,7 +133,7 @@ jobs:
           path: dist
 
       - name: build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         if: ${{ github.event_name != 'schedule' }}
         with:
           context: .
@@ -158,7 +158,7 @@ jobs:
             TENSORFLOW_NVIDIA_CUDA_VERSION=${{ env.TENSORFLOW_NVIDIA_CUDA_VERSION }}
 
       - name: build and push (no cache)
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         if: ${{ github.event_name == 'schedule' }}
         with:
           context: .
@@ -192,7 +192,7 @@ jobs:
           mv /tmp/.buildx-cache-${{ matrix.dioptra-app }}-new /tmp/.buildx-cache-${{ matrix.dioptra-app }}
 
       - name: build and export images for testing
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           push: false
