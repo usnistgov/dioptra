@@ -22,7 +22,7 @@ random
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: securingai_builtins.random
+.. automodule:: dioptra_builtins.random
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ random
 rng.py
 ------
 
-.. automodule:: securingai_builtins.random.rng
+.. automodule:: dioptra_builtins.random.rng
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,7 +38,7 @@ rng.py
 sample.py
 ---------
 
-.. automodule:: securingai_builtins.random.sample
+.. automodule:: dioptra_builtins.random.sample
    :members:
    :undoc-members:
    :show-inheritance:

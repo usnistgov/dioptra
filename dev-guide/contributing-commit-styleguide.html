@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -725,7 +725,7 @@ Those commits should get squashed, and the final patch when landed should be reb
 <div class="section" id="squashing">
 <h3>Squashing<a class="headerlink" href="#squashing" title="Permalink to this headline">#</a></h3>
 <p>If you are squashing your branch, it’s important to make sure you update the commit message.
-If you’re using GitLab’s UI it will by default create a new commit message which is a combination of all commits and <strong>does not follow the commit guidelines</strong>.</p>
+If you’re using GitHub’s UI it will by default create a new commit message which is a combination of all commits and <strong>does not follow the commit guidelines</strong>.</p>
 <p>If you’re working locally, it often can be useful to <code class="docutils literal notranslate"><span class="pre">--amend</span></code> a commit, or utilize <code class="docutils literal notranslate"><span class="pre">rebase</span> <span class="pre">-i</span></code> to reorder, squash, and reword your commits.</p>
 </div>
 </div>
@@ -743,8 +743,8 @@ If you’re using GitLab’s UI it will by default create a new commit message w
 <p>The <strong>header</strong> is mandatory and the <strong>scope</strong> of the header is optional.
 Both are written in <em>camelCase</em>.</p>
 <p>Any line of the commit message cannot be longer 100 characters!
-This allows the message to be easier to read on GitLab as well as in various git tools.</p>
-<p>The footer should contain a closing reference to an issue as well as a relevant GitLab issue (if any):</p>
+This allows the message to be easier to read on GitHub as well as in various git tools.</p>
+<p>The footer should contain a closing reference to an issue as well as a relevant GitHub issue (if any):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>examples: fix url joining for endpoints in lab api client on windows
 
 Replace the platform-specific `os.path.join()` with the platform-independent `posixpath.join()` so
@@ -791,7 +791,7 @@ For example, if the code primarily affects configuration, you’d use the <em>co
 <li><p><strong>sdk</strong>: used for updates related to the development and maintenance of the Testbed’s software development kit</p></li>
 </ul>
 <p>Ad-hoc scopes are permitted for the <code class="docutils literal notranslate"><span class="pre">examples</span></code> change type to indicate which example was updated provided the scope names remain consistent.
-The special scopes <strong>gitlab</strong> and <strong>tox</strong> are also permitted when combined with the <code class="docutils literal notranslate"><span class="pre">ci</span></code> change type.</p>
+The special scopes <strong>github</strong> and <strong>tox</strong> are also permitted when combined with the <code class="docutils literal notranslate"><span class="pre">ci</span></code> change type.</p>
 <p>Note that not all commits should have a scope.
 Cases where a commit should not specify a scope typically fall into one of two categories:</p>
 <ol class="arabic simple">
@@ -817,7 +817,7 @@ The body should include the motivation for the change and contrast this with pre
 </div>
 <div class="section" id="footer">
 <h2>Footer<a class="headerlink" href="#footer" title="Permalink to this headline">#</a></h2>
-<p>The footer should contain any information about <strong>Breaking Changes</strong> and is also the place to reference GitLab issues that this commit <strong>Closes</strong>.</p>
+<p>The footer should contain any information about <strong>Breaking Changes</strong> and is also the place to reference GitHub issues that this commit <strong>Closes</strong>.</p>
 <p><strong>Breaking Changes</strong> should start with the word <code class="docutils literal notranslate"><span class="pre">BREAKING</span> <span class="pre">CHANGE:</span></code> with a space or two newlines. The rest of the commit message is then used for this.</p>
 </div>
 <div class="section" id="references">

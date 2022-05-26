@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -633,18 +633,18 @@ In order to run all of the examples distributed with Dioptra, you will need to d
 <div class="section" id="setup">
 <h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">#</a></h3>
 <p>Register an account with Kaggle at <a class="reference external" href="https://www.kaggle.com/">https://www.kaggle.com/</a> so that you can access their content.
-Next, install the Python <code class="docutils literal notranslate"><span class="pre">kaggle</span></code> package so that you can use Python to access the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>,</p>
+Next, install the Python <code class="docutils literal notranslate"><span class="pre">kaggle</span></code> package so that you can use Python to access the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>.</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="3a75b2dc-796d-4c1f-bac1-e38411c2c257" name="764ae584-5b54-4915-a63b-8f0f6cc139f6" type="radio">
-</input><label class="tabbed-label" for="3a75b2dc-796d-4c1f-bac1-e38411c2c257">
+<input checked="checked" id="304e70d6-8d63-4324-8536-8391eb54110d" name="c82f15c3-3742-4d03-ad4a-f3cc88d7376f" type="radio">
+</input><label class="tabbed-label" for="304e70d6-8d63-4324-8536-8391eb54110d">
 Pip</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># User-level install</span>
 python -m pip install --user kaggle
 </pre></div>
 </div>
 </div>
-<input id="19d13ab4-1ce2-4281-b7f0-8d31543ff25c" name="764ae584-5b54-4915-a63b-8f0f6cc139f6" type="radio">
-</input><label class="tabbed-label" for="19d13ab4-1ce2-4281-b7f0-8d31543ff25c">
+<input id="f51ba528-6422-4a3c-86da-d6ae20f10748" name="c82f15c3-3742-4d03-ad4a-f3cc88d7376f" type="radio">
+</input><label class="tabbed-label" for="f51ba528-6422-4a3c-86da-d6ae20f10748">
 Conda + Pip</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Conda virtual environment install</span>
 conda create -n kaggle <span class="nv">python</span><span class="o">=</span><span class="m">3</span> pip
@@ -657,7 +657,7 @@ python -m pip install kaggle
 <p>Finally, you will need to generate a Kaggle <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> Token for authentication purposes by following these steps,</p>
 <ol class="arabic simple">
 <li><p>From your Kaggle account page go to <code class="docutils literal notranslate"><span class="pre">Account</span></code> settings (upper right corner of Kaggle site after login)</p></li>
-<li><p>Navigate to the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> section and click on the <strong>Create New API Token</strong> button to generate an term:<cite>API</cite> token and download it as a <code class="docutils literal notranslate"><span class="pre">kaggle.json</span></code> file</p></li>
+<li><p>Navigate to the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> section and click on the <strong>Create New API Token</strong> button to generate an <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> token and download it as a <code class="docutils literal notranslate"><span class="pre">kaggle.json</span></code> file</p></li>
 <li><p>Create a <code class="docutils literal notranslate"><span class="pre">~/.kaggle</span></code> folder in your home directory if it does not already exist and move the <code class="docutils literal notranslate"><span class="pre">kaggle.json</span></code> file you downloaded into the <code class="docutils literal notranslate"><span class="pre">~/.kaggle</span></code> directory</p></li>
 <li><p>Restrict the access permissions for the <code class="docutils literal notranslate"><span class="pre">kaggle.json</span></code> file by running <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">600</span> <span class="pre">~/.kaggle/kaggle.json</span></code>.</p></li>
 </ol>

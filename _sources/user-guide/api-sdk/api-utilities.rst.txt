@@ -22,7 +22,7 @@ utilities
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: mitre.securingai.sdk.utilities
+.. automodule:: dioptra.sdk.utilities
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ utilities
 contexts
 --------
 
-.. automodule:: mitre.securingai.sdk.utilities.contexts
+.. automodule:: dioptra.sdk.utilities.contexts
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,7 +38,7 @@ contexts
 decorators
 ----------
 
-.. automodule:: mitre.securingai.sdk.utilities.decorators
+.. automodule:: dioptra.sdk.utilities.decorators
    :members:
    :undoc-members:
    :show-inheritance:
@@ -46,7 +46,7 @@ decorators
 logging
 -------
 
-.. automodule:: mitre.securingai.sdk.utilities.logging
+.. automodule:: dioptra.sdk.utilities.logging
    :members:
    :undoc-members:
    :show-inheritance:
@@ -54,7 +54,7 @@ logging
 paths
 -----
 
-.. automodule:: mitre.securingai.sdk.utilities.paths
+.. automodule:: dioptra.sdk.utilities.paths
    :members:
    :undoc-members:
    :show-inheritance:

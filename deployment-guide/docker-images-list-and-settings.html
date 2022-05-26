@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -830,7 +830,7 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <p class="rubric">Options</p>
 <dl class="option-list">
 <dt><kbd><span class="option">--conda-env</span></kbd></dt>
-<dd><p>Conda environment (default: <code class="docutils literal notranslate"><span class="pre">'mitre-securing-ai'</span></code>)</p>
+<dd><p>Conda environment (default: <code class="docutils literal notranslate"><span class="pre">'dioptra'</span></code>)</p>
 </dd>
 <dt><kbd><span class="option">--backend-store-uri</span></kbd></dt>
 <dd><p><a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to which to persist experiment and run data. Acceptable <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a>s are SQLAlchemy-compatible database connection strings (e.g. ‘sqlite:///path/to/file.db’) or local filesystem <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a>s (e.g. <code class="docutils literal notranslate"><span class="pre">'file:///absolute/path/to/directory'</span></code>). (default: <code class="docutils literal notranslate"><span class="pre">'sqlite:////work/mlruns/mlflow-tracking.db'</span></code>)</p>
@@ -862,18 +862,18 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <div class="section" id="id2">
 <h3>Environment Variables<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <div class="line-block">
-<div class="line"><kbd class="kbd docutils literal notranslate">AI_RESTAPI_DATABASE_URI</kbd></div>
+<div class="line"><kbd class="kbd docutils literal notranslate">DIOPTRA_RESTAPI_DATABASE_URI</kbd></div>
 </div>
 <p>The <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to use to connect to the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> database.
-(default: <code class="docutils literal notranslate"><span class="pre">'$(pwd)/securingai.db'</span></code>)</p>
+(default: <code class="docutils literal notranslate"><span class="pre">'$(pwd)/dioptra.db'</span></code>)</p>
 <div class="line-block">
-<div class="line"><kbd class="kbd docutils literal notranslate">AI_RESTAPI_ENV</kbd></div>
+<div class="line"><kbd class="kbd docutils literal notranslate">DIOPTRA_RESTAPI_ENV</kbd></div>
 </div>
 <p>Selects a set of configurations for the Flask app to use.
 Must be ‘prod’, ‘dev’, or ‘test’.
 (default: <code class="docutils literal notranslate"><span class="pre">'prod'</span></code>)</p>
 <div class="line-block">
-<div class="line"><kbd class="kbd docutils literal notranslate">AI_DEPLOY_SECRET_KEY</kbd></div>
+<div class="line"><kbd class="kbd docutils literal notranslate">DIOPTRA_DEPLOY_SECRET_KEY</kbd></div>
 </div>
 <p>Secret key used by Flask to sign cookies.
 While cookies are not used when accessing the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>, per best practices this should still be changed to a long, random value.
@@ -915,10 +915,10 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <dd><p>Server backend (default: <code class="docutils literal notranslate"><span class="pre">'gunicorn'</span></code>)</p>
 </dd>
 <dt><kbd><span class="option">--conda-env</span></kbd></dt>
-<dd><p>Conda environment (default: <code class="docutils literal notranslate"><span class="pre">'mitre-securing-ai'</span></code>)</p>
+<dd><p>Conda environment (default: <code class="docutils literal notranslate"><span class="pre">'dioptra'</span></code>)</p>
 </dd>
 <dt><kbd><span class="option">--gunicorn-module</span></kbd></dt>
-<dd><p>Python module used to start Gunicorn WSGI server (default: <code class="docutils literal notranslate"><span class="pre">'mitre.securingai.restapi.cli.gunicorn'</span></code>)</p>
+<dd><p>Python module used to start Gunicorn WSGI server (default: <code class="docutils literal notranslate"><span class="pre">'dioptra.restapi.cli.gunicorn'</span></code>)</p>
 </dd>
 <dt><kbd><span class="option">--upgrade-db</span></kbd></dt>
 <dd><p>Upgrade the database schema</p>
@@ -933,19 +933,19 @@ The Testbed Workers come in different flavors, with each one provisioned to supp
 <div class="section" id="id4">
 <h3>Environment Variables<a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <div class="line-block">
-<div class="line"><kbd class="kbd docutils literal notranslate">AI_PLUGIN_DIR</kbd></div>
+<div class="line"><kbd class="kbd docutils literal notranslate">DIOPTRA_PLUGIN_DIR</kbd></div>
 </div>
 <p>Directory to use for syncing the task plugins.
 (default: <code class="docutils literal notranslate"><span class="pre">'/work/plugins'</span></code>)</p>
 <div class="line-block">
-<div class="line"><kbd class="kbd docutils literal notranslate">AI_PLUGINS_S3_URI</kbd></div>
+<div class="line"><kbd class="kbd docutils literal notranslate">DIOPTRA_PLUGINS_S3_URI</kbd></div>
 </div>
 <p>The S3 <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to the directory containing the builtin plugins</p>
 <div class="line-block">
-<div class="line"><kbd class="kbd docutils literal notranslate">AI_RESTAPI_DATABASE_URI</kbd></div>
+<div class="line"><kbd class="kbd docutils literal notranslate">DIOPTRA_RESTAPI_DATABASE_URI</kbd></div>
 </div>
 <p>The <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to use to connect to the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> database.
-(default: <code class="docutils literal notranslate"><span class="pre">'$(pwd)/securingai.db'</span></code>)</p>
+(default: <code class="docutils literal notranslate"><span class="pre">'$(pwd)/dioptra.db'</span></code>)</p>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">AWS_ACCESS_KEY_ID</kbd></div>
 </div>
@@ -982,13 +982,13 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <p class="rubric">Options</p>
 <dl class="option-list">
 <dt><kbd><span class="option">--conda-env</span></kbd></dt>
-<dd><p>Conda environment (default: <code class="docutils literal notranslate"><span class="pre">'mitre-securing-ai'</span></code>)</p>
+<dd><p>Conda environment (default: <code class="docutils literal notranslate"><span class="pre">'dioptra'</span></code>)</p>
 </dd>
 <dt><kbd><span class="option">--results-ttl</span></kbd></dt>
 <dd><p>Job results will be kept for this number of seconds (default: <code class="docutils literal notranslate"><span class="pre">'500'</span></code>)</p>
 </dd>
 <dt><kbd><span class="option">--rq-worker-module</span></kbd></dt>
-<dd><p>Python module used to start the RQ Worker (default: <code class="docutils literal notranslate"><span class="pre">'mitre.securingai.rq.cli.rq'</span></code>)</p>
+<dd><p>Python module used to start the RQ Worker (default: <code class="docutils literal notranslate"><span class="pre">'dioptra.rq.cli.rq'</span></code>)</p>
 </dd>
 </dl>
 </div>

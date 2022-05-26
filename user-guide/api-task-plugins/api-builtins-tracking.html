@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -552,7 +552,7 @@ title="Print to PDF"
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#module-securingai_builtins.tracking.mlflow">
+  <a class="reference internal nav-link" href="#module-dioptra_builtins.tracking.mlflow">
    mlflow.py
   </a>
  </li>
@@ -576,7 +576,7 @@ title="Print to PDF"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#module-securingai_builtins.tracking.mlflow">
+  <a class="reference internal nav-link" href="#module-dioptra_builtins.tracking.mlflow">
    mlflow.py
   </a>
  </li>
@@ -596,12 +596,12 @@ title="Print to PDF"
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<span class="target" id="module-securingai_builtins.tracking"></span><div class="section" id="module-securingai_builtins.tracking.mlflow">
-<span id="mlflow-py"></span><h2>mlflow.py<a class="headerlink" href="#module-securingai_builtins.tracking.mlflow" title="Permalink to this headline">#</a></h2>
+<span class="target" id="module-dioptra_builtins.tracking"></span><div class="section" id="module-dioptra_builtins.tracking.mlflow">
+<span id="mlflow-py"></span><h2>mlflow.py<a class="headerlink" href="#module-dioptra_builtins.tracking.mlflow" title="Permalink to this headline">#</a></h2>
 <p>A task plugin module for using the MLFlow Tracking service.</p>
 <dl class="py function">
-<dt id="securingai_builtins.tracking.mlflow.log_metrics">
-<code class="sig-name descname"><span class="pre">log_metrics</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><a class="reference internal" href="../../_modules/securingai_builtins/tracking/mlflow.html#log_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.tracking.mlflow.log_metrics" title="Permalink to this definition">#</a></dt>
+<dt id="dioptra_builtins.tracking.mlflow.log_metrics">
+<code class="sig-name descname"><span class="pre">log_metrics</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><a class="reference internal" href="../../_modules/dioptra_builtins/tracking/mlflow.html#log_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.tracking.mlflow.log_metrics" title="Permalink to this definition">#</a></dt>
 <dd><p>Logs metrics to the MLFlow Tracking service for the current run.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -618,8 +618,8 @@ names and the values are the metric values.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="securingai_builtins.tracking.mlflow.log_parameters">
-<code class="sig-name descname"><span class="pre">log_parameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><a class="reference internal" href="../../_modules/securingai_builtins/tracking/mlflow.html#log_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.tracking.mlflow.log_parameters" title="Permalink to this definition">#</a></dt>
+<dt id="dioptra_builtins.tracking.mlflow.log_parameters">
+<code class="sig-name descname"><span class="pre">log_parameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><a class="reference internal" href="../../_modules/dioptra_builtins/tracking/mlflow.html#log_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.tracking.mlflow.log_parameters" title="Permalink to this definition">#</a></dt>
 <dd><p>Logs parameters to the MLFlow Tracking service for the current run.</p>
 <p>Parameters can only be set once per run.</p>
 <dl class="field-list simple">
@@ -637,8 +637,8 @@ parameter names and the values are the parameter values.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="securingai_builtins.tracking.mlflow.log_tensorflow_keras_estimator">
-<code class="sig-name descname"><span class="pre">log_tensorflow_keras_estimator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.keras.models.Sequential</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><a class="reference internal" href="../../_modules/securingai_builtins/tracking/mlflow.html#log_tensorflow_keras_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.tracking.mlflow.log_tensorflow_keras_estimator" title="Permalink to this definition">#</a></dt>
+<dt id="dioptra_builtins.tracking.mlflow.log_tensorflow_keras_estimator">
+<code class="sig-name descname"><span class="pre">log_tensorflow_keras_estimator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.keras.models.Sequential</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><a class="reference internal" href="../../_modules/dioptra_builtins/tracking/mlflow.html#log_tensorflow_keras_estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.tracking.mlflow.log_tensorflow_keras_estimator" title="Permalink to this definition">#</a></dt>
 <dd><p>Logs a Keras estimator trained during the current run to the MLFlow registry.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

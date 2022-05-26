@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -562,8 +562,8 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#creating-a-builtin-task">
-   Creating a Builtin Task
+  <a class="reference internal nav-link" href="#creating-a-built-in-task">
+   Creating a Built-in Task
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -601,8 +601,8 @@ title="Print to PDF"
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#creating-a-builtin-task">
-   Creating a Builtin Task
+  <a class="reference internal nav-link" href="#creating-a-built-in-task">
+   Creating a Built-in Task
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -629,10 +629,10 @@ title="Print to PDF"
 <p>When designing a custom example, you may be required to create a new task plugin in order to effect specific behaviors not included in the core plugins.</p>
 <div class="section" id="task-organization-built-in-tasks">
 <h2>Task Organization: Built-in Tasks<a class="headerlink" href="#task-organization-built-in-tasks" title="Permalink to this headline">#</a></h2>
-<p>Dioptra contains a number of builtin task plugins that can be executed across all available examples.
+<p>Dioptra contains a number of built-in task plugins that can be executed across all available examples.
 They are stored in the following directories:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>task-plugins/
-    └── securingai_builtins
+    └── dioptra_builtins
         ├── artifacts
         |   ├── exceptions.py
         |   ├── mlflow.py
@@ -664,7 +664,7 @@ They are stored in the following directories:</p>
 </div>
 <div class="section" id="task-organization-local-tasks">
 <h2>Task Organization: Local Tasks<a class="headerlink" href="#task-organization-local-tasks" title="Permalink to this headline">#</a></h2>
-<p>In general while built-in task plugins are located in the <code class="docutils literal notranslate"><span class="pre">task-plugins/securingai_builtins</span></code> folder, local tasks can be stored in the same way as local python functions in each example’s src code folder.</p>
+<p>In general while built-in task plugins are located in the <code class="docutils literal notranslate"><span class="pre">task-plugins/dioptra_builtins</span></code> folder, local tasks can be stored in the same way as local python functions in each example’s src code folder.</p>
 <p>For instance, in our previous guide on creating custom entry points we had a localized task called <code class="docutils literal notranslate"><span class="pre">task_B</span></code> which was stored in the python file <code class="docutils literal notranslate"><span class="pre">custom_local_task_plugins.py</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>example_dir/
 ├── src/
@@ -679,11 +679,11 @@ They are stored in the following directories:</p>
 For additional examples on how these plugins are constructed, you can refer to <code class="docutils literal notranslate"><span class="pre">examples/tensorflow-mnist-classifier/src/tasks.py</span></code> for local plugins.</p>
 <p>The following sections will now involve creating built-in and localized task plugins.</p>
 </div>
-<div class="section" id="creating-a-builtin-task">
-<h2>Creating a Builtin Task<a class="headerlink" href="#creating-a-builtin-task" title="Permalink to this headline">#</a></h2>
-<p>To create a builtin task, first the user must identify which builtin subdirectory (artifacts, attacks, etc.) should contain the new task.
+<div class="section" id="creating-a-built-in-task">
+<h2>Creating a Built-in Task<a class="headerlink" href="#creating-a-built-in-task" title="Permalink to this headline">#</a></h2>
+<p>To create a built-in task, first the user must identify which built-in subdirectory (artifacts, attacks, etc.) should contain the new task.
 Once this is done, the task can be declared as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mitre.securingai</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
 
 <span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="k">def</span> <span class="nf">add_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
@@ -707,15 +707,15 @@ For a slightly more complex task, consider the sample below, which will generate
     <span class="k">return</span> <span class="n">result</span>
 </pre></div>
 </div>
-<p>To access the builtin task from a given example, users will need to call the plugin-task using the following notation in their flow pipeline.
+<p>To access the built-in task from a given example, users will need to call the plugin-task using the following notation in their flow pipeline.
 Note that we assumed these new tasks have been saved in a module named <code class="docutils literal notranslate"><span class="pre">ops.py</span></code> under the <cite>data</cite> task plugins directory:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mitre.securingai</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
 <span class="o">...</span>
 <span class="k">def</span> <span class="nf">custom_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
     <span class="o">...</span>
     <span class="o">//</span> <span class="n">Call</span> <span class="n">new</span> <span class="n">builtin</span> <span class="n">task</span><span class="o">.</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">pyplugs</span><span class="o">.</span><span class="n">call_task</span><span class="p">(</span>
-        <span class="s2">&quot;securingai_builtins.data&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;dioptra_builtins.data&quot;</span><span class="p">,</span>
         <span class="s2">&quot;ops&quot;</span><span class="p">,</span>
         <span class="s2">&quot;add_values&quot;</span><span class="p">,</span>
         <span class="n">x</span><span class="o">=</span><span class="n">input_x</span><span class="p">,</span>

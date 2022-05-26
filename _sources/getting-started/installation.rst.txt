@@ -22,7 +22,7 @@ Installation Guide
 
 .. include:: /_glossary_note.rst
 
-This installation guide is divided into three parts, with the first part covering system requirements, the second part covering how to install the ``mitre-securing-ai`` Python package, and the third part covering how to setup a personal computer for test-driving the Dioptra architecture locally.
+This installation guide is divided into three parts, with the first part covering system requirements, the second part covering how to install the ``dioptra`` Python package, and the third part covering how to setup a personal computer for test-driving the Dioptra architecture locally.
 General instructions on how to deploy the Testbed in an on-premises server can be found in the sections under **Deployment Guide**.
 
 Package Installation
@@ -31,7 +31,7 @@ Package Installation
 Requirements
 ^^^^^^^^^^^^
 
-The minimum requirements for installing the ``mitre-securing-ai`` Python package on your host device are as follows:
+The minimum requirements for installing the ``dioptra`` Python package on your host device are as follows:
 
 - CPU: An x86-64 processor
 - RAM: 4GB or higher
@@ -50,7 +50,7 @@ There are two install options to start using `Conda Environments <https://docs.c
 
 .. tabbed:: Anaconda installation
 
-   The following links will provide a installation package for version 2020.11 of `Anaconda <https://docs.anaconda.com/>`_ on your host machine (must meet all :ref:`quickstart-system-requirements`).
+   The following links will provide an installation package for version 2020.11 of `Anaconda <https://docs.anaconda.com/>`_ on your host machine (must meet all :ref:`quickstart-system-requirements`).
 
    - `Anaconda for Windows <https://repo.anaconda.com/archive/Anaconda3-2020.11-Windows-x86_64.exe>`_
    - `Anaconda for MacOS <https://repo.anaconda.com/archive/Anaconda3-2020.11-MacOSX-x86_64.pkg>`_
@@ -60,7 +60,7 @@ There are two install options to start using `Conda Environments <https://docs.c
 
 .. tabbed:: Miniconda installation
 
-   The following links will provide a installation package for the latest version of `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ on your host machine (must meet all :ref:`quickstart-system-requirements`).
+   The following links will provide an installation package for the latest version of `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ on your host machine (must meet all :ref:`quickstart-system-requirements`).
 
    - `Miniconda for Windows <https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe>`_
    - `Miniconda for MacOS <https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.pkg>`_
@@ -99,7 +99,7 @@ A host device that uses a GNU/Linux environment can be the following:
    Dioptra was developed for use with native GNU/Linux environments.
    When using MacOS/OS X or Windows there is a chance you will encounter errors that are specific to your system's setup that are not covered in this documentation.
    To resolve such issues, first look at the external documentation linked (i.e. Homebrew_ and `Windows Subsystem for Linux`_) before submitting a bug report.
-   Also, when using a virtual machine it is likely the performance of can be throttled because of the CPU and Memory allocations set at the time the virtual machine was configured.
+   Also, when using a virtual machine it is likely the performance can be throttled because of the CPU and Memory allocations set at the time the virtual machine was configured.
    If performance becomes an issue when using a virtual machine, consider increasing the CPU and Memory resources allocated to the machine.
 
 .. _Homebrew: https://brew.sh/
@@ -111,19 +111,19 @@ Clone the Repository
 
 To clone the repository, open a new **Terminal** session for your operating system,
 
-.. tabbed:: Windows
-
-   Use the keyboard shortcut :kbd:`windows` + :kbd:`r` to open **Run**, then type ``wsl`` into the search bar and click *OK* to start a `Windows Subsystem for Linux`_ session.
-
-.. tabbed:: MacOS
-
-   Use the keyboard shortcut :kbd:`command` + :kbd:`space` to open the **Spotlight Search**, type ``Terminal`` into the search bar, and click the *Terminal* application under *Top Hit* at the top of your results.
-
 .. tabbed:: Linux
 
    Use the keyboard shortcut :kbd:`ctrl` + :kbd:`alt` + :kbd:`t` to open the **Terminal**.
 
 Next, navigate to the directory where you will clone the repository,
+
+.. tabbed:: MacOS
+
+   Use the keyboard shortcut :kbd:`command` + :kbd:`space` to open the **Spotlight Search**, type ``Terminal`` into the search bar, and click the *Terminal* application under *Top Hit* at the top of your results.
+
+.. tabbed:: Windows
+
+   Use the keyboard shortcut :kbd:`windows` + :kbd:`r` to open **Run**, then type ``wsl`` into the search bar and click *OK* to start a `Windows Subsystem for Linux`_ session.
 
 .. code-block:: sh
 
@@ -160,7 +160,7 @@ Finally, verify the repository was downloaded and is up to date,
 
 .. code-block:: sh
 
-   cd secure-ai-lab-components && git pull
+   cd dioptra && git pull
 
 The message *Already up to date.* should be echoed, verifying the repository was successfully cloned to your device.
 
@@ -192,14 +192,14 @@ Demo-specific instructions for creating a suitable environment will be provided 
 
       conda activate name-of-the-environment
 
-   **NOTE**: The *name-of-the-environment* used for the demos provided in the project codebase can be found be inspecting the specific *environment.yml* file for the tag labeled *name*.
+   **NOTE**: The *name-of-the-environment* used for the demos provided in the project codebase can be found by inspecting the specific *environment.yml* file for the tag labeled *name*.
 
 .. _quickstart-build-images:
 
 Pulling the Latest Docker Images
 --------------------------------
 
-The last step to setup the Secure AI Testbed is to build the necessary docker images used by the repositories various tutorials.
+The last step to setup the Dioptra Testbed is to build the necessary docker images used by the repository's various tutorials.
 
 **NOTE**: The following steps will only work if you are attempting to use the *master* branch of the repository.
 If you are a developer using a separate branch please see :ref:`dev-guide-build-dev-images`.
@@ -208,7 +208,7 @@ If you are a developer using a separate branch please see :ref:`dev-guide-build-
 
    .. code-block:: bash
 
-      cd path/to/secure-ai-lab-components
+      cd path/to/dioptra
 
    **NOTE**: You must substitute the code snippet ``path/to/`` with the true path for the project codebase on your device.
    This should be the same path used in step 2 of :ref:`Clone the Repository <quickstart-clone-repository>`.

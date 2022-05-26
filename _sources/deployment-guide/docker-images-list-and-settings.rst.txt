@@ -72,7 +72,7 @@ Command
 
 .. rubric:: Options
 
---conda-env               Conda environment (default: ``'mitre-securing-ai'``)
+--conda-env               Conda environment (default: ``'dioptra'``)
 --backend-store-uri       |URI| to which to persist experiment and run data. Acceptable |URI|\s are SQLAlchemy-compatible database connection strings (e.g. 'sqlite:///path/to/file.db') or local filesystem |URI|\s (e.g. ``'file:///absolute/path/to/directory'``). (default: ``'sqlite:////work/mlruns/mlflow-tracking.db'``)
 --default-artifact-root   Local or S3 |URI| to store artifacts, for new experiments. Note that this flag does not impact already-created experiments. Default: Within file store, if a ``file:/`` |URI| is provided. If a sql backend is used, then this option is required. (default: ``'file:///work/artifacts'``)
 --gunicorn-opts           Additional command line options forwarded to gunicorn processes. (no default)
@@ -89,16 +89,16 @@ The :term:`REST` :term:`API` service is an :term:`API` for registering experimen
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-| :kbd:`AI_RESTAPI_DATABASE_URI`
+| :kbd:`DIOPTRA_RESTAPI_DATABASE_URI`
 The |URI| to use to connect to the :term:`REST` :term:`API` database.
-(default: ``'$(pwd)/securingai.db'``)
+(default: ``'$(pwd)/dioptra.db'``)
 
-| :kbd:`AI_RESTAPI_ENV`
+| :kbd:`DIOPTRA_RESTAPI_ENV`
 Selects a set of configurations for the Flask app to use.
 Must be 'prod', 'dev', or 'test'.
 (default: ``'prod'``)
 
-| :kbd:`AI_DEPLOY_SECRET_KEY`
+| :kbd:`DIOPTRA_DEPLOY_SECRET_KEY`
 Secret key used by Flask to sign cookies.
 While cookies are not used when accessing the :term:`REST` :term:`API`, per best practices this should still be changed to a long, random value.
 (default: ``'deploy123'``)
@@ -131,8 +131,8 @@ Command
 
 --app-module       Application module (default: ``'wsgi:app'``)
 --backend          Server backend (default: ``'gunicorn'``)
---conda-env        Conda environment (default: ``'mitre-securing-ai'``)
---gunicorn-module  Python module used to start Gunicorn WSGI server (default: ``'mitre.securingai.restapi.cli.gunicorn'``)
+--conda-env        Conda environment (default: ``'dioptra'``)
+--gunicorn-module  Python module used to start Gunicorn WSGI server (default: ``'dioptra.restapi.cli.gunicorn'``)
 --upgrade-db       Upgrade the database schema
 
 Workers (PyTorch/Tensorflow)
@@ -144,16 +144,16 @@ The Testbed Workers come in different flavors, with each one provisioned to supp
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-| :kbd:`AI_PLUGIN_DIR`
+| :kbd:`DIOPTRA_PLUGIN_DIR`
 Directory to use for syncing the task plugins.
 (default: ``'/work/plugins'``)
 
-| :kbd:`AI_PLUGINS_S3_URI`
+| :kbd:`DIOPTRA_PLUGINS_S3_URI`
 The S3 |URI| to the directory containing the builtin plugins
 
-| :kbd:`AI_RESTAPI_DATABASE_URI`
+| :kbd:`DIOPTRA_RESTAPI_DATABASE_URI`
 The |URI| to use to connect to the :term:`REST` :term:`API` database.
-(default: ``'$(pwd)/securingai.db'``)
+(default: ``'$(pwd)/dioptra.db'``)
 
 | :kbd:`AWS_ACCESS_KEY_ID`
 The username for accessing S3 storage.
@@ -186,9 +186,9 @@ Queues to watch
 
 .. rubric:: Options
 
---conda-env         Conda environment (default: ``'mitre-securing-ai'``)
+--conda-env         Conda environment (default: ``'dioptra'``)
 --results-ttl       Job results will be kept for this number of seconds (default: ``'500'``)
---rq-worker-module  Python module used to start the RQ Worker (default: ``'mitre.securingai.rq.cli.rq'``)
+--rq-worker-module  Python module used to start the RQ Worker (default: ``'dioptra.rq.cli.rq'``)
 
 Minio
 -----

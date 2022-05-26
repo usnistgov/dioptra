@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -559,59 +559,59 @@ title="Print to PDF"
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<span class="target" id="module-mitre.securingai.sdk.exceptions"></span><dl class="py exception">
-<dt id="mitre.securingai.sdk.exceptions.ARTDependencyError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ARTDependencyError</span></code><a class="reference internal" href="../../_modules/mitre/securingai/sdk/exceptions/optional_dependencies.html#ARTDependencyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.sdk.exceptions.ARTDependencyError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mitre.securingai.sdk.exceptions.base.BaseOptionalDependencyError</span></code></p>
+<span class="target" id="module-dioptra.sdk.exceptions"></span><dl class="py exception">
+<dt id="dioptra.sdk.exceptions.ARTDependencyError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ARTDependencyError</span></code><a class="reference internal" href="../../_modules/dioptra/sdk/exceptions/optional_dependencies.html#ARTDependencyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.sdk.exceptions.ARTDependencyError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dioptra.sdk.exceptions.base.BaseOptionalDependencyError</span></code></p>
 <p>Method/function depends on the “art” package.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="mitre.securingai.sdk.exceptions.CryptographyDependencyError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">CryptographyDependencyError</span></code><a class="reference internal" href="../../_modules/mitre/securingai/sdk/exceptions/optional_dependencies.html#CryptographyDependencyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.sdk.exceptions.CryptographyDependencyError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mitre.securingai.sdk.exceptions.base.BaseOptionalDependencyError</span></code></p>
+<dt id="dioptra.sdk.exceptions.CryptographyDependencyError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">CryptographyDependencyError</span></code><a class="reference internal" href="../../_modules/dioptra/sdk/exceptions/optional_dependencies.html#CryptographyDependencyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.sdk.exceptions.CryptographyDependencyError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dioptra.sdk.exceptions.base.BaseOptionalDependencyError</span></code></p>
 <p>Method/function depends on the “cryptography” package.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="mitre.securingai.sdk.exceptions.EstimatorPredictGenericPredTypeError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">EstimatorPredictGenericPredTypeError</span></code><a class="reference internal" href="../../_modules/mitre/securingai/sdk/exceptions/generics.html#EstimatorPredictGenericPredTypeError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.sdk.exceptions.EstimatorPredictGenericPredTypeError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mitre.securingai.sdk.exceptions.base.BaseGenericsRegistryError</span></code></p>
+<dt id="dioptra.sdk.exceptions.EstimatorPredictGenericPredTypeError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">EstimatorPredictGenericPredTypeError</span></code><a class="reference internal" href="../../_modules/dioptra/sdk/exceptions/generics.html#EstimatorPredictGenericPredTypeError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.sdk.exceptions.EstimatorPredictGenericPredTypeError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dioptra.sdk.exceptions.base.BaseGenericsRegistryError</span></code></p>
 <p>Unknown pred_type argument passed to estimator_predict.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="mitre.securingai.sdk.exceptions.PrefectDependencyError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">PrefectDependencyError</span></code><a class="reference internal" href="../../_modules/mitre/securingai/sdk/exceptions/optional_dependencies.html#PrefectDependencyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.sdk.exceptions.PrefectDependencyError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mitre.securingai.sdk.exceptions.base.BaseOptionalDependencyError</span></code></p>
+<dt id="dioptra.sdk.exceptions.PrefectDependencyError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">PrefectDependencyError</span></code><a class="reference internal" href="../../_modules/dioptra/sdk/exceptions/optional_dependencies.html#PrefectDependencyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.sdk.exceptions.PrefectDependencyError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dioptra.sdk.exceptions.base.BaseOptionalDependencyError</span></code></p>
 <p>Method/function depends on the “prefect” package.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="mitre.securingai.sdk.exceptions.TensorflowDependencyError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">TensorflowDependencyError</span></code><a class="reference internal" href="../../_modules/mitre/securingai/sdk/exceptions/optional_dependencies.html#TensorflowDependencyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.sdk.exceptions.TensorflowDependencyError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mitre.securingai.sdk.exceptions.base.BaseOptionalDependencyError</span></code></p>
+<dt id="dioptra.sdk.exceptions.TensorflowDependencyError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">TensorflowDependencyError</span></code><a class="reference internal" href="../../_modules/dioptra/sdk/exceptions/optional_dependencies.html#TensorflowDependencyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.sdk.exceptions.TensorflowDependencyError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dioptra.sdk.exceptions.base.BaseOptionalDependencyError</span></code></p>
 <p>Method/function depends on the “tensorflow” package.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="mitre.securingai.sdk.exceptions.UnknownPackageError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">UnknownPackageError</span></code><a class="reference internal" href="../../_modules/mitre/securingai/sdk/exceptions/pyplugs.html#UnknownPackageError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.sdk.exceptions.UnknownPackageError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mitre.securingai.sdk.exceptions.base.BasePyPlugsException</span></code></p>
+<dt id="dioptra.sdk.exceptions.UnknownPackageError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">UnknownPackageError</span></code><a class="reference internal" href="../../_modules/dioptra/sdk/exceptions/pyplugs.html#UnknownPackageError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.sdk.exceptions.UnknownPackageError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dioptra.sdk.exceptions.base.BasePyPlugsException</span></code></p>
 <p>PyPlugs could not import the given package.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="mitre.securingai.sdk.exceptions.UnknownPluginError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">UnknownPluginError</span></code><a class="reference internal" href="../../_modules/mitre/securingai/sdk/exceptions/pyplugs.html#UnknownPluginError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.sdk.exceptions.UnknownPluginError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mitre.securingai.sdk.exceptions.base.BasePyPlugsException</span></code></p>
+<dt id="dioptra.sdk.exceptions.UnknownPluginError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">UnknownPluginError</span></code><a class="reference internal" href="../../_modules/dioptra/sdk/exceptions/pyplugs.html#UnknownPluginError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.sdk.exceptions.UnknownPluginError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dioptra.sdk.exceptions.base.BasePyPlugsException</span></code></p>
 <p>PyPlugs could not locate the given plugin.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="mitre.securingai.sdk.exceptions.UnknownPluginFunctionError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">UnknownPluginFunctionError</span></code><a class="reference internal" href="../../_modules/mitre/securingai/sdk/exceptions/pyplugs.html#UnknownPluginFunctionError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.sdk.exceptions.UnknownPluginFunctionError" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mitre.securingai.sdk.exceptions.base.BasePyPlugsException</span></code></p>
+<dt id="dioptra.sdk.exceptions.UnknownPluginFunctionError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">UnknownPluginFunctionError</span></code><a class="reference internal" href="../../_modules/dioptra/sdk/exceptions/pyplugs.html#UnknownPluginFunctionError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.sdk.exceptions.UnknownPluginFunctionError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dioptra.sdk.exceptions.base.BasePyPlugsException</span></code></p>
 <p>PyPlugs could not locate the given function within a plugin.</p>
 </dd></dl>
 

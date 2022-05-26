@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -681,8 +681,8 @@ If you were watching the output logs, you will need to press Ctrl+C to stop foll
     <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;http://localhost:</span><span class="si">{</span><span class="n">RESTAPI_PORT</span><span class="si">}</span><span class="s2">&quot;</span>
 <span class="p">)</span>
 
-<span class="c1"># Override the AI_RESTAPI_URI variable, used to connect to RESTful API service</span>
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;AI_RESTAPI_URI&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">RESTAPI_ADDRESS</span>
+<span class="c1"># Override the DIOPTRA_RESTAPI_URI variable, used to connect to RESTful API service</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;DIOPTRA_RESTAPI_URI&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">RESTAPI_ADDRESS</span>
 
 <span class="c1"># Default address for accessing the MLFlow Tracking server</span>
 <span class="n">MLFLOW_TRACKING_URI</span> <span class="o">=</span> <span class="p">(</span>
@@ -725,8 +725,8 @@ make workflows
 </pre></div>
 </div>
 <p>To connect with the endpoint, we will use a client class defined in the <code class="docutils literal notranslate"><span class="pre">utils.py</span></code> file that is able to connect with the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> using the <a class="reference internal" href="../glossary.html#term-HTTP"><span class="xref std std-term">HTTP</span></a> protocol.
-We connect using the client below, which uses the environment variable <code class="docutils literal notranslate"><span class="pre">AI_RESTAPI_URI</span></code> to figure out how to connect to the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>,</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">restapi_client</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">SecuringAIClient</span><span class="p">()</span>
+We connect using the client below, which uses the environment variable <code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_URI</span></code> to figure out how to connect to the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>,</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">restapi_client</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">DioptraClient</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>We need to register an experiment under which to collect our job runs.
@@ -822,10 +822,10 @@ If it does, then it just returns info about the queue, if it doesn’t, it then 
 <span class="p">{</span><span class="s1">&#39;mlflow.project.entryPoint&#39;</span><span class="p">:</span> <span class="s1">&#39;hello_world&#39;</span><span class="p">,</span>
  <span class="s1">&#39;mlflow.source.name&#39;</span><span class="p">:</span> <span class="s1">&#39;/work/tmp2kojr5cq&#39;</span><span class="p">,</span>
  <span class="s1">&#39;mlflow.source.type&#39;</span><span class="p">:</span> <span class="s1">&#39;PROJECT&#39;</span><span class="p">,</span>
- <span class="s1">&#39;mlflow.user&#39;</span><span class="p">:</span> <span class="s1">&#39;securingai&#39;</span><span class="p">,</span>
- <span class="s1">&#39;securingai.dependsOn&#39;</span><span class="p">:</span> <span class="s1">&#39;None&#39;</span><span class="p">,</span>
- <span class="s1">&#39;securingai.jobId&#39;</span><span class="p">:</span> <span class="s1">&#39;b53f207c-820d-4a09-8f0c-ff55ac603c09&#39;</span><span class="p">,</span>
- <span class="s1">&#39;securingai.queue&#39;</span><span class="p">:</span> <span class="s1">&#39;tensorflow_cpu&#39;</span><span class="p">}</span>
+ <span class="s1">&#39;mlflow.user&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;dioptra.dependsOn&#39;</span><span class="p">:</span> <span class="s1">&#39;None&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;dioptra.jobId&#39;</span><span class="p">:</span> <span class="s1">&#39;b53f207c-820d-4a09-8f0c-ff55ac603c09&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;dioptra.queue&#39;</span><span class="p">:</span> <span class="s1">&#39;tensorflow_cpu&#39;</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>To customize job parameters, add <code class="docutils literal notranslate"><span class="pre">&quot;-P</span> <span class="pre">job_property=&lt;job_value&gt;&quot;</span></code> to the <code class="docutils literal notranslate"><span class="pre">entry_point_kwargs</span></code> field in the job submission script:</p>

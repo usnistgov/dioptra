@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -664,21 +664,21 @@ They perform a variety of basic, low-level functions such as loading models, pre
 </div>
 <div class="section" id="calling-a-task-plugin">
 <h2>Calling a Task Plugin<a class="headerlink" href="#calling-a-task-plugin" title="Permalink to this headline">#</a></h2>
-<p>Let’s return to the <a class="reference internal" href="entry-points.html#entry-points-prefect-task-execution-code"><span class="std std-ref">final example from the previous guide</span></a> and expand the code to include the next task plugin call,</p>
+<p>Let’s return to the <a class="reference internal" href="entry-points.html#entry-points-prefect-task-execution-code"><span class="std std-ref">final example from the previous guide</span></a> and expand the code to include the next task plugin call.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">Parameter</span>
-<span class="kn">from</span> <span class="nn">mitre.securingai</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
 
 <span class="k">with</span> <span class="n">Flow</span><span class="p">(</span><span class="s2">&quot;Image Resizer&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">flow</span><span class="p">:</span>
     <span class="n">data_dir</span><span class="p">,</span> <span class="n">image_size</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;data_dir&quot;</span><span class="p">),</span> <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;image_size&quot;</span><span class="p">)</span>
     <span class="n">resize_output</span> <span class="o">=</span> <span class="n">pyplugs</span><span class="o">.</span><span class="n">call_task</span><span class="p">(</span>
-        <span class="s2">&quot;securingai_builtins.data&quot;</span><span class="p">,</span>    <span class="c1"># namespace.package import path</span>
+        <span class="s2">&quot;dioptra_builtins.data&quot;</span><span class="p">,</span>    <span class="c1"># namespace.package import path</span>
         <span class="s2">&quot;images&quot;</span><span class="p">,</span>                      <span class="c1"># module to import</span>
         <span class="s2">&quot;resize&quot;</span><span class="p">,</span>                      <span class="c1"># function to call</span>
         <span class="n">data_dir</span><span class="o">=</span><span class="n">training_dir</span><span class="p">,</span>         <span class="c1"># Named argument of resize()</span>
         <span class="n">image_size</span><span class="o">=</span><span class="n">image_size</span><span class="p">,</span>         <span class="c1"># Named argument of resize()</span>
     <span class="p">)</span>
     <span class="n">rotated_image</span> <span class="o">=</span> <span class="n">pyplugs</span><span class="o">.</span><span class="n">call_task</span><span class="p">(</span> <span class="c1"># Task won&#39;t run until resize_output is available</span>
-        <span class="s2">&quot;securingai_builtins.data&quot;</span><span class="p">,</span>    <span class="c1"># namespace.package import path</span>
+        <span class="s2">&quot;dioptra_builtins.data&quot;</span><span class="p">,</span>    <span class="c1"># namespace.package import path</span>
         <span class="s2">&quot;images&quot;</span><span class="p">,</span>                      <span class="c1"># module to import</span>
         <span class="s2">&quot;rotate&quot;</span><span class="p">,</span>                      <span class="c1"># function to call</span>
         <span class="n">data</span><span class="o">=</span><span class="n">resize_output</span><span class="p">,</span>            <span class="c1"># Named argument of rotate()</span>
@@ -687,12 +687,12 @@ They perform a variety of basic, low-level functions such as loading models, pre
     <span class="o">...</span>
 </pre></div>
 </div>
-<p>Some inline annotations have been added to the code to illustrate the anatomy of the <a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.call_task" title="mitre.securingai.pyplugs.call_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyplugs.call_task()</span></code></a> function calls.
+<p>Some inline annotations have been added to the code to illustrate the anatomy of the <a class="reference internal" href="api-sdk/api-pyplugs.html#dioptra.pyplugs.call_task" title="dioptra.pyplugs.call_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyplugs.call_task()</span></code></a> function calls.
 The first two arguments provide the <code class="docutils literal notranslate"><span class="pre">namespace.package.module</span></code> import path that leads you towards your function of interest, and the third argument names that function.
-This means that the full paths to our functions are <code class="docutils literal notranslate"><span class="pre">securingai_builtins.data.images.resize()</span></code> and <code class="docutils literal notranslate"><span class="pre">securingai_builtins.data.images.rotate()</span></code>.
+This means that the full paths to our functions are <code class="docutils literal notranslate"><span class="pre">dioptra_builtins.data.images.resize()</span></code> and <code class="docutils literal notranslate"><span class="pre">dioptra_builtins.data.images.rotate()</span></code>.
 Any number of named arguments may follow after these first three, which is how you pass specific arguments to the functions we’re using.
 Here, the <code class="docutils literal notranslate"><span class="pre">resize()</span></code> function will get <cite>data_dir</cite> and <cite>image_size</cite> arguments and the <code class="docutils literal notranslate"><span class="pre">rotate</span></code> function will get <code class="docutils literal notranslate"><span class="pre">data</span></code> and <code class="docutils literal notranslate"><span class="pre">image_size</span></code> arguments.
-Finally, we should note that, because we are passing the output of the first <a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.call_task" title="mitre.securingai.pyplugs.call_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyplugs.call_task()</span></code></a> function call into the second one with <cite>data=resize_output</cite>, we are declaring that there should be an explicit dependency between these task plugin calls, meaning the <code class="docutils literal notranslate"><span class="pre">rotate()</span></code> function will <strong>never</strong> be called before the <code class="docutils literal notranslate"><span class="pre">resize()</span></code> function call has finished running.</p>
+Finally, we should note that, because we are passing the output of the first <a class="reference internal" href="api-sdk/api-pyplugs.html#dioptra.pyplugs.call_task" title="dioptra.pyplugs.call_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyplugs.call_task()</span></code></a> function call into the second one with <cite>data=resize_output</cite>, we are declaring that there should be an explicit dependency between these task plugin calls, meaning the <code class="docutils literal notranslate"><span class="pre">rotate()</span></code> function will <strong>never</strong> be called before the <code class="docutils literal notranslate"><span class="pre">resize()</span></code> function call has finished running.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The <a class="reference external" href="https://www.prefect.io">Prefect</a> library’s task execution engine makes no guarantee that the tasks will run in the order they’re written in your script file, so the only thing that prevents tasks from running in the wrong order is the explicit dependency graph.
@@ -700,7 +700,7 @@ If you need to call a function for its side effects and certain functions should
 For example, if the <code class="docutils literal notranslate"><span class="pre">rotate()</span></code> task plugin didn’t have a data argument and instead the <code class="docutils literal notranslate"><span class="pre">resize</span></code> function just saved its results to disk, you could add the following to ensure that <code class="docutils literal notranslate"><span class="pre">rotate()</span></code> never runs before <code class="docutils literal notranslate"><span class="pre">resize()</span></code>,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
 <span class="n">rotated_image</span> <span class="o">=</span> <span class="n">pyplugs</span><span class="o">.</span><span class="n">call_task</span><span class="p">(</span>  <span class="c1"># Task won&#39;t run until resize_output is available</span>
-    <span class="s2">&quot;securingai_builtins.data&quot;</span><span class="p">,</span>     <span class="c1"># namespace.package import path</span>
+    <span class="s2">&quot;dioptra_builtins.data&quot;</span><span class="p">,</span>     <span class="c1"># namespace.package import path</span>
     <span class="s2">&quot;images&quot;</span><span class="p">,</span>                       <span class="c1"># module to import</span>
     <span class="s2">&quot;rotate&quot;</span><span class="p">,</span>                       <span class="c1"># function to call</span>
     <span class="n">image_size</span><span class="o">=</span><span class="n">image_size</span><span class="p">,</span>          <span class="c1"># Named argument of rotate()</span>
@@ -715,11 +715,11 @@ For example, if the <code class="docutils literal notranslate"><span class="pre"
 <h2>PyPlugs and the Task Plugin Registry<a class="headerlink" href="#pyplugs-and-the-task-plugin-registry" title="Permalink to this headline">#</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The forked <a class="reference external" href="https://github.com/gahjelle/pyplugs">PyPlugs</a> package in the <code class="docutils literal notranslate"><span class="pre">mitre-securing-ai</span></code> package namespace is, in essence, a sophisticated wrapper for the <a class="reference external" href="https://docs.python.org/3/library/importlib.html#importlib.import_module" title="(in Python v3.10)"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a> function in the standard library.
+<p>The forked <a class="reference external" href="https://github.com/gahjelle/pyplugs">PyPlugs</a> package in the <code class="docutils literal notranslate"><span class="pre">dioptra</span></code> package namespace is, in essence, a sophisticated wrapper for the <a class="reference external" href="https://docs.python.org/3/library/importlib.html#importlib.import_module" title="(in Python v3.10)"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a> function in the standard library.
 Most of the code in <a class="reference external" href="https://github.com/gahjelle/pyplugs">PyPlugs</a> is dedicated to managing the plugin registry and catching errors.
 Please see the following article for an explanation of how this type of plugin registry works: <a class="reference external" href="https://realpython.com/python-import/#example-a-package-of-plugins">https://realpython.com/python-import/#example-a-package-of-plugins</a>.</p>
 </div>
-<p>Now that we’ve seen how <a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.call_task" title="mitre.securingai.pyplugs.call_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyplugs.call_task()</span></code></a> is used to call task plugins, the next question is, “how does <a class="reference internal" href="api-sdk/api-pyplugs.html#mitre.securingai.pyplugs.call_task" title="mitre.securingai.pyplugs.call_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyplugs.call_task()</span></code></a> find the task plugins and build its internal registry?”
+<p>Now that we’ve seen how <a class="reference internal" href="api-sdk/api-pyplugs.html#dioptra.pyplugs.call_task" title="dioptra.pyplugs.call_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyplugs.call_task()</span></code></a> is used to call task plugins, the next question is, “how does <a class="reference internal" href="api-sdk/api-pyplugs.html#dioptra.pyplugs.call_task" title="dioptra.pyplugs.call_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyplugs.call_task()</span></code></a> find the task plugins and build its internal registry?”
 We address those questions with the following three sections.</p>
 <div class="section" id="storage">
 <h3>Storage<a class="headerlink" href="#storage" title="Permalink to this headline">#</a></h3>
@@ -733,7 +733,7 @@ This means that new plugins are installed in the Testbed environment simply by c
 The example below illustrates how to apply this decorator to a Python function so that PyPlugs can discover it and include it in its internal registry.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">numpy.random._generator</span> <span class="kn">import</span> <span class="n">Generator</span> <span class="k">as</span> <span class="n">RNGenerator</span>
 
-<span class="kn">from</span> <span class="nn">mitre.securingai</span> <span class="kn">import</span> <span class="n">pyplugs</span>
+<span class="kn">from</span> <span class="nn">dioptra</span> <span class="kn">import</span> <span class="n">pyplugs</span>
 
 
 <span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
@@ -746,14 +746,14 @@ The example below illustrates how to apply this decorator to a Python function s
 <h3>Discovery<a class="headerlink" href="#discovery" title="Permalink to this headline">#</a></h3>
 <p>The directory where the Testbed Worker syncs the latest copies of the plugins from S3 must be added to Python’s system path so that PyPlugs can search for them.
 However, modifying the Python system path must be done with care to ensure that you will still be able to import your other installed packages and avoid creating dependency conflicts.
-For this reason, the Testbed <a class="reference internal" href="../glossary.html#term-SDK"><span class="xref std std-term">SDK</span></a> provides the <code class="xref py py-func docutils literal notranslate"><span class="pre">plugin_dirs()</span></code> function, which modifies the Python system path within a temporary context, see the example below,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mitre.securingai.sdk.utilities.contexts</span> <span class="kn">import</span> <span class="n">plugin_dirs</span>
+For this reason, the Testbed <a class="reference internal" href="../glossary.html#term-SDK"><span class="xref std std-term">SDK</span></a> provides the <code class="xref py py-func docutils literal notranslate"><span class="pre">plugin_dirs()</span></code> function, which modifies the Python system path within a temporary context, see the example below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.contexts</span> <span class="kn">import</span> <span class="n">plugin_dirs</span>
 
 <span class="k">with</span> <span class="n">plugin_dirs</span><span class="p">():</span>
     <span class="n">_</span> <span class="o">=</span> <span class="n">entry_point_script</span><span class="p">()</span>
 </pre></div>
 </div>
-<p><code class="xref py py-func docutils literal notranslate"><span class="pre">plugin_dirs()</span></code> determines the paths it needs to add to the Python system path by inspecting the <code class="docutils literal notranslate"><span class="pre">AI_PLUGIN_DIR</span></code> environment variable, which is the same variable used by the Testbed Worker when it downloads the latest copies of the task plugins from S3.</p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">plugin_dirs()</span></code> determines the paths it needs to add to the Python system path by inspecting the <code class="docutils literal notranslate"><span class="pre">DIOPTRA_PLUGIN_DIR</span></code> environment variable, which is the same variable used by the Testbed Worker when it downloads the latest copies of the task plugins from S3.</p>
 </div>
 </div>
 </div>

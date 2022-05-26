@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -722,25 +722,25 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
 <span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/securing-ai/lab-deployment/minio</span><span class="w"></span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/minio</span><span class="w"></span>
 <span class="w">  </span><span class="nt">mlflow-tracking-data</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
 <span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/securing-ai/lab-deployment/mlflow-tracking</span><span class="w"></span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/mlflow-tracking</span><span class="w"></span>
 <span class="w">  </span><span class="nt">redis-data</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
 <span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/securing-ai/lab-deployment/redis</span><span class="w"></span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/redis</span><span class="w"></span>
 <span class="w">  </span><span class="nt">restapi-data</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
 <span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/securing-ai/lab-deployment/restapi</span><span class="w"></span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/restapi</span><span class="w"></span>
 
 <span class="nt">services</span><span class="p">:</span><span class="w"></span>
 <span class="w">  </span><span class="nt">redis</span><span class="p">:</span><span class="w"></span>
@@ -784,7 +784,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio-data:/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">mlflow-tracking</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/mlflow-tracking:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/mlflow-tracking:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
@@ -814,7 +814,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking-data:/work/mlruns</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">nginx</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/nginx:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/nginx:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx</span><span class="w"></span>
@@ -846,7 +846,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;30080:30080/tcp&quot;</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">restapi</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/restapi:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/restapi:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi</span><span class="w"></span>
@@ -863,8 +863,8 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span><span class="w"></span>
 <span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -877,7 +877,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">tfcpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/tensorflow2-cpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-cpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-01</span><span class="w"></span>
@@ -888,9 +888,9 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -910,7 +910,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">tfcpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/tensorflow2-cpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-cpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-02</span><span class="w"></span>
@@ -921,9 +921,9 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -943,7 +943,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">tfgpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/tensorflow2-gpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-01</span><span class="w"></span>
@@ -955,9 +955,9 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -973,7 +973,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">tfgpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/tensorflow2-gpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-02</span><span class="w"></span>
@@ -985,9 +985,9 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -1003,7 +1003,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">tfgpu-03</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/tensorflow2-gpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-03</span><span class="w"></span>
@@ -1015,9 +1015,9 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -1033,7 +1033,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">pytorchcpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/pytorch-cpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-cpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-01</span><span class="w"></span>
@@ -1044,9 +1044,9 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -1065,7 +1065,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">pytorchcpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/pytorch-cpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-cpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-02</span><span class="w"></span>
@@ -1076,9 +1076,9 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -1097,7 +1097,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">pytorchgpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/pytorch-gpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-gpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchgpu-01</span><span class="w"></span>
@@ -1109,9 +1109,9 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -1130,48 +1130,48 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 </div>
 </details><p>For the rest of this guide, we will discuss how to adapt this file for use in your deployment environment.
 You will need root access to the machine in order to proceed, run <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">-s</span></code> to become root.</p>
-<p>We store our deployment <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file at the path <code class="docutils literal notranslate"><span class="pre">/etc/securing-ai/lab-deployment/docker-compose.yml</span></code> and set the folder permissions so that non-root users cannot access the file.</p>
+<p>We store our deployment <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file at the path <code class="docutils literal notranslate"><span class="pre">/etc/dioptra/lab-deployment/docker-compose.yml</span></code> and set the folder permissions so that non-root users cannot access the file.</p>
 <div class="section" id="create-application-folders-on-host">
 <h3>Create Application Folders on Host<a class="headerlink" href="#create-application-folders-on-host" title="Permalink to this headline">#</a></h3>
-<p>The data generated by the Minio, MLFlow Tracking, Redis, and <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> term:<cite>API</cite> services will be mapped to the host machine’s filesystem via bind mounts.
-We placed these folders for our deployment under the directory <code class="docutils literal notranslate"><span class="pre">/var/securing-ai/lab-deployment</span></code>, which looks as follows,</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/var/securing-ai/lab-deployment
+<p>The data generated by the Minio, MLFlow Tracking, Redis, and <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> services will be mapped to the host machine’s filesystem via bind mounts.
+We placed these folders for our deployment under the directory <code class="docutils literal notranslate"><span class="pre">/var/dioptra/lab-deployment</span></code>, which looks as follows:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/var/dioptra/lab-deployment
 ├── minio
-│   ├── mlflow-tracking
-│   ├── plugins
-│   └── workflow
+│   ├── mlflow-tracking
+│   ├── plugins
+│   └── workflow
 ├── mlflow-tracking
-│   └── mlflow-tracking.db
+│   └── mlflow-tracking.db
 ├── redis
-│   └── appendonly.aof
+│   └── appendonly.aof
 └── restapi
-    └── securingai.db
+    └── dioptra.db
 </pre></div>
 </div>
 <p>For the purposes of this guide, we are going to re-use the same folder structure for our deployment.
-We create them as follows,</p>
+We create them as follows:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create folders</span>
-mkdir -p /var/securing-ai/lab-deployment/minio
-mkdir -p /var/securing-ai/lab-deployment/mlflow-tracking
-mkdir -p /var/securing-ai/lab-deployment/redis
-mkdir -p /var/securing-ai/lab-deployment/restapi
+mkdir -p /var/dioptra/lab-deployment/minio
+mkdir -p /var/dioptra/lab-deployment/mlflow-tracking
+mkdir -p /var/dioptra/lab-deployment/redis
+mkdir -p /var/dioptra/lab-deployment/restapi
 </pre></div>
 </div>
-<p>Next, we need to set the folder permissions to match the user and group ids of the non-root user accounts used by most of these services,</p>
+<p>Next, we need to set the folder permissions to match the user and group ids of the non-root user accounts used by most of these services.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Prevent access to deployment folders by non-root users</span>
-chmod <span class="m">0750</span> /var/securing-ai
+chmod <span class="m">0750</span> /var/dioptra
 
 <span class="c1"># Configure folder owners for compatibility with Docker images</span>
-chown -R <span class="m">39000</span>:100 /var/securing-ai/lab-deployment/mlflow-tracking
-chown -R <span class="m">39000</span>:100 /var/securing-ai/lab-deployment/restapi
-chown -R <span class="m">39000</span>:100 /var/securing-ai/lab-deployment/minio
-chown -R <span class="m">999</span>:100 /var/securing-ai/lab-deployment/redis
+chown -R <span class="m">39000</span>:100 /var/dioptra/lab-deployment/mlflow-tracking
+chown -R <span class="m">39000</span>:100 /var/dioptra/lab-deployment/restapi
+chown -R <span class="m">39000</span>:100 /var/dioptra/lab-deployment/minio
+chown -R <span class="m">999</span>:100 /var/dioptra/lab-deployment/redis
 
 <span class="c1"># Configure folder permissions</span>
-chmod <span class="m">0700</span> /var/securing-ai/lab-deployment/mlflow-tracking
-chmod <span class="m">0700</span> /var/securing-ai/lab-deployment/restapi
-chmod <span class="m">0700</span> /var/securing-ai/lab-deployment/minio
-chmod <span class="m">0700</span> /var/securing-ai/lab-deployment/redis
+chmod <span class="m">0700</span> /var/dioptra/lab-deployment/mlflow-tracking
+chmod <span class="m">0700</span> /var/dioptra/lab-deployment/restapi
+chmod <span class="m">0700</span> /var/dioptra/lab-deployment/minio
+chmod <span class="m">0700</span> /var/dioptra/lab-deployment/redis
 </pre></div>
 </div>
 </div>
@@ -1181,8 +1181,8 @@ chmod <span class="m">0700</span> /var/securing-ai/lab-deployment/redis
 <p class="rubric">Configure the dataset volume</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">nfs-datasets</span></code> volume will need to be updated based on the details of your deployment,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="bd4eeaa5-b264-4e70-aa98-2a5f3ec052f5" name="34202398-e4db-4330-a384-9b636a4118f5" type="radio">
-</input><label class="tabbed-label" for="bd4eeaa5-b264-4e70-aa98-2a5f3ec052f5">
+<input checked="checked" id="50ce3f64-cec0-41fc-bc30-53ccbdec2181" name="1d7d18ca-ff65-4d8e-aa33-7f0d811e4577" type="radio">
+</input><label class="tabbed-label" for="50ce3f64-cec0-41fc-bc30-53ccbdec2181">
 Datasets on NFS share</label><div class="tabbed-content docutils">
 <p>The following Docker volume assumes that the NFS share is the directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code> on a device with the IP address <code class="docutils literal notranslate"><span class="pre">192.168.1.20</span></code>.
 Update it to match the details of your NFS share.</p>
@@ -1195,8 +1195,8 @@ Update it to match the details of your NFS share.</p>
 </pre></div>
 </div>
 </div>
-<input id="b14073b2-e0cb-45fe-abaa-9f21018612b4" name="34202398-e4db-4330-a384-9b636a4118f5" type="radio">
-</input><label class="tabbed-label" for="b14073b2-e0cb-45fe-abaa-9f21018612b4">
+<input id="c7ed21ff-e5e8-4189-83d7-3b9e92cf2f5e" name="1d7d18ca-ff65-4d8e-aa33-7f0d811e4577" type="radio">
+</input><label class="tabbed-label" for="c7ed21ff-e5e8-4189-83d7-3b9e92cf2f5e">
 Datasets in local directory</label><div class="tabbed-content docutils">
 <p>The following Docker volume assumes that the data is stored in the local directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code>.
 Update this to match the folder where you store your datasets.</p>
@@ -1288,7 +1288,7 @@ So, for example, this means that the Workers in Block 2 have twice the CPU prior
 <div class="section" id="initializations">
 <h3>Initializations<a class="headerlink" href="#initializations" title="Permalink to this headline">#</a></h3>
 <p class="rubric">Initialize the REST API database</p>
-<p>The <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> term:<cite>API</cite> database must be initialized as follows before you start using it,</p>
+<p>The <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a>  <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> database must be initialized as follows before you start using it,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the database</span>
 docker-compose run --rm restapi --upgrade-db
 
@@ -1297,7 +1297,7 @@ docker-compose down
 </pre></div>
 </div>
 <p class="rubric">Create the S3 workflow bucket</p>
-<p>The bucket used to cache the job submissions must be created before jobs can be submitted to the Testbed,</p>
+<p>The bucket used to cache the job submissions must be created before jobs can be submitted to the Testbed.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create workflow bucket</span>
 docker-compose run --rm --entrypoint <span class="s2">&quot;/bin/bash&quot;</span> restapi -c <span class="s1">&#39;/usr/local/bin/s3-mb.sh \</span>
 <span class="s1">  --endpoint-url ${MLFLOW_S3_ENDPOINT_URL} workflow&#39;</span>
@@ -1311,7 +1311,7 @@ docker-compose down
 </div>
 <div class="section" id="deployment">
 <h3>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">#</a></h3>
-<p>With everything configured and initialized, you can deploy the Testbed,</p>
+<p>With everything configured and initialized, you can deploy the Testbed.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker-compose up -d
 </pre></div>
 </div>

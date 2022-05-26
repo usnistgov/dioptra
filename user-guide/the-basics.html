@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -607,7 +607,7 @@ title="Print to PDF"
 <p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
 <p>The primary use case for Dioptra is the running, tracking, and organizing of machine learning security experiments using the open-source technologies and architectures found in real-world AI applications.
-The Testbed supports this by providing the following capabilities,</p>
+The Testbed supports this by providing the following capabilities.</p>
 <ol class="arabic simple">
 <li><p>A containerized micro-services architecture for running and tracking experiments that is straightforward to deploy on a wide range of computational environments</p></li>
 <li><p>A modular workflow system with swappable units of work to enable low effort hypothesis testing and the rapid iteration of experiments</p></li>
@@ -625,7 +625,7 @@ The Testbed supports this by providing the following capabilities,</p>
 </dl>
 <div class="section" id="fundamental-units-of-an-experiment">
 <h2>Fundamental Units of an Experiment<a class="headerlink" href="#fundamental-units-of-an-experiment" title="Permalink to this headline">#</a></h2>
-<p>The following diagram illustrates the fundamental units of a Testbed experiment and their nesting hierarchy,</p>
+<p>The following diagram illustrates the fundamental units of a Testbed experiment and their nesting hierarchy.</p>
 <div class="figure align-default" id="id3">
 <img alt="The diagram showing the nesting of the fundamental building blocks of an experiment. There is a large block labeled &quot;experiment,&quot; nested within it are smaller blocks labeled &quot;entry point&quot;, and nested within those are several, even smaller blocks labeled &quot;task&quot;. The tasks flow from one to the next via a sequence of arrows. The entry points also flow from one to the next via a sequence of arrows." src="../_images/experiment-components.svg" /><p class="caption"><span class="caption-text">Entry points are composed of tasks and an experiment is a collection of related entry point runs.</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
 </div>

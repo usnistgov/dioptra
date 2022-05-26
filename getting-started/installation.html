@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -684,13 +684,13 @@ title="Print to PDF"
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<p>This installation guide is divided into three parts, with the first part covering system requirements, the second part covering how to install the <code class="docutils literal notranslate"><span class="pre">mitre-securing-ai</span></code> Python package, and the third part covering how to setup a personal computer for test-driving the Dioptra architecture locally.
+<p>This installation guide is divided into three parts, with the first part covering system requirements, the second part covering how to install the <code class="docutils literal notranslate"><span class="pre">dioptra</span></code> Python package, and the third part covering how to setup a personal computer for test-driving the Dioptra architecture locally.
 General instructions on how to deploy the Testbed in an on-premises server can be found in the sections under <strong>Deployment Guide</strong>.</p>
 <div class="section" id="package-installation">
 <h2>Package Installation<a class="headerlink" href="#package-installation" title="Permalink to this headline">#</a></h2>
 <div class="section" id="requirements">
 <h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">#</a></h3>
-<p>The minimum requirements for installing the <code class="docutils literal notranslate"><span class="pre">mitre-securing-ai</span></code> Python package on your host device are as follows:</p>
+<p>The minimum requirements for installing the <code class="docutils literal notranslate"><span class="pre">dioptra</span></code> Python package on your host device are as follows:</p>
 <ul class="simple">
 <li><p>CPU: An x86-64 processor</p></li>
 <li><p>RAM: 4GB or higher</p></li>
@@ -704,10 +704,10 @@ General instructions on how to deploy the Testbed in an on-premises server can b
 The easiest way to accomplish this is using the pre-built configuration files included in the project codebase to create a <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environment</a>.</p>
 <p>There are two install options to start using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environments</a>,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="f4160215-a749-4633-8d85-29787ff07c54" name="799a066a-7b1b-4fa5-a390-72145fac44c1" type="radio">
-</input><label class="tabbed-label" for="f4160215-a749-4633-8d85-29787ff07c54">
+<input checked="checked" id="64e736ff-9345-4f64-b73b-46df45b80584" name="b85cf9e0-1408-4537-909e-aea22237ec94" type="radio">
+</input><label class="tabbed-label" for="64e736ff-9345-4f64-b73b-46df45b80584">
 Anaconda installation</label><div class="tabbed-content docutils">
-<p>The following links will provide a installation package for version 2020.11 of <a class="reference external" href="https://docs.anaconda.com/">Anaconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
+<p>The following links will provide an installation package for version 2020.11 of <a class="reference external" href="https://docs.anaconda.com/">Anaconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://repo.anaconda.com/archive/Anaconda3-2020.11-Windows-x86_64.exe">Anaconda for Windows</a></p></li>
 <li><p><a class="reference external" href="https://repo.anaconda.com/archive/Anaconda3-2020.11-MacOSX-x86_64.pkg">Anaconda for MacOS</a></p></li>
@@ -715,10 +715,10 @@ Anaconda installation</label><div class="tabbed-content docutils">
 </ul>
 <p>If your host machine does not meet the <span class="xref std std-ref">quickstart-system-requirements</span>, then go to the <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda Installation Documents</a> for more help.</p>
 </div>
-<input id="f21d5d91-8642-4835-804e-7a98a9961a7d" name="799a066a-7b1b-4fa5-a390-72145fac44c1" type="radio">
-</input><label class="tabbed-label" for="f21d5d91-8642-4835-804e-7a98a9961a7d">
+<input id="83043cff-98fd-421e-9f2d-bd8cf486718a" name="b85cf9e0-1408-4537-909e-aea22237ec94" type="radio">
+</input><label class="tabbed-label" for="83043cff-98fd-421e-9f2d-bd8cf486718a">
 Miniconda installation</label><div class="tabbed-content docutils">
-<p>The following links will provide a installation package for the latest version of <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
+<p>The following links will provide an installation package for the latest version of <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe">Miniconda for Windows</a></p></li>
 <li><p><a class="reference external" href="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.pkg">Miniconda for MacOS</a></p></li>
@@ -756,7 +756,7 @@ Miniconda installation</label><div class="tabbed-content docutils">
 <p>Dioptra was developed for use with native GNU/Linux environments.
 When using MacOS/OS X or Windows there is a chance you will encounter errors that are specific to your system’s setup that are not covered in this documentation.
 To resolve such issues, first look at the external documentation linked (i.e. <a class="reference external" href="https://brew.sh/">Homebrew</a> and <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/">Windows Subsystem for Linux</a>) before submitting a bug report.
-Also, when using a virtual machine it is likely the performance of can be throttled because of the CPU and Memory allocations set at the time the virtual machine was configured.
+Also, when using a virtual machine it is likely the performance can be throttled because of the CPU and Memory allocations set at the time the virtual machine was configured.
 If performance becomes an issue when using a virtual machine, consider increasing the CPU and Memory resources allocated to the machine.</p>
 </div>
 </div>
@@ -764,23 +764,25 @@ If performance becomes an issue when using a virtual machine, consider increasin
 <span id="quickstart-clone-repository"></span><h3>Clone the Repository<a class="headerlink" href="#clone-the-repository" title="Permalink to this headline">#</a></h3>
 <p>To clone the repository, open a new <strong>Terminal</strong> session for your operating system,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="1888ae0b-c2d3-4da3-a45b-3249fe4a25ab" name="6d05e393-a2b6-4cf7-b489-8ea3093c4b64" type="radio">
-</input><label class="tabbed-label" for="1888ae0b-c2d3-4da3-a45b-3249fe4a25ab">
-Windows</label><div class="tabbed-content docutils">
-<p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">windows</kbd> + <kbd class="kbd docutils literal notranslate">r</kbd> to open <strong>Run</strong>, then type <code class="docutils literal notranslate"><span class="pre">wsl</span></code> into the search bar and click <em>OK</em> to start a <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/">Windows Subsystem for Linux</a> session.</p>
-</div>
-<input id="7fb22c7c-acc8-4df6-b0d5-e87263064311" name="6d05e393-a2b6-4cf7-b489-8ea3093c4b64" type="radio">
-</input><label class="tabbed-label" for="7fb22c7c-acc8-4df6-b0d5-e87263064311">
-MacOS</label><div class="tabbed-content docutils">
-<p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">command</kbd> + <kbd class="kbd docutils literal notranslate">space</kbd> to open the <strong>Spotlight Search</strong>, type <code class="docutils literal notranslate"><span class="pre">Terminal</span></code> into the search bar, and click the <em>Terminal</em> application under <em>Top Hit</em> at the top of your results.</p>
-</div>
-<input id="e1ddf3af-1b77-4feb-bb5b-c16af92cba95" name="6d05e393-a2b6-4cf7-b489-8ea3093c4b64" type="radio">
-</input><label class="tabbed-label" for="e1ddf3af-1b77-4feb-bb5b-c16af92cba95">
+<input checked="checked" id="809f0a44-47b6-458a-bad4-6485793a7990" name="c149dbe2-9a08-4853-88dd-3f1b9e3cd74f" type="radio">
+</input><label class="tabbed-label" for="809f0a44-47b6-458a-bad4-6485793a7990">
 Linux</label><div class="tabbed-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">ctrl</kbd> + <kbd class="kbd docutils literal notranslate">alt</kbd> + <kbd class="kbd docutils literal notranslate">t</kbd> to open the <strong>Terminal</strong>.</p>
 </div>
 </div>
 <p>Next, navigate to the directory where you will clone the repository,</p>
+<div class="tabbed-set docutils">
+<input checked="checked" id="5cec2e61-049a-4d2a-aa62-548d4a4beca5" name="8d2edf67-07aa-4410-904a-59ab3eb85bc2" type="radio">
+</input><label class="tabbed-label" for="5cec2e61-049a-4d2a-aa62-548d4a4beca5">
+MacOS</label><div class="tabbed-content docutils">
+<p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">command</kbd> + <kbd class="kbd docutils literal notranslate">space</kbd> to open the <strong>Spotlight Search</strong>, type <code class="docutils literal notranslate"><span class="pre">Terminal</span></code> into the search bar, and click the <em>Terminal</em> application under <em>Top Hit</em> at the top of your results.</p>
+</div>
+<input id="724d9740-de28-4fe9-b155-59c391c33ac2" name="8d2edf67-07aa-4410-904a-59ab3eb85bc2" type="radio">
+</input><label class="tabbed-label" for="724d9740-de28-4fe9-b155-59c391c33ac2">
+Windows</label><div class="tabbed-content docutils">
+<p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">windows</kbd> + <kbd class="kbd docutils literal notranslate">r</kbd> to open <strong>Run</strong>, then type <code class="docutils literal notranslate"><span class="pre">wsl</span></code> into the search bar and click <em>OK</em> to start a <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/">Windows Subsystem for Linux</a> session.</p>
+</div>
+</div>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE: Substitute path/to/your/directory with a path that exists on your device.</span>
 <span class="nb">cd</span> path/to/your/directory
 </pre></div>
@@ -798,15 +800,15 @@ For this reason, WSL and MacOS users are both encouraged to create and clone the
 </div>
 <p>Clone the repository to your local computer,</p>
 <div class="tabbed-set docutils">
-<input checked="checked" id="20b59030-97be-43a2-8fa1-695f332b68a3" name="4aedd8cc-5077-4875-81a0-50c80174c946" type="radio">
-</input><label class="tabbed-label" for="20b59030-97be-43a2-8fa1-695f332b68a3">
+<input checked="checked" id="c9203dc8-5cd2-4e4e-b854-4f92b01e92de" name="35d940b5-6c05-49f4-b929-ef216b680353" type="radio">
+</input><label class="tabbed-label" for="c9203dc8-5cd2-4e4e-b854-4f92b01e92de">
 Clone with HTTPS</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/usnistgov/dioptra.git
 </pre></div>
 </div>
 </div>
-<input id="941f2edc-5c5f-4e0e-9179-30e7cc172c97" name="4aedd8cc-5077-4875-81a0-50c80174c946" type="radio">
-</input><label class="tabbed-label" for="941f2edc-5c5f-4e0e-9179-30e7cc172c97">
+<input id="d404c718-c7b6-4b36-b22a-b9cac69b8814" name="35d940b5-6c05-49f4-b929-ef216b680353" type="radio">
+</input><label class="tabbed-label" for="d404c718-c7b6-4b36-b22a-b9cac69b8814">
 Clone with SSH</label><div class="tabbed-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:usnistgov/dioptra.git
 </pre></div>
@@ -814,7 +816,7 @@ Clone with SSH</label><div class="tabbed-content docutils">
 </div>
 </div>
 <p>Finally, verify the repository was downloaded and is up to date,</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> secure-ai-lab-components <span class="o">&amp;&amp;</span> git pull
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> dioptra <span class="o">&amp;&amp;</span> git pull
 </pre></div>
 </div>
 <p>The message <em>Already up to date.</em> should be echoed, verifying the repository was successfully cloned to your device.</p>
@@ -839,19 +841,19 @@ These <a class="reference internal" href="../glossary.html#term-YAML"><span clas
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda activate name-of-the-environment
 </pre></div>
 </div>
-<p><strong>NOTE</strong>: The <em>name-of-the-environment</em> used for the demos provided in the project codebase can be found be inspecting the specific <em>environment.yml</em> file for the tag labeled <em>name</em>.</p>
+<p><strong>NOTE</strong>: The <em>name-of-the-environment</em> used for the demos provided in the project codebase can be found by inspecting the specific <em>environment.yml</em> file for the tag labeled <em>name</em>.</p>
 </li>
 </ol>
 </div>
 </div>
 <div class="section" id="pulling-the-latest-docker-images">
 <span id="quickstart-build-images"></span><h2>Pulling the Latest Docker Images<a class="headerlink" href="#pulling-the-latest-docker-images" title="Permalink to this headline">#</a></h2>
-<p>The last step to setup the Secure AI Testbed is to build the necessary docker images used by the repositories various tutorials.</p>
+<p>The last step to setup the Dioptra Testbed is to build the necessary docker images used by the repository’s various tutorials.</p>
 <p><strong>NOTE</strong>: The following steps will only work if you are attempting to use the <em>master</em> branch of the repository.
 If you are a developer using a separate branch please see <a class="reference internal" href="../dev-guide/contributing-build-dev-images.html#dev-guide-build-dev-images"><span class="std std-ref">Building Development Docker Images</span></a>.</p>
 <ol class="arabic">
 <li><p>Navigate the the root directory of the project.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> path/to/secure-ai-lab-components
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> path/to/dioptra
 </pre></div>
 </div>
 <p><strong>NOTE</strong>: You must substitute the code snippet <code class="docutils literal notranslate"><span class="pre">path/to/</span></code> with the true path for the project codebase on your device.

@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -644,9 +644,9 @@ title="Print to PDF"
 <p class="admonition-title">Tip</p>
 <p>When creating a new entrypoint, users may also find it helpful to create their own python task plugins in combination with existing builtin task plugins.
 Instructions for developing local and builtin tasks can be found in the following guide: <a class="reference internal" href="custom-task-plugins.html#user-guide-custom-task-plugins"><span class="std std-ref">Custom Task Plugins</span></a>.
-The following sections will assume that all task plugins already exist somewhere (either locally or as a builtin), and are ready to use for use in our entry point python script.</p>
+The following sections will assume that all task plugins already exist somewhere (either locally or as a builtin), and are ready for use in our entry point python script.</p>
 </div>
-<p>Entry point development generally involves the creating Python script, that is then executed by its associated command within the MLproject file.</p>
+<p>Entry point development generally involves creating a Python script, that is then executed by its associated command within the MLproject file.</p>
 <p>The general development work can be divided as follows:</p>
 <ul class="simple">
 <li><p>Developing the Python entry point script:</p>
@@ -747,14 +747,14 @@ if __name__ == &quot;__main__&quot;:
 </pre></div>
 </div>
 <p>Here we can see that we’ve transferred the parameters for tasks A-C through into process_artifacts_flow’s <code class="docutils literal notranslate"><span class="pre">flow.run()</span></code> call.</p>
-<p>This call will take in all job associated parameters needed for running each task and transfer it our flow pipeline.
+<p>This call will take in all job associated parameters needed for running each task and transfer it to our flow pipeline.
 Users are also allowed to initialize and pass through additional parameter values as needed into the <code class="docutils literal notranslate"><span class="pre">flow.run()</span></code> call, such as the secondary parameters that can be set by default or calculated based on other input parameters.</p>
 </div>
 <div class="section" id="developing-the-python-entry-point-script-creating-a-flow-pipeline">
 <h2>Developing the Python Entry Point Script: Creating a Flow Pipeline<a class="headerlink" href="#developing-the-python-entry-point-script-creating-a-flow-pipeline" title="Permalink to this headline">#</a></h2>
 <p>Next, we will define the flow pipeline itself.
 We will start with the input parameters we need to provide to the current Flow.
-Here will define the name of each parameter and their associated parameter information:</p>
+Here we will define the name of each parameter and their associated parameter information:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">init_hello_world_flow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flow</span><span class="p">:</span>
     <span class="k">with</span> <span class="n">Flow</span><span class="p">(</span><span class="s2">&quot;&lt;Description of What this Flow Does Here&gt;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">flow</span><span class="p">:</span>
         <span class="p">(</span>
@@ -817,7 +817,7 @@ Once <code class="docutils literal notranslate"><span class="pre">task_A</span><
 <p>Users can refer to <a class="reference internal" href="task-plugins-collection.html#user-guide-task-plugins-collection"><span class="std std-ref">Task Plugins Collection</span></a> to see our builtin task plugin directories and <a class="reference internal" href="custom-task-plugins.html#user-guide-custom-task-plugins"><span class="std std-ref">Custom Task Plugins</span></a> for how to create local and builtin plugins.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>For this example, the input and output parameters link up nicely so that the task dependencies follow an <code class="docutils literal notranslate"><span class="pre">task</span> <span class="pre">A-&gt;B-&gt;C</span></code> in order.
+<p>For this example, the input and output parameters link up nicely so that the task dependencies follow <code class="docutils literal notranslate"><span class="pre">task</span> <span class="pre">A-&gt;B-&gt;C</span></code> in order.
 However, should any intermediate tasks not have preceding dependencies, they can be run out of order. Those will require their preceding tasks to be declared as well.
 Please refer to <a class="reference internal" href="task-plugins.html#user-guide-task-plugins"><span class="std std-ref">Task Plugins</span></a> for more information.</p>
 </div>

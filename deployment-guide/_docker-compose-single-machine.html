@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -599,25 +599,25 @@ title="Print to PDF"
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
 <span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/securing-ai/lab-deployment/minio</span><span class="w"></span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/minio</span><span class="w"></span>
 <span class="w">  </span><span class="nt">mlflow-tracking-data</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
 <span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/securing-ai/lab-deployment/mlflow-tracking</span><span class="w"></span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/mlflow-tracking</span><span class="w"></span>
 <span class="w">  </span><span class="nt">redis-data</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
 <span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/securing-ai/lab-deployment/redis</span><span class="w"></span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/redis</span><span class="w"></span>
 <span class="w">  </span><span class="nt">restapi-data</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
 <span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/securing-ai/lab-deployment/restapi</span><span class="w"></span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/restapi</span><span class="w"></span>
 
 <span class="nt">services</span><span class="p">:</span><span class="w"></span>
 <span class="w">  </span><span class="nt">redis</span><span class="p">:</span><span class="w"></span>
@@ -661,7 +661,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio-data:/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">mlflow-tracking</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/mlflow-tracking:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/mlflow-tracking:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
@@ -691,7 +691,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking-data:/work/mlruns</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">nginx</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/nginx:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/nginx:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx</span><span class="w"></span>
@@ -723,7 +723,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;30080:30080/tcp&quot;</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">restapi</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/restapi:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/restapi:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi</span><span class="w"></span>
@@ -740,8 +740,8 @@ title="Print to PDF"
 <span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span><span class="w"></span>
 <span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -754,7 +754,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">tfcpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/tensorflow2-cpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-cpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-01</span><span class="w"></span>
@@ -765,9 +765,9 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -787,7 +787,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">tfcpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/tensorflow2-cpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-cpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-02</span><span class="w"></span>
@@ -798,9 +798,9 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -820,7 +820,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">tfgpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/tensorflow2-gpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-01</span><span class="w"></span>
@@ -832,9 +832,9 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -850,7 +850,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">tfgpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/tensorflow2-gpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-02</span><span class="w"></span>
@@ -862,9 +862,9 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -880,7 +880,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">tfgpu-03</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/tensorflow2-gpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-03</span><span class="w"></span>
@@ -892,9 +892,9 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -910,7 +910,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">pytorchcpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/pytorch-cpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-cpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-01</span><span class="w"></span>
@@ -921,9 +921,9 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -942,7 +942,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">pytorchcpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/pytorch-cpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-cpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-02</span><span class="w"></span>
@@ -953,9 +953,9 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
@@ -974,7 +974,7 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">pytorchgpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">securing-ai/pytorch-gpu:latest</span><span class="w"></span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-gpu:latest</span><span class="w"></span>
 <span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
 <span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchgpu-01</span><span class="w"></span>
@@ -986,9 +986,9 @@ title="Print to PDF"
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/securingai_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/securingai.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AI_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
 <span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
 <span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>

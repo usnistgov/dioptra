@@ -22,7 +22,7 @@ cryptography
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: mitre.securingai.sdk.cryptography
+.. automodule:: dioptra.sdk.cryptography
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ cryptography
 common
 ------
 
-.. automodule:: mitre.securingai.sdk.cryptography.common
+.. automodule:: dioptra.sdk.cryptography.common
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,7 +38,7 @@ common
 keygen
 ------
 
-.. automodule:: mitre.securingai.sdk.cryptography.keygen
+.. automodule:: dioptra.sdk.cryptography.keygen
    :members:
    :undoc-members:
    :show-inheritance:
@@ -46,7 +46,7 @@ keygen
 sign
 ----
 
-.. automodule:: mitre.securingai.sdk.cryptography.sign
+.. automodule:: dioptra.sdk.cryptography.sign
    :members:
    :undoc-members:
    :show-inheritance:
@@ -54,7 +54,7 @@ sign
 verify
 ------
 
-.. automodule:: mitre.securingai.sdk.cryptography.verify
+.. automodule:: dioptra.sdk.cryptography.verify
    :members:
    :undoc-members:
    :show-inheritance:

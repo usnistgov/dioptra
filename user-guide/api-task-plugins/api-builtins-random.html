@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -552,12 +552,12 @@ title="Print to PDF"
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#module-securingai_builtins.random.rng">
+  <a class="reference internal nav-link" href="#module-dioptra_builtins.random.rng">
    rng.py
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#module-securingai_builtins.random.sample">
+  <a class="reference internal nav-link" href="#module-dioptra_builtins.random.sample">
    sample.py
   </a>
  </li>
@@ -581,12 +581,12 @@ title="Print to PDF"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#module-securingai_builtins.random.rng">
+  <a class="reference internal nav-link" href="#module-dioptra_builtins.random.rng">
    rng.py
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#module-securingai_builtins.random.sample">
+  <a class="reference internal nav-link" href="#module-dioptra_builtins.random.sample">
    sample.py
   </a>
  </li>
@@ -606,12 +606,12 @@ title="Print to PDF"
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<span class="target" id="module-securingai_builtins.random"></span><div class="section" id="module-securingai_builtins.random.rng">
-<span id="rng-py"></span><h2>rng.py<a class="headerlink" href="#module-securingai_builtins.random.rng" title="Permalink to this headline">#</a></h2>
+<span class="target" id="module-dioptra_builtins.random"></span><div class="section" id="module-dioptra_builtins.random.rng">
+<span id="rng-py"></span><h2>rng.py<a class="headerlink" href="#module-dioptra_builtins.random.rng" title="Permalink to this headline">#</a></h2>
 <p>A task plugin module for managing random number generators.</p>
 <dl class="py function">
-<dt id="securingai_builtins.random.rng.init_rng">
-<code class="sig-name descname"><span class="pre">init_rng</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v1.22)"><span class="pre">numpy.random._generator.Generator</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../../_modules/securingai_builtins/random/rng.html#init_rng"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.random.rng.init_rng" title="Permalink to this definition">#</a></dt>
+<dt id="dioptra_builtins.random.rng.init_rng">
+<code class="sig-name descname"><span class="pre">init_rng</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v1.22)"><span class="pre">numpy.random._generator.Generator</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../../_modules/dioptra_builtins/random/rng.html#init_rng"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.random.rng.init_rng" title="Permalink to this definition">#</a></dt>
 <dd><p>Constructs a new random number generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -634,18 +634,18 @@ returned.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-securingai_builtins.random.sample">
-<span id="sample-py"></span><h2>sample.py<a class="headerlink" href="#module-securingai_builtins.random.sample" title="Permalink to this headline">#</a></h2>
+<div class="section" id="module-dioptra_builtins.random.sample">
+<span id="sample-py"></span><h2>sample.py<a class="headerlink" href="#module-dioptra_builtins.random.sample" title="Permalink to this headline">#</a></h2>
 <p>A task plugin module for drawing random samples.</p>
 <dl class="py function">
-<dt id="securingai_builtins.random.sample.draw_random_integer">
-<code class="sig-name descname"><span class="pre">draw_random_integer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v1.22)"><span class="pre">numpy.random._generator.Generator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2147483647</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><a class="reference internal" href="../../_modules/securingai_builtins/random/sample.html#draw_random_integer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.random.sample.draw_random_integer" title="Permalink to this definition">#</a></dt>
+<dt id="dioptra_builtins.random.sample.draw_random_integer">
+<code class="sig-name descname"><span class="pre">draw_random_integer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v1.22)"><span class="pre">numpy.random._generator.Generator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2147483647</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><a class="reference internal" href="../../_modules/dioptra_builtins/random/sample.html#draw_random_integer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.random.sample.draw_random_integer" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns a random integer from <cite>low</cite> (inclusive) to <cite>high</cite> (exclusive).</p>
 <p>The integer is sampled from a uniform distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>rng</strong> – A random number generator returned by <a class="reference internal" href="#securingai_builtins.random.rng.init_rng" title="securingai_builtins.random.rng.init_rng"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_rng()</span></code></a>.</p></li>
+<li><p><strong>rng</strong> – A random number generator returned by <a class="reference internal" href="#dioptra_builtins.random.rng.init_rng" title="dioptra_builtins.random.rng.init_rng"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_rng()</span></code></a>.</p></li>
 <li><p><strong>low</strong> – Lowest (signed) integers to be drawn from the distribution (unless
 <cite>high=None</cite>, in which case this parameter is <cite>0</cite> and this value is used for
 <cite>high</cite>).</p></li>
@@ -666,14 +666,14 @@ distribution (see above for behavior if <cite>high=None</cite>)</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="securingai_builtins.random.sample.draw_random_integers">
-<code class="sig-name descname"><span class="pre">draw_random_integers</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v1.22)"><span class="pre">numpy.random._generator.Generator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2147483647</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">…</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/securingai_builtins/random/sample.html#draw_random_integers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#securingai_builtins.random.sample.draw_random_integers" title="Permalink to this definition">#</a></dt>
+<dt id="dioptra_builtins.random.sample.draw_random_integers">
+<code class="sig-name descname"><span class="pre">draw_random_integers</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v1.22)"><span class="pre">numpy.random._generator.Generator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2147483647</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><span class="p"><span class="pre">…</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><span class="pre">numpy.ndarray</span></a><a class="reference internal" href="../../_modules/dioptra_builtins/random/sample.html#draw_random_integers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.random.sample.draw_random_integers" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns random integers from <cite>low</cite> (inclusive) to <cite>high</cite> (exclusive).</p>
 <p>The integers are sampled from a uniform distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>rng</strong> – A random number generator returned by <a class="reference internal" href="#securingai_builtins.random.rng.init_rng" title="securingai_builtins.random.rng.init_rng"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_rng()</span></code></a>.</p></li>
+<li><p><strong>rng</strong> – A random number generator returned by <a class="reference internal" href="#dioptra_builtins.random.rng.init_rng" title="dioptra_builtins.random.rng.init_rng"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_rng()</span></code></a>.</p></li>
 <li><p><strong>low</strong> – Lowest (signed) integers to be drawn from the distribution (unless
 <cite>high=None</cite>, in which case this parameter is <cite>0</cite> and this value is used for
 <cite>high</cite>).</p></li>

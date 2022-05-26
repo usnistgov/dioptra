@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -552,7 +552,7 @@ title="Print to PDF"
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#module-mitre.securingai.rq.tasks">
+  <a class="reference internal nav-link" href="#module-dioptra.rq.tasks">
    Tasks
   </a>
  </li>
@@ -576,7 +576,7 @@ title="Print to PDF"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#module-mitre.securingai.rq.tasks">
+  <a class="reference internal nav-link" href="#module-dioptra.rq.tasks">
    Tasks
   </a>
  </li>
@@ -596,11 +596,11 @@ title="Print to PDF"
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<div class="section" id="module-mitre.securingai.rq.tasks">
-<span id="tasks"></span><h2>Tasks<a class="headerlink" href="#module-mitre.securingai.rq.tasks" title="Permalink to this headline">#</a></h2>
+<div class="section" id="module-dioptra.rq.tasks">
+<span id="tasks"></span><h2>Tasks<a class="headerlink" href="#module-dioptra.rq.tasks" title="Permalink to this headline">#</a></h2>
 <dl class="py function">
-<dt id="mitre.securingai.rq.tasks.run_mlflow_task">
-<code class="sig-name descname"><span class="pre">run_mlflow_task</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">workflow_uri</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_point</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">conda_env</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'base'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_point_kwargs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/subprocess.html#subprocess.CompletedProcess" title="(in Python v3.10)"><span class="pre">subprocess.CompletedProcess</span></a><a class="reference internal" href="../../_modules/mitre/securingai/rq/tasks/run_mlflow.html#run_mlflow_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mitre.securingai.rq.tasks.run_mlflow_task" title="Permalink to this definition">#</a></dt>
+<dt id="dioptra.rq.tasks.run_mlflow_task">
+<code class="sig-name descname"><span class="pre">run_mlflow_task</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">workflow_uri</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_point</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">conda_env</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'base'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_point_kwargs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/subprocess.html#subprocess.CompletedProcess" title="(in Python v3.10)"><span class="pre">subprocess.CompletedProcess</span></a><a class="reference internal" href="../../_modules/dioptra/rq/tasks/run_mlflow.html#run_mlflow_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.rq.tasks.run_mlflow_task" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </div>

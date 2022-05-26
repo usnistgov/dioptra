@@ -57,7 +57,7 @@ Squashing
 ^^^^^^^^^
 
 If you are squashing your branch, it’s important to make sure you update the commit message.
-If you’re using GitLab’s UI it will by default create a new commit message which is a combination of all commits and **does not follow the commit guidelines**.
+If you’re using GitHub’s UI it will by default create a new commit message which is a combination of all commits and **does not follow the commit guidelines**.
 
 If you’re working locally, it often can be useful to ``--amend`` a commit, or utilize ``rebase -i`` to reorder, squash, and reword your commits.
 
@@ -80,9 +80,9 @@ The **header** is mandatory and the **scope** of the header is optional.
 Both are written in *camelCase*.
 
 Any line of the commit message cannot be longer 100 characters!
-This allows the message to be easier to read on GitLab as well as in various git tools.
+This allows the message to be easier to read on GitHub as well as in various git tools.
 
-The footer should contain a closing reference to an issue as well as a relevant GitLab issue (if any):
+The footer should contain a closing reference to an issue as well as a relevant GitHub issue (if any):
 
 ::
 
@@ -149,7 +149,7 @@ The following is the list of supported scopes:
 -  **sdk**: used for updates related to the development and maintenance of the Testbed’s software development kit
 
 Ad-hoc scopes are permitted for the ``examples`` change type to indicate which example was updated provided the scope names remain consistent.
-The special scopes **gitlab** and **tox** are also permitted when combined with the ``ci`` change type.
+The special scopes **github** and **tox** are also permitted when combined with the ``ci`` change type.
 
 Note that not all commits should have a scope.
 Cases where a commit should not specify a scope typically fall into one of two categories:
@@ -178,7 +178,7 @@ The body should include the motivation for the change and contrast this with pre
 Footer
 ~~~~~~
 
-The footer should contain any information about **Breaking Changes** and is also the place to reference GitLab issues that this commit **Closes**.
+The footer should contain any information about **Breaking Changes** and is also the place to reference GitHub issues that this commit **Closes**.
 
 **Breaking Changes** should start with the word ``BREAKING CHANGE:`` with a space or two newlines. The rest of the commit message is then used for this.
 

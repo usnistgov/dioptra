@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -694,9 +694,9 @@ If you were watching the output logs, you will need to press <kbd class="kbd com
 <span class="c1"># Default address for accessing the RESTful API service</span>
 <span class="n">RESTAPI_ADDRESS</span> <span class="o">=</span> <span class="s2">&quot;http://localhost:30080&quot;</span>
 
-<span class="c1"># Set AI_RESTAPI_URI variable if not defined, used to connect to RESTful API service</span>
-<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AI_RESTAPI_URI&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;AI_RESTAPI_URI&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">RESTAPI_ADDRESS</span>
+<span class="c1"># Set DIOPTRA_RESTAPI_URI variable if not defined, used to connect to RESTful API service</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DIOPTRA_RESTAPI_URI&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;DIOPTRA_RESTAPI_URI&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">RESTAPI_ADDRESS</span>
 
 <span class="c1"># Default address for accessing the MLFlow Tracking server</span>
 <span class="n">MLFLOW_TRACKING_URI</span> <span class="o">=</span> <span class="s2">&quot;http://localhost:35000&quot;</span>
@@ -775,8 +775,8 @@ make workflows
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">workflows</span></code> was invoked as part of the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">demo</span></code> startup procedure, so unless you edited the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file or one of the files under <code class="docutils literal notranslate"><span class="pre">src/</span></code>, you will likely see a message of <em>make: Nothing to be done for ‘workflows’</em>.</p>
 <p>To connect with the endpoint, we will use a client class defined in the <code class="docutils literal notranslate"><span class="pre">utils.py</span></code> file that is able to connect with the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> term:<cite>API</cite> using the <a class="reference internal" href="../glossary.html#term-HTTP"><span class="xref std std-term">HTTP</span></a> protocol.
-We connect using the client below, which uses the environment variable <code class="docutils literal notranslate"><span class="pre">AI_RESTAPI_URI</span></code> to figure out how to connect to the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">restapi_client</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">SecuringAIClient</span><span class="p">()</span>
+We connect using the client below, which uses the environment variable <code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_URI</span></code> to figure out how to connect to the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">restapi_client</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">DioptraClient</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>We need to register an experiment under which to collect our job runs.

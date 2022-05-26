@@ -22,7 +22,7 @@ artifacts
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: securingai_builtins.artifacts
+.. automodule:: dioptra_builtins.artifacts
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ artifacts
 mlflow.py
 ---------
 
-.. automodule:: securingai_builtins.artifacts.mlflow
+.. automodule:: dioptra_builtins.artifacts.mlflow
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,7 +38,7 @@ mlflow.py
 utils.py
 --------
 
-.. automodule:: securingai_builtins.artifacts.utils
+.. automodule:: dioptra_builtins.artifacts.utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -46,7 +46,7 @@ utils.py
 exceptions.py
 -------------
 
-.. automodule:: securingai_builtins.artifacts.exceptions
+.. automodule:: dioptra_builtins.artifacts.exceptions
    :members:
    :undoc-members:
    :show-inheritance:

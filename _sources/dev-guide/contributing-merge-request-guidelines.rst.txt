@@ -57,13 +57,13 @@ Please follow these steps to submit a contribution using a merge request:
    The pre-commit hooks will run a linter that scans your commit message for formatting errors.
    Adherence to these guidelines is required because these commit messages are used to automatically generate the project `CHANGELOG <CHANGELOG.md>`__.
 
--  Push your branch to GitLab:
+-  Push your branch to GitHub:
 
    .. code:: sh
 
       git push origin my-branch
 
--  In GitLab, open a merge request and set ``my-branch`` as the source branch and ``master`` as the target branch.
+-  In GitHub, open a merge request and set ``my-branch`` as the source branch and ``master`` as the target branch.
    If you need to make changes, you can either push them as additional commits to ``my-branch`` or use ``git rebase`` to amend your initial commits and force push them:
 
    .. code:: sh

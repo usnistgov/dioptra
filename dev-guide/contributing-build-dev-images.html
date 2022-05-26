@@ -27,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/securing-ai-testbed.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -562,7 +562,7 @@ title="Print to PDF"
 <p><strong>NOTE</strong>: The following steps are intended for developers that are using a branch that is <strong>NOT</strong> the <em>master</em> branch of the repository. If you are using the <em>master</em> branch please see <a class="reference internal" href="../getting-started/installation.html#quickstart-build-images"><span class="std std-ref">Pulling the Latest Docker Images</span></a>.</p>
 <ol class="arabic" id="dev-guide-build-branch-images-step-1">
 <li><p>Navigate to the root directory of the project codebase.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> path/to/secure-ai-lab-components
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> path/to/dioptra
 </pre></div>
 </div>
 <p><strong>NOTE</strong>: You must substitute the code snippet <code class="docutils literal notranslate"><span class="pre">path/to/</span></code> with the true path for the project codebase on your device. This should be the same path used in <span class="xref std std-ref">Clone the Repository: Step 2</span>.</p>
@@ -593,7 +593,7 @@ If the desired branch does <em>NOT</em> begin with <code class="docutils literal
 </li>
 </ul>
 </li>
-<li><p>Pull the latest vendor, Continuous Integration (CI), and lab images from the MITRE artifactory and retag them.</p>
+<li><p>Pull the latest vendor, Continuous Integration (CI), and lab images and retag them.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make pull-latest-hub pull-latest-ci pull-latest-lab
 </pre></div>
 </div>
@@ -613,7 +613,7 @@ If the desired branch does <em>NOT</em> begin with <code class="docutils literal
 </div>
 </li>
 <li><p>Modify the Docker configuration file.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sed -E -e <span class="s1">&#39;s/(securing-ai\/.*):latest/\1:dev/g&#39;</span> -i .backup docker-compose.yml
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sed -E -e <span class="s1">&#39;s/(dioptra\/.*):latest/\1:dev/g&#39;</span> -i .backup docker-compose.yml
 </pre></div>
 </div>
 <p><strong>NOTE</strong>: To revert the changes made to the configuration file use the command:</p>
@@ -621,7 +621,7 @@ If the desired branch does <em>NOT</em> begin with <code class="docutils literal
 </pre></div>
 </div>
 </li>
-<li><p>Navigate back to the root directory of the to the root directory of the project codebase.</p>
+<li><p>Navigate back to the root directory of the project codebase.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> ../..
 </pre></div>
 </div>
