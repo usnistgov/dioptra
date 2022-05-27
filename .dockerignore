@@ -14,7 +14,7 @@ build
 ci
 coverage
 data
-docs
+docs/build
 examples
 htmlcov
 img
@@ -25,13 +25,11 @@ results
 site
 target
 task-plugins
-tests*
 venv
 venv.bak
 wheels
 
 *.egg-info
-*.m4
 *.md
 *.pyc
 *.pyo
@@ -48,7 +46,6 @@ wheels
 **/.vscode
 **/.vscode-cache
 **/*.egg-info
-**/*.m4
 **/*.md
 **/*.pyc
 **/*.pyo
