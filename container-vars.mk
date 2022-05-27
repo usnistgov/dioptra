@@ -21,151 +21,155 @@
 
 # MLFlow Tracking ---------------------------------------------------------------
 
-CONTAINER_MLFLOW_TRACKING_CONDA_ENV_FILES =\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/environment-mlflow-tracking.yml
 CONTAINER_MLFLOW_TRACKING_INCLUDE_FILES =\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/aws-config\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/bash.bashrc\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/dot-condarc
-CONTAINER_MLFLOW_TRACKING_SCRIPTS =\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/entrypoint-mlflow-tracking.sh\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/fix-permissions.sh\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/init-copy.sh\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/init-git-clone.sh\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/init-set-permissions.sh\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/parse-uri.sh\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/s3-cp.sh\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/s3-mb.sh\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/s3-sync.sh\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/secure-container.sh\
-    $(CONTAINER_MLFLOW_TRACKING_INCLUDE_DIR)/unpack-archive.sh
+    docker/configs/aws-config\
+    docker/configs/bash.bashrc\
+    docker/configs/build.pip.conf\
+    docker/configs/dot-condarc\
+    docker/conda-env/environment-mlflow-tracking.yml\
+    docker/shellscripts/conda-env.m4\
+    docker/shellscripts/entrypoint-mlflow-tracking.m4\
+    docker/shellscripts/fix-permissions.m4\
+    docker/shellscripts/init-copy.m4\
+    docker/shellscripts/init-git-clone.m4\
+    docker/shellscripts/init-set-permissions.m4\
+    docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/s3-cp.m4\
+    docker/shellscripts/s3-mb.m4\
+    docker/shellscripts/s3-sync.m4\
+    docker/shellscripts/secure-container.m4\
+    docker/shellscripts/unpack-archive.m4
 
 # Nginx -------------------------------------------------------------------------
 
-CONTAINER_NGINX_CONDA_ENV_FILES =
 CONTAINER_NGINX_INCLUDE_FILES =\
-    $(CONTAINER_NGINX_INCLUDE_DIR)/nginx.conf
-CONTAINER_NGINX_SCRIPTS =\
-    $(CONTAINER_NGINX_INCLUDE_DIR)/entrypoint-nginx.sh\
-    $(CONTAINER_NGINX_INCLUDE_DIR)/init-copy.sh\
-    $(CONTAINER_NGINX_INCLUDE_DIR)/init-git-clone.sh\
-    $(CONTAINER_NGINX_INCLUDE_DIR)/init-set-permissions.sh\
-    $(CONTAINER_NGINX_INCLUDE_DIR)/parse-uri.sh\
-    $(CONTAINER_NGINX_INCLUDE_DIR)/secure-container.sh
+    docker/configs/nginx.conf\
+    docker/configs/nginx.default.conf\
+    docker/shellscripts/entrypoint-nginx.m4\
+    docker/shellscripts/init-copy.m4\
+    docker/shellscripts/init-git-clone.m4\
+    docker/shellscripts/init-set-permissions.m4\
+    docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/secure-container.m4
 
 # PyTorch (CPU) -----------------------------------------------------------------
 
-CONTAINER_PYTORCH_CPU_CONDA_ENV_FILES =\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/environment-worker.yml
 CONTAINER_PYTORCH_CPU_INCLUDE_FILES =\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/aws-config\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/bash.bashrc\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/dot-condarc\
-    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
-CONTAINER_PYTORCH_CPU_SCRIPTS =\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/entrypoint-worker.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/fix-permissions.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/init-copy.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/init-git-clone.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/init-set-permissions.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/parse-uri.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/run-mlflow-job.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/s3-cp.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/s3-mb.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/s3-sync.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/secure-container.sh\
-    $(CONTAINER_PYTORCH_CPU_INCLUDE_DIR)/unpack-archive.sh
+    docker/conda-env/environment-pytorch-cpu.yml\
+    docker/configs/aws-config\
+    docker/configs/bash.bashrc\
+    docker/configs/build.pip.conf\
+    docker/configs/dot-condarc\
+    docker/shellscripts/conda-env.m4\
+    docker/shellscripts/entrypoint-worker.m4\
+    docker/shellscripts/fix-permissions.m4\
+    docker/shellscripts/init-copy.m4\
+    docker/shellscripts/init-git-clone.m4\
+    docker/shellscripts/init-set-permissions.m4\
+    docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/run-mlflow-job.m4\
+    docker/shellscripts/s3-cp.m4\
+    docker/shellscripts/s3-mb.m4\
+    docker/shellscripts/s3-sync.m4\
+    docker/shellscripts/secure-container.m4\
+    docker/shellscripts/unpack-archive.m4\
+    $(CODE_PACKAGING_FILES)\
+    $(CODE_SRC_FILES)
 
 # PyTorch (GPU) -----------------------------------------------------------------
 
-CONTAINER_PYTORCH_GPU_CONDA_ENV_FILES =\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/environment-worker.yml
 CONTAINER_PYTORCH_GPU_INCLUDE_FILES =\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/aws-config\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/bash.bashrc\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/dot-condarc\
-    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
-CONTAINER_PYTORCH_GPU_SCRIPTS =\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/entrypoint-worker.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/fix-permissions.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/init-copy.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/init-git-clone.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/init-set-permissions.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/parse-uri.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/run-mlflow-job.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/s3-cp.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/s3-mb.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/s3-sync.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/secure-container.sh\
-    $(CONTAINER_PYTORCH_GPU_INCLUDE_DIR)/unpack-archive.sh
+    docker/conda-env/environment-pytorch-gpu.yml\
+    docker/configs/aws-config\
+    docker/configs/bash.bashrc\
+    docker/configs/build.pip.conf\
+    docker/configs/dot-condarc\
+    docker/shellscripts/conda-env.m4\
+    docker/shellscripts/entrypoint-worker.m4\
+    docker/shellscripts/fix-permissions.m4\
+    docker/shellscripts/init-copy.m4\
+    docker/shellscripts/init-git-clone.m4\
+    docker/shellscripts/init-set-permissions.m4\
+    docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/run-mlflow-job.m4\
+    docker/shellscripts/s3-cp.m4\
+    docker/shellscripts/s3-mb.m4\
+    docker/shellscripts/s3-sync.m4\
+    docker/shellscripts/secure-container.m4\
+    docker/shellscripts/unpack-archive.m4\
+    $(CODE_PACKAGING_FILES)\
+    $(CODE_SRC_FILES)
 
 # restapi -----------------------------------------------------------------------
 
-CONTAINER_RESTAPI_CONDA_ENV_FILES =\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/environment-restapi.yml
 CONTAINER_RESTAPI_INCLUDE_FILES =\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/aws-config\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/bash.bashrc\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/dot-condarc\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/gunicorn.conf.py\
-    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl\
+    docker/conda-env/environment-restapi.yml\
+    docker/configs/aws-config\
+    docker/configs/bash.bashrc\
+    docker/configs/build.pip.conf\
+    docker/configs/dot-condarc\
+    docker/configs/gunicorn.restapi.conf.py\
+    docker/shellscripts/conda-env.m4\
+    docker/shellscripts/entrypoint-restapi.m4\
+    docker/shellscripts/fix-permissions.m4\
+    docker/shellscripts/init-copy.m4\
+    docker/shellscripts/init-git-clone.m4\
+    docker/shellscripts/init-set-permissions.m4\
+    docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/s3-cp.m4\
+    docker/shellscripts/s3-mb.m4\
+    docker/shellscripts/s3-sync.m4\
+    docker/shellscripts/secure-container.m4\
+    docker/shellscripts/unpack-archive.m4\
+    wsgi.py\
     $(CODE_DB_MIGRATIONS_FILES)\
-    wsgi.py
-CONTAINER_RESTAPI_SCRIPTS =\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/entrypoint-restapi.sh\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/fix-permissions.sh\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/init-copy.sh\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/init-git-clone.sh\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/init-set-permissions.sh\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/parse-uri.sh\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/s3-cp.sh\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/s3-mb.sh\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/s3-sync.sh\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/secure-container.sh\
-    $(CONTAINER_RESTAPI_INCLUDE_DIR)/unpack-archive.sh
+    $(CODE_PACKAGING_FILES)\
+    $(CODE_SRC_FILES)
 
 # Tensorflow v2 (CPU) -----------------------------------------------------------
 
-CONTAINER_TENSORFLOW2_CPU_CONDA_ENV_FILES =\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/environment-worker.yml
 CONTAINER_TENSORFLOW2_CPU_INCLUDE_FILES =\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/aws-config\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/bash.bashrc\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/dot-condarc\
-    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
-CONTAINER_TENSORFLOW2_CPU_SCRIPTS =\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/entrypoint-worker.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/fix-permissions.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/init-copy.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/init-git-clone.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/init-set-permissions.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/parse-uri.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/run-mlflow-job.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/s3-cp.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/s3-mb.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/s3-sync.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/secure-container.sh\
-    $(CONTAINER_TENSORFLOW2_CPU_INCLUDE_DIR)/unpack-archive.sh
+    docker/conda-env/environment-tensorflow2-cpu.yml\
+    docker/configs/aws-config\
+    docker/configs/bash.bashrc\
+    docker/configs/build.pip.conf\
+    docker/configs/dot-condarc\
+    docker/shellscripts/conda-env.m4\
+    docker/shellscripts/entrypoint-worker.m4\
+    docker/shellscripts/fix-permissions.m4\
+    docker/shellscripts/init-copy.m4\
+    docker/shellscripts/init-git-clone.m4\
+    docker/shellscripts/init-set-permissions.m4\
+    docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/run-mlflow-job.m4\
+    docker/shellscripts/s3-cp.m4\
+    docker/shellscripts/s3-mb.m4\
+    docker/shellscripts/s3-sync.m4\
+    docker/shellscripts/secure-container.m4\
+    docker/shellscripts/unpack-archive.m4\
+    $(CODE_PACKAGING_FILES)\
+    $(CODE_SRC_FILES)
 
 # Tensorflow v2 (GPU) -----------------------------------------------------------
 
-CONTAINER_TENSORFLOW2_GPU_CONDA_ENV_FILES =\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/environment-worker.yml
 CONTAINER_TENSORFLOW2_GPU_INCLUDE_FILES =\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/aws-config\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/bash.bashrc\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/dot-condarc\
-    $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
-CONTAINER_TENSORFLOW2_GPU_SCRIPTS =\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/entrypoint-worker.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/fix-permissions.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/init-copy.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/init-git-clone.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/init-set-permissions.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/parse-uri.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/run-mlflow-job.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/s3-cp.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/s3-mb.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/s3-sync.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/secure-container.sh\
-    $(CONTAINER_TENSORFLOW2_GPU_INCLUDE_DIR)/unpack-archive.sh
+    docker/conda-env/environment-tensorflow2-gpu.yml\
+    docker/configs/aws-config\
+    docker/configs/bash.bashrc\
+    docker/configs/build.pip.conf\
+    docker/configs/dot-condarc\
+    docker/shellscripts/conda-env.m4\
+    docker/shellscripts/entrypoint-worker.m4\
+    docker/shellscripts/fix-permissions.m4\
+    docker/shellscripts/init-copy.m4\
+    docker/shellscripts/init-git-clone.m4\
+    docker/shellscripts/init-set-permissions.m4\
+    docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/run-mlflow-job.m4\
+    docker/shellscripts/s3-cp.m4\
+    docker/shellscripts/s3-mb.m4\
+    docker/shellscripts/s3-sync.m4\
+    docker/shellscripts/secure-container.m4\
+    docker/shellscripts/unpack-archive.m4\
+    $(CODE_PACKAGING_FILES)\
+    $(CODE_SRC_FILES)
