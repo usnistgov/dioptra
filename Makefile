@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-.PHONY: beautify build-all build-mlflow-tracking build-nginx build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-tensorflow build-tensorflow-cpu build-tensorflow-gpu clean code-check code-pkg conda-env docker-deps docs help hooks pull-latest tag-latest tests tests-integration tests-unit tox
+.PHONY: beautify build-all build-mlflow-tracking build-nginx build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-tensorflow build-tensorflow-cpu build-tensorflow-gpu clean code-check code-pkg conda-env docs help hooks tag-latest tests tests-integration tests-unit tox
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -O extglob -o pipefail -c
@@ -167,14 +167,14 @@ CONDA_ENV_FILE = environment.yml
 CONDA_ENV_NAME = $(PROJECT_NAME)
 CONDA_ENV_PIP =
 
+USE_BUILDKIT ?= true
+USE_INLINE_CACHE ?= true
+BUILD_TARGET ?= image-pinned-deps
 NO_CACHE ?=
+DOCKER_BUILDKIT_VALUE = $(if $(USE_BUILDKIT),1,)
+DOCKER_BUILDKIT_INLINE_CACHE_VALUE = $(if $(USE_INLINE_CACHE),1,)
+DOCKER_BUILD_TARGET = $(BUILD_TARGET)
 DOCKER_NO_CACHE = $(if $(NO_CACHE),--no-cache,)
-
-DOCKER_HUB_IMAGES_LATEST =\
-    matejak/argbash:latest\
-    minio/minio:latest\
-    postgres:latest\
-    redis:latest
 
 BEAUTIFY_SENTINEL = $(PROJECT_BUILD_DIR)/.beautify.sentinel
 CODE_PACKAGING_SENTINEL = $(PROJECT_BUILD_DIR)/.code-packaging.sentinel
@@ -185,8 +185,6 @@ CONDA_CREATE_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-create.sentinel
 CONDA_UPDATE_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-update.sentinel
 CONDA_ENV_DEV_INSTALL_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-env-dev-install.sentinel
 CONDA_ENV_PIP_INSTALL_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-env-pip-install.sentinel
-CONTAINER_CONDA_ENV_FILES =
-CONTAINER_SCRIPTS =
 DOCS_SENTINEL = $(PROJECT_BUILD_DIR)/.docs.sentinel
 LINTING_SENTINEL = $(PROJECT_BUILD_DIR)/.linting.sentinel
 PRE_COMMIT_HOOKS_SENTINEL = $(PROJECT_BUILD_DIR)/.pre-commit-hooks.sentinel
@@ -246,14 +244,6 @@ define package_code
 $(call run_in_conda_env,$(CONDA_ENV_NAME),$(PY) -m build -sw,)
 endef
 
-define pull_docker_hub_images
-@$(foreach image,$(1),\
-    echo "Pulling image $(image) from Docker Hub";\
-    echo "======================================";\
-    $(DOCKER) pull $(image) || exit 1;\
-    echo "";)
-endef
-
 define pre_commit_cmd
 $(call run_in_conda_env,$(CONDA_ENV_NAME),$(PRE_COMMIT) $(1),)
 endef
@@ -273,20 +263,30 @@ endef
 
 define run_build_script
 CORES=$(CORES)\
+BASE_IMAGE=${CONTAINER_BASE_IMAGE}\
 IMAGE_TAG=$(strip $(2))\
 CODE_PKG_VERSION=$(CODE_PKG_VERSION)\
 PROJECT_PREFIX=$(PROJECT_PREFIX)\
 PROJECT_COMPONENT=$(strip $(1))\
 MINICONDA3_PREFIX=$(CONTAINER_MINICONDA3_PREFIX)\
 MINICONDA_VERSION=$(CONTAINER_MINICONDA_VERSION)\
-PYTORCH_VERSION=$(CONTAINER_PYTORCH_VERSION)\
-PYTORCH_NVIDIA_CUDA_VERSION=$(CONTAINER_PYTORCH_NVIDIA_CUDA_VERSION)\
+IBM_ART_VERSION=$(CONTAINER_IBM_ART_VERSION)\
+MLFLOW_VERSION=$(CONTAINER_MLFLOW_VERSION)\
+PREFECT_VERSION=$(CONTAINER_PREFECT_VERSION)\
+PYTHON_VERSION=$(CONTAINER_PYTHON_VERSION)\
 PYTORCH_CUDA_VERSION=$(CONTAINER_PYTORCH_CUDA_VERSION)\
+PYTORCH_MAJOR_MINOR_VERSION=$(CONTAINER_PYTORCH_MAJOR_MINOR_VERSION)\
 PYTORCH_TORCHAUDIO_VERSION=$(CONTAINER_PYTORCH_TORCHAUDIO_VERSION)\
 PYTORCH_TORCHVISION_VERSION=$(CONTAINER_PYTORCH_TORCHVISION_VERSION)\
+PYTORCH_VERSION=$(CONTAINER_PYTORCH_VERSION)\
+SKLEARN_VERSION=$(CONTAINER_SKLEARN_VERSION)\
 SPHINX_VERSION=$(CONTAINER_SPHINX_VERSION)\
 TENSORFLOW_VERSION=$(CONTAINER_TENSORFLOW_VERSION)\
+PYTORCH_NVIDIA_CUDA_VERSION=$(CONTAINER_PYTORCH_NVIDIA_CUDA_VERSION)\
 TENSORFLOW_NVIDIA_CUDA_VERSION=$(CONTAINER_TENSORFLOW_NVIDIA_CUDA_VERSION)\
+DOCKER_BUILDKIT_VALUE=$(DOCKER_BUILDKIT_VALUE)\
+DOCKER_BUILDKIT_INLINE_CACHE_VALUE=$(DOCKER_BUILDKIT_INLINE_CACHE_VALUE)\
+DOCKER_BUILD_TARGET=$(DOCKER_BUILD_TARGET)\
 DOCKER_NO_CACHE=$(DOCKER_NO_CACHE)\
 docker/build.sh
 endef
@@ -327,18 +327,6 @@ define run_tox
 $(call run_in_conda_env,$(1),PIP_CACHE_DIR=$(CODE_PIP_CACHE_DIR) $(TOX) $(2),)
 endef
 
-define run_yq
-$(call run_docker,\
-    run\
-    -t\
-    --rm\
-    -v $(PROJECT_DIR):/workdir\
-    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
-    mikefarah/yq\
-    $(strip $(1))\
-    $(strip $(2)))
-endef
-
 define save_sentinel_file
 @touch $(1)
 endef
@@ -371,51 +359,20 @@ $(strip $(1)): $(strip $(2)) | $$(PROJECT_BUILD_DIR)
 	$(call save_sentinel_file,$$@)
 endef
 
-define generate_docker_image_shellscripts_recipe
-$(strip $(1)):
-
-$(strip $(2))/%.sh: $$(PROJECT_DOCKER_SHELLSCRIPTS_DIR)/%.m4
-	$(call run_argbash,\
-		$$(PROJECT_DIR)/$$(PROJECT_DOCKER_SHELLSCRIPTS_DIR),\
-		$$(PROJECT_DIR)/$(strip $(2)),\
-		-o /output/$$(shell basename '$$@') /work/$$(shell basename '$$<'))
-endef
-
-define generate_docker_image_conda_env_recipe
-$(strip $(1)):
-
-$(strip $(2))/%.yml: $$(PROJECT_DOCKER_CONDA_ENV_DIR)/%.yml $$(VERSION_VARS_FILE)
-	( $(call run_yq,\
-		--no-colors\
-		--prettyPrint\
-		eval\
-		'(.dependencies[] | select(. == "python")) = "python=$$(CONTAINER_PYTHON_VERSION)" | \
-			(.dependencies[] | select(. == "scikit-learn")) = "scikit-learn=$$(CONTAINER_SKLEARN_VERSION)" | \
-			(.dependencies[].pip[] | select(. == "adversarial-robustness-toolbox")) = "adversarial-robustness-toolbox==$$(CONTAINER_IBM_ART_VERSION)" | \
-			(.dependencies[].pip[] | select(. == "mlflow")) = "mlflow==$$(CONTAINER_MLFLOW_VERSION)" | \
-			(.dependencies[].pip[] | select(. == "prefect")) = "prefect==$$(CONTAINER_PREFECT_VERSION)"', \
-		/workdir/$$<) ) >$$@
-endef
-
 define define_docker_image_sentinel_vars
 CONTAINER_$(strip $(1))_COMPONENT_NAME = $(strip $(3))
 CONTAINER_$(strip $(1))_IMAGE = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):$$($(strip $(2)))
 CONTAINER_$(strip $(1))_IMAGE_LATEST = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):latest
-CONTAINER_$(strip $(1))_DIR = $$(PROJECT_DOCKER_DIR)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)
-CONTAINER_$(strip $(1))_INCLUDE_DIR = $$(CONTAINER_$(strip $(1))_DIR)/include/etc/$$(PROJECT_PREFIX)/docker
-CONTAINER_$(strip $(1))_DOCKERFILE = $$(CONTAINER_$(strip $(1))_DIR)/Dockerfile
+CONTAINER_$(strip $(1))_DIR =
+CONTAINER_$(strip $(1))_INCLUDE_DIR =
+CONTAINER_$(strip $(1))_DOCKERFILE = $$(PROJECT_DOCKER_DIR)/Dockerfile.$(strip $(3))
 CONTAINER_$(strip $(1))_BUILD_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-$$($(strip $(2))).sentinel
 CONTAINER_$(strip $(1))_BUILD_LATEST_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-latest.sentinel
-CONTAINER_CONDA_ENV_FILES += $$(CONTAINER_$(1)_CONDA_ENV_FILES)
-CONTAINER_SCRIPTS += $$(CONTAINER_$(strip $(1))_SCRIPTS)
-DOCKER_HUB_IMAGES_LATEST += $(if $(strip $(4)),$$(CONTAINER_$(strip $(1))_IMAGE_LATEST),)
 endef
 
 define generate_docker_image_pipeline
 $(eval $(call build_docker_image_recipe,$(1),$(strip $(strip $(2) $(7)) $(10)),$(5),$(6)))
 $(eval $(call set_latest_tag_docker_image_recipe,$(9),$(1),$(3),$(4)))
-$(eval $(call generate_docker_image_shellscripts_recipe,$(7),$(8)))
-$(eval $(call generate_docker_image_conda_env_recipe,$(10),$(8)))
 endef
 
 define generate_full_docker_image_vars
@@ -423,7 +380,7 @@ $(eval $(call define_docker_image_sentinel_vars,$(1),$(2),$(3),$(4)))
 endef
 
 define generate_full_docker_image_recipe
-$(eval $(call generate_docker_image_pipeline,\
+$(call generate_docker_image_pipeline,\
 	$$(CONTAINER_$(1)_BUILD_SENTINEL),\
 	$$($(2)) $$(CONTAINER_$(1)_DOCKERFILE) $$(CONTAINER_$(1)_INCLUDE_FILES),\
 	$$(CONTAINER_$(1)_IMAGE),\
@@ -433,7 +390,7 @@ $(eval $(call generate_docker_image_pipeline,\
 	$$(CONTAINER_$(1)_SCRIPTS),\
 	$$(CONTAINER_$(1)_INCLUDE_DIR),\
 	$$(CONTAINER_$(1)_BUILD_LATEST_SENTINEL),\
-	$$(CONTAINER_$(1)_CONDA_ENV_FILES)))
+	$$(CONTAINER_$(1)_CONDA_ENV_FILES))
 endef
 
 #################################################################################
@@ -497,17 +454,11 @@ code-pkg: $(CODE_PACKAGING_SENTINEL)
 ## Update conda-based virtual environment
 conda-env: $(CONDA_CREATE_SENTINEL) $(CONDA_UPDATE_SENTINEL) $(CONDA_ENV_PIP_INSTALL_SENTINEL) $(CONDA_ENV_DEV_INSTALL_SENTINEL)
 
-## Generate configuration and script files for docker images
-docker-deps: $(CONTAINER_CONDA_ENV_FILES) $(CONTAINER_SCRIPTS)
-
 ## Build project documentation
 docs: $(DOCS_SENTINEL)
 
 ## Install pre-commit hooks
 hooks: $(PRE_COMMIT_HOOKS_SENTINEL)
-
-## Pull latest Docker images from Docker Hub
-pull-latest: ; $(call pull_docker_hub_images,$(DOCKER_HUB_IMAGES_LATEST))
 
 ## Manually set "latest" tag on all Dioptra images
 tag-latest: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL) $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL) $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW21_CPU_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW21_GPU_BUILD_SENTINEL)
@@ -627,11 +578,11 @@ $(TOX_INTEGRATION_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_INTEGRATION_TESTS_FILES) 
 
 $(call generate_full_docker_image_recipe,MLFLOW_TRACKING,,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,NGINX,,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,RESTAPI,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,PYTORCH_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,PYTORCH_GPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,TENSORFLOW2_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,TENSORFLOW2_GPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,RESTAPI,,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,PYTORCH_CPU,,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,PYTORCH_GPU,,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,TENSORFLOW2_CPU,,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,TENSORFLOW2_GPU,,CONTAINER_IMAGE_TAG)
 
 #################################################################################
 # Self Documenting Commands                                                     #
