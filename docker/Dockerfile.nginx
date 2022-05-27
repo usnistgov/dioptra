@@ -1,0 +1,210 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+#
+# Part of this script is adapted from the work
+# https://github.com/jupyter/docker-stacks/blob/6bf5922f5a511b4ff28f23783a716df75b8b8d4b/base-notebook/Dockerfile.
+# See copyright below.
+#
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+#
+# Neither the name of the Jupyter Development Team nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+######################################################################################################
+# Base images
+######################################################################################################
+
+ARG BASE_IMAGE=public-base
+
+# -- Base image (public-facing) ----------------------------------------------------------------------
+
+FROM ubuntu:focal AS public-base
+
+USER root
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV LANG C.UTF-8
+ENV LANGUAGE C.UTF-8
+ENV LC_ALL C.UTF-8
+
+ARG DIOPTRA_USER=dioptra
+ARG DIOPTRA_UID=39000
+ARG DIOPTRA_GID=100
+
+RUN apt-get update && \
+    echo "===> Upgrade existing packages...." && \
+    apt-get -y upgrade && \
+    echo "===> Installing ca-certificates curl nginx wget...." && \
+    apt-get install -yq --no-install-recommends \
+    ca-certificates \
+    curl \
+    nginx \
+    wget && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    echo "===> Create non-root user...." && \
+    sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
+    useradd -u ${DIOPTRA_UID} -N -m -s /bin/bash -c "Dioptra user" ${DIOPTRA_USER} && \
+    mkdir -p /etc/nginx/conf.d && \
+    mkdir -p /var/cache/nginx && \
+    mkdir -p /var/lib/nginx && \
+    mkdir -p /var/log/nginx && \
+    chmod 0755 /etc/nginx/conf.d && \
+    chmod 0755 /var/cache/nginx && \
+    chmod 0755 /var/lib/nginx && \
+    chmod 0755 /var/log/nginx && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/nginx/conf.d && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/cache/nginx && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/lib/nginx && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/log/nginx && \
+    chmod g+w /etc/passwd
+
+# -- Base image (includes corporate certs) -----------------------------------------------------------
+
+FROM public-base AS mitre-base
+
+# The MITRE certs are necessary to install in order for wget to work
+ADD http://pki.mitre.org/MITRE%20BA%20ROOT.crt /usr/local/share/ca-certificates/MITRE-BA-ROOT.crt
+ADD http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt /usr/local/share/ca-certificates/MITRE-BA-NPE-CA-3-1.crt
+ADD http://pki.mitre.org/MITRE-chain.txt /usr/local/share/ca-certificates/MITRE-chain.pem
+ADD http://pki.mitre.org/ZScaler_Root.crt /usr/local/share/ca-certificates/ZScaler_Root.crt
+
+RUN cat /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/MITRE-chain.pem /usr/local/share/ca-certificates/ZScaler_Root.crt >/etc/ssl/certs/ca-certificates-plus-mitre.pem && \
+    /usr/sbin/update-ca-certificates
+
+ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+
+# -- Base image (includes argbash tool) --------------------------------------------------------------
+
+FROM matejak/argbash:latest AS argbash-base
+
+RUN mkdir -p /shellscripts
+
+######################################################################################################
+# Build
+######################################################################################################
+
+# -- Build: render bash script templates -------------------------------------------------------------
+
+FROM argbash-base AS build-bash-scripts
+
+COPY --chown=root:root --chmod=0755 docker/shellscripts/conda-env.m4 /templates/conda-env.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-mlflow-tracking.m4 /templates/entrypoint-mlflow-tracking.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-nginx.m4 /templates/entrypoint-nginx.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-restapi.m4 /templates/entrypoint-restapi.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-worker.m4 /templates/entrypoint-worker.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/fix-permissions.m4 /templates/fix-permissions.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/init-copy.m4 /templates/init-copy.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/init-git-clone.m4 /templates/init-git-clone.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/init-set-permissions.m4 /templates/init-set-permissions.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/parse-uri.m4 /templates/parse-uri.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/render-conda-env.m4 /templates/render-conda-env.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/run-mlflow-job.m4 /templates/run-mlflow-job.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-cp.m4 /templates/s3-cp.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-mb.m4 /templates/s3-mb.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-sync.m4 /templates/s3-sync.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/secure-container.m4 /templates/secure-container.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/unpack-archive.m4 /templates/unpack-archive.m4
+
+RUN argbash /templates/conda-env.m4 -o /shellscripts/conda-env.sh && \
+    argbash /templates/entrypoint-mlflow-tracking.m4 -o /shellscripts/entrypoint-mlflow-tracking.sh && \
+    argbash /templates/entrypoint-nginx.m4 -o /shellscripts/entrypoint-nginx.sh && \
+    argbash /templates/entrypoint-restapi.m4 -o /shellscripts/entrypoint-restapi.sh && \
+    argbash /templates/entrypoint-worker.m4 -o /shellscripts/entrypoint-worker.sh && \
+    argbash /templates/fix-permissions.m4 -o /shellscripts/fix-permissions.sh && \
+    argbash /templates/init-copy.m4 -o /shellscripts/init-copy.sh && \
+    argbash /templates/init-git-clone.m4 -o /shellscripts/init-git-clone.sh && \
+    argbash /templates/init-set-permissions.m4 -o /shellscripts/init-set-permissions.sh && \
+    argbash /templates/parse-uri.m4 -o /shellscripts/parse-uri.sh && \
+    argbash /templates/render-conda-env.m4 -o /shellscripts/render-conda-env.sh && \
+    argbash /templates/run-mlflow-job.m4 -o /shellscripts/run-mlflow-job.sh && \
+    argbash /templates/s3-cp.m4 -o /shellscripts/s3-cp.sh && \
+    argbash /templates/s3-mb.m4 -o /shellscripts/s3-mb.sh && \
+    argbash /templates/s3-sync.m4 -o /shellscripts/s3-sync.sh && \
+    argbash /templates/secure-container.m4 -o /shellscripts/secure-container.sh && \
+    argbash /templates/unpack-archive.m4 -o /shellscripts/unpack-archive.sh
+
+# -- Build: copy files -------------------------------------------------------------------------------
+
+FROM ${BASE_IMAGE} AS copy-files
+
+COPY --chown=root:root --chmod=0644 docker/configs/nginx.conf /files/nginx.conf
+COPY --chown=root:root --chmod=0644 docker/configs/nginx.default.conf /files/nginx.default.conf
+
+######################################################################################################
+# Target images
+######################################################################################################
+
+# -- Target image: add scripts, add configs ----------------------------------------------------------
+
+FROM ${BASE_IMAGE} AS image-configs-scripts
+
+ARG DIOPTRA_UID=39000
+ARG DIOPTRA_GID=100
+ARG PROJECT_COMPONENT=nginx
+
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/entrypoint-${PROJECT_COMPONENT}.sh /usr/local/bin/entrypoint.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/init-copy.sh /usr/local/bin/init-copy.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/init-git-clone.sh /usr/local/bin/init-git-clone.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/init-set-permissions.sh /usr/local/bin/init-set-permissions.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/secure-container.sh /usr/local/bin/secure-container.sh
+COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/nginx.conf /etc/nginx/nginx.conf
+COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/nginx.default.conf /etc/nginx/conf.d/default.conf
+
+ARG DIOPTRA_USER=dioptra
+
+ENV DIOPTRA_USER ${DIOPTRA_USER}
+ENV DIOPTRA_UID ${DIOPTRA_UID}
+ENV DIOPTRA_GID ${DIOPTRA_GID}
+
+USER ${DIOPTRA_UID}
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# -- Target image: pinned deps -----------------------------------------------------------------------
+
+FROM image-configs-scripts AS image-pinned-deps
+
+# -- Target image: latest deps -----------------------------------------------------------------------
+
+FROM image-configs-scripts AS image-latest-deps
