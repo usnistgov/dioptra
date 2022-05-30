@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-name: Docker images
+name: Docker images (pinned dependencies)
 
 on:
   schedule:
@@ -31,49 +31,11 @@ on:
       - "dev"
 
 env:
-  CODE_PKG_VERSION: 0.0.0
   PROJECT_PREFIX: dioptra
-  MINICONDA3_PREFIX: Miniconda3-py39_
-  MINICONDA_VERSION: 4.11.0
-  PYTORCH_VERSION: 1.10.2
-  PYTORCH_NVIDIA_CUDA_VERSION: 11.3.1-cudnn8-runtime-ubuntu20.04
-  PYTORCH_CUDA_VERSION: cu113
-  PYTORCH_TORCHAUDIO_VERSION: 0.10.2
-  PYTORCH_TORCHVISION_VERSION: 0.11.3
-  TENSORFLOW_VERSION: 2.8.0
-  TENSORFLOW_NVIDIA_CUDA_VERSION: 11.5.1-cudnn8-runtime-ubuntu20.04
 
 jobs:
-  package-code:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: setup python 3.9
-        uses: actions/setup-python@v3.1.2
-        with:
-          python-version: "3.9"
-
-      - name: upgrade pip
-        run: |
-          # install pip=>20.1 to use "pip cache dir"
-          python3 -m pip install --upgrade pip
-
-      - name: install dependencies
-        run: python3 -m pip install build
-
-      - name: package the source code
-        run: python3 -m build -sw
-
-      - name: archive the code package
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-code-package
-          path: dist
-
   build-docker-dioptra-apps:
     runs-on: ubuntu-20.04
-    needs: package-code
     strategy:
       matrix:
         dioptra-app:
@@ -87,6 +49,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/remove-extra-software
+
+      - name: set version variables
+        uses: ./.github/actions/setenv
+        with:
+          env-path: ./.github/env/version-vars.env
 
       - name: set docker metadata
         id: meta
@@ -95,7 +63,8 @@ jobs:
           images: |
             ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}
           tags: |
-            type=schedule
+            type=schedule,pattern=nightly
+            type=schedule,prefix=nightly-,pattern={{date 'YYYYMMDD'}}
             type=ref,event=branch
             type=ref,event=pr
             type=ref,event=tag
@@ -104,130 +73,65 @@ jobs:
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
             type=sha,format=long,prefix=,suffix=
           labels: |
-            maintainer=NCCoE Artificial Intelligence Team <ai-nccoe@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>
+            maintainer=NCCoE Artificial Intelligence Team <dioptra@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>
             org.opencontainers.image.title=${{ matrix.dioptra-app }}
             org.opencontainers.image.description=Provides the ${{ matrix.dioptra-app }} microservice within the Dioptra architecture.
             org.opencontainers.image.vendor=National Institute of Standards and Technology
             org.opencontainers.image.licenses=NIST-PD OR CC-BY-4.0
             org.opencontainers.image.documentation=https://pages.nist.gov/dioptra
-            org.opencontainers.image.authors=NCCoE Artificial Intelligence Team <ai-nccoe@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Cory Miniter <jminiter@mitre.org>, Howard Huang <hhuang@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Paul Rowe <prowe@mitre.org>
+            org.opencontainers.image.authors=NCCoE Artificial Intelligence Team <dioptra@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Cory Miniter <jminiter@mitre.org>, Howard Huang <hhuang@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Paul Rowe <prowe@mitre.org>
 
       - name: set up docker qemu
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       - name: set up docker buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: cache docker layers
-        uses: actions/cache@v3.0.2
-        with:
-          path: /tmp/.buildx-cache-${{ matrix.dioptra-app }}
-          key: ${{ runner.os }}-buildx-${{ matrix.dioptra-app }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ matrix.dioptra-app }}-
-
-      - name: download packaged source code
-        uses: actions/download-artifact@v3
-        with:
-          name: build-code-package
-          path: dist
+        uses: docker/setup-buildx-action@v2
 
       - name: build and push
-        uses: docker/build-push-action@v2
-        if: ${{ github.event_name != 'schedule' }}
+        uses: docker/build-push-action@v3
         with:
           context: .
+          target: image-pinned-deps
           push: false
-          file: docker/${{ matrix.dioptra-app }}/Dockerfile
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache-${{ matrix.dioptra-app }}
-          cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.dioptra-app }}-new
-          build-args: |
-            CODE_PKG_VERSION=${{ env.CODE_PKG_VERSION }}
-            MINICONDA3_PREFIX=${{ env.MINICONDA3_PREFIX }}
-            MINICONDA_VERSION=${{ env.MINICONDA_VERSION }}
-            PROJECT_COMPONENT=${{ matrix.dioptra-app }}
-            PROJECT_PREFIX=${{ env.PROJECT_PREFIX }}
-            PYTORCH_VERSION=${{ env.PYTORCH_VERSION }}
-            PYTORCH_NVIDIA_CUDA_VERSION=${{ env.PYTORCH_NVIDIA_CUDA_VERSION }}
-            PYTORCH_CUDA_VERSION=${{ env.PYTORCH_CUDA_VERSION }}
-            PYTORCH_TORCHAUDIO_VERSION=${{ env.PYTORCH_TORCHAUDIO_VERSION }}
-            PYTORCH_TORCHVISION_VERSION=${{ env.PYTORCH_TORCHVISION_VERSION }}
-            TENSORFLOW_VERSION=${{ env.TENSORFLOW_VERSION }}
-            TENSORFLOW_NVIDIA_CUDA_VERSION=${{ env.TENSORFLOW_NVIDIA_CUDA_VERSION }}
-
-      - name: build and push (no cache)
-        uses: docker/build-push-action@v2
-        if: ${{ github.event_name == 'schedule' }}
-        with:
-          context: .
-          push: false
-          file: docker/${{ matrix.dioptra-app }}/Dockerfile
+          load: true
+          file: docker/Dockerfile.${{ matrix.dioptra-app }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           no-cache: true
           pull: true
-          cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.dioptra-app }}-new
           build-args: |
+            BASE_IMAGE=${{ env.BASE_IMAGE }}
             CODE_PKG_VERSION=${{ env.CODE_PKG_VERSION }}
             MINICONDA3_PREFIX=${{ env.MINICONDA3_PREFIX }}
             MINICONDA_VERSION=${{ env.MINICONDA_VERSION }}
-            PROJECT_COMPONENT=${{ matrix.dioptra-app }}
-            PROJECT_PREFIX=${{ env.PROJECT_PREFIX }}
-            PYTORCH_VERSION=${{ env.PYTORCH_VERSION }}
-            PYTORCH_NVIDIA_CUDA_VERSION=${{ env.PYTORCH_NVIDIA_CUDA_VERSION }}
+            IBM_ART_VERSION=${{ env.IBM_ART_VERSION }}
+            MLFLOW_VERSION=${{ env.MLFLOW_VERSION }}
+            PREFECT_VERSION=${{ env.PREFECT_VERSION }}
+            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
             PYTORCH_CUDA_VERSION=${{ env.PYTORCH_CUDA_VERSION }}
+            PYTORCH_MAJOR_MINOR_VERSION=${{ env.PYTORCH_MAJOR_MINOR_VERSION }}
             PYTORCH_TORCHAUDIO_VERSION=${{ env.PYTORCH_TORCHAUDIO_VERSION }}
             PYTORCH_TORCHVISION_VERSION=${{ env.PYTORCH_TORCHVISION_VERSION }}
-            TENSORFLOW_VERSION=${{ env.TENSORFLOW_VERSION }}
-            TENSORFLOW_NVIDIA_CUDA_VERSION=${{ env.TENSORFLOW_NVIDIA_CUDA_VERSION }}
-
-      # Temp fix
-      # https://github.com/docker/build-push-action/issues/252
-      # https://github.com/moby/buildkit/issues/1896
-      - name: move docker build cache
-        run: |
-          rm -rf /tmp/.buildx-cache-${{ matrix.dioptra-app }}
-          mv /tmp/.buildx-cache-${{ matrix.dioptra-app }}-new /tmp/.buildx-cache-${{ matrix.dioptra-app }}
-
-      - name: build and export images for testing
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: false
-          file: docker/${{ matrix.dioptra-app }}/Dockerfile
-          tags: ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev
-          cache-from: type=local,src=/tmp/.buildx-cache-${{ matrix.dioptra-app }}
-          cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.dioptra-app }}-new
-          outputs: type=docker,dest=/tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
-          build-args: |
-            CODE_PKG_VERSION=${{ env.CODE_PKG_VERSION }}
-            MINICONDA3_PREFIX=${{ env.MINICONDA3_PREFIX }}
-            MINICONDA_VERSION=${{ env.MINICONDA_VERSION }}
-            PROJECT_COMPONENT=${{ matrix.dioptra-app }}
-            PROJECT_PREFIX=${{ env.PROJECT_PREFIX }}
             PYTORCH_VERSION=${{ env.PYTORCH_VERSION }}
-            PYTORCH_NVIDIA_CUDA_VERSION=${{ env.PYTORCH_NVIDIA_CUDA_VERSION }}
-            PYTORCH_CUDA_VERSION=${{ env.PYTORCH_CUDA_VERSION }}
-            PYTORCH_TORCHAUDIO_VERSION=${{ env.PYTORCH_TORCHAUDIO_VERSION }}
-            PYTORCH_TORCHVISION_VERSION=${{ env.PYTORCH_TORCHVISION_VERSION }}
+            SKLEARN_VERSION=${{ env.SKLEARN_VERSION }}
             TENSORFLOW_VERSION=${{ env.TENSORFLOW_VERSION }}
+            PYTORCH_NVIDIA_CUDA_VERSION=${{ env.PYTORCH_NVIDIA_CUDA_VERSION }}
             TENSORFLOW_NVIDIA_CUDA_VERSION=${{ env.TENSORFLOW_NVIDIA_CUDA_VERSION }}
 
-      # Temp fix
-      # https://github.com/docker/build-push-action/issues/252
-      # https://github.com/moby/buildkit/issues/1896
-      - name: move docker build cache
+      - name: create 'dev' tag
         run: |
-          rm -rf /tmp/.buildx-cache-${{ matrix.dioptra-app }}
-          mv /tmp/.buildx-cache-${{ matrix.dioptra-app }}-new /tmp/.buildx-cache-${{ matrix.dioptra-app }}
+          docker tag ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }} ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev
+
+      - name: export dev-tagged image to tar.gz file
+        shell: bash
+        run: |
+          docker save ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev | gzip > /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
 
       - name: archive the testing images
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
-          path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
+          path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
 
   container-test:
     runs-on: ubuntu-20.04
@@ -248,7 +152,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: setup python 3.9
-        uses: actions/setup-python@v3.1.1
+        uses: actions/setup-python@v3.1.2
         with:
           python-version: "3.9"
 
@@ -279,15 +183,15 @@ jobs:
           path: /tmp
 
       - name: set up docker qemu
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       - name: set up docker buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
 
       - name: load the container image
         run: |
-          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
-          rm /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
+          rm /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
 
       - name: run ${{ matrix.tox-env }} test
         run: tox -e containers
@@ -332,11 +236,22 @@ jobs:
       - name: install dependencies
         run: python3 -m pip install tox
 
+      - name: set up docker qemu
+        uses: docker/setup-qemu-action@v2
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: download the nginx testing image
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-nginx-dev-image
           path: /tmp
+
+      - name: load the nginx testing image
+        run: |
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_nginx_dev.tar.gz
+          rm /tmp/${{ env.PROJECT_PREFIX }}_nginx_dev.tar.gz
 
       - name: download the mlflow-tracking testing image
         uses: actions/download-artifact@v3
@@ -344,11 +259,21 @@ jobs:
           name: ${{ env.PROJECT_PREFIX }}-mlflow-tracking-dev-image
           path: /tmp
 
+      - name: load the mlflow-tracking testing image
+        run: |
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar.gz
+          rm /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar.gz
+
       - name: download the restapi testing image
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.PROJECT_PREFIX }}-restapi-dev-image
           path: /tmp
+
+      - name: load the restapi testing image
+        run: |
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar.gz
+          rm /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar.gz
 
       - name: download the tensorflow2-cpu testing image
         uses: actions/download-artifact@v3
@@ -356,22 +281,10 @@ jobs:
           name: ${{ env.PROJECT_PREFIX }}-tensorflow2-cpu-dev-image
           path: /tmp
 
-      - name: set up docker qemu
-        uses: docker/setup-qemu-action@v1
-
-      - name: set up docker buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: load the testing images
+      - name: load the tensorflow2-cpu testing image
         run: |
-          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_nginx_dev.tar
-          rm /tmp/${{ env.PROJECT_PREFIX }}_nginx_dev.tar
-          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar
-          rm /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar
-          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar
-          rm /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar
-          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_tensorflow2-cpu_dev.tar
-          rm /tmp/${{ env.PROJECT_PREFIX }}_tensorflow2-cpu_dev.tar
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_tensorflow2-cpu_dev.tar.gz
+          rm /tmp/${{ env.PROJECT_PREFIX }}_tensorflow2-cpu_dev.tar.gz
 
       - name: cache the mnist dataset download
         if: ${{ matrix.tox-env != 'containers' }}
