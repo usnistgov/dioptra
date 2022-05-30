@@ -399,6 +399,7 @@ vignettes/*.pdf
 
 # track these files, if they exist
 !.github/
+!.github/env
 !.gitlab/
 !.clog.toml
 !.cz-config.js
