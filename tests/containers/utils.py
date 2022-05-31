@@ -39,7 +39,6 @@ DIOPTRA_IMAGES = [
     "tensorflow2-gpu",
 ]
 ENV_DIOPTRA_TEST_CONTAINER = os.getenv("DIOPTRA_TEST_CONTAINER")
-TEST_WORKDIR: str = "/test_workdir"
 
 CONTAINER_FIXTURE_PARAMS = [
     pytest.param(
@@ -67,18 +66,27 @@ class DioptraImages(TypedDict, total=False):
     tensorflow21_cpu: str
 
 
-def start_container(client: DockerClient, image: str, user: str | int | None = None):
+def start_container(
+    client: DockerClient,
+    image: str,
+    user: str | int | None = None,
+    environment: dict[str, str] | list[str] | None = None,
+    entrypoint: str | list | None = "/bin/bash",
+    tmpfs: dict[str, str] | None = None,
+    working_dir: str | None = None
+):
     image_fullname, _ = image.split(":")
     image_name = image_fullname.split("/")[-1]
 
     return client.containers.run(
         image=image,
         hostname=f"test_{image_name}",
-        entrypoint="/bin/bash",
+        entrypoint=entrypoint,
+        environment=environment,
         user=user,
         remove=True,
         tty=True,
         detach=True,
-        tmpfs={TEST_WORKDIR: ""},
-        working_dir=TEST_WORKDIR,
+        tmpfs=tmpfs or {},
+        working_dir=working_dir,
     )

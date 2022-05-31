@@ -23,11 +23,13 @@ from testinfra.host import Host
 
 from ..utils import (
     CONTAINER_FIXTURE_PARAMS,
-    TEST_WORKDIR,
     DioptraImages,
     DockerClient,
     start_container,
 )
+
+
+TEST_WORKDIR: str = "/test_workdir"
 
 
 @pytest.fixture(
@@ -41,6 +43,8 @@ def container(
         client=docker_client,
         image=dioptra_images[request.param.replace("-", "_")],
         user="root:root",
+        tmpfs={TEST_WORKDIR: ""},
+        working_dir=TEST_WORKDIR,
     )
     yield c
     c.stop()
