@@ -207,8 +207,7 @@ def test_get_all(
             list_objects_v2_expected_params6,
         )
         response_task_plugin: List[TaskPlugin] = task_plugin_service.get_all(
-            s3_collections_list=["dioptra_builtins", "dioptra_custom"],
-            bucket="plugins"
+            s3_collections_list=["dioptra_builtins", "dioptra_custom"], bucket="plugins"
         )
         stubber.assert_no_pending_responses()
 

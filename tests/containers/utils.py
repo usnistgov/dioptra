@@ -20,7 +20,7 @@ import os
 
 import pytest
 
-from docker import DockerClient
+from docker import DockerClient  # type: ignore[attr-defined]
 
 try:
     from typing import TypedDict
@@ -73,7 +73,7 @@ def start_container(
     environment: dict[str, str] | list[str] | None = None,
     entrypoint: str | list | None = "/bin/bash",
     tmpfs: dict[str, str] | None = None,
-    working_dir: str | None = None
+    working_dir: str | None = None,
 ):
     image_fullname, _ = image.split(":")
     image_name = image_fullname.split("/")[-1]

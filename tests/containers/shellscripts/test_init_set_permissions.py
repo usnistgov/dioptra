@@ -16,6 +16,8 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+from typing import Iterator, cast
+
 import pytest
 import testinfra
 from docker.models.containers import Container
@@ -28,7 +30,6 @@ from ..utils import (
     start_container,
 )
 
-
 TEST_WORKDIR: str = "/test_workdir"
 
 
@@ -38,10 +39,10 @@ TEST_WORKDIR: str = "/test_workdir"
 )
 def container(
     request, docker_client: DockerClient, dioptra_images: DioptraImages
-) -> Container:
+) -> Iterator[Container]:
     c = start_container(
         client=docker_client,
-        image=dioptra_images[request.param.replace("-", "_")],
+        image=dioptra_images[request.param.replace("-", "_")],  # type: ignore[literal-required] # noqa: B950
         user="root:root",
         tmpfs={TEST_WORKDIR: ""},
         working_dir=TEST_WORKDIR,
@@ -57,7 +58,7 @@ def host(container: Container) -> Host:
 
 
 @pytest.fixture(scope="function")
-def temporary_file(host: Host) -> str:
+def temporary_file(host: Host) -> Iterator[str]:
     tmpfile_path = f"{TEST_WORKDIR}/tmpfile.txt"
     host.run("touch %s", tmpfile_path)
     host.run("chmod %s %s", "0644", tmpfile_path)
@@ -73,7 +74,7 @@ def temporary_file(host: Host) -> str:
 
 
 @pytest.fixture(scope="function")
-def temporary_files_and_folders(host: Host) -> dict[str, str]:
+def temporary_files_and_folders(host: Host) -> Iterator[dict[str, str | list[str]]]:
     tmproot_path = f"{TEST_WORKDIR}/tmproot"
     tmpfolder1_path = f"{tmproot_path}/tmpfolder1"
     tmpfolder2_path = f"{tmproot_path}/tmpfolder2"
@@ -145,22 +146,23 @@ class TestInitSetPermissions:
     def test_set_recursive_permissions_on_root_dir(
         self,
         host: Host,
-        temporary_files_and_folders: dict[str, str],
+        temporary_files_and_folders: dict[str, str | list[str]],
         new_owner: str,
         file_chmod: str,
         dir_chmod: str,
     ) -> None:
         new_uid, new_gid = [int(x) for x in new_owner.split(":")]
         directories: list[str] = [
-            temporary_files_and_folders["tmproot"],
-            temporary_files_and_folders["tmpfolder1"],
-            temporary_files_and_folders["tmpfolder2"],
-            temporary_files_and_folders["tmpfolder3"],
+            cast(str, temporary_files_and_folders["tmproot"]),
+            cast(str, temporary_files_and_folders["tmpfolder1"]),
+            cast(str, temporary_files_and_folders["tmpfolder2"]),
+            cast(str, temporary_files_and_folders["tmpfolder3"]),
         ]
-        filepaths: list[str] = temporary_files_and_folders["tmpfiles"]
+        filepaths: list[str] = cast(list[str], temporary_files_and_folders["tmpfiles"])
 
         cmd = host.run(
-            "init-set-permissions.sh --recursive --dir-chmod %s --file-chmod %s --chown %s %s",
+            "init-set-permissions.sh --recursive --dir-chmod %s --file-chmod %s "
+            "--chown %s %s",
             dir_chmod,
             file_chmod,
             new_owner,
@@ -188,23 +190,28 @@ class TestInitSetPermissions:
     def test_set_recursive_permissions_on_sub_dirs(
         self,
         host: Host,
-        temporary_files_and_folders: dict[str, str],
+        temporary_files_and_folders: dict[str, str | list[str]],
         new_owner: str,
         file_chmod: str,
         dir_chmod: str,
     ) -> None:
         new_uid, new_gid = [int(x) for x in new_owner.split(":")]
-        root_directory: str = temporary_files_and_folders["tmproot"]
+        root_directory: str = cast(str, temporary_files_and_folders["tmproot"])
         directories: list[str] = [
-            temporary_files_and_folders["tmpfolder1"],
-            temporary_files_and_folders["tmpfolder2"],
-            temporary_files_and_folders["tmpfolder3"],
+            cast(str, temporary_files_and_folders["tmpfolder1"]),
+            cast(str, temporary_files_and_folders["tmpfolder2"]),
+            cast(str, temporary_files_and_folders["tmpfolder3"]),
         ]
-        root_filepaths: list[str] = temporary_files_and_folders["tmpfiles"][:2]
-        subdir_filepaths: list[str] = temporary_files_and_folders["tmpfiles"][2:]
+        root_filepaths: list[str] = cast(
+            list[str], temporary_files_and_folders["tmpfiles"][:2]
+        )
+        subdir_filepaths: list[str] = cast(
+            list[str], temporary_files_and_folders["tmpfiles"][2:]
+        )
 
         cmd = host.run(
-            "init-set-permissions.sh --recursive --dir-chmod %s --file-chmod %s --chown %s %s %s",
+            "init-set-permissions.sh --recursive --dir-chmod %s --file-chmod %s "
+            "--chown %s %s %s",
             dir_chmod,
             file_chmod,
             new_owner,

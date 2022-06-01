@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 
 import docker
-from docker import DockerClient
+from docker import DockerClient  # type: ignore[attr-defined]
 
 from .utils import DioptraImages
 
@@ -43,4 +43,4 @@ def dioptra_images(docker_client: DockerClient):
             if image_tag == "dev" and "dioptra" in image_fullname.split("/"):
                 dev_images[image_name] = ":".join([image_fullname, image_tag])
 
-    return DioptraImages(**dev_images)
+    return DioptraImages(**dev_images)  # type: ignore[misc]

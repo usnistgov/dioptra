@@ -51,6 +51,6 @@ def init_rng(seed: int = -1) -> Tuple[int, RNGenerator]:
     rng = np.random.default_rng(seed if seed >= 0 else None)
 
     if seed < 0:
-        seed = rng.bit_generator._seed_seq.entropy
+        seed = rng.bit_generator._seed_seq.entropy  # type: ignore[attr-defined]
 
     return int(seed), rng

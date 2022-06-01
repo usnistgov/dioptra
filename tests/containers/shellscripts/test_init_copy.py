@@ -16,6 +16,8 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+from typing import Iterator, cast
+
 import pytest
 import testinfra
 from docker.models.containers import Container
@@ -28,7 +30,6 @@ from ..utils import (
     start_container,
 )
 
-
 TEST_WORKDIR: str = "/test_workdir"
 
 
@@ -38,10 +39,10 @@ TEST_WORKDIR: str = "/test_workdir"
 )
 def container(
     request, docker_client: DockerClient, dioptra_images: DioptraImages
-) -> Container:
+) -> Iterator[Container]:
     c = start_container(
         client=docker_client,
-        image=dioptra_images[request.param.replace("-", "_")],
+        image=dioptra_images[request.param.replace("-", "_")],  # type: ignore[literal-required] # noqa: B950
         user="root:root",
         tmpfs={TEST_WORKDIR: ""},
         working_dir=TEST_WORKDIR,
@@ -57,7 +58,7 @@ def host(container: Container) -> Host:
 
 
 @pytest.fixture(scope="function")
-def temporary_file(host: Host) -> str:
+def temporary_file(host: Host) -> Iterator[str]:
     tmpfile_path = f"{TEST_WORKDIR}/tmpfile.txt"
     host.run("touch %s", tmpfile_path)
     host.run("chmod %s %s", "0644", tmpfile_path)
@@ -73,7 +74,7 @@ def temporary_file(host: Host) -> str:
 
 
 @pytest.fixture(scope="function")
-def temporary_files_and_folders(host: Host) -> dict[str, str]:
+def temporary_files_and_folders(host: Host) -> Iterator[dict[str, str | list[str]]]:
     tmproot_path = f"{TEST_WORKDIR}/tmproot"
     tmpfolder1_path = f"{tmproot_path}/tmpfolder1"
     tmpfolder2_path = f"{tmproot_path}/tmpfolder2"
@@ -151,12 +152,12 @@ class TestInitCopy:
     def test_set_recursive_permissions_on_root_dir(
         self,
         host: Host,
-        temporary_files_and_folders: dict[str, str],
+        temporary_files_and_folders: dict[str, str | list[str]],
         chown: str,
         chmod: str,
     ) -> None:
         new_uid, new_gid = [int(x) for x in chown.split(":")]
-        root_directory: str = temporary_files_and_folders["tmproot"]
+        root_directory: str = cast(str, temporary_files_and_folders["tmproot"])
         root_directory_copy: str = f"{TEST_WORKDIR}/tmproot_copy"
         subfolder_copies: list[str] = [
             root_directory_copy,
