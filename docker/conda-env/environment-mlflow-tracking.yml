@@ -27,8 +27,8 @@ dependencies:
   - gunicorn # mlflow requirement
   - jinja2>=2.10.1,<3.0
   - nomkl
-  - numpy>=1.18.0 # adversarial-robustness-toolbox requirement
-  - pandas>=1.1.0 # mlflow/prefect requirement
+  - numpy>=1.22.0
+  - pandas>=1.1.1 # mlflow/prefect requirement
   - pip
   - protobuf>=3.7.0 # mlflow requirement
   - psycopg2

@@ -26,8 +26,9 @@ dependencies:
   - gitpython>=2.1.0 # mlflow requirement
   - gunicorn # mlflow requirement
   - jinja2>=2.10.1,<3.0
+  - markupsafe<=2.0.1
   - nomkl
-  - numpy>=1.18.0 # adversarial-robustness-toolbox requirement
+  - numpy>=1.22.0
   - pandas>=1.1.1 # mlflow/prefect requirement
   - pillow
   - pip
@@ -55,8 +56,9 @@ dependencies:
       - flask-restx>=0.2.0,<1
       - Flask-SQLAlchemy>=2.4.0,<3
       - Flask-WTF>=0.14.3,<1
-      - Flask>=1.1.0,<2
+      - Flask>=1.1.4,<2
       - gorilla
+      - injector>=0.18.0
       - marshmallow>=3.9.0,<4
       - mlflow
       - multimethod>=1.5
@@ -67,4 +69,4 @@ dependencies:
       - querystring-parser # mlflow requirement
       - rq>=1.5.0
       - structlog>=20.2.0
-      - typing-extensions>=3.7.4.0
+      - typing-extensions>=3.7.4.3
