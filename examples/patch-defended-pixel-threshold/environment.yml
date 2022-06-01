@@ -45,7 +45,7 @@ dependencies:
   - pycodestyle
   - pydocstyle
   - pytables
-  - python=3.7.7
+  - python=3.8.*
   - pytz
   - pyyaml=5.3.0
   - requests
