@@ -380,7 +380,7 @@ $(eval $(call define_docker_image_sentinel_vars,$(1),$(2),$(3),$(4)))
 endef
 
 define generate_full_docker_image_recipe
-$(call generate_docker_image_pipeline,\
+$(eval $(call generate_docker_image_pipeline,\
 	$$(CONTAINER_$(1)_BUILD_SENTINEL),\
 	$$($(2)) $$(CONTAINER_$(1)_DOCKERFILE) $$(CONTAINER_$(1)_INCLUDE_FILES),\
 	$$(CONTAINER_$(1)_IMAGE),\
@@ -390,7 +390,7 @@ $(call generate_docker_image_pipeline,\
 	$$(CONTAINER_$(1)_SCRIPTS),\
 	$$(CONTAINER_$(1)_INCLUDE_DIR),\
 	$$(CONTAINER_$(1)_BUILD_LATEST_SENTINEL),\
-	$$(CONTAINER_$(1)_CONDA_ENV_FILES))
+	$$(CONTAINER_$(1)_CONDA_ENV_FILES)))
 endef
 
 #################################################################################
