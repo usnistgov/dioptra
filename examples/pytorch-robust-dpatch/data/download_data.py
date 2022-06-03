@@ -15,14 +15,16 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
 
+import shutil
+from functools import partial
 from pathlib import Path
-from typing import Optional, Union
 
 import click
-import mnist
 import numpy as np
 import pandas as pd
+import requests
 from PIL import Image
 from rich.console import Console
 from rich.panel import Panel
@@ -64,61 +66,103 @@ class AppConsole(object):
 
 
 class MnistDataset(object):
-    train_images = "train-images-idx3-ubyte.gz"
-    train_labels = "train-labels-idx1-ubyte.gz"
-    test_images = "t10k-images-idx3-ubyte.gz"
-    test_labels = "t10k-labels-idx1-ubyte.gz"
+    """Adapter class for accessing the MNIST dataset.
 
-    def __init__(self, cache_dir: Optional[str] = None) -> None:
-        self._train_images_cache: Optional[np.ndarray] = None
-        self._train_labels_cache: Optional[np.ndarray] = None
-        self._test_images_cache: Optional[np.ndarray] = None
-        self._test_labels_cache: Optional[np.ndarray] = None
-        self._cache_dir: Optional[str] = cache_dir
+    This class will check if a copy of the MNIST dataset is in a caching directory. If
+    it exists, then it will be used to load the training and testing datasets. If it
+    doesn't, then it will be downloaded using the `data_url` attribute URL.
+
+    Attributes:
+        data_url: A URL pointing to a downloadable copy the MNIST dataset.
+
+    License:
+        Yann LeCun and Corinna Cortes hold the copyright of MNIST dataset, which is a
+        derivative work from original NIST datasets. MNIST dataset is made available
+        under the terms of the `Creative Commons Attribution-Share Alike 3.0 license
+        <https://creativecommons.org/licenses/by-sa/3.0/>`_.
+    """
+
+    data_url = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz"
+
+    def __init__(self, cache_dir: str) -> None:
+        self._train_images_cache: np.ndarray | None = None
+        self._train_labels_cache: np.ndarray | None = None
+        self._test_images_cache: np.ndarray | None = None
+        self._test_labels_cache: np.ndarray | None = None
+        self._cache_dir: str = cache_dir
+
+    @property
+    def data_file(self) -> str:
+        return self._download_mnist_file(
+            url=self.data_url,
+            output_path=Path(self._cache_dir) / "mnist.npz",
+        )
+
+    @property
+    def train_images_cache(self) -> np.ndarray:
+        if self._train_images_cache is None:
+            with np.load(self.data_file, allow_pickle=True) as f:  # type: ignore[no-untyped-call] # noqa: B950
+                self._train_images_cache = f["x_train"]
+
+        return self._train_images_cache
+
+    @property
+    def train_labels_cache(self) -> np.ndarray:
+        if self._train_labels_cache is None:
+            with np.load(self.data_file, allow_pickle=True) as f:  # type: ignore[no-untyped-call] # noqa: B950
+                self._train_labels_cache = f["y_train"]
+
+        return self._train_labels_cache
+
+    @property
+    def test_images_cache(self) -> np.ndarray:
+        if self._test_images_cache is None:
+            with np.load(self.data_file, allow_pickle=True) as f:  # type: ignore[no-untyped-call] # noqa: B950
+                self._test_images_cache = f["x_test"]
+
+        return self._test_images_cache
+
+    @property
+    def test_labels_cache(self) -> np.ndarray:
+        if self._test_labels_cache is None:
+            with np.load(self.data_file, allow_pickle=True) as f:  # type: ignore[no-untyped-call] # noqa: B950
+                self._test_labels_cache = f["y_test"]
+
+        return self._test_labels_cache
 
     @property
     def training(self) -> pd.DataFrame:
-        if self._train_images_cache is None:
-            self._train_images_cache = mnist.download_and_parse_mnist_file(
-                fname=self.train_images,
-                target_dir=self._cache_dir,
-            )
-
-        if self._train_labels_cache is None:
-            self._train_labels_cache = mnist.download_and_parse_mnist_file(
-                fname=self.train_labels,
-                target_dir=self._cache_dir,
-            )
-
         return pd.DataFrame(
             {
-                "id": range(len(self._train_labels_cache)),
-                "image": [image_array for image_array in self._train_images_cache],
-                "label": [label for label in self._train_labels_cache],
+                "id": range(len(self.train_images_cache)),
+                "image": [image_array for image_array in self.train_images_cache],
+                "label": [label for label in self.train_labels_cache],
             }
         )
 
     @property
     def testing(self) -> pd.DataFrame:
-        if self._test_images_cache is None:
-            self._test_images_cache = mnist.download_and_parse_mnist_file(
-                fname=self.test_images,
-                target_dir=self._cache_dir,
-            )
-
-        if self._test_labels_cache is None:
-            self._test_labels_cache = mnist.download_and_parse_mnist_file(
-                fname=self.test_labels,
-                target_dir=self._cache_dir,
-            )
-
         return pd.DataFrame(
             {
-                "id": range(len(self._test_labels_cache)),
-                "image": [image_array for image_array in self._test_images_cache],
-                "label": [label for label in self._test_labels_cache],
+                "id": range(len(self.test_images_cache)),
+                "image": [image_array for image_array in self.test_images_cache],
+                "label": [label for label in self.test_labels_cache],
             }
         )
+
+    @staticmethod
+    def _download_mnist_file(url: str, output_path: Path) -> str:
+        if output_path.exists():
+            return str(output_path)
+
+        with requests.get(url=url, stream=True) as response:
+            response.raise_for_status()
+            response.raw.read = partial(response.raw.read, decode_content=True)
+
+            with output_path.open("wb") as f:
+                shutil.copyfileobj(response.raw, f)
+
+        return str(output_path)
 
 
 def save_gif_images(dataset: pd.DataFrame, target_dir: Path) -> None:
@@ -149,17 +193,15 @@ def save_gif_images(dataset: pd.DataFrame, target_dir: Path) -> None:
 @click.option(
     "--cache-dir",
     type=click.Path(),
-    default=f"{Path(__file__).parent}/.cache",
     help="Caching directory",
 )
 @click.option(
     "--data-dir",
     type=click.Path(),
-    default=f"{Path(__file__).parent}",
     help="Save dataset in this directory",
 )
 def download_data(
-    training: bool, testing: bool, cache_dir: Union[str, Path], data_dir: str
+    training: bool, testing: bool, cache_dir: str | Path, data_dir: str
 ) -> None:
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
