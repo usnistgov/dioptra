@@ -1,0 +1,59 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: tensorflow-roadsigns-yolo
+
+entry_points:
+  transfer_learn:
+    parameters:
+      training_dir: { type: path, default: "/nfs/data/Road-Sign-Detection-v2/training" }
+      validation_dir: { type: path, default: "/nfs/data/Road-Sign-Detection-v2/testing" }
+      image_size: { type: string, default: "448,448,3" }
+      augmentations: { type: string, default: "imgaug_minimal" }
+      model_architecture: { type: string, default: "yolo_v1" }
+      backbone: { type: string, default: "efficientnetb1" }
+      detector: { type: string, default: "two_headed" }
+      wh_loss: { type: string, default: "sq_relative_diff" }
+      classification_loss: { type: string, default: "categorical_crossentropy" }
+      epochs: { type: float, default: 300 }
+      labels: { type: string, default: "crosswalk,speedlimit,stop,trafficlight" }
+      n_bounding_boxes: { type: float, default: 2 }
+      n_classes: { type: float, default: 4 }
+      batch_size: { type: float, default: 32 }
+      register_model_name: { type: string, default: "" }
+      learning_rate: { type: float, default: 3e-5 }
+      optimizer: { type: string, default: "Adam" }
+      seed: { type: float, default: -1 }
+    command: >
+      python src/transfer_learn.py
+      --training-dir {training_dir}
+      --validation-dir {validation_dir}
+      --image-size {image_size}
+      --augmentations {augmentations}
+      --model-architecture {model_architecture}
+      --backbone {backbone}
+      --detector {detector}
+      --wh-loss {wh_loss}
+      --classification-loss {classification_loss}
+      --epochs {epochs}
+      --labels {labels}
+      --n-bounding-boxes {n_bounding_boxes}
+      --n-classes {n_classes}
+      --batch-size {batch_size}
+      --register-model-name {register_model_name}
+      --learning-rate {learning_rate}
+      --optimizer {optimizer}
+      --seed {seed}
