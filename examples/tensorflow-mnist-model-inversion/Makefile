@@ -48,6 +48,7 @@ EXAMPLE_NAME = tensorflow-mnist-model-inversion
 EXAMPLE_CONDA_ENV_NAME = mnist-model-inversion
 EXAMPLE_CUSTOM_PLUGINS_DIR = task-plugins
 EXAMPLE_DATA_DIR = data
+EXAMPLE_DATA_CACHE_DIR = $(EXAMPLE_DATA_DIR)/.cache
 EXAMPLE_JUPYTER_DIR = jupyter
 EXAMPLE_MINIO_DATA_DIR = s3
 EXAMPLE_MLFLOW_TRACKING_DATA_DIR = mlruns
@@ -142,7 +143,7 @@ $(call run_docker_compose,\
     bash -c "\
         source /opt/conda/etc/profile.d/conda.sh &&\
         conda activate $(CONDA_ENV_NAME) &&\
-        $(PY) $(DATA_DOWNLOAD_FILE) --data-dir $(2) $(3)")
+        $(PY) $(DATA_DOWNLOAD_FILE) --data-dir $(2) --cache-dir $(3) $(4)")
 endef
 
 define get_host_user_id
@@ -295,14 +296,14 @@ $(RESTAPI_DATABASE): $(RESTAPI_DATABASE_INIT_SCRIPT_FILE) | $(EXAMPLE_MINIO_DATA
 
 $(TRAINING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
 	$(call chmod,777,$(EXAMPLE_DATA_DIR))
-	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--training)
+	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),$(EXAMPLE_DATA_CACHE_DIR),--training)
 	$(call run_docker_compose,down)
 	$(call docker_remove_volume,$(DOCKER_LOCAL_VOLUMES))
 	$(call save_sentinel_file,$@)
 
 $(TESTING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
 	$(call chmod,777,$(EXAMPLE_DATA_DIR))
-	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--testing)
+	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),$(EXAMPLE_DATA_CACHE_DIR),--testing)
 	$(call run_docker_compose,down)
 	$(call docker_remove_volume,$(DOCKER_LOCAL_VOLUMES))
 	$(call save_sentinel_file,$@)
