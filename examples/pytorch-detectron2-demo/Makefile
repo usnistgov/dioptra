@@ -45,7 +45,7 @@ endif
 
 EXAMPLE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 EXAMPLE_NAME = pytorch-detectron2-poison-demo
-EXAMPLE_CONDA_ENV_NAME = mnist-membership-inference
+EXAMPLE_CONDA_ENV_NAME = pytorch-detectron2-demo
 EXAMPLE_CUSTOM_PLUGINS_DIR = task-plugins
 EXAMPLE_DATA_DIR = data
 EXAMPLE_JUPYTER_DIR = jupyter
@@ -121,24 +121,14 @@ define cleanup
 $(FIND) . \( -name "__pycache__" -and -not -path "./.tox*" \) -type d -exec $(RM) -rf {} +
 $(FIND) . \( -name "*.py[co]" -and -not -path "./.tox*" \) -type f -exec $(RM) -rf {} +
 $(FIND) . -name ".ipynb_checkpoints" -type d -exec $(RM) -rf {} +
+$(RM) -f $(EXAMPLE_DIR)/$(DATASET_SENTINEL)
 $(RM) -rf $(EXAMPLE_DIR)/.mypy_cache
 $(RM) -rf $(EXAMPLE_DIR)/$(WORKFLOWS_TARBALL_FILE)
 $(RM) -rf $(EXAMPLE_DIR)/$(CUSTOM_TASK_PLUGINS_PYTORCH_D2_TARBALL_FILE)
 endef
 
 define download_data
-$(call run_docker_compose,\
-    run\
-    --rm\
-    --entrypoint ""\
-    -v $(strip $(1)):/work/demo\
-    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
-    -w /work/demo\
-    pytorchcpu-01\
-    bash -c "\
-        source /opt/conda/etc/profile.d/conda.sh &&\
-        conda activate $(CONDA_ENV_NAME) &&\
-        $(PY) $(DATA_DOWNLOAD_FILE) --data-dir $(2) $(3)")
+$(PY) $(DATA_DOWNLOAD_FILE) --data-dir $(1) --upgrade --clean
 endef
 
 define get_host_user_id
@@ -221,8 +211,8 @@ custom-plugins: custom-plugins-pytorch-mi
 ## Create custom pytorch_d2 plugins tarball
 custom-plugins-pytorch-mi: $(CUSTOM_TASK_PLUGINS_PYTORCH_D2_TARBALL_FILE)
 
-## Download and prepare MNIST dataset
-data: $(TRAINING_DATASET_SENTINEL) $(TESTING_DATASET_SENTINEL)
+## Download and prepare Road Signs dataset
+data: $(DATASET_SENTINEL)
 
 ## Launch the demo
 demo: initdb data plugins jupyter workflows services
@@ -282,18 +272,8 @@ $(RESTAPI_DATABASE): $(RESTAPI_DATABASE_INIT_SCRIPT_FILE) | $(EXAMPLE_MINIO_DATA
 	$(call docker_remove_volume,$(DOCKER_LOCAL_VOLUMES))
 	$(RM) -f $(DOCKER_COMPOSE_SENTINEL)
 
-$(TRAINING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
-	$(call chmod,777,$(EXAMPLE_DATA_DIR))
-	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--training)
-	$(call run_docker_compose,down)
-	$(call docker_remove_volume,$(DOCKER_LOCAL_VOLUMES))
-	$(call save_sentinel_file,$@)
-
-$(TESTING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
-	$(call chmod,777,$(EXAMPLE_DATA_DIR))
-	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--testing)
-	$(call run_docker_compose,down)
-	$(call docker_remove_volume,$(DOCKER_LOCAL_VOLUMES))
+$(DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
+	$(call download_data,$(EXAMPLE_DATA_DIR))
 	$(call save_sentinel_file,$@)
 
 $(WORKFLOWS_TARBALL_FILE): $(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE)
