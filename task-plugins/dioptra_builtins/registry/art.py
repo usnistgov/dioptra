@@ -22,6 +22,8 @@
 
 from __future__ import annotations
 
+from typing import Any, Dict, Optional
+
 import structlog
 from structlog.stdlib import BoundLogger
 
@@ -57,14 +59,15 @@ except ImportError:  # pragma: nocover
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def load_wrapped_tensorflow_keras_classifier(
-    name: str, version: int
+    name: str, version: int, classifier_kwargs: Optional[Dict[str, Any]] = None
 ) -> KerasClassifier:
     """Loads and wraps a registered Keras classifier for compatibility with the |ART|.
 
     Args:
         name: The name of the registered model in the MLFlow model registry.
         version: The version number of the registered model in the MLFlow registry.
-
+        classifier_kwargs: A dictionary mapping argument names to values which will
+            be passed to the KerasClassifier constructor.
     Returns:
         A trained :py:class:`~art.estimators.classification.KerasClassifier` object.
 
@@ -72,10 +75,13 @@ def load_wrapped_tensorflow_keras_classifier(
         - :py:class:`art.estimators.classification.KerasClassifier`
         - :py:func:`.mlflow.load_tensorflow_keras_classifier`
     """
+    classifier_kwargs = classifier_kwargs or {}
     keras_classifier: Sequential = load_tensorflow_keras_classifier(
         name=name, version=version
     )
-    wrapped_keras_classifier: KerasClassifier = KerasClassifier(model=keras_classifier)
+    wrapped_keras_classifier: KerasClassifier = KerasClassifier(
+        model=keras_classifier, **classifier_kwargs
+    )
     LOGGER.info(
         "Wrap Keras classifier for compatibility with Adversarial Robustness Toolbox"
     )
