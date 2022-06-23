@@ -72,6 +72,7 @@ CODE_WORKFLOW_FILE = MLproject
 
 PLUGINS_BUILTINS_DIR := $(EXAMPLE_PLUGINS_DIR)/dioptra_builtins
 PLUGINS_SRC_FILES := $(wildcard $(PLUGINS_BUILTINS_DIR)/*/*.py)
+CUSTOM_PLUGIN_ROADSIGNS_YOLO_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/roadsigns_yolo/*.py)
 
 PLUGINS_CUSTOM_DIR := $(EXAMPLE_CUSTOM_PLUGINS_DIR)/dioptra_custom
 CUSTOM_PLUGIN_PYTORCH_D2_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/pytorch_d2/*.py)
@@ -85,7 +86,7 @@ S3_PLUGINS_BUCKET = plugins
 S3_WORKFLOW_BUCKET = workflow
 
 MAKEFILE_FILE = Makefile
-DATA_DOWNLOAD_FILE = $(EXAMPLE_DATA_DIR)/download_data.py
+DATA_DOWNLOAD_FILE = $(EXAMPLE_DATA_DIR)/download_roadsigns_data.py
 CUSTOM_TASK_PLUGINS_PYTORCH_D2_TARBALL_FILE = custom-plugins-pytorch-mi.tar.gz
 WORKFLOWS_TARBALL_FILE = workflows.tar.gz
 
@@ -102,9 +103,7 @@ DOCKER_LOCAL_VOLUMES =\
 DOCKER_COMPOSE_SENTINEL = .docker-compose.sentinel
 JUPYTER_SENTINEL = .jupyter.sentinel
 PLUGINS_SENTINEL = .plugins.sentinel
-TRAINING_DATASET_SENTINEL = .training-dataset.sentinel
-TESTING_DATASET_SENTINEL = .testing-dataset.sentinel
-
+DATASET_SENTINEL = .dataset.sentinel
 #################################################################################
 # FUNCTIONS                                                                     #
 #################################################################################

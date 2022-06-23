@@ -1,0 +1,36 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00042_road200.png</filename>
+    <size>
+        <width>300</width>
+        <height>400</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>crosswalk</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>52</xmin>
+            <ymin>195</ymin>
+            <xmax>108</xmax>
+            <ymax>257</ymax>
+        </bndbox>
+    </object>
+    <object>
+        <name>trafficlight</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>201</xmin>
+            <ymin>320</ymin>
+            <xmax>210</xmax>
+            <ymax>348</ymax>
+        </bndbox>
+    </object>
+</annotation>

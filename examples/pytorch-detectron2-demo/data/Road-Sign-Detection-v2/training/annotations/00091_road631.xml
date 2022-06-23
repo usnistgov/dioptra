@@ -1,0 +1,23 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00091_road631.png</filename>
+    <size>
+        <width>300</width>
+        <height>400</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>stop</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>146</xmin>
+            <ymin>137</ymin>
+            <xmax>178</xmax>
+            <ymax>168</ymax>
+        </bndbox>
+    </object>
+</annotation>
