@@ -1,0 +1,297 @@
+{%- macro container_image(container) -%}
+{%- set _container_registry = [container.registry] if container.registry else [] -%}
+{%- set _container_namespace = [container.namespace] if container.namespace else [] -%}
+{%- set _container_image_name_and_tag = [container.image ~ ":" ~ container.tag] -%}
+{%- set _container_image_components = _container_registry + _container_namespace + _container_image_name_and_tag -%}
+{{ _container_image_components|join("/") }}
+{%- endmacro -%}
+
+{% macro service_env_files(env_files) -%}
+env_file:
+  {% for env_file in env_files -%}
+  - {{ "$((BASEDIR))/" ~ env_file }}{{ "
+  " if not loop.last }}
+  {%- endfor -%}
+{%- endmacro -%}
+
+{% macro service_networks(networks) -%}
+networks:
+  {% for network in networks -%}
+  - {{ network }}{{ "
+  " if not loop.last }}
+  {%- endfor -%}
+{%- endmacro -%}
+
+{% macro service_ports(ports) -%}
+ports:
+  {% for port in ports -%}
+  - {{ port }}{{ "
+  " if not loop.last }}
+  {%- endfor -%}
+{%- endmacro -%}
+
+{% macro service_volumes(volumes) -%}
+volumes:
+  {% for volume in volumes -%}
+  - {{ volume }}{{ "
+  " if not loop.last }}
+  {%- endfor -%}
+{%- endmacro -%}
+
+{% macro nfs_volume(name, server_address, mount_options, target_dir) -%}
+{{ name }}:
+  driver: local
+  driver_opts:
+    type: nfs
+    o: addr={{ server_address }},{{ mount_options }}
+    device: ":{{ target_dir }}"
+{%- endmacro -%}
+
+{% macro redis_service(cookiecutter) -%}
+{%- set _redis_volumes = ["redis-data:/data:rw"] -%}
+{{ cookiecutter.container_slug_prefix }}-redis:
+  image: {{ container_image(cookiecutter.__containers.redis) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-redis
+  healthcheck:
+    test: ["CMD", "redis-cli", "ping"]
+    interval: 30s
+    timeout: 10s
+    retries: 30
+  command:
+    - redis-server
+    - --appendonly
+    - "yes"
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_redis_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro db_service(cookiecutter, expose_ports=false) -%}
+{%- set _db_public_env_files = ["envs/" ~ cookiecutter.container_slug_prefix ~ "-db.env"] -%}
+{%- set _db_secret_env_files = ["secrets/" ~ cookiecutter.container_slug_prefix ~ "-db.env"] -%}
+{%- set _db_env_files = _db_public_env_files + _db_secret_env_files -%}
+{%- set _db_ports = ["35432:5432/tcp"] -%}
+{%- set _db_volumes = ["postgres-data:/var/lib/postgresql/data:rw", "postgres-docker-entrypoint-initdb-d:/docker-entrypoint-initdb.d:rw", "postgres-etc-postgresql:/etc/postgresql:rw"] -%}
+{{ cookiecutter.container_slug_prefix }}-db:
+  image: {{ container_image(cookiecutter.__containers.db) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-db
+  shm_size: 256MB
+  {{ service_env_files(_db_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {% if expose_ports -%}
+  {{ service_ports(_db_ports)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_db_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro dbadmin_service(cookiecutter) -%}
+{%- set _dbadmin_public_env_files = ["envs/" ~ cookiecutter.container_slug_prefix ~ "-dbadmin.env"] -%}
+{%- set _dbadmin_secret_env_files = ["secrets/" ~ cookiecutter.container_slug_prefix ~ "-dbadmin.env"] -%}
+{%- set _dbadmin_env_files = _dbadmin_public_env_files + _dbadmin_secret_env_files -%}
+{%- set _dbadmin_volumes = ["pgadmin4-data:/var/lib/pgadmin:rw"] -%}
+{{ cookiecutter.container_slug_prefix }}-dbadmin:
+  image: {{ container_image(cookiecutter.__containers.dbadmin) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-dbadmin
+  {{ service_env_files(_dbadmin_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_dbadmin_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro minio_service(cookiecutter, expose_ports=false) -%}
+{%- set _minio_public_env_files = ["envs/" ~ cookiecutter.container_slug_prefix ~ "-minio.env"] -%}
+{%- set _minio_secret_env_files = ["secrets/" ~ cookiecutter.container_slug_prefix ~ "-minio.env"] -%}
+{%- set _minio_env_files = _minio_public_env_files + _minio_secret_env_files -%}
+{%- set _minio_ports = ["39000:9000/tcp", "39001:9001/tcp"] -%}
+{%- set _minio_volumes = ["minio-data:/data:rw"] -%}
+{%- if cookiecutter.minio_use_https.lower() == "true" -%}{{ _minio_volumes.append("minio-certs:/root/.minio/certs:ro")|default("", true) }}{%- endif -%}
+{{ cookiecutter.container_slug_prefix }}-minio:
+  image: {{ container_image(cookiecutter.__containers.minio) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-minio
+  command:
+    - server
+    - /data
+    - --console-address
+    - ":9001"
+  healthcheck:
+    test: ["CMD", "curl", "-k", "-f", "https://localhost:9000/minio/health/live"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+  {{ service_env_files(_minio_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {% if expose_ports -%}
+  {{ service_ports(_minio_ports)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_minio_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro nginx_service(cookiecutter) %}
+{%- set _nginx_ports = [cookiecutter.dioptra_http_port ~ ":30080/tcp"] -%}
+{%- if cookiecutter.nginx_use_https.lower() == "true" -%}{{ _nginx_ports.append(cookiecutter.dioptra_https_port ~ ":30443/tcp")|default("", true) }}{% endif -%}
+{%- set _nginx_volumes = ["nginx-conf-d:/etc/nginx/conf.d:rw"] -%}
+{%- if cookiecutter.nginx_use_https.lower() == "true" -%}{{ _nginx_volumes.append("nginx-etc-ssl:/etc/ssl:ro")|default("", true) }}{% endif -%}
+{{ cookiecutter.container_slug_prefix }}-nginx:
+  image: {{ container_image(cookiecutter.__containers.nginx) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-nginx
+  healthcheck:
+    test:
+      [
+        "CMD",
+        "curl",
+        "-f",
+        "http://localhost:30080",
+      ]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_ports(_nginx_ports)|indent(2) }}
+  {{ service_volumes(_nginx_volumes)|indent(2) }}
+{%- endmacro %}
+
+{% macro mlflow_tracking_service(cookiecutter) -%}
+{%- set _mlflow_tracking_public_env_files = ["envs/" ~ cookiecutter.container_slug_prefix ~ "-mlflow-tracking.env"] -%}
+{%- set _mlflow_tracking_secret_env_files = ["secrets/" ~ cookiecutter.container_slug_prefix ~ "-mlflow-tracking.env"] -%}
+{%- set _mlflow_tracking_env_files = _mlflow_tracking_public_env_files + _mlflow_tracking_secret_env_files -%}
+{%- set _mlflow_tracking_volumes = ["mlflow-tracking-data:/work/mlruns:rw"] -%}
+{{ cookiecutter.container_slug_prefix }}-mlflow-tracking:
+  image: {{ container_image(cookiecutter.__containers.mlflow_tracking) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-mlflow-tracking
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:5000"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+  command:
+    - --host
+    - "0.0.0.0"
+    - --default-artifact-root
+    - "s3://mlflow-tracking/artifacts"
+  {{ service_env_files(_mlflow_tracking_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_mlflow_tracking_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro restapi_service(cookiecutter) -%}
+{%- set _restapi_public_env_files = ["envs/" ~ cookiecutter.container_slug_prefix ~ "-restapi.env"] -%}
+{%- set _restapi_secret_env_files = ["secrets/" ~ cookiecutter.container_slug_prefix ~ "-restapi.env"] -%}
+{%- set _restapi_env_files = _restapi_public_env_files + _restapi_secret_env_files -%}
+{%- set _restapi_volumes = ["restapi-data:/work/data:rw"] -%}
+{{ cookiecutter.container_slug_prefix }}-restapi:
+  image: {{ container_image(cookiecutter.__containers.restapi) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-restapi
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+  {{ service_env_files(_restapi_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_restapi_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro tensorflow_cpu_service(cookiecutter, worker_id) -%}
+{%- set _tfcpu_public_env_files = ["envs/" ~ cookiecutter.container_slug_prefix ~ "-worker.env", "envs/" ~ cookiecutter.container_slug_prefix ~ "-worker-cpu.env"] -%}
+{%- set _tfcpu_secret_env_files = ["secrets/" ~ cookiecutter.container_slug_prefix ~ "-worker.env"] -%}
+{%- set _tfcpu_env_files = _tfcpu_public_env_files + _tfcpu_secret_env_files -%}
+{%- set _tfcpu_volumes = ["restapi-data:/work/data:rw"] -%}
+{%- if cookiecutter.use_nfs.lower() == "true" -%}{{ _tfcpu_volumes.append("dioptra-datasets:/dioptra/data")|default("", true) }}{%- else -%}{{ _tfcpu_volumes.append(cookiecutter.dioptra_datasets_source_dir ~ ":/dioptra/data:ro")|default("", true) }}{%- endif -%}
+{%- if cookiecutter.use_nfs.lower() == "true" -%}{{ _tfcpu_volumes.append("dioptra-saved-models:/dioptra/saved-models")|default("", true) }}{%- else -%}{{ _tfcpu_volumes.append(cookiecutter.dioptra_saved_models_source_dir ~ ":/dioptra/saved-models:rw")|default("", true) }}{%- endif -%}
+{{ cookiecutter.container_slug_prefix }}-tfcpu-{{ "%02d" | format(worker_id|int) }}:
+  image: {{ container_image(cookiecutter.__containers.tfcpu) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-tfcpu-{{ "%02d" | format(worker_id|int) }}
+  command:
+    - tensorflow_cpu
+  {{ service_env_files(_tfcpu_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_tfcpu_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro tensorflow_gpu_service(cookiecutter, worker_id, gpu_device_id) -%}
+{%- set _tfgpu_public_env_files = ["envs/" ~ cookiecutter.container_slug_prefix ~ "-worker.env"] -%}
+{%- set _tfgpu_secret_env_files = ["secrets/" ~ cookiecutter.container_slug_prefix ~ "-worker.env"] -%}
+{%- set _tfgpu_env_files = _tfgpu_public_env_files + _tfgpu_secret_env_files -%}
+{%- set _tfgpu_volumes = ["restapi-data:/work/data:rw"] -%}
+{%- if cookiecutter.use_nfs.lower() == "true" -%}{{ _tfgpu_volumes.append("dioptra-datasets:/dioptra/data")|default("", true) }}{%- else -%}{{ _tfgpu_volumes.append(cookiecutter.dioptra_datasets_source_dir ~ ":/dioptra/data:ro")|default("", true) }}{%- endif -%}
+{%- if cookiecutter.use_nfs.lower() == "true" -%}{{ _tfgpu_volumes.append("dioptra-saved-models:/dioptra/saved-models")|default("", true) }}{%- else -%}{{ _tfgpu_volumes.append(cookiecutter.dioptra_saved_models_source_dir ~ ":/dioptra/saved-models:rw")|default("", true) }}{%- endif -%}
+{{ cookiecutter.container_slug_prefix }}-tfgpu-{{ "%02d" | format(worker_id|int) }}:
+  image: {{ container_image(cookiecutter.__containers.tfgpu) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-tfgpu-{{ "%02d" | format(worker_id|int) }}
+  runtime: nvidia
+  environment:
+    NVIDIA_VISIBLE_DEVICES: {{ gpu_device_id }}
+  command:
+    - tensorflow_gpu
+  {{ service_env_files(_tfgpu_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_tfgpu_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro pytorch_cpu_service(cookiecutter, worker_id) -%}
+{%- set _pytorchcpu_public_env_files = ["envs/" ~ cookiecutter.container_slug_prefix ~ "-worker.env", "envs/" ~ cookiecutter.container_slug_prefix ~ "-worker-cpu.env"] -%}
+{%- set _pytorchcpu_secret_env_files = ["secrets/" ~ cookiecutter.container_slug_prefix ~ "-worker.env"] -%}
+{%- set _pytorchcpu_env_files = _pytorchcpu_public_env_files + _pytorchcpu_secret_env_files -%}
+{%- set _pytorchcpu_volumes = ["restapi-data:/work/data:rw"] -%}
+{%- if cookiecutter.use_nfs.lower() == "true" -%}{{ _pytorchcpu_volumes.append("dioptra-datasets:/dioptra/data")|default("", true) }}{%- else -%}{{ _pytorchcpu_volumes.append(cookiecutter.dioptra_datasets_source_dir ~ ":/dioptra/data:ro")|default("", true) }}{%- endif -%}
+{%- if cookiecutter.use_nfs.lower() == "true" -%}{{ _pytorchcpu_volumes.append("dioptra-saved-models:/dioptra/saved-models")|default("", true) }}{%- else -%}{{ _pytorchcpu_volumes.append(cookiecutter.dioptra_saved_models_source_dir ~ ":/dioptra/saved-models:rw")|default("", true) }}{%- endif -%}
+{{ cookiecutter.container_slug_prefix }}-pytorchcpu-{{ "%02d" | format(worker_id|int) }}:
+  image: {{ container_image(cookiecutter.__containers.pytorchcpu) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-pytorchcpu-{{ "%02d" | format(worker_id|int) }}
+  command:
+    - pytorch_cpu
+  {{ service_env_files(_pytorchcpu_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_pytorchcpu_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro pytorch_gpu_service(cookiecutter, worker_id, gpu_device_id) -%}
+{%- set _pytorchgpu_public_env_files = ["envs/" ~ cookiecutter.container_slug_prefix ~ "-worker.env"] -%}
+{%- set _pytorchgpu_secret_env_files = ["secrets/" ~ cookiecutter.container_slug_prefix ~ "-worker.env"] -%}
+{%- set _pytorchgpu_env_files = _pytorchgpu_public_env_files + _pytorchgpu_secret_env_files -%}
+{%- set _pytorchgpu_volumes = ["restapi-data:/work/data:rw"] -%}
+{%- if cookiecutter.use_nfs.lower() == "true" -%}{{ _pytorchgpu_volumes.append("dioptra-datasets:/dioptra/data")|default("", true) }}{%- else -%}{{ _pytorchgpu_volumes.append(cookiecutter.dioptra_datasets_source_dir ~ ":/dioptra/data:ro")|default("", true) }}{%- endif -%}
+{%- if cookiecutter.use_nfs.lower() == "true" -%}{{ _pytorchgpu_volumes.append("dioptra-saved-models:/dioptra/saved-models")|default("", true) }}{%- else -%}{{ _pytorchgpu_volumes.append(cookiecutter.dioptra_saved_models_source_dir ~ ":/dioptra/saved-models:rw")|default("", true) }}{%- endif -%}
+{{ cookiecutter.container_slug_prefix }}-pytorchgpu-{{ "%02d" | format(worker_id|int) }}:
+  image: {{ container_image(cookiecutter.__containers.pytorchgpu) }}
+  restart: always
+  hostname: {{ cookiecutter.container_slug_prefix }}-pytorchgpu-{{ "%02d" | format(worker_id|int) }}
+  runtime: nvidia
+  environment:
+    NVIDIA_VISIBLE_DEVICES: {{ gpu_device_id }}
+  command:
+    - pytorch_gpu
+  {{ service_env_files(_pytorchgpu_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_pytorchgpu_volumes)|indent(2) }}
+{%- endmacro -%}

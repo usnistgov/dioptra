@@ -1,0 +1,271 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+{% from "templates/macros/docker-compose.j2" import container_image, db_service, minio_service, mlflow_tracking_service, nfs_volume, restapi_service, service_networks -%}
+version: "2.4"
+
+{% if cookiecutter.__containers.networks -%}
+networks:
+  {% for network in cookiecutter.__containers.networks -%}
+  {{ network }}:
+    name: {{ cookiecutter.container_slug_prefix }}_{{ network }}{{ "
+    " if not loop.last }}
+  {%- endfor %}
+
+{% endif -%}
+services:
+  {{ minio_service(cookiecutter, expose_ports=true)|indent(2) }}
+
+  {{ db_service(cookiecutter, expose_ports=true)|indent(2) }}
+
+  {{ mlflow_tracking_service(cookiecutter)|indent(2) }}
+
+  {{ restapi_service(cookiecutter)|indent(2) }}
+
+  mc:
+    image: {{ container_image(cookiecutter.__containers.mc) }}
+    entrypoint:
+      - "/bin/sh"
+    {% if cookiecutter.__containers.networks -%}
+    {{ service_networks(cookiecutter.__containers.networks)|indent(4) }}
+    {% endif -%}
+    volumes:
+      {% if cookiecutter.minio_use_https.lower() == "true" -%}
+      - minio-certs:/root/.mc/certs/CAs:ro
+      {% endif -%}
+      - init-repos:/init-repos:ro
+
+  init-copy-nginx-01:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - "/usr/local/bin/init-copy.sh"
+    command:
+      - "--chown"
+      - "39000:100"
+      - "--chmod"
+      - "0644"
+      {% if cookiecutter.nginx_use_https.lower() == "true" -%}
+      - "/init/{{ cookiecutter.nginx_ssl_certificate_stem }}.crt"
+      - "/etc/ssl/{{ cookiecutter.nginx_ssl_certificate_stem }}.crt"
+      {% endif -%}
+      - "/init/default.conf"
+      - "/etc/nginx/conf.d/default.conf"
+    volumes:
+      - $((BASEDIR))/config/nginx:/init:ro
+      {% if cookiecutter.nginx_use_https.lower() == "true" -%}
+      - nginx-etc-ssl:/etc/ssl:rw
+      {% endif -%}
+      - nginx-conf-d:/etc/nginx/conf.d:rw
+
+  {% if cookiecutter.nginx_use_https.lower() == "true" -%}
+  init-copy-nginx-02:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - "/usr/local/bin/init-copy.sh"
+    command:
+      - "--chown"
+      - "39000:100"
+      - "--chmod"
+      - "0600"
+      - "/init/{{ cookiecutter.nginx_ssl_certificate_stem }}.key"
+      - "/etc/ssl/{{ cookiecutter.nginx_ssl_certificate_stem }}.key"
+    volumes:
+      - $((BASEDIR))/secrets:/init:ro
+      - nginx-etc-ssl:/etc/ssl:rw
+
+  {% endif -%}
+  init-copy-db-01:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - /usr/local/bin/init-copy.sh
+    command:
+      - "--chown"
+      - "root:root"
+      - "--chmod"
+      - "0600"
+      - "/init/postgres-passwd.env"
+      - "/etc/postgresql/postgres-passwd"
+    volumes:
+      - $((BASEDIR))/secrets:/init:ro
+      - postgres-docker-entrypoint-initdb-d:/docker-entrypoint-initdb.d:rw
+      - postgres-etc-postgresql:/etc/postgresql:rw
+
+  init-copy-db-02:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - /usr/local/bin/init-copy.sh
+    command:
+      - "--chown"
+      - "root:root"
+      - "--chmod"
+      - "0755"
+      - "/init/init-db.sh"
+      - "/docker-entrypoint-initdb.d/init-db.sh"
+    volumes:
+      - $((BASEDIR))/config/db:/init:ro
+      - postgres-docker-entrypoint-initdb-d:/docker-entrypoint-initdb.d:rw
+      - postgres-etc-postgresql:/etc/postgresql:rw
+
+  init-set-permissions-01:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - "/usr/local/bin/init-set-permissions"
+    command:
+      - "--chown"
+      - "39000:100"
+      - "--dir-chmod"
+      - "0700"
+      - "/mlflow-tracking-data"
+      - "/restapi-data"
+    volumes:
+      - mlflow-tracking-data:/mlflow-tracking-data:rw
+      - restapi-data:/restapi-data:rw
+
+  init-set-permissions-02:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - "/usr/local/bin/init-set-permissions"
+    command:
+      - "--chown"
+      - "999:999"
+      - "--dir-chmod"
+      - "0700"
+      - "/postgres-data"
+      - "/redis-data"
+    volumes:
+      - postgres-data:/postgres-data:rw
+      - redis-data:/redis-data:rw
+
+  init-set-permissions-03:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - "/usr/local/bin/init-set-permissions"
+    command:
+      - "--chown"
+      - "root:root"
+      - "--dir-chmod"
+      - "0700"
+      - "/minio-data"
+      - "/postgres-data"
+    volumes:
+      - minio-data:/minio-data:rw
+      - postgres-data:/postgres-data:rw
+
+  init-set-permissions-04:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - "/usr/local/bin/init-set-permissions"
+    command:
+      - "--chown"
+      - "5050:5050"
+      - "--dir-chmod"
+      - "0700"
+      - "/pgadmin4-data"
+    volumes:
+      - pgadmin4-data:/pgadmin4-data:rw
+
+  {% if cookiecutter.minio_use_https.lower() == "true" -%}
+  init-copy-minio-01:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - "/usr/local/bin/init-copy.sh"
+    command:
+      - "--chown"
+      - "root:root"
+      - "--chmod"
+      - "0644"
+      - "/init/{{ cookiecutter.minio_ssl_certificate_stem }}.crt"
+      - "/minio-certs/{{ cookiecutter.minio_ssl_certificate_stem }}.crt"
+    volumes:
+      - $((BASEDIR))/config/minio:/init:ro
+      - minio-certs:/minio-certs:rw
+
+  init-copy-minio-02:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - "/usr/local/bin/init-copy.sh"
+    command:
+      - "--chown"
+      - "root:root"
+      - "--chmod"
+      - "0600"
+      - "/init/{{ cookiecutter.minio_ssl_certificate_stem }}.key"
+      - "/minio-certs/{{ cookiecutter.minio_ssl_certificate_stem }}.key"
+    volumes:
+      - $((BASEDIR))/secrets:/init:ro
+      - minio-certs:/minio-certs:rw
+
+  {% endif -%}
+  init-clone-dioptra-repo-01:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - /usr/local/bin/init-git-clone.sh
+    command:
+      - "--chown"
+      - "root:root"
+      - "--dir-chmod"
+      - "0755"
+      - "--file-chmod"
+      - "0644"
+      - "https://github.com/usnistgov/dioptra.git"
+      - "/init-repos"
+    volumes:
+      - init-repos:/init-repos/git-repos:rw
+
+volumes:
+  {% if cookiecutter.use_nfs.lower() == "true" -%}
+  {{ nfs_volume("dioptra-datasets", cookiecutter.nfs_server_address, cookiecutter.nfs_mount_options, cookiecutter.dioptra_datasets_source_dir)|indent(2) }}
+  {{ nfs_volume("dioptra-saved-models", cookiecutter.nfs_server_address, cookiecutter.nfs_mount_options, cookiecutter.dioptra_saved_models_source_dir)|indent(2) }}
+  {% endif -%}
+  init-repos:
+    name: {{ cookiecutter.container_slug_prefix }}_init-repos
+  mlflow-tracking-data:
+    name: {{ cookiecutter.container_slug_prefix }}_mlflow-tracking-data
+  {% if cookiecutter.minio_use_https.lower() == "true" -%}
+  minio-certs:
+    name: {{ cookiecutter.container_slug_prefix }}_minio-certs
+  {% endif -%}
+  minio-data:
+    name: {{ cookiecutter.container_slug_prefix }}_minio-data
+  nginx-conf-d:
+    name: {{ cookiecutter.container_slug_prefix }}_nginx-conf-d
+  {% if cookiecutter.nginx_use_https.lower() == "true" -%}
+  nginx-etc-ssl:
+    name: {{ cookiecutter.container_slug_prefix }}_nginx-etc-ssl
+  {% endif -%}
+  pgadmin4-data:
+    name: {{ cookiecutter.container_slug_prefix }}_pgadmin4-data
+  postgres-data:
+    name: {{ cookiecutter.container_slug_prefix }}_postgres-data
+  postgres-docker-entrypoint-initdb-d:
+    name: {{ cookiecutter.container_slug_prefix }}_postgres-docker-entrypoint-initdb-d
+  postgres-etc-postgresql:
+    name: {{ cookiecutter.container_slug_prefix }}_postgres-etc-postgresql
+  redis-data:
+    name: {{ cookiecutter.container_slug_prefix }}_redis-data
+  restapi-data:
+    name: {{ cookiecutter.container_slug_prefix }}_restapi-data

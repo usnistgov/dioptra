@@ -1,9 +1,10 @@
 from __future__ import with_statement
 
 import logging
+import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, create_engine
 from sqlalchemy import pool
 
 from alembic import context
@@ -35,6 +36,16 @@ target_metadata = current_app.extensions["migrate"].db.metadata
 # ... etc.
 
 
+def get_url():
+    app_env = os.getenv("DIOPTRA_RESTAPI_ENV", "prod")
+    env_urls = {
+        "dev": os.getenv("DIOPTRA_RESTAPI_DEV_DATABASE_URI"),
+        "prod": os.getenv("DIOPTRA_RESTAPI_DATABASE_URI"),
+    }
+
+    return env_urls[app_env]
+
+
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
 
@@ -47,7 +58,7 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = get_url()
     context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
 
     with context.begin_transaction():
@@ -72,11 +83,7 @@ def run_migrations_online():
                 directives[:] = []
                 logger.info("No changes in schema detected.")
 
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_engine(get_url())
 
     with connectable.connect() as connection:
         context.configure(

@@ -1,0 +1,14 @@
+[Unit]
+Description=Dioptra Volume Backup service
+Requires=docker.socket
+After=docker.socket
+Wants=syslog.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory={{ cookiecutter.volume_backups_dir }}
+ExecStart=/bin/bash /usr/local/sbin/backup-dioptra-volumes.sh
+
+[Install]
+WantedBy=multi-user.target

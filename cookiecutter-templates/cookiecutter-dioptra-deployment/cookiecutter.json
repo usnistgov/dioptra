@@ -1,0 +1,112 @@
+{
+    "project_name": "dioptra-deployment",
+    "__project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '-').replace('_', '-') }}",
+    "__project_snakecase": "{{ cookiecutter.project_name.lower().replace(' ', '_').replace('-', '_') }}",
+    "container_slug_prefix": "{{ cookiecutter.__project_slug }}",
+    "container_registry": "",
+    "container_namespace": "dioptra",
+    "container_tag": "latest",
+    "db_admin_username": "postgres",
+    "db_admin_database": "postgres",
+    "generate_passwords": "True",
+    "pgadmin_default_email": "dioptra@example.com",
+    "nginx_use_https": "True",
+    "nginx_server_name": "dioptra.example.org",
+    "nginx_ssl_certificate_stem": "dioptra",
+    "dioptra_http_port": "80",
+    "dioptra_https_port": "443",
+    "is_firewall_forwarding_ports_80_433": "{{ 'False' if cookiecutter.dioptra_http_port == '80' and cookiecutter.dioptra_https_port == '443' else 'True' }}",
+    "minio_use_https": "True",
+    "minio_ssl_certificate_stem": "{{ cookiecutter.nginx_ssl_certificate_stem }}",
+    "minio_kms_secret_key_name": "{{ cookiecutter.container_slug_prefix ~ '-key' if cookiecutter.container_slug_prefix|length == 0 else 'dioptra-minio-key' }}",
+    "num_tensorflow_cpu_workers": "1",
+    "num_tensorflow_gpu_workers": "0",
+    "num_pytorch_cpu_workers": "0",
+    "num_pytorch_gpu_workers": "0",
+    "use_nfs": "True",
+    "nfs_server_address": "127.0.0.1",
+    "nfs_mount_options": "auto,rw,bg,nfsvers=4,intr,actimeo=1800 0 0",
+    "dioptra_datasets_source_dir": "/dioptra/data",
+    "dioptra_saved_models_source_dir": "/dioptra/saved-models",
+    "docker_compose_path": "/usr/local/bin/docker-compose",
+    "volume_backups_dir": "/var/backups",
+    "__containers": {
+        "networks": ["dioptra"],
+        "nginx": {
+            "image": "nginx",
+            "namespace": "{{ cookiecutter.container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "mlflow_tracking": {
+            "image": "mlflow-tracking",
+            "namespace": "{{ cookiecutter.container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "restapi": {
+            "image": "restapi",
+            "namespace": "{{ cookiecutter.container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "tfcpu": {
+            "image": "tensorflow2-cpu",
+            "namespace": "{{ cookiecutter.container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "tfgpu": {
+            "image": "tensorflow2-gpu",
+            "namespace": "{{ cookiecutter.container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "pytorchcpu": {
+            "image": "pytorch-cpu",
+            "namespace": "{{ cookiecutter.container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "pytorchgpu": {
+            "image": "pytorch-gpu",
+            "namespace": "{{ cookiecutter.container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "db": {
+            "image": "postgres",
+            "namespace": "",
+            "tag": "latest",
+            "registry": ""
+        },
+        "dbadmin": {
+            "image": "pgadmin4",
+            "namespace": "dpage",
+            "tag": "latest",
+            "registry": ""
+        },
+        "mc": {
+            "image": "mc",
+            "namespace": "minio",
+            "tag": "latest",
+            "registry": ""
+        },
+        "minio": {
+            "image": "minio",
+            "namespace": "minio",
+            "tag": "latest",
+            "registry": ""
+        },
+        "redis": {
+            "image": "redis",
+            "namespace": "",
+            "tag": "latest",
+            "registry": ""
+        }
+    },
+    "_copy_without_render": [
+        "templates"
+    ],
+    "_is_pytest": "False"
+}

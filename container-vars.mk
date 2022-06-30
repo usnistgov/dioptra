@@ -44,7 +44,6 @@ CONTAINER_MLFLOW_TRACKING_INCLUDE_FILES =\
 
 CONTAINER_NGINX_INCLUDE_FILES =\
     docker/configs/nginx.conf\
-    docker/configs/nginx.default.conf\
     docker/shellscripts/entrypoint-nginx.m4\
     docker/shellscripts/init-copy.m4\
     docker/shellscripts/init-git-clone.m4\

@@ -77,41 +77,6 @@ secure_container() {
 }
 
 ###########################################################################################
-# Create bucket on S3 storage
-#
-# Globals:
-#   default_artifact_root
-#   mlflow_s3_endpoint_url
-#   logname
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-s3_mb() {
-  local proto=$(echo ${default_artifact_root} | grep :// | sed -e "s,^\(.*://\).*,\1,g")
-  local url=$(echo ${default_artifact_root/${proto}/})
-
-  echo "${logname}: artifacts storage backend protocol is ${proto}"
-
-  if [[ ${proto} == s3:// && ! -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-mb.sh ]]; then
-    local bucket=${url%%/*}
-    echo "${logname}: artifacts storage path is ${default_artifact_root}, ensuring bucket ${bucket} exists"
-    /usr/local/bin/s3-mb.sh --endpoint-url ${mlflow_s3_endpoint_url} ${bucket}
-  elif [[ ${proto} == s3:// && -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-mb.sh ]]; then
-    local bucket=${url%%/*}
-    echo "${logname}: artifacts storage path is ${default_artifact_root}, ensuring bucket ${bucket} exists"
-    /usr/local/bin/s3-mb.sh ${bucket}
-  elif [[ ! -f /usr/local/bin/s3-mb.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/s3-mb.sh script missing" 1>&2
-    exit 1
-  else
-    echo "${logname}: artifacts storage path is ${default_artifact_root}"
-  fi
-}
-
-###########################################################################################
 # Freeze and export the container's conda virtual environment
 #
 # Globals:
@@ -217,6 +182,5 @@ start_mlflow_server() {
 parse_commandline "$@"
 set_parsed_globals
 secure_container
-s3_mb
 start_mlflow_server
 # ] <-- needed because of Argbash

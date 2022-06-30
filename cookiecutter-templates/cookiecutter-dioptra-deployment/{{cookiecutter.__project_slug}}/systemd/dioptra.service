@@ -1,0 +1,15 @@
+[Unit]
+Description=Dioptra service
+Requires=docker.socket
+After=docker.socket
+Wants=syslog.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory={{ cookiecutter._output_dir }}/{{ cookiecutter.__project_slug }}
+ExecStart={{ cookiecutter.docker_compose_path }} up
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

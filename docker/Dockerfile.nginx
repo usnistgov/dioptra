@@ -71,10 +71,11 @@ ARG DIOPTRA_GID=100
 RUN apt-get update && \
     echo "===> Upgrade existing packages...." && \
     apt-get -y upgrade && \
-    echo "===> Installing ca-certificates curl nginx wget...." && \
+    echo "===> Installing ca-certificates curl git nginx wget...." && \
     apt-get install -yq --no-install-recommends \
     ca-certificates \
     curl \
+    git \
     nginx \
     wget && \
     apt-get clean && \
@@ -170,7 +171,6 @@ RUN argbash /templates/conda-env.m4 -o /shellscripts/conda-env.sh && \
 FROM ${BASE_IMAGE} AS copy-files
 
 COPY --chown=root:root --chmod=0644 docker/configs/nginx.conf /files/nginx.conf
-COPY --chown=root:root --chmod=0644 docker/configs/nginx.default.conf /files/nginx.default.conf
 
 ######################################################################################################
 # Target images
@@ -188,9 +188,9 @@ COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/entr
 COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/init-copy.sh /usr/local/bin/init-copy.sh
 COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/init-git-clone.sh /usr/local/bin/init-git-clone.sh
 COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/init-set-permissions.sh /usr/local/bin/init-set-permissions.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/parse-uri.sh /usr/local/bin/parse-uri.sh
 COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/secure-container.sh /usr/local/bin/secure-container.sh
 COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/nginx.conf /etc/nginx/nginx.conf
-COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/nginx.default.conf /etc/nginx/conf.d/default.conf
 
 ARG DIOPTRA_USER=dioptra
 

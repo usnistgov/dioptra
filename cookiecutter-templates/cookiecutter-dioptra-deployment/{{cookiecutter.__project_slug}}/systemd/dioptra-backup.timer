@@ -1,0 +1,12 @@
+[Unit]
+Description=Dioptra Volume Backup timer
+RefuseManualStart=no
+RefuseManualStop=no
+
+[Timer]
+Persistent=true
+OnCalendar=*-*-* 06:00:00
+Unit=dioptra-backup.service
+
+[Install]
+WantedBy=timers.target

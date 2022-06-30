@@ -85,6 +85,7 @@ dependencies:
       - black>=20.8b1,<22
       - boto3
       - build
+      - git+https://github.com/cookiecutter/cookiecutter@master
       - commitizen
       - databricks-cli>=0.8.7 # mlflow requirement
       - docformatter
