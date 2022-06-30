@@ -45,7 +45,7 @@ endif
 
 EXAMPLE_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 EXAMPLE_NAME = pytorch-detectron2-poison-demo
-EXAMPLE_CONDA_ENV_NAME = mnist-membership-inference
+EXAMPLE_CONDA_ENV_NAME = pytorch-detectron2-demo
 EXAMPLE_CUSTOM_PLUGINS_DIR = task-plugins
 EXAMPLE_DATA_DIR = data
 EXAMPLE_JUPYTER_DIR = jupyter
@@ -72,6 +72,7 @@ CODE_WORKFLOW_FILE = MLproject
 
 PLUGINS_BUILTINS_DIR := $(EXAMPLE_PLUGINS_DIR)/dioptra_builtins
 PLUGINS_SRC_FILES := $(wildcard $(PLUGINS_BUILTINS_DIR)/*/*.py)
+CUSTOM_PLUGIN_ROADSIGNS_YOLO_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/roadsigns_yolo/*.py)
 
 PLUGINS_CUSTOM_DIR := $(EXAMPLE_CUSTOM_PLUGINS_DIR)/dioptra_custom
 CUSTOM_PLUGIN_PYTORCH_D2_SRC_FILES := $(wildcard $(PLUGINS_CUSTOM_DIR)/pytorch_d2/*.py)
@@ -85,7 +86,7 @@ S3_PLUGINS_BUCKET = plugins
 S3_WORKFLOW_BUCKET = workflow
 
 MAKEFILE_FILE = Makefile
-DATA_DOWNLOAD_FILE = $(EXAMPLE_DATA_DIR)/download_data.py
+DATA_DOWNLOAD_FILE = $(EXAMPLE_DATA_DIR)/download_roadsigns_data.py
 CUSTOM_TASK_PLUGINS_PYTORCH_D2_TARBALL_FILE = custom-plugins-pytorch-mi.tar.gz
 WORKFLOWS_TARBALL_FILE = workflows.tar.gz
 
@@ -102,9 +103,7 @@ DOCKER_LOCAL_VOLUMES =\
 DOCKER_COMPOSE_SENTINEL = .docker-compose.sentinel
 JUPYTER_SENTINEL = .jupyter.sentinel
 PLUGINS_SENTINEL = .plugins.sentinel
-TRAINING_DATASET_SENTINEL = .training-dataset.sentinel
-TESTING_DATASET_SENTINEL = .testing-dataset.sentinel
-
+DATASET_SENTINEL = .dataset.sentinel
 #################################################################################
 # FUNCTIONS                                                                     #
 #################################################################################
@@ -121,24 +120,14 @@ define cleanup
 $(FIND) . \( -name "__pycache__" -and -not -path "./.tox*" \) -type d -exec $(RM) -rf {} +
 $(FIND) . \( -name "*.py[co]" -and -not -path "./.tox*" \) -type f -exec $(RM) -rf {} +
 $(FIND) . -name ".ipynb_checkpoints" -type d -exec $(RM) -rf {} +
+$(RM) -f $(EXAMPLE_DIR)/$(DATASET_SENTINEL)
 $(RM) -rf $(EXAMPLE_DIR)/.mypy_cache
 $(RM) -rf $(EXAMPLE_DIR)/$(WORKFLOWS_TARBALL_FILE)
 $(RM) -rf $(EXAMPLE_DIR)/$(CUSTOM_TASK_PLUGINS_PYTORCH_D2_TARBALL_FILE)
 endef
 
 define download_data
-$(call run_docker_compose,\
-    run\
-    --rm\
-    --entrypoint ""\
-    -v $(strip $(1)):/work/demo\
-    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
-    -w /work/demo\
-    pytorchcpu-01\
-    bash -c "\
-        source /opt/conda/etc/profile.d/conda.sh &&\
-        conda activate $(CONDA_ENV_NAME) &&\
-        $(PY) $(DATA_DOWNLOAD_FILE) --data-dir $(2) $(3)")
+$(PY) $(DATA_DOWNLOAD_FILE) --data-dir $(1) --upgrade --clean
 endef
 
 define get_host_user_id
@@ -221,8 +210,8 @@ custom-plugins: custom-plugins-pytorch-mi
 ## Create custom pytorch_d2 plugins tarball
 custom-plugins-pytorch-mi: $(CUSTOM_TASK_PLUGINS_PYTORCH_D2_TARBALL_FILE)
 
-## Download and prepare MNIST dataset
-data: $(TRAINING_DATASET_SENTINEL) $(TESTING_DATASET_SENTINEL)
+## Download and prepare Road Signs dataset
+data: $(DATASET_SENTINEL)
 
 ## Launch the demo
 demo: initdb data plugins jupyter workflows services
@@ -282,18 +271,8 @@ $(RESTAPI_DATABASE): $(RESTAPI_DATABASE_INIT_SCRIPT_FILE) | $(EXAMPLE_MINIO_DATA
 	$(call docker_remove_volume,$(DOCKER_LOCAL_VOLUMES))
 	$(RM) -f $(DOCKER_COMPOSE_SENTINEL)
 
-$(TRAINING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
-	$(call chmod,777,$(EXAMPLE_DATA_DIR))
-	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--training)
-	$(call run_docker_compose,down)
-	$(call docker_remove_volume,$(DOCKER_LOCAL_VOLUMES))
-	$(call save_sentinel_file,$@)
-
-$(TESTING_DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE) | $(EXAMPLE_MINIO_DATA_DIR) $(EXAMPLE_MLFLOW_TRACKING_DATA_DIR) $(EXAMPLE_REDIS_DATA_DIR) $(EXAMPLE_RESTAPI_DATA_DIR)
-	$(call chmod,777,$(EXAMPLE_DATA_DIR))
-	$(call download_data,$(EXAMPLE_DIR),$(EXAMPLE_DATA_DIR),--testing)
-	$(call run_docker_compose,down)
-	$(call docker_remove_volume,$(DOCKER_LOCAL_VOLUMES))
+$(DATASET_SENTINEL): $(DATA_DOWNLOAD_FILE)
+	$(call download_data,$(EXAMPLE_DATA_DIR))
 	$(call save_sentinel_file,$@)
 
 $(WORKFLOWS_TARBALL_FILE): $(CODE_SRC_FILES) $(CODE_WORKFLOW_FILE)

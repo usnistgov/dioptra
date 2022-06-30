@@ -35,5 +35,8 @@ rm balloon_dataset.zip
 
 ## Road Sign Detection Kaggle Dataset:
 
-Register with Kaggle to download the following road sign detection dataset: 
-https://www.kaggle.com/andrewmvd/road-sign-detection
+To download the Road Sign Detection dataset, please run the following command:
+
+`make data`
+
+Afterwards, the dataset would be stored in `./data/Road-Sign-Detection-v2`.

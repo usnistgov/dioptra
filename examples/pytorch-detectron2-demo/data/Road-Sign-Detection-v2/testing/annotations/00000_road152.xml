@@ -1,0 +1,23 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00000_road152.png</filename>
+    <size>
+        <width>400</width>
+        <height>225</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>crosswalk</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>125</xmin>
+            <ymin>37</ymin>
+            <xmax>276</xmax>
+            <ymax>185</ymax>
+        </bndbox>
+    </object>
+</annotation>
