@@ -33,7 +33,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
@@ -611,23 +611,25 @@ title="Print to PDF"
 <p>A task plugin module for interfacing the <a class="reference external" href="https://adversarial-robustness-toolbox.readthedocs.io/en/latest/">Adversarial Robustness Toolbox</a> with the MLFlow model registry.</p>
 <dl class="py function">
 <dt id="dioptra_builtins.registry.art.load_wrapped_tensorflow_keras_classifier">
-<code class="sig-name descname"><span class="pre">load_wrapped_tensorflow_keras_classifier</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">KerasClassifier</span><a class="reference internal" href="../../_modules/dioptra_builtins/registry/art.html#load_wrapped_tensorflow_keras_classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.registry.art.load_wrapped_tensorflow_keras_classifier" title="Permalink to this definition">#</a></dt>
+<code class="sig-name descname"><span class="pre">load_wrapped_tensorflow_keras_classifier</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifier_kwargs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">KerasClassifier</span><a class="reference internal" href="../../_modules/dioptra_builtins/registry/art.html#load_wrapped_tensorflow_keras_classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.registry.art.load_wrapped_tensorflow_keras_classifier" title="Permalink to this definition">#</a></dt>
 <dd><p>Loads and wraps a registered Keras classifier for compatibility with the <a class="reference external" href="https://adversarial-robustness-toolbox.readthedocs.io/en/latest/">Adversarial Robustness Toolbox</a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> – The name of the registered model in the MLFlow model registry.</p></li>
 <li><p><strong>version</strong> – The version number of the registered model in the MLFlow registry.</p></li>
+<li><p><strong>classifier_kwargs</strong> – A dictionary mapping argument names to values which will
+be passed to the KerasClassifier constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A trained <a class="reference external" href="https://adversarial-robustness-toolbox.readthedocs.io/en/latest/modules/estimators/classification.html#art.estimators.classification.KerasClassifier" title="(in Adversarial Robustness Toolbox v1.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasClassifier</span></code></a> object.</p>
+<dd class="field-even"><p>A trained <a class="reference external" href="https://adversarial-robustness-toolbox.readthedocs.io/en/latest/modules/estimators/classification.html#art.estimators.classification.KerasClassifier" title="(in Adversarial Robustness Toolbox v1.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">KerasClassifier</span></code></a> object.</p>
 </dd>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://adversarial-robustness-toolbox.readthedocs.io/en/latest/modules/estimators/classification.html#art.estimators.classification.KerasClassifier" title="(in Adversarial Robustness Toolbox v1.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">art.estimators.classification.KerasClassifier</span></code></a></p></li>
+<li><p><a class="reference external" href="https://adversarial-robustness-toolbox.readthedocs.io/en/latest/modules/estimators/classification.html#art.estimators.classification.KerasClassifier" title="(in Adversarial Robustness Toolbox v1.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">art.estimators.classification.KerasClassifier</span></code></a></p></li>
 <li><p><a class="reference internal" href="#dioptra_builtins.registry.mlflow.load_tensorflow_keras_classifier" title="dioptra_builtins.registry.mlflow.load_tensorflow_keras_classifier"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.load_tensorflow_keras_classifier()</span></code></a></p></li>
 </ul>
 </div>
