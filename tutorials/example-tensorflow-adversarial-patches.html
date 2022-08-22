@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Tensorflow Adversarial Patch &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Tensorflow Backdoor Poisoning" href="example-tensorflow-backdoor-poisoning.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -658,7 +658,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="tensorflow-adversarial-patch">
+  <section id="tensorflow-adversarial-patch">
 <span id="tutorials-example-tensorflow-adversarial-patch"></span><h1>Tensorflow Adversarial Patch<a class="headerlink" href="#tensorflow-adversarial-patch" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -686,9 +686,9 @@ For more information regarding attack and defense parameters, please see the att
 <li><p>JPEG Compression: Applies an image compression algorithm over the image.</p></li>
 </ul>
 <p>Please note that the patch attack generally bypasses most preprocessing defenses, see <code class="docutils literal notranslate"><span class="pre">demo-mnist-patches.ipynb</span></code> for details.</p>
-<div class="section" id="getting-started">
+<section id="getting-started">
 <h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">#</a></h2>
-<div class="section" id="mnist-patches-demo">
+<section id="mnist-patches-demo">
 <h3>MNIST patches demo<a class="headerlink" href="#mnist-patches-demo" title="Permalink to this headline">#</a></h3>
 <p>Everything you need to run the <code class="docutils literal notranslate"><span class="pre">demo-mnist-patches.ipynb</span></code> demo on your local computer is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
 Once you have downloaded the images, navigate to this example’s directory using the terminal and run the demo startup sequence:</p>
@@ -703,8 +703,8 @@ From here, follow the provided instructions to run the demo provided in the Jupy
 <p>If you want to watch the output logs for the Tensorflow worker containers as you step through the demo, run <code class="docutils literal notranslate"><span class="pre">docker-compose</span> <span class="pre">logs</span> <span class="pre">-f</span> <span class="pre">tfcpu-01</span> <span class="pre">tfcpu-02</span></code> in your terminal.</p>
 <p>When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code> on the command-line.
 If you were watching the output logs, you will need to press Ctrl-C to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
-</div>
-<div class="section" id="on-prem-deployment">
+</section>
+<section id="on-prem-deployment">
 <h3>On-prem deployment<a class="headerlink" href="#on-prem-deployment" title="Permalink to this headline">#</a></h3>
 <p>To run any of the demo notebooks using an on-prem deployment, all you need to do is download and start the <strong>jupyter</strong> service defined in this example’s <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file.
 Open a terminal and navigate to this example’s directory and run the <strong>jupyter</strong> startup sequence,</p>
@@ -714,12 +714,12 @@ Open a terminal and navigate to this example’s directory and run the <strong>j
 <p>Once the startup process completes, open up your web browser and enter <a class="reference external" href="http://localhost:38888">http://localhost:38888</a> in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10 to 15 more seconds and try again).
 Double click the <code class="docutils literal notranslate"><span class="pre">work</span></code> folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.</p>
 <p>When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code> on the command-line.</p>
-</div>
-</div>
-<div class="section" id="mlflow-entrypoint-overview">
+</section>
+</section>
+<section id="mlflow-entrypoint-overview">
 <h2>MLflow Entrypoint Overview<a class="headerlink" href="#mlflow-entrypoint-overview" title="Permalink to this headline">#</a></h2>
 <p>Here are the available MLflow entry points used by the demos and their associated parameters.</p>
-<div class="section" id="common-training-and-testing-entry-points">
+<section id="common-training-and-testing-entry-points">
 <h3>Common Training and Testing Entry Points<a class="headerlink" href="#common-training-and-testing-entry-points" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">init_model</span></code>: Loads a pretrained model available from the TensorFlow library into the MLflow model storage. Evaluates the model on an available test set</p>
@@ -795,8 +795,8 @@ Double click the <code class="docutils literal notranslate"><span class="pre">wo
 </ul>
 </li>
 </ul>
-</div>
-<div class="section" id="patch-attack-entry-points">
+</section>
+<section id="patch-attack-entry-points">
 <h3>Patch Attack Entry Points<a class="headerlink" href="#patch-attack-entry-points" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">gen_patch</span></code>: Generates adversarial patches from a trained model and dataset.</p>
@@ -842,8 +842,8 @@ Double click the <code class="docutils literal notranslate"><span class="pre">wo
 </ul>
 </li>
 </ul>
-</div>
-<div class="section" id="image-preprocessing-defense-entry-points">
+</section>
+<section id="image-preprocessing-defense-entry-points">
 <h3>Image Preprocessing Defense Entry Points<a class="headerlink" href="#image-preprocessing-defense-entry-points" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">spatial_smoothing</span></code>: Applies localized median filtering across an image for the given dataset.</p>
@@ -910,9 +910,9 @@ Double click the <code class="docutils literal notranslate"><span class="pre">wo
 </ul>
 </li>
 </ul>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
               </div>

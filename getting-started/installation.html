@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Installation Guide &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Setup Tips for Newcomers" href="newcomer-tips.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -678,7 +678,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="installation-guide">
+  <section id="installation-guide">
 <span id="getting-started-installation"></span><h1>Installation Guide<a class="headerlink" href="#installation-guide" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -686,9 +686,9 @@ title="Print to PDF"
 </div>
 <p>This installation guide is divided into three parts, with the first part covering system requirements, the second part covering how to install the <code class="docutils literal notranslate"><span class="pre">dioptra</span></code> Python package, and the third part covering how to setup a personal computer for test-driving the Dioptra architecture locally.
 General instructions on how to deploy the Testbed in an on-premises server can be found in the sections under <strong>Deployment Guide</strong>.</p>
-<div class="section" id="package-installation">
+<section id="package-installation">
 <h2>Package Installation<a class="headerlink" href="#package-installation" title="Permalink to this headline">#</a></h2>
-<div class="section" id="requirements">
+<section id="requirements">
 <h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">#</a></h3>
 <p>The minimum requirements for installing the <code class="docutils literal notranslate"><span class="pre">dioptra</span></code> Python package on your host device are as follows:</p>
 <ul class="simple">
@@ -697,16 +697,16 @@ General instructions on how to deploy the Testbed in an on-premises server can b
 <li><p>Operating System: Windows 10, MacOS 10.14 or newer, Linux (Ubuntu 20.04 LTS recommended)</p></li>
 <li><p>Python 3.7 or above (3.7 and 3.8 are actively tested)</p></li>
 </ul>
-</div>
-<div class="section" id="creating-a-conda-environment">
+</section>
+<section id="creating-a-conda-environment">
 <span id="quickstart-create-environment"></span><h3>Creating a Conda Environment<a class="headerlink" href="#creating-a-conda-environment" title="Permalink to this headline">#</a></h3>
 <p>A <a class="reference external" href="https://en.wikipedia.org/wiki/Virtual_environment">Virtual Environment</a> must be created to support various dependencies such as the <a class="reference external" href="https://www.python.org/">Python</a> modules and packages included in scripts within the project codebase.
 The easiest way to accomplish this is using the pre-built configuration files included in the project codebase to create a <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environment</a>.</p>
 <p>There are two install options to start using <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html">Conda Environments</a>,</p>
-<div class="tabbed-set docutils">
-<input checked="checked" id="61796ad4-0d0d-4070-aede-617398e66a91" name="420a8a3b-fc2c-4530-93d4-9b986779626b" type="radio">
-</input><label class="tabbed-label" for="61796ad4-0d0d-4070-aede-617398e66a91">
-Anaconda installation</label><div class="tabbed-content docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-0">
+Anaconda installation</label><div class="sd-tab-content docutils">
 <p>The following links will provide an installation package for version 2020.11 of <a class="reference external" href="https://docs.anaconda.com/">Anaconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://repo.anaconda.com/archive/Anaconda3-2020.11-Windows-x86_64.exe">Anaconda for Windows</a></p></li>
@@ -715,9 +715,9 @@ Anaconda installation</label><div class="tabbed-content docutils">
 </ul>
 <p>If your host machine does not meet the <span class="xref std std-ref">quickstart-system-requirements</span>, then go to the <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">Anaconda Installation Documents</a> for more help.</p>
 </div>
-<input id="97fce702-831c-4853-93e8-dcd76c15e4de" name="420a8a3b-fc2c-4530-93d4-9b986779626b" type="radio">
-</input><label class="tabbed-label" for="97fce702-831c-4853-93e8-dcd76c15e4de">
-Miniconda installation</label><div class="tabbed-content docutils">
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-1">
+Miniconda installation</label><div class="sd-tab-content docutils">
 <p>The following links will provide an installation package for the latest version of <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> on your host machine (must meet all <span class="xref std std-ref">quickstart-system-requirements</span>).</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe">Miniconda for Windows</a></p></li>
@@ -727,11 +727,11 @@ Miniconda installation</label><div class="tabbed-content docutils">
 <p>If your host machine does not meet the <span class="xref std std-ref">quickstart-system-requirements</span>, then go to the <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda Installation Documents</a> for more help.</p>
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="preparing-a-local-testbed-environment">
+</section>
+</section>
+<section id="preparing-a-local-testbed-environment">
 <h2>Preparing a Local Testbed environment<a class="headerlink" href="#preparing-a-local-testbed-environment" title="Permalink to this headline">#</a></h2>
-<div class="section" id="id1">
+<section id="id1">
 <h3>Requirements<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p>The minimum requirements for test-driving the Testbed architecture locally on your host device are as follows:</p>
 <ul class="simple">
@@ -741,8 +741,8 @@ Miniconda installation</label><div class="tabbed-content docutils">
 <li><p>GNU/Linux-compatible environment, see <a class="reference internal" href="#quickstart-gnu-linux-environment"><span class="std std-ref">GNU/Linux Environments</span></a></p></li>
 <li><p>Docker Desktop 3.1.0 or later (Windows/MacOS)</p></li>
 </ul>
-</div>
-<div class="section" id="gnu-linux-environments">
+</section>
+<section id="gnu-linux-environments">
 <span id="quickstart-gnu-linux-environment"></span><h3>GNU/Linux Environments<a class="headerlink" href="#gnu-linux-environments" title="Permalink to this headline">#</a></h3>
 <p>A host device that uses a GNU/Linux environment can be the following:</p>
 <ul class="simple">
@@ -759,30 +759,28 @@ To resolve such issues, first look at the external documentation linked (i.e. <a
 Also, when using a virtual machine it is likely the performance can be throttled because of the CPU and Memory allocations set at the time the virtual machine was configured.
 If performance becomes an issue when using a virtual machine, consider increasing the CPU and Memory resources allocated to the machine.</p>
 </div>
-</div>
-<div class="section" id="clone-the-repository">
+</section>
+<section id="clone-the-repository">
 <span id="quickstart-clone-repository"></span><h3>Clone the Repository<a class="headerlink" href="#clone-the-repository" title="Permalink to this headline">#</a></h3>
 <p>To clone the repository, open a new <strong>Terminal</strong> session for your operating system,</p>
-<div class="tabbed-set docutils">
-<input checked="checked" id="a58bcd68-2337-44d1-8714-61addba354bd" name="e5ce94ff-75fe-4397-9db4-eb7119469800" type="radio">
-</input><label class="tabbed-label" for="a58bcd68-2337-44d1-8714-61addba354bd">
-Linux</label><div class="tabbed-content docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-2">
+Linux</label><div class="sd-tab-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">ctrl</kbd> + <kbd class="kbd docutils literal notranslate">alt</kbd> + <kbd class="kbd docutils literal notranslate">t</kbd> to open the <strong>Terminal</strong>.</p>
 </div>
-</div>
-<p>Next, navigate to the directory where you will clone the repository,</p>
-<div class="tabbed-set docutils">
-<input checked="checked" id="08e4f153-ec4d-4af8-aae3-94e4183420fd" name="9c640306-5630-418a-8353-b88612669170" type="radio">
-</input><label class="tabbed-label" for="08e4f153-ec4d-4af8-aae3-94e4183420fd">
-MacOS</label><div class="tabbed-content docutils">
+<input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-3">
+MacOS</label><div class="sd-tab-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">command</kbd> + <kbd class="kbd docutils literal notranslate">space</kbd> to open the <strong>Spotlight Search</strong>, type <code class="docutils literal notranslate"><span class="pre">Terminal</span></code> into the search bar, and click the <em>Terminal</em> application under <em>Top Hit</em> at the top of your results.</p>
 </div>
-<input id="0999273c-6e3b-42da-83b6-6cc9eff2f226" name="9c640306-5630-418a-8353-b88612669170" type="radio">
-</input><label class="tabbed-label" for="0999273c-6e3b-42da-83b6-6cc9eff2f226">
-Windows</label><div class="tabbed-content docutils">
+<input id="sd-tab-item-4" name="sd-tab-set-1" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-4">
+Windows</label><div class="sd-tab-content docutils">
 <p>Use the keyboard shortcut <kbd class="kbd docutils literal notranslate">windows</kbd> + <kbd class="kbd docutils literal notranslate">r</kbd> to open <strong>Run</strong>, then type <code class="docutils literal notranslate"><span class="pre">wsl</span></code> into the search bar and click <em>OK</em> to start a <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/">Windows Subsystem for Linux</a> session.</p>
 </div>
 </div>
+<p>Next, navigate to the directory where you will clone the repository,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE: Substitute path/to/your/directory with a path that exists on your device.</span>
 <span class="nb">cd</span> path/to/your/directory
 </pre></div>
@@ -799,17 +797,17 @@ For this reason, WSL and MacOS users are both encouraged to create and clone the
 </div>
 </div>
 <p>Clone the repository to your local computer,</p>
-<div class="tabbed-set docutils">
-<input checked="checked" id="b433439e-c71d-46d7-b8aa-4a08fa46b18b" name="2bfcddf8-a566-40fd-9ad8-f0052a21871b" type="radio">
-</input><label class="tabbed-label" for="b433439e-c71d-46d7-b8aa-4a08fa46b18b">
-Clone with HTTPS</label><div class="tabbed-content docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-5">
+Clone with HTTPS</label><div class="sd-tab-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/usnistgov/dioptra.git
 </pre></div>
 </div>
 </div>
-<input id="a6212e81-edad-4f78-9f02-1f9f036d89e1" name="2bfcddf8-a566-40fd-9ad8-f0052a21871b" type="radio">
-</input><label class="tabbed-label" for="a6212e81-edad-4f78-9f02-1f9f036d89e1">
-Clone with SSH</label><div class="tabbed-content docutils">
+<input id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-6">
+Clone with SSH</label><div class="sd-tab-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:usnistgov/dioptra.git
 </pre></div>
 </div>
@@ -820,8 +818,8 @@ Clone with SSH</label><div class="tabbed-content docutils">
 </pre></div>
 </div>
 <p>The message <em>Already up to date.</em> should be echoed, verifying the repository was successfully cloned to your device.</p>
-</div>
-<div class="section" id="using-pre-made-configuration-files-to-create-a-conda-environment">
+</section>
+<section id="using-pre-made-configuration-files-to-create-a-conda-environment">
 <span id="quickstart-config-environment"></span><h3>Using Pre-made Configuration Files to Create a Conda Environment<a class="headerlink" href="#using-pre-made-configuration-files-to-create-a-conda-environment" title="Permalink to this headline">#</a></h3>
 <p>Throughout the project codebase, there are a multitude of files named <cite>environment.yml</cite>.
 These <a class="reference internal" href="../glossary.html#term-YAML"><span class="xref std std-term">YAML</span></a> files, or rather configuration files, can be used as parameters when <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands">creating a Conda Environment</a>.</p>
@@ -844,9 +842,9 @@ These <a class="reference internal" href="../glossary.html#term-YAML"><span clas
 <p><strong>NOTE</strong>: The <em>name-of-the-environment</em> used for the demos provided in the project codebase can be found by inspecting the specific <em>environment.yml</em> file for the tag labeled <em>name</em>.</p>
 </li>
 </ol>
-</div>
-</div>
-<div class="section" id="pulling-the-latest-docker-images">
+</section>
+</section>
+<section id="pulling-the-latest-docker-images">
 <span id="quickstart-build-images"></span><h2>Pulling the Latest Docker Images<a class="headerlink" href="#pulling-the-latest-docker-images" title="Permalink to this headline">#</a></h2>
 <p>The last step to setup the Dioptra Testbed is to build the necessary docker images used by the repository’s various tutorials.</p>
 <p><strong>NOTE</strong>: The following steps will only work if you are attempting to use the <em>master</em> branch of the repository.
@@ -866,8 +864,8 @@ These are most current images that are pre-built to be used by the <em>master</e
 </div>
 </li>
 </ol>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

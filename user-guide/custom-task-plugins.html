@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Custom Task Plugins &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Generics Plugin System" href="generics-plugin-system.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -620,14 +620,14 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="custom-task-plugins">
+  <section id="custom-task-plugins">
 <span id="user-guide-custom-task-plugins"></span><h1>Custom Task Plugins<a class="headerlink" href="#custom-task-plugins" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
 <p>When designing a custom example, you may be required to create a new task plugin in order to effect specific behaviors not included in the core plugins.</p>
-<div class="section" id="task-organization-built-in-tasks">
+<section id="task-organization-built-in-tasks">
 <h2>Task Organization: Built-in Tasks<a class="headerlink" href="#task-organization-built-in-tasks" title="Permalink to this headline">#</a></h2>
 <p>Dioptra contains a number of built-in task plugins that can be executed across all available examples.
 They are stored in the following directories:</p>
@@ -661,8 +661,8 @@ They are stored in the following directories:</p>
 </pre></div>
 </div>
 <p>Please refer to <a class="reference internal" href="task-plugins-collection.html#user-guide-task-plugins-collection"><span class="std std-ref">Task Plugins Collection</span></a> for more information regarding each built-in task.</p>
-</div>
-<div class="section" id="task-organization-local-tasks">
+</section>
+<section id="task-organization-local-tasks">
 <h2>Task Organization: Local Tasks<a class="headerlink" href="#task-organization-local-tasks" title="Permalink to this headline">#</a></h2>
 <p>In general while built-in task plugins are located in the <code class="docutils literal notranslate"><span class="pre">task-plugins/dioptra_builtins</span></code> folder, local tasks can be stored in the same way as local python functions in each example’s src code folder.</p>
 <p>For instance, in our previous guide on creating custom entry points we had a localized task called <code class="docutils literal notranslate"><span class="pre">task_B</span></code> which was stored in the python file <code class="docutils literal notranslate"><span class="pre">custom_local_task_plugins.py</span></code>.</p>
@@ -678,8 +678,8 @@ They are stored in the following directories:</p>
 <p>To retrieve this plugin for our entry point we had to call the import statement <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">.custom_local_task_plugins</span> <span class="pre">import</span> <span class="pre">task_B</span></code>, similar to how we would import and use a python function.
 For additional examples on how these plugins are constructed, you can refer to <code class="docutils literal notranslate"><span class="pre">examples/tensorflow-mnist-classifier/src/tasks.py</span></code> for local plugins.</p>
 <p>The following sections will now involve creating built-in and localized task plugins.</p>
-</div>
-<div class="section" id="creating-a-built-in-task">
+</section>
+<section id="creating-a-built-in-task">
 <h2>Creating a Built-in Task<a class="headerlink" href="#creating-a-built-in-task" title="Permalink to this headline">#</a></h2>
 <p>To create a built-in task, first the user must identify which built-in subdirectory (artifacts, attacks, etc.) should contain the new task.
 Once this is done, the task can be declared as follows:</p>
@@ -724,8 +724,8 @@ Note that we assumed these new tasks have been saved in a module named <code cla
 </pre></div>
 </div>
 <p>For local tasks we will use a different notation for both creating and invoking tasks in the flow pipeline.</p>
-</div>
-<div class="section" id="creating-a-local-task">
+</section>
+<section id="creating-a-local-task">
 <h2>Creating a Local Task<a class="headerlink" href="#creating-a-local-task" title="Permalink to this headline">#</a></h2>
 <p>In general the major difference besides location of local task plugins is that the the <cite>&#64;task</cite> decorator now replaces the <cite>&#64;pyplugs.register</cite> decorator.
 The task decorator is imported from the prefect library:</p>
@@ -759,8 +759,8 @@ The task decorator is imported from the prefect library:</p>
     <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

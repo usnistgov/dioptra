@@ -35,40 +35,42 @@ Using this Demo
 The steps for getting your environment ready to run this demo depend on whether you intend to run the demo locally (i.e. on your personal computer) or on an existing on-prem deployment.
 Navigate to the tab below that best describes your setup in order to proceed.
 
-.. tabbed:: Local
+.. tab-set::
 
-   .. include:: snippets/common-local-setup-instructions.rst
+   .. tab-item:: Local
 
-   The startup sequence will take more time to finish the first time you use this demo, as you will need to download the :term:`MNIST` dataset, initialize the Testbed term:`API` database, and synchronize the task plugins to the S3 storage.
+      .. include:: snippets/common-local-setup-instructions.rst
 
-   .. include:: snippets/common-setup-instructions.rst
+      The startup sequence will take more time to finish the first time you use this demo, as you will need to download the :term:`MNIST` dataset, initialize the Testbed term:`API` database, and synchronize the task plugins to the S3 storage.
 
-   Before doing anything else, ensure that the first 4 code blocks are configured for your local environment.
+      .. include:: snippets/common-setup-instructions.rst
 
-   If you are running the demos locally and want to watch the output logs for the Tensorflow worker containers as you step through the demo, run ``docker-compose logs -f tfcpu-01 tfcpu-02`` in your terminal.
+      Before doing anything else, ensure that the first 4 code blocks are configured for your local environment.
 
-   .. include:: snippets/common-model-inversion-notebook-summary.rst
+      If you are running the demos locally and want to watch the output logs for the Tensorflow worker containers as you step through the demo, run ``docker-compose logs -f tfcpu-01 tfcpu-02`` in your terminal.
 
-   .. include:: snippets/common-teardown-instructions.rst
+      .. include:: snippets/common-model-inversion-notebook-summary.rst
 
-   If you were watching the output logs, you will need to press :kbd:`Ctrl-C` to stop following the logs before you can run ``make teardown``.
+      .. include:: snippets/common-teardown-instructions.rst
 
-.. tabbed:: On-Prem Deployment
+      If you were watching the output logs, you will need to press :kbd:`Ctrl-C` to stop following the logs before you can run ``make teardown``.
 
-   To run the demo on an on-prem deployment, all you need to do is download and start the **jupyter** service defined in this example's ``docker-compose.yml`` file.
-   Open a terminal and navigate to this example's directory and run the **jupyter** startup sequence,
+   .. tab-item:: On-Prem Deployment
 
-   .. code-block:: sh
+      To run the demo on an on-prem deployment, all you need to do is download and start the **jupyter** service defined in this example's ``docker-compose.yml`` file.
+      Open a terminal and navigate to this example's directory and run the **jupyter** startup sequence,
 
-      make jupyter
+      .. code-block:: sh
 
-   .. include:: snippets/common-setup-instructions.rst
+         make jupyter
 
-   Before doing anything else, ensure that the first 4 code blocks are configured for interacting with your on-prem deployment of the testbed architecture.
+      .. include:: snippets/common-setup-instructions.rst
 
-   .. include:: snippets/common-model-inversion-notebook-summary.rst
+      Before doing anything else, ensure that the first 4 code blocks are configured for interacting with your on-prem deployment of the testbed architecture.
 
-   .. include:: snippets/common-teardown-instructions.rst
+      .. include:: snippets/common-model-inversion-notebook-summary.rst
+
+      .. include:: snippets/common-teardown-instructions.rst
 
 Attacks
 -------

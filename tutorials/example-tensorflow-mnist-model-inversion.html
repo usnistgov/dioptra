@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Tensorflow MNIST Model Inversion &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Tensorflow Adversarial Patch" href="example-tensorflow-adversarial-patches.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -624,7 +624,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="tensorflow-mnist-model-inversion">
+  <section id="tensorflow-mnist-model-inversion">
 <span id="tutorials-example-tensorflow-mnist-model-inversion"></span><h1>Tensorflow MNIST Model Inversion<a class="headerlink" href="#tensorflow-mnist-model-inversion" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -636,14 +636,14 @@ title="Print to PDF"
 For this reason, it is highly recommended that you run these demos on a CUDA-compatible GPU.</p>
 </div>
 <p>The demo provided in the Jupyter notebook <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> uses Dioptra to run experiments that investigate the model inversion attack when launched on a neural network model trained on the <a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> dataset.</p>
-<div class="section" id="using-this-demo">
+<section id="using-this-demo">
 <h2>Using this Demo<a class="headerlink" href="#using-this-demo" title="Permalink to this headline">#</a></h2>
 <p>The steps for getting your environment ready to run this demo depend on whether you intend to run the demo locally (i.e. on your personal computer) or on an existing on-prem deployment.
 Navigate to the tab below that best describes your setup in order to proceed.</p>
-<div class="tabbed-set docutils">
-<input checked="checked" id="28b61682-1a90-4f3a-895e-c1b7f79fc416" name="eb525c08-0010-4ab6-b00d-d8300596dd5b" type="radio">
-</input><label class="tabbed-label" for="28b61682-1a90-4f3a-895e-c1b7f79fc416">
-Local</label><div class="tabbed-content docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-0">
+Local</label><div class="sd-tab-content docutils">
 <p>Everything you need to run this demo locally is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
 Once you have downloaded the images, stay in the terminal and navigate to this example’s directory and run the demo startup sequence,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make demo
@@ -665,9 +665,9 @@ Running block 7 will run the model inversion attack on the <a class="reference i
 </div>
 <p>If you were watching the output logs, you will need to press <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
 </div>
-<input id="3bd3300b-39fa-4dc9-a9f5-4ab041b004dd" name="eb525c08-0010-4ab6-b00d-d8300596dd5b" type="radio">
-</input><label class="tabbed-label" for="3bd3300b-39fa-4dc9-a9f5-4ab041b004dd">
-On-Prem Deployment</label><div class="tabbed-content docutils">
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-1">
+On-Prem Deployment</label><div class="sd-tab-content docutils">
 <p>To run the demo on an on-prem deployment, all you need to do is download and start the <strong>jupyter</strong> service defined in this example’s <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file.
 Open a terminal and navigate to this example’s directory and run the <strong>jupyter</strong> startup sequence,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make jupyter
@@ -687,13 +687,13 @@ Running block 7 will run the model inversion attack on the <a class="reference i
 </div>
 </div>
 </div>
-</div>
-<div class="section" id="attacks">
+</section>
+<section id="attacks">
 <h2>Attacks<a class="headerlink" href="#attacks" title="Permalink to this headline">#</a></h2>
 <p>Model Inversion (MIFACE) is an attack which attempts to discover a generic representative image of each class of the training set.
 In the original paper, this was applied to facial recognition, where the attack would attempt to discover what a face looked like, given access to the model and the name of the person (where each person was their own class).
 In this example, it is instead applied to <a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> handwritten data, and the attack attempts to discover a representative handwritten digit which might be considered an average of the training set’s images for that class, without having access to the training set.</p>
-<div class="section" id="model-inversion">
+<section id="model-inversion">
 <h3>Model Inversion<a class="headerlink" href="#model-inversion" title="Permalink to this headline">#</a></h3>
 <p><strong>Paper:</strong> <a class="reference external" href="https://dl.acm.org/doi/10.1145/2810103.2813677">https://dl.acm.org/doi/10.1145/2810103.2813677</a></p>
 <dl class="option-list">
@@ -710,14 +710,14 @@ In this example, it is instead applied to <a class="reference internal" href="..
 <dd><p>The learning rate for the gradient descent.</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="viewing-results-and-downloading-images">
+</section>
+</section>
+<section id="viewing-results-and-downloading-images">
 <h2>Viewing Results and Downloading Images<a class="headerlink" href="#viewing-results-and-downloading-images" title="Permalink to this headline">#</a></h2>
 <p>To view the results, under MLFlow, click the experiment associated with the attack, and scroll down.
 A download will be available for <code class="docutils literal notranslate"><span class="pre">testing_adversarial_miface.tar.gz</span></code>, which will contain one image per class, which is the attack’s guess as to what the members of the original class would have looked like.</p>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

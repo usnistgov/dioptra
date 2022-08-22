@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Single Machine Deployment &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Task Plugins Management" href="task-plugins-management.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -634,7 +634,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="single-machine-deployment">
+  <section id="single-machine-deployment">
 <span id="deployment-guide-single-machine"></span><h1>Single Machine Deployment<a class="headerlink" href="#single-machine-deployment" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -677,7 +677,7 @@ You can alternatively run <code class="docutils literal notranslate"><span class
 <p>For more information about the Compose file, see the <a class="reference external" href="https://docs.docker.com/compose/compose-file/">Compose file reference</a>.</p>
 <p class="attribution">—<a class="reference external" href="https://docs.docker.com/compose/">Overview of Docker Compose</a></p>
 </div></blockquote>
-<div class="section" id="sample-deployment">
+<section id="sample-deployment">
 <h2>Sample Deployment<a class="headerlink" href="#sample-deployment" title="Permalink to this headline">#</a></h2>
 <p>The sample <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file contained in the dropdown menu below is a copy of our single-machine Testbed deployment, which was for an <a class="reference internal" href="../glossary.html#term-NVIDIA-DGX"><span class="xref std std-term">NVIDIA DGX</span></a> workstation with the following specifications,</p>
 <dl class="simple">
@@ -694,13 +694,13 @@ You can alternatively run <code class="docutils literal notranslate"><span class
 <dt>Operating System</dt><dd><p>Ubuntu 18.04 LTS</p>
 </dd>
 </dl>
-<details class="sphinx-bs dropdown card mb-3">
-<summary class="summary-title card-header">
-Single Machine Deployment docker-compose.yml file<div class="summary-down docutils">
-<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
-<div class="summary-up docutils">
-<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
-</summary><div class="summary-content card-body docutils">
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+Single Machine Deployment docker-compose.yml file<div class="sd-summary-down docutils">
+<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
+<div class="sd-summary-up docutils">
+<svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
+</summary><div class="sd-summary-content sd-card-body docutils">
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2.4&quot;</span><span class="w"></span>
 
 <span class="nt">networks</span><span class="p">:</span><span class="w"></span>
@@ -1131,7 +1131,7 @@ Single Machine Deployment docker-compose.yml file<div class="summary-down docuti
 </details><p>For the rest of this guide, we will discuss how to adapt this file for use in your deployment environment.
 You will need root access to the machine in order to proceed, run <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">-s</span></code> to become root.</p>
 <p>We store our deployment <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file at the path <code class="docutils literal notranslate"><span class="pre">/etc/dioptra/lab-deployment/docker-compose.yml</span></code> and set the folder permissions so that non-root users cannot access the file.</p>
-<div class="section" id="create-application-folders-on-host">
+<section id="create-application-folders-on-host">
 <h3>Create Application Folders on Host<a class="headerlink" href="#create-application-folders-on-host" title="Permalink to this headline">#</a></h3>
 <p>The data generated by the Minio, MLFlow Tracking, Redis, and <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> services will be mapped to the host machine’s filesystem via bind mounts.
 We placed these folders for our deployment under the directory <code class="docutils literal notranslate"><span class="pre">/var/dioptra/lab-deployment</span></code>, which looks as follows:</p>
@@ -1174,16 +1174,16 @@ chmod <span class="m">0700</span> /var/dioptra/lab-deployment/minio
 chmod <span class="m">0700</span> /var/dioptra/lab-deployment/redis
 </pre></div>
 </div>
-</div>
-<div class="section" id="parameters-to-set-update">
+</section>
+<section id="parameters-to-set-update">
 <h3>Parameters to Set/Update<a class="headerlink" href="#parameters-to-set-update" title="Permalink to this headline">#</a></h3>
 <p>Now that we’ve set up our folder structure, there are a few changes that you will need to make to the <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file to prepare it for your environment.</p>
 <p class="rubric">Configure the dataset volume</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">nfs-datasets</span></code> volume will need to be updated based on the details of your deployment,</p>
-<div class="tabbed-set docutils">
-<input checked="checked" id="d3cd9fd6-ee45-460b-bfac-4416e1d1667a" name="e7e79201-f730-4866-8e56-6bd8112f5555" type="radio">
-</input><label class="tabbed-label" for="d3cd9fd6-ee45-460b-bfac-4416e1d1667a">
-Datasets on NFS share</label><div class="tabbed-content docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-0">
+Datasets on NFS share</label><div class="sd-tab-content docutils">
 <p>The following Docker volume assumes that the NFS share is the directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code> on a device with the IP address <code class="docutils literal notranslate"><span class="pre">192.168.1.20</span></code>.
 Update it to match the details of your NFS share.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nfs-datasets</span><span class="p">:</span><span class="w"></span>
@@ -1195,9 +1195,9 @@ Update it to match the details of your NFS share.</p>
 </pre></div>
 </div>
 </div>
-<input id="5258b182-8b97-4939-bcb9-d01f67458d86" name="e7e79201-f730-4866-8e56-6bd8112f5555" type="radio">
-</input><label class="tabbed-label" for="5258b182-8b97-4939-bcb9-d01f67458d86">
-Datasets in local directory</label><div class="tabbed-content docutils">
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-1">
+Datasets in local directory</label><div class="sd-tab-content docutils">
 <p>The following Docker volume assumes that the data is stored in the local directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code>.
 Update this to match the folder where you store your datasets.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nfs-datasets</span><span class="p">:</span><span class="w"></span>
@@ -1284,8 +1284,8 @@ Our deployment used the following:</p>
 The <code class="docutils literal notranslate"><span class="pre">cpu_shares</span></code> parameter controls the container’s CPU priority when CPU resources are in high demand and only relative differences are meaningful.
 So, for example, this means that the Workers in Block 2 have twice the CPU priority that the Workers in Block 4 have when using CPUS 10 to 14.</p>
 <p>Tune the CPU and GPU allocations to suit your circumstances and needs.</p>
-</div>
-<div class="section" id="initializations">
+</section>
+<section id="initializations">
 <h3>Initializations<a class="headerlink" href="#initializations" title="Permalink to this headline">#</a></h3>
 <p class="rubric">Initialize the REST API database</p>
 <p>The <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a>  <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> database must be initialized as follows before you start using it,</p>
@@ -1308,8 +1308,8 @@ docker-compose down
 </div>
 <p class="rubric">Configure and synchronize the task plugins</p>
 <p>See the <a class="reference internal" href="task-plugins-management.html"><span class="doc">Task Plugins Management guide</span></a>.</p>
-</div>
-<div class="section" id="deployment">
+</section>
+<section id="deployment">
 <h3>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">#</a></h3>
 <p>With everything configured and initialized, you can deploy the Testbed.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker-compose up -d
@@ -1319,9 +1319,9 @@ docker-compose down
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker-compose down
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
               </div>

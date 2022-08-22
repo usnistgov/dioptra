@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Task Plugins &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Creating a New Entry Point" href="custom-entry-points.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -644,7 +644,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="task-plugins">
+  <section id="task-plugins">
 <span id="user-guide-task-plugins"></span><h1>Task Plugins<a class="headerlink" href="#task-plugins" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -654,15 +654,15 @@ title="Print to PDF"
 <p class="admonition-title">Tip</p>
 <p>Instructions for how to create your own task plugins are available in the <a class="reference internal" href="custom-task-plugins.html"><span class="doc">Custom Task Plugins guide</span></a>.</p>
 </div>
-<div class="section" id="what-are-task-plugins">
+<section id="what-are-task-plugins">
 <h2>What are Task Plugins?<a class="headerlink" href="#what-are-task-plugins" title="Permalink to this headline">#</a></h2>
-<div class="figure align-default">
-<img alt="../_images/entry-point-task-plugin-composition.svg" src="../_images/entry-point-task-plugin-composition.svg" /></div>
+<figure class="align-default">
+<img alt="../_images/entry-point-task-plugin-composition.svg" src="../_images/entry-point-task-plugin-composition.svg" /></figure>
 <p>Task plugins are the main compositional unit of an entry point script.
 They perform a variety of basic, low-level functions such as loading models, preparing data, and computing metrics, as well as implementing atomic portions of attacks and defenses such as generating adversarial examples or pre-processing images before inference.
 <a class="reference internal" href="entry-points.html#entry-points-prefect-task-execution"><span class="std std-ref">As discussed at the end of the previous section</span></a>, the <a class="reference external" href="https://www.prefect.io">Prefect</a> library sets up and manages the data flows between the task plugins and the task execution order.</p>
-</div>
-<div class="section" id="calling-a-task-plugin">
+</section>
+<section id="calling-a-task-plugin">
 <h2>Calling a Task Plugin<a class="headerlink" href="#calling-a-task-plugin" title="Permalink to this headline">#</a></h2>
 <p>Let’s return to the <a class="reference internal" href="entry-points.html#entry-points-prefect-task-execution-code"><span class="std std-ref">final example from the previous guide</span></a> and expand the code to include the next task plugin call.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">Parameter</span>
@@ -710,8 +710,8 @@ For example, if the <code class="docutils literal notranslate"><span class="pre"
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="pyplugs-and-the-task-plugin-registry">
+</section>
+<section id="pyplugs-and-the-task-plugin-registry">
 <h2>PyPlugs and the Task Plugin Registry<a class="headerlink" href="#pyplugs-and-the-task-plugin-registry" title="Permalink to this headline">#</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -721,13 +721,13 @@ Please see the following article for an explanation of how this type of plugin r
 </div>
 <p>Now that we’ve seen how <a class="reference internal" href="api-sdk/api-pyplugs.html#dioptra.pyplugs.call_task" title="dioptra.pyplugs.call_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyplugs.call_task()</span></code></a> is used to call task plugins, the next question is, “how does <a class="reference internal" href="api-sdk/api-pyplugs.html#dioptra.pyplugs.call_task" title="dioptra.pyplugs.call_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyplugs.call_task()</span></code></a> find the task plugins and build its internal registry?”
 We address those questions with the following three sections.</p>
-<div class="section" id="storage">
+<section id="storage">
 <h3>Storage<a class="headerlink" href="#storage" title="Permalink to this headline">#</a></h3>
 <p>The task plugins are stored in a specific bucket and directory on the Testbed’s S3 storage.
 When a Testbed Worker pulls a new experiment job from the queue, it is instructed to first synchronize its plugins with the latest copies on S3.
 This means that new plugins are installed in the Testbed environment simply by copying them to the relevant S3 storage location.</p>
-</div>
-<div class="section" id="registration">
+</section>
+<section id="registration">
 <h3>Registration<a class="headerlink" href="#registration" title="Permalink to this headline">#</a></h3>
 <p>PyPlugs will only be aware of functions that have a <code class="docutils literal notranslate"><span class="pre">&#64;pyplugs.register</span></code> decorator attached to them.
 The example below illustrates how to apply this decorator to a Python function so that PyPlugs can discover it and include it in its internal registry.</p>
@@ -741,8 +741,8 @@ The example below illustrates how to apply this decorator to a Python function s
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="discovery">
+</section>
+<section id="discovery">
 <h3>Discovery<a class="headerlink" href="#discovery" title="Permalink to this headline">#</a></h3>
 <p>The directory where the Testbed Worker syncs the latest copies of the plugins from S3 must be added to Python’s system path so that PyPlugs can search for them.
 However, modifying the Python system path must be done with care to ensure that you will still be able to import your other installed packages and avoid creating dependency conflicts.
@@ -754,9 +754,9 @@ For this reason, the Testbed <a class="reference internal" href="../glossary.htm
 </pre></div>
 </div>
 <p><code class="xref py py-func docutils literal notranslate"><span class="pre">plugin_dirs()</span></code> determines the paths it needs to add to the Python system path by inspecting the <code class="docutils literal notranslate"><span class="pre">DIOPTRA_PLUGIN_DIR</span></code> environment variable, which is the same variable used by the Testbed Worker when it downloads the latest copies of the task plugins from S3.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
               </div>

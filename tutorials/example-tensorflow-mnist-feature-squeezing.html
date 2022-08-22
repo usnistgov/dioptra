@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Tensorflow MNIST Feature Squeezing &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Tensorflow MNIST Model Inversion" href="example-tensorflow-mnist-model-inversion.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -684,13 +684,13 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="tensorflow-mnist-feature-squeezing">
+  <section id="tensorflow-mnist-feature-squeezing">
 <span id="tutorials-example-tensorflow-mnist-feature-squeezing"></span><h1>Tensorflow MNIST Feature Squeezing<a class="headerlink" href="#tensorflow-mnist-feature-squeezing" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<div class="section" id="introduction">
+<section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">#</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -698,15 +698,15 @@ title="Print to PDF"
 For this reason, it is highly recommended that you run these demos on a CUDA-compatible GPU.</p>
 </div>
 <p>The demo provided in the Jupyter notebook <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> uses Dioptra to run experiments that investigate the effectiveness of the feature-squeezing defense against a series of evasion attacks against a neural network model.</p>
-</div>
-<div class="section" id="using-this-demo">
+</section>
+<section id="using-this-demo">
 <h2>Using this Demo<a class="headerlink" href="#using-this-demo" title="Permalink to this headline">#</a></h2>
 <p>The steps for getting your environment ready to run this demo depend on whether you intend to run the demo locally (i.e. on your personal computer) or on an existing on-prem deployment.
 Navigate to the tab below that best describes your setup in order to proceed.</p>
-<div class="tabbed-set docutils">
-<input checked="checked" id="7065deb5-22f5-4b10-9ebe-2893b632b620" name="91b03251-ed54-44d4-94b9-8a7ebfb1fbbf" type="radio">
-</input><label class="tabbed-label" for="7065deb5-22f5-4b10-9ebe-2893b632b620">
-Local</label><div class="tabbed-content docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-0">
+Local</label><div class="sd-tab-content docutils">
 <p>Everything you need to run this demo locally is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
 Once you have downloaded the images, stay in the terminal and navigate to this example’s directory and run the demo startup sequence,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make demo
@@ -735,9 +735,9 @@ Generally speaking, each pair contains an pipeline representing an undefended at
 </div>
 <p>If you were watching the output logs, you will need to press <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs before you can run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code>.</p>
 </div>
-<input id="d80f0728-6d73-40bb-94b7-53c9f81aa4d8" name="91b03251-ed54-44d4-94b9-8a7ebfb1fbbf" type="radio">
-</input><label class="tabbed-label" for="d80f0728-6d73-40bb-94b7-53c9f81aa4d8">
-On-Prem Deployment</label><div class="tabbed-content docutils">
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-1">
+On-Prem Deployment</label><div class="sd-tab-content docutils">
 <p>To run the demo on an on-prem deployment, all you need to do is download and start the <strong>jupyter</strong> service defined in this example’s <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file.
 Open a terminal and navigate to this example’s directory and run the <strong>jupyter</strong> startup sequence,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make jupyter
@@ -766,13 +766,13 @@ Generally speaking, each pair contains an pipeline representing an undefended at
 </div>
 </div>
 </div>
-</div>
-<div class="section" id="attacks">
+</section>
+<section id="attacks">
 <h2>Attacks<a class="headerlink" href="#attacks" title="Permalink to this headline">#</a></h2>
 <p>This demo includes a series of adversarial image generation techniques to test the feature squeezing defense against.
 The parameters for each attack are listed below, along with a link to the paper describing each attack.
 These parameters will help you to tune your attacks.</p>
-<div class="section" id="carlini-wagner-l2-distance-metric">
+<section id="carlini-wagner-l2-distance-metric">
 <h3>Carlini Wagner (L2 Distance Metric)<a class="headerlink" href="#carlini-wagner-l2-distance-metric" title="Permalink to this headline">#</a></h3>
 <p><strong>Paper:</strong> <a class="reference external" href="https://arxiv.org/abs/1608.04644">https://arxiv.org/abs/1608.04644</a></p>
 <dl class="option-list">
@@ -798,8 +798,8 @@ These parameters will help you to tune your attacks.</p>
 <dd><p>Maximum number of doubling steps in the line search optimization. [default: 5]</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="carlini-wagner-linf-distance-metric">
+</section>
+<section id="carlini-wagner-linf-distance-metric">
 <h3>Carlini Wagner (Linf Distance Metric)<a class="headerlink" href="#carlini-wagner-linf-distance-metric" title="Permalink to this headline">#</a></h3>
 <p><strong>Paper:</strong> <a class="reference external" href="https://arxiv.org/abs/1608.04644">https://arxiv.org/abs/1608.04644</a></p>
 <dl class="option-list">
@@ -822,8 +822,8 @@ These parameters will help you to tune your attacks.</p>
 <dd><p>An upper bound for the L_0 norm of the adversarial perturbation. [default: 0.3]</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="jacobian-saliency-map-attack">
+</section>
+<section id="jacobian-saliency-map-attack">
 <h3>Jacobian Saliency Map Attack<a class="headerlink" href="#jacobian-saliency-map-attack" title="Permalink to this headline">#</a></h3>
 <p><strong>Paper:</strong> <a class="reference external" href="https://arxiv.org/abs/1511.07528">https://arxiv.org/abs/1511.07528</a></p>
 <dl class="option-list">
@@ -834,8 +834,8 @@ These parameters will help you to tune your attacks.</p>
 <dd><p>Maximum fraction of features being perturbed (between 0 and 1). [default: 1.0]</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="fast-gradient-method">
+</section>
+<section id="fast-gradient-method">
 <h3>Fast Gradient Method<a class="headerlink" href="#fast-gradient-method" title="Permalink to this headline">#</a></h3>
 <p><strong>Paper:</strong> <a class="reference external" href="https://arxiv.org/abs/1412.6572">https://arxiv.org/abs/1412.6572</a></p>
 <dl class="option-list">
@@ -855,8 +855,8 @@ These parameters will help you to tune your attacks.</p>
 <dd><p>Indicates if computing the minimal perturbation (True). If True, also define eps_step for the step size and eps for the maximum perturbation. [default: False]</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="deepfool">
+</section>
+<section id="deepfool">
 <h3>Deepfool<a class="headerlink" href="#deepfool" title="Permalink to this headline">#</a></h3>
 <p><strong>Paper:</strong> <a class="reference external" href="https://arxiv.org/abs/1511.04599">https://arxiv.org/abs/1511.04599</a></p>
 <dl class="option-list">
@@ -870,9 +870,9 @@ These parameters will help you to tune your attacks.</p>
 <dd><p>Number of class gradients to compute. [default: 10]</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="defense">
+</section>
+</section>
+<section id="defense">
 <h2>Defense<a class="headerlink" href="#defense" title="Permalink to this headline">#</a></h2>
 <p>This demo implements a portion of the feature squeezing defense described in the paper found here: <a class="reference external" href="https://arxiv.org/abs/1704.01155">https://arxiv.org/abs/1704.01155</a>.
 <code class="docutils literal notranslate"><span class="pre">feature_squeezing.py</span></code> applies the color-depth squeezing defense in order to attempt to reduce the feature space of images shown to the classifier.
@@ -883,8 +883,8 @@ For example, setting the bit-depth to 2 on an RGB image will set the max color d
 <dd><p>An integer between 1 and 8 that defines the color depth of the squeezed image. [default: 8]</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="viewing-results-and-downloading-images">
+</section>
+<section id="viewing-results-and-downloading-images">
 <h2>Viewing Results and Downloading Images<a class="headerlink" href="#viewing-results-and-downloading-images" title="Permalink to this headline">#</a></h2>
 <p>Results for each run may be viewed through the MLFlow dashboard, by default located at <a class="reference external" href="http://localhost:35000">http://localhost:35000</a> (your own deployment may have mlflow in a different location, contact your system administrator for more information).
 To view your experiment runs, first navigate to your own experiment on the left hand side of the screen (If you’ve followed this readme up to now, it should be named <code class="docutils literal notranslate"><span class="pre">{user_id}_feature_squeeze</span></code>).
@@ -896,8 +896,8 @@ If you wish to download sample images, you can get them by doing the following:<
 <li><p>Select the file you wish to download (in this case, testing_adversarial.tar.gz)</p></li>
 <li><p>Click the download icon on the top right corner of the Artifacts box.</p></li>
 </ol>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

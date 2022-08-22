@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Creating a New Entry Point &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Custom Task Plugins" href="custom-task-plugins.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -630,16 +630,16 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="creating-a-new-entry-point">
+  <section id="creating-a-new-entry-point">
 <span id="user-guide-custom-entry-points"></span><h1>Creating a New Entry Point<a class="headerlink" href="#creating-a-new-entry-point" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<div class="section" id="what-are-the-basic-steps">
+<section id="what-are-the-basic-steps">
 <h2>What are the basic steps?<a class="headerlink" href="#what-are-the-basic-steps" title="Permalink to this headline">#</a></h2>
-<div class="figure align-default">
-<img alt="../_images/entry-point-customization.svg" src="../_images/entry-point-customization.svg" /></div>
+<figure class="align-default">
+<img alt="../_images/entry-point-customization.svg" src="../_images/entry-point-customization.svg" /></figure>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>When creating a new entrypoint, users may also find it helpful to create their own python task plugins in combination with existing builtin task plugins.
@@ -676,8 +676,8 @@ The following sections will assume that all task plugins already exist somewhere
 </pre></div>
 </div>
 <p>We will start by defining the <code class="docutils literal notranslate"><span class="pre">&lt;custom_entrypoint_script&gt;.py</span></code> file followed by the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file.</p>
-</div>
-<div class="section" id="developing-the-python-entry-point-script-defining-tasks-and-parameters">
+</section>
+<section id="developing-the-python-entry-point-script-defining-tasks-and-parameters">
 <h2>Developing the Python Entry Point Script: Defining Tasks and Parameters<a class="headerlink" href="#developing-the-python-entry-point-script-defining-tasks-and-parameters" title="Permalink to this headline">#</a></h2>
 <p>Let us assume we want to do the following tasks in a new python script, called <code class="docutils literal notranslate"><span class="pre">process_artifacts.py</span></code>:</p>
 <ol class="arabic simple">
@@ -695,8 +695,8 @@ The following sections will assume that all task plugins already exist somewhere
 <p>Now that we have identified all the parameters we will need to provide to each task, we will need to setup the proper Click commands in our script so that it will request those parameters when it is executed.</p>
 <p>Please refer to <a class="reference internal" href="entry-points.html#user-guide-entry-points"><span class="std std-ref">Entry Points</span></a> for more information on setting up command line arguments with Click.</p>
 <p>After Click parameter setup, we will need to pass the parameters into our flow pipeline.</p>
-</div>
-<div class="section" id="developing-the-python-entry-point-script-passing-job-parameters-into-a-given-flow">
+</section>
+<section id="developing-the-python-entry-point-script-passing-job-parameters-into-a-given-flow">
 <h2>Developing the Python Entry Point Script: Passing Job Parameters into a Given Flow<a class="headerlink" href="#developing-the-python-entry-point-script-passing-job-parameters-into-a-given-flow" title="Permalink to this headline">#</a></h2>
 <p>Let us call our flow pipeline <code class="docutils literal notranslate"><span class="pre">process_artifacts_flow</span></code>.
 With this we will need to do the following steps to initialize the flow in our main body of the script:</p>
@@ -705,7 +705,7 @@ With this we will need to do the following steps to initialize the flow in our m
 <li><p>Pass our parameters into the <code class="docutils literal notranslate"><span class="pre">flow.run()</span></code> call.</p></li>
 <li><p>Define the <code class="docutils literal notranslate"><span class="pre">process_artifacts_flow</span></code> task pipeline.</p></li>
 </ol>
-<p>We should have something similar to the example below (after defining our <a class="reference external" href="https://click.palletsprojects.com/en/7.x/api/#click.command" title="(in Click v7.x)"><code class="xref py py-func docutils literal notranslate"><span class="pre">click.command()</span></code></a> line inputs):</p>
+<p>We should have something similar to the example below (after defining our <a class="reference external" href="https://click.palletsprojects.com/en/8.1.x/api/#click.command" title="(in Click v8.1.x)"><code class="xref py py-func docutils literal notranslate"><span class="pre">click.command()</span></code></a> line inputs):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># START OF PYTHON SCRIPT
 !/usr/bin/env python
 import ...
@@ -749,8 +749,8 @@ if __name__ == &quot;__main__&quot;:
 <p>Here we can see that we’ve transferred the parameters for tasks A-C through into process_artifacts_flow’s <code class="docutils literal notranslate"><span class="pre">flow.run()</span></code> call.</p>
 <p>This call will take in all job associated parameters needed for running each task and transfer it to our flow pipeline.
 Users are also allowed to initialize and pass through additional parameter values as needed into the <code class="docutils literal notranslate"><span class="pre">flow.run()</span></code> call, such as the secondary parameters that can be set by default or calculated based on other input parameters.</p>
-</div>
-<div class="section" id="developing-the-python-entry-point-script-creating-a-flow-pipeline">
+</section>
+<section id="developing-the-python-entry-point-script-creating-a-flow-pipeline">
 <h2>Developing the Python Entry Point Script: Creating a Flow Pipeline<a class="headerlink" href="#developing-the-python-entry-point-script-creating-a-flow-pipeline" title="Permalink to this headline">#</a></h2>
 <p>Next, we will define the flow pipeline itself.
 We will start with the input parameters we need to provide to the current Flow.
@@ -883,8 +883,8 @@ if __name__ == &quot;__main__&quot;:
 </pre></div>
 </div>
 <p>Next we will need to add our new entry point script to the MLproject file.</p>
-</div>
-<div class="section" id="adding-the-new-entry-point-to-mlproject-file">
+</section>
+<section id="adding-the-new-entry-point-to-mlproject-file">
 <h2>Adding the New Entry Point to MLproject File:<a class="headerlink" href="#adding-the-new-entry-point-to-mlproject-file" title="Permalink to this headline">#</a></h2>
 <p>Assuming we will want to create an entry point called <code class="docutils literal notranslate"><span class="pre">process_artifacts</span></code> to invoke our <code class="docutils literal notranslate"><span class="pre">process_artifacts.py</span></code> script with the same job parameter names, we will create the following example below to link our script to our MLproject file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">:</span> <span class="n">example_mlflow_project_name_here</span>
@@ -904,8 +904,8 @@ if __name__ == &quot;__main__&quot;:
 </div>
 <p>Effectively, the <code class="docutils literal notranslate"><span class="pre">process_parameters</span></code> entry point will now invoke the <code class="docutils literal notranslate"><span class="pre">src/process_parameters.py</span></code> script with the associated job parameters now forwarding to their counterpart command line arguments.</p>
 <p>Please refer to <a class="reference internal" href="entry-points.html#user-guide-entry-points"><span class="std std-ref">Entry Points</span></a> for more details regarding MLproject specifications.</p>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

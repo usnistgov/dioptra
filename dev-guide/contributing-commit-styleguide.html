@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Commit Styleguide &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Building Development Docker Images" href="contributing-build-dev-images.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -694,7 +694,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="commit-styleguide">
+  <section id="commit-styleguide">
 <span id="dev-guide-commit-styleguide"></span><h1>Commit Styleguide<a class="headerlink" href="#commit-styleguide" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -702,7 +702,7 @@ title="Print to PDF"
 </div>
 <p>This project follows precise rules over how git commit messages should be formatted.
 This leads to more readable messages that are easy to follow when looking through the project history.</p>
-<div class="section" id="general-rules">
+<section id="general-rules">
 <h2>General Rules<a class="headerlink" href="#general-rules" title="Permalink to this headline">#</a></h2>
 <ol class="arabic simple">
 <li><p>Separate subject from body with a blank line</p></li>
@@ -713,8 +713,8 @@ This leads to more readable messages that are easy to follow when looking throug
 <li><p>Use the body to explain what and why vs. how</p></li>
 <li><p>Each commit should be a single, stable change</p></li>
 </ol>
-</div>
-<div class="section" id="merge-vs-rebase">
+</section>
+<section id="merge-vs-rebase">
 <h2>Merge vs Rebase<a class="headerlink" href="#merge-vs-rebase" title="Permalink to this headline">#</a></h2>
 <p>This project uses a rebase workflow.
 That means that every commit on its own should be a clear, functional, and stable change.
@@ -722,14 +722,14 @@ This means then when you’re building a new feature, you should try to pare it 
 This is counter to having a Merge Request which may include commit messages like “fix [unmerged] behavior”.
 Those commits should get squashed, and the final patch when landed should be rebased.</p>
 <p>Remember: each commit should follow the commit message format and be stable.</p>
-<div class="section" id="squashing">
+<section id="squashing">
 <h3>Squashing<a class="headerlink" href="#squashing" title="Permalink to this headline">#</a></h3>
 <p>If you are squashing your branch, it’s important to make sure you update the commit message.
 If you’re using GitHub’s UI it will by default create a new commit message which is a combination of all commits and <strong>does not follow the commit guidelines</strong>.</p>
 <p>If you’re working locally, it often can be useful to <code class="docutils literal notranslate"><span class="pre">--amend</span></code> a commit, or utilize <code class="docutils literal notranslate"><span class="pre">rebase</span> <span class="pre">-i</span></code> to reorder, squash, and reword your commits.</p>
-</div>
-</div>
-<div class="section" id="commit-message-format">
+</section>
+</section>
+<section id="commit-message-format">
 <h2>Commit Message Format<a class="headerlink" href="#commit-message-format" title="Permalink to this headline">#</a></h2>
 <p>Each commit message consists of a <strong>header</strong>, a <strong>body</strong> and a <strong>footer</strong>.</p>
 <p>The header has a special format that includes a type, a scope and a subject:</p>
@@ -753,13 +753,13 @@ that joining behavior is consistent on both Windows and POSIX systems.
 Closes #1
 </pre></div>
 </div>
-</div>
-<div class="section" id="revert">
+</section>
+<section id="revert">
 <h2>Revert<a class="headerlink" href="#revert" title="Permalink to this headline">#</a></h2>
 <p>If the commit reverts a previous commit, it should begin with <code class="docutils literal notranslate"><span class="pre">revert:</span></code>, followed by the header of the reverted commit.
 In the body it should say: <code class="docutils literal notranslate"><span class="pre">This</span> <span class="pre">reverts</span> <span class="pre">commit</span> <span class="pre">&lt;hash&gt;.</span></code>, where the hash is the SHA of the commit being reverted.</p>
-</div>
-<div class="section" id="type">
+</section>
+<section id="type">
 <h2>Type<a class="headerlink" href="#type" title="Permalink to this headline">#</a></h2>
 <p>Must be one of the following:</p>
 <ul class="simple">
@@ -776,8 +776,8 @@ In the body it should say: <code class="docutils literal notranslate"><span clas
 <li><p><strong>style</strong>: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)</p></li>
 <li><p><strong>test</strong>: Adding missing tests or correcting existing tests</p></li>
 </ul>
-</div>
-<div class="section" id="scope">
+</section>
+<section id="scope">
 <h2>Scope<a class="headerlink" href="#scope" title="Permalink to this headline">#</a></h2>
 <p>The scope should be the name of the core component affected as perceived by person reading changelog generated from commit messages, not the name of the literal file changed.
 For example, if the code primarily affects configuration, you’d use the <em>config</em> scope, even if the changes are made to a utility file.</p>
@@ -800,8 +800,8 @@ Examples include restructuring the project layout or running a code beautifier a
 <li><p><code class="docutils literal notranslate"><span class="pre">chore</span></code> and <code class="docutils literal notranslate"><span class="pre">build</span></code> changes: There is a broad range of tools and libraries out there related to changes in the project’s configuration files and the build system (examples: conda, flake8, makefile, mypy, pre-commit, etc).
 The use of scopes for these kinds of changes is optional and it is generally recommended that you omit them in the interest of keeping the list of scopes simple.</p></li>
 </ol>
-</div>
-<div class="section" id="subject">
+</section>
+<section id="subject">
 <h2>Subject<a class="headerlink" href="#subject" title="Permalink to this headline">#</a></h2>
 <p>The subject contains a succinct description of the change:</p>
 <ul class="simple">
@@ -809,18 +809,18 @@ The use of scopes for these kinds of changes is optional and it is generally rec
 <li><p>Don’t capitalize the first letter</p></li>
 <li><p>No dot (.) at the end</p></li>
 </ul>
-</div>
-<div class="section" id="body">
+</section>
+<section id="body">
 <h2>Body<a class="headerlink" href="#body" title="Permalink to this headline">#</a></h2>
 <p>Just as in the <strong>subject</strong>, use the imperative, present tense: “change” not “changed” nor “changes”.
 The body should include the motivation for the change and contrast this with previous behavior.</p>
-</div>
-<div class="section" id="footer">
+</section>
+<section id="footer">
 <h2>Footer<a class="headerlink" href="#footer" title="Permalink to this headline">#</a></h2>
 <p>The footer should contain any information about <strong>Breaking Changes</strong> and is also the place to reference GitHub issues that this commit <strong>Closes</strong>.</p>
 <p><strong>Breaking Changes</strong> should start with the word <code class="docutils literal notranslate"><span class="pre">BREAKING</span> <span class="pre">CHANGE:</span></code> with a space or two newlines. The rest of the commit message is then used for this.</p>
-</div>
-<div class="section" id="references">
+</section>
+<section id="references">
 <span id="references-1"></span><h2>References<a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://chris.beams.io/posts/git-commit/">https://chris.beams.io/posts/git-commit/</a></p></li>
@@ -828,8 +828,8 @@ The body should include the motivation for the change and contrast this with pre
 <li><p><a class="reference external" href="https://github.com/angular/angular/blob/master/CONTRIBUTING.md">https://github.com/angular/angular/blob/master/CONTRIBUTING.md</a></p></li>
 <li><p><a class="reference external" href="https://docs.sentry.io/development/contribute/contributing">https://docs.sentry.io/development/contribute/contributing</a></p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

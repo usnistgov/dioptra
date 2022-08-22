@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Testbed REST API Reference &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Hello World!" href="../tutorials/example-basic-mlflow-demo.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -682,7 +682,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="testbed-rest-api-reference">
+  <section id="testbed-rest-api-reference">
 <span id="user-guide-api-reference-restapi"></span><h1>Testbed REST API Reference<a class="headerlink" href="#testbed-rest-api-reference" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -691,25 +691,27 @@ title="Print to PDF"
 <p>This page documents the endpoints and available <a class="reference internal" href="../glossary.html#term-HTTP"><span class="xref std std-term">HTTP</span></a> methods for the Dioptra <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>.
 In addition to using this page, it is highly recommended that Testbed users also use the Swagger documentation that the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service automatically generates at runtime, which presents all of this page’s information in an interactive format.
 To access the Swagger documentation, just navigate to the web URL for the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service (omit the <code class="docutils literal notranslate"><span class="pre">/api</span></code> part at the end of the web address).</p>
-<div class="figure align-default" id="id5" style="width: 100%">
+<figure class="align-default" id="id5" style="width: 100%">
 <img alt="An animation clicking and scrolling through the contents of the Dioptra :term:`REST` :term:`API` Swagger documentation." src="../_images/swagger-docs-testbed-rest-api.gif" />
-<p class="caption"><span class="caption-text">An animated tour of the automatically generated Swagger documentation for the Dioptra <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>.
+<figcaption>
+<p><span class="caption-text">An animated tour of the automatically generated Swagger documentation for the Dioptra <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>.
 Several of the Testbed demos that you can run on a personal computer publish the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service at the address <a class="reference external" href="http://localhost:30080">http://localhost:30080</a>.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
-</div>
-<div class="section" id="experiment">
+</figcaption>
+</figure>
+<section id="experiment">
 <h2>Experiment<a class="headerlink" href="#experiment" title="Permalink to this headline">#</a></h2>
 <p>Experiment registration operations.</p>
-<div class="section" id="endpoints">
+<section id="endpoints">
 <h3>Endpoints<a class="headerlink" href="#endpoints" title="Permalink to this headline">#</a></h3>
 <p>The following is the list of endpoints under the <code class="docutils literal notranslate"><span class="pre">/api/experiment/</span></code> namespace.</p>
 <dl class="http get">
-<dt id="get--api-experiment-">
-<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/</span></code><a class="headerlink" href="#get--api-experiment-" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="get--api-experiment-">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/experiment/</span></span><a class="headerlink" href="#get--api-experiment-" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets a list of all registered experiments</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request Headers</dt>
@@ -729,13 +731,13 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http post">
-<dt id="post--api-experiment-">
-<code class="sig-name descname"><span class="pre">POST</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/</span></code><a class="headerlink" href="#post--api-experiment-" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="post--api-experiment-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/experiment/</span></span><a class="headerlink" href="#post--api-experiment-" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Creates a new experiment via an experiment registration form</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request Headers</dt>
@@ -760,8 +762,8 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http delete">
-<dt id="delete--api-experiment-experimentId">
-<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/{experimentId}</span></code><a class="headerlink" href="#delete--api-experiment-experimentId" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="delete--api-experiment-experimentId">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/experiment/{experimentId}</span></span><a class="headerlink" href="#delete--api-experiment-experimentId" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Deletes an experiment by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -771,15 +773,15 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="http get">
-<dt id="get--api-experiment-experimentId">
-<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/{experimentId}</span></code><a class="headerlink" href="#get--api-experiment-experimentId" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="get--api-experiment-experimentId">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/experiment/{experimentId}</span></span><a class="headerlink" href="#get--api-experiment-experimentId" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets an experiment by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -789,7 +791,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Request Headers</dt>
@@ -809,8 +811,8 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http put">
-<dt id="put--api-experiment-experimentId">
-<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/{experimentId}</span></code><a class="headerlink" href="#put--api-experiment-experimentId" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="put--api-experiment-experimentId">
+<span class="sig-name descname"><span class="pre">PUT</span> </span><span class="sig-name descname"><span class="pre">/api/experiment/{experimentId}</span></span><a class="headerlink" href="#put--api-experiment-experimentId" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Modifies an experiment by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -825,7 +827,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request Headers</dt>
@@ -845,8 +847,8 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http delete">
-<dt id="delete--api-experiment-name-experimentName">
-<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/name/{experimentName}</span></code><a class="headerlink" href="#delete--api-experiment-name-experimentName" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="delete--api-experiment-name-experimentName">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/experiment/name/{experimentName}</span></span><a class="headerlink" href="#delete--api-experiment-name-experimentName" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Deletes an experiment by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -856,15 +858,15 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="http get">
-<dt id="get--api-experiment-name-experimentName">
-<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/name/{experimentName}</span></code><a class="headerlink" href="#get--api-experiment-name-experimentName" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="get--api-experiment-name-experimentName">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/experiment/name/{experimentName}</span></span><a class="headerlink" href="#get--api-experiment-name-experimentName" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets an experiment by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -874,7 +876,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Request Headers</dt>
@@ -894,8 +896,8 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http put">
-<dt id="put--api-experiment-name-experimentName">
-<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/experiment/name/{experimentName}</span></code><a class="headerlink" href="#put--api-experiment-name-experimentName" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="put--api-experiment-name-experimentName">
+<span class="sig-name descname"><span class="pre">PUT</span> </span><span class="sig-name descname"><span class="pre">/api/experiment/name/{experimentName}</span></span><a class="headerlink" href="#put--api-experiment-name-experimentName" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Modifies an experiment by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -910,7 +912,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request Headers</dt>
@@ -929,62 +931,62 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="error-messages">
+</section>
+<section id="error-messages">
 <h3>Error Messages<a class="headerlink" href="#error-messages" title="Permalink to this headline">#</a></h3>
 <p>The following error handlers are registered to the experiment endpoints.</p>
 <dl class="py exception">
-<dt id="dioptra.restapi.experiment.errors.ExperimentAlreadyExistsError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentAlreadyExistsError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentAlreadyExistsError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentAlreadyExistsError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentAlreadyExistsError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentAlreadyExistsError" title="Permalink to this definition">#</a></dt>
 <dd><p>The experiment name already exists.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingAlreadyExistsError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentMLFlowTrackingAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingAlreadyExistsError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentMLFlowTrackingAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError" title="Permalink to this definition">#</a></dt>
 <dd><p>The experiment name already exists on the MLFlow Tracking backend.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="dioptra.restapi.experiment.errors.ExperimentDoesNotExistError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentDoesNotExistError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentDoesNotExistError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentDoesNotExistError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentDoesNotExistError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentDoesNotExistError" title="Permalink to this definition">#</a></dt>
 <dd><p>The requested experiment does not exist.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingDoesNotExistError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentMLFlowTrackingDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingDoesNotExistError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentMLFlowTrackingDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError" title="Permalink to this definition">#</a></dt>
 <dd><p>The requested experiment is in our database but is not in MLFlow Tracking.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingRegistrationError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentMLFlowTrackingRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingRegistrationError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentMLFlowTrackingRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError" title="Permalink to this definition">#</a></dt>
 <dd><p>Experiment registration to the MLFlow Tracking backend has failed.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="dioptra.restapi.experiment.errors.ExperimentRegistrationError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">ExperimentRegistrationError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentRegistrationError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentRegistrationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentRegistrationError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentRegistrationError" title="Permalink to this definition">#</a></dt>
 <dd><p>The experiment registration form contains invalid parameters.</p>
 </dd></dl>
 
-</div>
-</div>
-<div class="section" id="job">
+</section>
+</section>
+<section id="job">
 <h2>Job<a class="headerlink" href="#job" title="Permalink to this headline">#</a></h2>
 <p>Job submission and management operations.</p>
-<div class="section" id="id1">
+<section id="id1">
 <h3>Endpoints<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p>The following is the list of endpoints under the <code class="docutils literal notranslate"><span class="pre">/api/job/</span></code> namespace.</p>
 <dl class="http get">
-<dt id="get--api-job-">
-<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/job/</span></code><a class="headerlink" href="#get--api-job-" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="get--api-job-">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/job/</span></span><a class="headerlink" href="#get--api-job-" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets a list of all submitted jobs</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request Headers</dt>
@@ -1012,13 +1014,13 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http post">
-<dt id="post--api-job-">
-<code class="sig-name descname"><span class="pre">POST</span> </code><code class="sig-name descname"><span class="pre">/api/job/</span></code><a class="headerlink" href="#post--api-job-" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="post--api-job-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/job/</span></span><a class="headerlink" href="#post--api-job-" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Creates a new job via a job submission form with an attached file</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request Headers</dt>
@@ -1057,8 +1059,8 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http get">
-<dt id="get--api-job-jobId">
-<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/job/{jobId}</span></code><a class="headerlink" href="#get--api-job-jobId" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="get--api-job-jobId">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/job/{jobId}</span></span><a class="headerlink" href="#get--api-job-jobId" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets a job by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1068,7 +1070,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Request Headers</dt>
@@ -1095,44 +1097,44 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="id2">
+</section>
+<section id="id2">
 <h3>Error Messages<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <p>The following error handlers are registered to the job endpoints.</p>
 <dl class="py exception">
-<dt id="dioptra.restapi.job.errors.JobDoesNotExistError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">JobDoesNotExistError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/job/errors.html#JobDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.job.errors.JobDoesNotExistError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.job.errors.JobDoesNotExistError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">JobDoesNotExistError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/job/errors.html#JobDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.job.errors.JobDoesNotExistError" title="Permalink to this definition">#</a></dt>
 <dd><p>The requested job does not exist.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="dioptra.restapi.job.errors.JobSubmissionError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">JobSubmissionError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/job/errors.html#JobSubmissionError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.job.errors.JobSubmissionError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.job.errors.JobSubmissionError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">JobSubmissionError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/job/errors.html#JobSubmissionError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.job.errors.JobSubmissionError" title="Permalink to this definition">#</a></dt>
 <dd><p>The job submission form contains invalid parameters.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="dioptra.restapi.job.errors.JobWorkflowUploadError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">JobWorkflowUploadError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/job/errors.html#JobWorkflowUploadError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.job.errors.JobWorkflowUploadError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.job.errors.JobWorkflowUploadError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">JobWorkflowUploadError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/job/errors.html#JobWorkflowUploadError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.job.errors.JobWorkflowUploadError" title="Permalink to this definition">#</a></dt>
 <dd><p>The service for storing the uploaded workfile file is unavailable.</p>
 </dd></dl>
 
-</div>
-</div>
-<div class="section" id="queue">
+</section>
+</section>
+<section id="queue">
 <h2>Queue<a class="headerlink" href="#queue" title="Permalink to this headline">#</a></h2>
 <p>Queue registration operations.</p>
-<div class="section" id="id3">
+<section id="id3">
 <h3>Endpoints<a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
 <p>The following is the list of endpoints under the <code class="docutils literal notranslate"><span class="pre">/api/queue/</span></code> namespace.</p>
 <dl class="http get">
-<dt id="get--api-queue-">
-<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/queue/</span></code><a class="headerlink" href="#get--api-queue-" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="get--api-queue-">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/queue/</span></span><a class="headerlink" href="#get--api-queue-" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets a list of all registered queues</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request Headers</dt>
@@ -1152,13 +1154,13 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http post">
-<dt id="post--api-queue-">
-<code class="sig-name descname"><span class="pre">POST</span> </code><code class="sig-name descname"><span class="pre">/api/queue/</span></code><a class="headerlink" href="#post--api-queue-" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="post--api-queue-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/queue/</span></span><a class="headerlink" href="#post--api-queue-" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Creates a new queue via a queue registration form</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request Headers</dt>
@@ -1183,8 +1185,8 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http delete">
-<dt id="delete--api-queue-queueId">
-<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/queue/{queueId}</span></code><a class="headerlink" href="#delete--api-queue-queueId" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="delete--api-queue-queueId">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/queue/{queueId}</span></span><a class="headerlink" href="#delete--api-queue-queueId" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Deletes a queue by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1194,15 +1196,15 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="http get">
-<dt id="get--api-queue-queueId">
-<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/queue/{queueId}</span></code><a class="headerlink" href="#get--api-queue-queueId" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="get--api-queue-queueId">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/queue/{queueId}</span></span><a class="headerlink" href="#get--api-queue-queueId" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets a queue by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1212,7 +1214,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Request Headers</dt>
@@ -1232,8 +1234,8 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http put">
-<dt id="put--api-queue-queueId">
-<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/queue/{queueId}</span></code><a class="headerlink" href="#put--api-queue-queueId" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="put--api-queue-queueId">
+<span class="sig-name descname"><span class="pre">PUT</span> </span><span class="sig-name descname"><span class="pre">/api/queue/{queueId}</span></span><a class="headerlink" href="#put--api-queue-queueId" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Modifies a queue by its unique identifier</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1248,7 +1250,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request Headers</dt>
@@ -1268,8 +1270,8 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http delete">
-<dt id="delete--api-queue-queueId-lock">
-<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/queue/{queueId}/lock</span></code><a class="headerlink" href="#delete--api-queue-queueId-lock" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="delete--api-queue-queueId-lock">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/queue/{queueId}/lock</span></span><a class="headerlink" href="#delete--api-queue-queueId-lock" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Removes the lock from the queue (id reference) if it exists</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1279,15 +1281,15 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="http put">
-<dt id="put--api-queue-queueId-lock">
-<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/queue/{queueId}/lock</span></code><a class="headerlink" href="#put--api-queue-queueId-lock" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="put--api-queue-queueId-lock">
+<span class="sig-name descname"><span class="pre">PUT</span> </span><span class="sig-name descname"><span class="pre">/api/queue/{queueId}/lock</span></span><a class="headerlink" href="#put--api-queue-queueId-lock" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Locks the queue (id reference) if it is unlocked</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1297,15 +1299,15 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="http delete">
-<dt id="delete--api-queue-name-queueName">
-<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/queue/name/{queueName}</span></code><a class="headerlink" href="#delete--api-queue-name-queueName" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="delete--api-queue-name-queueName">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/queue/name/{queueName}</span></span><a class="headerlink" href="#delete--api-queue-name-queueName" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Deletes a queue by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1315,15 +1317,15 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="http get">
-<dt id="get--api-queue-name-queueName">
-<code class="sig-name descname"><span class="pre">GET</span> </code><code class="sig-name descname"><span class="pre">/api/queue/name/{queueName}</span></code><a class="headerlink" href="#get--api-queue-name-queueName" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="get--api-queue-name-queueName">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/queue/name/{queueName}</span></span><a class="headerlink" href="#get--api-queue-name-queueName" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Gets a queue by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1333,7 +1335,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Request Headers</dt>
@@ -1353,8 +1355,8 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http put">
-<dt id="put--api-queue-name-queueName">
-<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/queue/name/{queueName}</span></code><a class="headerlink" href="#put--api-queue-name-queueName" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="put--api-queue-name-queueName">
+<span class="sig-name descname"><span class="pre">PUT</span> </span><span class="sig-name descname"><span class="pre">/api/queue/name/{queueName}</span></span><a class="headerlink" href="#put--api-queue-name-queueName" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Modifies a queue by its unique name</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1369,7 +1371,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request Headers</dt>
@@ -1389,8 +1391,8 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd></dl>
 
 <dl class="http delete">
-<dt id="delete--api-queue-name-queueName-lock">
-<code class="sig-name descname"><span class="pre">DELETE</span> </code><code class="sig-name descname"><span class="pre">/api/queue/name/{queueName}/lock</span></code><a class="headerlink" href="#delete--api-queue-name-queueName-lock" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="delete--api-queue-name-queueName-lock">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/queue/name/{queueName}/lock</span></span><a class="headerlink" href="#delete--api-queue-name-queueName-lock" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Removes the lock from the queue (name reference) if it exists</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1400,15 +1402,15 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="http put">
-<dt id="put--api-queue-name-queueName-lock">
-<code class="sig-name descname"><span class="pre">PUT</span> </code><code class="sig-name descname"><span class="pre">/api/queue/name/{queueName}/lock</span></code><a class="headerlink" href="#put--api-queue-name-queueName-lock" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object http" id="put--api-queue-name-queueName-lock">
+<span class="sig-name descname"><span class="pre">PUT</span> </span><span class="sig-name descname"><span class="pre">/api/queue/name/{queueName}/lock</span></span><a class="headerlink" href="#put--api-queue-name-queueName-lock" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Locks the queue (name reference) if it is unlocked</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1418,37 +1420,37 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Status Codes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> – Success</p></li>
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="id4">
+</section>
+<section id="id4">
 <h3>Error Messages<a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <p>The following error handlers are registered to the queue endpoints.</p>
 <dl class="py exception">
-<dt id="dioptra.restapi.queue.errors.QueueAlreadyExistsError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">QueueAlreadyExistsError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/queue/errors.html#QueueAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.queue.errors.QueueAlreadyExistsError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.queue.errors.QueueAlreadyExistsError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueueAlreadyExistsError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/queue/errors.html#QueueAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.queue.errors.QueueAlreadyExistsError" title="Permalink to this definition">#</a></dt>
 <dd><p>The queue name already exists.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="dioptra.restapi.queue.errors.QueueDoesNotExistError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">QueueDoesNotExistError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/queue/errors.html#QueueDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.queue.errors.QueueDoesNotExistError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.queue.errors.QueueDoesNotExistError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueueDoesNotExistError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/queue/errors.html#QueueDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.queue.errors.QueueDoesNotExistError" title="Permalink to this definition">#</a></dt>
 <dd><p>The requested queue does not exist.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="dioptra.restapi.queue.errors.QueueRegistrationError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-name descname"><span class="pre">QueueRegistrationError</span></code><a class="reference internal" href="../_modules/dioptra/restapi/queue/errors.html#QueueRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.queue.errors.QueueRegistrationError" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra.restapi.queue.errors.QueueRegistrationError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueueRegistrationError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/queue/errors.html#QueueRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.queue.errors.QueueRegistrationError" title="Permalink to this definition">#</a></dt>
 <dd><p>The queue registration form contains invalid parameters.</p>
 </dd></dl>
 
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
               </div>

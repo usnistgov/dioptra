@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Tensorflow ImageNet Pixel Threshold &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="PyTorch MNIST Membership Inference" href="example-pytorch-mnist-membership-inference.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -624,7 +624,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="tensorflow-imagenet-pixel-threshold">
+  <section id="tensorflow-imagenet-pixel-threshold">
 <span id="tutorials-example-tensorflow-imagenet-pixel-threshold"></span><h1>Tensorflow ImageNet Pixel Threshold<a class="headerlink" href="#tensorflow-imagenet-pixel-threshold" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -636,7 +636,7 @@ title="Print to PDF"
 This demo cannot be run on a typical personal computer.</p>
 </div>
 <p>The demo provided in the Jupyter notebook <code class="docutils literal notranslate"><span class="pre">demo.ipynb</span></code> uses Dioptra to run experiments that investigate the effects of the pixel threshold attack when launched on a neural network model trained on the ImageNet dataset.</p>
-<div class="section" id="using-this-demo">
+<section id="using-this-demo">
 <h2>Using this Demo<a class="headerlink" href="#using-this-demo" title="Permalink to this headline">#</a></h2>
 <p>To run the demo on an on-prem deployment, all you need to do is download and start the <strong>jupyter</strong> service defined in this example’s <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file.
 Open a terminal and navigate to this example’s directory and run the <strong>jupyter</strong> startup sequence,</p>
@@ -655,13 +655,13 @@ Running block 7 will run the pixel threshold attack on the loaded ImageNet model
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make teardown
 </pre></div>
 </div>
-</div>
-<div class="section" id="attacks">
+</section>
+<section id="attacks">
 <h2>Attacks<a class="headerlink" href="#attacks" title="Permalink to this headline">#</a></h2>
 <p>The Pixel Threshold attack is an evasion attack which tries to deceive the classifier by changing a limited number of pixels in a test image.
 It does this through differential evolution - each iteration seeks to decrease the accuracy of the model on the image while keeping changes limited to a certain threshold of pixels.
 In this example it is applied to ImageNet in an attempt to get the model to misclassify images.</p>
-<div class="section" id="pixel-threshold">
+<section id="pixel-threshold">
 <h3>Pixel Threshold<a class="headerlink" href="#pixel-threshold" title="Permalink to this headline">#</a></h3>
 <p><strong>Paper:</strong> <a class="reference external" href="https://arxiv.org/abs/1906.06026">https://arxiv.org/abs/1906.06026</a></p>
 <dl class="option-list">
@@ -672,15 +672,15 @@ In this example it is applied to ImageNet in an attempt to get the model to misc
 <dd><p>If 0, then use the CMA-ES strategy, or if 1, use the DE strategy for evolution.</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="viewing-results-and-downloading-images">
+</section>
+</section>
+<section id="viewing-results-and-downloading-images">
 <h2>Viewing Results and Downloading Images<a class="headerlink" href="#viewing-results-and-downloading-images" title="Permalink to this headline">#</a></h2>
 <p>To view the results, under MLFlow, click the experiment associated with the attack, and scroll down.
 A download will be available for <code class="docutils literal notranslate"><span class="pre">adv_testing.tar.gz</span></code>, which will contain a transformed dataset of the input to the evasion attack.
 Note that this particular attack will output the original image if it is unsuccessful in changing the classification of the image, rather than outputting a modified version.</p>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

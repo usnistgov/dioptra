@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>data &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../../_static/togglebutton.js"></script>
-    <script src="../../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../../_static/jquery.visible.js"></script>
     <script src="../../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../../_static/applyLeaveNotice.js"></script>
     <script src="../../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="estimators" href="api-builtins-estimators.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -590,18 +590,18 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="data">
+  <section id="data">
 <span id="api-task-plugins-builtins-data"></span><h1>data<a class="headerlink" href="#data" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<span class="target" id="module-dioptra_builtins.data"></span><div class="section" id="module-dioptra_builtins.data.tensorflow">
+<span class="target" id="module-dioptra_builtins.data"></span><section id="module-dioptra_builtins.data.tensorflow">
 <span id="tensorflow-py"></span><h2>tensorflow.py<a class="headerlink" href="#module-dioptra_builtins.data.tensorflow" title="Permalink to this headline">#</a></h2>
 <p>A task plugin module for preparing Tensorflow-specific dataset iterators.</p>
 <dl class="py function">
-<dt id="dioptra_builtins.data.tensorflow.create_image_dataset">
-<code class="sig-name descname"><span class="pre">create_image_dataset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.00392156862745098</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_split</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_mode</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'categorical'</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.4)"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></a><a class="reference internal" href="../../_modules/dioptra_builtins/data/tensorflow.html#create_image_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.data.tensorflow.create_image_dataset" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="dioptra_builtins.data.tensorflow.create_image_dataset">
+<span class="sig-name descname"><span class="pre">create_image_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.10)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.00392156862745098</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'categorical'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://www.tensorflow.org/versions/r2.8/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.8)"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/data/tensorflow.html#create_image_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.data.tensorflow.create_image_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Yields an iterator for generating batches of real-time augmented image data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -627,29 +627,29 @@ The default is <cite>32</cite>.</p></li>
 <li><p><strong>label_mode</strong> – Determines how the label arrays for the dataset will be returned.
 The available choices are: <cite>“categorical”</cite>, <cite>“binary”</cite>, <cite>“sparse”</cite>,
 <cite>“input”</cite>, <cite>None</cite>. For information on the meaning of each choice, see
-the documentation for <a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/preprocessing/image/ImageDataGenerator#flow_from_directory" title="(in TensorFlow v2.4)"><code class="docutils literal notranslate"><span class="pre">tf.keras.preprocessing.image.ImageDataGenerator.flow_from_directory</span></code></a>. The default is <cite>“categorical”</cite>.</p></li>
+the documentation for <code class="xref py py-meth docutils literal notranslate"><span class="pre">tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_directory()</span></code>. The default is <cite>“categorical”</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.4)"><code class="docutils literal notranslate"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></code></a> object.</p>
+<dd class="field-even"><p>A <a class="reference external" href="https://www.tensorflow.org/versions/r2.8/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.8)"><code class="docutils literal notranslate"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></code></a> object.</p>
 </dd>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/preprocessing/image/ImageDataGenerator#flow_from_directory" title="(in TensorFlow v2.4)"><code class="docutils literal notranslate"><span class="pre">tf.keras.preprocessing.image.ImageDataGenerator.flow_from_directory</span></code></a></p></li>
-<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.4)"><code class="docutils literal notranslate"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></code></a></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">tensorflow.keras.preprocessing.image.ImageDataGenerator.flow_from_directory()</span></code></p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/versions/r2.8/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.8)"><code class="docutils literal notranslate"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></code></a></p></li>
 </ul>
 </div>
 </dd></dl>
 
 <dl class="py function">
-<dt id="dioptra_builtins.data.tensorflow.get_n_classes_from_directory_iterator">
-<code class="sig-name descname"><span class="pre">get_n_classes_from_directory_iterator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.4)"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><a class="reference internal" href="../../_modules/dioptra_builtins/data/tensorflow.html#get_n_classes_from_directory_iterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.data.tensorflow.get_n_classes_from_directory_iterator" title="Permalink to this definition">#</a></dt>
-<dd><p>Returns the number of unique labels found by the <a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.4)"><code class="docutils literal notranslate"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></code></a>.</p>
+<dt class="sig sig-object py" id="dioptra_builtins.data.tensorflow.get_n_classes_from_directory_iterator">
+<span class="sig-name descname"><span class="pre">get_n_classes_from_directory_iterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://www.tensorflow.org/versions/r2.8/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.8)"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/data/tensorflow.html#get_n_classes_from_directory_iterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.data.tensorflow.get_n_classes_from_directory_iterator" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the number of unique labels found by the <a class="reference external" href="https://www.tensorflow.org/versions/r2.8/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.8)"><code class="docutils literal notranslate"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ds</strong> – A <a class="reference external" href="https://www.tensorflow.org/versions/r2.4/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.4)"><code class="docutils literal notranslate"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></code></a> object.</p>
+<dd class="field-odd"><p><strong>ds</strong> – A <a class="reference external" href="https://www.tensorflow.org/versions/r2.8/api_docs/python/tf/keras/preprocessing/image/DirectoryIterator" title="(in TensorFlow v2.8)"><code class="docutils literal notranslate"><span class="pre">tf.keras.preprocessing.image.DirectoryIterator</span></code></a> object.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The number of unique labels in the dataset.</p>
@@ -657,8 +657,8 @@ the documentation for <a class="reference external" href="https://www.tensorflow
 </dl>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

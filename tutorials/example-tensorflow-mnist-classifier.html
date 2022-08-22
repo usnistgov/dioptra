@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>First Steps - MNIST Tensorflow Classifier &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Tensorflow MNIST Feature Squeezing" href="example-tensorflow-mnist-feature-squeezing.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -650,7 +650,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="first-steps-mnist-tensorflow-classifier">
+  <section id="first-steps-mnist-tensorflow-classifier">
 <span id="tutorials-example-tensorflow-mnist-classifier"></span><h1>First Steps - MNIST Tensorflow Classifier<a class="headerlink" href="#first-steps-mnist-tensorflow-classifier" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -658,7 +658,7 @@ title="Print to PDF"
 </div>
 <p>This demo provides a practical example that you can run on your personal computer to see how Dioptra can be used to run a simple experiment on the transferability of the <a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a> evasion attack between two neural network architectures.
 It can be used as a basic template for crafting your own custom scripts to run within the testbed.</p>
-<div class="section" id="getting-started">
+<section id="getting-started">
 <h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">#</a></h2>
 <p>Everything you need to run this demo is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">pull-latest</span></code>.
 Once you have downloaded the images, navigate to this directory using the terminal and run the demo startup sequence:</p>
@@ -676,8 +676,8 @@ If you were watching the output logs, you will need to press <kbd class="kbd com
 <p class="admonition-title">Note</p>
 <p>The contents that follows is also found in the corresponding Jupyter notebook for this demo.</p>
 </div>
-</div>
-<div class="section" id="setup">
+</section>
+<section id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">#</a></h2>
 <p>Below we import the necessary Python modules and ensure the proper environment variables are set so that all the code blocks will work as expected,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import packages from the Python standard library</span>
@@ -720,8 +720,8 @@ If you were watching the output logs, you will need to press <kbd class="kbd com
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">54399264723942495723666216079516778448</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="dataset">
+</section>
+<section id="dataset">
 <h2>Dataset<a class="headerlink" href="#dataset" title="Permalink to this headline">#</a></h2>
 <p>We obtained a copy of the <a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> dataset as part of the startup process invoked by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">demo</span></code>.
 The training and testing images for the <a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> dataset are stored within the <code class="docutils literal notranslate"><span class="pre">data/</span></code> directory as PNG files that are organized into the following folder structure,</p>
@@ -752,17 +752,17 @@ The training and testing images for the <a class="reference internal" href="../g
 </div>
 <p>The subfolders under <code class="docutils literal notranslate"><span class="pre">data/training/</span></code> and <code class="docutils literal notranslate"><span class="pre">data/testing/</span></code> are the classification labels for the images in the dataset.
 This folder structure is a standardized way to encode the label information and many libraries can make use of it, including the Tensorflow library that we are using for this particular demo.</p>
-</div>
-<div class="section" id="testbed-microservices">
+</section>
+<section id="testbed-microservices">
 <h2>Testbed microservices<a class="headerlink" href="#testbed-microservices" title="Permalink to this headline">#</a></h2>
 <p>Dioptra is composed of several micro-services that are used to manage job execution, artifact storage, and logging the results of experiments.
 These services all run within separate containers that were instantiated via Docker images that you either built locally or pulled into your environment from a Docker image registry.
 A high-level schematic showing how all of the images connect together to form the architecture of Dioptra is provided below.</p>
-<div class="figure align-default">
-<img alt="../_images/testbed-architecture.svg" src="../_images/testbed-architecture.svg" /></div>
+<figure class="align-default">
+<img alt="../_images/testbed-architecture.svg" src="../_images/testbed-architecture.svg" /></figure>
 <p>The startup process for all of these services, including database initialization and synchronizing the task plugins into the Minio S3 storage service, was handled automatically when you invoked <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">demo</span></code>.</p>
-</div>
-<div class="section" id="submit-and-run-jobs">
+</section>
+<section id="submit-and-run-jobs">
 <h2>Submit and run jobs<a class="headerlink" href="#submit-and-run-jobs" title="Permalink to this headline">#</a></h2>
 <p>The entrypoints that we will be running in this example are implemented in the Python source files under <code class="docutils literal notranslate"><span class="pre">src/</span></code> and the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file.
 To run these entrypoints within the testbed architecture, we need to package those files up into an archive and submit it to the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> term:<cite>API</cite> to create a new job.
@@ -985,10 +985,10 @@ The following code is very similar to the code we just saw, all we’ve done is 
 </pre></div>
 </div>
 <p>Congratulations, you’ve just run your first experiment using Dioptra!</p>
-</div>
-<div class="section" id="querying-the-mlflow-tracking-service">
+</section>
+<section id="querying-the-mlflow-tracking-service">
 <h2>Querying the MLFlow Tracking Service<a class="headerlink" href="#querying-the-mlflow-tracking-service" title="Permalink to this headline">#</a></h2>
-<p>Currently the Testbed <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> can only be used to register experiments and start jobs, so if users wish to extract their results programmatically, they can use the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.tracking.html#mlflow.tracking.MlflowClient" title="(in MLflow v1.27.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MlflowClient</span></code></a> class from the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#module-mlflow" title="(in MLflow v1.27.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mlflow</span></code></a> Python package to connect and query their results.
+<p>Currently the Testbed <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> can only be used to register experiments and start jobs, so if users wish to extract their results programmatically, they can use the <code class="xref py py-class docutils literal notranslate"><span class="pre">MlflowClient</span></code> class from the <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#module-mlflow" title="(in MLflow v1.28.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mlflow</span></code></a> Python package to connect and query their results.
 Since we captured the run ids generated by MLFlow, we can easily retrieve the data logged about one of our jobs and inspect the results.
 To start the client, we simply need to run,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mlflow_client</span> <span class="o">=</span> <span class="n">MlflowClient</span><span class="p">()</span>
@@ -1015,12 +1015,12 @@ For example, to review the collected metrics, we just use,</p>
 </div>
 <p>There are many things you can query using the MLFlow client.
 <a class="reference external" href="https://www.mlflow.org/docs/latest/python_api/mlflow.tracking.html#mlflow.tracking.MlflowClient">The MLFlow documentation gives a full overview of the methods that are available</a>.</p>
-</div>
-<div class="section" id="cleanup">
+</section>
+<section id="cleanup">
 <h2>Cleanup<a class="headerlink" href="#cleanup" title="Permalink to this headline">#</a></h2>
 <p>To clean up, you simply need to close the browser tab containing the Jupyter notebook and shut down the services by running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">teardown</span></code> on the command-line.</p>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

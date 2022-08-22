@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Generics Plugin System &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Task Plugins Collection" href="task-plugins-collection.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -620,13 +620,13 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="generics-plugin-system">
+  <section id="generics-plugin-system">
 <span id="user-guide-generics-plugin-system"></span><h1>Generics Plugin System<a class="headerlink" href="#generics-plugin-system" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<div class="section" id="what-are-generics">
+<section id="what-are-generics">
 <h2>What are generics?<a class="headerlink" href="#what-are-generics" title="Permalink to this headline">#</a></h2>
 <p>The generic functions (<em>generics</em> for short) in <a class="reference internal" href="api-sdk/api-generics.html#module-dioptra.sdk.generics" title="dioptra.sdk.generics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">dioptra.sdk.generics</span></code></a> provide standardized interfaces for sets of related methods.
 As an example, the <a class="reference internal" href="api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_estimator()</span></code></a> generic can be called to train an estimator without needing to specify the name of the underlying library (scikit-learn, Tensorflow, PyTorch).
@@ -657,8 +657,8 @@ On the other hand, if an object of type <cite>D</cite> is passed to the generic 
 When this happens, the generic function will either raise an exception immediately or attempt to process the object using a default implementation (if one is defined).</p>
 <p>The implementations are registered using a plugin system where each generic advertises a plugin entry point that it scans for methods at runtime.
 This system means that <strong>all</strong> the underlying generic implementations, even the ones that come bundled with the Testbed, are plugins that are independent of the core <code class="xref py py-mod docutils literal notranslate"><span class="pre">dioptra.sdk</span></code> package and users are free to create custom implementations and share them as Python packages.</p>
-</div>
-<div class="section" id="available-plugin-entry-points">
+</section>
+<section id="available-plugin-entry-points">
 <h2>Available plugin entry points<a class="headerlink" href="#available-plugin-entry-points" title="Permalink to this headline">#</a></h2>
 <table class="table">
 <colgroup>
@@ -679,8 +679,8 @@ This system means that <strong>all</strong> the underlying generic implementatio
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="registering-generic-dispatch-methods">
+</section>
+<section id="registering-generic-dispatch-methods">
 <h2>Registering generic dispatch methods<a class="headerlink" href="#registering-generic-dispatch-methods" title="Permalink to this headline">#</a></h2>
 <p>Creating a new dispatch method for a generic is done by writing a Python function and adding a function decorator.
 Each generic exposes a <cite>.register</cite> attribute that is a decorator for registering new dispatch methods, and is applied to functions that implement a new dispatch method.
@@ -735,8 +735,8 @@ For example, if you wanted to handle a <a class="reference external" href="https
 </div>
 <p>Then, in the implementation, you could process the <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> so that it was compatible with the <code class="xref py py-meth docutils literal notranslate"><span class="pre">estimator.fit()</span></code> method used in the <code class="xref py py-func docutils literal notranslate"><span class="pre">fit_keras_model()</span></code> helper function.
 In this way you can incrementally add new implementations to handle many different combinations of estimator and data types!</p>
-</div>
-<div class="section" id="packaging-a-generic-plugin">
+</section>
+<section id="packaging-a-generic-plugin">
 <h2>Packaging a generic plugin<a class="headerlink" href="#packaging-a-generic-plugin" title="Permalink to this headline">#</a></h2>
 <p>A generic plugin is a Python package that registers an implementation to the generic’s plugin entry point.
 The Python package itself should be structured in the usual way, with a minimal plugin package containing the following files:</p>
@@ -765,8 +765,8 @@ The name of the <cite>key</cite>, on the other hand, is not used by the plugin s
 <p>For guidance on how to prepare a Python package, including what else needs to be included in <cite>setup.cfg</cite> and the rest of the files, see the <a class="reference external" href="https://packaging.python.org/tutorials/packaging-projects/">Packaging Python Projects</a> tutorial.
 Readers are also encouraged to examine the source files of the Dioptra repository itself.</p>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

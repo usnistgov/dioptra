@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Summary &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     
@@ -118,7 +118,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -135,7 +135,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -276,7 +276,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -328,7 +328,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -365,7 +365,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -638,7 +638,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="summary">
+  <section id="summary">
 <h1>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">#</a></h1>
 <p>Our systems increasingly rely on Machine Learning (ML) algorithms and models to perform essential functions.
 As users of these systems, we must implicitly trust that the models are working as designed.
@@ -655,32 +655,32 @@ Cybersecurity Center of Excellence (NCCoE) has built an experimentation testbed 
 The testbed aims to facilitate security evaluations of ML algorithms under a diverse set of conditions.
 To that end, the testbed has a modular design enabling researchers to easily swap in alternative datasets, models, attacks, and defenses.
 The result is the ability to advance the metrology needed to ultimately help secure ML-enabled systems.</p>
-</div>
-<div class="section" id="context">
+</section>
+<section id="context">
 <h1>Context<a class="headerlink" href="#context" title="Permalink to this headline">#</a></h1>
 <p>While there are a large variety of types of attacks against ML algorithms, NIST Internal Report 8269 identifies three broad categories: Evasion, Poisoning, and Oracle.
 In Evasion attacks, an adversary manipulates the test data (sometimes by altering the physical environment) in order to cause the ML model to misbehave.
 Poisoning attacks alter the training data used to create or maintain a model with the intention of causing it to learn incorrect associations.
 Oracle attacks attempt to “reverse engineer” a model to learn about details of the training set used to create it, or specific model parameters to replicate the model.</p>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="../_images/overview-image-attack-examples.png" src="../_images/overview-image-attack-examples.png" />
-</div>
+</figure>
 <p>In the case of image classification, attacks can manifest in many different ways ranging from the addition of noise which is difficult for humans to detect in the training or testing images, to the inclusion of colorful “patches,” which are noticeable by a human observer and can be printed and placed in the physical environment to alter the images entering the classifier.</p>
 <p>There are an equal variety in the types of defenses researchers have developed to mitigate the effectiveness of attacks.
 These types range from altering the training paradigm for generating models to techniques that pre-process test data in an attempt to eliminate any carefully crafted alterations added by an adversary.
 Just as with attacks, defenses can be deployed at any stage of the ML development pipeline.
 The simplified diagrams of the development pipeline below depict some examples.</p>
-<div class="figure align-default" style="width: 49%">
+<figure class="align-default" style="width: 49%">
 <img alt="../_images/overview-attack-interfaces.png" src="../_images/overview-attack-interfaces.png" />
-</div>
-<div class="figure align-default" style="width: 49%">
+</figure>
+<figure class="align-default" style="width: 49%">
 <img alt="../_images/overview-defense-interfaces.png" src="../_images/overview-defense-interfaces.png" />
-</div>
+</figure>
 <p>The sheer variety of attacks and defenses results in a combinatorial
 explosion of possible combinations of attacks, defenses, model architectures, and datasets, which creates a challenge for evaluating the effectiveness of defenses against the full array of attacks it may face.
 Dioptra, the NCCoE’s machine learning security testbed, addresses this challenge by making it easier for researchers to explore the set of possible combinations.</p>
-</div>
-<div class="section" id="target-audience">
+</section>
+<section id="target-audience">
 <h1>Target Audience<a class="headerlink" href="#target-audience" title="Permalink to this headline">#</a></h1>
 <p>We envision an audience with a wide variety of familiarity with and expertise in machine learning.
 Newcomers to the platform will be able to run the included demonstrations of attacks and defenses even if they have very little programming experience.</p>
@@ -694,8 +694,8 @@ For example, we envision new defenses being tested against a wider array of atta
 Similarly, it can facilitate “parameter sweeping” to help developers better understand the degree to which small changes in parameters can affect an algorithm.
 It also affords an opportunity to replicate and benchmark well-known results from the research literature.
 This ability to repeat experiments to reproduce results is critical for creating and validating reliable metrics.</p>
-</div>
-<div class="section" id="scope">
+</section>
+<section id="scope">
 <h1>Scope<a class="headerlink" href="#scope" title="Permalink to this headline">#</a></h1>
 <p>The testbed is specifically focused on adversarial attacks against the ML algorithms themselves and defensive techniques designed to mitigate the attacks.
 In that spirit, the testbed presently is not designed to embed ML algorithms into a larger system context.
@@ -708,8 +708,8 @@ The attacks include the Fast Gradient Method evasion attack, the Poison Frogs po
 Defenses include feature squeezing, adversarial training, and jpeg compression among others.
 We anticipate this list will grow with time, and we encourage users to
 contribute other algorithms to the project as they are developed.</p>
-</div>
-<div class="section" id="assumptions-system-requirements">
+</section>
+<section id="assumptions-system-requirements">
 <h1>Assumptions / System Requirements<a class="headerlink" href="#assumptions-system-requirements" title="Permalink to this headline">#</a></h1>
 <p>Most of the built-in demonstrations in the testbed assume the testbed is deployed on Unix-based operating systems (e.g., Linux, MacOS).
 Those familiar with the Windows Subsystem for Linux (WSL) should be able to deploy it on Windows, but this mode is not explicitly supported at this time.
@@ -717,11 +717,11 @@ Most included demos perform computationally intensive calculations requiring acc
 The architecture has been tested on a <a class="reference internal" href="../glossary.html#term-NVIDIA-DGX"><span class="xref std std-term">NVIDIA DGX</span></a> server with 4 GPUs.
 The demonstrations also rely on publicly available datasets such as <a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a> handwritten digits, ImageNet, and Fruits360 that are not part of the testbed distribution.
 The built-in demonstrations assume that relevant datasets have already been obtained and saved in the testbed’s Data Storage container.</p>
-</div>
-<div class="section" id="architecture-overview">
+</section>
+<section id="architecture-overview">
 <h1>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permalink to this headline">#</a></h1>
-<div class="figure align-default">
-<img alt="../_images/testbed-architecture.svg" src="../_images/testbed-architecture.svg" /></div>
+<figure class="align-default">
+<img alt="../_images/testbed-architecture.svg" src="../_images/testbed-architecture.svg" /></figure>
 <p>The testbed is built on a microservices architecture.
 It is designed to be deployed across several physical machines but is equally deployable on a local laptop.
 The distributed deployment allows the core optimization algorithms to reside on machines with GPUs or other high-powered computational resources, while a local deployment will impose strong computational constraints.</p>
@@ -732,8 +732,8 @@ As experiment jobs get submitted, the <a class="reference internal" href="../glo
 These worker containers run the plugins interacting with the MLflow Tracking Service to coordinate job dependencies and record statistics, metrics, and any generated artifacts.
 The user may then interact with the MLflow service directly to access a user-friendly dashboard with relevant results, or they may use the <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> to mediate access.
 The architecture is built entirely from open-source resources making it easy for others to extend and improve upon.</p>
-<div class="figure align-default">
-<img alt="../_images/experiment-components.svg" src="../_images/experiment-components.svg" /></div>
+<figure class="align-default">
+<img alt="../_images/experiment-components.svg" src="../_images/experiment-components.svg" /></figure>
 <p>As depicted above, the architecture relies on a modular task plugin system to ease the job of programming new combinations of attacks and defenses.
 The task plugins perform various basic, low-level functions such as loading models, preparing data, and computing metrics.
 They also implement atomic portions of attacks and defenses such as generating adversarial examples or pre-processing images before inference.
@@ -763,7 +763,7 @@ These individuals will have a deep understanding of how the testbed’s architec
 They will be able to write reusable code and program applications that conform to coding best practices.</p>
 </dd>
 </dl>
-</div>
+</section>
 
 
               </div>

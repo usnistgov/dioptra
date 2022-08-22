@@ -42,21 +42,23 @@ Setup
 Register an account with Kaggle at https://www.kaggle.com/ so that you can access their content.
 Next, install the Python ``kaggle`` package so that you can use Python to access the :term:`API`.
 
-.. tabbed:: Pip
+.. tab-set::
 
-   .. code-block:: sh
+   .. tab-item:: Pip
 
-      # User-level install
-      python -m pip install --user kaggle
+      .. code-block:: sh
 
-.. tabbed:: Conda + Pip
+         # User-level install
+         python -m pip install --user kaggle
 
-   .. code-block:: sh
+   .. tab-item:: Conda + Pip
 
-      # Conda virtual environment install
-      conda create -n kaggle python=3 pip
-      conda activate kaggle
-      python -m pip install kaggle
+      .. code-block:: sh
+
+         # Conda virtual environment install
+         conda create -n kaggle python=3 pip
+         conda activate kaggle
+         python -m pip install kaggle
 
 Finally, you will need to generate a Kaggle :term:`API` Token for authentication purposes by following these steps,
 

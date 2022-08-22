@@ -6,7 +6,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Docker Images List and Settings &#8212; Dioptra 0.0.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
@@ -21,34 +22,33 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script >let toggleHintShow = 'Click to show';</script>
-    <script >let toggleHintHide = 'Click to hide';</script>
-    <script >let toggleOpenOnPrint = 'true';</script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script src="../_static/jquery.visible.js"></script>
     <script src="../_static/jquery.leaveNotice-nist.js"></script>
     <script src="../_static/applyLeaveNotice.js"></script>
     <script src="../_static/smoothNavScroll.js"></script>
-    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Single Machine Deployment" href="single-machine-deployment.html" />
@@ -120,7 +120,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Getting Started
  </span>
@@ -137,7 +137,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   User Guide
  </span>
@@ -278,7 +278,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Tutorials and Examples
  </span>
@@ -330,7 +330,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Deployment Guide
  </span>
@@ -367,7 +367,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Developer Guides
  </span>
@@ -764,17 +764,17 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="docker-images-list-and-settings">
+  <section id="docker-images-list-and-settings">
 <span id="deployment-guide-docker-images-list-and-settings"></span><h1>Docker Images List and Settings<a class="headerlink" href="#docker-images-list-and-settings" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
 </div>
-<div class="section" id="nginx">
+<section id="nginx">
 <h2>Nginx<a class="headerlink" href="#nginx" title="Permalink to this headline">#</a></h2>
 <p>Nginx is an open-source web server that serves as a reverse proxy in the Testbed architecture.
 It receives <a class="reference internal" href="../glossary.html#term-HTTP"><span class="xref std std-term">HTTP</span></a> requests originating from outside the Testbed network and routes the traffic to the appropriate service.</p>
-<div class="section" id="command">
+<section id="command">
 <h3>Command<a class="headerlink" href="#command" title="Permalink to this headline">#</a></h3>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE [OPTIONS]
 </pre></div>
@@ -800,12 +800,12 @@ It receives <a class="reference internal" href="../glossary.html#term-HTTP"><spa
 <dd><p>Nginx listening port (default: <code class="docutils literal notranslate"><span class="pre">'35000'</span></code>)</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="mlflow-tracking">
+</section>
+</section>
+<section id="mlflow-tracking">
 <h2>MLFlow Tracking<a class="headerlink" href="#mlflow-tracking" title="Permalink to this headline">#</a></h2>
 <p>The MLFlow Tracking service is an <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> and UI for logging and querying parameters, metrics, and output files when running your experiments.</p>
-<div class="section" id="environment-variables">
+<section id="environment-variables">
 <h3>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">#</a></h3>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">AWS_ACCESS_KEY_ID</kbd></div>
@@ -821,8 +821,8 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <div class="line"><kbd class="kbd docutils literal notranslate">MLFLOW_S3_ENDPOINT_URL</kbd></div>
 </div>
 <p>The URL endpoint for accessing the S3 storage.</p>
-</div>
-<div class="section" id="id1">
+</section>
+<section id="id1">
 <h3>Command<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE [OPTIONS]
 </pre></div>
@@ -854,12 +854,12 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <dd><p>Upgrade the database schema</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="rest-api">
+</section>
+</section>
+<section id="rest-api">
 <h2>REST API<a class="headerlink" href="#rest-api" title="Permalink to this headline">#</a></h2>
 <p>The <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service is an <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> for registering experiments and submitting jobs to the Testbed.</p>
-<div class="section" id="id2">
+<section id="id2">
 <h3>Environment Variables<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">DIOPTRA_RESTAPI_DATABASE_URI</kbd></div>
@@ -900,8 +900,8 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <div class="line"><kbd class="kbd docutils literal notranslate">RQ_REDIS_URI</kbd></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">redis://</span></code> <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to the Redis queue.</p>
-</div>
-<div class="section" id="id3">
+</section>
+<section id="id3">
 <h3>Command<a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE [OPTIONS]
 </pre></div>
@@ -924,13 +924,13 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <dd><p>Upgrade the database schema</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="workers-pytorch-tensorflow">
+</section>
+</section>
+<section id="workers-pytorch-tensorflow">
 <h2>Workers (PyTorch/Tensorflow)<a class="headerlink" href="#workers-pytorch-tensorflow" title="Permalink to this headline">#</a></h2>
 <p>A Testbed Worker is a managed process within a Docker container that watches one or more Redis Queues for new jobs to handle.
 The Testbed Workers come in different flavors, with each one provisioned to support running jobs for different types of machine learning libraries.</p>
-<div class="section" id="id4">
+<section id="id4">
 <h3>Environment Variables<a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">DIOPTRA_PLUGIN_DIR</kbd></div>
@@ -968,8 +968,8 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <div class="line"><kbd class="kbd docutils literal notranslate">RQ_REDIS_URI</kbd></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">redis://</span></code> <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> to the Redis queue.</p>
-</div>
-<div class="section" id="id5">
+</section>
+<section id="id5">
 <h3>Command<a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE [OPTIONS] [ARGS]...
 </pre></div>
@@ -991,13 +991,13 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 <dd><p>Python module used to start the RQ Worker (default: <code class="docutils literal notranslate"><span class="pre">'dioptra.rq.cli.rq'</span></code>)</p>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="minio">
+</section>
+</section>
+<section id="minio">
 <h2>Minio<a class="headerlink" href="#minio" title="Permalink to this headline">#</a></h2>
 <p><strong>Vendor image:</strong> <a class="reference external" href="https://hub.docker.com/r/minio/minio/">https://hub.docker.com/r/minio/minio/</a></p>
 <p>The Minio service provides distributed, S3-compatible storage for the Testbed.</p>
-<div class="section" id="id6">
+<section id="id6">
 <h3>Command<a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE server [ARGS]...
 </pre></div>
@@ -1010,8 +1010,8 @@ Must match <code class="docutils literal notranslate"><span class="pre">MINIO_RO
 For a single machine deployment, the path should point to a bind mounted or docker volume directory, e.g. <code class="docutils literal notranslate"><span class="pre">/data</span></code>.
 For a distributed deployment, pass a list of URLs instead, e.g. <code class="docutils literal notranslate"><span class="pre">http://minio{1...4}/data{1...2}</span></code>.
 The ellipses syntax <code class="docutils literal notranslate"><span class="pre">{1...4}</span></code> expands into a list of URLs at runtime.</p>
-</div>
-<div class="section" id="id7">
+</section>
+<section id="id7">
 <h3>Environment Variables<a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
 <div class="line-block">
 <div class="line"><kbd class="kbd docutils literal notranslate">MINIO_ROOT_USER</kbd></div>
@@ -1021,13 +1021,13 @@ The ellipses syntax <code class="docutils literal notranslate"><span class="pre"
 <div class="line"><kbd class="kbd docutils literal notranslate">MINIO_ROOT_PASSWORD</kbd></div>
 </div>
 <p>Sets the password for logging into the Minio deployment.</p>
-</div>
-</div>
-<div class="section" id="redis">
+</section>
+</section>
+<section id="redis">
 <h2>Redis<a class="headerlink" href="#redis" title="Permalink to this headline">#</a></h2>
 <p><strong>Vendor image:</strong> <a class="reference external" href="https://hub.docker.com/_/redis">https://hub.docker.com/_/redis</a></p>
 <p>The Redis service is a fast in-memory database that is leveraged as a centralized queue to delegate jobs to the Testbed Workers.</p>
-<div class="section" id="id8">
+<section id="id8">
 <h3>Command<a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Usage: docker run --rm -it IMAGE redis-server [OPTIONS]
 </pre></div>
@@ -1041,9 +1041,9 @@ The ellipses syntax <code class="docutils literal notranslate"><span class="pre"
 <dd><p>The name of the append only file. (default: <code class="docutils literal notranslate"><span class="pre">'appendonly.aof'</span></code>)</p>
 </dd>
 </dl>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
               </div>
