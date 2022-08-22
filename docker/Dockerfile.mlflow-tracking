@@ -111,22 +111,6 @@ RUN echo "===> Installing compilers...." && \
     apt-get update && \
     apt-get install -yq --no-install-recommends build-essential
 
-# -- Base image (includes system Python with build package) ------------------------------------------
-
-FROM ${BASE_IMAGE} AS python-base
-
-RUN echo "===> Installing system Python...." && \
-    apt-get update && \
-    apt-get install -yq --no-install-recommends \
-    python3.9 \
-    python3.9-venv \
-    python3-pip
-
-RUN echo "===> Installing latest version of pip...." && \
-    python3.9 -m pip install --upgrade pip && \
-    echo "===> Installing build package...." && \
-    python3.9 -m pip install build
-
 # -- Base image (includes argbash tool) --------------------------------------------------------------
 
 FROM matejak/argbash:latest AS argbash-base
@@ -272,34 +256,6 @@ RUN echo "===> Installing Miniconda3 version ${MINICONDA_VERSION} to ${CONDA_DIR
     chmod 0775 ${CONDA_DIR} && \
     find ${CONDA_DIR} -type d -exec chmod 0775 "{}" "+"
 
-# -- Build: create dioptra wheel ---------------------------------------------------------------------
-
-FROM python-base AS build-dioptra-wheel
-
-WORKDIR /code
-
-COPY --chown=root:root --chmod=0644 LICENSE /code/LICENSE
-COPY --chown=root:root --chmod=0644 MANIFEST.in /code/MANIFEST.in
-COPY --chown=root:root --chmod=0644 pyproject.toml /code/pyproject.toml
-COPY --chown=root:root --chmod=0644 README.md /code/README.md
-COPY --chown=root:root --chmod=0644 setup.cfg /code/setup.cfg
-COPY --chown=root:root --chmod=0644 setup.py /code/setup.py
-COPY --chown=root:root --chmod=0644 tox.ini /code/tox.ini
-COPY --chown=root:root --chmod=0644 docs/make.bat /code/docs/make.bat
-COPY --chown=root:root --chmod=0644 docs/Makefile /code/docs/Makefile
-COPY --chown=root:root docs/assets /code/docs/assets
-COPY --chown=root:root docs/source /code/docs/source
-COPY --chown=root:root src/dioptra /code/src/dioptra
-COPY --chown=root:root tests /code/tests
-
-RUN find /code -type d -exec chmod 0755 "{}" "+" && \
-    find /code/docs/assets -type f -exec chmod 0644 "{}" "+" && \
-    find /code/docs/source -type f -exec chmod 0644 "{}" "+" && \
-    find /code/src -type f -exec chmod 0644 "{}" "+" && \
-    find /code/tests -type f -exec chmod 0644 "{}" "+" && \
-    echo "===> Building the dioptra wheel...." && \
-    python3.9 -m build -sw
-
 # -- Build: create conda virtual environment ---------------------------------------------------------
 
 FROM build-base AS build-miniconda-venv
@@ -315,16 +271,7 @@ COPY --from=copy-files --chown=root:root --chmod=0644 /files/build.pip.conf /etc
 RUN echo "===> Building Miniconda virtual environment with latest version of dependencies...." && \
     ${CONDA_DIR}/condabin/conda env create --file /tmp/environment.yml
 
-COPY --from=build-dioptra-wheel --chown=root:root --chmod=0644 /code/dist /code/dist
-
-ARG CODE_PKG_VERSION
 ARG DIOPTRA_CONDA_ENV=dioptra
-
-RUN echo "===> Installing Dioptra code module...." && \
-    ${CONDA_DIR}/condabin/conda run -n ${DIOPTRA_CONDA_ENV} \
-    pip install --no-cache-dir --no-deps \
-    /code/dist/dioptra-${CODE_PKG_VERSION}-py3-none-any.whl && \
-    ${CONDA_DIR}/condabin/conda clean -afy
 
 RUN echo "===> Cleaning/pruning directories...." && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
