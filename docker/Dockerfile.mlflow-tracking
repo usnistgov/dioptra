@@ -317,17 +317,6 @@ COPY --from=copy-files --chown=root:root --chmod=0644 /files/environment-pinned-
 RUN echo "===> Building Miniconda virtual environment with pinned versions of dependencies...." && \
     ${CONDA_DIR}/condabin/conda env create --file /tmp/environment.yml
 
-COPY --from=build-dioptra-wheel --chown=root:root --chmod=0644 /code/dist /code/dist
-
-ARG CODE_PKG_VERSION
-ARG DIOPTRA_CONDA_ENV=dioptra
-
-RUN echo "===> Installing Dioptra code module...." && \
-    ${CONDA_DIR}/condabin/conda run -n ${DIOPTRA_CONDA_ENV} \
-    pip install --no-cache-dir --no-deps \
-    /code/dist/dioptra-${CODE_PKG_VERSION}-py3-none-any.whl && \
-    ${CONDA_DIR}/condabin/conda clean -afy
-
 ARG DIOPTRA_CONDA_ENV=dioptra
 
 RUN echo "===> Cleaning/pruning directories...." && \
