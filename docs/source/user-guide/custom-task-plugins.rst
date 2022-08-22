@@ -85,7 +85,7 @@ For additional examples on how these plugins are constructed, you can refer to `
 The following sections will now involve creating built-in and localized task plugins.
 
 Creating a Built-in Task
------------------------
+------------------------
 
 To create a built-in task, first the user must identify which built-in subdirectory (artifacts, attacks, etc.) should contain the new task.
 Once this is done, the task can be declared as follows:

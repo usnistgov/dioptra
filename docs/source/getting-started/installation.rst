@@ -48,25 +48,27 @@ The easiest way to accomplish this is using the pre-built configuration files in
 
 There are two install options to start using `Conda Environments <https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/environments.html>`_,
 
-.. tabbed:: Anaconda installation
+.. tab-set::
 
-   The following links will provide an installation package for version 2020.11 of `Anaconda <https://docs.anaconda.com/>`_ on your host machine (must meet all :ref:`quickstart-system-requirements`).
+   .. tab-item:: Anaconda installation
 
-   - `Anaconda for Windows <https://repo.anaconda.com/archive/Anaconda3-2020.11-Windows-x86_64.exe>`_
-   - `Anaconda for MacOS <https://repo.anaconda.com/archive/Anaconda3-2020.11-MacOSX-x86_64.pkg>`_
-   - `Anaconda for Linux <https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh>`_
+      The following links will provide an installation package for version 2020.11 of `Anaconda <https://docs.anaconda.com/>`_ on your host machine (must meet all :ref:`quickstart-system-requirements`).
 
-   If your host machine does not meet the :ref:`quickstart-system-requirements`, then go to the `Anaconda Installation Documents <https://docs.anaconda.com/anaconda/install/>`_ for more help.
+      - `Anaconda for Windows <https://repo.anaconda.com/archive/Anaconda3-2020.11-Windows-x86_64.exe>`_
+      - `Anaconda for MacOS <https://repo.anaconda.com/archive/Anaconda3-2020.11-MacOSX-x86_64.pkg>`_
+      - `Anaconda for Linux <https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh>`_
 
-.. tabbed:: Miniconda installation
+      If your host machine does not meet the :ref:`quickstart-system-requirements`, then go to the `Anaconda Installation Documents <https://docs.anaconda.com/anaconda/install/>`_ for more help.
 
-   The following links will provide an installation package for the latest version of `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ on your host machine (must meet all :ref:`quickstart-system-requirements`).
+   .. tab-item:: Miniconda installation
 
-   - `Miniconda for Windows <https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe>`_
-   - `Miniconda for MacOS <https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.pkg>`_
-   - `Miniconda for Linux <https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh>`_
+      The following links will provide an installation package for the latest version of `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ on your host machine (must meet all :ref:`quickstart-system-requirements`).
 
-   If your host machine does not meet the :ref:`quickstart-system-requirements`, then go to the `Miniconda Installation Documents <https://docs.conda.io/en/latest/miniconda.html>`_ for more help.
+      - `Miniconda for Windows <https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe>`_
+      - `Miniconda for MacOS <https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.pkg>`_
+      - `Miniconda for Linux <https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh>`_
+
+      If your host machine does not meet the :ref:`quickstart-system-requirements`, then go to the `Miniconda Installation Documents <https://docs.conda.io/en/latest/miniconda.html>`_ for more help.
 
 Preparing a Local Testbed environment
 -------------------------------------
@@ -111,19 +113,21 @@ Clone the Repository
 
 To clone the repository, open a new **Terminal** session for your operating system,
 
-.. tabbed:: Linux
+.. tab-set::
 
-   Use the keyboard shortcut :kbd:`ctrl` + :kbd:`alt` + :kbd:`t` to open the **Terminal**.
+   .. tab-item:: Linux
+
+      Use the keyboard shortcut :kbd:`ctrl` + :kbd:`alt` + :kbd:`t` to open the **Terminal**.
+
+   .. tab-item:: MacOS
+
+      Use the keyboard shortcut :kbd:`command` + :kbd:`space` to open the **Spotlight Search**, type ``Terminal`` into the search bar, and click the *Terminal* application under *Top Hit* at the top of your results.
+
+   .. tab-item:: Windows
+
+      Use the keyboard shortcut :kbd:`windows` + :kbd:`r` to open **Run**, then type ``wsl`` into the search bar and click *OK* to start a `Windows Subsystem for Linux`_ session.
 
 Next, navigate to the directory where you will clone the repository,
-
-.. tabbed:: MacOS
-
-   Use the keyboard shortcut :kbd:`command` + :kbd:`space` to open the **Spotlight Search**, type ``Terminal`` into the search bar, and click the *Terminal* application under *Top Hit* at the top of your results.
-
-.. tabbed:: Windows
-
-   Use the keyboard shortcut :kbd:`windows` + :kbd:`r` to open **Run**, then type ``wsl`` into the search bar and click *OK* to start a `Windows Subsystem for Linux`_ session.
 
 .. code-block:: sh
 
@@ -144,17 +148,19 @@ Next, navigate to the directory where you will clone the repository,
 
 Clone the repository to your local computer,
 
-.. tabbed:: Clone with HTTPS
+.. tab-set::
 
-   .. code:: sh
+   .. tab-item:: Clone with HTTPS
 
-      git clone https://github.com/usnistgov/dioptra.git
+      .. code:: sh
 
-.. tabbed:: Clone with SSH
+         git clone https://github.com/usnistgov/dioptra.git
 
-   .. code:: sh
+   .. tab-item:: Clone with SSH
 
-      git clone git@github.com:usnistgov/dioptra.git
+      .. code:: sh
+
+         git clone git@github.com:usnistgov/dioptra.git
 
 Finally, verify the repository was downloaded and is up to date,
 

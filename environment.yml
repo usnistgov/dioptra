@@ -103,6 +103,7 @@ dependencies:
       - injector>=0.18.0
       - markdown
       - marshmallow>=3.9.0,<4
+      - mistune<2
       - mlflow>=1.12.0,<2
       - multimethod>=1.5
       - mypy>=0.920
@@ -124,14 +125,13 @@ dependencies:
       - rich>=9.1.0
       - rq>=1.5.0
       - rstcheck
-      - sphinx>=3.3.0
+      - Sphinx>=4.5.0,<5
       - sphinx-autobuild
       - sphinx-autodoc-typehints
-      - sphinx-book-theme
-      - sphinx-copybutton
-      - sphinx-panels
-      - sphinx-rtd-theme
-      - sphinx-togglebutton
+      - sphinx-book-theme>=0.3.3
+      - sphinx-copybutton>=0.5.0
+      - sphinx_design>=0.1.0
+      - sphinx-togglebutton>=0.3.2
       - sphinxcontrib-openapi
       - structlog>=20.2.0
       - tabulate

@@ -152,33 +152,35 @@ Now that we've set up our folder structure, there are a few changes that you wil
 
 The ``nfs-datasets`` volume will need to be updated based on the details of your deployment,
 
-.. tabbed:: Datasets on NFS share
+.. tab-set::
 
-   The following Docker volume assumes that the NFS share is the directory ``/var/nfs/datasets`` on a device with the IP address ``192.168.1.20``.
-   Update it to match the details of your NFS share.
+   .. tab-item:: Datasets on NFS share
 
-   .. code-block:: yaml
+      The following Docker volume assumes that the NFS share is the directory ``/var/nfs/datasets`` on a device with the IP address ``192.168.1.20``.
+      Update it to match the details of your NFS share.
 
-      nfs-datasets:
-        driver: local
-        driver_opts:
-          type: nfs
-          o: addr=192.168.1.20,nfsvers=4,ro,soft,nolock,async,noatime,intr,tcp,rsize=131072,wsize=131072,actimeo=1800
-          device: ":/var/nfs/datasets"
+      .. code-block:: yaml
 
-.. tabbed:: Datasets in local directory
+         nfs-datasets:
+           driver: local
+           driver_opts:
+             type: nfs
+             o: addr=192.168.1.20,nfsvers=4,ro,soft,nolock,async,noatime,intr,tcp,rsize=131072,wsize=131072,actimeo=1800
+             device: ":/var/nfs/datasets"
 
-   The following Docker volume assumes that the data is stored in the local directory ``/var/nfs/datasets``.
-   Update this to match the folder where you store your datasets.
+   .. tab-item:: Datasets in local directory
 
-   .. code-block:: yaml
+      The following Docker volume assumes that the data is stored in the local directory ``/var/nfs/datasets``.
+      Update this to match the folder where you store your datasets.
 
-      nfs-datasets:
-        driver: local
-        driver_opts:
-          type: none
-          o: bind
-          device: /var/nfs/datasets
+      .. code-block:: yaml
+
+         nfs-datasets:
+           driver: local
+           driver_opts:
+             type: none
+             o: bind
+             device: /var/nfs/datasets
 
 .. rubric:: Minio Username and Password
 
