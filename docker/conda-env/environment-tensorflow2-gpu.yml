@@ -19,7 +19,6 @@ channels:
   - defaults
 dependencies:
   - bottleneck
-  - click>=7.1.0,<8 # mlflow/prefect requirement
   - cloudpickle>=1.3.0 # prefect requirement
   - cython
   - dask>=2021.06.0 # prefect requirement
@@ -28,19 +27,17 @@ dependencies:
   - gitpython>=2.1.0 # mlflow requirement
   - gunicorn # mlflow requirement
   - h5py=2.10.0 # tensorflow requirement
-  - jinja2>=2.10.1,<3.0
   - joblib
-  - markupsafe<=2.0.1
   - matplotlib
+  - mccabe>=0.6.1,<0.7.0
   - mkl
   - nose
   - numexpr
-  - numpy>=1.22.0
+  - numpy>=1.22.0,<1.23.0
   - packaging # mlflow requirement
   - pandas>=1.1.1 # mlflow/prefect requirement
   - pillow
   - pip
-  - protobuf>=3.7.0 # mlflow requirement
   - psutil
   - psycopg2
   - pycodestyle
@@ -55,35 +52,40 @@ dependencies:
   - scikit-learn
   - simplejson
   - six>=1.13.0 # adversarial-robustness-toolbox requirement
-  - sqlalchemy>=1.3.0,<2 # mlflow requirement
   - sqlparse>=0.3.1 # mlflow requirement
-  - werkzeug>=1.0.0,<2
   - pip:
       - adversarial-robustness-toolbox
       - alembic<2.0.0
       - boto3>=1.16.0 # mlflow requirement
+      - Click>=8.0.0
+      - cma
       - databricks-cli>=0.8.7 # mlflow requirement
-      - flask-accepts>=0.17.0,<1
-      - Flask-Injector>=0.12.0,<1
-      - Flask-Migrate>=2.5.0,<3
-      - flask-restx>=0.2.0,<1
-      - Flask-SQLAlchemy>=2.4.0,<3
-      - Flask-WTF>=0.14.3,<1
-      - Flask>=1.1.4,<2
+      - flask-accepts>=0.17.0
+      - Flask-Injector>=0.12.0
+      - Flask-Migrate>=2.5.0
+      - flask-restx>=0.5.1
+      - Flask-SQLAlchemy>=2.4.0
+      - Flask-WTF>=0.14.3
+      - Flask>=2.0.0,<2.2.0
       - gorilla
+      - gym[box2d,classic_control,other,toy_text]
       - imgaug>=0.4.0,<1
       - marshmallow>=3.9.0,<4
       - mlflow
       - multimethod>=1.5
+      - opencv-python
       - passlib
       - prefect
       - prometheus-flask-exporter # mlflow requirement
+      - protobuf>=3.7.0 # mlflow requirement
       - pyarrow>=2.0.0
       - pycocotools
       - python-json-logger>=2.0.0
       - querystring-parser # mlflow requirement
       - rich>=9.1.0
       - rq>=1.5.0
+      - SQLAlchemy>=1.4.0,<2 # mlflow requirement
       - structlog>=20.2.0
       - tensorflow
       - typing-extensions>=3.7.4.3
+      - werkzeug>=1.0.0,<=2.1.2

@@ -114,7 +114,7 @@ FROM base AS build-base
 
 RUN echo "===> Installing compilers...." && \
     apt-get update && \
-    apt-get install -yq --no-install-recommends build-essential
+    apt-get install -yq --no-install-recommends build-essential swig
 
 # -- Base image (includes system Python with build package) ------------------------------------------
 
