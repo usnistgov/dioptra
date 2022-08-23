@@ -158,6 +158,8 @@ dependencies:
   - zlib=1.2.12=h7f8727e_2
   - zstd=1.5.2=ha4553b6_0
   - pip:
+    - --find-links https://download.pytorch.org/whl/cu113/torch_stable.html
+    - --find-links https://dl.fbaipublicfiles.com/detectron2/wheels/cu113/torch1.10/index.html
     - absl-py==1.2.0
     - adversarial-robustness-toolbox==1.11.0
     - aiohttp==3.8.1
