@@ -14,12 +14,50 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module for binding configurations to shared services using dependency injection."""
+"""Binding configurations to shared services using dependency injection."""
 from __future__ import annotations
 
-from typing import Any, Callable, List
+from dataclasses import dataclass
+from typing import Any, Callable
 
-from injector import Binder
+from injector import Binder, Module, provider
+from passlib.context import CryptContext
+
+from dioptra.restapi.shared.password.service import PasswordService
+
+from .schema import UserRegistrationFormSchema
+
+
+@dataclass
+class PasswordServiceConfiguration(object):
+    crypt_context: CryptContext
+
+
+class PasswordServiceModule(Module):
+    @provider
+    def provide_password_service_module(
+        self, configuration: PasswordServiceConfiguration
+    ) -> PasswordService:
+        return PasswordService(crypt_context=configuration.crypt_context)
+
+
+class UserRegistrationFormSchemaModule(Module):
+    @provider
+    def provide_user_registration_form_schema_module(
+        self,
+    ) -> UserRegistrationFormSchema:
+        return UserRegistrationFormSchema()
+
+
+def _bind_password_service_configuration(binder: Binder):
+    configuration: PasswordServiceConfiguration = PasswordServiceConfiguration(
+        crypt_context=CryptContext(
+            schemes=["pbkdf2_sha256"],
+            pbkdf2_sha256__default_rounds=30000,
+        ),
+    )
+
+    binder.bind(PasswordServiceConfiguration, to=configuration)
 
 
 def bind_dependencies(binder: Binder) -> None:
@@ -28,36 +66,15 @@ def bind_dependencies(binder: Binder) -> None:
     Args:
         binder: A :py:class:`~injector.Binder` object.
     """
-    from .experiment import bind_dependencies as attach_experiment_dependencies
-    from .job import bind_dependencies as attach_job_dependencies
-    from .queue import bind_dependencies as attach_job_queue_dependencies
-    from .task_plugin import bind_dependencies as attach_task_plugin_dependencies
-    from .user import bind_dependencies as attach_user_dependencies
-
-    # Bind configurations
-    attach_experiment_dependencies(binder)
-    attach_job_dependencies(binder)
-    attach_job_queue_dependencies(binder)
-    attach_task_plugin_dependencies(binder)
-    attach_user_dependencies(binder)
+    _bind_password_service_configuration(binder)
 
 
-def register_providers(modules: List[Callable[..., Any]]) -> None:
+def register_providers(modules: list[Callable[..., Any]]) -> None:
     """Registers type providers within the main application.
 
     Args:
         modules: A list of callables used for configuring the dependency injection
             environment.
     """
-    from .experiment import register_providers as attach_experiment_providers
-    from .job import register_providers as attach_job_providers
-    from .queue import register_providers as attach_job_queue_providers
-    from .task_plugin import register_providers as attach_task_plugin_providers
-    from .user import register_providers as attach_user_providers
-
-    # Append modules to list
-    attach_experiment_providers(modules)
-    attach_job_providers(modules)
-    attach_job_queue_providers(modules)
-    attach_task_plugin_providers(modules)
-    attach_user_providers(modules)
+    modules.append(PasswordServiceModule)
+    modules.append(UserRegistrationFormSchemaModule)

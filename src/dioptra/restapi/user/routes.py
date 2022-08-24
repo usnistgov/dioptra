@@ -14,32 +14,28 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module for registering the error handlers for the application.
+"""Methods for registering the user endpoint routes with the main application.
 
 .. |Api| replace:: :py:class:`flask_restx.Api`
+.. |Flask| replace:: :py:class:`flask.Flask`
 """
 from __future__ import annotations
 
+from flask import Flask
 from flask_restx import Api
 
+BASE_ROUTE: str = "user"
 
-def register_error_handlers(api: Api) -> None:
-    """Registers the error handlers with the main application.
+
+def register_routes(api: Api, app: Flask, root: str = "api") -> None:
+    """Registers the user endpoint routes with the main application.
 
     Args:
         api: The main REST |Api| object.
+        app: The main |Flask| application.
+        root: The root path for the registration prefix of the namespace. The default
+            is `"api"`.
     """
-    from .experiment import register_error_handlers as attach_experiment_error_handlers
-    from .job import register_error_handlers as attach_job_error_handlers
-    from .queue import register_error_handlers as attach_job_queue_error_handlers
-    from .task_plugin import (
-        register_error_handlers as attach_task_plugin_error_handlers,
-    )
-    from .user import register_error_handlers as attach_user_error_handlers
+    from .controller import api as endpoint_api
 
-    # Add error handlers
-    attach_experiment_error_handlers(api)
-    attach_job_error_handlers(api)
-    attach_job_queue_error_handlers(api)
-    attach_task_plugin_error_handlers(api)
-    attach_user_error_handlers(api)
+    api.add_namespace(endpoint_api, path=f"/{root}/{BASE_ROUTE}")

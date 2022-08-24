@@ -14,32 +14,45 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module for registering the error handlers for the application.
-
-.. |Api| replace:: :py:class:`flask_restx.Api`
-"""
+"""Error handlers for the user endpoints."""
 from __future__ import annotations
 
 from flask_restx import Api
 
 
+class UsernameNotAvailableError(Exception):
+    """The username is not available."""
+
+
+class UserDoesNotExistError(Exception):
+    """The requested user does not exist."""
+
+
+class UserRegistrationError(Exception):
+    """The user registration form contains invalid parameters."""
+
+
 def register_error_handlers(api: Api) -> None:
-    """Registers the error handlers with the main application.
+    @api.errorhandler(UserDoesNotExistError)
+    def handle_user_does_not_exist_error(error):
+        return {"message": "Not Found - The requested user does not exist"}, 404
 
-    Args:
-        api: The main REST |Api| object.
-    """
-    from .experiment import register_error_handlers as attach_experiment_error_handlers
-    from .job import register_error_handlers as attach_job_error_handlers
-    from .queue import register_error_handlers as attach_job_queue_error_handlers
-    from .task_plugin import (
-        register_error_handlers as attach_task_plugin_error_handlers,
-    )
-    from .user import register_error_handlers as attach_user_error_handlers
+    @api.errorhandler(UsernameNotAvailableError)
+    def handle_username_not_available_error(error):
+        return (
+            {
+                "message": "Bad Request - The username on the registration form "
+                "is not available. Please select another and resubmit."
+            },
+            400,
+        )
 
-    # Add error handlers
-    attach_experiment_error_handlers(api)
-    attach_job_error_handlers(api)
-    attach_job_queue_error_handlers(api)
-    attach_task_plugin_error_handlers(api)
-    attach_user_error_handlers(api)
+    @api.errorhandler(UserRegistrationError)
+    def handle_user_registration_error(error):
+        return (
+            {
+                "message": "Bad Request - The user registration form contains "
+                "invalid parameters. Please verify and resubmit."
+            },
+            400,
+        )

@@ -14,32 +14,15 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module for registering the error handlers for the application.
+"""The experiment endpoint subpackage."""
 
-.. |Api| replace:: :py:class:`flask_restx.Api`
-"""
-from __future__ import annotations
+from .dependencies import bind_dependencies, register_providers
+from .errors import register_error_handlers
+from .routes import register_routes
 
-from flask_restx import Api
-
-
-def register_error_handlers(api: Api) -> None:
-    """Registers the error handlers with the main application.
-
-    Args:
-        api: The main REST |Api| object.
-    """
-    from .experiment import register_error_handlers as attach_experiment_error_handlers
-    from .job import register_error_handlers as attach_job_error_handlers
-    from .queue import register_error_handlers as attach_job_queue_error_handlers
-    from .task_plugin import (
-        register_error_handlers as attach_task_plugin_error_handlers,
-    )
-    from .user import register_error_handlers as attach_user_error_handlers
-
-    # Add error handlers
-    attach_experiment_error_handlers(api)
-    attach_job_error_handlers(api)
-    attach_job_queue_error_handlers(api)
-    attach_task_plugin_error_handlers(api)
-    attach_user_error_handlers(api)
+__all__ = [
+    "bind_dependencies",
+    "register_error_handlers",
+    "register_providers",
+    "register_routes",
+]

@@ -14,32 +14,31 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module for registering the error handlers for the application.
-
-.. |Api| replace:: :py:class:`flask_restx.Api`
-"""
 from __future__ import annotations
 
-from flask_restx import Api
+from typing import cast
+
+import structlog
+from passlib.context import CryptContext
+from structlog.stdlib import BoundLogger
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
-def register_error_handlers(api: Api) -> None:
-    """Registers the error handlers with the main application.
+class PasswordService(object):
+    def __init__(self, crypt_context: CryptContext) -> None:
+        self._context = crypt_context
 
-    Args:
-        api: The main REST |Api| object.
-    """
-    from .experiment import register_error_handlers as attach_experiment_error_handlers
-    from .job import register_error_handlers as attach_job_error_handlers
-    from .queue import register_error_handlers as attach_job_queue_error_handlers
-    from .task_plugin import (
-        register_error_handlers as attach_task_plugin_error_handlers,
-    )
-    from .user import register_error_handlers as attach_user_error_handlers
+    def hash(self, password: str, **kwargs) -> str:
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-    # Add error handlers
-    attach_experiment_error_handlers(api)
-    attach_job_error_handlers(api)
-    attach_job_queue_error_handlers(api)
-    attach_task_plugin_error_handlers(api)
-    attach_user_error_handlers(api)
+        log.debug("Hashing password")
+
+        return cast(str, self._context.hash(password))
+
+    def verify(self, password: str, hashed_password: str, **kwargs) -> bool:
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        log.debug("Verifying password")
+
+        return cast(bool, self._context.verify(password, hashed_password))

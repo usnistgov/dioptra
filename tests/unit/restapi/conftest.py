@@ -97,6 +97,23 @@ def dependency_modules() -> List[Any]:
     from dioptra.restapi.task_plugin.dependencies import (
         TaskPluginUploadFormSchemaModule,
     )
+    from dioptra.restapi.user.dependencies import (
+        PasswordServiceModule,
+        UserRegistrationFormSchemaModule,
+        _bind_password_service_configuration,
+    )
+
+    def _bind_rq_service_configuration(binder: Binder) -> None:
+        configuration: RQServiceConfiguration = RQServiceConfiguration(
+            redis=Redis.from_url("redis://"),
+            run_mlflow="dioptra.rq.tasks.run_mlflow_task",
+        )
+
+        binder.bind(
+            interface=RQServiceConfiguration,
+            to=configuration,
+            scope=request,
+        )
 
     def _bind_s3_service_configuration(binder: Binder) -> None:
         s3_session: Session = Session()
@@ -106,23 +123,19 @@ def dependency_modules() -> List[Any]:
         binder.bind(BaseClient, to=s3_client, scope=request)
 
     def configure(binder: Binder) -> None:
-        binder.bind(
-            interface=RQServiceConfiguration,
-            to=RQServiceConfiguration(
-                redis=Redis.from_url("redis://"),
-                run_mlflow="dioptra.rq.tasks.run_mlflow_task",
-            ),
-            scope=request,
-        )
+        _bind_password_service_configuration(binder)
+        _bind_rq_service_configuration(binder)
         _bind_s3_service_configuration(binder)
 
     return [
         configure,
         ExperimentRegistrationFormSchemaModule(),
         JobFormSchemaModule(),
+        PasswordServiceModule(),
         QueueRegistrationFormSchemaModule(),
         RQServiceModule(),
         TaskPluginUploadFormSchemaModule(),
+        UserRegistrationFormSchemaModule(),
     ]
 
 

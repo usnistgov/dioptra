@@ -126,6 +126,38 @@ definitions:
         description: A unique string identifying a task plugin package within a collection.
         type: string
     type: object
+  User:
+    properties:
+      createdOn:
+        description: The date and time the user account was created.
+        format: date-time
+        type: string
+      emailAddress:
+        description: The email address associated with the user account.
+        type: string
+      lastLoginOn:
+        description: The date and time the user last logged into their account.
+        format: date-time
+        type: string
+      lastModifiedOn:
+        description: The date and time the user account was last modified.
+        format: date-time
+        type: string
+      passwordExpireOn:
+        description: The date and time the user's password is set to expire.
+        format: date-time
+        type: string
+      userExpireOn:
+        description: The date and time the user account is set to expire.
+        format: date-time
+        type: string
+      userId:
+        description: An integer identifying a registered user account.
+        type: integer
+      username:
+        description: The username for logging into the user account.
+        type: string
+    type: object
 info:
   title: Dioptra REST API
   version: 0.0.0
@@ -718,6 +750,96 @@ paths:
         name: taskPluginName
         required: true
         type: string
+  /api/user/:
+    get:
+      operationId: get_user_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/User"
+            type: array
+      summary: Gets a list of all registered users
+      tags:
+        - User
+    post:
+      consumes:
+        - application/x-www-form-urlencoded
+        - multipart/form-data
+      operationId: post_user_resource
+      parameters:
+        - description: The username for logging into the user account. Must be unique.
+          in: formData
+          name: username
+          required: true
+          type: string
+        - description: The password used for authenticating the user account.
+          in: formData
+          name: password
+          required: true
+          type: string
+        - description: The password confirmation field, this should exactly match the
+            value in password.
+          in: formData
+          name: password_confirm
+          required: true
+          type: string
+        - description: The email address associated with the user account.
+          in: formData
+          name: email_address
+          required: true
+          type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/User"
+      summary: Creates a new user via an user registration form
+      tags:
+        - User
+  /api/user/{userId}:
+    delete:
+      operationId: delete_user_id_resource
+      responses:
+        "200":
+          description: Success
+      summary: Deletes user account by its unique identifier
+      tags:
+        - User
+    get:
+      operationId: get_user_id_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/User"
+      summary: Gets user account by its unique identifier
+      tags:
+        - User
+    parameters:
+      - description: An integer identifying a registered user account.
+        in: path
+        name: userId
+        required: true
+        type: integer
 produces:
   - application/json
 responses:
@@ -737,6 +859,12 @@ responses:
   QueueAlreadyExistsError: {}
   QueueDoesNotExistError: {}
   QueueRegistrationError: {}
+  TaskPluginAlreadyExistsError: {}
+  TaskPluginDoesNotExistError: {}
+  TaskPluginUploadError: {}
+  UserDoesNotExistError: {}
+  UserRegistrationError: {}
+  UsernameNotAvailableError: {}
 swagger: "2.0"
 tags:
   - description: Experiment registration operations
@@ -745,3 +873,7 @@ tags:
     name: Job
   - description: Queue registration operations
     name: Queue
+  - description: Task plugin registry operations
+    name: TaskPlugin
+  - description: User accounts
+    name: User
