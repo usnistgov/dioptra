@@ -125,7 +125,7 @@ dependencies:
       - sphinx-togglebutton>=0.3.2
       - sphinxcontrib-openapi
       - structlog>=20.2.0
-      - SQLAlchemy>=1.4.0
+      - SQLAlchemy[mypy]>=1.4.0,<2
       - tabulate
       - tox
       - types-click
