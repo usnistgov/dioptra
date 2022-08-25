@@ -1,12 +1,15 @@
 import argparse
 import logging
 import logging.config
+from collections.abc import Iterable
+from typing import Any, Union
+
 import yaml
 
 import dioptra.task_engine.task_engine
 
 
-def _parse_args():
+def _parse_args() -> argparse.Namespace:
     """
     Set up and parse commandline parameters.
     """
@@ -69,11 +72,12 @@ def _parse_args():
     return arg_parser.parse_args()
 
 
-def _setup_logging(log_level=logging.INFO):
+def _setup_logging(log_level: Union[int, str] = logging.INFO) -> None:
     """
     Set up logging.
 
-    :param log_level: The logging level to use.
+    :param log_level: The logging level to use.  May be one of the integer log
+        level constants or names recognized by the logging module, or "all".
     """
 
     if isinstance(log_level, str):
@@ -100,7 +104,7 @@ def _setup_logging(log_level=logging.INFO):
         "disable_existing_loggers": False
     }
 
-    logger_config = {
+    logger_config: dict[str, Any] = {
         "handlers": ["stream"]
     }
 
@@ -114,13 +118,13 @@ def _setup_logging(log_level=logging.INFO):
         # the final location of the task_engine module!
         logger_config["level"] = log_level
         config["loggers"] = {
-            "dioptra.task_engine.task_engine": logger_config
+            "dioptra.task_engine": logger_config
         }
 
     logging.config.dictConfig(config)
 
 
-def _cmdline_params_to_map(params):
+def _cmdline_params_to_map(params: Iterable[str]) -> dict[str, str]:
     """
     Convert global parameters given on the commandline in <name>=<value>
     format, into a mapping from name to value.  Values are run through a YAML
@@ -134,6 +138,7 @@ def _cmdline_params_to_map(params):
         parameters, as collected by argparse.
     :return: A mapping from name (string) to value (some python type)
     """
+    param_value: Any
     param_map = {}
 
     if params:
@@ -163,7 +168,7 @@ def _cmdline_params_to_map(params):
     return param_map
 
 
-def main():
+def main() -> None:
     args = _parse_args()
     _setup_logging(args.log_level)
 

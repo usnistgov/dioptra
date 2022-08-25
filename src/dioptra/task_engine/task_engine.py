@@ -1,8 +1,10 @@
 import collections
-import dioptra.pyplugs
 import itertools
 import logging
+
 import mlflow
+
+import dioptra.pyplugs
 
 
 def _get_logger():
