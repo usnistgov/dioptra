@@ -1,13 +1,23 @@
 import collections
 import itertools
 import logging
+from collections.abc import (
+    Container,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    MutableSequence,
+    MutableSet,
+    Sequence,
+)
+from typing import Any, Union
 
 import mlflow
 
 import dioptra.pyplugs
 
 
-def _get_logger():
+def _get_logger() -> logging.Logger:
     """
     Get a logger to use for functions in this module.
 
@@ -16,7 +26,7 @@ def _get_logger():
     return logging.getLogger(__name__)
 
 
-def _is_iterable(value):
+def _is_iterable(value: Any) -> bool:
     """
     Determine whether the given value is iterable.  Works by attempting to
     get an iterator from it.
@@ -34,7 +44,7 @@ def _is_iterable(value):
     return result
 
 
-def _is_reference(value):
+def _is_reference(value: str) -> bool:
     """
     Determine whether the given string, as may be found in a task invocation
     specification, is syntactically a reference.  References begin with a
@@ -54,7 +64,7 @@ def _is_reference(value):
         and not value.startswith("$$")
 
 
-def _get_references(input_):
+def _get_references(input_: Any) -> Iterator[str]:
     """
     Search for references within a task invocation specification, and generate
     the names.  This just makes the reference determination syntactically, and
@@ -84,7 +94,10 @@ def _get_references(input_):
             yield from _get_references(elt)
 
 
-def _get_step_references(input_, step_names):
+def _get_step_references(
+    input_: Any,
+    step_names: Container[str]
+) -> Iterator[str]:
     """
     Generate step names from references in the input which refer to steps.
 
@@ -106,7 +119,12 @@ def _get_step_references(input_, step_names):
             yield step_name
 
 
-def _step_dfs(step_graph, curr_step_name, visited_steps, search_path):
+def _step_dfs(
+    step_graph: Mapping[str, Any],
+    curr_step_name: str,
+    visited_steps: MutableSet[str],
+    search_path: MutableSequence[str]
+) -> list[str]:
     """
     Perform depth-first search through the task graph, to produce a total order
     over step names which is compatible with the steps' dependencies.
@@ -167,7 +185,7 @@ def _step_dfs(step_graph, curr_step_name, visited_steps, search_path):
     return sorted_steps
 
 
-def _get_sorted_steps(step_graph):
+def _get_sorted_steps(step_graph: Mapping[str, Any]) -> list[str]:
     """
     Topological sorts the step graph to obtain a sequential execution order.
 
@@ -178,7 +196,7 @@ def _get_sorted_steps(step_graph):
     """
 
     sorted_steps = []
-    visited_steps = set()
+    visited_steps: MutableSet[str] = set()
     for step in step_graph:
         sub_sorted = _step_dfs(step_graph, step, visited_steps, [])
         sorted_steps.extend(sub_sorted)
@@ -186,7 +204,11 @@ def _get_sorted_steps(step_graph):
     return sorted_steps
 
 
-def _resolve_reference(reference, global_parameters, step_outputs):
+def _resolve_reference(
+    reference: str,
+    global_parameters: Mapping[str, Any],
+    step_outputs: Mapping[str, Mapping[str, Any]]
+) -> Any:
     """
     Resolve a reference to a task output or global parameter.
 
@@ -235,7 +257,11 @@ def _resolve_reference(reference, global_parameters, step_outputs):
     return value
 
 
-def _resolve_task_parameter_value(arg_spec, global_parameters, step_outputs):
+def _resolve_task_parameter_value(
+    arg_spec: Any,
+    global_parameters: Mapping[str, Any],
+    step_outputs: Mapping[str, Mapping[str, Any]]
+) -> Any:
     """
     Resolve a specification for one argument of a task invocation, to the
     actual value to be used in the invocation.
@@ -284,7 +310,11 @@ def _resolve_task_parameter_value(arg_spec, global_parameters, step_outputs):
     return arg_value
 
 
-def _positional_specs_to_args(arg_specs, global_parameters, step_outputs):
+def _positional_specs_to_args(
+    arg_specs: Any,
+    global_parameters: Mapping[str, Any],
+    step_outputs: Mapping[str, Mapping[str, Any]]
+) -> list[Any]:
     """
     Resolve a positional parameter style invocation specification to a list
     of actual parameter values to use in the task invocation.
@@ -312,7 +342,11 @@ def _positional_specs_to_args(arg_specs, global_parameters, step_outputs):
     return arg_values
 
 
-def _kwarg_specs_to_kwargs(kwarg_specs, global_parameters, step_outputs):
+def _kwarg_specs_to_kwargs(
+    kwarg_specs: Mapping[str, Any],
+    global_parameters: Mapping[str, Any],
+    step_outputs: Mapping[str, Mapping[str, Any]]
+) -> dict[str, Any]:
     """
     Resolve a keyword arg style invocation specification to a mapping of actual
     parameter values to use in the task invocation.
@@ -335,7 +369,11 @@ def _kwarg_specs_to_kwargs(kwarg_specs, global_parameters, step_outputs):
     return kwarg_values
 
 
-def _arg_specs_to_args(arg_specs, global_parameters, step_outputs):
+def _arg_specs_to_args(
+    arg_specs: Any,
+    global_parameters: Mapping[str, Any],
+    step_outputs: Mapping[str, Mapping[str, Any]]
+) -> tuple[list[Any], dict[str, Any]]:
     """
     Resolve a task invocation specification to all of the positional and
     keyword arg values to use in the invocation.
@@ -385,7 +423,12 @@ def _arg_specs_to_args(arg_specs, global_parameters, step_outputs):
     return arg_values, kwarg_values
 
 
-def _update_output_map(step_outputs, step_name, new_output_names, new_outputs):
+def _update_output_map(
+    step_outputs: MutableMapping[str, MutableMapping[str, Any]],
+    step_name: str,
+    new_output_names: Union[str, Sequence[str]],
+    new_outputs: Any
+) -> None:
     """
     Update the step outputs mapping according to task metadata regarding output
     name(s), and actual task plugin return value(s).
@@ -437,7 +480,10 @@ def _update_output_map(step_outputs, step_name, new_output_names, new_outputs):
             step_outputs[step_name][output_name] = output_value
 
 
-def _resolve_global_parameters(global_parameter_spec, global_parameters):
+def _resolve_global_parameters(
+    global_parameter_spec: Union[list[str], Mapping[str, Any]],
+    global_parameters: MutableMapping[str, Any]
+) -> None:
     """
     Build a complete set of global parameters from the specification given in
     the experiment description and the parameter names and values given from an
@@ -504,7 +550,7 @@ def _resolve_global_parameters(global_parameter_spec, global_parameters):
             del global_parameters[param_name]
 
 
-def _get_pyplugs_coords(task_plugin):
+def _get_pyplugs_coords(task_plugin: str) -> list[str]:
     """
     Split a fully qualified task plugin to the three parts required as
     identifying coordinates by pyplugs.  The coordinates are:
@@ -541,7 +587,10 @@ def _get_pyplugs_coords(task_plugin):
     return coords
 
 
-def _run_experiment(experiment_desc, global_parameters):
+def _run_experiment(
+    experiment_desc: Mapping[str, Any],
+    global_parameters: MutableMapping[str, Any]
+) -> None:
     """
     Run an experiment via a declarative experiment description.
 
@@ -566,7 +615,8 @@ def _run_experiment(experiment_desc, global_parameters):
         )
         log.debug("Global parameters:\n  %s", props_values)
 
-    step_outputs = collections.defaultdict(dict)
+    step_outputs: MutableMapping[str, MutableMapping[str, Any]] \
+        = collections.defaultdict(dict)
 
     step_order = _get_sorted_steps(graph)
 
@@ -641,7 +691,11 @@ def _run_experiment(experiment_desc, global_parameters):
         # output_names were given?
 
 
-def run_experiment(experiment_desc, global_parameters, mlflow_run=True):
+def run_experiment(
+    experiment_desc: Mapping[str, Any],
+    global_parameters: MutableMapping[str, Any],
+    mlflow_run: Any = True
+):
     """
     Run an experiment via a declarative experiment description.
 
