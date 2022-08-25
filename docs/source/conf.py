@@ -168,7 +168,7 @@ intersphinx_mapping = {
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "python": ("https://docs.python.org/3/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "sklearn": ("https://scikit-learn.org/1.0/", None),
     "structlog": ("https://www.structlog.org/en/stable/", None),
     "tensorflow": (

@@ -38,7 +38,7 @@ definitions:
   ExperimentUpdate:
     properties:
       name:
-        description: The name of the experiment.
+        description: The new name of the experiment. Must be unique.
         type: string
     type: object
   Job:
@@ -108,7 +108,22 @@ definitions:
   QueueNameUpdate:
     properties:
       name:
-        description: The name of the queue.
+        description: The new name for the queue. Must be unique.
+        type: string
+    type: object
+  TaskPlugin:
+    properties:
+      collection:
+        description: The collection that contains the task plugin module, for example,
+          the "builtins" collection.
+        type: string
+      modules:
+        description: The available modules (Python files) in the task plugin package.
+        items:
+          type: string
+        type: array
+      taskPluginName:
+        description: A unique string identifying a task plugin package within a collection.
         type: string
     type: object
 info:
@@ -184,7 +199,7 @@ paths:
       tags:
         - Experiment
     parameters:
-      - description: Unique experiment name
+      - description: The name of the experiment.
         in: path
         name: experimentName
         required: true
@@ -236,7 +251,7 @@ paths:
       tags:
         - Experiment
     parameters:
-      - description: Unique experiment identifier
+      - description: An integer identifying a registered experiment.
         in: path
         name: experimentId
         required: true
@@ -554,6 +569,155 @@ paths:
       summary: Locks the queue (id reference) if it is unlocked
       tags:
         - Queue
+  /api/taskPlugin/:
+    get:
+      operationId: get_task_plugin_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/TaskPlugin"
+            type: array
+      summary: Gets a list of all registered task plugins
+      tags:
+        - TaskPlugin
+    post:
+      consumes:
+        - multipart/form-data
+      operationId: post_task_plugin_resource
+      parameters:
+        - description: A unique string identifying a task plugin package within a collection.
+          in: formData
+          name: task_plugin_name
+          required: true
+          type: string
+        - description: A tarball archive or zip file containing a single task plugin
+            package.
+          in: formData
+          name: task_plugin_file
+          required: true
+          type: file
+        - description: The collection where the task plugin should be stored.
+          in: formData
+          name: collection
+          required: true
+          type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/TaskPlugin"
+      summary: Registers a new task plugin uploaded via the task plugin upload form
+      tags:
+        - TaskPlugin
+  /api/taskPlugin/dioptra_builtins:
+    get:
+      operationId: get_task_plugin_builtins_collection_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/TaskPlugin"
+            type: array
+      summary: Gets a list of all available builtin task plugins
+      tags:
+        - TaskPlugin
+  /api/taskPlugin/dioptra_builtins/{taskPluginName}:
+    get:
+      operationId: get_task_plugin_builtin_collection_name_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/TaskPlugin"
+      summary: Gets a builtin task plugin by its unique name
+      tags:
+        - TaskPlugin
+    parameters:
+      - description:
+          A unique string identifying a task plugin package within dioptra_builtins
+          collection.
+        in: path
+        name: taskPluginName
+        required: true
+        type: string
+  /api/taskPlugin/dioptra_custom:
+    get:
+      operationId: get_task_plugin_custom_collection_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/TaskPlugin"
+            type: array
+      summary: Gets a list of all registered custom task plugins
+      tags:
+        - TaskPlugin
+  /api/taskPlugin/dioptra_custom/{taskPluginName}:
+    delete:
+      operationId: delete_task_plugin_custom_collection_name_resource
+      responses:
+        "200":
+          description: Success
+      summary: Deletes a custom task plugin by its unique name
+      tags:
+        - TaskPlugin
+    get:
+      operationId: get_task_plugin_custom_collection_name_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/TaskPlugin"
+      summary: Gets a custom task plugin by its unique name
+      tags:
+        - TaskPlugin
+    parameters:
+      - description:
+          A unique string identifying a task plugin package within dioptra_custom
+          collection.
+        in: path
+        name: taskPluginName
+        required: true
+        type: string
 produces:
   - application/json
 responses:
