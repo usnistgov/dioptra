@@ -602,6 +602,23 @@ title="Print to PDF"
    </li>
   </ul>
  </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#task-plugin">
+   Task Plugin
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id5">
+     Endpoints
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id6">
+     Error Messages
+    </a>
+   </li>
+  </ul>
+ </li>
 </ul>
 
     </nav>
@@ -672,6 +689,23 @@ title="Print to PDF"
    </li>
   </ul>
  </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#task-plugin">
+   Task Plugin
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id5">
+     Endpoints
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id6">
+     Error Messages
+    </a>
+   </li>
+  </ul>
+ </li>
 </ul>
 
                         </nav>
@@ -691,11 +725,11 @@ title="Print to PDF"
 <p>This page documents the endpoints and available <a class="reference internal" href="../glossary.html#term-HTTP"><span class="xref std std-term">HTTP</span></a> methods for the Dioptra <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>.
 In addition to using this page, it is highly recommended that Testbed users also use the Swagger documentation that the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service automatically generates at runtime, which presents all of this page’s information in an interactive format.
 To access the Swagger documentation, just navigate to the web URL for the Testbed <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service (omit the <code class="docutils literal notranslate"><span class="pre">/api</span></code> part at the end of the web address).</p>
-<figure class="align-default" id="id5" style="width: 100%">
+<figure class="align-default" id="id7" style="width: 100%">
 <img alt="An animation clicking and scrolling through the contents of the Dioptra :term:`REST` :term:`API` Swagger documentation." src="../_images/swagger-docs-testbed-rest-api.gif" />
 <figcaption>
 <p><span class="caption-text">An animated tour of the automatically generated Swagger documentation for the Dioptra <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a>.
-Several of the Testbed demos that you can run on a personal computer publish the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service at the address <a class="reference external" href="http://localhost:30080">http://localhost:30080</a>.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
+Several of the Testbed demos that you can run on a personal computer publish the <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a> <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> service at the address <a class="reference external" href="http://localhost:30080">http://localhost:30080</a>.</span><a class="headerlink" href="#id7" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <section id="experiment">
@@ -768,7 +802,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>experimentId</strong> (<em>integer</em>) – Unique experiment identifier</p></li>
+<li><p><strong>experimentId</strong> (<em>integer</em>) – An integer identifying a registered experiment.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -786,7 +820,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>experimentId</strong> (<em>integer</em>) – Unique experiment identifier</p></li>
+<li><p><strong>experimentId</strong> (<em>integer</em>) – An integer identifying a registered experiment.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -817,12 +851,12 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>experimentId</strong> (<em>integer</em>) – Unique experiment identifier</p></li>
+<li><p><strong>experimentId</strong> (<em>integer</em>) – An integer identifying a registered experiment.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request JSON Object</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>name</strong> (<em>string</em>) – The name of the experiment.</p></li>
+<li><p><strong>name</strong> (<em>string</em>) – The new name of the experiment. Must be unique.</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Status Codes</dt>
@@ -853,7 +887,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>experimentName</strong> (<em>string</em>) – Unique experiment name</p></li>
+<li><p><strong>experimentName</strong> (<em>string</em>) – The name of the experiment.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -871,7 +905,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>experimentName</strong> (<em>string</em>) – Unique experiment name</p></li>
+<li><p><strong>experimentName</strong> (<em>string</em>) – The name of the experiment.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -902,12 +936,12 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>experimentName</strong> (<em>string</em>) – Unique experiment name</p></li>
+<li><p><strong>experimentName</strong> (<em>string</em>) – The name of the experiment.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Request JSON Object</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>name</strong> (<em>string</em>) – The name of the experiment.</p></li>
+<li><p><strong>name</strong> (<em>string</em>) – The new name of the experiment. Must be unique.</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Status Codes</dt>
@@ -1245,7 +1279,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Request JSON Object</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>name</strong> (<em>string</em>) – The name of the queue.</p></li>
+<li><p><strong>name</strong> (<em>string</em>) – The new name for the queue. Must be unique.</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Status Codes</dt>
@@ -1366,7 +1400,7 @@ Several of the Testbed demos that you can run on a personal computer publish the
 </dd>
 <dt class="field-even">Request JSON Object</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>name</strong> (<em>string</em>) – The name of the queue.</p></li>
+<li><p><strong>name</strong> (<em>string</em>) – The new name for the queue. Must be unique.</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Status Codes</dt>
@@ -1446,6 +1480,171 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <dt class="sig sig-object py" id="dioptra.restapi.queue.errors.QueueRegistrationError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueueRegistrationError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/queue/errors.html#QueueRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.queue.errors.QueueRegistrationError" title="Permalink to this definition">#</a></dt>
 <dd><p>The queue registration form contains invalid parameters.</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="task-plugin">
+<h2>Task Plugin<a class="headerlink" href="#task-plugin" title="Permalink to this headline">#</a></h2>
+<p>Task plugin registry operations.</p>
+<section id="id5">
+<h3>Endpoints<a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
+<p>The following is the list of endpoints under the <code class="docutils literal notranslate"><span class="pre">/api/taskPlugin/</span></code> namespace.</p>
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-taskPlugin-">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/taskPlugin/</span></span><a class="headerlink" href="#get--api-taskPlugin-" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Gets a list of all registered task plugins</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Response JSON Object</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>[].collection</strong> (<em>string</em>) – The collection that contains the task plugin module, for example, the “builtins” collection.</p></li>
+<li><p><strong>[].modules[]</strong> (<em>string</em>) – The available modules (Python files) in the task plugin package.</p></li>
+<li><p><strong>[].taskPluginName</strong> (<em>string</em>) – A unique string identifying a task plugin package within a collection.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-taskPlugin-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/taskPlugin/</span></span><a class="headerlink" href="#post--api-taskPlugin-" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Registers a new task plugin uploaded via the task plugin upload form</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Form Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task_plugin_name</strong> – <em>(required)</em> A unique string identifying a task plugin package within a collection.</p></li>
+<li><p><strong>task_plugin_file</strong> – <em>(required)</em> A tarball archive or zip file containing a single task plugin package.</p></li>
+<li><p><strong>collection</strong> – <em>(required)</em> The collection where the task plugin should be stored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Response JSON Object</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>collection</strong> (<em>string</em>) – The collection that contains the task plugin module, for example, the “builtins” collection.</p></li>
+<li><p><strong>modules[]</strong> (<em>string</em>) – The available modules (Python files) in the task plugin package.</p></li>
+<li><p><strong>taskPluginName</strong> (<em>string</em>) – A unique string identifying a task plugin package within a collection.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-taskPlugin-dioptra_builtins-taskPluginName">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/taskPlugin/dioptra_builtins/{taskPluginName}</span></span><a class="headerlink" href="#get--api-taskPlugin-dioptra_builtins-taskPluginName" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Gets a builtin task plugin by its unique name</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>taskPluginName</strong> (<em>string</em>) – A unique string identifying a task plugin package within dioptra_builtins collection.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+<dt class="field-even">Response JSON Object</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>collection</strong> (<em>string</em>) – The collection that contains the task plugin module, for example, the “builtins” collection.</p></li>
+<li><p><strong>modules[]</strong> (<em>string</em>) – </p></li>
+<li><p><strong>taskPluginName</strong> (<em>string</em>) – A unique string identifying a task plugin package within a collection.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-taskPlugin-dioptra_custom-taskPluginName">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/taskPlugin/dioptra_custom/{taskPluginName}</span></span><a class="headerlink" href="#delete--api-taskPlugin-dioptra_custom-taskPluginName" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Deletes a custom task plugin by its unique name</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>taskPluginName</strong> (<em>string</em>) – A unique string identifying a task plugin package within dioptra_custom collection.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-taskPlugin-dioptra_custom-taskPluginName">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/taskPlugin/dioptra_custom/{taskPluginName}</span></span><a class="headerlink" href="#get--api-taskPlugin-dioptra_custom-taskPluginName" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Gets a custom task plugin by its unique name</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>taskPluginName</strong> (<em>string</em>) – A unique string identifying a task plugin package within dioptra_custom collection.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+<dt class="field-even">Response JSON Object</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>collection</strong> (<em>string</em>) – The collection that contains the task plugin module, for example, the “builtins” collection.</p></li>
+<li><p><strong>modules[]</strong> (<em>string</em>) – </p></li>
+<li><p><strong>taskPluginName</strong> (<em>string</em>) – A unique string identifying a task plugin package within a collection.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="id6">
+<h3>Error Messages<a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
+<p>The following error handlers are registered to the task plugin endpoints.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="dioptra.restapi.task_plugin.errors.TaskPluginAlreadyExistsError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TaskPluginAlreadyExistsError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/task_plugin/errors.html#TaskPluginAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.task_plugin.errors.TaskPluginAlreadyExistsError" title="Permalink to this definition">#</a></dt>
+<dd><p>A task plugin package with this name already exists.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dioptra.restapi.task_plugin.errors.TaskPluginDoesNotExistError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TaskPluginDoesNotExistError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/task_plugin/errors.html#TaskPluginDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.task_plugin.errors.TaskPluginDoesNotExistError" title="Permalink to this definition">#</a></dt>
+<dd><p>The requested task plugin package does not exist.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dioptra.restapi.task_plugin.errors.TaskPluginUploadError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TaskPluginUploadError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/task_plugin/errors.html#TaskPluginUploadError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.task_plugin.errors.TaskPluginUploadError" title="Permalink to this definition">#</a></dt>
+<dd><p>The task plugin upload form contains invalid parameters.</p>
 </dd></dl>
 
 </section>

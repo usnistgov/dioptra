@@ -212,3 +212,59 @@ The following error handlers are registered to the queue endpoints.
 .. autoexception:: dioptra.restapi.queue.errors.QueueDoesNotExistError
 
 .. autoexception:: dioptra.restapi.queue.errors.QueueRegistrationError
+
+Task Plugin
+-----------
+
+Task plugin registry operations.
+
+Endpoints
+^^^^^^^^^
+
+The following is the list of endpoints under the ``/api/taskPlugin/`` namespace.
+
+.. http:get:: /api/taskPlugin/
+
+   **Gets a list of all registered task plugins**
+
+   :status 200: Success
+   :reqheader X-Fields: An optional fields mask
+   :>json string [].collection: The collection that contains the task plugin module, for example, the "builtins" collection.
+   :>json string [].modules[]: The available modules (Python files) in the task plugin package.
+   :>json string [].taskPluginName: A unique string identifying a task plugin package within a collection.
+
+.. http:post:: /api/taskPlugin/
+
+   **Registers a new task plugin uploaded via the task plugin upload form**
+
+   :status 200: Success
+   :reqheader X-Fields: An optional fields mask
+   :form task_plugin_name: *(required)* A unique string identifying a task plugin package within a collection.
+   :form task_plugin_file: *(required)* A tarball archive or zip file containing a single task plugin package.
+   :form collection: *(required)* The collection where the task plugin should be stored.
+   :>json string collection: The collection that contains the task plugin module, for example, the "builtins" collection.
+   :>json string modules[]: The available modules (Python files) in the task plugin package.
+   :>json string taskPluginName: A unique string identifying a task plugin package within a collection.
+
+.. openapi:: api-restapi/openapi.yml
+   :include:
+     /api/taskPlugin/{.*
+
+.. openapi:: api-restapi/openapi.yml
+   :include:
+     /api/taskPlugin/dioptra_builtins/.*
+
+.. openapi:: api-restapi/openapi.yml
+   :include:
+     /api/taskPlugin/dioptra_custom/.*
+
+Error Messages
+^^^^^^^^^^^^^^
+
+The following error handlers are registered to the task plugin endpoints.
+
+.. autoexception:: dioptra.restapi.task_plugin.errors.TaskPluginAlreadyExistsError
+
+.. autoexception:: dioptra.restapi.task_plugin.errors.TaskPluginDoesNotExistError
+
+.. autoexception:: dioptra.restapi.task_plugin.errors.TaskPluginUploadError
