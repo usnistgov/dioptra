@@ -719,6 +719,11 @@ def run_experiment(
     try:
         _run_experiment(experiment_desc, global_parameters)
 
-    finally:
         if mlflow_run:
             mlflow.end_run()
+
+    except Exception:
+        if mlflow_run:
+            mlflow.end_run("FAILED")
+
+        raise
