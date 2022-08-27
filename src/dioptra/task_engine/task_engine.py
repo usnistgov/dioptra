@@ -15,6 +15,19 @@ from typing import Any, Union
 import mlflow
 
 import dioptra.pyplugs
+from dioptra.sdk.exceptions.task_engine import (
+    IllegalOutputReference,
+    IllegalPluginName,
+    MissingGlobalParameters,
+    NonIterableTaskOutputError,
+    OutputNotFound,
+    PyplugsAutoregistrationError,
+    StepError,
+    StepNotFound,
+    StepReferenceCycleError,
+    TaskPluginNotFoundError,
+    UnresolvableReference,
+)
 
 
 def _get_logger() -> logging.Logger:
@@ -144,11 +157,15 @@ def _step_dfs(
         sorted order
     """
 
-    if curr_step_name in search_path:
-        raise ValueError("Cycle detected!")
+    # Should always be true, since this function is called internally only on
+    # known graph steps.
+    assert curr_step_name in step_graph
 
-    elif curr_step_name not in step_graph:
-        raise ValueError("Step not found: " + curr_step_name)
+    if curr_step_name in search_path:
+        cycle_start_idx = search_path.index(curr_step_name)
+        cycle = search_path[cycle_start_idx:]
+        cycle.append(curr_step_name)
+        raise StepReferenceCycleError(cycle)
 
     sorted_steps = []
 
@@ -226,13 +243,10 @@ def _resolve_reference(
 
         step_output = step_outputs.get(step_name)
         if not step_output:
-            raise Exception("Step not found: " + step_name)
+            raise StepNotFound(step_name)
 
         if output_name not in step_output:
-            raise Exception(
-                "Unrecognized output of step "
-                + step_name + ": " + output_name
-            )
+            raise OutputNotFound(step_name, output_name)
 
         value = step_output[output_name]
 
@@ -245,14 +259,10 @@ def _resolve_reference(
         elif reference in step_outputs:
             outputs = step_outputs[reference]
             if len(outputs) != 1:
-                raise Exception(
-                    "A reference to a step which does not have exactly"
-                    " one output must include an output name as"
-                    " <step>.<output>: " + reference
-                )
+                raise IllegalOutputReference(reference)
             value = next(iter(outputs.values()))
         else:
-            raise Exception("Unresolvable reference: " + reference)
+            raise UnresolvableReference(reference)
 
     return value
 
@@ -452,11 +462,7 @@ def _update_output_map(
         # else, new_output_names is a list.  Task plugin return value must
         # be iterable.
         if not _is_iterable(new_outputs):
-            raise TypeError(
-                'Task output name(s) for step "{}" were given as a list,'
-                ' but the task plugin did not return an iterable value: {}'
-                .format(step_name, type(new_outputs))
-            )
+            raise NonIterableTaskOutputError(new_outputs, step_name)
 
         # Support more general iterables as return values from tasks, which may
         # not be len()-able.  If we can get a length, then we can sanity check
@@ -533,10 +539,7 @@ def _resolve_global_parameters(
             - global_parameter_spec.keys()
 
     if missing_parameters:
-        raise Exception(
-            "Missing values for global parameters: "
-            + ", ".join(missing_parameters)
-        )
+        raise MissingGlobalParameters(missing_parameters)
 
     if extra_parameters:
         # This doesn't need to be a showstopper error I think.
@@ -576,15 +579,73 @@ def _get_pyplugs_coords(task_plugin: str) -> list[str]:
     coords = task_plugin.rsplit(".", 2)
 
     if len(coords) < 2:
-        raise Exception(
-            "A task plugin must be a dot-delimited string of at least two"
-            " components: " + task_plugin
-        )
+        raise IllegalPluginName(task_plugin)
 
     elif len(coords) == 2:
         coords.insert(0, "")
 
     return coords
+
+
+def _run_step(step, task_plugin_id, global_parameters, step_outputs):
+    """
+    Run one step of a task graph.
+
+    :param step: The step description
+    :param task_plugin_id: The task plugin to call, in a composed dotted
+        string form with all the parts needed by pyplugs, e.g. "a.b.c.d"
+    :param global_parameters: The global parameters in use for this run, as a
+        mapping from parameter name to value
+    :param step_outputs: The step outputs we have thus far.  This is a nested
+        mapping: step name => output name => output value.
+    :return: The step output (i.e. whatever the task plugin returned)
+    """
+
+    log = _get_logger()
+
+    if "task" in step:
+        arg_specs = step
+    else:
+        _, arg_specs = next(iter(step.items()))
+
+    arg_values, kwarg_values = _arg_specs_to_args(
+        arg_specs, global_parameters, step_outputs
+    )
+
+    if arg_values:
+        log.debug("args: %s", arg_values)
+    if kwarg_values:
+        log.debug("kwargs: %s", kwarg_values)
+
+    package_name, module_name, func_name = _get_pyplugs_coords(task_plugin_id)
+
+    try:
+        output = dioptra.pyplugs.call(
+            package_name, module_name, func_name,
+            *arg_values, **kwarg_values
+        )
+    except TypeError as e:
+        # This is nasty, but inside pyplugs, importlib raises an exception
+        # of a very generic type (TypeError) if you give it an empty
+        # package name, and it has to import the module (because the tasks
+        # aren't already registered).  I don't feel like I can safely catch
+        # all TypeErrors and report this more useful message for this
+        # particular pyplugs issue, since it would not make sense if a
+        # TypeError were thrown for a different reason.  So I need to
+        # distinguish a pyplugs TypeError (really, an importlib error) from
+        # a TypeError which may come from the called task.  I do that by
+        # checking the contents of the error message.  Ugh.  Dioptra
+        # plugins will probably all be in packages, so this will probably
+        # never be an issue in practice.
+        if "is required to perform a relative import" in str(e):
+            raise PyplugsAutoregistrationError(
+                task_plugin_id
+            ) from e
+
+        else:
+            raise
+
+    return output
 
 
 def _run_experiment(
@@ -624,71 +685,43 @@ def _run_experiment(
 
     for step_name in step_order:
 
-        log.info("Running step: %s", step_name)
-
-        step = graph[step_name]
-
-        if "task" in step:
-            task_short_name = step["task"]
-            arg_specs = step
-        else:
-            task_short_name, arg_specs = next(iter(step.items()))
-
-        arg_values, kwarg_values = _arg_specs_to_args(
-            arg_specs, global_parameters, step_outputs
-        )
-
-        if arg_values:
-            log.debug('Step "%s" args: %s', step_name, arg_values)
-        if kwarg_values:
-            log.debug('Step "%s" kwargs: %s', step_name, kwarg_values)
-
-        task_def = tasks[task_short_name]
-        task_plugin = task_def["plugin"]
-
-        package_name, module_name, func_name = _get_pyplugs_coords(task_plugin)
-
         try:
-            output = dioptra.pyplugs.call(
-                package_name, module_name, func_name,
-                *arg_values, **kwarg_values
-            )
-        except TypeError as e:
-            # This is nasty, but inside pyplugs, importlib raises an exception
-            # of a very generic type (TypeError) if you give it an empty
-            # package name, and it has to import the module (because the tasks
-            # aren't already registered).  I don't feel like I can safely catch
-            # all TypeErrors and report this more useful message for this
-            # particular pyplugs issue, since it would not make sense if a
-            # TypeError were thrown for a different reason.  So I need to
-            # distinguish a pyplugs TypeError (really, an importlib error) from
-            # a TypeError which may come from the called task.  I do that by
-            # checking the contents of the error message.  Ugh.  Dioptra
-            # plugins will probably all be in packages, so this will probably
-            # never be an issue in practice.
-            if "is required to perform a relative import" in str(e):
-                raise Exception(
-                    "Pyplugs' auto-registration requires a Python package."
-                    "  You must either manually register plugins (e.g. by"
-                    " manually importing their module(s)) before running this"
-                    " experiment, or move the file with tasks into a"
-                    " subdirectory which is a package, and update your"
-                    " experiment to reference task plugins via the package."
-                ) from e
+            log.info("Running step: %s", step_name)
 
+            step = graph[step_name]
+
+            if "task" in step:
+                task_plugin_short_name = step["task"]
             else:
-                raise
+                task_plugin_short_name, _ = next(iter(step.items()))
 
-        output_names = task_def.get("outputs")
-        if output_names:
-            _update_output_map(step_outputs, step_name, output_names, output)
-            log.debug(
-                'Step "%s" output(s): %s',
-                step_name, str(step_outputs[step_name])
+            task_def = tasks.get(task_plugin_short_name)
+            if not task_def:
+                raise TaskPluginNotFoundError(
+                    task_plugin_short_name, step_name
+                )
+
+            task_plugin_id = task_def["plugin"]
+
+            output = _run_step(
+                step, task_plugin_id, global_parameters, step_outputs
             )
 
-        # else: should I warn if there was an output from the task but no
-        # output_names were given?
+            output_names = task_def.get("outputs")
+            if output_names:
+                _update_output_map(
+                    step_outputs, step_name, output_names, output
+                )
+                log.debug('Output(s): %s', str(step_outputs[step_name]))
+
+            # else: should I warn if there was an output from the task but no
+            # output_names were given?
+
+        except StepError as e:
+            # Fill in useful contextual info on the error if necessary.
+            if not e.context_step_name:
+                e.context_step_name = step_name
+            raise
 
 
 def run_experiment(
