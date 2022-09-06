@@ -562,7 +562,7 @@ def _get_pyplugs_coords(task_plugin: str) -> list[str]:
 
     The task plugin is a dot-delimited string with at least two components.
     The last two components map to <module> and <function name>; everything to
-    their left comprises the package> part.  If there are only two components
+    their left comprises the <package> part.  If there are only two components
     in the plugin, the package will default to the empty string.  This keeps
     with how pyplugs registers plugins.  For example:
 
@@ -587,7 +587,12 @@ def _get_pyplugs_coords(task_plugin: str) -> list[str]:
     return coords
 
 
-def _run_step(step, task_plugin_id, global_parameters, step_outputs):
+def _run_step(
+    step: Mapping[str, Any],
+    task_plugin_id: str,
+    global_parameters: Mapping[str, Any],
+    step_outputs: Mapping[str, Mapping[str, Any]]
+) -> Any:
     """
     Run one step of a task graph.
 
