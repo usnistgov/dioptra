@@ -21,7 +21,6 @@ from dioptra.sdk.exceptions.task_engine import (
     MissingGlobalParameters,
     NonIterableTaskOutputError,
     OutputNotFound,
-    PyplugsAutoregistrationError,
     StepError,
     StepNotFound,
     StepReferenceCycleError,
@@ -624,31 +623,9 @@ def _run_step(
 
     package_name, module_name, func_name = _get_pyplugs_coords(task_plugin_id)
 
-    try:
-        output = dioptra.pyplugs.call(
-            package_name, module_name, func_name,
-            *arg_values, **kwarg_values
-        )
-    except TypeError as e:
-        # This is nasty, but inside pyplugs, importlib raises an exception
-        # of a very generic type (TypeError) if you give it an empty
-        # package name, and it has to import the module (because the tasks
-        # aren't already registered).  I don't feel like I can safely catch
-        # all TypeErrors and report this more useful message for this
-        # particular pyplugs issue, since it would not make sense if a
-        # TypeError were thrown for a different reason.  So I need to
-        # distinguish a pyplugs TypeError (really, an importlib error) from
-        # a TypeError which may come from the called task.  I do that by
-        # checking the contents of the error message.  Ugh.  Dioptra
-        # plugins will probably all be in packages, so this will probably
-        # never be an issue in practice.
-        if "is required to perform a relative import" in str(e):
-            raise PyplugsAutoregistrationError(
-                task_plugin_id
-            ) from e
-
-        else:
-            raise
+    output = dioptra.pyplugs.call(
+        package_name, module_name, func_name, *arg_values, **kwarg_values
+    )
 
     return output
 

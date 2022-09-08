@@ -143,26 +143,6 @@ class TaskPluginNotFoundError(StepError):
         self.task_plugin_short_name = task_plugin_short_name
 
 
-class PyplugsAutoregistrationError(StepError):
-    """
-    Pyplugs attempted to auto-register a plugin which is not in a package.
-    This causes it to throw an exception.
-    """
-
-    def __init__(self, plugin_name: str, context_step_name: str = None) -> None:
-        super().__init__(
-            ('Error auto-registering plugin "{}".  Pyplugs\' auto-registration'
-             " requires a Python package.  You must either manually register"
-             " plugins (e.g. by manually importing their module(s)) before"
-             " running this experiment, or move the file with tasks into a"
-             " subdirectory which is a package, and update your experiment to"
-             " reference task plugins via the package.").format(plugin_name),
-            context_step_name
-        )
-
-        self.plugin_name = plugin_name
-
-
 class MissingGlobalParameters(BaseTaskEngineError):
     """
     A value could not be obtained for some task graph global parameter(s).
