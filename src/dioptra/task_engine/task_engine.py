@@ -156,9 +156,8 @@ def _step_dfs(
         sorted order
     """
 
-    # Should always be true, since this function is called internally only on
-    # known graph steps.
-    assert curr_step_name in step_graph
+    if curr_step_name not in step_graph:
+        raise StepNotFound(curr_step_name)
 
     if curr_step_name in search_path:
         cycle_start_idx = search_path.index(curr_step_name)
@@ -572,7 +571,8 @@ def _get_pyplugs_coords(task_plugin: str) -> list[str]:
 
         etc...
 
-    :param task_plugin:
+    :param task_plugin: The dotted plugin string from the declarative
+        experiment description
     :return: A length-3 list of pyplugs coordinates
     """
     coords = task_plugin.rsplit(".", 2)
