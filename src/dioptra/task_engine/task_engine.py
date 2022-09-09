@@ -10,7 +10,7 @@ from collections.abc import (
     MutableSet,
     Sequence,
 )
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import mlflow
 
@@ -19,6 +19,7 @@ from dioptra.sdk.exceptions.task_engine import (
     IllegalOutputReference,
     IllegalPluginName,
     MissingGlobalParameters,
+    MissingTaskPluginNameError,
     NonIterableTaskOutputError,
     OutputNotFound,
     StepError,
@@ -74,6 +75,29 @@ def _is_reference(value: str) -> bool:
     return value != "$" \
         and value.startswith("$") \
         and not value.startswith("$$")
+
+
+def _step_get_plugin_short_name(step: Mapping[str, Any]) -> Optional[str]:
+    """
+    Get the plugin short name from a step description.  There is a bit of
+    complexity to this, since step descriptions can take different forms, and
+    some properties can have special meanings and should not be mistaken for a
+    task plugin short name.
+
+    :param step: A step description, as a mapping
+    :return: A task plugin short name, or None if one was not found
+    """
+    plugin_name = None
+    if "task" in step:
+        plugin_name = step["task"]
+    else:
+        for key in step:
+            # Top-level "dependencies" key has a special meaning; ignore that.
+            if key != "dependencies":
+                plugin_name = key
+                break
+
+    return plugin_name
 
 
 def _get_references(input_: Any) -> Iterator[str]:
@@ -607,6 +631,13 @@ def _run_step(
 
     log = _get_logger()
 
+    # Make a shallow-copy without "dependencies", as it is not relevant to
+    # finding task plugin arguments.  Removing the property means subsequent
+    # code won't have to deal with it.  (A shallow copy avoids modifying the
+    # caller's structure.)
+    step = dict(step)
+    step.pop("dependencies", None)
+
     if "task" in step:
         arg_specs = step
     else:
@@ -672,10 +703,9 @@ def _run_experiment(
 
             step = graph[step_name]
 
-            if "task" in step:
-                task_plugin_short_name = step["task"]
-            else:
-                task_plugin_short_name, _ = next(iter(step.items()))
+            task_plugin_short_name = _step_get_plugin_short_name(step)
+            if not task_plugin_short_name:
+                raise MissingTaskPluginNameError(step_name)
 
             task_def = tasks.get(task_plugin_short_name)
             if not task_def:

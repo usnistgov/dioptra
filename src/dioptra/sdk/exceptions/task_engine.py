@@ -143,6 +143,18 @@ class TaskPluginNotFoundError(StepError):
         self.task_plugin_short_name = task_plugin_short_name
 
 
+class MissingTaskPluginNameError(StepError):
+    """
+    A step description was malformed: it was missing a task plugin short name.
+    """
+
+    def __init__(self, context_step_name=None):
+        super().__init__(
+            "Step is missing a task plugin name",
+            context_step_name
+        )
+
+
 class MissingGlobalParameters(BaseTaskEngineError):
     """
     A value could not be obtained for some task graph global parameter(s).
