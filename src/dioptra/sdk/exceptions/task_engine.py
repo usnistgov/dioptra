@@ -26,7 +26,7 @@ class StepError(BaseTaskEngineError):
 
         self.__message = message
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Override string representation such that it depends on what context we
         have for the error.  With more context, we can produce a better error
@@ -148,7 +148,7 @@ class MissingTaskPluginNameError(StepError):
     A step description was malformed: it was missing a task plugin short name.
     """
 
-    def __init__(self, context_step_name=None):
+    def __init__(self, context_step_name: str = None) -> None:
         super().__init__(
             "Step is missing a task plugin name",
             context_step_name
