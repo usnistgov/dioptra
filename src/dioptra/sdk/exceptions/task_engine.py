@@ -43,7 +43,7 @@ class StepError(BaseTaskEngineError):
         return "".join(msg_parts)
 
 
-class StepNotFound(StepError):
+class StepNotFoundError(StepError):
     """A reference to a non-existent step."""
 
     def __init__(self, step_name: str, context_step_name: str = None) -> None:
@@ -55,7 +55,7 @@ class StepNotFound(StepError):
         self.step_name = step_name
 
 
-class OutputNotFound(StepError):
+class OutputNotFoundError(StepError):
     """A reference to a non-existent output of an existing step."""
 
     def __init__(
@@ -75,7 +75,7 @@ class OutputNotFound(StepError):
         self.output_name = output_name
 
 
-class IllegalOutputReference(StepError):
+class IllegalOutputReferenceError(StepError):
     """A reference to a multi-output step did not name the desired output."""
 
     def __init__(self, step_name: str, context_step_name: str = None) -> None:
@@ -107,7 +107,7 @@ class NonIterableTaskOutputError(StepError):
         self.value = value
 
 
-class UnresolvableReference(StepError):
+class UnresolvableReferenceError(StepError):
     """
     A reference did not resolve and does not match any global parameter or
     step (so we don't know what the intent was), or the reference was to the
@@ -155,7 +155,7 @@ class MissingTaskPluginNameError(StepError):
         )
 
 
-class MissingGlobalParameters(BaseTaskEngineError):
+class MissingGlobalParametersError(BaseTaskEngineError):
     """
     A value could not be obtained for some task graph global parameter(s).
     """
@@ -169,7 +169,7 @@ class MissingGlobalParameters(BaseTaskEngineError):
         self.parameter_names = parameter_names
 
 
-class IllegalPluginName(BaseTaskEngineError):
+class IllegalPluginNameError(BaseTaskEngineError):
     """A task was defined with an illegal plugin name."""
 
     def __init__(self, plugin_name: str) -> None:

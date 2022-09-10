@@ -16,17 +16,17 @@ import mlflow
 
 import dioptra.pyplugs
 from dioptra.sdk.exceptions.task_engine import (
-    IllegalOutputReference,
-    IllegalPluginName,
-    MissingGlobalParameters,
+    IllegalOutputReferenceError,
+    IllegalPluginNameError,
+    MissingGlobalParametersError,
     MissingTaskPluginNameError,
     NonIterableTaskOutputError,
-    OutputNotFound,
+    OutputNotFoundError,
     StepError,
-    StepNotFound,
+    StepNotFoundError,
     StepReferenceCycleError,
     TaskPluginNotFoundError,
-    UnresolvableReference,
+    UnresolvableReferenceError,
 )
 
 
@@ -181,7 +181,7 @@ def _step_dfs(
     """
 
     if curr_step_name not in step_graph:
-        raise StepNotFound(curr_step_name)
+        raise StepNotFoundError(curr_step_name)
 
     if curr_step_name in search_path:
         cycle_start_idx = search_path.index(curr_step_name)
@@ -265,10 +265,10 @@ def _resolve_reference(
 
         step_output = step_outputs.get(step_name)
         if not step_output:
-            raise StepNotFound(step_name)
+            raise StepNotFoundError(step_name)
 
         if output_name not in step_output:
-            raise OutputNotFound(step_name, output_name)
+            raise OutputNotFoundError(step_name, output_name)
 
         value = step_output[output_name]
 
@@ -281,10 +281,10 @@ def _resolve_reference(
         elif reference in step_outputs:
             outputs = step_outputs[reference]
             if len(outputs) != 1:
-                raise IllegalOutputReference(reference)
+                raise IllegalOutputReferenceError(reference)
             value = next(iter(outputs.values()))
         else:
-            raise UnresolvableReference(reference)
+            raise UnresolvableReferenceError(reference)
 
     return value
 
@@ -561,7 +561,7 @@ def _resolve_global_parameters(
             - global_parameter_spec.keys()
 
     if missing_parameters:
-        raise MissingGlobalParameters(missing_parameters)
+        raise MissingGlobalParametersError(missing_parameters)
 
     if extra_parameters:
         # This doesn't need to be a showstopper error I think.
@@ -602,7 +602,7 @@ def _get_pyplugs_coords(task_plugin: str) -> list[str]:
     coords = task_plugin.rsplit(".", 2)
 
     if len(coords) < 2:
-        raise IllegalPluginName(task_plugin)
+        raise IllegalPluginNameError(task_plugin)
 
     elif len(coords) == 2:
         coords.insert(0, "")
