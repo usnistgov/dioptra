@@ -14,8 +14,8 @@ class StepError(BaseTaskEngineError):
         Initialize this error instance.
 
         :param message: An error message
-        :param step_name: The name of the step which was the context of the
-            error, or None.  If None, the step name can be populated later,
+        :param context_step_name: The name of the step which was the context of
+            the error, or None.  If None, the step name can be populated later,
             e.g. filled in at a higher stack frame where the info is known.
         """
 
