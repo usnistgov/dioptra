@@ -1,0 +1,188 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "parameters": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/parameters_as_array"
+                },
+                {
+                    "$ref": "#/$defs/parameters_as_object"
+                }
+            ]
+        },
+        "tasks": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/task_plugin"
+            },
+            "minProperties": 1
+        },
+        "graph": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/graph_step"
+            },
+            "minProperties": 1
+        }
+    },
+    "required": ["tasks", "graph"],
+    "additionalProperties": false,
+    "$defs": {
+        "parameters_as_array": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+
+        "parameters_as_object": {
+            "type": "object",
+            "additionalProperties": {
+                "oneOf": [
+                    {
+                        "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null",
+                            "array"
+                        ]
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "default": {
+                                "$comment": "Any default value"
+                            }
+                        },
+                        "required": ["default"],
+                        "additionalProperties": false
+                    }
+                ]
+            }
+        },
+
+        "task_plugin": {
+            "type": "object",
+            "properties": {
+                "plugin": {
+                    "$comment": "Shortest plugin is X.Y, 3 chars",
+                    "type": "string",
+                    "minLength": 3
+                },
+                "outputs": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "minItems": 1
+                        }
+                    ]
+                }
+            },
+            "required": ["plugin"],
+            "additionalProperties": false
+        },
+
+        "graph_step": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/positional_invocation"
+                },
+                {
+                    "$ref": "#/$defs/keyword_invocation"
+                },
+                {
+                    "$ref": "#/$defs/mixed_invocation"
+                }
+            ]
+        },
+
+        "positional_invocation": {
+            "type": "object",
+            "properties": {
+                "dependencies": {
+                    "$ref": "#/$defs/step_dependencies"
+                }
+            },
+            "additionalProperties": {
+                "$comment": "The task plugin short name + arg value(s)",
+                "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null",
+                    "array"
+                ]
+            },
+            "minProperties": 1,
+            "maxProperties": 2
+        },
+
+        "keyword_invocation": {
+            "type": "object",
+            "properties": {
+                "dependencies": {
+                    "$ref": "#/$defs/step_dependencies"
+                }
+            },
+            "additionalProperties": {
+                "$comment": "The task plugin short name + kwargs",
+                "type": "object"
+            },
+            "minProperties": 1,
+            "maxProperties": 2
+        },
+
+        "mixed_invocation": {
+            "type": "object",
+            "properties": {
+                "task": {
+                    "$comment": "Task plugin short name",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "args": {
+                    "$comment": "Positional args",
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null",
+                        "array"
+                    ]
+                },
+                "kwargs": {
+                    "$comment": "Keyword args",
+                    "type": "object"
+                },
+                "dependencies": {
+                    "$ref": "#/$defs/step_dependencies"
+                }
+            },
+            "required": ["task"],
+            "additionalProperties": false
+        },
+
+        "step_dependencies": {
+            "oneOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "type": "string"
+                }
+            ]
+        }
+    }
+}
