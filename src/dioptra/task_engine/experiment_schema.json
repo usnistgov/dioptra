@@ -31,6 +31,7 @@
     "additionalProperties": false,
     "$defs": {
         "parameters_as_array": {
+            "title": "Parameters as array",
             "type": "array",
             "items": {
                 "type": "string"
@@ -38,10 +39,12 @@
         },
 
         "parameters_as_object": {
+            "title": "Parameters as object",
             "type": "object",
             "additionalProperties": {
                 "oneOf": [
                     {
+                        "title": "Parameter with simple default",
                         "type": [
                             "string",
                             "number",
@@ -51,6 +54,7 @@
                         ]
                     },
                     {
+                        "title": "Parameter with object default",
                         "type": "object",
                         "properties": {
                             "default": {
@@ -75,9 +79,11 @@
                 "outputs": {
                     "oneOf": [
                         {
+                            "title": "Output name as string",
                             "type": "string"
                         },
                         {
+                            "title": "Output name as list of strings",
                             "type": "array",
                             "items": {
                                 "type": "string"
@@ -106,6 +112,7 @@
         },
 
         "positional_invocation": {
+            "title": "Positional invocation",
             "type": "object",
             "properties": {
                 "dependencies": {
@@ -127,6 +134,7 @@
         },
 
         "keyword_invocation": {
+            "title": "Keyword invocation",
             "type": "object",
             "properties": {
                 "dependencies": {
@@ -142,6 +150,7 @@
         },
 
         "mixed_invocation": {
+            "title": "Mixed position/keyword invocation",
             "type": "object",
             "properties": {
                 "task": {
@@ -174,12 +183,14 @@
         "step_dependencies": {
             "oneOf": [
                 {
+                    "title": "Dependencies as a list",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
                 {
+                    "title": "Single dependency as a string",
                     "type": "string"
                 }
             ]

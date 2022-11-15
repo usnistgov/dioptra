@@ -8,6 +8,7 @@ import jsonschema.exceptions
 
 from dioptra.sdk.exceptions.base import BaseTaskEngineError
 from dioptra.task_engine import util
+from dioptra.task_engine.error_message import validation_errors_to_message
 
 _SCHEMA_FILENAME = "experiment_schema.json"
 
@@ -42,15 +43,16 @@ def _schema_validate(experiment_desc: Mapping[str, Any]) -> Optional[str]:
 
     schema = _get_json_schema()
 
-    error: Optional[str]
-    try:
-        jsonschema.validate(instance=experiment_desc, schema=schema)
-    except jsonschema.exceptions.ValidationError as e:
-        error = str(e)
-    else:
-        error = None
+    # Make use of a more complex API to try to produce better schema
+    # validation error messages.
+    validator_class = jsonschema.validators.validator_for(schema)
+    validator = validator_class(schema=schema)
 
-    return error
+    error_message = validation_errors_to_message(
+        validator.iter_errors(experiment_desc), schema
+    ) or None
+
+    return error_message
 
 
 def _structure_paths_preorder(
