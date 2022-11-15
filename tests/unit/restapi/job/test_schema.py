@@ -14,6 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 import datetime
 from typing import Any, BinaryIO, Dict
 
@@ -23,8 +25,8 @@ from flask import Flask
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
-from mitre.securingai.restapi.job.schema import JobFormSchema, JobSchema
-from mitre.securingai.restapi.models import Job, JobForm
+from dioptra.restapi.job.schema import JobFormSchema, JobSchema
+from dioptra.restapi.models import Job, JobForm
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

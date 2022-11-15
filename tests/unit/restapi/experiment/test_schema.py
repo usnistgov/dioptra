@@ -14,6 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 import datetime
 from typing import Any, Dict
 
@@ -22,11 +24,11 @@ import structlog
 from flask import Flask
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.experiment.schema import (
+from dioptra.restapi.experiment.schema import (
     ExperimentRegistrationFormSchema,
     ExperimentSchema,
 )
-from mitre.securingai.restapi.models import Experiment, ExperimentRegistrationForm
+from dioptra.restapi.models import Experiment, ExperimentRegistrationForm
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

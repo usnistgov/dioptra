@@ -1,0 +1,36 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00018_road236.png</filename>
+    <size>
+        <width>300</width>
+        <height>400</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>speedlimit</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>143</xmin>
+            <ymin>152</ymin>
+            <xmax>151</xmax>
+            <ymax>162</ymax>
+        </bndbox>
+    </object>
+    <object>
+        <name>speedlimit</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>155</xmin>
+            <ymin>153</ymin>
+            <xmax>164</xmax>
+            <ymax>163</ymax>
+        </bndbox>
+    </object>
+</annotation>

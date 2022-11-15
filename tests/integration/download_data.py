@@ -15,6 +15,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional, Union
@@ -99,7 +100,7 @@ class MnistDataset(object):
     @property
     def train_images_cache(self) -> np.ndarray:
         if self._train_images_cache is None:
-            with np.load(self.data_file, allow_pickle=True) as f:
+            with np.load(self.data_file, allow_pickle=True) as f:  # type: ignore[no-untyped-call] # noqa: B950
                 self._train_images_cache = f["x_train"]
 
         return self._train_images_cache
@@ -107,7 +108,7 @@ class MnistDataset(object):
     @property
     def train_labels_cache(self) -> np.ndarray:
         if self._train_labels_cache is None:
-            with np.load(self.data_file, allow_pickle=True) as f:
+            with np.load(self.data_file, allow_pickle=True) as f:  # type: ignore[no-untyped-call] # noqa: B950
                 self._train_labels_cache = f["y_train"]
 
         return self._train_labels_cache
@@ -115,7 +116,7 @@ class MnistDataset(object):
     @property
     def test_images_cache(self) -> np.ndarray:
         if self._test_images_cache is None:
-            with np.load(self.data_file, allow_pickle=True) as f:
+            with np.load(self.data_file, allow_pickle=True) as f:  # type: ignore[no-untyped-call] # noqa: B950
                 self._test_images_cache = f["x_test"]
 
         return self._test_images_cache
@@ -123,7 +124,7 @@ class MnistDataset(object):
     @property
     def test_labels_cache(self) -> np.ndarray:
         if self._test_labels_cache is None:
-            with np.load(self.data_file, allow_pickle=True) as f:
+            with np.load(self.data_file, allow_pickle=True) as f:  # type: ignore[no-untyped-call] # noqa: B950
                 self._test_labels_cache = f["y_test"]
 
         return self._test_labels_cache

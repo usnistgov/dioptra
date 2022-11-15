@@ -40,7 +40,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """A plug-in that will be sorted after other plug-ins"""
-from mitre.securingai import pyplugs
+from dioptra import pyplugs
 
 
 @pyplugs.register(sort_value=10)

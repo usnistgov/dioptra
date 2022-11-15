@@ -27,10 +27,10 @@ jobs:
   docs:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: setup python 3.9
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3.1.2
         with:
           python-version: "3.9"
 
@@ -44,7 +44,7 @@ jobs:
         run: echo "::set-output name=dir::$(pip cache dir)"
 
       - name: cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.3
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/.github/pip-envs/requirements-sphinx.txt') }}
@@ -58,7 +58,7 @@ jobs:
         run: sphinx-build -b html docs/source docs/build
 
       - name: archive the documentation
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: docs-build
           path: docs/build

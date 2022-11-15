@@ -23,15 +23,13 @@ import click
 import mlflow
 import mlflow.tensorflow
 import structlog
-from data_tensorflow_updated import create_image_dataset
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-from tasks import evaluate_metrics_tensorflow
 
-from mitre.securingai import pyplugs
-from mitre.securingai.sdk.utilities.contexts import plugin_dirs
-from mitre.securingai.sdk.utilities.logging import (
+from dioptra import pyplugs
+from dioptra.sdk.utilities.contexts import plugin_dirs
+from dioptra.sdk.utilities.logging import (
     StderrLogStream,
     StdoutLogStream,
     attach_stdout_stream_handler,
@@ -40,7 +38,8 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
-_PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+_PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
@@ -215,8 +214,10 @@ def init_infer_flow() -> Flow:
             filepath=adv_tar_path,
         )
 
-        # TODO: Transfer to load_tensorflow_keras_classifier
-        adv_ds = create_image_dataset(
+        adv_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
             data_dir=adv_data_dir,
             subset=None,
             validation_split=None,
@@ -236,8 +237,12 @@ def init_infer_flow() -> Flow:
             version=model_version,
             upstream_tasks=[init_tensorflow_results],
         )
-        classifier_performance_metrics = evaluate_metrics_tensorflow(
-            classifier=classifier, dataset=adv_ds
+        classifier_performance_metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
+            "tensorflow",
+            "evaluate_metrics_tensorflow",
+            classifier=classifier,
+            dataset=adv_ds,
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
@@ -250,8 +255,8 @@ def init_infer_flow() -> Flow:
 
 
 if __name__ == "__main__":
-    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
-    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
+    log_level: str = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("DIOPTRA_JOB_LOG_AS_JSON") else False
 
     clear_logger_handlers(get_prefect_logger())
     attach_stdout_stream_handler(as_json)

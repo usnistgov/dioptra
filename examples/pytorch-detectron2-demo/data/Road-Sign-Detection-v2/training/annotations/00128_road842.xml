@@ -1,0 +1,36 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00128_road842.png</filename>
+    <size>
+        <width>300</width>
+        <height>400</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>speedlimit</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>74</xmin>
+            <ymin>153</ymin>
+            <xmax>125</xmax>
+            <ymax>203</ymax>
+        </bndbox>
+    </object>
+    <object>
+        <name>crosswalk</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>107</xmin>
+            <ymin>344</ymin>
+            <xmax>159</xmax>
+            <ymax>399</ymax>
+        </bndbox>
+    </object>
+</annotation>

@@ -1,0 +1,23 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00057_road421.png</filename>
+    <size>
+        <width>300</width>
+        <height>400</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>speedlimit</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>116</xmin>
+            <ymin>160</ymin>
+            <xmax>194</xmax>
+            <ymax>239</ymax>
+        </bndbox>
+    </object>
+</annotation>

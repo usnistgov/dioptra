@@ -14,16 +14,14 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-name: securing-ai-testbed
+name: dioptra
 channels:
   - defaults
 dependencies:
   - autopep8
   - beautifulsoup4
   - blinker
-  - bottleneck
   - chardet>=3.0.0,<4
-  - click>=7.1.*,<8.0
   - cloudpickle>=1.3.0 # prefect requirement
   - coverage
   - cryptography=3.*
@@ -37,87 +35,77 @@ dependencies:
   - gitpython>=2.1.0 # mlflow requirement
   - gunicorn
   - h5py=2.10.0 # tensorflow requirement
-  - importlib_metadata>=3.7.0 # mlflow requirement
   - ipython
   - isort>=5.6.0
-  - jinja2>=2.11.0,<3
   - joblib
   - jupyter
-  - markupsafe
   - matplotlib
+  - mccabe>=0.6.1,<0.7.0
   - networkx
   - nose
   - numexpr
-  - numpy>=1.18.0 # adversarial-robustness-toolbox requirement
-  - packaging=20.* # mlflow requirement
-  - pandas>=1.0.1
+  - numpy>=1.22.0,<1.23.0
+  - pandas>=1.1.1
   - pillow
   - pip
-  - protobuf>=3.7.0 # mlflow requirement
   - psutil
   - psycopg2
-  - pycodestyle
-  - pydocstyle
-  - pymysql
-  - pyodbc
-  - pytables
-  - pytest>=6
-  - python-dateutil>=2.7.0 # prefect requirement
-  - python-jsonrpc-server=0.3.4
+  - pytest>=7
+  - python-dateutil>=2.8.0 # prefect requirement
   - python=3.9.*
   - pytz
   - pytz>=2018.7 # mlflow requirement
   - pyyaml=5.3.1 # mlflow requirement
-  - pyzmq
-  - redis-py>=3.2.1
-  - requests=2.24.*
-  - scikit-learn=0.24.2
+  - redis-py>=3.5.0
+  - requests>=2.25.0
+  - scikit-learn>=1.0.0,<1.1.0
   - scipy>=1.4.1 # adversarial-robustness-toolbox requirement
   - setuptools
   - simplejson
   - six
-  - sphinx>=3.3.0,<4
-  - sqlalchemy
   - sqlparse>=0.3.1 # mlflow requirement
   - toml
   - twine
-  - urllib3=1.25.*
+  - urllib3>=1.26.0
   - watchdog=0.10.4
-  - werkzeug
   - wheel
   - pip:
-      - adversarial-robustness-toolbox==1.7.*
-      - alembic<=1.4.1
-      - black>=20.8b1
+      - adversarial-robustness-toolbox>=1.9.0,<2
+      - alembic<2.0.0
+      - black>=22
       - boto3
       - build
+      - Click>=8.0.0
       - commitizen
       - databricks-cli>=0.8.7 # mlflow requirement
       - docformatter
       - flake8-bugbear
-      - flask-accepts>=0.17.0,<1
-      - Flask-Injector>=0.12.0,<1
-      - Flask-JWT-Extended>3.24.0,<4
-      - Flask-Migrate>=2.5.0,<3
-      - flask-restx>=0.2.0,<1
-      - Flask-SQLAlchemy>=2.4.0,<3
-      - Flask-WTF>=0.14.0,<1
-      - Flask>=1.1.0,<2
+      - flask-accepts>=0.17.0
+      - Flask-Injector>=0.12.0
+      - Flask-JWT-Extended>3.24.0
+      - Flask-Migrate>=2.5.0
+      - flask-restx>=0.5.1
+      - Flask-SQLAlchemy>=2.4.0
+      - Flask-WTF>=0.14.0
+      - Flask>=2.0.0,<2.2.0
       - freezegun
       - gorilla
+      - imgaug>=0.4.0
       - injector>=0.18.0
       - markdown
       - marshmallow>=3.9.0,<4
+      - mistune<2
       - mlflow>=1.12.0,<2
-      - mnist>=0.2.2
       - multimethod>=1.5
-      - mypy>=0.900
+      - mypy>=0.920
       - passlib
       - plantuml-markdown
-      - pre-commit
-      - prefect==0.15.*
+      - prefect>=1.0.0,<2
       - prometheus-flask-exporter
+      - protobuf>=3.7.0 # mlflow requirement
       - pyarrow
+      - pycodestyle
+      - pydocstyle
       - pymdown-extensions
       - pytest-cov
       - pytest-datadir
@@ -128,18 +116,16 @@ dependencies:
       - rich>=9.1.0
       - rq>=1.5.0
       - rstcheck
-      - snooty
-      - snooty-lextudio
+      - Sphinx>=4.5.0,<5
       - sphinx-autobuild
       - sphinx-autodoc-typehints
-      - sphinx-book-theme
-      - sphinx-copybutton
-      - sphinx-panels
-      - sphinx-rtd-theme
-      - sphinx-togglebutton
+      - sphinx-book-theme>=0.3.3
+      - sphinx-copybutton>=0.5.0
+      - sphinx_design>=0.1.0
+      - sphinx-togglebutton>=0.3.2
       - sphinxcontrib-openapi
-      - sqlalchemy-stubs
       - structlog>=20.2.0
+      - SQLAlchemy[mypy]>=1.4.0,<2
       - tabulate
       - tox
       - types-click
@@ -150,9 +136,13 @@ dependencies:
       - types-ipaddress
       - types-Jinja2
       - types-python-dateutil
+      - types-PyYAML
       - types-redis
       - types-requests
+      - types-SQLAlchemy
       - types-Werkzeug
-      - typing-extensions==3.7.4.3
-      - ujson==1.35
+      - typing-extensions>=3.7.4.3
+      - ujson
       - web-compile
+      - werkzeug>=1.0.0,<=2.1.2
+      - wtforms[email]>=3.0.0

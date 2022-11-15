@@ -39,7 +39,7 @@ Task Plugins Collection
 Artifacts
 ---------
 
-.. currentmodule:: securingai_builtins.artifacts
+.. currentmodule:: dioptra_builtins.artifacts
 
 .. autosummary::
 
@@ -60,7 +60,7 @@ Exceptions
 Attacks
 -------
 
-.. currentmodule:: securingai_builtins.attacks
+.. currentmodule:: dioptra_builtins.attacks
 
 .. autosummary::
 
@@ -69,7 +69,7 @@ Attacks
 Backend Configuration
 ---------------------
 
-.. currentmodule:: securingai_builtins.backend_configs
+.. currentmodule:: dioptra_builtins.backend_configs
 
 .. autosummary::
 
@@ -78,7 +78,7 @@ Backend Configuration
 Data
 ----
 
-.. currentmodule:: securingai_builtins.data
+.. currentmodule:: dioptra_builtins.data
 
 .. autosummary::
 
@@ -88,7 +88,7 @@ Data
 Estimators
 ----------
 
-.. currentmodule:: securingai_builtins.estimators
+.. currentmodule:: dioptra_builtins.estimators
 
 .. autosummary::
 
@@ -108,7 +108,7 @@ Available Estimators
 Metrics
 -------
 
-.. currentmodule:: securingai_builtins.metrics
+.. currentmodule:: dioptra_builtins.metrics
 
 .. autosummary::
 
@@ -148,7 +148,7 @@ Exceptions
 Random
 ------
 
-.. currentmodule:: securingai_builtins.random
+.. currentmodule:: dioptra_builtins.random
 
 .. autosummary::
 
@@ -159,7 +159,7 @@ Random
 Registry
 --------
 
-.. currentmodule:: securingai_builtins.registry
+.. currentmodule:: dioptra_builtins.registry
 
 .. autosummary::
 
@@ -171,7 +171,7 @@ Registry
 Tracking
 --------
 
-.. currentmodule:: securingai_builtins.tracking
+.. currentmodule:: dioptra_builtins.tracking
 
 .. autosummary::
 

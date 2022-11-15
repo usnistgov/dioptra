@@ -1,0 +1,36 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00000_road49.png</filename>
+    <size>
+        <width>400</width>
+        <height>284</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>trafficlight</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>86</xmin>
+            <ymin>35</ymin>
+            <xmax>122</xmax>
+            <ymax>113</ymax>
+        </bndbox>
+    </object>
+    <object>
+        <name>trafficlight</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>134</xmin>
+            <ymin>120</ymin>
+            <xmax>151</xmax>
+            <ymax>152</ymax>
+        </bndbox>
+    </object>
+</annotation>

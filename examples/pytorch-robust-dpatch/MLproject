@@ -1,0 +1,64 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: rsa-demo
+
+entry_points:
+  attack:
+    parameters:
+      data_dir: { type: path, default: "/nfs/data/Road-Sign-Detection-v2-balanced-div/" }
+      adv_patch_dir: { type: string, default: "adv_patch" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      image_size: { type: string, default: "400,300,3" }
+      model_loc: { type: string, default: "/nfs/saved-models/stop_sign_training_outputs/output"} 
+      patch_shape: {type: string, default: "30,30,3"}
+      patch_location: {type: string, default: "2,2"}
+      crop_range: {type: string, default: "0,0"}
+      brightness_range: {type: string, default: "0.1, 1.9"}
+      rotation_weights: {type: string, default: "1,0,0,0"}
+      sample_size: {type: float, default: 1}
+      learning_rate: {type: float, default: 0.1}
+      lr_decay_size: {type: float, default: 0.95}
+      lr_decay_schedule: {type: float, default: 5000}
+      momentum: {type: float, default: 0.9}
+      max_iter: {type: float, default: 500}
+      batch_size: {type: float, default: 10}
+      targeted: {type: float, default: 0}
+      verbose: {type: float, default: 1}
+      detection_score_cutoff: {type: float, default: 0.5}
+    command: >
+      python src/attack.py
+      --data-dir {data_dir}
+      --adv-patch-dir {adv_patch_dir}
+      --adv-data-dir {adv_data_dir}
+      --image-size {image_size}
+      --model-loc {model_loc}
+      --patch-shape {patch_shape}
+      --patch-location {patch_location}
+      --crop-range {crop_range}
+      --brightness-range {brightness_range}
+      --rotation-weights {rotation_weights}
+      --sample-size {sample_size}
+      --learning-rate {learning_rate}
+      --lr-decay-size {lr_decay_size}
+      --lr-decay-schedule {lr_decay_schedule}
+      --momentum {momentum}
+      --max-iter {max_iter}
+      --batch-size {batch_size}
+      --targeted {targeted}
+      --verbose {verbose}
+      --detection-score-cutoff {detection_score_cutoff}
+

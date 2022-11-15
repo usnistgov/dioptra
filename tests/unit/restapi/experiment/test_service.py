@@ -14,6 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 import datetime
 from typing import List
 
@@ -24,9 +26,9 @@ from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.experiment.errors import ExperimentAlreadyExistsError
-from mitre.securingai.restapi.experiment.service import ExperimentService
-from mitre.securingai.restapi.models import (
+from dioptra.restapi.experiment.errors import ExperimentAlreadyExistsError
+from dioptra.restapi.experiment.service import ExperimentService
+from dioptra.restapi.models import (
     Experiment,
     ExperimentRegistrationForm,
     ExperimentRegistrationFormData,

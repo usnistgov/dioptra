@@ -14,6 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Dict, List
@@ -24,9 +26,9 @@ from _pytest.monkeypatch import MonkeyPatch
 from botocore.stub import Stubber
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import TaskPlugin, TaskPluginUploadFormData
-from mitre.securingai.restapi.shared.s3.service import S3Service
-from mitre.securingai.restapi.task_plugin.service import TaskPluginService
+from dioptra.restapi.models import TaskPlugin, TaskPluginUploadFormData
+from dioptra.restapi.shared.s3.service import S3Service
+from dioptra.restapi.task_plugin.service import TaskPluginService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -51,7 +53,7 @@ def test_create(
 ) -> None:
     list_objects_v2_expected_params: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Prefix": "securingai_custom/new_package/",
+        "Prefix": "dioptra_custom/new_package/",
     }
     uri_list: List[str] = []
     output_dir: Path = tmp_path / "tmpdir"
@@ -77,7 +79,7 @@ def test_create(
         m.setattr(s3_service._client, "upload_file", mockuploadfile)
         stubber.add_response(
             "list_objects_v2",
-            dict(Name="plugins", Prefix="securingai_custom/new_package"),
+            dict(Name="plugins", Prefix="dioptra_custom/new_package"),
             list_objects_v2_expected_params,
         )
         response_task_plugin: TaskPlugin = task_plugin_service.create(
@@ -103,12 +105,12 @@ def test_delete_prefix(
 
     list_objects_v2_expected_params1: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Prefix": "securingai_custom/new_plugin_one/",
+        "Prefix": "dioptra_custom/new_plugin_one/",
     }
 
     list_objects_v2_expected_params2: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Prefix": "securingai_custom/new_plugin_one",
+        "Prefix": "dioptra_custom/new_plugin_one",
     }
 
     with Stubber(s3_service._client) as stubber, monkeypatch.context() as m:
@@ -124,16 +126,14 @@ def test_delete_prefix(
             list_objects_v2_expected_params2,
         )
         response: List[TaskPlugin] = task_plugin_service.delete(
-            collection="securingai_custom",
+            collection="dioptra_custom",
             task_plugin_name="new_plugin_one",
             bucket="plugins",
         )
         stubber.assert_no_pending_responses()
 
     expected_response: List[TaskPlugin] = [
-        TaskPlugin(
-            "new_plugin_one", "securingai_custom", ["__init__.py", "plugin_one.py"]
-        )
+        TaskPlugin("new_plugin_one", "dioptra_custom", ["__init__.py", "plugin_one.py"])
     ]
     assert response == expected_response
 
@@ -141,96 +141,84 @@ def test_delete_prefix(
 def test_get_all(
     s3_service: S3Service,
     task_plugin_service: TaskPluginService,
-    list_objects_v2_collections: Dict[str, Any],
     list_objects_v2_builtins: Dict[str, Any],
     list_objects_v2_custom: Dict[str, Any],
     list_objects_v2_builtins_artifacts: Dict[str, Any],
     list_objects_v2_builtins_attacks: Dict[str, Any],
     list_objects_v2_custom_new_plugin_one: Dict[str, Any],
     list_objects_v2_custom_new_plugin_two: Dict[str, Any],
-    monkeypatch: MonkeyPatch,
 ) -> None:
     list_objects_v2_expected_params1: Dict[str, Any] = {
         "Bucket": "plugins",
         "Delimiter": "/",
-        "Prefix": "/",
+        "Prefix": "dioptra_builtins/",
     }
     list_objects_v2_expected_params2: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Delimiter": "/",
-        "Prefix": "securingai_builtins/",
+        "Prefix": "dioptra_builtins/artifacts/",
     }
     list_objects_v2_expected_params3: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Prefix": "securingai_builtins/artifacts/",
+        "Prefix": "dioptra_builtins/attacks/",
     }
     list_objects_v2_expected_params4: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Prefix": "securingai_builtins/attacks/",
+        "Delimiter": "/",
+        "Prefix": "dioptra_custom/",
     }
     list_objects_v2_expected_params5: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Delimiter": "/",
-        "Prefix": "securingai_custom/",
+        "Prefix": "dioptra_custom/new_plugin_one/",
     }
     list_objects_v2_expected_params6: Dict[str, Any] = {
         "Bucket": "plugins",
-        "Prefix": "securingai_custom/new_plugin_one/",
-    }
-    list_objects_v2_expected_params7: Dict[str, Any] = {
-        "Bucket": "plugins",
-        "Prefix": "securingai_custom/new_plugin_two/",
+        "Prefix": "dioptra_custom/new_plugin_two/",
     }
 
     with Stubber(s3_service._client) as stubber:
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_collections,
+            list_objects_v2_builtins,
             list_objects_v2_expected_params1,
         )
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_builtins,
+            list_objects_v2_builtins_artifacts,
             list_objects_v2_expected_params2,
         )
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_builtins_artifacts,
+            list_objects_v2_builtins_attacks,
             list_objects_v2_expected_params3,
         )
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_builtins_attacks,
+            list_objects_v2_custom,
             list_objects_v2_expected_params4,
         )
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_custom,
+            list_objects_v2_custom_new_plugin_one,
             list_objects_v2_expected_params5,
         )
         stubber.add_response(
             "list_objects_v2",
-            list_objects_v2_custom_new_plugin_one,
+            list_objects_v2_custom_new_plugin_two,
             list_objects_v2_expected_params6,
         )
-        stubber.add_response(
-            "list_objects_v2",
-            list_objects_v2_custom_new_plugin_two,
-            list_objects_v2_expected_params7,
-        )
         response_task_plugin: List[TaskPlugin] = task_plugin_service.get_all(
-            bucket="plugins"
+            s3_collections_list=["dioptra_builtins", "dioptra_custom"], bucket="plugins"
         )
         stubber.assert_no_pending_responses()
 
     expected_response: List[TaskPlugin] = [
-        TaskPlugin("artifacts", "securingai_builtins", ["__init__.py", "mlflow.py"]),
-        TaskPlugin("attacks", "securingai_builtins", ["__init__.py", "fgm.py"]),
+        TaskPlugin("artifacts", "dioptra_builtins", ["__init__.py", "mlflow.py"]),
+        TaskPlugin("attacks", "dioptra_builtins", ["__init__.py", "fgm.py"]),
         TaskPlugin(
-            "new_plugin_one", "securingai_custom", ["__init__.py", "plugin_one.py"]
+            "new_plugin_one", "dioptra_custom", ["__init__.py", "plugin_one.py"]
         ),
         TaskPlugin(
-            "new_plugin_two", "securingai_custom", ["__init__.py", "plugin_two.py"]
+            "new_plugin_two", "dioptra_custom", ["__init__.py", "plugin_two.py"]
         ),
     ]
 

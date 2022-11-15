@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-.PHONY: beautify build-all build-legacy build-mlflow-tracking build-nginx build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-tensorflow build-tensorflow-cpu build-tensorflow-gpu clean code-check code-pkg conda-env docker-deps docs help hooks pull-latest tag-latest tests tests-integration tests-unit tox
+.PHONY: beautify build-all build-mlflow-tracking build-nginx build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-tensorflow build-tensorflow-cpu build-tensorflow-gpu clean code-check code-pkg conda-env docs help hooks tag-latest tests tests-integration tests-unit tox
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -O extglob -o pipefail -c
@@ -46,8 +46,8 @@ endif
 COMMA := ,
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-PROJECT_NAME = securing-ai-testbed
-PROJECT_PREFIX = securing-ai
+PROJECT_NAME = dioptra
+PROJECT_PREFIX = dioptra
 PROJECT_BUILD_DIR = build
 PROJECT_DOCS_DIR = docs
 PROJECT_DOCKER_DIR = docker
@@ -56,8 +56,7 @@ PROJECT_DOCKER_CONDA_ENV_DIR = $(PROJECT_DOCKER_SRC_DIR)/conda-env
 PROJECT_DOCKER_SHELLSCRIPTS_DIR = $(PROJECT_DOCKER_SRC_DIR)/shellscripts
 PROJECT_SRC_DIR = src
 PROJECT_SRC_MIGRATIONS_DIR = $(PROJECT_SRC_DIR)/migrations
-PROJECT_SRC_MITRE_DIR = $(PROJECT_SRC_DIR)/mitre
-PROJECT_SRC_SECURINGAI_DIR = $(PROJECT_SRC_MITRE_DIR)/securingai
+PROJECT_SRC_DIOPTRA_DIR = $(PROJECT_SRC_DIR)/dioptra
 PROJECT_TASK_PLUGINS_DIR = task-plugins
 PROJECT_TESTS_DIR = tests
 
@@ -72,9 +71,10 @@ ISORT = isort
 MV = mv
 MYPY = mypy
 PRE_COMMIT = pre-commit
-PY ?= python3
+PY ?= python
 PYTEST = $(PY) -m pytest
 RM = rm
+SPHINX_BUILD = sphinx-build
 TOX = $(PY) -m tox
 
 CONTAINER_VARS_FILE = container-vars.mk
@@ -84,30 +84,35 @@ SETUP_CFG_FILE = setup.cfg
 TOX_CONFIG_FILE = tox.ini
 VERSION_VARS_FILE = version-vars.mk
 
-CODE_PKG_NAME = mitre-securing-ai
+CODE_PKG_NAME = dioptra
 CODE_BUILD_DIR = dist
 CODE_PIP_CACHE_DIR = .pip-cache
+CODE_CONTAINER_TESTS_DIR = $(PROJECT_TESTS_DIR)/containers
 CODE_INTEGRATION_TESTS_DIR = $(PROJECT_TESTS_DIR)/integration
-CODE_SECURINGAI_BUILTINS_DIR = $(PROJECT_TASK_PLUGINS_DIR)/securingai_builtins
+CODE_DIOPTRA_BUILTINS_DIR = $(PROJECT_TASK_PLUGINS_DIR)/dioptra_builtins
 CODE_UNIT_TESTS_DIR = $(PROJECT_TESTS_DIR)/unit
-CODE_SRC_FILES := $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/generics_plugins/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/generics_plugins/*/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/mlflow_plugins/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/pyplugs/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/restapi/*/*/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/rq/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/rq/*/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/sdk/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/sdk/*/*.py)
-CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIR)/mitre/securingai/sdk/*/*/*.py)
+CODE_SRC_FILES := $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/generics_plugins/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/generics_plugins/*/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/mlflow_plugins/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/pyplugs/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/restapi/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/restapi/*/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/restapi/*/*/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/rq/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/rq/*/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/sdk/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/sdk/*/*.py)
+CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/sdk/*/*/*.py)
 CODE_DB_MIGRATIONS_FILES :=\
     $(PROJECT_SRC_MIGRATIONS_DIR)/alembic.ini\
     $(PROJECT_SRC_MIGRATIONS_DIR)/env.py\
     $(PROJECT_SRC_MIGRATIONS_DIR)/README\
     $(PROJECT_SRC_MIGRATIONS_DIR)/script.py.mako
 CODE_DB_MIGRATIONS_FILES += $(wildcard $(PROJECT_SRC_MIGRATIONS_DIR)/versions/*.py)
+CODE_CONTAINER_TESTS_FILES := $(wildcard $(CODE_CONTAINER_TESTS_DIR)/*.py)
+CODE_CONTAINER_TESTS_FILES += $(wildcard $(CODE_CONTAINER_TESTS_DIR)/*/*.py)
+CODE_CONTAINER_TESTS_FILES += $(wildcard $(CODE_CONTAINER_TESTS_DIR)/*/*/*.py)
+CODE_CONTAINER_TESTS_FILES += $(wildcard $(CODE_CONTAINER_TESTS_DIR)/*/*/*/*.py)
 CODE_INTEGRATION_TESTS_FILES := $(wildcard $(CODE_INTEGRATION_TESTS_DIR)/*.py)
 CODE_INTEGRATION_TESTS_FILES += $(wildcard $(CODE_INTEGRATION_TESTS_DIR)/*/*.py)
 CODE_INTEGRATION_TESTS_FILES += $(wildcard $(CODE_INTEGRATION_TESTS_DIR)/*/*/*.py)
@@ -116,10 +121,10 @@ CODE_UNIT_TESTS_FILES := $(wildcard $(CODE_UNIT_TESTS_DIR)/*.py)
 CODE_UNIT_TESTS_FILES += $(wildcard $(CODE_UNIT_TESTS_DIR)/*/*.py)
 CODE_UNIT_TESTS_FILES += $(wildcard $(CODE_UNIT_TESTS_DIR)/*/*/*.py)
 CODE_UNIT_TESTS_FILES += $(wildcard $(CODE_UNIT_TESTS_DIR)/*/*/*/*.py)
-CODE_TASK_PLUGINS_FILES := $(wildcard $(CODE_SECURINGAI_BUILTINS_DIR)/*.py)
-CODE_TASK_PLUGINS_FILES += $(wildcard $(CODE_SECURINGAI_BUILTINS_DIR)/*/*.py)
-CODE_TASK_PLUGINS_FILES += $(wildcard $(CODE_SECURINGAI_BUILTINS_DIR)/*/*/*.py)
-CODE_TASK_PLUGINS_FILES += $(wildcard $(CODE_SECURINGAI_BUILTINS_DIR)/*/*/*/*.py)
+CODE_TASK_PLUGINS_FILES := $(wildcard $(CODE_DIOPTRA_BUILTINS_DIR)/*.py)
+CODE_TASK_PLUGINS_FILES += $(wildcard $(CODE_DIOPTRA_BUILTINS_DIR)/*/*.py)
+CODE_TASK_PLUGINS_FILES += $(wildcard $(CODE_DIOPTRA_BUILTINS_DIR)/*/*/*.py)
+CODE_TASK_PLUGINS_FILES += $(wildcard $(CODE_DIOPTRA_BUILTINS_DIR)/*/*/*/*.py)
 CODE_PACKAGING_FILES =\
     $(DOCS_FILES)\
     $(SETUP_CFG_FILE)\
@@ -162,28 +167,28 @@ CONDA_ENV_FILE = environment.yml
 CONDA_ENV_NAME = $(PROJECT_NAME)
 CONDA_ENV_PIP =
 
+USE_BUILDKIT ?= true
+USE_INLINE_CACHE ?= true
+BUILD_TARGET ?= image-pinned-deps
 NO_CACHE ?=
+DOCKER_BUILDKIT_VALUE = $(if $(USE_BUILDKIT),1,)
+DOCKER_BUILDKIT_INLINE_CACHE_VALUE = $(if $(USE_INLINE_CACHE),1,)
+DOCKER_BUILD_TARGET = $(BUILD_TARGET)
 DOCKER_NO_CACHE = $(if $(NO_CACHE),--no-cache,)
-
-DOCKER_HUB_IMAGES_LATEST =\
-    matejak/argbash:latest\
-    minio/minio:latest\
-    postgres:latest\
-    redis:latest
 
 BEAUTIFY_SENTINEL = $(PROJECT_BUILD_DIR)/.beautify.sentinel
 CODE_PACKAGING_SENTINEL = $(PROJECT_BUILD_DIR)/.code-packaging.sentinel
+CODE_CONTAINER_TESTS_SENTINEL = $(PROJECT_BUILD_DIR)/.container-tests.sentinel
 CODE_INTEGRATION_TESTS_SENTINEL = $(PROJECT_BUILD_DIR)/.integration-tests.sentinel
 CODE_UNIT_TESTS_SENTINEL = $(PROJECT_BUILD_DIR)/.unit-tests.sentinel
 CONDA_CREATE_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-create.sentinel
 CONDA_UPDATE_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-update.sentinel
 CONDA_ENV_DEV_INSTALL_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-env-dev-install.sentinel
 CONDA_ENV_PIP_INSTALL_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-env-pip-install.sentinel
-CONTAINER_CONDA_ENV_FILES =
-CONTAINER_SCRIPTS =
 DOCS_SENTINEL = $(PROJECT_BUILD_DIR)/.docs.sentinel
 LINTING_SENTINEL = $(PROJECT_BUILD_DIR)/.linting.sentinel
 PRE_COMMIT_HOOKS_SENTINEL = $(PROJECT_BUILD_DIR)/.pre-commit-hooks.sentinel
+TOX_CONTAINERS_SENTINEL = $(PROJECT_BUILD_DIR)/.tox-containers.sentinel
 TOX_UNIT_SENTINEL = $(PROJECT_BUILD_DIR)/.tox-unit.sentinel
 TOX_INTEGRATION_SENTINEL = $(PROJECT_BUILD_DIR)/.tox-integration.sentinel
 TYPE_CHECK_SENTINEL = $(PROJECT_BUILD_DIR)/.type-check.sentinel
@@ -239,14 +244,6 @@ define package_code
 $(call run_in_conda_env,$(CONDA_ENV_NAME),$(PY) -m build -sw,)
 endef
 
-define pull_docker_hub_images
-@$(foreach image,$(1),\
-    echo "Pulling image $(image) from Docker Hub";\
-    echo "======================================";\
-    $(DOCKER) pull $(image) || exit 1;\
-    echo "";)
-endef
-
 define pre_commit_cmd
 $(call run_in_conda_env,$(CONDA_ENV_NAME),$(PRE_COMMIT) $(1),)
 endef
@@ -266,29 +263,31 @@ endef
 
 define run_build_script
 CORES=$(CORES)\
+BASE_IMAGE=${CONTAINER_BASE_IMAGE}\
 IMAGE_TAG=$(strip $(2))\
 CODE_PKG_VERSION=$(CODE_PKG_VERSION)\
 PROJECT_PREFIX=$(PROJECT_PREFIX)\
 PROJECT_COMPONENT=$(strip $(1))\
 MINICONDA3_PREFIX=$(CONTAINER_MINICONDA3_PREFIX)\
 MINICONDA_VERSION=$(CONTAINER_MINICONDA_VERSION)\
+IBM_ART_VERSION=$(CONTAINER_IBM_ART_VERSION)\
+MLFLOW_VERSION=$(CONTAINER_MLFLOW_VERSION)\
+PREFECT_VERSION=$(CONTAINER_PREFECT_VERSION)\
+PYTHON_VERSION=$(CONTAINER_PYTHON_VERSION)\
+PYTORCH_CUDA_VERSION=$(CONTAINER_PYTORCH_CUDA_VERSION)\
+PYTORCH_MAJOR_MINOR_VERSION=$(CONTAINER_PYTORCH_MAJOR_MINOR_VERSION)\
+PYTORCH_TORCHAUDIO_VERSION=$(CONTAINER_PYTORCH_TORCHAUDIO_VERSION)\
+PYTORCH_TORCHVISION_VERSION=$(CONTAINER_PYTORCH_TORCHVISION_VERSION)\
 PYTORCH_VERSION=$(CONTAINER_PYTORCH_VERSION)\
-SPHINX_VERSION=$(CONTAINER_SPHINX_VERSION)\
-TENSORFLOW2_VERSION=$(CONTAINER_TENSORFLOW2_VERSION)\
-TENSORFLOW2_BUILD=$(CONTAINER_TENSORFLOW2_BUILD)\
+SKLEARN_VERSION=$(CONTAINER_SKLEARN_VERSION)\
+TENSORFLOW_VERSION=$(CONTAINER_TENSORFLOW_VERSION)\
+PYTORCH_NVIDIA_CUDA_VERSION=$(CONTAINER_PYTORCH_NVIDIA_CUDA_VERSION)\
+TENSORFLOW_NVIDIA_CUDA_VERSION=$(CONTAINER_TENSORFLOW_NVIDIA_CUDA_VERSION)\
+DOCKER_BUILDKIT_VALUE=$(DOCKER_BUILDKIT_VALUE)\
+DOCKER_BUILDKIT_INLINE_CACHE_VALUE=$(DOCKER_BUILDKIT_INLINE_CACHE_VALUE)\
+DOCKER_BUILD_TARGET=$(DOCKER_BUILD_TARGET)\
 DOCKER_NO_CACHE=$(DOCKER_NO_CACHE)\
 docker/build.sh
-endef
-
-define run_legacy_build_script
-CORES=$(CORES)\
-IMAGE_TAG=$(strip $(2))\
-CODE_PKG_VERSION=$(CODE_PKG_VERSION)\
-PROJECT_PREFIX=$(PROJECT_PREFIX)\
-PROJECT_COMPONENT=$(strip $(1))\
-MINICONDA_VERSION=$(CONTAINER_MINICONDA_VERSION)\
-DOCKER_NO_CACHE=$(DOCKER_NO_CACHE)\
-docker/legacy/build.sh
 endef
 
 define run_docker
@@ -320,23 +319,11 @@ $(call run_in_conda_env,$(CONDA_ENV_NAME),$(BLACK) $(1),)
 endef
 
 define run_sphinx_build
-$(call run_in_conda_env,$(1),$(PY) -m sphinx-build -b html $(strip $(2)) $(strip $(3)),)
+$(call run_in_conda_env,$(1),$(SPHINX_BUILD) -b html $(strip $(2)) $(strip $(3)),)
 endef
 
 define run_tox
 $(call run_in_conda_env,$(1),PIP_CACHE_DIR=$(CODE_PIP_CACHE_DIR) $(TOX) $(2),)
-endef
-
-define run_yq
-$(call run_docker,\
-    run\
-    -t\
-    --rm\
-    -v $(PROJECT_DIR):/workdir\
-    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
-    mikefarah/yq\
-    $(strip $(1))\
-    $(strip $(2)))
 endef
 
 define save_sentinel_file
@@ -371,51 +358,20 @@ $(strip $(1)): $(strip $(2)) | $$(PROJECT_BUILD_DIR)
 	$(call save_sentinel_file,$$@)
 endef
 
-define generate_docker_image_shellscripts_recipe
-$(strip $(1)):
-
-$(strip $(2))/%.sh: $$(PROJECT_DOCKER_SHELLSCRIPTS_DIR)/%.m4
-	$(call run_argbash,\
-		$$(PROJECT_DIR)/$$(PROJECT_DOCKER_SHELLSCRIPTS_DIR),\
-		$$(PROJECT_DIR)/$(strip $(2)),\
-		-o /output/$$(shell basename '$$@') /work/$$(shell basename '$$<'))
-endef
-
-define generate_docker_image_conda_env_recipe
-$(strip $(1)):
-
-$(strip $(2))/%.yml: $$(PROJECT_DOCKER_CONDA_ENV_DIR)/%.yml $$(VERSION_VARS_FILE)
-	( $(call run_yq,\
-		--no-colors\
-		--prettyPrint\
-		eval\
-		'(.dependencies[] | select(. == "python")) = "python=$$(CONTAINER_PYTHON_VERSION)" | \
-			(.dependencies[] | select(. == "scikit-learn")) = "scikit-learn=$$(CONTAINER_SKLEARN_VERSION)" | \
-			(.dependencies[].pip[] | select(. == "adversarial-robustness-toolbox")) = "adversarial-robustness-toolbox==$$(CONTAINER_IBM_ART_VERSION)" | \
-			(.dependencies[].pip[] | select(. == "mlflow")) = "mlflow==$$(CONTAINER_MLFLOW_VERSION)" | \
-			(.dependencies[].pip[] | select(. == "prefect")) = "prefect==$$(CONTAINER_PREFECT_VERSION)"', \
-		/workdir/$$<) ) >$$@
-endef
-
 define define_docker_image_sentinel_vars
 CONTAINER_$(strip $(1))_COMPONENT_NAME = $(strip $(3))
 CONTAINER_$(strip $(1))_IMAGE = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):$$($(strip $(2)))
 CONTAINER_$(strip $(1))_IMAGE_LATEST = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):latest
-CONTAINER_$(strip $(1))_DIR = $$(PROJECT_DOCKER_DIR)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)
-CONTAINER_$(strip $(1))_INCLUDE_DIR = $$(CONTAINER_$(strip $(1))_DIR)/include/etc/$$(PROJECT_PREFIX)/docker
-CONTAINER_$(strip $(1))_DOCKERFILE = $$(CONTAINER_$(strip $(1))_DIR)/Dockerfile
+CONTAINER_$(strip $(1))_DIR =
+CONTAINER_$(strip $(1))_INCLUDE_DIR =
+CONTAINER_$(strip $(1))_DOCKERFILE = $$(PROJECT_DOCKER_DIR)/Dockerfile.$(strip $(3))
 CONTAINER_$(strip $(1))_BUILD_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-$$($(strip $(2))).sentinel
 CONTAINER_$(strip $(1))_BUILD_LATEST_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-latest.sentinel
-CONTAINER_CONDA_ENV_FILES += $$(CONTAINER_$(1)_CONDA_ENV_FILES)
-CONTAINER_SCRIPTS += $$(CONTAINER_$(strip $(1))_SCRIPTS)
-DOCKER_HUB_IMAGES_LATEST += $(if $(strip $(4)),$$(CONTAINER_$(strip $(1))_IMAGE_LATEST),)
 endef
 
 define generate_docker_image_pipeline
 $(eval $(call build_docker_image_recipe,$(1),$(strip $(strip $(2) $(7)) $(10)),$(5),$(6)))
 $(eval $(call set_latest_tag_docker_image_recipe,$(9),$(1),$(3),$(4)))
-$(eval $(call generate_docker_image_shellscripts_recipe,$(7),$(8)))
-$(eval $(call generate_docker_image_conda_env_recipe,$(10),$(8)))
 endef
 
 define generate_full_docker_image_vars
@@ -436,39 +392,6 @@ $(eval $(call generate_docker_image_pipeline,\
 	$$(CONTAINER_$(1)_CONDA_ENV_FILES)))
 endef
 
-define build_legacy_docker_image_recipe
-$(strip $(1)): $(strip $(2)) | $$(PROJECT_BUILD_DIR)
-	$(call run_legacy_build_script,$(3),$(4))
-	$(call save_sentinel_file,$$@)
-endef
-
-define define_legacy_docker_image_sentinel_vars
-CONTAINER_$(strip $(1))_COMPONENT_NAME = $(strip $(3))
-CONTAINER_$(strip $(1))_IMAGE = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):$$($(strip $(2)))
-CONTAINER_$(strip $(1))_DIR = $$(PROJECT_DOCKER_DIR)/legacy/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)
-CONTAINER_$(strip $(1))_INCLUDE_DIR = $$(CONTAINER_$(strip $(1))_DIR)/include/etc/$$(PROJECT_PREFIX)/docker
-CONTAINER_$(strip $(1))_DOCKERFILE = $$(CONTAINER_$(strip $(1))_DIR)/Dockerfile
-CONTAINER_$(strip $(1))_BUILD_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-legacy-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-$$($(strip $(2))).sentinel
-endef
-
-define generate_legacy_docker_image_pipeline
-$(eval $(call build_legacy_docker_image_recipe,$(1),$(strip $(strip $(2) $(5)) $(6)),$(3),$(4)))
-endef
-
-define generate_legacy_full_docker_image_vars
-$(eval $(call define_legacy_docker_image_sentinel_vars,$(1),$(2),$(3)))
-endef
-
-define generate_legacy_full_docker_image_recipe
-$(eval $(call generate_legacy_docker_image_pipeline,\
-	$$(CONTAINER_$(1)_BUILD_SENTINEL),\
-	$$($(2)) $$(CONTAINER_$(1)_DOCKERFILE) $$(CONTAINER_$(1)_INCLUDE_FILES),\
-	$$(CONTAINER_$(1)_COMPONENT_NAME),\
-	$$($(3)),\
-	$$(CONTAINER_$(1)_SCRIPTS),\
-	$$(CONTAINER_$(1)_CONDA_ENV_FILES)))
-endef
-
 #################################################################################
 # AUTO-GENERATED GLOBALS                                                        #
 #################################################################################
@@ -480,8 +403,6 @@ $(call generate_full_docker_image_vars,PYTORCH_CPU,CONTAINER_IMAGE_TAG,pytorch-c
 $(call generate_full_docker_image_vars,PYTORCH_GPU,CONTAINER_IMAGE_TAG,pytorch-gpu,)
 $(call generate_full_docker_image_vars,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG,tensorflow2-cpu,)
 $(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tensorflow2-gpu,)
-$(call generate_legacy_full_docker_image_vars,MLFLOW_TRACKING1_12_1,CONTAINER_IMAGE_TAG,mlflow-tracking1-12-1)
-$(call generate_legacy_full_docker_image_vars,TENSORFLOW21_CPU,CONTAINER_IMAGE_TAG,tensorflow21-cpu)
 
 #################################################################################
 # PROJECT RULES                                                                 #
@@ -490,11 +411,8 @@ $(call generate_legacy_full_docker_image_vars,TENSORFLOW21_CPU,CONTAINER_IMAGE_T
 ## Reformat code
 beautify: $(BEAUTIFY_SENTINEL)
 
-## Build all Dioptra Testbed images
+## Build all Dioptra images
 build-all: build-nginx build-mlflow-tracking build-restapi build-pytorch build-tensorflow
-
-## Build the legacy Testbed images
-build-legacy: $(CONTAINER_MLFLOW_TRACKING1_12_1_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW21_CPU_BUILD_SENTINEL)
 
 ## Build the MLFlow Tracking Docker image
 build-mlflow-tracking: $(CONTAINER_MLFLOW_TRACKING_BUILD_SENTINEL)
@@ -535,23 +453,20 @@ code-pkg: $(CODE_PACKAGING_SENTINEL)
 ## Update conda-based virtual environment
 conda-env: $(CONDA_CREATE_SENTINEL) $(CONDA_UPDATE_SENTINEL) $(CONDA_ENV_PIP_INSTALL_SENTINEL) $(CONDA_ENV_DEV_INSTALL_SENTINEL)
 
-## Generate configuration and script files for docker images
-docker-deps: $(CONTAINER_CONDA_ENV_FILES) $(CONTAINER_SCRIPTS)
-
 ## Build project documentation
 docs: $(DOCS_SENTINEL)
 
 ## Install pre-commit hooks
 hooks: $(PRE_COMMIT_HOOKS_SENTINEL)
 
-## Pull latest Docker images from Docker Hub
-pull-latest: ; $(call pull_docker_hub_images,$(DOCKER_HUB_IMAGES_LATEST))
-
-## Manually set "latest" tag on all Dioptra Testbed images
+## Manually set "latest" tag on all Dioptra images
 tag-latest: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL) $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL) $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW21_CPU_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW21_GPU_BUILD_SENTINEL)
 
 ## Run all tests
-tests: tests-unit tests-integration
+tests: tests-unit tests-containers tests-integration
+
+## Run container tests
+tests-containers: $(CODE_CONTAINER_TESTS_SENTINEL)
 
 ## Run integration tests
 tests-integration: $(CODE_INTEGRATION_TESTS_SENTINEL)
@@ -560,7 +475,16 @@ tests-integration: $(CODE_INTEGRATION_TESTS_SENTINEL)
 tests-unit: $(CODE_UNIT_TESTS_SENTINEL)
 
 ## Run all tests using tox
-tox: $(TOX_UNIT_SENTINEL) $(TOX_INTEGRATION_SENTINEL)
+tox: tox-unit tox-containers tox-integration
+
+## Run container tests using tox
+tox-containers: $(TOX_CONTAINERS_SENTINEL)
+
+## Run integration tests using tox
+tox-integration: $(TOX_INTEGRATION_SENTINEL)
+
+## Run unit tests using tox
+tox-unit: $(TOX_UNIT_SENTINEL)
 
 #################################################################################
 # PROJECT BUILD RECIPES                                                         #
@@ -569,9 +493,15 @@ tox: $(TOX_UNIT_SENTINEL) $(TOX_INTEGRATION_SENTINEL)
 $(PROJECT_BUILD_DIR): ; $(call make_subdirectory,$@)
 $(CODE_PIP_CACHE_DIR): ; $(call make_subdirectory,$@)
 
-$(BEAUTIFY_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_python_black,$(PROJECT_SRC_SECURINGAI_DIR) $(PROJECT_TESTS_DIR) $(CODE_SECURINGAI_BUILTINS_DIR))
-	$(call run_isort,$(PROJECT_SRC_SECURINGAI_DIR) $(CODE_SECURINGAI_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
+$(BEAUTIFY_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_CONTAINER_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_python_black,$(PROJECT_SRC_DIOPTRA_DIR) $(PROJECT_TESTS_DIR) $(CODE_DIOPTRA_BUILTINS_DIR))
+	$(call run_isort,$(PROJECT_SRC_DIOPTRA_DIR) $(CODE_DIOPTRA_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
+	$(call save_sentinel_file,$@)
+
+$(CODE_CONTAINER_TESTS_SENTINEL): $(CODE_CONTAINER_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+ifneq ($(strip $(CODE_CONTAINER_TESTS_FILES)),)
+	$(call run_pytest,$(CODE_CONTAINER_TESTS_DIR))
+endif
 	$(call save_sentinel_file,$@)
 
 $(CODE_INTEGRATION_TESTS_SENTINEL): $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
@@ -586,7 +516,7 @@ ifneq ($(strip $(CODE_UNIT_TESTS_FILES)),)
 endif
 	$(call save_sentinel_file,$@)
 
-$(CODE_PACKAGING_SENTINEL): $(VERSION_VARS_FILE) $(CODE_PACKAGING_FILES) $(CODE_SRC_FILES) $(DOCS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR) $(CODE_PIP_CACHE_DIR)
+$(CODE_PACKAGING_SENTINEL): $(VERSION_VARS_FILE) $(CODE_PACKAGING_FILES) $(CODE_SRC_FILES) $(DOCS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_CONTAINER_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR) $(CODE_PIP_CACHE_DIR)
 	$(call package_code,$(CODE_BUILD_DIR))
 	$(call save_sentinel_file,$@)
 	@echo ""
@@ -616,8 +546,8 @@ $(DOCS_SENTINEL): $(DOCS_FILES) $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) | $
 	@$(RM) -rf $(PROJECT_DOCS_DIR)/mlruns
 	$(call save_sentinel_file,$@)
 
-$(LINTING_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_flake8,$(PROJECT_SRC_SECURINGAI_DIR) $(CODE_SECURINGAI_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
+$(LINTING_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_CONTAINER_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_flake8,$(PROJECT_SRC_DIOPTRA_DIR) $(CODE_DIOPTRA_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
 	$(call save_sentinel_file,$@)
 
 $(PRE_COMMIT_HOOKS_SENTINEL): $(PRE_COMMIT_CONFIG_FILE) | $(PROJECT_BUILD_DIR)
@@ -625,12 +555,16 @@ $(PRE_COMMIT_HOOKS_SENTINEL): $(PRE_COMMIT_CONFIG_FILE) | $(PROJECT_BUILD_DIR)
 	$(call pre_commit_cmd,install --hook-type commit-msg)
 	$(call save_sentinel_file,$@)
 
-$(TYPE_CHECK_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_mypy,$(PROJECT_SRC_SECURINGAI_DIR) $(CODE_SECURINGAI_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
+$(TYPE_CHECK_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_CONTAINER_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_mypy,$(PROJECT_SRC_DIOPTRA_DIR) $(CODE_DIOPTRA_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
 	$(call save_sentinel_file,$@)
 
 $(TOX_UNIT_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_UNIT_TESTS_FILES) | $(PROJECT_BUILD_DIR)
 	$(call run_tox,$(CONDA_ENV_NAME),)
+	$(call save_sentinel_file,$@)
+
+$(TOX_CONTAINERS_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_CONTAINER_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_tox,$(CONDA_ENV_NAME),-e containers)
 	$(call save_sentinel_file,$@)
 
 $(TOX_INTEGRATION_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
@@ -643,13 +577,11 @@ $(TOX_INTEGRATION_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_INTEGRATION_TESTS_FILES) 
 
 $(call generate_full_docker_image_recipe,MLFLOW_TRACKING,,CONTAINER_IMAGE_TAG)
 $(call generate_full_docker_image_recipe,NGINX,,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,RESTAPI,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,PYTORCH_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,PYTORCH_GPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,TENSORFLOW2_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,TENSORFLOW2_GPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
-$(call generate_legacy_full_docker_image_recipe,MLFLOW_TRACKING1_12_1,,CONTAINER_IMAGE_TAG)
-$(call generate_legacy_full_docker_image_recipe,TENSORFLOW21_CPU,CODE_PACKAGING_SENTINEL,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,RESTAPI,,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,PYTORCH_CPU,,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,PYTORCH_GPU,,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,TENSORFLOW2_CPU,,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,TENSORFLOW2_GPU,,CONTAINER_IMAGE_TAG)
 
 #################################################################################
 # Self Documenting Commands                                                     #

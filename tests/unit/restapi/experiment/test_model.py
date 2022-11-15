@@ -14,13 +14,15 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 import datetime
 
 import pytest
 import structlog
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import Experiment, ExperimentRegistrationFormData
+from dioptra.restapi.models import Experiment, ExperimentRegistrationFormData
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

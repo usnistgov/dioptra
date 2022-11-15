@@ -23,7 +23,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.rq.tasks import run_mlflow_task
+from dioptra.rq.tasks import run_mlflow_task
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -61,7 +61,7 @@ def test_run_mlflow_task(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     d: Path = tmp_path / "run_mlflow_task"
     d.mkdir(parents=True)
 
-    monkeypatch.setenv("AI_WORKDIR", str(d))
+    monkeypatch.setenv("DIOPTRA_WORKDIR", str(d))
     monkeypatch.setattr(rq, "get_current_job", mockgetcurrentjob)
 
     with monkeypatch.context() as m:

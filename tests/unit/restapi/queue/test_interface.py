@@ -14,14 +14,16 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 import datetime
 
 import pytest
 import structlog
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import Queue, QueueLock
-from mitre.securingai.restapi.queue.interface import (
+from dioptra.restapi.models import Queue, QueueLock
+from dioptra.restapi.queue.interface import (
     QueueInterface,
     QueueLockInterface,
     QueueUpdateInterface,

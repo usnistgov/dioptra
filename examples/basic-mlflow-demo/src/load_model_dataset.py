@@ -23,6 +23,7 @@ from pathlib import Path
 warnings.filterwarnings("ignore")
 
 import tensorflow as tf
+import numpy as np
 from typing import Tuple
 
 tf.compat.v1.disable_eager_execution()
@@ -155,7 +156,7 @@ def load_and_test_model(data_dir, dataset_name):
         classifier = KerasClassifier(
             model=model,
             clip_values=clip_values,
-            preprocessing=([mean_b, mean_g, mean_r], 1),
+            preprocessing=(np.array([mean_b, mean_g, mean_r]), np.array([1.0, 1.0, 1.0])),
         )
         evaluate_metrics(classifier=classifier, ds=ds)
 

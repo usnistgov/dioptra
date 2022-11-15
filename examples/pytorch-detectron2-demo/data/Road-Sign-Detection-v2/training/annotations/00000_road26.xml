@@ -1,0 +1,36 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00000_road26.png</filename>
+    <size>
+        <width>268</width>
+        <height>400</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>trafficlight</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>57</xmin>
+            <ymin>88</ymin>
+            <xmax>101</xmax>
+            <ymax>224</ymax>
+        </bndbox>
+    </object>
+    <object>
+        <name>trafficlight</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>101</xmin>
+            <ymin>86</ymin>
+            <xmax>142</xmax>
+            <ymax>217</ymax>
+        </bndbox>
+    </object>
+</annotation>

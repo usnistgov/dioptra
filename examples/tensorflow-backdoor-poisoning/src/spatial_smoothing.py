@@ -25,16 +25,14 @@ import click
 import mlflow
 import numpy as np
 import structlog
-from defenses_image_preprocessing import create_defended_dataset
 from mlflow.tracking import MlflowClient
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
-from registry_art_updated import load_wrapped_tensorflow_keras_classifier
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai import pyplugs
-from mitre.securingai.sdk.utilities.contexts import plugin_dirs
-from mitre.securingai.sdk.utilities.logging import (
+from dioptra import pyplugs
+from dioptra.sdk.utilities.contexts import plugin_dirs
+from dioptra.sdk.utilities.logging import (
     StderrLogStream,
     StdoutLogStream,
     attach_stdout_stream_handler,
@@ -43,7 +41,8 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
-_PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
+_PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
     {"name": "l_1_norm", "func": "l_1_norm"},
@@ -297,7 +296,10 @@ def init_spatial_smoothing_flow() -> Flow:
             "get_distance_metric_list",
             request=DISTANCE_METRICS,
         )
-        distance_metrics = create_defended_dataset(
+        distance_metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "defenses_image_preprocessing",
+            "create_defended_dataset",
             data_dir=testing_dir,
             distance_metrics_list=distance_metrics_list,
             def_data_dir=def_data_dir,
@@ -330,8 +332,8 @@ def init_spatial_smoothing_flow() -> Flow:
 
 
 if __name__ == "__main__":
-    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
-    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
+    log_level: str = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("DIOPTRA_JOB_LOG_AS_JSON") else False
 
     clear_logger_handlers(get_prefect_logger())
     attach_stdout_stream_handler(as_json)

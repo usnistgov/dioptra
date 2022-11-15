@@ -28,13 +28,13 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ["3.9", "3.10"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3.1.2
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -48,7 +48,7 @@ jobs:
         run: echo "::set-output name=dir::$(pip cache dir)"
 
       - name: cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.3
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini', '**/setup.cfg') }}
@@ -62,7 +62,7 @@ jobs:
         run: tox
 
       - name: archive the code coverage results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: code-coverage-report
           path: coverage

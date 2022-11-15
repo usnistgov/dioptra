@@ -1,0 +1,36 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00120_road790.png</filename>
+    <size>
+        <width>300</width>
+        <height>400</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>speedlimit</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>118</xmin>
+            <ymin>210</ymin>
+            <xmax>142</xmax>
+            <ymax>234</ymax>
+        </bndbox>
+    </object>
+    <object>
+        <name>speedlimit</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>206</xmin>
+            <ymin>269</ymin>
+            <xmax>216</xmax>
+            <ymax>280</ymax>
+        </bndbox>
+    </object>
+</annotation>

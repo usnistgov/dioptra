@@ -22,7 +22,7 @@ estimators
 
 .. include:: /_glossary_note.rst
 
-.. automodule:: securingai_builtins.estimators
+.. automodule:: dioptra_builtins.estimators
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ estimators
 keras_classifiers.py
 --------------------
 
-.. automodule:: securingai_builtins.estimators.keras_classifiers
+.. automodule:: dioptra_builtins.estimators.keras_classifiers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -38,7 +38,7 @@ keras_classifiers.py
 methods.py
 ----------
 
-.. automodule:: securingai_builtins.estimators.methods
+.. automodule:: dioptra_builtins.estimators.methods
    :members:
    :undoc-members:
    :show-inheritance:

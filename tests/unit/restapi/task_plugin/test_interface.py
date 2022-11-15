@@ -14,11 +14,13 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 import structlog
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import TaskPlugin
-from mitre.securingai.restapi.task_plugin.interface import TaskPluginInterface
+from dioptra.restapi.models import TaskPlugin
+from dioptra.restapi.task_plugin.interface import TaskPluginInterface
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

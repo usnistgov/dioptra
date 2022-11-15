@@ -27,7 +27,7 @@ import structlog
 from log import configure_stdlib_logger, configure_structlog_logger
 from prefect import Flow, Parameter, task
 
-from mitre.securingai.sdk.exceptions import TensorflowDependencyError
+from dioptra.sdk.exceptions import TensorflowDependencyError
 
 LOGGER = structlog.get_logger()
 

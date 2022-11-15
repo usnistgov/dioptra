@@ -23,7 +23,7 @@ The Basics
 .. include:: /_glossary_note.rst
 
 The primary use case for Dioptra is the running, tracking, and organizing of machine learning security experiments using the open-source technologies and architectures found in real-world AI applications.
-The Testbed supports this by providing the following capabilities,
+The Testbed supports this by providing the following capabilities.
 
 #. A containerized micro-services architecture for running and tracking experiments that is straightforward to deploy on a wide range of computational environments
 #. A modular workflow system with swappable units of work to enable low effort hypothesis testing and the rapid iteration of experiments
@@ -45,7 +45,7 @@ Docker Images
 Fundamental Units of an Experiment
 ----------------------------------
 
-The following diagram illustrates the fundamental units of a Testbed experiment and their nesting hierarchy,
+The following diagram illustrates the fundamental units of a Testbed experiment and their nesting hierarchy.
 
 .. figure:: /images/experiment-components.svg
    :alt: The diagram showing the nesting of the fundamental building blocks of an experiment. There is a large block labeled "experiment," nested within it are smaller blocks labeled "entry point", and nested within those are several, even smaller blocks labeled "task". The tasks flow from one to the next via a sequence of arrows. The entry points also flow from one to the next via a sequence of arrows.

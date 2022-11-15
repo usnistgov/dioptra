@@ -19,7 +19,7 @@
 import flask_migrate
 from flask import Flask
 
-from mitre.securingai.restapi import create_app
+from dioptra.restapi import create_app
 
 app: Flask = create_app(env="prod")
 

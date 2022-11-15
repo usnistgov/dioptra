@@ -20,24 +20,12 @@ What is Dioptra?
 
 .. include:: /_glossary_note.rst
 
-.. note::
-
-   The project was recently renamed from its internal name of **Securing AI Testbed** to **Dioptra**, and updating all usages of the old name is a work-in-progress.
-
 .. include:: overview/executive-summary.rst
-
-.. TODO: Delete this line and uncomment once repository is made public
-..
-.. Getting Started
-.. ---------------
-
-.. The testbed is available on GitHub at https://github.com/usnistgov/dioptra.
-.. Complete documentation, including a Quick Start guide, can be found here: [url stub]
 
 Points of Contact
 -----------------
 
-Email us: ai-nccoe@nist.gov
+Email us: dioptra@nist.gov
 
 
 .. toctree::
@@ -103,6 +91,4 @@ Email us: ai-nccoe@nist.gov
 
    dev-guide/index
    dev-guide/programming-style
-   dev-guide/design-architecture
-   dev-guide/design-restapi
-   dev-guide/design-sdk
+   dev-guide/restapi

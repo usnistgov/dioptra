@@ -1,6 +1,6 @@
 # Tensorflow MNIST Classifier demo
 
-![Testbed architecture diagram](securing_ai_lab_architecture.png)
+![Dioptra architecture diagram](dioptra_architecture.png)
 
 This demo provides a practical example that you can run on your personal computer to see how Dioptra can be used to run a simple experiment on the transferability of the fast gradient method (FGM) evasion attack between two neural network architectures.
 It can be used as a basic template for crafting your own custom scripts to run within the testbed.

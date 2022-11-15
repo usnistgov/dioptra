@@ -372,6 +372,7 @@ pip-delete-this-directory.txt
 __pycache__/
 develop-eggs/
 docs/_build/
+docs/source/_build/
 eggs/
 [eE][nN][vV]/
 env.bak/
@@ -398,6 +399,7 @@ vignettes/*.pdf
 
 # track these files, if they exist
 !.github/
+!.github/env
 !.gitlab/
 !.clog.toml
 !.cz-config.js

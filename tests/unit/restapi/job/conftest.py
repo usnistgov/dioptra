@@ -14,11 +14,13 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 import datetime
 
 import pytest
 
-from mitre.securingai.restapi.models import Queue
+from dioptra.restapi.models import Queue
 
 
 @pytest.fixture(autouse=True)

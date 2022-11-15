@@ -14,6 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 from typing import Any, BinaryIO, Dict
 
 import pytest
@@ -22,8 +24,8 @@ from flask import Flask
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
-from mitre.securingai.restapi.models import TaskPlugin, TaskPluginUploadForm
-from mitre.securingai.restapi.task_plugin.schema import (
+from dioptra.restapi.models import TaskPlugin, TaskPluginUploadForm
+from dioptra.restapi.task_plugin.schema import (
     TaskPluginSchema,
     TaskPluginUploadFormSchema,
 )
@@ -39,7 +41,7 @@ def task_plugin_upload_form(
         form = TaskPluginUploadForm(
             data={
                 "task_plugin_name": "new_plugin_one",
-                "collection": "securingai_custom",
+                "collection": "dioptra_custom",
                 "task_plugin_file": FileStorage(
                     stream=task_plugin_archive,
                     filename="task_plugin_new_package.tar.gz",
@@ -79,13 +81,13 @@ def test_TaskPluginSchema_load_works(
     task_plugin: TaskPlugin = task_plugin_schema.load(
         {
             "taskPluginName": "new_plugin_one",
-            "collection": "securingai_custom",
+            "collection": "dioptra_custom",
             "modules": ["__init__.py", "plugin_module.py"],
         }
     )
 
     assert task_plugin.task_plugin_name == "new_plugin_one"
-    assert task_plugin.collection == "securingai_custom"
+    assert task_plugin.collection == "dioptra_custom"
     assert task_plugin.modules == ["__init__.py", "plugin_module.py"]
 
 
@@ -94,13 +96,13 @@ def test_TaskPluginSchema_dump_works(
 ) -> None:
     task_plugin: TaskPlugin = TaskPlugin(
         task_plugin_name="new_plugin_one",
-        collection="securingai_custom",
+        collection="dioptra_custom",
         modules=["__init__.py", "plugin_module.py"],
     )
     task_plugin_serialized: Dict[str, Any] = task_plugin_schema.dump(task_plugin)
 
     assert task_plugin_serialized["taskPluginName"] == "new_plugin_one"
-    assert task_plugin_serialized["collection"] == "securingai_custom"
+    assert task_plugin_serialized["collection"] == "dioptra_custom"
     assert task_plugin_serialized["modules"] == ["__init__.py", "plugin_module.py"]
 
 
@@ -114,7 +116,7 @@ def test_TaskPluginUploadFormSchema_dump_works(
     ] = task_plugin_upload_form_schema.dump(task_plugin_upload_form)
 
     assert task_plugin_upload_form_serialized["task_plugin_name"] == "new_plugin_one"
-    assert task_plugin_upload_form_serialized["collection"] == "securingai_custom"
+    assert task_plugin_upload_form_serialized["collection"] == "dioptra_custom"
     assert (
         task_plugin_upload_form_serialized["task_plugin_file"].stream
         == task_plugin_archive

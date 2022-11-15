@@ -24,24 +24,14 @@ from typing import Any, Dict, List, Optional
 import click
 import mlflow
 import structlog
-from attacks_poison_updated import create_adv_embedding_model
-from data_tensorflow_updated import create_image_dataset
-from estimators_keras_classifiers_updated import init_classifier
 from mlflow.tracking import MlflowClient
 from prefect import Flow, Parameter, case
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-from tasks import (
-    evaluate_metrics_tensorflow,
-    get_model_callbacks,
-    get_optimizer,
-    get_performance_metrics,
-)
-from tracking_mlflow_updated import add_model_manually_to_registry
 
-from mitre.securingai import pyplugs
-from mitre.securingai.sdk.utilities.contexts import plugin_dirs
-from mitre.securingai.sdk.utilities.logging import (
+from dioptra import pyplugs
+from dioptra.sdk.utilities.contexts import plugin_dirs
+from dioptra.sdk.utilities.logging import (
     StderrLogStream,
     StdoutLogStream,
     attach_stdout_stream_handler,
@@ -50,7 +40,8 @@ from mitre.securingai.sdk.utilities.logging import (
     set_logging_level,
 )
 
-_PLUGINS_IMPORT_PATH: str = "securingai_builtins"
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
+_PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 CALLBACKS: List[Dict[str, Any]] = [
     {
         "name": "EarlyStopping",
@@ -395,19 +386,33 @@ def init_train_flow() -> Flow:
                 dataset_seed=dataset_seed,
             ),
         )
-        optimizer = get_optimizer(
-            optimizer_name,
+        optimizer = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "tensorflow",
+            "get_optimizer",
+            optimizer=optimizer_name,
             learning_rate=learning_rate,
             upstream_tasks=[init_tensorflow_results],
         )
-        metrics = get_performance_metrics(
-            PERFORMANCE_METRICS, upstream_tasks=[init_tensorflow_results]
+        metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "tensorflow",
+            "get_performance_metrics",
+            metrics_list=PERFORMANCE_METRICS,
+            upstream_tasks=[init_tensorflow_results],
         )
-        callbacks_list = get_model_callbacks(
-            CALLBACKS, upstream_tasks=[init_tensorflow_results]
+        callbacks_list = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "tensorflow",
+            "get_model_callbacks",
+            callbacks_list=CALLBACKS,
+            upstream_tasks=[init_tensorflow_results],
         )
 
-        training_ds = create_image_dataset(
+        training_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
             data_dir=training_dir,
             subset="training",
             image_size=image_size,
@@ -419,7 +424,10 @@ def init_train_flow() -> Flow:
             imagenet_preprocessing=imagenet_preprocessing,
             set_to_max_size=True,
         )
-        validation_ds = create_image_dataset(
+        validation_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
             data_dir=training_dir,
             subset="validation",
             image_size=image_size,
@@ -430,7 +438,10 @@ def init_train_flow() -> Flow:
             rescale=rescale,
             imagenet_preprocessing=imagenet_preprocessing,
         )
-        testing_ds = create_image_dataset(
+        testing_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
             data_dir=testing_dir,
             subset=None,
             image_size=image_size,
@@ -447,15 +458,10 @@ def init_train_flow() -> Flow:
             "get_n_classes_from_directory_iterator",
             ds=training_ds,
         )
-
-        # Add keras wrapper and set the image preprocessing settings there.
-        # Disable imagenet preprocessing on training dataset.
-        # pipe all dependencies into a new attack pipeline (inport and define here first)
-        # In this attack pipeline, create poisoned attacker and then return the corrupted model.
-        # Update mlflow
-        # Update example
-
-        classifier = init_classifier(
+        classifier = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "estimators_keras_classifiers",
+            "init_classifier",
             model_architecture=model_architecture,
             optimizer=optimizer,
             metrics=metrics,
@@ -464,7 +470,10 @@ def init_train_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
         )
 
-        classifier = create_adv_embedding_model(
+        classifier = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "attacks_poison",
+            "create_adv_embedding_model",
             model=classifier,
             training_ds=training_ds,
             target_class_id=target_class_id,
@@ -480,8 +489,12 @@ def init_train_flow() -> Flow:
             metrics=metrics,
         )
 
-        classifier_performance_metrics = evaluate_metrics_tensorflow(
-            classifier=classifier, dataset=testing_ds
+        classifier_performance_metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "tensorflow",
+            "evaluate_metrics_tensorflow",
+            classifier=classifier,
+            dataset=testing_ds,
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
@@ -489,11 +502,14 @@ def init_train_flow() -> Flow:
             "log_metrics",
             metrics=classifier_performance_metrics,
         )
-        add_model_manually_to_registry(
-            active_run=active_run,
+        model_storage = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "tensorflow",
+            "register_init_model",
             model=classifier,
-            artifact_path="model",
-            model_name=register_model_name,
+            active_run=active_run,
+            name=register_model_name,
+            model_dir="model",
         )
     return flow
 
@@ -516,8 +532,8 @@ def download_image_archive(
 
 
 if __name__ == "__main__":
-    log_level: str = os.getenv("AI_JOB_LOG_LEVEL", default="INFO")
-    as_json: bool = True if os.getenv("AI_JOB_LOG_AS_JSON") else False
+    log_level: str = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")
+    as_json: bool = True if os.getenv("DIOPTRA_JOB_LOG_AS_JSON") else False
 
     clear_logger_handlers(get_prefect_logger())
     attach_stdout_stream_handler(as_json)

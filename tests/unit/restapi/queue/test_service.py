@@ -14,6 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 import datetime
 from typing import List, Optional, Set
 
@@ -24,13 +26,13 @@ from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
-from mitre.securingai.restapi.models import (
+from dioptra.restapi.models import (
     Queue,
     QueueRegistrationForm,
     QueueRegistrationFormData,
 )
-from mitre.securingai.restapi.queue.errors import QueueAlreadyExistsError
-from mitre.securingai.restapi.queue.service import QueueService
+from dioptra.restapi.queue.errors import QueueAlreadyExistsError
+from dioptra.restapi.queue.service import QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

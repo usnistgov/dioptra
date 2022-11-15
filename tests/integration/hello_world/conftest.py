@@ -21,7 +21,7 @@ from subprocess import CalledProcessError
 import pytest
 import testinfra
 
-from tests.integration.hello_world.utils import TestbedHosts
+from tests.integration.hello_world.utils import DioptraHosts
 from tests.integration.utils import (
     destroy_volumes,
     initialize_minio,
@@ -37,12 +37,12 @@ WORKFLOWS_DIR = CONFTEST_DIR / "workflows"
 MINIO_ENDPOINT_ALIAS = "minio"
 MINIO_ROOT_USER = "minio"
 MINIO_ROOT_PASSWORD = "minio123"
-PLUGINS_BUILTINS_DIR = "securingai_builtins"
+PLUGINS_BUILTINS_DIR = "dioptra_builtins"
 
 
 @pytest.fixture
 def workflows_tar_gz(tmp_path_factory):
-    hello_world_dir = tmp_path_factory.mktemp("hello_world", numbered=False)
+    hello_world_dir = tmp_path_factory.mktemp("hello_world")
 
     workflows_tar_gz_path: Path = hello_world_dir / "workflows.tar.gz"
 
@@ -58,7 +58,7 @@ def workflows_tar_gz(tmp_path_factory):
 
 
 @pytest.fixture
-def testbed_hosts(request, docker_client):
+def dioptra_hosts(request, docker_client):
     # Declare path to docker-compose.yml file
     docker_compose_file: Path = CONFTEST_DIR / "docker-compose.yml"
 
@@ -107,7 +107,7 @@ def testbed_hosts(request, docker_client):
         )
 
         # return host connection to each service
-        yield TestbedHosts(
+        yield DioptraHosts(
             minio=testinfra.get_host("docker://minio"),
             mlflow_tracking=testinfra.get_host("docker://mlflow-tracking"),
             nginx=testinfra.get_host("docker://nginx"),

@@ -1,0 +1,494 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+#
+# Part of this script is adapted from the work
+# https://github.com/jupyter/docker-stacks/blob/6bf5922f5a511b4ff28f23783a716df75b8b8d4b/base-notebook/Dockerfile.
+# See copyright below.
+#
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+#
+# Neither the name of the Jupyter Development Team nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+######################################################################################################
+# Base images
+######################################################################################################
+
+ARG BASE_IMAGE=public-base
+
+# -- Base image (public-facing) ----------------------------------------------------------------------
+
+FROM ubuntu:focal AS public-base
+
+USER root
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV LANG C.UTF-8
+ENV LANGUAGE C.UTF-8
+ENV LC_ALL C.UTF-8
+
+RUN apt-get update && \
+    echo "===> Upgrade existing packages...." && \
+    apt-get -y upgrade && \
+    echo "===> Installing ca-certificates curl git libbz2-1.0 liblz4-1 liblzma5 libsnappy1v5 libzstd1 unzip wget zlib1g...." && \
+    apt-get install -yq --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    libbz2-1.0 \
+    libgl1 \
+    liblz4-1 \
+    liblzma5 \
+    libsnappy1v5 \
+    libzstd1 \
+    unzip \
+    wget \
+    zlib1g && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# -- Base image (includes corporate certs) -----------------------------------------------------------
+
+FROM public-base AS mitre-base
+
+# The MITRE certs are necessary to install in order for wget to work
+ADD http://pki.mitre.org/MITRE%20BA%20ROOT.crt /usr/local/share/ca-certificates/MITRE-BA-ROOT.crt
+ADD http://pki.mitre.org/MITRE%20BA%20NPE%20CA-3%281%29.crt /usr/local/share/ca-certificates/MITRE-BA-NPE-CA-3-1.crt
+ADD http://pki.mitre.org/MITRE-chain.txt /usr/local/share/ca-certificates/MITRE-chain.pem
+ADD http://pki.mitre.org/ZScaler_Root.crt /usr/local/share/ca-certificates/ZScaler_Root.crt
+
+RUN cat /etc/ssl/certs/ca-certificates.crt /usr/local/share/ca-certificates/MITRE-chain.pem /usr/local/share/ca-certificates/ZScaler_Root.crt >/etc/ssl/certs/ca-certificates-plus-mitre.pem && \
+    /usr/sbin/update-ca-certificates
+
+ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates-plus-mitre.pem
+
+# -- Base image (includes compiler toolchain) --------------------------------------------------------
+
+FROM ${BASE_IMAGE} AS build-base
+
+RUN echo "===> Installing compilers...." && \
+    apt-get update && \
+    apt-get install -yq --no-install-recommends build-essential swig
+
+# -- Base image (includes system Python with build package) ------------------------------------------
+
+FROM ${BASE_IMAGE} AS python-base
+
+RUN echo "===> Installing system Python...." && \
+    apt-get update && \
+    apt-get install -yq --no-install-recommends \
+    python3.9 \
+    python3.9-venv \
+    python3-pip
+
+RUN echo "===> Installing latest version of pip...." && \
+    python3.9 -m pip install --upgrade pip && \
+    echo "===> Installing build package...." && \
+    python3.9 -m pip install build
+
+# -- Base image (includes argbash tool) --------------------------------------------------------------
+
+FROM matejak/argbash:latest AS argbash-base
+
+RUN mkdir -p /shellscripts
+
+# -- Base image (includes yq tool) -------------------------------------------------------------------
+
+FROM ${BASE_IMAGE} AS yq-base
+
+ARG YQ_VERSION=v4.25.1
+ARG YQ_BINARY=yq_linux_amd64
+
+RUN mkdir -p /conda-env && \
+    wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY} && \
+    chmod 0755 /usr/local/bin/yq
+
+######################################################################################################
+# Build
+######################################################################################################
+
+# -- Build: render bash script templates -------------------------------------------------------------
+
+FROM argbash-base AS build-bash-scripts
+
+COPY --chown=root:root --chmod=0755 docker/shellscripts/conda-env.m4 /templates/conda-env.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-mlflow-tracking.m4 /templates/entrypoint-mlflow-tracking.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-nginx.m4 /templates/entrypoint-nginx.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-restapi.m4 /templates/entrypoint-restapi.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-worker.m4 /templates/entrypoint-worker.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/fix-permissions.m4 /templates/fix-permissions.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/init-copy.m4 /templates/init-copy.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/init-git-clone.m4 /templates/init-git-clone.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/init-set-permissions.m4 /templates/init-set-permissions.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/parse-uri.m4 /templates/parse-uri.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/render-conda-env.m4 /templates/render-conda-env.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/run-mlflow-job.m4 /templates/run-mlflow-job.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-cp.m4 /templates/s3-cp.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-mb.m4 /templates/s3-mb.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-sync.m4 /templates/s3-sync.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/secure-container.m4 /templates/secure-container.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/unpack-archive.m4 /templates/unpack-archive.m4
+
+RUN argbash /templates/conda-env.m4 -o /shellscripts/conda-env.sh && \
+    argbash /templates/entrypoint-mlflow-tracking.m4 -o /shellscripts/entrypoint-mlflow-tracking.sh && \
+    argbash /templates/entrypoint-nginx.m4 -o /shellscripts/entrypoint-nginx.sh && \
+    argbash /templates/entrypoint-restapi.m4 -o /shellscripts/entrypoint-restapi.sh && \
+    argbash /templates/entrypoint-worker.m4 -o /shellscripts/entrypoint-worker.sh && \
+    argbash /templates/fix-permissions.m4 -o /shellscripts/fix-permissions.sh && \
+    argbash /templates/init-copy.m4 -o /shellscripts/init-copy.sh && \
+    argbash /templates/init-git-clone.m4 -o /shellscripts/init-git-clone.sh && \
+    argbash /templates/init-set-permissions.m4 -o /shellscripts/init-set-permissions.sh && \
+    argbash /templates/parse-uri.m4 -o /shellscripts/parse-uri.sh && \
+    argbash /templates/render-conda-env.m4 -o /shellscripts/render-conda-env.sh && \
+    argbash /templates/run-mlflow-job.m4 -o /shellscripts/run-mlflow-job.sh && \
+    argbash /templates/s3-cp.m4 -o /shellscripts/s3-cp.sh && \
+    argbash /templates/s3-mb.m4 -o /shellscripts/s3-mb.sh && \
+    argbash /templates/s3-sync.m4 -o /shellscripts/s3-sync.sh && \
+    argbash /templates/secure-container.m4 -o /shellscripts/secure-container.sh && \
+    argbash /templates/unpack-archive.m4 -o /shellscripts/unpack-archive.sh
+
+# -- Build: render environment.yml templates ---------------------------------------------------------
+
+FROM yq-base AS build-environment-yml-files
+
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/render-conda-env.sh /usr/local/bin/render-conda-env.sh
+COPY --chown=root:root --chmod=0644 docker/conda-env/environment-mlflow-tracking.yml /templates/environment-mlflow-tracking.yml
+COPY --chown=root:root --chmod=0644 docker/conda-env/environment-pytorch-cpu.yml /templates/environment-pytorch-cpu.yml
+COPY --chown=root:root --chmod=0644 docker/conda-env/environment-pytorch-gpu.yml /templates/environment-pytorch-gpu.yml
+COPY --chown=root:root --chmod=0644 docker/conda-env/environment-restapi.yml /templates/environment-restapi.yml
+COPY --chown=root:root --chmod=0644 docker/conda-env/environment-tensorflow2-cpu.yml /templates/environment-tensorflow2-cpu.yml
+COPY --chown=root:root --chmod=0644 docker/conda-env/environment-tensorflow2-gpu.yml /templates/environment-tensorflow2-gpu.yml
+
+ARG PROJECT_COMPONENT=tensorflow2-cpu
+ARG IBM_ART_VERSION
+ARG MLFLOW_VERSION
+ARG PREFECT_VERSION
+ARG PYTHON_VERSION
+ARG PYTORCH_CUDA_VERSION
+ARG PYTORCH_MAJOR_MINOR_VERSION
+ARG PYTORCH_TORCHAUDIO_VERSION
+ARG PYTORCH_TORCHVISION_VERSION
+ARG PYTORCH_VERSION
+ARG SKLEARN_VERSION
+ARG TENSORFLOW_VERSION
+
+RUN /usr/local/bin/render-conda-env.sh \
+    --file "/templates/environment-${PROJECT_COMPONENT}.yml" \
+    --output "/conda-env/environment-${PROJECT_COMPONENT}.yml" \
+    --ibm-art-version "${IBM_ART_VERSION}" \
+    --mlflow-version "${MLFLOW_VERSION}" \
+    --prefect-version "${PREFECT_VERSION}" \
+    --python-version "${PYTHON_VERSION}" \
+    --pytorch-cuda-version "${PYTORCH_CUDA_VERSION}" \
+    --pytorch-major-minor-version "${PYTORCH_MAJOR_MINOR_VERSION}" \
+    --pytorch-torchaudio-version "${PYTORCH_TORCHAUDIO_VERSION}" \
+    --pytorch-torchvision-version "${PYTORCH_TORCHVISION_VERSION}" \
+    --pytorch-version "${PYTORCH_VERSION}" \
+    --sklearn-version "${SKLEARN_VERSION}" \
+    --tensorflow-version "${TENSORFLOW_VERSION}"
+
+# -- Build: copy files -------------------------------------------------------------------------------
+
+FROM ${BASE_IMAGE} AS copy-files
+
+COPY --chown=root:root --chmod=0644 docker/configs/aws-config /files/aws-config
+COPY --chown=root:root --chmod=0644 docker/configs/bash.bashrc /files/bash.bashrc
+COPY --chown=root:root --chmod=0644 docker/configs/build.pip.conf /files/build.pip.conf
+COPY --chown=root:root --chmod=0644 docker/configs/dot-condarc /files/dot-condarc
+COPY --chown=root:root --chmod=0644 docker/conda-env/environment-pinned-tensorflow2-cpu.yml /files/environment-pinned-tensorflow2-cpu.yml
+
+# -- Build: download and install aws-cli -------------------------------------------------------------
+
+FROM ${BASE_IMAGE} AS install-awscli
+
+ARG AWSCLI_DOWNLOAD_URL=https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+ARG AWSCLI_INSTALL_DIR=/opt/aws-cli
+ARG AWSCLI_BIN_DIR=/usr/local/bin
+
+RUN cd /tmp && \
+    wget -qO /tmp/awscliv2.zip ${AWSCLI_DOWNLOAD_URL} && \
+    unzip awscliv2.zip && \
+    rm /tmp/awscliv2.zip && \
+    ./aws/install --install-dir ${AWSCLI_INSTALL_DIR} --bin-dir ${AWSCLI_BIN_DIR} && \
+    rm -rf /tmp/aws
+
+# -- Build: download and install miniconda -----------------------------------------------------------
+
+FROM ${BASE_IMAGE} AS install-miniconda
+
+ARG CONDA_DIR=/opt/conda
+ARG MINICONDA_VERSION
+ARG MINICONDA3_PREFIX
+
+RUN echo "===> Installing Miniconda3 version ${MINICONDA_VERSION} to ${CONDA_DIR}...." && \
+    cd /tmp && \
+    wget -qO "/tmp/${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" "https://repo.anaconda.com/miniconda/${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh" && \
+    bash ${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p ${CONDA_DIR} && \
+    rm ${MINICONDA3_PREFIX}${MINICONDA_VERSION}-Linux-x86_64.sh && \
+    ${CONDA_DIR}/condabin/conda install -q -y conda && \
+    ${CONDA_DIR}/condabin/conda install -q -y pip && \
+    ${CONDA_DIR}/condabin/conda update -q -y --all && \
+    chmod 0775 ${CONDA_DIR} && \
+    find ${CONDA_DIR} -type d -exec chmod 0775 "{}" "+"
+
+# -- Build: create dioptra wheel ---------------------------------------------------------------------
+
+FROM python-base AS build-dioptra-wheel
+
+WORKDIR /code
+
+COPY --chown=root:root --chmod=0644 LICENSE /code/LICENSE
+COPY --chown=root:root --chmod=0644 MANIFEST.in /code/MANIFEST.in
+COPY --chown=root:root --chmod=0644 pyproject.toml /code/pyproject.toml
+COPY --chown=root:root --chmod=0644 README.md /code/README.md
+COPY --chown=root:root --chmod=0644 setup.cfg /code/setup.cfg
+COPY --chown=root:root --chmod=0644 setup.py /code/setup.py
+COPY --chown=root:root --chmod=0644 tox.ini /code/tox.ini
+COPY --chown=root:root --chmod=0644 docs/make.bat /code/docs/make.bat
+COPY --chown=root:root --chmod=0644 docs/Makefile /code/docs/Makefile
+COPY --chown=root:root docs/assets /code/docs/assets
+COPY --chown=root:root docs/source /code/docs/source
+COPY --chown=root:root src/dioptra /code/src/dioptra
+COPY --chown=root:root tests /code/tests
+
+RUN find /code -type d -exec chmod 0755 "{}" "+" && \
+    find /code/docs/assets -type f -exec chmod 0644 "{}" "+" && \
+    find /code/docs/source -type f -exec chmod 0644 "{}" "+" && \
+    find /code/src -type f -exec chmod 0644 "{}" "+" && \
+    find /code/tests -type f -exec chmod 0644 "{}" "+" && \
+    echo "===> Building the dioptra wheel...." && \
+    python3.9 -m build -sw
+
+# -- Build: create conda virtual environment ---------------------------------------------------------
+
+FROM build-base AS build-miniconda-venv
+
+ARG CONDA_DIR=/opt/conda
+ARG PROJECT_COMPONENT=tensorflow2-cpu
+
+COPY --from=install-miniconda --chown=root:root ${CONDA_DIR} ${CONDA_DIR}
+COPY --from=build-environment-yml-files --chown=root:root --chmod=0644 /conda-env/environment-${PROJECT_COMPONENT}.yml /tmp/environment.yml
+COPY --from=copy-files --chown=root:root --chmod=0644 /files/build.pip.conf /etc/pip.conf
+COPY --from=copy-files --chown=root:root --chmod=0644 /files/dot-condarc /etc/conda/condarc
+
+RUN echo "===> Building Miniconda virtual environment with latest version of dependencies...." && \
+    ${CONDA_DIR}/condabin/conda env create --file /tmp/environment.yml
+
+COPY --from=build-dioptra-wheel --chown=root:root --chmod=0644 /code/dist /code/dist
+
+ARG CODE_PKG_VERSION
+ARG DIOPTRA_CONDA_ENV=dioptra
+
+RUN echo "===> Installing Dioptra code module...." && \
+    ${CONDA_DIR}/condabin/conda run -n ${DIOPTRA_CONDA_ENV} \
+    pip install --no-cache-dir --no-deps \
+    /code/dist/dioptra-${CODE_PKG_VERSION}-py3-none-any.whl && \
+    ${CONDA_DIR}/condabin/conda clean -afy
+
+RUN echo "===> Cleaning/pruning directories...." && \
+    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+    find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
+    find ${CONDA_DIR} -name "__pycache__" -type d -exec rm -rf "{}" "+" && \
+    find ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/site-packages/scipy -name "tests" -type d -exec rm -rf "{}" "+" && \
+    find ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/site-packages/numpy -name "tests" -type d -exec rm -rf "{}" "+" && \
+    find ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/site-packages/pandas -name "tests" -type d -exec rm -rf "{}" "+" && \
+    find ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/site-packages -name "*.pyx" -delete && \
+    rm -rf ${CONDA_DIR}/conda-meta && \
+    rm -rf ${CONDA_DIR}/include && \
+    rm -rf ${CONDA_DIR}/lib/python3.[0-9]/site-packages/pip && \
+    rm -rf ${CONDA_DIR}/lib/python3.[0-9]/ensurepip && \
+    rm -rf ${CONDA_DIR}/lib/python3.[0-9]/idlelib && \
+    rm -rf ${CONDA_DIR}/lib/libpython3.[0-9].so.[0-9].[0-9] && \
+    rm -rf ${CONDA_DIR}/lib/lib[atlu][b]san.so.[0-9].[0-9].[0-9] && \
+    rm -rf ${CONDA_DIR}/bin/x86_64-conda-linux-gnu-ld && \
+    rm -rf ${CONDA_DIR}/bin/sqlite3 && \
+    rm -rf ${CONDA_DIR}/bin/openssl && \
+    rm -rf ${CONDA_DIR}/share/terminfo && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/include && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/site-packages/pip && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/ensurepip && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/idlelib && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/lib[atlu][b]san.so.[0-9].[0-9].[0-9] && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/bin/x86_64-conda-linux-gnu-ld && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/bin/sqlite3 && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/bin/openssl && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/share/terminfo
+
+# -- Build: create conda virtual environment (pinned deps) -------------------------------------------
+
+FROM build-base AS build-miniconda-venv-pinned
+
+ARG CONDA_DIR=/opt/conda
+ARG PROJECT_COMPONENT=tensorflow2-cpu
+
+COPY --from=install-miniconda --chown=root:root ${CONDA_DIR} ${CONDA_DIR}
+COPY --from=copy-files --chown=root:root --chmod=0644 /files/build.pip.conf /etc/pip.conf
+COPY --from=copy-files --chown=root:root --chmod=0644 /files/dot-condarc /etc/conda/condarc
+COPY --from=copy-files --chown=root:root --chmod=0644 /files/environment-pinned-${PROJECT_COMPONENT}.yml /tmp/environment.yml
+
+RUN echo "===> Building Miniconda virtual environment with pinned versions of dependencies...." && \
+    ${CONDA_DIR}/condabin/conda env create --file /tmp/environment.yml
+
+COPY --from=build-dioptra-wheel --chown=root:root --chmod=0644 /code/dist /code/dist
+
+ARG CODE_PKG_VERSION
+ARG DIOPTRA_CONDA_ENV=dioptra
+
+RUN echo "===> Installing Dioptra code module...." && \
+    ${CONDA_DIR}/condabin/conda run -n ${DIOPTRA_CONDA_ENV} \
+    pip install --no-cache-dir --no-deps \
+    /code/dist/dioptra-${CODE_PKG_VERSION}-py3-none-any.whl && \
+    ${CONDA_DIR}/condabin/conda clean -afy
+
+ARG DIOPTRA_CONDA_ENV=dioptra
+
+RUN echo "===> Cleaning/pruning directories...." && \
+    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+    find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete && \
+    find ${CONDA_DIR} -name "__pycache__" -type d -exec rm -rf "{}" "+" && \
+    find ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/site-packages/scipy -name "tests" -type d -exec rm -rf "{}" "+" && \
+    find ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/site-packages/numpy -name "tests" -type d -exec rm -rf "{}" "+" && \
+    find ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/site-packages/pandas -name "tests" -type d -exec rm -rf "{}" "+" && \
+    find ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/site-packages -name "*.pyx" -delete && \
+    rm -rf ${CONDA_DIR}/conda-meta && \
+    rm -rf ${CONDA_DIR}/include && \
+    rm -rf ${CONDA_DIR}/lib/python3.[0-9]/site-packages/pip && \
+    rm -rf ${CONDA_DIR}/lib/python3.[0-9]/ensurepip && \
+    rm -rf ${CONDA_DIR}/lib/python3.[0-9]/idlelib && \
+    rm -rf ${CONDA_DIR}/lib/libpython3.[0-9].so.[0-9].[0-9] && \
+    rm -rf ${CONDA_DIR}/lib/lib[atlu][b]san.so.[0-9].[0-9].[0-9] && \
+    rm -rf ${CONDA_DIR}/bin/x86_64-conda-linux-gnu-ld && \
+    rm -rf ${CONDA_DIR}/bin/sqlite3 && \
+    rm -rf ${CONDA_DIR}/bin/openssl && \
+    rm -rf ${CONDA_DIR}/share/terminfo && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/include && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/site-packages/pip && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/ensurepip && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/python3.[0-9]/idlelib && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/lib/lib[atlu][b]san.so.[0-9].[0-9].[0-9] && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/bin/x86_64-conda-linux-gnu-ld && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/bin/sqlite3 && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/bin/openssl && \
+    rm -rf ${CONDA_DIR}/envs/${DIOPTRA_CONDA_ENV}/share/terminfo
+
+######################################################################################################
+# Target images
+######################################################################################################
+
+# -- Target image: add non-root user and dirs, add scripts, add configs, install aws-cli -------------
+
+FROM ${BASE_IMAGE} AS image-non-root-user-configs-scripts
+
+ARG AWSCLI_INSTALL_DIR=/opt/aws-cli
+ARG AWSCLI_BIN_DIR=/usr/local/bin
+
+COPY --from=install-awscli --chown=root:root ${AWSCLI_INSTALL_DIR} ${AWSCLI_INSTALL_DIR}
+COPY --from=install-awscli --chown=root:root ${AWSCLI_BIN_DIR} ${AWSCLI_BIN_DIR}
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/fix-permissions.sh /usr/local/bin/fix-permissions.sh
+
+ARG CONDA_DIR=/opt/conda
+ARG DIOPTRA_USER=dioptra
+ARG DIOPTRA_UID=39000
+ARG DIOPTRA_GID=100
+ARG DIOPTRA_WORKDIR=/work
+
+RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
+    useradd -u ${DIOPTRA_UID} -N -m -s /bin/bash -c "Dioptra user" ${DIOPTRA_USER} && \
+    mkdir -p /home/${DIOPTRA_USER}/.aws/cli && \
+    mkdir -p /home/${DIOPTRA_USER}/.aws/config && \
+    mkdir -p /home/${DIOPTRA_USER}/.conda && \
+    mkdir -p ${DIOPTRA_WORKDIR}/plugins && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /home/${DIOPTRA_USER} && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} ${DIOPTRA_WORKDIR} && \
+    chmod g+w /etc/passwd && \
+    ln -s ${CONDA_DIR}/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    fix-permissions.sh /home/${DIOPTRA_USER} ${DIOPTRA_WORKDIR}
+
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/conda-env.sh /usr/local/bin/conda-env.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/entrypoint-worker.sh /usr/local/bin/entrypoint.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/init-copy.sh /usr/local/bin/init-copy.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/init-git-clone.sh /usr/local/bin/init-git-clone.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/init-set-permissions.sh /usr/local/bin/init-set-permissions.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/parse-uri.sh /usr/local/bin/parse-uri.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/run-mlflow-job.sh /usr/local/bin/run-mlflow-job.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/s3-cp.sh /usr/local/bin/s3-cp.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/s3-mb.sh /usr/local/bin/s3-mb.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/s3-sync.sh /usr/local/bin/s3-sync.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/secure-container.sh /usr/local/bin/secure-container.sh
+COPY --from=build-bash-scripts --chown=root:root --chmod=0755 /shellscripts/unpack-archive.sh /usr/local/bin/unpack-archive.sh
+COPY --from=copy-files --chown=root:root --chmod=0644 /files/bash.bashrc /etc/bash.bashrc
+COPY --from=copy-files --chown=root:root --chmod=0644 /files/dot-condarc /etc/conda/condarc
+COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/aws-config /home/${DIOPTRA_USER}/.aws/config/aws-config
+
+ENV CONDA_DIR ${CONDA_DIR}
+ENV DIOPTRA_USER ${DIOPTRA_USER}
+ENV DIOPTRA_UID ${DIOPTRA_UID}
+ENV DIOPTRA_GID ${DIOPTRA_GID}
+ENV DIOPTRA_RESTAPI_ENV prod
+ENV DIOPTRA_WORKDIR ${DIOPTRA_WORKDIR}
+ENV DIOPTRA_PLUGIN_DIR ${DIOPTRA_WORKDIR}/plugins
+
+USER ${DIOPTRA_UID}
+WORKDIR ${DIOPTRA_WORKDIR}
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# -- Target image: install miniconda with conda virtual environment (pinned deps) --------------------
+
+FROM image-non-root-user-configs-scripts AS image-pinned-deps
+
+ARG CONDA_DIR=/opt/conda
+ARG DIOPTRA_UID=39000
+ARG DIOPTRA_GID=100
+
+COPY --from=build-miniconda-venv-pinned --chown=${DIOPTRA_UID}:${DIOPTRA_GID} ${CONDA_DIR} ${CONDA_DIR}
+
+# -- Target image: install miniconda with conda virtual environment (pinned deps) --------------------
+
+FROM image-non-root-user-configs-scripts AS image-latest-deps
+
+ARG CONDA_DIR=/opt/conda
+ARG DIOPTRA_UID=39000
+ARG DIOPTRA_GID=100
+
+COPY --from=build-miniconda-venv --chown=${DIOPTRA_UID}:${DIOPTRA_GID} ${CONDA_DIR} ${CONDA_DIR}

@@ -21,7 +21,7 @@ from subprocess import CalledProcessError
 import pytest
 import testinfra
 
-from tests.integration.tf_mnist_classifier.utils import TestbedHosts
+from tests.integration.tf_mnist_classifier.utils import DioptraHosts
 from tests.integration.utils import (
     destroy_volumes,
     initialize_minio,
@@ -36,18 +36,18 @@ from tests.integration.utils import (
 CONFTEST_DIR = Path(__file__).absolute().parent
 WORKFLOWS_DIR = CONFTEST_DIR / "workflows"
 CUSTOM_PLUGINS_EVALUATION_DIR = (
-    CONFTEST_DIR / "task_plugins" / "securingai_custom" / "evaluation"
+    CONFTEST_DIR / "task_plugins" / "dioptra_custom" / "evaluation"
 )
 MINIO_ENDPOINT_ALIAS = "minio"
 MINIO_ROOT_USER = "minio"
 MINIO_ROOT_PASSWORD = "minio123"
-PLUGINS_BUILTINS_DIR = "securingai_builtins"
+PLUGINS_BUILTINS_DIR = "dioptra_builtins"
 
 
 @pytest.fixture
 def custom_plugins_evaluation_tar_gz(tmp_path_factory):
     custom_plugins_evaluation_tar_gz_dir = tmp_path_factory.mktemp(
-        "tf_mnist_classifier_custom_plugins_evaluation", numbered=False
+        "tf_mnist_classifier_custom_plugins_evaluation"
     )
     custom_plugins_evaluation_tar_gz_path: Path = (
         custom_plugins_evaluation_tar_gz_dir / "custom-plugins-evaluation.tar.gz"
@@ -72,9 +72,7 @@ def custom_plugins_evaluation_tar_gz(tmp_path_factory):
 
 @pytest.fixture
 def workflows_tar_gz(tmp_path_factory):
-    workflows_tar_gz_dir = tmp_path_factory.mktemp(
-        "tf_mnist_classifier_workflows", numbered=False
-    )
+    workflows_tar_gz_dir = tmp_path_factory.mktemp("tf_mnist_classifier_workflows")
 
     workflows_tar_gz_path: Path = workflows_tar_gz_dir / "workflows.tar.gz"
 
@@ -95,7 +93,7 @@ def workflows_tar_gz(tmp_path_factory):
 
 
 @pytest.fixture
-def testbed_hosts(request, mnist_data_dir, docker_client):
+def dioptra_hosts(request, mnist_data_dir, docker_client):
     # Declare path to docker-compose.yml file
     docker_compose_file: Path = CONFTEST_DIR / "docker-compose.yml"
 
@@ -151,7 +149,7 @@ def testbed_hosts(request, mnist_data_dir, docker_client):
         )
 
         # return host connection to each service
-        yield TestbedHosts(
+        yield DioptraHosts(
             minio=testinfra.get_host("docker://minio"),
             mlflow_tracking=testinfra.get_host("docker://mlflow-tracking"),
             nginx=testinfra.get_host("docker://nginx"),

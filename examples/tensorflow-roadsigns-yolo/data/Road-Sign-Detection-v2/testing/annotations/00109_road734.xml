@@ -1,0 +1,36 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00109_road734.png</filename>
+    <size>
+        <width>300</width>
+        <height>400</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>speedlimit</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>133</xmin>
+            <ymin>142</ymin>
+            <xmax>228</xmax>
+            <ymax>240</ymax>
+        </bndbox>
+    </object>
+    <object>
+        <name>speedlimit</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>144</xmin>
+            <ymin>292</ymin>
+            <xmax>240</xmax>
+            <ymax>389</ymax>
+        </bndbox>
+    </object>
+</annotation>
