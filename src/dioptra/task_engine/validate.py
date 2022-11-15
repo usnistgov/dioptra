@@ -1,13 +1,15 @@
 import argparse
-import dioptra.task_engine.validation
+
 import yaml
+
+import dioptra.task_engine.validation
 
 
 def parse_args() -> argparse.Namespace:
     arg_parser = argparse.ArgumentParser(
         description="""
         Simple commandline tool to statically validate a declarative
-        experiment description file. 
+        experiment description file.
         """
     )
 

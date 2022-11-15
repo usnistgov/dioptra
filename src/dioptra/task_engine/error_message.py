@@ -2,16 +2,13 @@
 Try to derive better error messages for jsonschema validation errors.
 """
 
-from typing import (
-    Any, cast, Iterable, MutableMapping, MutableSequence, Sequence, Union
-)
-
 import collections
+from typing import Any, Iterable, MutableMapping, MutableSequence, Sequence, Union, cast
+
 import jsonschema
 import jsonschema.exceptions
 import jsonschema.protocols
 import jsonschema.validators
-
 
 # Controls indentation of sub-parts of error messages
 _INDENT_SIZE = 4
