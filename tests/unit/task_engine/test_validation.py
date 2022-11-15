@@ -225,6 +225,25 @@ def test_invalid_tasks(tasks):
     },
     {
         "step1": {
+            "task": "add"
+        }
+    },
+    {
+        "step1": {
+            "task": "add",
+            "args": [1, 2]
+        }
+    },
+    {
+        "step1": {
+            "task": "add",
+            "kwargs": {
+                "b": 2
+            }
+        }
+    },
+    {
+        "step1": {
             "task": "add",
             "args": 1,
             "kwargs": {
@@ -264,6 +283,7 @@ def test_valid_graph(graph):
     {1: "step1"},
     {"step1": [1]},
     {"step1": {"sub": 1}},
+    {"step1": {"task": "sub"}},
     {
         "step1": {
             # missing task short name
@@ -271,6 +291,12 @@ def test_valid_graph(graph):
         },
         "step2": {
             "add": 1
+        }
+    },
+    {
+        "step1": {
+            "task": "add",
+            "foo": "bar"
         }
     }
 ])

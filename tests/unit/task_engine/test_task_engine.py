@@ -63,6 +63,14 @@ def addsub(a: Any, b: Any) -> Any:
     return a + b, a - b
 
 
+@capture_return
+def hello() -> str:
+    """
+    Simple function which takes no args, to register with pyplugs, for testing
+    """
+    return "hello"
+
+
 @contextlib.contextmanager
 def pyplugs_register(*funcs: Callable[..., Any]) -> Iterator[None]:
     """
@@ -228,6 +236,72 @@ def test_single_call_mixed_positional_keyword() -> None:
     )
 
     assert _output == 2
+
+
+@require_plugins(hello)
+def test_single_call_no_args_positional() -> None:
+    desc = {
+        "tasks": {
+            "hello": {
+                "plugin": "tests.unit.task_engine.test_task_engine.hello"
+            }
+        },
+        "graph": {
+            "step1": {
+                "hello": []
+            }
+        }
+    }
+
+    dioptra.task_engine.task_engine.run_experiment(
+        desc, {}, mlflow_run=None
+    )
+
+    assert _output == "hello"
+
+
+@require_plugins(hello)
+def test_single_call_no_args_keyword() -> None:
+    desc = {
+        "tasks": {
+            "hello": {
+                "plugin": "tests.unit.task_engine.test_task_engine.hello"
+            }
+        },
+        "graph": {
+            "step1": {
+                "hello": {}
+            }
+        }
+    }
+
+    dioptra.task_engine.task_engine.run_experiment(
+        desc, {}, mlflow_run=None
+    )
+
+    assert _output == "hello"
+
+
+@require_plugins(hello)
+def test_single_call_no_args_mixed() -> None:
+    desc = {
+        "tasks": {
+            "hello": {
+                "plugin": "tests.unit.task_engine.test_task_engine.hello"
+            }
+        },
+        "graph": {
+            "step1": {
+                "task": "hello"
+            }
+        }
+    }
+
+    dioptra.task_engine.task_engine.run_experiment(
+        desc, {}, mlflow_run=None
+    )
+
+    assert _output == "hello"
 
 
 @require_plugins(add)

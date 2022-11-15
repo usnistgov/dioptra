@@ -114,6 +114,10 @@
         "positional_invocation": {
             "title": "Positional invocation",
             "type": "object",
+            "not": {
+                "$comment": "If the 'task' property is present, we always treat as a mixed invocation.",
+                "required": ["task"]
+            },
             "properties": {
                 "dependencies": {
                     "$ref": "#/$defs/step_dependencies"
@@ -136,6 +140,10 @@
         "keyword_invocation": {
             "title": "Keyword invocation",
             "type": "object",
+            "not": {
+                "$comment": "If the 'task' property is present, we always treat as a mixed invocation.",
+                "required": ["task"]
+            },
             "properties": {
                 "dependencies": {
                     "$ref": "#/$defs/step_dependencies"
