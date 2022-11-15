@@ -3,7 +3,7 @@ import dioptra.task_engine.validation
 import yaml
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     arg_parser = argparse.ArgumentParser(
         description="""
         Simple commandline tool to statically validate a declarative
@@ -20,7 +20,7 @@ def parse_args():
     return arg_parser.parse_args()
 
 
-def main():
+def main() -> None:
 
     args = parse_args()
 

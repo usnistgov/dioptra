@@ -1,9 +1,15 @@
 """
 Try to derive better error messages for jsonschema validation errors.
 """
+
+from typing import (
+    Any, cast, Iterable, MutableMapping, MutableSequence, Sequence, Union
+)
+
 import collections
 import jsonschema
 import jsonschema.exceptions
+import jsonschema.protocols
 import jsonschema.validators
 
 
@@ -11,7 +17,7 @@ import jsonschema.validators
 _INDENT_SIZE = 4
 
 
-def _indent_lines(lines):
+def _indent_lines(lines: MutableSequence[str]) -> MutableSequence[str]:
     """
     Add a level of indentation to each of the given lines.  The given
     line sequence is modified in-place, and for convenience also returned.
@@ -26,7 +32,7 @@ def _indent_lines(lines):
     return lines
 
 
-def _json_path_to_string(path):
+def _json_path_to_string(path: Iterable[Any]) -> str:
     """
     Create a string representation of a JSON path as is used in jsonschema
     ValidationError objects.  For now, a filesystem-like syntax is used with
@@ -41,7 +47,7 @@ def _json_path_to_string(path):
     return "/" + "/".join(str(elt) for elt in path)
 
 
-def _schema_reference_to_path(ref):
+def _schema_reference_to_path(ref: str) -> list[str]:
     """
     Convert a JSON-Schema reference to the same sort of path structure used in
     jsonschema ValidationError objects to identify locations in JSON.  This
@@ -70,7 +76,9 @@ def _schema_reference_to_path(ref):
     return ref_schema_path
 
 
-def _instance_path_to_description(instance_path):
+def _instance_path_to_description(
+    instance_path: Sequence[Union[int, str]]
+) -> str:
     """
     Create a nice description of the location in an experiment description
     pointed to by instance_path.  This implementation is crafted specifically
@@ -108,7 +116,9 @@ def _instance_path_to_description(instance_path):
             if path_len == 1:
                 message_parts.append("tasks section")
             else:
-                message_parts.append('task plugin "' + instance_path[1] + '"')
+                message_parts.append(
+                    'task plugin "' + str(instance_path[1]) + '"'
+                )
                 if len(instance_path) > 2:
                     if instance_path[2] == "outputs":
                         message_parts.append("outputs")
@@ -119,7 +129,7 @@ def _instance_path_to_description(instance_path):
             if path_len == 1:
                 message_parts.append("graph section")
             else:
-                message_parts.append('step "' + instance_path[1] + '"')
+                message_parts.append('step "' + str(instance_path[1]) + '"')
                 if len(instance_path) > 2 \
                         and instance_path[2] == "dependencies":
                     message_parts.append("dependencies")
@@ -134,7 +144,11 @@ def _instance_path_to_description(instance_path):
     return description
 
 
-def _extract_schema_by_schema_path(schema_path, full_schema, schema=None):
+def _extract_schema_by_schema_path(
+    schema_path: Iterable[Union[int, str]],
+    full_schema: dict[str, Any],
+    schema: Union[dict[str, Any], list[Any]] = None
+) -> Union[dict[str, Any], list[Any]]:
     """
     Find the schema sub-document referred to by a path.  The path must not
     include any "$ref" elements; references are transparently dereferenced as
@@ -159,7 +173,23 @@ def _extract_schema_by_schema_path(schema_path, full_schema, schema=None):
         # element.  The paths pass through as if the referent was substituted
         # for the reference, and the reference wasn't even there.
 
-        ref_schema_path = _schema_reference_to_path(schema["$ref"])
+        # the cast here is necessary: _schema_reference_to_path() is defined
+        # to return list[str].  It never returns anything else, so I think it
+        # would be incorrect to define it otherwise.  Mypy regards lists as
+        # "invariant", i.e. list[A] and list[B] are considered incompatible
+        # types no matter the relationship between A and B.  It is effectively
+        # forcing the caller to never add anything other than strings to a
+        # list[str] since that's what the called function is declared to
+        # return.  In this case, the function may return me a list[str], but I
+        # know I will be sole owner of it, and so I should be able to do
+        # whatever I want with it, including adding values which are not
+        # strings, and use it in contexts where non-string content is expected
+        # (ints, in this case).
+        ref_schema_path: MutableSequence[Union[int, str]] = cast(
+            MutableSequence[Union[int, str]],
+            _schema_reference_to_path(schema["$ref"])
+        )
+        # Here, schema_path may have integer list indices.  That's okay.
         ref_schema_path.extend(schema_path)
 
         result_schema = _extract_schema_by_schema_path(
@@ -185,14 +215,26 @@ def _extract_schema_by_schema_path(schema_path, full_schema, schema=None):
                 # pointer string to obtain a schema path.
                 next_path_component = int(next_path_component)
 
+            # next_path_component is correctly inferred to be Union[int, str],
+            # but mypy does not consider that a valid index type.  Since
+            # 'schema' can have different values at runtime (sometimes lists,
+            # sometimes dicts), the below indexing can't always mean the same
+            # thing: sometimes it's a key lookup in a dict, sometimes an index
+            # lookup in a list.  As a static type checker, mypy seems to want
+            # one meaning, and I couldn't figure out how to make that pass mypy
+            # checks.
+            subschema = schema[next_path_component]  # type: ignore
+
             result_schema = _extract_schema_by_schema_path(
-                schema_path_it, full_schema, schema[next_path_component]
+                schema_path_it, full_schema, subschema
             )
 
     return result_schema
 
 
-def _extract_schema_by_reference(ref, schema):
+def _extract_schema_by_reference(
+    ref: str, schema: dict[str, Any]
+) -> Union[dict[str, Any], list[Any]]:
     """
     Extract a sub-part of the given schema, according to the given reference.
 
@@ -204,7 +246,10 @@ def _extract_schema_by_reference(ref, schema):
     return _extract_schema_by_schema_path(ref_schema_path, schema)
 
 
-def _get_one_of_alternative_names(alternative_schemas, full_schema):
+def _get_one_of_alternative_names(
+    alternative_schemas: Iterable[Any],
+    full_schema: dict[str, Any]
+) -> list[str]:
     """
     Find names for the given alternative schemas.  The names are derived from
     "title" properties of the schemas.  Numeric suffixes may be introduced if
@@ -220,7 +265,7 @@ def _get_one_of_alternative_names(alternative_schemas, full_schema):
     # It is possible, though unlikely, that more than one alternative has the
     # same name (title).  We will add a numeric counter suffix as necessary to
     # force alternative names to be unique.
-    name_counts = collections.defaultdict(int)
+    name_counts: MutableMapping[str, int] = collections.defaultdict(int)
     names = []
 
     for idx, alternative_schema in enumerate(alternative_schemas):
@@ -250,7 +295,11 @@ def _get_one_of_alternative_names(alternative_schemas, full_schema):
     return names
 
 
-def _is_valid_for_sub_schema(full_schema, sub_schema, sub_instance):
+def _is_valid_for_sub_schema(
+    full_schema: dict[str, Any],
+    sub_schema: dict[str, Any],
+    sub_instance: Any
+) -> bool:
     """
     Run a validation of document sub_instance against sub_schema.
 
@@ -262,7 +311,10 @@ def _is_valid_for_sub_schema(full_schema, sub_schema, sub_instance):
     """
     validator_class = jsonschema.validators.validator_for(full_schema)
 
-    validator = validator_class(
+    # Without this type annotation, the is_valid() call below is treated as
+    # returning Any, and mypy errors since this function is defined to return
+    # bool!  Even with the jsonschema type stubs, mypy gets confused.
+    validator: jsonschema.protocols.Validator = validator_class(
         schema=sub_schema,
         # Need to construct a resolver from the full schema, since the
         # sub-schema might contain references relative to the full schema,
@@ -275,7 +327,10 @@ def _is_valid_for_sub_schema(full_schema, sub_schema, sub_instance):
     return validator.is_valid(sub_instance)
 
 
-def _one_of_too_many_alternatives_satisfied_message_lines(error, schema):
+def _one_of_too_many_alternatives_satisfied_message_lines(
+    error: jsonschema.exceptions.ValidationError,
+    schema: dict[str, Any]
+) -> list[str]:
     """
     Create an error message specifically about the situation where too many
     alternatives in a oneOf schema were valid.
@@ -296,7 +351,7 @@ def _one_of_too_many_alternatives_satisfied_message_lines(error, schema):
     satisfied_alt_names = []
     for alt_name, alt_schema in zip(alt_names, error.validator_value):
         # Perform a little "mini" validation to determine which alternatives
-        # were satisfied and describe them in the error message.
+        # were satisfied, and describe them in the error message.
         if _is_valid_for_sub_schema(
                 schema, alt_schema, error.instance
         ):
@@ -311,7 +366,10 @@ def _one_of_too_many_alternatives_satisfied_message_lines(error, schema):
     return [error_desc]
 
 
-def _one_of_no_alternatives_satisfied_message_lines(error, schema):
+def _one_of_no_alternatives_satisfied_message_lines(
+    error: jsonschema.exceptions.ValidationError,
+    schema: dict[str, Any]
+) -> list[str]:
     """
     Create an error message specifically about the situation where none of the
     alternatives in a oneOf schema were valid.
@@ -346,6 +404,11 @@ def _one_of_no_alternatives_satisfied_message_lines(error, schema):
     errors_by_alt = collections.defaultdict(list)
 
     one_of_schema_path_len = len(error.absolute_schema_path)
+
+    # required to assure mypy that error.context is non-null.  That is checked
+    # before this function is called (in fact it is the exact criteria for the
+    # call).  Otherwise, it is treated as a non-iterable Optional type.
+    assert error.context
     for ctx_error in error.context:
         # schema paths for errors associated with the alternatives
         # will share a common prefix with the schema path for the
@@ -355,6 +418,10 @@ def _one_of_no_alternatives_satisfied_message_lines(error, schema):
             one_of_schema_path_len
         ]
 
+        # Mypy infers Union[str, int] for error_alt_idx and complains that it
+        # is not a valid index type.  As explained above, in this context, this
+        # index must be an int.
+        assert isinstance(error_alt_idx, int)
         errors_by_alt[alt_names[error_alt_idx]].append(ctx_error)
 
     for alt_name, alt_errors in errors_by_alt.items():
@@ -373,7 +440,10 @@ def _one_of_no_alternatives_satisfied_message_lines(error, schema):
     return message_lines
 
 
-def _validation_error_to_message_lines(error, schema):
+def _validation_error_to_message_lines(
+    error: jsonschema.exceptions.ValidationError,
+    schema: dict[str, Any]
+) -> list[str]:
     """
     Create a nice error message for the given error object.
 
@@ -422,7 +492,10 @@ def _validation_error_to_message_lines(error, schema):
     return message_lines
 
 
-def validation_error_to_message(error, schema):
+def validation_error_to_message(
+    error: jsonschema.exceptions.ValidationError,
+    schema: dict[str, Any]
+) -> str:
     """
     Create a nice error message for the given error object.
 
@@ -441,7 +514,10 @@ def validation_error_to_message(error, schema):
     return message
 
 
-def validation_errors_to_message(errors, schema):
+def validation_errors_to_message(
+    errors: Iterable[jsonschema.exceptions.ValidationError],
+    schema: dict[str, Any]
+) -> str:
     """
     Create a nice error message for the given error objects.  This currently
     just creates error messages for each error individually, and then
