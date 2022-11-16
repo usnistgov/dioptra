@@ -32,7 +32,7 @@ def main() -> None:
         print("Errors:")
         print()
         for i, error in enumerate(errors):
-            print(i, ". ", error, sep="")
+            print(i+1, ". ", error, sep="")
             print()
 
     else:

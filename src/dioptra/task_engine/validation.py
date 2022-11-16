@@ -1,14 +1,14 @@
 import json
 import pathlib
 from collections.abc import Iterable, Mapping
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Tuple, Union
 
 import jsonschema
 import jsonschema.exceptions
 
 from dioptra.sdk.exceptions.base import BaseTaskEngineError
 from dioptra.task_engine import util
-from dioptra.task_engine.error_message import validation_errors_to_message
+from dioptra.task_engine.error_message import validation_error_to_message
 
 _SCHEMA_FILENAME = "experiment_schema.json"
 
@@ -30,15 +30,15 @@ def _get_json_schema() -> Union[dict, bool]:  # hypothetical types of schemas
     return schema
 
 
-def _schema_validate(experiment_desc: Mapping[str, Any]) -> Optional[str]:
+def _schema_validate(experiment_desc: Mapping[str, Any]) -> list[str]:
     """
     Validate the given declarative experiment description against a JSON-Schema
     schema.
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: An error string if the description was invalid; None if it was
-        valid
+    :return: A list of error strings; will be an empty list if the experiment
+        description was valid.
     """
 
     schema = _get_json_schema()
@@ -48,11 +48,12 @@ def _schema_validate(experiment_desc: Mapping[str, Any]) -> Optional[str]:
     validator_class = jsonschema.validators.validator_for(schema)
     validator = validator_class(schema=schema)
 
-    error_message = validation_errors_to_message(
-        validator.iter_errors(experiment_desc), schema
-    ) or None
+    error_messages = [
+        validation_error_to_message(error, schema)
+        for error in validator.iter_errors(experiment_desc)
+    ]
 
-    return error_message
+    return error_messages
 
 
 def _structure_paths_preorder(
@@ -534,14 +535,11 @@ def validate(experiment_desc: Mapping[str, Any]) -> list[str]:
         an empty list if it was valid
     """
 
-    schema_result = _schema_validate(experiment_desc)
+    result = _schema_validate(experiment_desc)
 
     # If the description is not schema-valid, the basic structure is incorrect,
     # so we won't even try to dig inside it to check anything.
-    if schema_result:
-        result = [schema_result]
-
-    else:
+    if not result:
         result = _manually_validate(experiment_desc)
 
     return result
