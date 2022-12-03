@@ -1,11 +1,14 @@
 import itertools
 from collections.abc import Container, Iterator, Mapping, MutableSequence, MutableSet
-from typing import Any, Optional
+from typing import Any, Optional, Union
+
+import jsonschema.validators
 
 from dioptra.sdk.exceptions.task_engine import (
     StepNotFoundError,
     StepReferenceCycleError,
 )
+from dioptra.task_engine.error_message import validation_error_to_message
 
 
 def is_iterable(value: Any) -> bool:
@@ -24,6 +27,29 @@ def is_iterable(value: Any) -> bool:
         result = True
 
     return result
+
+
+def schema_validate(
+    instance: Any, schema: Union[dict, bool]
+) -> list[str]:
+    """
+    Validate the given instance against the given JSON-Schema.
+
+    :param instance: A value to validate
+    :param schema: JSON-Schema as a data structure, e.g. parsed JSON
+    :return: A list of error messages; will be empty if validation succeeded
+    """
+    # Make use of a more complex API to try to produce better schema
+    # validation error messages.
+    validator_class = jsonschema.validators.validator_for(schema)
+    validator = validator_class(schema=schema)
+
+    error_messages = [
+        validation_error_to_message(error, schema)
+        for error in validator.iter_errors(instance)
+    ]
+
+    return error_messages
 
 
 def step_get_plugin_short_name(step: Mapping[str, Any]) -> Optional[str]:

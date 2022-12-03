@@ -3,12 +3,9 @@ import pathlib
 from collections.abc import Iterable, Mapping
 from typing import Any, Tuple, Union
 
-import jsonschema
-import jsonschema.exceptions
-
 from dioptra.sdk.exceptions.base import BaseTaskEngineError
 from dioptra.task_engine import util
-from dioptra.task_engine.error_message import validation_error_to_message
+from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 _SCHEMA_FILENAME = "experiment_schema.json"
 
@@ -30,30 +27,29 @@ def _get_json_schema() -> Union[dict, bool]:  # hypothetical types of schemas
     return schema
 
 
-def _schema_validate(experiment_desc: Mapping[str, Any]) -> list[str]:
+def _schema_validate(
+    experiment_desc: Mapping[str, Any]
+) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description against a JSON-Schema
     schema.
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: A list of error strings; will be an empty list if the experiment
-        description was valid.
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
 
     schema = _get_json_schema()
 
-    # Make use of a more complex API to try to produce better schema
-    # validation error messages.
-    validator_class = jsonschema.validators.validator_for(schema)
-    validator = validator_class(schema=schema)
+    error_messages = util.schema_validate(experiment_desc, schema)
 
-    error_messages = [
-        validation_error_to_message(error, schema)
-        for error in validator.iter_errors(experiment_desc)
+    issues = [
+        ValidationIssue(IssueType.SCHEMA, IssueSeverity.ERROR, message)
+        for message in error_messages
     ]
 
-    return error_messages
+    return issues
 
 
 def _structure_paths_preorder(
@@ -116,7 +112,9 @@ def _structure_paths_to_objects_preorder(
             yield path, value
 
 
-def _check_string_keys(experiment_desc: Mapping[str, Any]) -> list[str]:
+def _check_string_keys(
+    experiment_desc: Mapping[str, Any]
+) -> list[ValidationIssue]:
     """
     Check the types of keys in the given mapping.  JSON doesn't support other
     than string keys, so JSON-Schema doesn't support checking the types of
@@ -129,11 +127,11 @@ def _check_string_keys(experiment_desc: Mapping[str, Any]) -> list[str]:
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: Non-empty list of error strings if the description was invalid;
-        an empty list if it was valid
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
 
-    errors = []
+    issues = []
 
     for path, obj in _structure_paths_to_objects_preorder(experiment_desc):
         non_string_keys = [
@@ -150,23 +148,29 @@ def _check_string_keys(experiment_desc: Mapping[str, Any]) -> list[str]:
                 str(key) for key in non_string_keys
             )
 
-            errors.append(
-                "Found non-string key(s) in object at location {}: {}".format(
-                    path_string, non_string_keys_string
-                )
+            message = (
+                "Found non-string key(s) in object at location {}: {}"
+            ).format(
+                path_string, non_string_keys_string
             )
+            issue = ValidationIssue(
+                IssueType.SEMANTIC, IssueSeverity.ERROR, message
+            )
+            issues.append(issue)
 
-    return errors
+    return issues
 
 
-def _check_name_collisions(experiment_desc: Mapping[str, Any]) -> list[str]:
+def _check_name_collisions(
+    experiment_desc: Mapping[str, Any]
+) -> list[ValidationIssue]:
     """
     Check whether any graph step names collide with any parameter names.
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: Non-empty list of error strings if the description was invalid;
-        an empty list if it was valid
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
 
     param_names = set(experiment_desc.get("parameters", []))
@@ -174,58 +178,71 @@ def _check_name_collisions(experiment_desc: Mapping[str, Any]) -> list[str]:
 
     collisions = param_names & step_names
 
+    issues = []
     if collisions:
-        errors = [
-            "Some parameters and steps have the same name: "
+        message = "Some parameters and steps have the same name: " \
             + ", ".join(collisions)
-        ]
-    else:
-        errors = []
+        issue = ValidationIssue(
+            IssueType.SEMANTIC, IssueSeverity.ERROR, message
+        )
+        issues.append(issue)
 
-    return errors
+    return issues
 
 
 def _check_task_plugin_references(
     experiment_desc: Mapping[str, Any]
-) -> list[str]:
+) -> list[ValidationIssue]:
     """
     Check whether all task plugin short names refer to known task plugins.
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: Non-empty list of error strings if the description was invalid;
-        an empty list if it was valid
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
     task_defs = experiment_desc["tasks"]
     graph = experiment_desc["graph"]
 
-    errors = []
+    issues = []
     for step_name, step_def in graph.items():
-        error = None
+        message = None
         task_plugin_short_name = util.step_get_plugin_short_name(step_def)
 
         if task_plugin_short_name not in task_defs:
-            error = 'Unrecognized task plugin in step "{}": {}'.format(
+            message = 'Unrecognized task plugin in step "{}": {}'.format(
                 step_name, task_plugin_short_name
             )
 
-        if error:
-            errors.append(error)
+        if message:
+            issue = ValidationIssue(
+                IssueType.SEMANTIC, IssueSeverity.ERROR, message
+            )
+            issues.append(issue)
 
-    return errors
+    return issues
 
 
 def _check_task_plugin_pyplugs_coords(
     experiment_desc: Mapping[str, Any]
-) -> list[str]:
+) -> list[ValidationIssue]:
+    """
+    Check task plugin IDs for validity.  They must at minimum include a module
+    name and a function name.
+
+    :param experiment_desc: The experiment description, as parsed YAML or
+        equivalent
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
+    """
     task_defs = experiment_desc["tasks"]
 
-    errors = []
+    issues = []
     for task_short_name, task_def in task_defs.items():
-        error = None
+        message = None
         plugin = task_def["plugin"]
         if "." not in plugin:
-            error = (
+            message = (
                 "Invalid plugin in task '{}': requires at least one '.': {}"
             ).format(
                 task_short_name, plugin
@@ -235,37 +252,42 @@ def _check_task_plugin_pyplugs_coords(
         if any(
             len(plugin_part) == 0 for plugin_part in plugin_parts
         ):
-            error = (
+            message = (
                 "Invalid plugin in task '{}': all plugin module components"
                 " must be of non-zero length: {}"
             ).format(
                 task_short_name, plugin
             )
 
-        if error:
-            errors.append(error)
+        if message:
+            issue = ValidationIssue(
+                IssueType.SEMANTIC, IssueSeverity.ERROR, message
+            )
+            issues.append(issue)
 
-    return errors
+    return issues
 
 
-def _check_graph_references(experiment_desc: Mapping[str, Any]) -> list[str]:
+def _check_graph_references(
+    experiment_desc: Mapping[str, Any]
+) -> list[ValidationIssue]:
     """
     Scan for references within task invocations, check whether they are legal,
     and whether they refer to recognized parameters, steps, and/or step outputs.
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: Non-empty list of error strings if the description was invalid;
-        an empty list if it was valid
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
     graph = experiment_desc["graph"]
     task_defs = experiment_desc["tasks"]
     params = experiment_desc.get("parameters", [])
 
-    errors = []
+    issues = []
     for step_name, step_def in graph.items():
         for ref in util.get_references(step_def):
-            error = None
+            message = None
 
             dot_idx = ref.find(".")
             if dot_idx >= 0:
@@ -289,7 +311,7 @@ def _check_graph_references(experiment_desc: Mapping[str, Any]) -> list[str]:
                     if isinstance(task_outputs, list) \
                             and len(task_outputs) > 1:
 
-                        error = (
+                        message = (
                             'In step "{}": reference "{}": an output name must'
                             ' be given if the task plugin produces more than'
                             ' one output.'
@@ -300,7 +322,7 @@ def _check_graph_references(experiment_desc: Mapping[str, Any]) -> list[str]:
                 elif task_outputs is None or (
                     isinstance(task_outputs, str) and task_outputs != output
                 ) or output not in task_outputs:
-                    error = (
+                    message = (
                         'In step "{}": reference "{}": unrecognized output: {}'
                     ).format(
                         step_name, ref, output
@@ -308,7 +330,7 @@ def _check_graph_references(experiment_desc: Mapping[str, Any]) -> list[str]:
 
             elif name in params:
                 if output:
-                    error = (
+                    message = (
                         'In step "{}": reference "{}": references to parameters'
                         ' may not include an output name: {}'
                     ).format(
@@ -316,29 +338,34 @@ def _check_graph_references(experiment_desc: Mapping[str, Any]) -> list[str]:
                     )
 
             else:
-                error = 'Unresolvable reference in step "{}": {}'.format(
+                message = 'Unresolvable reference in step "{}": {}'.format(
                     step_name, name
                 )
 
-            if error:
-                errors.append(error)
+            if message:
+                issue = ValidationIssue(
+                    IssueType.SEMANTIC, IssueSeverity.ERROR, message
+                )
+                issues.append(issue)
 
-    return errors
+    return issues
 
 
-def _check_graph_dependencies(experiment_desc: Mapping[str, Any]) -> list[str]:
+def _check_graph_dependencies(
+    experiment_desc: Mapping[str, Any]
+) -> list[ValidationIssue]:
     """
     Check explicitly declared dependencies for each step and ensure they refer
     to other steps.
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: Non-empty list of error strings if the description was invalid;
-        an empty list if it was valid
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
     graph = experiment_desc["graph"]
 
-    errors = []
+    issues = []
     for step_name, step_def in graph.items():
 
         deps = step_def.get("dependencies", [])
@@ -350,40 +377,51 @@ def _check_graph_dependencies(experiment_desc: Mapping[str, Any]) -> list[str]:
         unrecognized_deps = deps - graph.keys()
 
         if unrecognized_deps:
-            error = 'In step "{}": unrecognized dependency step(s): {}'.format(
+            message = 'In step "{}": unrecognized dependency step(s): {}'.format(
                 step_name, ", ".join(unrecognized_deps)
             )
-            errors.append(error)
+            issue = ValidationIssue(
+                IssueType.SEMANTIC, IssueSeverity.ERROR, message
+            )
+            issues.append(issue)
 
-    return errors
+    return issues
 
 
-def _check_graph_cycle(experiment_desc: Mapping[str, Any]) -> list[str]:
+def _check_graph_cycle(
+    experiment_desc: Mapping[str, Any]
+) -> list[ValidationIssue]:
     """
     Check for a cycle in the task graph.
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: Non-empty list of error strings if the description was invalid;
-        an empty list if it was valid
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
 
+    issues = []
+    message = None
     try:
         util.get_sorted_steps(experiment_desc["graph"])
     except BaseTaskEngineError as e:
         # If all references resolve and the description is schema-valid, the
         # only exception that could be thrown is a StepReferenceCycleError.
         # But I will catch all task engine errors, just in case.
-        errors = [str(e)]
-    else:
-        errors = []
+        message = str(e)
 
-    return errors
+    if message:
+        issue = ValidationIssue(
+            IssueType.SEMANTIC, IssueSeverity.ERROR, message
+        )
+        issues.append(issue)
+
+    return issues
 
 
 def _check_parameter_names_dots(
     experiment_desc: Mapping[str, Any]
-) -> list[str]:
+) -> list[ValidationIssue]:
     """
     Check whether any parameter names have a dot.  That needs to be disallowed
     because references to the parameter would have the same syntax as a step
@@ -391,16 +429,16 @@ def _check_parameter_names_dots(
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: Non-empty list of error strings if the description was invalid;
-        an empty list if it was valid
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
     parameters = experiment_desc.get("parameters", [])
 
-    errors = []
+    issues = []
     for param_name in parameters:
 
         if "." in param_name:
-            error = (
+            message = (
                 'Parameter name "{}" contains a dot.  References to this'
                 ' parameter will ambiguously look like step.output'
                 ' references.'
@@ -408,14 +446,18 @@ def _check_parameter_names_dots(
                 param_name
             )
 
-            errors.append(error)
+            issue = ValidationIssue(
+                IssueType.SEMANTIC, IssueSeverity.ERROR, message
+            )
 
-    return errors
+            issues.append(issue)
+
+    return issues
 
 
 def _check_short_form_task_invocation_structure(
     experiment_desc: Mapping[str, Any]
-) -> list[str]:
+) -> list[ValidationIssue]:
     """
     A requirement for short form task invocations is that if there are two
     properties, one of them must be "dependencies" (the other one would be a
@@ -425,8 +467,8 @@ def _check_short_form_task_invocation_structure(
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: Non-empty list of error strings if the description was invalid;
-        an empty list if it was valid
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
 
     # I tried writing JSON-Schema for this, but I felt it was too complicated
@@ -434,9 +476,9 @@ def _check_short_form_task_invocation_structure(
 
     graph = experiment_desc["graph"]
 
-    errors = []
+    issues = []
     for step_name, step_def in graph.items():
-        error = None
+        message = None
         if "task" not in step_def:
             # This is a short-form positional or keyword arg invocation.
             if len(step_def) == 1 and "dependencies" in step_def:
@@ -445,7 +487,7 @@ def _check_short_form_task_invocation_structure(
                 # "dependencies").  So this check won't get a chance to
                 # succeed.  I'd like to keep this check here anyway, just in
                 # case.
-                error = (
+                message = (
                     'Illegal task invocation in step "{}": A'
                     ' positional/keyword short form step definition must be an'
                     ' object which includes a property whose name is the'
@@ -455,7 +497,7 @@ def _check_short_form_task_invocation_structure(
                 )
 
             elif len(step_def) == 2 and "dependencies" not in step_def:
-                error = (
+                message = (
                     'Illegal task invocation in step "{}": A'
                     ' positional/keyword short form step definition must be an'
                     ' object which includes a property whose name is the'
@@ -466,83 +508,88 @@ def _check_short_form_task_invocation_structure(
 
             # Presence of more than two properties is checked in schema.
 
-        if error:
-            errors.append(error)
+        if message:
+            issue = ValidationIssue(
+                IssueType.SEMANTIC, IssueSeverity.ERROR, message
+            )
+            issues.append(issue)
 
-    return errors
+    return issues
 
 
-def _manually_validate(experiment_desc: Mapping[str, Any]) -> list[str]:
+def _manually_validate(
+    experiment_desc: Mapping[str, Any]
+) -> list[ValidationIssue]:
     """
     Do any extra domain-specific handwritten validation we can think of, which
     can't be done (or awkward to do) via JSON-Schema.
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: Non-empty list of error strings if the description was invalid;
-        an empty list if it was valid
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
 
-    errors = []
+    issues = []
 
-    errors += _check_task_plugin_pyplugs_coords(experiment_desc)
+    issues += _check_task_plugin_pyplugs_coords(experiment_desc)
 
     string_key_errors = _check_string_keys(experiment_desc)
-    errors += string_key_errors
+    issues += string_key_errors
 
     if not string_key_errors:
         # If some keys aren't strings, the following check for dots in names
         # may fail, since it doesn't make sense on non-string names.
-        errors += _check_parameter_names_dots(experiment_desc)
+        issues += _check_parameter_names_dots(experiment_desc)
 
     invocation_errors = _check_short_form_task_invocation_structure(
         experiment_desc
     )
-    errors += invocation_errors
+    issues += invocation_errors
 
     if not invocation_errors:
         # If there are errors in the structure of task plugin invocations, we
         # may not be able to reliably tell which property is a task plugin
         # reference.  So skip this check.
-        errors += _check_task_plugin_references(experiment_desc)
+        issues += _check_task_plugin_references(experiment_desc)
 
     name_collision_errors = _check_name_collisions(experiment_desc)
-    errors += name_collision_errors
+    issues += name_collision_errors
 
     if not name_collision_errors:
         # If there were name collisions, we can't properly interpret
         # references.  So we will skip these checks.
         graph_ref_errors = _check_graph_references(experiment_desc)
         graph_ref_errors += _check_graph_dependencies(experiment_desc)
-        errors += graph_ref_errors
+        issues += graph_ref_errors
 
         if not graph_ref_errors:
             # The graph topology is based on references.  If there were
             # reference errors, we don't have sensible graph.  So we aren't
             # able to check the graph for cycles.  So we will skip this check.
-            errors += _check_graph_cycle(experiment_desc)
+            issues += _check_graph_cycle(experiment_desc)
 
-    return errors
+    return issues
 
 
-def validate(experiment_desc: Mapping[str, Any]) -> list[str]:
+def validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description.
 
     :param experiment_desc: The experiment description, as parsed YAML or
         equivalent
-    :return: Non-empty list of error strings if the description was invalid;
-        an empty list if it was valid
+    :return: A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
     """
 
-    result = _schema_validate(experiment_desc)
+    issues = _schema_validate(experiment_desc)
 
     # If the description is not schema-valid, the basic structure is incorrect,
     # so we won't even try to dig inside it to check anything.
-    if not result:
-        result = _manually_validate(experiment_desc)
+    if not issues:
+        issues = _manually_validate(experiment_desc)
 
-    return result
+    return issues
 
 
 def is_valid(experiment_desc: Mapping[str, Any]) -> bool:
@@ -557,8 +604,8 @@ def is_valid(experiment_desc: Mapping[str, Any]) -> bool:
     :return: True if the description is valid; False if not
     """
 
-    errors = validate(experiment_desc)
+    issues = validate(experiment_desc)
 
     # validate() returns a list of error strings, so an empty list (falsey)
     # means the description was valid.
-    return not bool(errors)
+    return not bool(issues)

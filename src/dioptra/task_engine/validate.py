@@ -27,16 +27,16 @@ def main() -> None:
     args = parse_args()
 
     experiment_desc = yaml.safe_load(args.file)
-    errors = dioptra.task_engine.validation.validate(experiment_desc)
-    if errors:
-        print("Errors:")
+    issues = dioptra.task_engine.validation.validate(experiment_desc)
+    if issues:
+        print("Issues:")
         print()
-        for i, error in enumerate(errors):
-            print(i+1, ". ", error, sep="")
+        for i, issue in enumerate(issues):
+            print(i+1, ". ", issue, sep="")
             print()
 
     else:
-        print("No errors!")
+        print("No issues!")
 
 
 if __name__ == "__main__":
