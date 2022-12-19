@@ -26,6 +26,7 @@ import numpy as np
 import pytest
 import structlog 
 from functools import reduce
+
 @pytest.mark.parametrize(
     "seed",
     [
