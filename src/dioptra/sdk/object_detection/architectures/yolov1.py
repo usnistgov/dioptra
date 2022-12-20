@@ -392,7 +392,7 @@ class ARTYOLOV1ObjectDetector(ARTObjectDetector):
             predictions[0].numpy(),
             predictions[1].numpy(),
             predictions[2].numpy(),
-            strict=False
+            strict=False,
         )
         results = [
             {"boxes": boxes.copy(), "labels": labels.copy(), "scores": scores.copy()}
