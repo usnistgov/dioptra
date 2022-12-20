@@ -205,7 +205,12 @@ class ImgAugObjectDetectionAugmentations(ObjectDetectionAugmentations):
                     y2=bbox[3] * self.image_height,
                     label=str(label),
                 )
-                for bbox, label in zip(corner_bboxes.tolist(), labels.tolist(), strict=False)
+                for bbox, label 
+                in zip(
+                    corner_bboxes.tolist(),
+                    labels.tolist(),
+                    strict=False
+                )
             ],
             shape=(self.image_height, self.image_width),
         )
