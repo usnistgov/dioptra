@@ -35,9 +35,11 @@ class LogStream(metaclass=ABCMeta):
         if msg and not msg.isspace():
             self.logger.log(self.level, self._format_newlines(msg))
 
+    @abstractmethod
     def close(self):
         pass
 
+    @abstractmethod
     def flush(self):
         pass
 
