@@ -117,7 +117,7 @@ class YOLOV1ObjectDetector(Model):
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
 
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars, strict=False))
         self.loss_tracker.update_state(loss)
 
         return {"loss": self.loss_tracker.result()}
@@ -392,6 +392,7 @@ class ARTYOLOV1ObjectDetector(ARTObjectDetector):
             predictions[0].numpy(),
             predictions[1].numpy(),
             predictions[2].numpy(),
+            strict=False
         )
         results = [
             {"boxes": boxes.copy(), "labels": labels.copy(), "scores": scores.copy()}

@@ -111,7 +111,7 @@ class ExperimentRegistrationFormSchema(Schema):
         self, data: Dict[str, Any], many: bool, **kwargs
     ) -> ExperimentRegistrationFormData:
         """Makes an |ExperimentRegistrationFormData| object from the validated data."""
-        return self.__model__(**data)  # type: ignore
+        return self.__model__(**data)
 
 
 ExperimentRegistrationSchema = [

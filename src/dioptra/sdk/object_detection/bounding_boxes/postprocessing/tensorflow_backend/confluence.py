@@ -383,7 +383,7 @@ class TensorflowBoundingBoxesYOLOV1Confluence(BoundingBoxesYOLOV1PostProcessing)
         """
         boxes_to_classes = defaultdict(list)
         for each_box, each_class, each_score in zip(
-            bounding_boxes.tolist(), classes.tolist(), scores.tolist()
+            bounding_boxes.tolist(), classes.tolist(), scores.tolist(), strict=False
         ):
             if each_score >= self._pre_algorithm_threshold:
                 boxes_to_classes[each_class].append(
@@ -498,7 +498,7 @@ class TensorflowBoundingBoxesYOLOV1Confluence(BoundingBoxesYOLOV1PostProcessing)
         padded_detections: npt.NDArray = np.zeros(batch_size, dtype="int32")
 
         for batch_idx, (batch_boxes, batch_scores, batch_labels) in enumerate(
-            zip(boxes, scores, labels)
+            zip(boxes, scores, labels, strict=False)
         ):
             if len(batch_boxes) > 0:
                 padded_boxes[batch_idx, 0 : batch_boxes.shape[0]] = batch_boxes.astype(
