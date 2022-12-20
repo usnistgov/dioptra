@@ -117,7 +117,7 @@ class YOLOV1ObjectDetector(Model):
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
 
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars, strict=False))
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
         self.loss_tracker.update_state(loss)
 
         return {"loss": self.loss_tracker.result()}
