@@ -44,7 +44,7 @@ jobs:
         run: echo "::set-output name=dir::$(pip cache dir)"
 
       - name: cache dependencies
-        uses: actions/cache@v3.0.3
+        uses: actions/cache@v3.2.0
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/.github/pip-envs/requirements-sphinx.txt') }}
