@@ -3,7 +3,17 @@ Try to derive better error messages for jsonschema validation errors.
 """
 
 import collections
-from typing import Any, Iterable, MutableMapping, MutableSequence, Sequence, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    MutableMapping,
+    MutableSequence,
+    Optional,
+    Sequence,
+    Union,
+    cast,
+)
 
 import jsonschema
 import jsonschema.exceptions
@@ -27,21 +37,6 @@ def _indent_lines(lines: MutableSequence[str]) -> MutableSequence[str]:
         lines[i] = " "*_INDENT_SIZE + line
 
     return lines
-
-
-def _json_path_to_string(path: Iterable[Any]) -> str:
-    """
-    Create a string representation of a JSON path as is used in jsonschema
-    ValidationError objects.  For now, a filesystem-like syntax is used with
-    slash-delimited strings, which I think winds up being the same as
-    JSON-Pointer syntax (rfc6901).
-
-    :param path: A "path" into a JSON structure, as an iterable of values
-        (probably strings and ints).
-    :return: A string representation of the path
-    """
-    # Use a filesystem-like syntax?
-    return "/" + "/".join(str(elt) for elt in path)
 
 
 def _schema_reference_to_path(ref: str) -> list[str]:
@@ -73,78 +68,10 @@ def _schema_reference_to_path(ref: str) -> list[str]:
     return ref_schema_path
 
 
-def _instance_path_to_description(
-    instance_path: Sequence[Union[int, str]]
-) -> str:
-    """
-    Create a nice description of the location in an experiment description
-    pointed to by instance_path.  This implementation is crafted specifically
-    to the structure of a declarative experiment description.
-
-    :param instance_path: A path, as a list of strings/ints.
-    :return: A string description
-    """
-
-    path_len = len(instance_path)
-
-    message_parts = []
-    if path_len == 0:
-        message_parts.append("root level of experiment description")
-
-    else:
-
-        if instance_path[0] == "parameters":
-            if path_len == 1:
-                message_parts.append("global parameters section")
-            else:
-                message_parts.append("parameter")
-
-                # Should be a string naming a parameter if parameters were
-                # given as a mapping, or an integer index if parameters were
-                # given as a list of names.
-                parameter_id = instance_path[1]
-
-                if isinstance(parameter_id, str):
-                    message_parts.append('"{}"'.format(parameter_id))
-                elif isinstance(parameter_id, int):
-                    message_parts.append("#" + str(parameter_id+1))
-
-        elif instance_path[0] == "tasks":
-            if path_len == 1:
-                message_parts.append("tasks section")
-            else:
-                message_parts.append(
-                    'task plugin "' + str(instance_path[1]) + '"'
-                )
-                if len(instance_path) > 2:
-                    if instance_path[2] == "outputs":
-                        message_parts.append("outputs")
-                    elif instance_path[2] == "plugin":
-                        message_parts.append("plugin ID")
-
-        elif instance_path[0] == "graph":
-            if path_len == 1:
-                message_parts.append("graph section")
-            else:
-                message_parts.append('step "' + str(instance_path[1]) + '"')
-                if len(instance_path) > 2 \
-                        and instance_path[2] == "dependencies":
-                    message_parts.append("dependencies")
-
-    if message_parts:
-        description = " ".join(message_parts)
-    else:
-        # fallbacks if we don't know another way of describing the location
-        instance_path_str = _json_path_to_string(instance_path)
-        description = "experiment description location " + instance_path_str
-
-    return description
-
-
 def _extract_schema_by_schema_path(
     schema_path: Iterable[Union[int, str]],
     full_schema: dict[str, Any],
-    schema: Union[dict[str, Any], list[Any]] = None
+    schema: Optional[Union[dict[str, Any], list[Any]]] = None
 ) -> Union[dict[str, Any], list[Any]]:
     """
     Find the schema sub-document referred to by a path.  The path must not
@@ -365,7 +292,8 @@ def _one_of_too_many_alternatives_satisfied_message_lines(
 
 def _one_of_no_alternatives_satisfied_message_lines(
     error: jsonschema.exceptions.ValidationError,
-    schema: dict[str, Any]
+    schema: dict[str, Any],
+    location_desc_callback: Callable[[Sequence[Union[int, str]]], str]
 ) -> list[str]:
     """
     Create an error message specifically about the situation where none of the
@@ -374,6 +302,10 @@ def _one_of_no_alternatives_satisfied_message_lines(
     :param error: The ValidationError object representing the aforementioned
         type of error
     :param schema: The schema whose validation failed
+    :param location_desc_callback: A callback function used to customize the
+        description of the location of errors.  Takes a programmatic "path"
+        structure as a sequence of strings/ints, and should return a nice
+        one-line string description.
     :return: An error message, as a list of lines (strings).  Returning a list
         of lines is convenient for callers, who may want to nest this message
         in another, with indented lines.
@@ -430,7 +362,7 @@ def _one_of_no_alternatives_satisfied_message_lines(
 
         for alt_error in alt_errors:
             sub_message_lines = _validation_error_to_message_lines(
-                alt_error, schema
+                alt_error, schema, location_desc_callback
             )
             message_lines.extend(_indent_lines(sub_message_lines))
 
@@ -439,7 +371,8 @@ def _one_of_no_alternatives_satisfied_message_lines(
 
 def _validation_error_to_message_lines(
     error: jsonschema.exceptions.ValidationError,
-    schema: dict[str, Any]
+    schema: dict[str, Any],
+    location_desc_callback: Callable[[Sequence[Union[int, str]]], str]
 ) -> list[str]:
     """
     Create a nice error message for the given error object.
@@ -447,20 +380,24 @@ def _validation_error_to_message_lines(
     :param error: A ValidationError object which represents some schema
         validation error
     :param schema: The schema whose validation failed
+    :param location_desc_callback: A callback function used to customize the
+        description of the location of errors.  Takes a programmatic "path"
+        structure as a sequence of strings/ints, and should return a nice
+        one-line string description.
     :return: An error message, as a list of lines (strings).  Returning a list
         of lines is convenient for callers, who may want to nest this message
         in another, with indented lines.
     """
 
     # Describe "where" the error occurred
-    location_desc = _instance_path_to_description(error.absolute_path)
+    location_desc = location_desc_callback(error.absolute_path)
 
     # Describe "what" error(s) occurred
     if error.validator == "oneOf":
 
         if error.context:
             what_lines = _one_of_no_alternatives_satisfied_message_lines(
-                error, schema
+                error, schema, location_desc_callback
             )
 
         else:
@@ -489,9 +426,27 @@ def _validation_error_to_message_lines(
     return message_lines
 
 
+def json_path_to_string(path: Iterable[Any]) -> str:
+    """
+    Create a string representation of a JSON path as is used in jsonschema
+    ValidationError objects.  For now, a filesystem-like syntax is used with
+    slash-delimited strings, which I think winds up being the same as
+    JSON-Pointer syntax (rfc6901).
+
+    :param path: A "path" into a JSON structure, as an iterable of values
+        (strings and ints).
+    :return: A string representation of the path
+    """
+    # Use a filesystem-like syntax?
+    return "/" + "/".join(str(elt) for elt in path)
+
+
 def validation_error_to_message(
     error: jsonschema.exceptions.ValidationError,
-    schema: dict[str, Any]
+    schema: dict[str, Any],
+    location_desc_callback: Optional[
+        Callable[[Sequence[Union[int, str]]], str]
+    ] = None
 ) -> str:
     """
     Create a nice error message for the given error object.
@@ -499,11 +454,19 @@ def validation_error_to_message(
     :param error: A ValidationError object which represents some schema
         validation error
     :param schema: The schema whose validation failed
+    :param location_desc_callback: A callback function used to customize the
+        description of the location of errors.  Takes a programmatic "path"
+        structure as a sequence of strings/ints, and should return a nice
+        one-line string description.  Defaults to a simple generic
+        implementation which produces descriptions which aren't very nice.
     :return: An error message as a string
     """
 
+    if location_desc_callback is None:
+        location_desc_callback = json_path_to_string
+
     message_lines = _validation_error_to_message_lines(
-        error, schema
+        error, schema, location_desc_callback
     )
 
     message = "\n".join(message_lines)
@@ -513,7 +476,10 @@ def validation_error_to_message(
 
 def validation_errors_to_message(
     errors: Iterable[jsonschema.exceptions.ValidationError],
-    schema: dict[str, Any]
+    schema: dict[str, Any],
+    location_desc_callback: Optional[
+        Callable[[Sequence[Union[int, str]]], str]
+    ] = None
 ) -> str:
     """
     Create a nice error message for the given error objects.  This currently
@@ -523,10 +489,15 @@ def validation_errors_to_message(
     :param errors: An iterable of ValidationError objects which represent some
         schema validation errors
     :param schema: The schema whose validation failed, as a dict
+    :param location_desc_callback: A callback function used to customize the
+        description of the location of errors.  Takes a programmatic "path"
+        structure as a sequence of strings/ints, and should return a nice
+        one-line string description.  Defaults to a simple generic
+        implementation which produces descriptions which aren't very nice.
     :return: An error message as a string.
     """
     messages = [
-        validation_error_to_message(error, schema)
+        validation_error_to_message(error, schema, location_desc_callback)
         for error in errors
     ]
 

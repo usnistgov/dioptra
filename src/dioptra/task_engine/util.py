@@ -1,6 +1,6 @@
 import itertools
 from collections.abc import Container, Iterator, Mapping, MutableSequence, MutableSet
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Sequence, Union
 
 import jsonschema.validators
 
@@ -30,13 +30,22 @@ def is_iterable(value: Any) -> bool:
 
 
 def schema_validate(
-    instance: Any, schema: Union[dict, bool]
+    instance: Any,
+    schema: Union[dict, bool],
+    location_desc_callback: Optional[
+        Callable[[Sequence[Union[int, str]]], str]
+    ] = None
 ) -> list[str]:
     """
     Validate the given instance against the given JSON-Schema.
 
     :param instance: A value to validate
     :param schema: JSON-Schema as a data structure, e.g. parsed JSON
+    :param location_desc_callback: A callback function used to customize the
+        description of the location of errors.  Takes a programmatic "path"
+        structure as a sequence of strings/ints, and should return a nice
+        one-line string description.  Defaults to a simple generic
+        implementation which produces descriptions which aren't very nice.
     :return: A list of error messages; will be empty if validation succeeded
     """
     # Make use of a more complex API to try to produce better schema
@@ -45,7 +54,7 @@ def schema_validate(
     validator = validator_class(schema=schema)
 
     error_messages = [
-        validation_error_to_message(error, schema)
+        validation_error_to_message(error, schema, location_desc_callback)
         for error in validator.iter_errors(instance)
     ]
 

@@ -1,13 +1,82 @@
 import json
 import pathlib
 from collections.abc import Iterable, Mapping
-from typing import Any, Tuple, Union
+from typing import Any, Sequence, Tuple, Union, Optional
 
 from dioptra.sdk.exceptions.base import BaseTaskEngineError
 from dioptra.task_engine import util
+from dioptra.task_engine.error_message import json_path_to_string
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 _SCHEMA_FILENAME = "experiment_schema.json"
+
+
+def _instance_path_to_description(
+    instance_path: Sequence[Union[int, str]]
+) -> str:
+    """
+    Create a nice description of the location in an experiment description
+    pointed to by instance_path.  This implementation is crafted specifically
+    to the structure of a declarative experiment description.
+
+    :param instance_path: A path, as a sequence of strings/ints.
+    :return: A string description
+    """
+
+    path_len = len(instance_path)
+
+    message_parts = []
+    if path_len == 0:
+        message_parts.append("root level of experiment description")
+
+    else:
+
+        if instance_path[0] == "parameters":
+            if path_len == 1:
+                message_parts.append("global parameters section")
+            else:
+                message_parts.append("parameter")
+
+                # Should be a string naming a parameter if parameters were
+                # given as a mapping, or an integer index if parameters were
+                # given as a list of names.
+                parameter_id = instance_path[1]
+
+                if isinstance(parameter_id, str):
+                    message_parts.append('"{}"'.format(parameter_id))
+                elif isinstance(parameter_id, int):
+                    message_parts.append("#" + str(parameter_id+1))
+
+        elif instance_path[0] == "tasks":
+            if path_len == 1:
+                message_parts.append("tasks section")
+            else:
+                message_parts.append(
+                    'task plugin "' + str(instance_path[1]) + '"'
+                )
+                if len(instance_path) > 2:
+                    if instance_path[2] == "outputs":
+                        message_parts.append("outputs")
+                    elif instance_path[2] == "plugin":
+                        message_parts.append("plugin ID")
+
+        elif instance_path[0] == "graph":
+            if path_len == 1:
+                message_parts.append("graph section")
+            else:
+                message_parts.append('step "' + str(instance_path[1]) + '"')
+                if len(instance_path) > 2 \
+                        and instance_path[2] == "dependencies":
+                    message_parts.append("dependencies")
+
+    if message_parts:
+        description = " ".join(message_parts)
+    else:
+        # fallbacks if we don't know another way of describing the location
+        instance_path_str = json_path_to_string(instance_path)
+        description = "experiment description location " + instance_path_str
+
+    return description
 
 
 def _get_json_schema() -> Union[dict, bool]:  # hypothetical types of schemas
@@ -42,7 +111,9 @@ def _schema_validate(
 
     schema = _get_json_schema()
 
-    error_messages = util.schema_validate(experiment_desc, schema)
+    error_messages = util.schema_validate(
+        experiment_desc, schema, _instance_path_to_description
+    )
 
     issues = [
         ValidationIssue(IssueType.SCHEMA, IssueSeverity.ERROR, message)
@@ -53,7 +124,7 @@ def _schema_validate(
 
 
 def _structure_paths_preorder(
-    value: Any, parent_path: list[Any] = None
+    value: Any, parent_path: Optional[list[Any]] = None
 ) -> Iterable[Tuple[list[Any], Any]]:
     """
     Does a recursive search through a data structure composed of nested maps
