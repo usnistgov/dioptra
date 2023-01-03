@@ -14,6 +14,9 @@ line-length = 70
 [body-max-line-length]
 line-length = 100
 
+[body-min-length]
+min-length = 5
+
 [ignore-by-title]
 regex = ^release
 ignore = all
