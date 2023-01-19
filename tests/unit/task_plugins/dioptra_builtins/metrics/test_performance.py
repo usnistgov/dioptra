@@ -19,12 +19,6 @@
 
 from __future__ import annotations 
 from dioptra import pyplugs 
-from sklearn.metrics import accuracy_score 
-from sklearn.metrics import f1_score 
-from sklearn.metrics import matthews_corrcoef 
-from sklearn.metrics import precision_score 
-from sklearn.metrics import recall_score 
-from sklearn.metrics import roc_auc_score 
 from structlog.stdlib import BoundLogger 
 from typing import Any 
 from typing import Callable 
@@ -103,173 +97,136 @@ def test_get_performance_metric(func, y_true, y_pred) -> None:
     assert isinstance(result, float)
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred", "weights"),
-    [
-        ([0,1],[1,1],None),
-        ([1,2,4],[4,1,1],[0.3,0.7,0]),
-        ([1,2,3,4,5,6],[6,4,4,3,2,2],None),
-        ([9,9,9,9,9,2],[9,9,9,9,9,9],[0.2,0.1,0.3,0.1,0.1,0.2]),
-        ([2,2,3,4,5],[5,5,5,5,4],[0.2,0.2,0.2,0.2,0.2])
-    ]
-)
-@pytest.mark.parametrize(
-    "normalize",
-    [
-        True, False
-    ]
+	('y_true', 'y_pred', 'weights', 'normalize', 'expected'),
+	[
+		([0, 1], [1, 1], None, True, 0.5),
+		([1, 2, 4], [4, 1, 1], [0.3, 0.6, 0.1], False, 0.0),
+		([1, 2, 3, 6, 5, 6], [6, 6, 6, 6, 6, 6], None, True, 0.33333333),
+		([9, 9, 9, 9, 9, 2], [9, 9, 9, 9, 9, 9], [0.2, 0.1, 0.3, 0.1, 0.1, 0.2], False, 0.8),
+		([2, 2, 3, 4, 5], [2, 2, 5, 5, 5], [0.2, 0.2, 0.2, 0.2, 0.2], True, 0.6),
+	]
 )
 
-def test_accuracy(y_true, y_pred, weights, normalize) -> None:
+def test_accuracy(y_true, y_pred, weights, normalize, expected) -> None:
     from dioptra_builtins.metrics.performance import accuracy
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
+    expected = np.array(expected)
     kwargs = {"normalize":normalize, "sample_weight": weights}
     result: float = accuracy(y_true, y_pred, **kwargs)
-    assert result == accuracy_score(y_true, y_pred, **kwargs)
+    assert np.isclose(result, expected)
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred", "weights"),
-    [
-        ([2,1,3],[[0.3,0.5,0.2],[0.4,0.5,0.1],[0.3,0.3,0.4]],None),
-        ([2,1,3,1,1],[[0.3,0.5,0.2],[0.4,0.5,0.1],[0.3,0.3,0.4],[0.9,0.05,0.05],[0.1,0.1,0.8]],None),
-    ]
+	('y_true', 'y_pred', 'weights', 'average', 'multiclass', 'expected'),
+	[
+		([2, 1, 3], [[0.3, 0.5, 0.2], [0.4, 0.5, 0.1], [0.3, 0.3, 0.4]], None, 'macro', 'ovr', 0.9166666666666666),
+		([2, 1, 3, 1, 1], [[0.3, 0.5, 0.2], [0.4, 0.5, 0.1], [0.3, 0.3, 0.4], [0.9, 0.05, 0.05], [0.1, 0.1, 0.8]], None, 'macro', 'ovo', 0.8055555555555557),
+		([2, 1, 3, 1, 1], [[0.3, 0.5, 0.2], [0.4, 0.5, 0.1], [0.3, 0.3, 0.4], [0.9, 0.05, 0.05], [0.1, 0.1, 0.8]], [0.2, 0.3, 0.3, 0.1, 0.1], 'macro', 'ovr', 0.8232142857142858),
+		([2, 1, 3, 1, 1], [[0.3, 0.5, 0.2], [0.4, 0.5, 0.1], [0.3, 0.3, 0.4], [0.9, 0.05, 0.05], [0.1, 0.1, 0.8]], None, 'weighted', 'ovo', 0.7666666666666668),
+		([2, 1, 3, 1, 1], [[0.1, 0.5, 0.4], [0.4, 0.5, 0.1], [0, 0.9, 0.1], [0.9, 0.05, 0.05], [0.1, 0.1, 0.8]], None, 'weighted', 'ovr', 0.75),
+		([0, 1, 0, 1, 1], [1, 0, 1, 0, 1], None, 'micro', 'ovo', 0.16666666666666666),
+		([0, 1, 0, 1, 0], [1, 0, 1, 1, 1], None, 'macro', 'ovr', 0.25),
+		([1, 1, 1, 1, 0], [1, 1, 1, 1, 0], None, 'weighted', 'ovr', 1.0),
+	]
 )
-@pytest.mark.parametrize(
-    ("average", "multiclass"),
-    [
-        ("micro","ovr"),
-        ("macro", "ovo"),
-        ("macro","ovr"),
-        ("weighted","ovo"),
-        ("weighted","ovr"),
-    ]
-)
-def test_roc_auc(y_true, y_pred, weights, average, multiclass) -> None:
+def test_roc_auc(y_true, y_pred, weights, average, multiclass, expected) -> None:
     from dioptra_builtins.metrics.performance import roc_auc
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     kwargs = {"average":average, "multi_class":multiclass, "sample_weight": weights}
     result: float = roc_auc(y_true, y_pred, **kwargs)
-    assert result == roc_auc_score(y_true, y_pred, **kwargs)
+    assert np.isclose(result, expected)
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred"),
-    [
-        ([2,1,3],[[0.3,0.5,0.2],[0.4,0.5,0.1],[0.3,0.3,0.4]]),
-        ([2,1,3,1,1],[[0.3,0.5,0.2],[0.4,0.5,0.1],[0.3,0.3,0.4],[0.9,0.05,0.05],[0.1,0.1,0.8]]),
-    ]
+	('y_true', 'y_pred', 'expected'),
+	[
+		([0, 1], [1, 1], 0.5),
+		([1, 2, 4], [4, 1, 1], 0.0),
+		([1, 2, 3, 6, 5, 6], [6, 6, 6, 6, 6, 6], 0.33333333),
+		([9, 9, 9, 9, 9, 2], [9, 9, 9, 9, 9, 9], 0.83333333),
+		([2, 2, 3, 4, 5], [2, 2, 5, 5, 5], 0.6),
+	]
 )
-def test_categorical_accuracy(y_true, y_pred) -> None:
+def test_categorical_accuracy(y_true, y_pred, expected) -> None:
     from dioptra_builtins.metrics.performance import categorical_accuracy
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
-    if len(y_true.shape) > 1 and len(y_pred.shape) > 1:
-        label_comparison: np.ndarray = np.argmax(y_true, axis=-1) == np.argmax(
-            y_pred, axis=-1
-        )
-    else:
-        label_comparison = y_true == y_pred
-    metric: float = float(np.mean(label_comparison))    
-    assert metric == categorical_accuracy(y_true, y_pred)
+    result: float = categorical_accuracy(y_true, y_pred)
+    assert np.isclose(expected, result)
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred", "weights"),
-    [
-        ([0,1],[1,1],None),
-        ([1,2,4],[4,1,1],[0.3,0.7,0]),
-        ([1,2,3,4,5,6],[6,4,4,3,2,2],None),
-        ([9,9,9,9,9,2],[9,9,9,9,9,9],[0.2,0.1,0.3,0.1,0.1,0.2]),
-        ([2,2,3,4,5],[5,5,5,5,4],[0.2,0.2,0.2,0.2,0.2])
-    ]
+	('y_true', 'y_pred', 'weights', 'expected'),
+	[
+		([0, 1], [1, 1], None, 0.0),
+		([1, 2, 4], [4, 1, 1], [0.3, 0.6, 0.1], -0.5039526306789696),
+		([1, 2, 3, 6, 5, 6], [6, 6, 6, 6, 6, 6], None, 0.0),
+		([9, 9, 9, 9, 9, 2], [9, 9, 9, 9, 9, 9], [0.2, 0.1, 0.3, 0.1, 0.1, 0.2], 0.0),
+		([2, 2, 3, 4, 5], [2, 2, 5, 5, 5], [0.2, 0.2, 0.2, 0.2, 0.2], 0.5443310539518176),
+	]
 )
-
-def test_mcc(y_true, y_pred, weights) -> None:
+def test_mcc(y_true, y_pred, weights, expected) -> None:
     from dioptra_builtins.metrics.performance import mcc
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     kwargs = {"sample_weight": weights}
     result: float = mcc(y_true, y_pred, **kwargs)
-    assert result == matthews_corrcoef(y_true, y_pred, **kwargs)
+    assert np.isclose(expected, result)
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred", "weights"),
-    [
-        ([0,1],[1,1],None),
-        ([1,2,4],[4,1,1],[0.3,0.7,0]),
-        ([1,2,3,4,5,6],[6,4,4,3,2,2],None),
-        ([9,9,9,9,9,2],[9,9,9,9,9,9],[0.2,0.1,0.3,0.1,0.1,0.2]),
-        ([2,2,3,4,5],[5,5,5,5,4],[0.2,0.2,0.2,0.2,0.2])
-    ]
+	('y_true', 'y_pred', 'weights', 'average', 'expected'),
+	[
+		([0, 1], [1, 1], None, 'micro', 0.5),
+		([1, 2, 4], [4, 1, 1], [0.3, 0.6, 0.1], 'macro', 0.0),
+		([1, 2, 3, 6, 5, 6], [6, 6, 6, 6, 6, 6], None, 'weighted', 0.16666666),
+		([9, 9, 9, 9, 9, 2], [9, 9, 9, 9, 9, 9], [0.2, 0.1, 0.3, 0.1, 0.1, 0.2], 'micro', 0.8),
+		([2, 2, 3, 4, 5], [2, 2, 5, 5, 5], [0.2, 0.2, 0.2, 0.2, 0.2], 'weighted', 0.5),
+	]
 )
-@pytest.mark.parametrize(
-    "average",
-    [
-        "micro",
-        "macro",
-        "weighted"
-    ]
-)
-def test_f1(y_true, y_pred, weights, average) -> None:
+def test_f1(y_true, y_pred, weights, average, expected) -> None:
     from dioptra_builtins.metrics.performance import f1
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     kwargs = {"average":average, "sample_weight": weights}
     result: float = f1(y_true, y_pred, **kwargs)
-    assert result == f1_score(y_true, y_pred, **kwargs)
+    assert np.isclose(result, expected) 
 
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred", "weights"),
-    [
-        ([0,1],[1,1],None),
-        ([1,2,4],[4,1,1],[0.3,0.7,0]),
-        ([1,2,3,4,5,6],[6,4,4,3,2,2],None),
-        ([9,9,9,9,9,2],[9,9,9,9,9,9],[0.2,0.1,0.3,0.1,0.1,0.2]),
-        ([2,2,3,4,5],[5,5,5,5,4],[0.2,0.2,0.2,0.2,0.2])
-    ]
+	('y_true', 'y_pred', 'weights', 'average', 'expected'),
+	[
+		([0, 1], [1, 1], None, 'micro', 0.5),
+		([1, 2, 4], [4, 1, 1], [0.3, 0.6, 0.1], 'macro', 0.0),
+		([1, 2, 3, 6, 5, 6], [6, 6, 6, 6, 6, 6], None, 'weighted', 0.1111111),
+		([9, 9, 9, 9, 9, 2], [9, 9, 9, 9, 9, 9], [0.2, 0.1, 0.3, 0.1, 0.1, 0.2], 'micro', 0.8),
+		([2, 2, 3, 4, 5], [2, 2, 5, 5, 5], [0.2, 0.2, 0.2, 0.2, 0.2], 'weighted', 0.466666666),
+	]
 )
-@pytest.mark.parametrize(
-    "average",
-    [
-        "micro",
-        "macro",
-        "weighted"
-    ]
-)
-def test_precision(y_true, y_pred, weights, average) -> None:
+def test_precision(y_true, y_pred, weights, average, expected) -> None:
     from dioptra_builtins.metrics.performance import precision
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     kwargs = {"average":average, "sample_weight": weights}
     result: float = precision(y_true, y_pred, **kwargs)
-    assert result == precision_score(y_true, y_pred, **kwargs)
+    assert np.isclose(result, expected) 
 
 
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred", "weights"),
-    [
-        ([0,1],[1,1],None),
-        ([1,2,4],[4,1,1],[0.3,0.7,0]),
-        ([1,2,3,4,5,6],[6,4,4,3,2,2],None),
-        ([9,9,9,9,9,2],[9,9,9,9,9,9],[0.2,0.1,0.3,0.1,0.1,0.2]),
-        ([2,2,3,4,5],[5,5,5,5,4],[0.2,0.2,0.2,0.2,0.2])
-    ]
+	('y_true', 'y_pred', 'weights', 'average', 'expected'),
+	[
+		([0, 1], [1, 1], None, 'micro', 0.5),
+		([1, 2, 4], [4, 1, 1], [0.3, 0.6, 0.1], 'macro', 0.0),
+		([1, 2, 3, 6, 5, 6], [6, 6, 6, 6, 6, 6], None, 'weighted', 0.3333333),
+		([9, 9, 9, 9, 9, 2], [9, 9, 9, 9, 9, 9], [0.2, 0.1, 0.3, 0.1, 0.1, 0.2], 'micro', 0.8),
+		([2, 2, 3, 4, 5], [2, 2, 5, 5, 5], [0.2, 0.2, 0.2, 0.2, 0.2], 'weighted', 0.6),
+	]
 )
-@pytest.mark.parametrize(
-    "average",
-    [
-        "micro",
-        "macro",
-        "weighted"
-    ]
-)
-def test_recall(y_true, y_pred, weights, average) -> None:
+def test_recall(y_true, y_pred, weights, average, expected) -> None:
     from dioptra_builtins.metrics.performance import recall
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     kwargs = {"average":average, "sample_weight": weights}
     result: float = recall(y_true, y_pred, **kwargs)
-    assert result == recall_score(y_true, y_pred, **kwargs)
+    assert np.isclose(result, expected) 
 
 

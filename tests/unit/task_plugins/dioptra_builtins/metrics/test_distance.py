@@ -92,182 +92,155 @@ def test_get_distance_metric(func, y_true, y_pred) -> None:
 
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred"),
-    [
-        ([[1,2,3],[3,4,5]],[[-2,4,5],[-9,0,1]]),
-        ([[1,2],[3,4],[4,5]],[[-2,4],[5,-9],[0,1]]),
-        ([1,2,3,4,5,6],[-2,4,5,-9,0,1]),
-        ([10],[1]),
-    ]
+	('y_true', 'y_pred', 'expected'),
+	[
+		([[1, 2, 3], [3, 4, 5]], [[-2, 4, 5], [-9, 0, 1]], [3.0, 12.0]),
+		([[1, 2], [3, 4], [4, 5]], [[-2, 4], [5, -9], [0, 1]], [3.0, 13.0, 4.0]),
+		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], [3.0, 2.0, 2.0, 13.0, 5.0, 5.0]),
+		([10], [1], [9.0]),
+	]
 )
-def test_l_inf_norm(y_true, y_pred) -> None:
+def test_l_inf_norm(y_true, y_pred, expected) -> None:
     from dioptra_builtins.metrics.distance import l_inf_norm
-    from dioptra_builtins.metrics.distance import _flatten_batch
 
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
-    
+    expected = np.array(expected)
     result: np.ndarray = l_inf_norm(y_true, y_pred)
-        
-    y_diff: np.ndarray = _flatten_batch(y_true - y_pred)
-    y_diff_l_norm: np.ndarray = np.linalg.norm(y_diff, axis=1, ord=np.inf)
-    
+            
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(y_diff_l_norm, result)
+    assert np.array_equal(expected, result)
 
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred"),
-    [
-        ([[1,2,3],[3,4,5]],[[-2,4,5],[-9,0,1]]),
-        ([[1,2],[3,4],[4,5]],[[-2,4],[5,-9],[0,1]]),
-        ([1,2,3,4,5,6],[-2,4,5,-9,0,1]),
-        ([10],[1]),
-    ]
+	('y_true', 'y_pred', 'expected'),
+	[
+		([[1, 2, 3], [3, 4, 5]], [[-2, 4, 5], [-9, 0, 1]], [7.0, 20.0]),
+		([[1, 2], [3, 4], [4, 5]], [[-2, 4], [5, -9], [0, 1]], [5.0, 15.0, 8.0]),
+		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], [3.0, 2.0, 2.0, 13.0, 5.0, 5.0]),
+		([10], [1], [9.0]),
+	]
 )
-def test_l_1_norm(y_true, y_pred) -> None:
+def test_l_1_norm(y_true, y_pred, expected) -> None:
     from dioptra_builtins.metrics.distance import l_1_norm
-    from dioptra_builtins.metrics.distance import _flatten_batch
     
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
+    expected = np.array(expected)
     
     result: np.ndarray = l_1_norm(y_true, y_pred)
-        
-    y_diff: np.ndarray = _flatten_batch(y_true - y_pred)
-    y_diff_l_norm: np.ndarray = np.linalg.norm(y_diff, axis=1, ord=1)
-
-    
+                
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(y_diff_l_norm, result)
+    assert np.array_equal(expected, result)
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred"),
-    [
-        ([[1,2,3],[3,4,5]],[[-2,4,5],[-9,0,1]]),
-        ([[1,2],[3,4],[4,5]],[[-2,4],[5,-9],[0,1]]),
-        ([1,2,3,4,5,6],[-2,4,5,-9,0,1]),
-        ([10],[1]),
-    ]
+	('y_true', 'y_pred', 'expected'),
+	[
+		([[1, 2, 3], [3, 4, 5]], [[-2, 4, 5], [-9, 0, 1]], [4.123105625617661, 13.2664991614216]),
+		([[1, 2], [3, 4], [4, 5]], [[-2, 4], [5, -9], [0, 1]], [3.605551275463989, 13.152946437965905, 5.656854249492381]),
+		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], [3.0, 2.0, 2.0, 13.0, 5.0, 5.0]),
+		([10], [1], [9.0]),
+	]
 )
-def test_l_2_norm(y_true, y_pred) -> None:
+def test_l_2_norm(y_true, y_pred, expected) -> None:
     from dioptra_builtins.metrics.distance import l_2_norm
-    from dioptra_builtins.metrics.distance import _flatten_batch
 
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
+    expected = np.array(expected)
     
     result: np.ndarray = l_2_norm(y_true, y_pred)
-        
-    y_diff: np.ndarray = _flatten_batch(y_true - y_pred)
-    y_diff_l_norm: np.ndarray = np.linalg.norm(y_diff, axis=1, ord=2)
-
     
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(y_diff_l_norm, result)
+    assert np.array_equal(expected, result)
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred"),
-    [
-        ([[1,2,3],[3,4,5]],[[-2,4,5],[-9,0,1]]),
-        ([[1,2],[3,4],[4,5]],[[-2,4],[5,-9],[0,1]]),
-        ([1,2,3,4,5,6],[-2,4,5,-9,0,1]),
-        ([10],[1]),
-    ]
+	('y_true', 'y_pred', 'expected'),
+	[
+		([[1, 2, 3], [3, 4, 5]], [[-2, 4, 5], [-9, 0, 1]], [0.8366600265340757, -0.3435822761549333]),
+		([[1, 2], [3, 4], [4, 5]], [[-2, 4], [5, -9], [0, 1]], [0.6, -0.40794006219005097, 0.7808688094430304]),
+		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], [-1.0, 1.0, 1.0, -1.0, np.nan, 1.0]),
+		([10], [1], [1.0]),
+	]
 )
-def test_paired_cosine_similarities(y_true, y_pred) -> None:
+def test_paired_cosine_similarities(y_true, y_pred, expected) -> None:
     from dioptra_builtins.metrics.distance import paired_cosine_similarities
     from dioptra_builtins.metrics.distance import _normalize_batch
     from dioptra_builtins.metrics.distance import _flatten_batch
     
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
-    
+    expected = np.array(expected)
+
     result: np.ndarray = paired_cosine_similarities(y_true, y_pred)
-    
-    
-    
-    y_true_normalized: np.ndarray = _normalize_batch(_flatten_batch(y_true), order=2)
-    y_pred_normalized: np.ndarray = _normalize_batch(_flatten_batch(y_pred), order=2)
-    metric: np.ndarray = np.sum(y_true_normalized * y_pred_normalized, axis=1)
         
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(metric, result, equal_nan=True)
+    assert np.array_equal(expected, result, equal_nan=True)
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred"),
-    [
-        ([[1,2,3],[3,4,5]],[[-2,4,5],[-9,0,1]]),
-        ([[1,2],[3,4],[4,5]],[[-2,4],[5,-9],[0,1]]),
-        ([1,2,3,4,5,6],[-2,4,5,-9,0,1]),
-        ([10],[1]),
-    ]
+	('y_true', 'y_pred', 'expected'),
+	[
+		([[1, 2, 3], [3, 4, 5]], [[-2, 4, 5], [-9, 0, 1]], [4.123105625617661, 13.2664991614216]),
+		([[1, 2], [3, 4], [4, 5]], [[-2, 4], [5, -9], [0, 1]], [3.605551275463989, 13.152946437965905, 5.656854249492381]),
+		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], [3.0, 2.0, 2.0, 13.0, 5.0, 5.0]),
+		([10], [1], [9.0]),
+	]
 )
-def test_paired_euclidean_distances(y_true, y_pred) -> None:
+def test_paired_euclidean_distances(y_true, y_pred, expected) -> None:
     from dioptra_builtins.metrics.distance import paired_euclidean_distances
     from dioptra_builtins.metrics.distance import _flatten_batch
 
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
-    
+    expected = np.array(expected)
     result : np.ndarray = paired_euclidean_distances(y_true, y_pred)
         
-    y_diff: np.ndarray = _flatten_batch(y_true - y_pred)
-    y_diff_l_norm: np.ndarray = np.linalg.norm(y_diff, axis=1, ord=2)
-
     
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(y_diff_l_norm, result)
+    assert np.array_equal(expected, result)
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred"),
-    [
-        ([[1,2,3],[3,4,5]],[[-2,4,5],[-9,0,1]]),
-        ([[1,2],[3,4],[4,5]],[[-2,4],[5,-9],[0,1]]),
-        ([1,2,3,4,5,6],[-2,4,5,-9,0,1]),
-        ([10],[1]),
-    ]
+	('y_true', 'y_pred', 'expected'),
+	[
+		([[1, 2, 3], [3, 4, 5]], [[-2, 4, 5], [-9, 0, 1]], [7.0, 20.0]),
+		([[1, 2], [3, 4], [4, 5]], [[-2, 4], [5, -9], [0, 1]], [5.0, 15.0, 8.0]),
+		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], [3.0, 2.0, 2.0, 13.0, 5.0, 5.0]),
+		([10], [1], [9.0]),
+	]
 )
-def test_paired_manhattan_distances(y_true, y_pred) -> None:
+def test_paired_manhattan_distances(y_true, y_pred, expected) -> None:
     from dioptra_builtins.metrics.distance import paired_manhattan_distances
     from dioptra_builtins.metrics.distance import _flatten_batch
     
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
-    
+    expected = np.array(expected)
     result: np.ndarray = paired_manhattan_distances(y_true, y_pred)
-        
-    y_diff: np.ndarray = _flatten_batch(y_true - y_pred)
-    y_diff_l_norm: np.ndarray = np.linalg.norm(y_diff, axis=1, ord=1)
-
+       
     
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(y_diff_l_norm, result)
+    assert np.array_equal(expected, result)
 
 @pytest.mark.parametrize(
-    ("y_true", "y_pred"),
-    [
-        ([[1,2,3],[3,4,5]],[[-2,4,5],[-9,0,1]]),
-        ([[1,2],[3,4],[4,5]],[[-2,4],[5,-9],[0,1]]),
-        ([1,2,3,4,5,6],[-2,4,5,-9,0,1]),
-        ([10],[1]),
-    ]
+	('y_true', 'y_pred', 'expected'),
+	[
+		([[1, 2, 3], [3, 4, 5]], [[-2, 4, 5], [-9, 0, 1]], [2.3333333333333335, 6.666666666666666]),
+		([[1, 2], [3, 4], [4, 5]], [[-2, 4], [5, -9], [0, 1]], [2.5, 6.5, 4.0]),
+		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], [3.0, 2.0, 2.0, 13.0, 5.0, 5.0]),
+		([10], [1], [9.0]),
+	]
 )
-def test_paired_wasserstein_distances(y_true, y_pred) -> None:
+def test_paired_wasserstein_distances(y_true, y_pred, expected) -> None:
     from dioptra_builtins.metrics.distance import paired_wasserstein_distances
     from dioptra_builtins.metrics.distance import _flatten_batch
     
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
-
+    expected = np.array(expected)
     result : np.ndarray = paired_wasserstein_distances(y_true, y_pred)
-    metric: np.ndarray = paired_distances(
-        X=_flatten_batch(y_true), Y=_flatten_batch(y_pred), 
-        metric=lambda x,y: 
-            wasserstein_distance(u_values=x,v_values=y))
     
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(metric, result)
+    assert np.array_equal(expected, result)
 
 @pytest.mark.parametrize(
     "X",
@@ -290,31 +263,27 @@ def test__flatten_batch(X) -> None:
     assert np.array_equal(expected, result)
     
 @pytest.mark.parametrize(
-    ("y_true", "y_pred"),
-    [
-        ([[1,2,3],[3,4,5]],[[-2,4,5],[-9,0,1]]),
-        ([[1,2],[3,4],[4,5]],[[-2,4],[5,-9],[0,1]]),
-        ([1,2,3,4,5,6],[-2,4,5,-9,0,1]),
-        ([10],[1]),
-    ]
+	('y_true', 'y_pred', 'order', 'expected'),
+	[
+		([[1, 2, 3], [3, 4, 5]], [[-2, 4, 5], [-9, 0, 1]], 1, [7.0, 20.0]),
+		([[1, 2], [3, 4], [4, 5]], [[-2, 4], [5, -9], [0, 1]], 2, [3.605551275463989, 13.152946437965905, 5.656854249492381]),
+		([[1, 2], [3, 4], [4, 5]], [[-2, 4], [5, -9], [0, 1]], np.inf, [3.0, 13.0, 4.0]),
+		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], 5, [3.0, 2.0, 2.0, 13.0, 5.0, 5.0]),
+		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], 1, [3.0, 2.0, 2.0, 13.0, 5.0, 5.0]),
+		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], np.inf, [3.0, 2.0, 2.0, 13.0, 5.0, 5.0]),
+		([10], [1], 20, [9.0]),
+	]
 )
-@pytest.mark.parametrize(
-    "order",
-    [
-        1,2,3,4,5,6,8,20,np.inf
-    ],
-)
-def test__matrix_difference_l_norm(y_true, y_pred, order) -> None:
+def test__matrix_difference_l_norm(y_true, y_pred, order, expected) -> None:
     from dioptra_builtins.metrics.distance import _matrix_difference_l_norm
     from dioptra_builtins.metrics.distance import _flatten_batch
     
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
-    
+    expected = np.array(expected)
     result: np.ndarray = _matrix_difference_l_norm(y_true, y_pred, order)
-    expected: np.ndarray = np.linalg.norm(_flatten_batch(y_true - y_pred), axis=1, ord=order)
     
-    assert np.array_equal(expected, result)
+    assert np.allclose(expected, result)
 
 @pytest.mark.parametrize(
     "X",
