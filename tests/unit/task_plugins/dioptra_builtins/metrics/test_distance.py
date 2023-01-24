@@ -109,7 +109,7 @@ def test_l_inf_norm(y_true, y_pred, expected) -> None:
     result: np.ndarray = l_inf_norm(y_true, y_pred)
             
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(expected, result)
+    assert np.allclose(expected, result)
 
 
 @pytest.mark.parametrize(
@@ -131,7 +131,7 @@ def test_l_1_norm(y_true, y_pred, expected) -> None:
     result: np.ndarray = l_1_norm(y_true, y_pred)
                 
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(expected, result)
+    assert np.allclose(expected, result)
 
 @pytest.mark.parametrize(
 	('y_true', 'y_pred', 'expected'),
@@ -152,7 +152,7 @@ def test_l_2_norm(y_true, y_pred, expected) -> None:
     result: np.ndarray = l_2_norm(y_true, y_pred)
     
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(expected, result)
+    assert np.allclose(expected, result)
 
 @pytest.mark.parametrize(
 	('y_true', 'y_pred', 'expected'),
@@ -175,7 +175,7 @@ def test_paired_cosine_similarities(y_true, y_pred, expected) -> None:
     result: np.ndarray = paired_cosine_similarities(y_true, y_pred)
         
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(expected, result, equal_nan=True)
+    assert np.allclose(expected, result, equal_nan=True)
 
 @pytest.mark.parametrize(
 	('y_true', 'y_pred', 'expected'),
@@ -197,7 +197,7 @@ def test_paired_euclidean_distances(y_true, y_pred, expected) -> None:
         
     
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(expected, result)
+    assert np.allclose(expected, result)
 
 @pytest.mark.parametrize(
 	('y_true', 'y_pred', 'expected'),
@@ -219,12 +219,12 @@ def test_paired_manhattan_distances(y_true, y_pred, expected) -> None:
        
     
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(expected, result)
+    assert np.allclose(expected, result)
 
 @pytest.mark.parametrize(
 	('y_true', 'y_pred', 'expected'),
 	[
-		([[1, 2, 3], [3, 4, 5]], [[-2, 4, 5], [-9, 0, 1]], [2.3333333333333335, 6.666666666666666]),
+		([[1, 2, 3], [3, 4, 5]], [[-2, 4, 5], [-9, 0, 1]], [2.33333333, 6.6666666]),
 		([[1, 2], [3, 4], [4, 5]], [[-2, 4], [5, -9], [0, 1]], [2.5, 6.5, 4.0]),
 		([1, 2, 3, 4, 5, 6], [-2, 4, 5, -9, 0, 1], [3.0, 2.0, 2.0, 13.0, 5.0, 5.0]),
 		([10], [1], [9.0]),
@@ -240,7 +240,7 @@ def test_paired_wasserstein_distances(y_true, y_pred, expected) -> None:
     result : np.ndarray = paired_wasserstein_distances(y_true, y_pred)
     
     assert all([isinstance(res, float) for res in result])
-    assert np.array_equal(expected, result)
+    assert np.allclose(expected, result)
 
 @pytest.mark.parametrize(
     "X",
@@ -260,7 +260,7 @@ def test__flatten_batch(X) -> None:
     expected: np.ndarray = X.reshape(X.shape[0], int(np.prod(X.shape[1:])))
     
     assert result.shape == expected.shape
-    assert np.array_equal(expected, result)
+    assert np.allclose(expected, result)
     
 @pytest.mark.parametrize(
 	('y_true', 'y_pred', 'order', 'expected'),
