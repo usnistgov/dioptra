@@ -11,7 +11,9 @@ from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 _SCHEMA_FILENAME = "experiment_schema.json"
 
 
-def _instance_path_to_description(instance_path: Sequence[Union[int, str]]) -> str:
+def _instance_path_to_description(  # noqa: C901
+    instance_path: Sequence[Union[int, str]]
+) -> str:
     """
     Create a nice description of the location in an experiment description
     pointed to by instance_path.  This implementation is crafted specifically
