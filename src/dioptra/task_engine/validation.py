@@ -148,8 +148,8 @@ def _structure_paths_preorder(
     yield parent_path, value
 
     if isinstance(value, Mapping):
-        for key, value in value.items():
-            yield from _structure_paths_preorder(value, parent_path + [key])
+        for key, sub_value in value.items():
+            yield from _structure_paths_preorder(sub_value, parent_path + [key])
 
     elif not isinstance(value, str) and util.is_iterable(value):
         for idx, elt in enumerate(value):
@@ -171,9 +171,9 @@ def _structure_paths_to_objects_preorder(
 
     :param value: A value to search
     """
-    for path, value in _structure_paths_preorder(value):
-        if isinstance(value, Mapping):
-            yield path, value
+    for path, sub_value in _structure_paths_preorder(value):
+        if isinstance(sub_value, Mapping):
+            yield path, sub_value
 
 
 def _check_string_keys(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
