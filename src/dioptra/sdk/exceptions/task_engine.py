@@ -1,6 +1,7 @@
-from .base import BaseTaskEngineError
 from collections.abc import Iterable
 from typing import Any
+
+from .base import BaseTaskEngineError
 
 
 class StepError(BaseTaskEngineError):
@@ -9,6 +10,7 @@ class StepError(BaseTaskEngineError):
     of a task graph.  This class has support for storing the contextual step
     name and producing a better error message.
     """
+
     def __init__(self, message: str, context_step_name: str = None) -> None:
         """
         Initialize this error instance.
@@ -47,10 +49,7 @@ class StepNotFoundError(StepError):
     """A reference to a non-existent step."""
 
     def __init__(self, step_name: str, context_step_name: str = None) -> None:
-        super().__init__(
-            "Step not found: " + step_name,
-            context_step_name
-        )
+        super().__init__("Step not found: " + step_name, context_step_name)
 
         self.step_name = step_name
 
@@ -59,16 +58,11 @@ class OutputNotFoundError(StepError):
     """A reference to a non-existent output of an existing step."""
 
     def __init__(
-        self,
-        step_name: str,
-        output_name: str,
-        context_step_name: str = None
+        self, step_name: str, output_name: str, context_step_name: str = None
     ) -> None:
         super().__init__(
-            'Unrecognized output of step "{}": {}'.format(
-                step_name, output_name
-            ),
-            context_step_name
+            'Unrecognized output of step "{}": {}'.format(step_name, output_name),
+            context_step_name,
         )
 
         self.step_name = step_name
@@ -80,9 +74,9 @@ class IllegalOutputReferenceError(StepError):
 
     def __init__(self, step_name: str, context_step_name: str = None) -> None:
         super().__init__(
-            'An output name is required when referring to a step with more'
-            ' than one output: ' + step_name,
-            context_step_name
+            "An output name is required when referring to a step with more"
+            " than one output: " + step_name,
+            context_step_name,
         )
 
         self.step_name = step_name
@@ -98,10 +92,8 @@ class NonIterableTaskOutputError(StepError):
 
         super().__init__(
             "Task output was defined using a list, but the task invocation did"
-            " not return an iterable value: {} ({})".format(
-                value, type(value)
-            ),
-            context_step_name
+            " not return an iterable value: {} ({})".format(value, type(value)),
+            context_step_name,
         )
 
         self.value = value
@@ -114,15 +106,8 @@ class UnresolvableReferenceError(StepError):
     output of a step which was not declared to produce any output.
     """
 
-    def __init__(
-        self,
-        reference_name: str,
-        context_step_name: str = None
-    ) -> None:
-        super().__init__(
-            "Unresolvable reference: " + reference_name,
-            context_step_name
-        )
+    def __init__(self, reference_name: str, context_step_name: str = None) -> None:
+        super().__init__("Unresolvable reference: " + reference_name, context_step_name)
 
         self.reference_name = reference_name
 
@@ -131,13 +116,10 @@ class TaskPluginNotFoundError(StepError):
     """A reference to a non-existent task plugin."""
 
     def __init__(
-        self,
-        task_plugin_short_name: str,
-        context_step_name: str = None
+        self, task_plugin_short_name: str, context_step_name: str = None
     ) -> None:
         super().__init__(
-            "Task plugin not found: " + task_plugin_short_name,
-            context_step_name
+            "Task plugin not found: " + task_plugin_short_name, context_step_name
         )
 
         self.task_plugin_short_name = task_plugin_short_name
@@ -149,10 +131,7 @@ class MissingTaskPluginNameError(StepError):
     """
 
     def __init__(self, context_step_name: str = None) -> None:
-        super().__init__(
-            "Step is missing a task plugin name",
-            context_step_name
-        )
+        super().__init__("Step is missing a task plugin name", context_step_name)
 
 
 class MissingGlobalParametersError(BaseTaskEngineError):
@@ -162,8 +141,7 @@ class MissingGlobalParametersError(BaseTaskEngineError):
 
     def __init__(self, parameter_names: Iterable[str]) -> None:
         super().__init__(
-            "Missing values for global parameters: "
-            + ", ".join(parameter_names)
+            "Missing values for global parameters: " + ", ".join(parameter_names)
         )
 
         self.parameter_names = parameter_names
@@ -185,10 +163,6 @@ class StepReferenceCycleError(BaseTaskEngineError):
     """A cycle was detected in the step graph."""
 
     def __init__(self, cycle: Iterable[str]) -> None:
-        super().__init__(
-            "Step cycle detected: {}".format(
-                " > ".join(cycle)
-            )
-        )
+        super().__init__("Step cycle detected: {}".format(" > ".join(cycle)))
 
         self.cycle = cycle

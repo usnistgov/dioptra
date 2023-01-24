@@ -16,7 +16,7 @@ def parse_args() -> argparse.Namespace:
     arg_parser.add_argument(
         "file",
         help="""The file to validate""",
-        type=argparse.FileType("r", encoding="utf-8")
+        type=argparse.FileType("r", encoding="utf-8"),
     )
 
     return arg_parser.parse_args()
@@ -32,7 +32,7 @@ def main() -> None:
         print("Issues:")
         print()
         for i, issue in enumerate(issues):
-            print(i+1, ". ", issue, sep="")
+            print(i + 1, ". ", issue, sep="")
             print()
 
     else:

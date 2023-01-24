@@ -17,9 +17,8 @@ class ValidationIssue:
     """
     Represents a validation "issue", including errors, warnings, etc.
     """
-    def __init__(
-        self, type_: IssueType, severity: IssueSeverity, message: str
-    ) -> None:
+
+    def __init__(self, type_: IssueType, severity: IssueSeverity, message: str) -> None:
         self.type = type_
         self.severity = severity
         self.message = message

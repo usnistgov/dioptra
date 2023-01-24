@@ -32,9 +32,7 @@ def is_iterable(value: Any) -> bool:
 def schema_validate(
     instance: Any,
     schema: Union[dict, bool],
-    location_desc_callback: Optional[
-        Callable[[Sequence[Union[int, str]]], str]
-    ] = None
+    location_desc_callback: Optional[Callable[[Sequence[Union[int, str]]], str]] = None,
 ) -> list[str]:
     """
     Validate the given instance against the given JSON-Schema.
@@ -99,9 +97,7 @@ def is_reference(value: str) -> bool:
     :return: True if the given string is a reference; False if not
     """
 
-    return value != "$" \
-        and value.startswith("$") \
-        and not value.startswith("$$")
+    return value != "$" and value.startswith("$") and not value.startswith("$$")
 
 
 def get_references(input_: Any) -> Iterator[str]:
@@ -134,10 +130,7 @@ def get_references(input_: Any) -> Iterator[str]:
             yield from get_references(elt)
 
 
-def _get_step_references(
-    input_: Any,
-    step_names: Container[str]
-) -> Iterator[str]:
+def _get_step_references(input_: Any, step_names: Container[str]) -> Iterator[str]:
     """
     Generate step names from references in the input which refer to steps.
 
@@ -163,7 +156,7 @@ def _step_dfs(
     step_graph: Mapping[str, Any],
     curr_step_name: str,
     visited_steps: MutableSet[str],
-    search_path: MutableSequence[str]
+    search_path: MutableSequence[str],
 ) -> list[str]:
     """
     Perform depth-first search through the task graph, to produce a total order
@@ -211,10 +204,7 @@ def _step_dfs(
         if isinstance(explicit_deps, str):
             explicit_deps = [explicit_deps]
 
-        all_dependencies = itertools.chain(
-            implicit_deps,
-            explicit_deps
-        )
+        all_dependencies = itertools.chain(implicit_deps, explicit_deps)
 
         for next_step_name in all_dependencies:
             sub_sorted = _step_dfs(

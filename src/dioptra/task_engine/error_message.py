@@ -34,7 +34,7 @@ def _indent_lines(lines: MutableSequence[str]) -> MutableSequence[str]:
         lines.
     """
     for i, line in enumerate(lines):
-        lines[i] = " "*_INDENT_SIZE + line
+        lines[i] = " " * _INDENT_SIZE + line
 
     return lines
 
@@ -71,7 +71,7 @@ def _schema_reference_to_path(ref: str) -> list[str]:
 def _extract_schema_by_schema_path(
     schema_path: Iterable[Union[int, str]],
     full_schema: dict[str, Any],
-    schema: Optional[Union[dict[str, Any], list[Any]]] = None
+    schema: Optional[Union[dict[str, Any], list[Any]]] = None,
 ) -> Union[dict[str, Any], list[Any]]:
     """
     Find the schema sub-document referred to by a path.  The path must not
@@ -110,15 +110,12 @@ def _extract_schema_by_schema_path(
         # strings, and use it in contexts where non-string content is expected
         # (ints, in this case).
         ref_schema_path: MutableSequence[Union[int, str]] = cast(
-            MutableSequence[Union[int, str]],
-            _schema_reference_to_path(schema["$ref"])
+            MutableSequence[Union[int, str]], _schema_reference_to_path(schema["$ref"])
         )
         # Here, schema_path may have integer list indices.  That's okay.
         ref_schema_path.extend(schema_path)
 
-        result_schema = _extract_schema_by_schema_path(
-            ref_schema_path, full_schema
-        )
+        result_schema = _extract_schema_by_schema_path(ref_schema_path, full_schema)
 
     else:
 
@@ -171,8 +168,7 @@ def _extract_schema_by_reference(
 
 
 def _get_one_of_alternative_names(
-    alternative_schemas: Iterable[Any],
-    full_schema: dict[str, Any]
+    alternative_schemas: Iterable[Any], full_schema: dict[str, Any]
 ) -> list[str]:
     """
     Find names for the given alternative schemas.  The names are derived from
@@ -202,11 +198,11 @@ def _get_one_of_alternative_names(
 
             name = alternative_schema.get("title")
             if not name:
-                name = "Alternative #" + str(idx+1)
+                name = "Alternative #" + str(idx + 1)
 
         else:
             # rare case... would only apply to true/false schemas I think.
-            name = "Alternative #" + str(idx+1)
+            name = "Alternative #" + str(idx + 1)
 
         # uniquefy names, just in case...
         name_count = name_counts[name]
@@ -214,15 +210,13 @@ def _get_one_of_alternative_names(
         if name_count == 0:
             names.append(name)
         else:
-            names.append("{}({})".format(name, name_count+1))
+            names.append("{}({})".format(name, name_count + 1))
 
     return names
 
 
 def _is_valid_for_sub_schema(
-    full_schema: dict[str, Any],
-    sub_schema: dict[str, Any],
-    sub_instance: Any
+    full_schema: dict[str, Any], sub_schema: dict[str, Any], sub_instance: Any
 ) -> bool:
     """
     Run a validation of document sub_instance against sub_schema.
@@ -243,17 +237,14 @@ def _is_valid_for_sub_schema(
         # Need to construct a resolver from the full schema, since the
         # sub-schema might contain references relative to the full schema,
         # and we need to be able to resolve them.
-        resolver=jsonschema.validators.RefResolver.from_schema(
-            full_schema
-        )
+        resolver=jsonschema.validators.RefResolver.from_schema(full_schema),
     )
 
     return validator.is_valid(sub_instance)
 
 
 def _one_of_too_many_alternatives_satisfied_message_lines(
-    error: jsonschema.exceptions.ValidationError,
-    schema: dict[str, Any]
+    error: jsonschema.exceptions.ValidationError, schema: dict[str, Any]
 ) -> list[str]:
     """
     Create an error message specifically about the situation where too many
@@ -268,23 +259,17 @@ def _one_of_too_many_alternatives_satisfied_message_lines(
     """
 
     alt_names = _get_one_of_alternative_names(error.validator_value, schema)
-    error_desc = "Must be exactly one of: {}".format(
-        ", ".join(alt_names)
-    )
+    error_desc = "Must be exactly one of: {}".format(", ".join(alt_names))
 
     satisfied_alt_names = []
     for alt_name, alt_schema in zip(alt_names, error.validator_value):
         # Perform a little "mini" validation to determine which alternatives
         # were satisfied, and describe them in the error message.
-        if _is_valid_for_sub_schema(
-                schema, alt_schema, error.instance
-        ):
+        if _is_valid_for_sub_schema(schema, alt_schema, error.instance):
             satisfied_alt_names.append(alt_name)
 
-    error_desc += (
-        ".  Content satisfied more than one alternative: {}.".format(
-            ", ".join(satisfied_alt_names)
-        )
+    error_desc += ".  Content satisfied more than one alternative: {}.".format(
+        ", ".join(satisfied_alt_names)
     )
 
     return [error_desc]
@@ -293,7 +278,7 @@ def _one_of_too_many_alternatives_satisfied_message_lines(
 def _one_of_no_alternatives_satisfied_message_lines(
     error: jsonschema.exceptions.ValidationError,
     schema: dict[str, Any],
-    location_desc_callback: Callable[[Sequence[Union[int, str]]], str]
+    location_desc_callback: Callable[[Sequence[Union[int, str]]], str],
 ) -> list[str]:
     """
     Create an error message specifically about the situation where none of the
@@ -318,9 +303,7 @@ def _one_of_no_alternatives_satisfied_message_lines(
     alt_names = _get_one_of_alternative_names(error.validator_value, schema)
     basic_desc = (
         "Must be exactly one of: {}; all alternatives failed validation."
-    ).format(
-        ", ".join(alt_names)
-    )
+    ).format(", ".join(alt_names))
 
     message_lines.append(basic_desc)
 
@@ -343,9 +326,7 @@ def _one_of_no_alternatives_satisfied_message_lines(
         # will share a common prefix with the schema path for the
         # "oneOf" error.  The next element after the common portion
         # will be an int which is the index of the alternative.
-        error_alt_idx = ctx_error.absolute_schema_path[
-            one_of_schema_path_len
-        ]
+        error_alt_idx = ctx_error.absolute_schema_path[one_of_schema_path_len]
 
         # Mypy infers Union[str, int] for error_alt_idx and complains that it
         # is not a valid index type.  As explained above, in this context, this
@@ -355,9 +336,7 @@ def _one_of_no_alternatives_satisfied_message_lines(
 
     for alt_name, alt_errors in errors_by_alt.items():
         message_lines.append(
-            'Errors associated with alternative "{}":'.format(
-                alt_name
-            )
+            'Errors associated with alternative "{}":'.format(alt_name)
         )
 
         for alt_error in alt_errors:
@@ -372,7 +351,7 @@ def _one_of_no_alternatives_satisfied_message_lines(
 def _validation_error_to_message_lines(
     error: jsonschema.exceptions.ValidationError,
     schema: dict[str, Any],
-    location_desc_callback: Callable[[Sequence[Union[int, str]]], str]
+    location_desc_callback: Callable[[Sequence[Union[int, str]]], str],
 ) -> list[str]:
     """
     Create a nice error message for the given error object.
@@ -401,26 +380,19 @@ def _validation_error_to_message_lines(
             )
 
         else:
-            what_lines = \
-                _one_of_too_many_alternatives_satisfied_message_lines(
-                    error, schema
-                )
+            what_lines = _one_of_too_many_alternatives_satisfied_message_lines(
+                error, schema
+            )
 
     else:
         # fallback if we can't be more clever about our message
         what_lines = [error.message]
 
     if len(what_lines) == 1:
-        message_lines = [
-            "In {}: {}".format(
-                location_desc, what_lines[0]
-            )
-        ]
+        message_lines = ["In {}: {}".format(location_desc, what_lines[0])]
 
     else:
-        message_lines = [
-            "In {}:".format(location_desc)
-        ]
+        message_lines = ["In {}:".format(location_desc)]
         message_lines.extend(_indent_lines(what_lines))
 
     return message_lines
@@ -444,9 +416,7 @@ def json_path_to_string(path: Iterable[Any]) -> str:
 def validation_error_to_message(
     error: jsonschema.exceptions.ValidationError,
     schema: dict[str, Any],
-    location_desc_callback: Optional[
-        Callable[[Sequence[Union[int, str]]], str]
-    ] = None
+    location_desc_callback: Optional[Callable[[Sequence[Union[int, str]]], str]] = None,
 ) -> str:
     """
     Create a nice error message for the given error object.
@@ -477,9 +447,7 @@ def validation_error_to_message(
 def validation_errors_to_message(
     errors: Iterable[jsonschema.exceptions.ValidationError],
     schema: dict[str, Any],
-    location_desc_callback: Optional[
-        Callable[[Sequence[Union[int, str]]], str]
-    ] = None
+    location_desc_callback: Optional[Callable[[Sequence[Union[int, str]]], str]] = None,
 ) -> str:
     """
     Create a nice error message for the given error objects.  This currently

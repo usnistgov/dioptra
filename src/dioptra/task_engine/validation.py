@@ -1,7 +1,7 @@
 import json
 import pathlib
 from collections.abc import Iterable, Mapping
-from typing import Any, Sequence, Tuple, Union, Optional
+from typing import Any, Optional, Sequence, Tuple, Union
 
 from dioptra.sdk.exceptions.base import BaseTaskEngineError
 from dioptra.task_engine import util
@@ -11,9 +11,7 @@ from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 _SCHEMA_FILENAME = "experiment_schema.json"
 
 
-def _instance_path_to_description(
-    instance_path: Sequence[Union[int, str]]
-) -> str:
+def _instance_path_to_description(instance_path: Sequence[Union[int, str]]) -> str:
     """
     Create a nice description of the location in an experiment description
     pointed to by instance_path.  This implementation is crafted specifically
@@ -45,15 +43,13 @@ def _instance_path_to_description(
                 if isinstance(parameter_id, str):
                     message_parts.append('"{}"'.format(parameter_id))
                 elif isinstance(parameter_id, int):
-                    message_parts.append("#" + str(parameter_id+1))
+                    message_parts.append("#" + str(parameter_id + 1))
 
         elif instance_path[0] == "tasks":
             if path_len == 1:
                 message_parts.append("tasks section")
             else:
-                message_parts.append(
-                    'task plugin "' + str(instance_path[1]) + '"'
-                )
+                message_parts.append('task plugin "' + str(instance_path[1]) + '"')
                 if len(instance_path) > 2:
                     if instance_path[2] == "outputs":
                         message_parts.append("outputs")
@@ -65,8 +61,7 @@ def _instance_path_to_description(
                 message_parts.append("graph section")
             else:
                 message_parts.append('step "' + str(instance_path[1]) + '"')
-                if len(instance_path) > 2 \
-                        and instance_path[2] == "dependencies":
+                if len(instance_path) > 2 and instance_path[2] == "dependencies":
                     message_parts.append("dependencies")
 
     if message_parts:
@@ -96,9 +91,7 @@ def _get_json_schema() -> Union[dict, bool]:  # hypothetical types of schemas
     return schema
 
 
-def _schema_validate(
-    experiment_desc: Mapping[str, Any]
-) -> list[ValidationIssue]:
+def _schema_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description against a JSON-Schema
     schema.
@@ -164,7 +157,7 @@ def _structure_paths_preorder(
 
 
 def _structure_paths_to_objects_preorder(
-    value: Any
+    value: Any,
 ) -> Iterable[Tuple[list[Any], Mapping]]:
     """
     Find mappings in the given value.  The given value is treated as a nested
@@ -183,9 +176,7 @@ def _structure_paths_to_objects_preorder(
             yield path, value
 
 
-def _check_string_keys(
-    experiment_desc: Mapping[str, Any]
-) -> list[ValidationIssue]:
+def _check_string_keys(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     """
     Check the types of keys in the given mapping.  JSON doesn't support other
     than string keys, so JSON-Schema doesn't support checking the types of
@@ -205,36 +196,25 @@ def _check_string_keys(
     issues = []
 
     for path, obj in _structure_paths_to_objects_preorder(experiment_desc):
-        non_string_keys = [
-            key for key in obj
-            if not isinstance(key, str)
-        ]
+        non_string_keys = [key for key in obj if not isinstance(key, str)]
 
         if non_string_keys:
             # Would a filesystem path-like syntax be most intuitive for
             # readers?  JSONPath uses "$" for root and "." for subsequent
             # path component separators.  Is that syntax well recognized?
             path_string = "/" + "/".join(str(elt) for elt in path)
-            non_string_keys_string = ", ".join(
-                str(key) for key in non_string_keys
-            )
+            non_string_keys_string = ", ".join(str(key) for key in non_string_keys)
 
-            message = (
-                "Found non-string key(s) in object at location {}: {}"
-            ).format(
+            message = ("Found non-string key(s) in object at location {}: {}").format(
                 path_string, non_string_keys_string
             )
-            issue = ValidationIssue(
-                IssueType.SEMANTIC, IssueSeverity.ERROR, message
-            )
+            issue = ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)
             issues.append(issue)
 
     return issues
 
 
-def _check_name_collisions(
-    experiment_desc: Mapping[str, Any]
-) -> list[ValidationIssue]:
+def _check_name_collisions(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     """
     Check whether any graph step names collide with any parameter names.
 
@@ -251,11 +231,10 @@ def _check_name_collisions(
 
     issues = []
     if collisions:
-        message = "Some parameters and steps have the same name: " \
-            + ", ".join(collisions)
-        issue = ValidationIssue(
-            IssueType.SEMANTIC, IssueSeverity.ERROR, message
+        message = "Some parameters and steps have the same name: " + ", ".join(
+            collisions
         )
+        issue = ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)
         issues.append(issue)
 
     return issues
@@ -286,9 +265,7 @@ def _check_task_plugin_references(
             )
 
         if message:
-            issue = ValidationIssue(
-                IssueType.SEMANTIC, IssueSeverity.ERROR, message
-            )
+            issue = ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)
             issues.append(issue)
 
     return issues
@@ -315,25 +292,17 @@ def _check_task_plugin_pyplugs_coords(
         if "." not in plugin:
             message = (
                 "Invalid plugin in task '{}': requires at least one '.': {}"
-            ).format(
-                task_short_name, plugin
-            )
+            ).format(task_short_name, plugin)
 
         plugin_parts = plugin.split(".")
-        if any(
-            len(plugin_part) == 0 for plugin_part in plugin_parts
-        ):
+        if any(len(plugin_part) == 0 for plugin_part in plugin_parts):
             message = (
                 "Invalid plugin in task '{}': all plugin module components"
                 " must be of non-zero length: {}"
-            ).format(
-                task_short_name, plugin
-            )
+            ).format(task_short_name, plugin)
 
         if message:
-            issue = ValidationIssue(
-                IssueType.SEMANTIC, IssueSeverity.ERROR, message
-            )
+            issue = ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)
             issues.append(issue)
 
     return issues
@@ -363,7 +332,7 @@ def _check_graph_references(
             dot_idx = ref.find(".")
             if dot_idx >= 0:
                 name = ref[:dot_idx]
-                output = ref[dot_idx+1:]
+                output = ref[dot_idx + 1 :]
             else:
                 name = ref
                 output = None
@@ -379,34 +348,29 @@ def _check_graph_references(
 
                 if output is None:
 
-                    if isinstance(task_outputs, list) \
-                            and len(task_outputs) > 1:
+                    if isinstance(task_outputs, list) and len(task_outputs) > 1:
 
                         message = (
                             'In step "{}": reference "{}": an output name must'
-                            ' be given if the task plugin produces more than'
-                            ' one output.'
-                        ).format(
-                            step_name, ref
-                        )
+                            " be given if the task plugin produces more than"
+                            " one output."
+                        ).format(step_name, ref)
 
-                elif task_outputs is None or (
-                    isinstance(task_outputs, str) and task_outputs != output
-                ) or output not in task_outputs:
+                elif (
+                    task_outputs is None
+                    or (isinstance(task_outputs, str) and task_outputs != output)
+                    or output not in task_outputs
+                ):
                     message = (
                         'In step "{}": reference "{}": unrecognized output: {}'
-                    ).format(
-                        step_name, ref, output
-                    )
+                    ).format(step_name, ref, output)
 
             elif name in params:
                 if output:
                     message = (
                         'In step "{}": reference "{}": references to parameters'
-                        ' may not include an output name: {}'
-                    ).format(
-                        step_name, ref, output
-                    )
+                        " may not include an output name: {}"
+                    ).format(step_name, ref, output)
 
             else:
                 message = 'Unresolvable reference in step "{}": {}'.format(
@@ -451,17 +415,13 @@ def _check_graph_dependencies(
             message = 'In step "{}": unrecognized dependency step(s): {}'.format(
                 step_name, ", ".join(unrecognized_deps)
             )
-            issue = ValidationIssue(
-                IssueType.SEMANTIC, IssueSeverity.ERROR, message
-            )
+            issue = ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)
             issues.append(issue)
 
     return issues
 
 
-def _check_graph_cycle(
-    experiment_desc: Mapping[str, Any]
-) -> list[ValidationIssue]:
+def _check_graph_cycle(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     """
     Check for a cycle in the task graph.
 
@@ -482,9 +442,7 @@ def _check_graph_cycle(
         message = str(e)
 
     if message:
-        issue = ValidationIssue(
-            IssueType.SEMANTIC, IssueSeverity.ERROR, message
-        )
+        issue = ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)
         issues.append(issue)
 
     return issues
@@ -511,15 +469,11 @@ def _check_parameter_names_dots(
         if "." in param_name:
             message = (
                 'Parameter name "{}" contains a dot.  References to this'
-                ' parameter will ambiguously look like step.output'
-                ' references.'
-            ).format(
-                param_name
-            )
+                " parameter will ambiguously look like step.output"
+                " references."
+            ).format(param_name)
 
-            issue = ValidationIssue(
-                IssueType.SEMANTIC, IssueSeverity.ERROR, message
-            )
+            issue = ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)
 
             issues.append(issue)
 
@@ -560,37 +514,29 @@ def _check_short_form_task_invocation_structure(
                 # case.
                 message = (
                     'Illegal task invocation in step "{}": A'
-                    ' positional/keyword short form step definition must be an'
-                    ' object which includes a property whose name is the'
-                    ' task plugin short name.'
-                ).format(
-                    step_name
-                )
+                    " positional/keyword short form step definition must be an"
+                    " object which includes a property whose name is the"
+                    " task plugin short name."
+                ).format(step_name)
 
             elif len(step_def) == 2 and "dependencies" not in step_def:
                 message = (
                     'Illegal task invocation in step "{}": A'
-                    ' positional/keyword short form step definition must be an'
-                    ' object which includes a property whose name is the'
-                    ' task plugin short name.'
-                ).format(
-                    step_name
-                )
+                    " positional/keyword short form step definition must be an"
+                    " object which includes a property whose name is the"
+                    " task plugin short name."
+                ).format(step_name)
 
             # Presence of more than two properties is checked in schema.
 
         if message:
-            issue = ValidationIssue(
-                IssueType.SEMANTIC, IssueSeverity.ERROR, message
-            )
+            issue = ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)
             issues.append(issue)
 
     return issues
 
 
-def _manually_validate(
-    experiment_desc: Mapping[str, Any]
-) -> list[ValidationIssue]:
+def _manually_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     """
     Do any extra domain-specific handwritten validation we can think of, which
     can't be done (or awkward to do) via JSON-Schema.
@@ -613,9 +559,7 @@ def _manually_validate(
         # may fail, since it doesn't make sense on non-string names.
         issues += _check_parameter_names_dots(experiment_desc)
 
-    invocation_errors = _check_short_form_task_invocation_structure(
-        experiment_desc
-    )
+    invocation_errors = _check_short_form_task_invocation_structure(experiment_desc)
     issues += invocation_errors
 
     if not invocation_errors:

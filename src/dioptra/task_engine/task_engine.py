@@ -33,7 +33,7 @@ def _get_logger() -> logging.Logger:
 def _resolve_reference(
     reference: str,
     global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]]
+    step_outputs: Mapping[str, Mapping[str, Any]],
 ) -> Any:
     """
     Resolve a reference to a task output or global parameter.
@@ -79,7 +79,7 @@ def _resolve_reference(
 def _resolve_task_parameter_value(
     arg_spec: Any,
     global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]]
+    step_outputs: Mapping[str, Mapping[str, Any]],
 ) -> Any:
     """
     Resolve a specification for one argument of a task invocation, to the
@@ -109,17 +109,13 @@ def _resolve_task_parameter_value(
 
     elif isinstance(arg_spec, dict):
         arg_value = {
-            key: _resolve_task_parameter_value(
-                value, global_parameters, step_outputs
-            )
+            key: _resolve_task_parameter_value(value, global_parameters, step_outputs)
             for key, value in arg_spec.items()
         }
 
     elif isinstance(arg_spec, list):
         arg_value = [
-            _resolve_task_parameter_value(
-                sub_val, global_parameters, step_outputs
-            )
+            _resolve_task_parameter_value(sub_val, global_parameters, step_outputs)
             for sub_val in arg_spec
         ]
 
@@ -132,7 +128,7 @@ def _resolve_task_parameter_value(
 def _positional_specs_to_args(
     arg_specs: Any,
     global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]]
+    step_outputs: Mapping[str, Mapping[str, Any]],
 ) -> list[Any]:
     """
     Resolve a positional parameter style invocation specification to a list
@@ -152,9 +148,7 @@ def _positional_specs_to_args(
         arg_specs = [arg_specs]
 
     arg_values = [
-        _resolve_task_parameter_value(
-            arg_spec, global_parameters, step_outputs
-        )
+        _resolve_task_parameter_value(arg_spec, global_parameters, step_outputs)
         for arg_spec in arg_specs
     ]
 
@@ -164,7 +158,7 @@ def _positional_specs_to_args(
 def _kwarg_specs_to_kwargs(
     kwarg_specs: Mapping[str, Any],
     global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]]
+    step_outputs: Mapping[str, Mapping[str, Any]],
 ) -> dict[str, Any]:
     """
     Resolve a keyword arg style invocation specification to a mapping of actual
@@ -191,7 +185,7 @@ def _kwarg_specs_to_kwargs(
 def _arg_specs_to_args(
     arg_specs: Any,
     global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]]
+    step_outputs: Mapping[str, Mapping[str, Any]],
 ) -> tuple[list[Any], dict[str, Any]]:
     """
     Resolve a task invocation specification to all of the positional and
@@ -246,7 +240,7 @@ def _update_output_map(
     step_outputs: MutableMapping[str, MutableMapping[str, Any]],
     step_name: str,
     new_output_names: Union[str, Sequence[str]],
-    new_outputs: Any
+    new_outputs: Any,
 ) -> None:
     """
     Update the step outputs mapping according to task metadata regarding output
@@ -286,9 +280,11 @@ def _update_output_map(
 
         if num_outputs is not None and num_outputs != num_output_names:
             log.warning(
-                'Warning: different numbers of outputs and output names for'
+                "Warning: different numbers of outputs and output names for"
                 ' step "%s": %d != %d',
-                step_name, num_outputs, num_output_names
+                step_name,
+                num_outputs,
+                num_output_names,
             )
 
         for output_name, output_value in zip(new_output_names, new_outputs):
@@ -297,7 +293,7 @@ def _update_output_map(
 
 def _resolve_global_parameters(
     global_parameter_spec: Union[list[str], Mapping[str, Any]],
-    global_parameters: MutableMapping[str, Any]
+    global_parameters: MutableMapping[str, Any],
 ) -> None:
     """
     Build a complete set of global parameters from the specification given in
@@ -329,8 +325,7 @@ def _resolve_global_parameters(
             if param_name not in global_parameters:
                 missing_parameters.append(param_name)
 
-        extra_parameters = global_parameters.keys() \
-            - set(global_parameter_spec)
+        extra_parameters = global_parameters.keys() - set(global_parameter_spec)
 
     else:
         # Global parameter spec is a dict/mapping.  Semantics for this style
@@ -344,8 +339,7 @@ def _resolve_global_parameters(
                 else:
                     missing_parameters.append(param_name)
 
-        extra_parameters = global_parameters.keys() \
-            - global_parameter_spec.keys()
+        extra_parameters = global_parameters.keys() - global_parameter_spec.keys()
 
     if missing_parameters:
         raise MissingGlobalParametersError(missing_parameters)
@@ -353,8 +347,7 @@ def _resolve_global_parameters(
     if extra_parameters:
         # This doesn't need to be a showstopper error I think.
         log.warning(
-            "Some global parameters were unused: %s",
-            ", ".join(extra_parameters)
+            "Some global parameters were unused: %s", ", ".join(extra_parameters)
         )
 
         # Maybe should also remove extras from the mapping?
@@ -401,7 +394,7 @@ def _run_step(
     step: Mapping[str, Any],
     task_plugin_id: str,
     global_parameters: Mapping[str, Any],
-    step_outputs: Mapping[str, Mapping[str, Any]]
+    step_outputs: Mapping[str, Mapping[str, Any]],
 ) -> Any:
     """
     Run one step of a task graph.
@@ -449,8 +442,7 @@ def _run_step(
 
 
 def _run_experiment(
-    experiment_desc: Mapping[str, Any],
-    global_parameters: MutableMapping[str, Any]
+    experiment_desc: Mapping[str, Any], global_parameters: MutableMapping[str, Any]
 ) -> None:
     """
     Run an experiment via a declarative experiment description.
@@ -476,8 +468,9 @@ def _run_experiment(
         )
         log.debug("Global parameters:\n  %s", props_values)
 
-    step_outputs: MutableMapping[str, MutableMapping[str, Any]] \
-        = collections.defaultdict(dict)
+    step_outputs: MutableMapping[
+        str, MutableMapping[str, Any]
+    ] = collections.defaultdict(dict)
 
     step_order = util.get_sorted_steps(graph)
 
@@ -496,22 +489,16 @@ def _run_experiment(
 
             task_def = tasks.get(task_plugin_short_name)
             if not task_def:
-                raise TaskPluginNotFoundError(
-                    task_plugin_short_name, step_name
-                )
+                raise TaskPluginNotFoundError(task_plugin_short_name, step_name)
 
             task_plugin_id = task_def["plugin"]
 
-            output = _run_step(
-                step, task_plugin_id, global_parameters, step_outputs
-            )
+            output = _run_step(step, task_plugin_id, global_parameters, step_outputs)
 
             output_names = task_def.get("outputs")
             if output_names:
-                _update_output_map(
-                    step_outputs, step_name, output_names, output
-                )
-                log.debug('Output(s): %s', str(step_outputs[step_name]))
+                _update_output_map(step_outputs, step_name, output_names, output)
+                log.debug("Output(s): %s", str(step_outputs[step_name]))
 
             # else: should I warn if there was an output from the task but no
             # output_names were given?
@@ -526,7 +513,7 @@ def _run_experiment(
 def run_experiment(
     experiment_desc: Mapping[str, Any],
     global_parameters: MutableMapping[str, Any],
-    mlflow_run: Any = True
+    mlflow_run: Any = True,
 ):
     """
     Run an experiment via a declarative experiment description.

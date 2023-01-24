@@ -18,13 +18,13 @@ def _parse_args() -> argparse.Namespace:
         epilog="""
         By default, if neither --no-run nor --run-id are given, an experiment
         runs in the context of a new MLflow run.
-        """
+        """,
     )
 
     arg_parser.add_argument(
         "file",
         type=argparse.FileType(mode="r", encoding="utf-8"),
-        help="The declarative experiment file to read"
+        help="The declarative experiment file to read",
     )
 
     arg_parser.add_argument(
@@ -34,19 +34,20 @@ def _parse_args() -> argparse.Namespace:
         form <name>=<value>.  This option can be repeated.
         """,
         action="append",
-        metavar="name=value"
+        metavar="name=value",
     )
 
     arg_parser.add_argument(
-        "-l", "--log-level",
-        help='''
+        "-l",
+        "--log-level",
+        help="""
         Set the logging level.  "all" is a special setting which causes logging
         from all modules to display at the debug level, in addition to this
         application.  This can result in a lot of logging noise.
         Default: %(default)s
-        ''',
+        """,
         choices=["all", "debug", "info", "warning", "error", "critical"],
-        default="info"
+        default="info",
     )
 
     run_group = arg_parser.add_mutually_exclusive_group()
@@ -55,7 +56,7 @@ def _parse_args() -> argparse.Namespace:
         "--run-id",
         help="""
         Resume the given MLflow run, for this experiment.
-        """
+        """,
     )
 
     run_group.add_argument(
@@ -66,7 +67,7 @@ def _parse_args() -> argparse.Namespace:
         # This is a "negative" option, i.e. its presence turns something off,
         # but I'd prefer to keep it positive in the resulting args object.
         dest="use_run",
-        action="store_false"
+        action="store_false",
     )
 
     return arg_parser.parse_args()
@@ -85,7 +86,6 @@ def _setup_logging(log_level: Union[int, str] = logging.INFO) -> None:
 
     config = {
         "version": 1,
-
         "formatters": {
             "fmt": {
                 # Uniform width, so we get nice alignment, with enough room for
@@ -93,20 +93,11 @@ def _setup_logging(log_level: Union[int, str] = logging.INFO) -> None:
                 "format": "[%(levelname)8s] %(message)s"
             }
         },
-
-        "handlers": {
-            "stream": {
-                "class": "logging.StreamHandler",
-                "formatter": "fmt"
-            }
-        },
-
-        "disable_existing_loggers": False
+        "handlers": {"stream": {"class": "logging.StreamHandler", "formatter": "fmt"}},
+        "disable_existing_loggers": False,
     }
 
-    logger_config: dict[str, Any] = {
-        "handlers": ["stream"]
-    }
+    logger_config: dict[str, Any] = {"handlers": ["stream"]}
 
     # Set the logging config on the root logger if "ALL", else just on
     # the task_graph module.
@@ -117,9 +108,7 @@ def _setup_logging(log_level: Union[int, str] = logging.INFO) -> None:
         # TODO: when this code is integrated into dioptra, update to reflect
         # the final location of the task_engine module!
         logger_config["level"] = log_level
-        config["loggers"] = {
-            "dioptra.task_engine": logger_config
-        }
+        config["loggers"] = {"dioptra.task_engine": logger_config}
 
     logging.config.dictConfig(config)
 
@@ -146,9 +135,7 @@ def _cmdline_params_to_map(params: Iterable[str]) -> dict[str, str]:
             equals_idx = param.find("=")
 
             if equals_idx == 0:
-                raise ValueError(
-                    "Global parameter names must not be empty: " + param
-                )
+                raise ValueError("Global parameter names must not be empty: " + param)
 
             elif equals_idx < 0:
                 # No equals sign: treat this as setting a "true" value.
@@ -157,7 +144,7 @@ def _cmdline_params_to_map(params: Iterable[str]) -> dict[str, str]:
 
             else:
                 param_name = param[:equals_idx]
-                param_value = param[equals_idx+1:]
+                param_value = param[equals_idx + 1 :]
 
                 # run a yaml evaluation to try to convert the value to some
                 # Python type which is more specialized than a string.

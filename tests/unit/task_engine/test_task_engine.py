@@ -33,6 +33,7 @@ def capture_return(f: Callable[..., Any]) -> Callable[..., Any]:
     plugin is invoked, at the end, _output will contain the return value for
     whichever plugin was invoked last.
     """
+
     @functools.wraps(f)
     def wrapper(*args: Any, **kwargs: Mapping[str, Any]) -> Any:
         global _output
@@ -133,6 +134,7 @@ def require_plugins(
     :param funcs: The plugin functions to register
     :return: A wrap function
     """
+
     def wrap(f):
         def wrapper(*args, **kwargs):
             with pyplugs_register(*funcs):
@@ -146,21 +148,11 @@ def require_plugins(
 @require_plugins(add)
 def test_single_call_positional() -> None:
     desc = {
-        "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            }
-        },
-        "graph": {
-            "add": {
-                "add": [1, 1]
-            }
-        }
+        "tasks": {"add": {"plugin": "tests.unit.task_engine.test_task_engine.add"}},
+        "graph": {"add": {"add": [1, 1]}},
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == 2
 
@@ -169,20 +161,12 @@ def test_single_call_positional() -> None:
 def test_single_call_positional_nolist() -> None:
     desc = {
         "tasks": {
-            "square": {
-                "plugin": "tests.unit.task_engine.test_task_engine.square"
-            }
+            "square": {"plugin": "tests.unit.task_engine.test_task_engine.square"}
         },
-        "graph": {
-            "step1": {
-                "square": 2
-            }
-        }
+        "graph": {"step1": {"square": 2}},
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == 4
 
@@ -190,24 +174,11 @@ def test_single_call_positional_nolist() -> None:
 @require_plugins(add)
 def test_single_call_keyword() -> None:
     desc = {
-        "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            }
-        },
-        "graph": {
-            "step1": {
-                "add": {
-                    "a": 1,
-                    "b": 1
-                }
-            }
-        }
+        "tasks": {"add": {"plugin": "tests.unit.task_engine.test_task_engine.add"}},
+        "graph": {"step1": {"add": {"a": 1, "b": 1}}},
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == 2
 
@@ -215,25 +186,11 @@ def test_single_call_keyword() -> None:
 @require_plugins(add)
 def test_single_call_mixed_positional_keyword() -> None:
     desc = {
-        "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            }
-        },
-        "graph": {
-            "step1": {
-                "task": "add",
-                "args": 1,
-                "kwargs": {
-                    "b": 1
-                }
-            }
-        }
+        "tasks": {"add": {"plugin": "tests.unit.task_engine.test_task_engine.add"}},
+        "graph": {"step1": {"task": "add", "args": 1, "kwargs": {"b": 1}}},
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == 2
 
@@ -241,21 +198,11 @@ def test_single_call_mixed_positional_keyword() -> None:
 @require_plugins(hello)
 def test_single_call_no_args_positional() -> None:
     desc = {
-        "tasks": {
-            "hello": {
-                "plugin": "tests.unit.task_engine.test_task_engine.hello"
-            }
-        },
-        "graph": {
-            "step1": {
-                "hello": []
-            }
-        }
+        "tasks": {"hello": {"plugin": "tests.unit.task_engine.test_task_engine.hello"}},
+        "graph": {"step1": {"hello": []}},
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == "hello"
 
@@ -263,21 +210,11 @@ def test_single_call_no_args_positional() -> None:
 @require_plugins(hello)
 def test_single_call_no_args_keyword() -> None:
     desc = {
-        "tasks": {
-            "hello": {
-                "plugin": "tests.unit.task_engine.test_task_engine.hello"
-            }
-        },
-        "graph": {
-            "step1": {
-                "hello": {}
-            }
-        }
+        "tasks": {"hello": {"plugin": "tests.unit.task_engine.test_task_engine.hello"}},
+        "graph": {"step1": {"hello": {}}},
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == "hello"
 
@@ -285,21 +222,11 @@ def test_single_call_no_args_keyword() -> None:
 @require_plugins(hello)
 def test_single_call_no_args_mixed() -> None:
     desc = {
-        "tasks": {
-            "hello": {
-                "plugin": "tests.unit.task_engine.test_task_engine.hello"
-            }
-        },
-        "graph": {
-            "step1": {
-                "task": "hello"
-            }
-        }
+        "tasks": {"hello": {"plugin": "tests.unit.task_engine.test_task_engine.hello"}},
+        "graph": {"step1": {"task": "hello"}},
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == "hello"
 
@@ -307,19 +234,9 @@ def test_single_call_no_args_mixed() -> None:
 @require_plugins(add)
 def test_globals_list() -> None:
     desc = {
-        "parameters": [
-            "global_in"
-        ],
-        "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            }
-        },
-        "graph": {
-            "step1": {
-                "add": [1, "$global_in"]
-            }
-        }
+        "parameters": ["global_in"],
+        "tasks": {"add": {"plugin": "tests.unit.task_engine.test_task_engine.add"}},
+        "graph": {"step1": {"add": [1, "$global_in"]}},
     }
 
     dioptra.task_engine.task_engine.run_experiment(
@@ -332,19 +249,9 @@ def test_globals_list() -> None:
 @require_plugins(add)
 def test_globals_dict_nodefault() -> None:
     desc = {
-        "parameters": {
-            "global_in": None
-        },
-        "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            }
-        },
-        "graph": {
-            "step1": {
-                "add": [1, "$global_in"]
-            }
-        }
+        "parameters": {"global_in": None},
+        "tasks": {"add": {"plugin": "tests.unit.task_engine.test_task_engine.add"}},
+        "graph": {"step1": {"add": [1, "$global_in"]}},
     }
 
     dioptra.task_engine.task_engine.run_experiment(
@@ -354,9 +261,7 @@ def test_globals_dict_nodefault() -> None:
     assert _output == 3
 
     with pytest.raises(MissingGlobalParametersError) as e:
-        dioptra.task_engine.task_engine.run_experiment(
-            desc, {}, mlflow_run=None
-        )
+        dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert "global_in" in e.value.parameter_names
 
@@ -364,19 +269,9 @@ def test_globals_dict_nodefault() -> None:
 @require_plugins(add)
 def test_globals_dict_default() -> None:
     desc = {
-        "parameters": {
-            "global_in": 1
-        },
-        "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            }
-        },
-        "graph": {
-            "step1": {
-                "add": [1, "$global_in"]
-            }
-        }
+        "parameters": {"global_in": 1},
+        "tasks": {"add": {"plugin": "tests.unit.task_engine.test_task_engine.add"}},
+        "graph": {"step1": {"add": [1, "$global_in"]}},
     }
 
     dioptra.task_engine.task_engine.run_experiment(
@@ -385,9 +280,7 @@ def test_globals_dict_default() -> None:
 
     assert _output == 3
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == 2
 
@@ -398,19 +291,13 @@ def test_task_nonlist_output() -> None:
         "tasks": {
             "addsub": {
                 "plugin": "tests.unit.task_engine.test_task_engine.addsub",
-                "outputs": "value"
+                "outputs": "value",
             }
         },
-        "graph": {
-            "step1": {
-                "addsub": [1, 2]
-            }
-        }
+        "graph": {"step1": {"addsub": [1, 2]}},
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == (3, -1)
 
@@ -421,30 +308,24 @@ def test_task_list_output() -> None:
         "tasks": {
             "addsub": {
                 "plugin": "tests.unit.task_engine.test_task_engine.addsub",
-                "outputs": ["sum", "diff"]
+                "outputs": ["sum", "diff"],
             },
             "add": {
                 "plugin": "tests.unit.task_engine.test_task_engine.add",
-                "outputs": "value"
-            }
+                "outputs": "value",
+            },
         },
         "graph": {
-            "step1": {
-                "addsub": [1, 2]
-            },
+            "step1": {"addsub": [1, 2]},
             # Hard to check how the multi-outputs from "addsub" are actually
             # stored without peeking at the task engine's internal bookkeeping,
             # but I can use those outputs in another step... maybe that will
             # work just as well?
-            "step2": {
-                "add": ["$step1.sum", "$step1.diff"]
-            }
-        }
+            "step2": {"add": ["$step1.sum", "$step1.diff"]},
+        },
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     # (a+b) + (a-b) = 2a
     assert _output == 2
@@ -456,33 +337,29 @@ def test_task_dependencies_ambig() -> None:
         "tasks": {
             "add": {
                 "plugin": "tests.unit.task_engine.test_task_engine.add",
-                "outputs": "value"
+                "outputs": "value",
             },
             "square": {
                 "plugin": "tests.unit.task_engine.test_task_engine.square",
-                "outputs": "value"
+                "outputs": "value",
             },
             # Bad name for a plugin.
             "dependencies": {
                 "plugin": "tests.unit.task_engine.test_task_engine.addsub"
-            }
+            },
         },
         "graph": {
             "step1": {
                 # Ensure "dependencies" below isn't mistaken for the same-named
                 # plugin defined above!
                 "dependencies": ["step2"],
-                "add": [3, 4]
+                "add": [3, 4],
             },
-            "step2": {
-                "square": 6
-            }
-        }
+            "step2": {"square": 6},
+        },
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == 7
 
@@ -493,16 +370,14 @@ def test_task_task_ambig() -> None:
         "tasks": {
             "add": {
                 "plugin": "tests.unit.task_engine.test_task_engine.add",
-                "outputs": "value"
+                "outputs": "value",
             },
             "square": {
                 "plugin": "tests.unit.task_engine.test_task_engine.square",
-                "outputs": "value"
+                "outputs": "value",
             },
             # Bad name for a plugin.
-            "task": {
-                "plugin": "tests.unit.task_engine.test_task_engine.addsub"
-            }
+            "task": {"plugin": "tests.unit.task_engine.test_task_engine.addsub"},
         },
         "graph": {
             "step1": {
@@ -510,17 +385,13 @@ def test_task_task_ambig() -> None:
                 # Ensure "task" below isn't mistaken for the same-named
                 # plugin defined above!
                 "task": "add",
-                "args": [3, 4]
+                "args": [3, 4],
             },
-            "step2": {
-                "square": 6
-            }
-        }
+            "step2": {"square": 6},
+        },
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {}, mlflow_run=None
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert _output == 7
 
@@ -529,55 +400,37 @@ def test_task_task_ambig() -> None:
 def test_step_missing_plugin_name() -> None:
     desc = {
         "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            },
-            "square": {
-                "plugin": "tests.unit.task_engine.test_task_engine.square"
-            }
+            "add": {"plugin": "tests.unit.task_engine.test_task_engine.add"},
+            "square": {"plugin": "tests.unit.task_engine.test_task_engine.square"},
         },
         "graph": {
             "step1": {
                 # Missing the plugin name here
                 "dependencies": ["step2"]
             },
-            "step2": {
-                "square": 6
-            }
-        }
+            "step2": {"square": 6},
+        },
     }
 
     with pytest.raises(MissingTaskPluginNameError):
-        dioptra.task_engine.task_engine.run_experiment(
-            desc, {}, mlflow_run=None
-        )
+        dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
 
 @require_plugins(add, square)
 def test_step_cycle() -> None:
     desc = {
         "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            },
-            "square": {
-                "plugin": "tests.unit.task_engine.test_task_engine.square"
-            }
+            "add": {"plugin": "tests.unit.task_engine.test_task_engine.add"},
+            "square": {"plugin": "tests.unit.task_engine.test_task_engine.square"},
         },
         "graph": {
-            "step1": {
-                "add": [1, 2, "$step2.value"]
-            },
-            "step2": {
-                "square": "$step1.value"
-            }
-        }
+            "step1": {"add": [1, 2, "$step2.value"]},
+            "step2": {"square": "$step1.value"},
+        },
     }
 
     with pytest.raises(StepReferenceCycleError) as e:
-        dioptra.task_engine.task_engine.run_experiment(
-            desc, {}, mlflow_run=None
-        )
+        dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert "step1" in e.value.cycle
     assert "step2" in e.value.cycle
@@ -585,22 +438,12 @@ def test_step_cycle() -> None:
 
 def test_step_not_found_reference() -> None:
     desc = {
-        "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            }
-        },
-        "graph": {
-            "step1": {
-                "add": [1, "$foo"]
-            }
-        }
+        "tasks": {"add": {"plugin": "tests.unit.task_engine.test_task_engine.add"}},
+        "graph": {"step1": {"add": [1, "$foo"]}},
     }
 
     with pytest.raises(UnresolvableReferenceError) as e:
-        dioptra.task_engine.task_engine.run_experiment(
-            desc, {}, mlflow_run=None
-        )
+        dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert e.value.reference_name == "foo"
 
@@ -608,23 +451,12 @@ def test_step_not_found_reference() -> None:
 @require_plugins(add)
 def test_step_not_found_dependency() -> None:
     desc = {
-        "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            }
-        },
-        "graph": {
-            "step1": {
-                "add": [1, 2],
-                "dependencies": ["foo"]
-            }
-        }
+        "tasks": {"add": {"plugin": "tests.unit.task_engine.test_task_engine.add"}},
+        "graph": {"step1": {"add": [1, 2], "dependencies": ["foo"]}},
     }
 
     with pytest.raises(StepNotFoundError) as e:
-        dioptra.task_engine.task_engine.run_experiment(
-            desc, {}, mlflow_run=None
-        )
+        dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert e.value.step_name == "foo"
 
@@ -635,26 +467,15 @@ def test_output_not_found_explicit() -> None:
         "tasks": {
             "add": {
                 "plugin": "tests.unit.task_engine.test_task_engine.add",
-                "outputs": "value"
+                "outputs": "value",
             },
-            "square": {
-                "plugin": "tests.unit.task_engine.test_task_engine.square"
-            }
+            "square": {"plugin": "tests.unit.task_engine.test_task_engine.square"},
         },
-        "graph": {
-            "step1": {
-                "add": [1, 2]
-            },
-            "step2": {
-                "square": "$step1.foo"
-            }
-        }
+        "graph": {"step1": {"add": [1, 2]}, "step2": {"square": "$step1.foo"}},
     }
 
     with pytest.raises(OutputNotFoundError) as e:
-        dioptra.task_engine.task_engine.run_experiment(
-            desc, {}, mlflow_run=None
-        )
+        dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert e.value.step_name == "step1"
     assert e.value.output_name == "foo"
@@ -664,28 +485,20 @@ def test_output_not_found_explicit() -> None:
 def test_output_not_found_implicit() -> None:
     desc = {
         "tasks": {
-            "add": {
-                "plugin": "tests.unit.task_engine.test_task_engine.add"
-            },
-            "square": {
-                "plugin": "tests.unit.task_engine.test_task_engine.square"
-            }
+            "add": {"plugin": "tests.unit.task_engine.test_task_engine.add"},
+            "square": {"plugin": "tests.unit.task_engine.test_task_engine.square"},
         },
         "graph": {
-            "step1": {
-                "add": [1, 2]
-            },
+            "step1": {"add": [1, 2]},
             "step2": {
                 # error because plugin "add" did not define any outputs
                 "square": "$step1"
-            }
-        }
+            },
+        },
     }
 
     with pytest.raises(UnresolvableReferenceError) as e:
-        dioptra.task_engine.task_engine.run_experiment(
-            desc, {}, mlflow_run=None
-        )
+        dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert e.value.reference_name == "step1"
 
@@ -696,28 +509,22 @@ def test_output_reference_ambig() -> None:
         "tasks": {
             "addsub": {
                 "plugin": "tests.unit.task_engine.test_task_engine.addsub",
-                "outputs": ["sum", "diff"]
+                "outputs": ["sum", "diff"],
             },
-            "square": {
-                "plugin": "tests.unit.task_engine.test_task_engine.square"
-            }
+            "square": {"plugin": "tests.unit.task_engine.test_task_engine.square"},
         },
         "graph": {
-            "step1": {
-                "addsub": [1, 2]
-            },
+            "step1": {"addsub": [1, 2]},
             "step2": {
                 # error because plugin "addsub" defines two outputs, so this
                 # reference is ambiguous.  It needs to pick one of them.
                 "square": "$step1"
-            }
-        }
+            },
+        },
     }
 
     with pytest.raises(IllegalOutputReferenceError) as e:
-        dioptra.task_engine.task_engine.run_experiment(
-            desc, {}, mlflow_run=None
-        )
+        dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert e.value.context_step_name == "step2"
     assert e.value.step_name == "step1"
@@ -731,41 +538,22 @@ def test_output_not_iterable() -> None:
                 "plugin": "tests.unit.task_engine.test_task_engine.add",
                 # error: integer addition produces an integer, which is not
                 # iterable.
-                "outputs": ["value"]
+                "outputs": ["value"],
             }
         },
-        "graph": {
-            "step1": {
-                "add": [1, 2]
-            }
-        }
+        "graph": {"step1": {"add": [1, 2]}},
     }
 
     with pytest.raises(NonIterableTaskOutputError) as e:
-        dioptra.task_engine.task_engine.run_experiment(
-            desc, {}, mlflow_run=None
-        )
+        dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert e.value.value == 3
 
 
 def test_illegal_plugin_name() -> None:
-    desc = {
-        "tasks": {
-            "add": {
-                "plugin": "foo"
-            }
-        },
-        "graph": {
-            "step1": {
-                "add": [1, 2]
-            }
-        }
-    }
+    desc = {"tasks": {"add": {"plugin": "foo"}}, "graph": {"step1": {"add": [1, 2]}}}
 
     with pytest.raises(IllegalPluginNameError) as e:
-        dioptra.task_engine.task_engine.run_experiment(
-            desc, {}, mlflow_run=None
-        )
+        dioptra.task_engine.task_engine.run_experiment(desc, {}, mlflow_run=None)
 
     assert e.value.plugin_name == "foo"
