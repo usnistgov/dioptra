@@ -567,7 +567,7 @@ title="Source repository"
     <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
     <span class="n">label_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;categorical&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DirectoryIterator</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Yields an iterator for generating batches of real-time augmented image data.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Yields an iterator for generating batches of real-time augmented image data.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        data_dir: The directory containing the image dataset.</span>
@@ -624,7 +624,7 @@ title="Source repository"
 <div class="viewcode-block" id="get_n_classes_from_directory_iterator"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-data.html#dioptra_builtins.data.tensorflow.get_n_classes_from_directory_iterator">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">get_n_classes_from_directory_iterator</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">DirectoryIterator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Returns the number of unique labels found by the |directory_iterator|.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the number of unique labels found by the |directory_iterator|.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        ds: A |directory_iterator| object.</span>

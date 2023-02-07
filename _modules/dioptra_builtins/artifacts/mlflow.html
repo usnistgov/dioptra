@@ -549,7 +549,7 @@ title="Source repository"
 <span class="k">def</span> <span class="nf">download_all_artifacts_in_run</span><span class="p">(</span>
     <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">artifact_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Downloads an artifact file or directory from a previous MLFlow run.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Downloads an artifact file or directory from a previous MLFlow run.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        run_id: The unique identifier of a previous MLFlow run.</span>
@@ -585,7 +585,7 @@ title="Source repository"
     <span class="n">file_format_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">working_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Uploads a :py:class:`~pandas.DataFrame` as an artifact of the active MLFlow run.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uploads a :py:class:`~pandas.DataFrame` as an artifact of the active MLFlow run.</span>
 
 <span class="sd">    The `file_format` argument selects the :py:class:`~pandas.DataFrame` serializer,</span>
 <span class="sd">    which are all handled using the object&#39;s `DataFrame.to_{format}` methods. The string</span>
@@ -693,7 +693,7 @@ title="Source repository"
     <span class="n">tarball_write_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;w:gz&quot;</span><span class="p">,</span>
     <span class="n">working_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Archives a directory and uploads it as an artifact of the active MLFlow run.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Archives a directory and uploads it as an artifact of the active MLFlow run.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        source_dir: The directory which should be uploaded.</span>
@@ -728,7 +728,7 @@ title="Source repository"
 
 <div class="viewcode-block" id="upload_file_as_artifact"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.mlflow.upload_file_as_artifact">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="k">def</span> <span class="nf">upload_file_as_artifact</span><span class="p">(</span><span class="n">artifact_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Uploads a file as an artifact of the active MLFlow run.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uploads a file as an artifact of the active MLFlow run.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        artifact_path: The location of the file to be uploaded.</span>

@@ -548,7 +548,7 @@ title="Source repository"
 <div class="viewcode-block" id="init_tensorflow"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-backend_configs.html#dioptra_builtins.backend_configs.tensorflow.init_tensorflow">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">init_tensorflow</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Initializes Tensorflow to ensure compatibility and reproducibility.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initializes Tensorflow to ensure compatibility and reproducibility.</span>
 
 <span class="sd">    This task plugin **must** be run before any other features from Tensorflow are used.</span>
 <span class="sd">    It disables Tensorflow&#39;s eager execution, which is not compatible with Dioptra&#39;s</span>

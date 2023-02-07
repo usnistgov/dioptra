@@ -562,13 +562,13 @@ title="Print to PDF"
 <p><strong>NOTE</strong>: The following steps are intended for developers that are using a branch that is <strong>NOT</strong> the <em>master</em> branch of the repository. If you are using the <em>master</em> branch please see <a class="reference internal" href="../getting-started/installation.html#quickstart-build-images"><span class="std std-ref">Pulling the Latest Docker Images</span></a>.</p>
 <ol class="arabic" id="dev-guide-build-branch-images-step-1">
 <li><p>Navigate to the root directory of the project codebase.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> path/to/dioptra
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>path/to/dioptra
 </pre></div>
 </div>
 <p><strong>NOTE</strong>: You must substitute the code snippet <code class="docutils literal notranslate"><span class="pre">path/to/</span></code> with the true path for the project codebase on your device. This should be the same path used in <span class="xref std std-ref">Clone the Repository: Step 2</span>.</p>
 </li>
 <li><p>Echo a list of all branches for the repository.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git branch -a
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>branch<span class="w"> </span>-a
 </pre></div>
 </div>
 </li>
@@ -576,53 +576,53 @@ title="Print to PDF"
 <ul>
 <li><p><strong>Checkout Remote Branch</strong>
 If the desired branch begins with <code class="docutils literal notranslate"><span class="pre">remotes/origin/</span></code> it is a remote branch.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git checkout -b new-name-for-local-branch remotes/origin/name-of-remote-branch
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>new-name-for-local-branch<span class="w"> </span>remotes/origin/name-of-remote-branch
 </pre></div>
 </div>
 <p>This will create and checkout a local branch with the name you substituted for <code class="docutils literal notranslate"><span class="pre">new-name-for-local-branch</span></code> that is a copy of the remote branch <code class="docutils literal notranslate"><span class="pre">remotes/origin/name-of-remote-branch</span></code>.</p>
 </li>
 <li><p><strong>Checkout Local Branch</strong>
 If the desired branch does <em>NOT</em> begin with <code class="docutils literal notranslate"><span class="pre">remotes/origin/</span></code> it is a local branch that you have already created on your host device.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git checkout name-of-local-branch
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>name-of-local-branch
 </pre></div>
 </div>
 <p><strong>NOTE</strong>: The <code class="docutils literal notranslate"><span class="pre">remotes/origin/name-of-remote-branch</span></code> and <code class="docutils literal notranslate"><span class="pre">name-of-local-branch</span></code> must be listed when using:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git branch -a
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>branch<span class="w"> </span>-a
 </pre></div>
 </div>
 </li>
 </ul>
 </li>
 <li><p>Pull the latest vendor, Continuous Integration (CI), and lab images and retag them.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make pull-latest-hub pull-latest-ci pull-latest-lab
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>pull-latest-hub<span class="w"> </span>pull-latest-ci<span class="w"> </span>pull-latest-lab
 </pre></div>
 </div>
 </li>
 <li><p>Echo a list of all demos that can be run locally in the project codebase.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ls examples
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ls<span class="w"> </span>examples
 </pre></div>
 </div>
 </li>
 <li><p>Navigate to the target demo directory.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> example/name-of-demo
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>example/name-of-demo
 </pre></div>
 </div>
 <p><strong>NOTE</strong>: The <code class="docutils literal notranslate"><span class="pre">name-of-demo</span></code> must be listed when using:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ls examples
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ls<span class="w"> </span>examples
 </pre></div>
 </div>
 </li>
 <li><p>Modify the Docker configuration file.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sed -E -e <span class="s1">&#39;s/(dioptra\/.*):latest/\1:dev/g&#39;</span> -i .backup docker-compose.yml
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sed<span class="w"> </span>-E<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;s/(dioptra\/.*):latest/\1:dev/g&#39;</span><span class="w"> </span>-i<span class="w"> </span>.backup<span class="w"> </span>docker-compose.yml
 </pre></div>
 </div>
 <p><strong>NOTE</strong>: To revert the changes made to the configuration file use the command:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>mv docker-compose.yml.backup docker-compose.yml
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>mv<span class="w"> </span>docker-compose.yml.backup<span class="w"> </span>docker-compose.yml
 </pre></div>
 </div>
 </li>
 <li><p>Navigate back to the root directory of the project codebase.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> ../..
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>../..
 </pre></div>
 </div>
 <p><strong>NOTE</strong>: Alternatively, use the same commands as in <a class="reference internal" href="#dev-guide-build-branch-images-step-1"><span class="std std-ref">Building the Docker Images for Separate Branches: Step 1</span></a>.</p>
@@ -631,7 +631,7 @@ If the desired branch does <em>NOT</em> begin with <code class="docutils literal
 <li><p>Build all the Docker images for in the project.</p></li>
 </ol>
 <blockquote>
-<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make build-all
+<div><div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>build-all
 </pre></div>
 </div>
 </div></blockquote>

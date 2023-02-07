@@ -725,7 +725,7 @@ The expected types for the arguments are then declared using type annotations, w
 <li><p>The functions, which do not need to have unique names, are registered simply by topping them with the <cite>&#64;fit_estimator.register</cite> decorator.</p></li>
 </ol>
 <p>More complicated function signatures can be used.
-For example, if you wanted to handle a <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> passed to the <cite>x</cite> argument differently from other data types, you could register the following implementation:</p>
+For example, if you wanted to handle a <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> passed to the <cite>x</cite> argument differently from other data types, you could register the following implementation:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="nd">@fit_estimator</span><span class="o">.</span><span class="n">register</span>
@@ -733,7 +733,7 @@ For example, if you wanted to handle a <a class="reference external" href="https
     <span class="o">...</span>
 </pre></div>
 </div>
-<p>Then, in the implementation, you could process the <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> so that it was compatible with the <code class="xref py py-meth docutils literal notranslate"><span class="pre">estimator.fit()</span></code> method used in the <code class="xref py py-func docutils literal notranslate"><span class="pre">fit_keras_model()</span></code> helper function.
+<p>Then, in the implementation, you could process the <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> so that it was compatible with the <code class="xref py py-meth docutils literal notranslate"><span class="pre">estimator.fit()</span></code> method used in the <code class="xref py py-func docutils literal notranslate"><span class="pre">fit_keras_model()</span></code> helper function.
 In this way you can incrementally add new implementations to handle many different combinations of estimator and data types!</p>
 </section>
 <section id="packaging-a-generic-plugin">
@@ -753,8 +753,8 @@ The Python package itself should be structured in the usual way, with a minimal 
 </div>
 <p>In the file layout shown above, the implementation from the previous section is saved to the file <code class="docutils literal notranslate"><span class="pre">src/fit_estimator_tf_keras/tf_keras_model.py</span></code>.
 Knowing this, we add the following to our <cite>setup.cfg</cite> file to register the implementation to the advertised plugin entry point for the <a class="reference internal" href="api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">fit_estimator</span></code></a> generic:</p>
-<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[options.entry_points]</span><span class="w"></span>
-<span class="na">dioptra.generics.fit_estimator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">tf_keras_model=fit_estimator_tf_keras.tf_keras_model</span><span class="w"></span>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[options.entry_points]</span>
+<span class="na">dioptra.generics.fit_estimator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">tf_keras_model=fit_estimator_tf_keras.tf_keras_model</span>
 </pre></div>
 </div>
 <p>As usual, the name of the advertised plugin entry point goes on the left of the first <code class="docutils literal notranslate"><span class="pre">=</span></code> and the import path to the module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">fit_estimator_tf_keras.tf_keras_model</span></code> in this case) containing the implementation goes to the right, which is passed as the <cite>value</cite> of a <cite>key=value</cite> pair.

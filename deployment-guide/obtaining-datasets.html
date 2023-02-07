@@ -639,7 +639,7 @@ Next, install the Python <code class="docutils literal notranslate"><span class=
 </input><label class="sd-tab-label" for="sd-tab-item-0">
 Pip</label><div class="sd-tab-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># User-level install</span>
-python -m pip install --user kaggle
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>kaggle
 </pre></div>
 </div>
 </div>
@@ -647,9 +647,9 @@ python -m pip install --user kaggle
 </input><label class="sd-tab-label" for="sd-tab-item-1">
 Conda + Pip</label><div class="sd-tab-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Conda virtual environment install</span>
-conda create -n kaggle <span class="nv">python</span><span class="o">=</span><span class="m">3</span> pip
-conda activate kaggle
-python -m pip install kaggle
+conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>kaggle<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span><span class="w"> </span>pip
+conda<span class="w"> </span>activate<span class="w"> </span>kaggle
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>kaggle
 </pre></div>
 </div>
 </div>
@@ -675,23 +675,23 @@ Then, from that directory, run the following bash script to download the data.</
 <span class="nv">imagenet_data_dir</span><span class="o">=</span><span class="si">${</span><span class="nv">target_install_data_dir</span><span class="si">}</span>/ImageNet-Kaggle-2017
 
 <span class="c1"># Create the dataset directories</span>
-<span class="nb">echo</span> <span class="s2">&quot;Creating fruits360 data dir: </span><span class="si">${</span><span class="nv">fruits360_data_dir</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="nb">echo</span> <span class="s2">&quot;Creating imagenet data dir: </span><span class="si">${</span><span class="nv">imagenet_data_dir</span><span class="si">}</span><span class="s2">&quot;</span>
-mkdir -p <span class="si">${</span><span class="nv">fruits360_data_dir</span><span class="si">}</span> <span class="si">${</span><span class="nv">imagenet_data_dir</span><span class="si">}</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Creating fruits360 data dir: </span><span class="si">${</span><span class="nv">fruits360_data_dir</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Creating imagenet data dir: </span><span class="si">${</span><span class="nv">imagenet_data_dir</span><span class="si">}</span><span class="s2">&quot;</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="si">${</span><span class="nv">fruits360_data_dir</span><span class="si">}</span><span class="w"> </span><span class="si">${</span><span class="nv">imagenet_data_dir</span><span class="si">}</span>
 
 <span class="c1"># Download the Fruits360 dataset</span>
-<span class="nb">cd</span> <span class="si">${</span><span class="nv">fruits360_data_dir</span><span class="si">}</span>
-kaggle datasets download -d moltean/fruits
-unzip fruits.zip
-rm fruits.zip
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">fruits360_data_dir</span><span class="si">}</span>
+kaggle<span class="w"> </span>datasets<span class="w"> </span>download<span class="w"> </span>-d<span class="w"> </span>moltean/fruits
+unzip<span class="w"> </span>fruits.zip
+rm<span class="w"> </span>fruits.zip
 
 <span class="c1"># Download the ImageNet dataset</span>
-<span class="nb">cd</span> <span class="si">${</span><span class="nv">imagenet_data_dir</span><span class="si">}</span>
-kaggle competitions download -c imagenet-object-localization-challenge
-unzip imagenet-object-localization-challenge.zip
-tar -xzf imagenet_object_localization_patched2019.tar.gz
-rm imagenet-object-localization-challenge.zip
-rm imagenet_object_localization_patched2019.tar.gz
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">imagenet_data_dir</span><span class="si">}</span>
+kaggle<span class="w"> </span>competitions<span class="w"> </span>download<span class="w"> </span>-c<span class="w"> </span>imagenet-object-localization-challenge
+unzip<span class="w"> </span>imagenet-object-localization-challenge.zip
+tar<span class="w"> </span>-xzf<span class="w"> </span>imagenet_object_localization_patched2019.tar.gz
+rm<span class="w"> </span>imagenet-object-localization-challenge.zip
+rm<span class="w"> </span>imagenet_object_localization_patched2019.tar.gz
 </pre></div>
 </div>
 </section>

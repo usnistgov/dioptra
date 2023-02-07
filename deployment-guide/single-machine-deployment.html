@@ -657,21 +657,21 @@ To learn more about all the features of Compose, see the <a class="reference ext
 You can alternatively run <code class="docutils literal notranslate"><span class="pre">docker-compose</span> <span class="pre">up</span></code> using the docker-compose binary.</p></li>
 </ol>
 <p>A <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> looks like this:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;3.9&quot;</span><span class="w">  </span><span class="c1"># optional since v1.27.0</span><span class="w"></span>
-<span class="nt">services</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">web</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span><span class="w"></span>
-<span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5000:5000&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.:/code</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">logvolume01:/var/log</span><span class="w"></span>
-<span class="w">    </span><span class="nt">links</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">  </span><span class="nt">redis</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">logvolume01</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;3.9&quot;</span><span class="w">  </span><span class="c1"># optional since v1.27.0</span>
+<span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">web</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5000:5000&quot;</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.:/code</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">logvolume01:/var/log</span>
+<span class="w">    </span><span class="nt">links</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">  </span><span class="nt">redis</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="nt">volumes</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">logvolume01</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
 </pre></div>
 </div>
 <p>For more information about the Compose file, see the <a class="reference external" href="https://docs.docker.com/compose/compose-file/">Compose file reference</a>.</p>
@@ -701,430 +701,430 @@ Single Machine Deployment docker-compose.yml file<div class="sd-summary-down doc
 <div class="sd-summary-up docutils">
 <svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
 </summary><div class="sd-summary-content sd-card-body docutils">
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2.4&quot;</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2.4&quot;</span>
 
-<span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">lab_deployment_backend</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">lab_deployment_frontend</span><span class="p">:</span><span class="w"></span>
+<span class="nt">networks</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">lab_deployment_backend</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">lab_deployment_frontend</span><span class="p">:</span>
 
-<span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># NOTE: If you are accessing your datasets on an NFS mount, uncomment the nfs-datasets block below and</span><span class="w"></span>
-<span class="w">  </span><span class="c1">#       update addr=192.168.1.20 and the device path to match with your NFS share&#39;s details</span><span class="w"></span>
-<span class="w">  </span><span class="c1">#</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># nfs-datasets:</span><span class="w"></span>
-<span class="w">  </span><span class="c1">#   driver: local</span><span class="w"></span>
-<span class="w">  </span><span class="c1">#   driver_opts:</span><span class="w"></span>
-<span class="w">  </span><span class="c1">#     type: nfs</span><span class="w"></span>
-<span class="w">  </span><span class="c1">#     o: addr=192.168.1.20,nfsvers=4,ro,soft,nolock,async,noatime,intr,tcp,rsize=131072,wsize=131072,actimeo=1800</span><span class="w"></span>
-<span class="w">  </span><span class="c1">#     device: &quot;:/var/nfs/datasets&quot;</span><span class="w"></span>
-<span class="w">  </span><span class="nt">minio-data</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
-<span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
-<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/minio</span><span class="w"></span>
-<span class="w">  </span><span class="nt">mlflow-tracking-data</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
-<span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
-<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/mlflow-tracking</span><span class="w"></span>
-<span class="w">  </span><span class="nt">redis-data</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
-<span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
-<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/redis</span><span class="w"></span>
-<span class="w">  </span><span class="nt">restapi-data</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
-<span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
-<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/restapi</span><span class="w"></span>
+<span class="nt">volumes</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># NOTE: If you are accessing your datasets on an NFS mount, uncomment the nfs-datasets block below and</span>
+<span class="w">  </span><span class="c1">#       update addr=192.168.1.20 and the device path to match with your NFS share&#39;s details</span>
+<span class="w">  </span><span class="c1">#</span>
+<span class="w">  </span><span class="c1"># nfs-datasets:</span>
+<span class="w">  </span><span class="c1">#   driver: local</span>
+<span class="w">  </span><span class="c1">#   driver_opts:</span>
+<span class="w">  </span><span class="c1">#     type: nfs</span>
+<span class="w">  </span><span class="c1">#     o: addr=192.168.1.20,nfsvers=4,ro,soft,nolock,async,noatime,intr,tcp,rsize=131072,wsize=131072,actimeo=1800</span>
+<span class="w">  </span><span class="c1">#     device: &quot;:/var/nfs/datasets&quot;</span>
+<span class="w">  </span><span class="nt">minio-data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
+<span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/minio</span>
+<span class="w">  </span><span class="nt">mlflow-tracking-data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
+<span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/mlflow-tracking</span>
+<span class="w">  </span><span class="nt">redis-data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
+<span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/redis</span>
+<span class="w">  </span><span class="nt">restapi-data</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
+<span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/dioptra/lab-deployment/restapi</span>
 
-<span class="nt">services</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">redis</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis-server --appendonly yes</span><span class="w"></span>
-<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;redis-cli&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;ping&quot;</span><span class="p p-Indicator">]</span><span class="w"></span>
-<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis-data:/data</span><span class="w"></span>
+<span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">redis</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis-server --appendonly yes</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;redis-cli&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;ping&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis-data:/data</span>
 
-<span class="w">  </span><span class="nt">minio</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio/minio:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">server /data</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://localhost:9000/minio/health/live&quot;</span><span class="p p-Indicator">]</span><span class="w"></span>
-<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MINIO_ROOT_USER</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MINIO_ROOT_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio-data:/data</span><span class="w"></span>
+<span class="w">  </span><span class="nt">minio</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio/minio:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">server /data</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://localhost:9000/minio/health/live&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">MINIO_ROOT_USER</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">MINIO_ROOT_PASSWORD</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio-data:/data</span>
 
-<span class="w">  </span><span class="nt">mlflow-tracking</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/mlflow-tracking:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span><span class="w"></span>
-<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://nginx:35000&quot;</span><span class="p p-Indicator">]</span><span class="w"></span>
-<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--host</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;0.0.0.0&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--default-artifact-root</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;s3://mlflow-tracking/artifacts&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_frontend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking-data:/work/mlruns</span><span class="w"></span>
+<span class="w">  </span><span class="nt">mlflow-tracking</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/mlflow-tracking:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://nginx:35000&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--host</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;0.0.0.0&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">--default-artifact-root</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;s3://mlflow-tracking/artifacts&quot;</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_frontend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking-data:/work/mlruns</span>
 
-<span class="w">  </span><span class="nt">nginx</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/nginx:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi</span><span class="w"></span>
-<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="p p-Indicator">[</span><span class="w"></span>
-<span class="w">          </span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"></span>
-<span class="w">          </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"></span>
-<span class="w">          </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span><span class="w"></span>
-<span class="w">          </span><span class="s">&quot;http://localhost:35000&quot;</span><span class="p p-Indicator">,</span><span class="w"></span>
-<span class="w">          </span><span class="s">&quot;&amp;&amp;&quot;</span><span class="p p-Indicator">,</span><span class="w"></span>
-<span class="w">          </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"></span>
-<span class="w">          </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span><span class="w"></span>
-<span class="w">          </span><span class="s">&quot;http://localhost:30080&quot;</span><span class="p p-Indicator">,</span><span class="w"></span>
-<span class="w">        </span><span class="p p-Indicator">]</span><span class="w"></span>
-<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_frontend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;35000:35000/tcp&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;30080:30080/tcp&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="nt">nginx</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/nginx:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">[</span>
+<span class="w">          </span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">          </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">          </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">          </span><span class="s">&quot;http://localhost:35000&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">          </span><span class="s">&quot;&amp;&amp;&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">          </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">          </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">          </span><span class="s">&quot;http://localhost:30080&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_frontend</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;35000:35000/tcp&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;30080:30080/tcp&quot;</span>
 
-<span class="w">  </span><span class="nt">restapi</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/restapi:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://nginx:30080/health&quot;</span><span class="p p-Indicator">]</span><span class="w"></span>
-<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span><span class="w"></span>
-<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_frontend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
+<span class="w">  </span><span class="nt">restapi</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/restapi:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://nginx:30080/health&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span>
+<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span>
+<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_frontend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span>
 
-<span class="w">  </span><span class="nt">tfcpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-cpu:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-01</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-01</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10-14</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_AFFINITY</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_BLOCKTIME</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_SETTINGS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FALSE&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">OMP_PROC_BIND</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span><span class="w"></span>
-<span class="w">      </span><span class="nt">TF_CPP_MIN_LOG_LEVEL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tensorflow_cpu</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
+<span class="w">  </span><span class="nt">tfcpu-01</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-cpu:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-01</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-01</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10-14</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span>
+<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span>
+<span class="w">      </span><span class="nt">KMP_AFFINITY</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span>
+<span class="w">      </span><span class="nt">KMP_BLOCKTIME</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span>
+<span class="w">      </span><span class="nt">KMP_SETTINGS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FALSE&quot;</span>
+<span class="w">      </span><span class="nt">OMP_PROC_BIND</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
+<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span>
+<span class="w">      </span><span class="nt">TF_CPP_MIN_LOG_LEVEL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2&quot;</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tensorflow_cpu</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span>
 
-<span class="w">  </span><span class="nt">tfcpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-cpu:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-02</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-02</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_AFFINITY</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_BLOCKTIME</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_SETTINGS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FALSE&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">OMP_PROC_BIND</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span><span class="w"></span>
-<span class="w">      </span><span class="nt">TF_CPP_MIN_LOG_LEVEL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tensorflow_cpu</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
+<span class="w">  </span><span class="nt">tfcpu-02</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-cpu:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-02</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfcpu-02</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span>
+<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span>
+<span class="w">      </span><span class="nt">KMP_AFFINITY</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span>
+<span class="w">      </span><span class="nt">KMP_BLOCKTIME</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span>
+<span class="w">      </span><span class="nt">KMP_SETTINGS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FALSE&quot;</span>
+<span class="w">      </span><span class="nt">OMP_PROC_BIND</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
+<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span>
+<span class="w">      </span><span class="nt">TF_CPP_MIN_LOG_LEVEL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2&quot;</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tensorflow_cpu</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span>
 
-<span class="w">  </span><span class="nt">tfgpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-01</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-01</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span><span class="w"></span>
-<span class="w">    </span><span class="nt">runtime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">NVIDIA_VISIBLE_DEVICES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
-<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tensorflow_gpu</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
+<span class="w">  </span><span class="nt">tfgpu-01</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-01</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-01</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">    </span><span class="nt">runtime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span>
+<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span>
+<span class="w">      </span><span class="nt">NVIDIA_VISIBLE_DEVICES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tensorflow_gpu</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span>
 
-<span class="w">  </span><span class="nt">tfgpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-02</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-02</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span><span class="w"></span>
-<span class="w">    </span><span class="nt">runtime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">NVIDIA_VISIBLE_DEVICES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
-<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tensorflow_gpu</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
+<span class="w">  </span><span class="nt">tfgpu-02</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-02</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-02</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">    </span><span class="nt">runtime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span>
+<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span>
+<span class="w">      </span><span class="nt">NVIDIA_VISIBLE_DEVICES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tensorflow_gpu</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span>
 
-<span class="w">  </span><span class="nt">tfgpu-03</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-03</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-03</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span><span class="w"></span>
-<span class="w">    </span><span class="nt">runtime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">NVIDIA_VISIBLE_DEVICES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"></span>
-<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tensorflow_gpu</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
+<span class="w">  </span><span class="nt">tfgpu-03</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-gpu:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-03</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tfgpu-03</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">    </span><span class="nt">runtime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span>
+<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span>
+<span class="w">      </span><span class="nt">NVIDIA_VISIBLE_DEVICES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tensorflow_gpu</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span>
 
-<span class="w">  </span><span class="nt">pytorchcpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-cpu:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-01</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-01</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10-14</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_AFFINITY</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_BLOCKTIME</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_SETTINGS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FALSE&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">OMP_PROC_BIND</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorch_cpu</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
+<span class="w">  </span><span class="nt">pytorchcpu-01</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-cpu:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-01</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-01</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10-14</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span>
+<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span>
+<span class="w">      </span><span class="nt">KMP_AFFINITY</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span>
+<span class="w">      </span><span class="nt">KMP_BLOCKTIME</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span>
+<span class="w">      </span><span class="nt">KMP_SETTINGS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FALSE&quot;</span>
+<span class="w">      </span><span class="nt">OMP_PROC_BIND</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
+<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorch_cpu</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span>
 
-<span class="w">  </span><span class="nt">pytorchcpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-cpu:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-02</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-02</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_AFFINITY</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_BLOCKTIME</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">KMP_SETTINGS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FALSE&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">OMP_PROC_BIND</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorch_cpu</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
+<span class="w">  </span><span class="nt">pytorchcpu-02</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-cpu:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-02</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchcpu-02</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span>
+<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span>
+<span class="w">      </span><span class="nt">KMP_AFFINITY</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span>
+<span class="w">      </span><span class="nt">KMP_BLOCKTIME</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span>
+<span class="w">      </span><span class="nt">KMP_SETTINGS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FALSE&quot;</span>
+<span class="w">      </span><span class="nt">OMP_PROC_BIND</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
+<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorch_cpu</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span>
 
-<span class="w">  </span><span class="nt">pytorchgpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-gpu:latest</span><span class="w"></span>
-<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span><span class="w"></span>
-<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchgpu-01</span><span class="w"></span>
-<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchgpu-01</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span><span class="w"></span>
-<span class="w">    </span><span class="nt">runtime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span><span class="w"></span>
-<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span><span class="w"></span>
-<span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
-<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span><span class="w"></span>
-<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span><span class="w"></span>
-<span class="w">      </span><span class="nt">NVIDIA_VISIBLE_DEVICES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w"></span>
-<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span><span class="w"></span>
-<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorch_gpu</span><span class="w"></span>
-<span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span><span class="w"></span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span><span class="w"></span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span><span class="w"></span>
+<span class="w">  </span><span class="nt">pytorchgpu-01</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/pytorch-gpu:latest</span>
+<span class="w">    </span><span class="nt">init</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchgpu-01</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorchgpu-01</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">    </span><span class="nt">runtime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mlflow-tracking</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span>
+<span class="w">      </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">      </span><span class="nt">AWS_ACCESS_KEY_ID</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired username</span>
+<span class="w">      </span><span class="nt">AWS_SECRET_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="c1"># Replace with desired password</span>
+<span class="w">      </span><span class="nt">MLFLOW_TRACKING_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://mlflow-tracking:5000</span>
+<span class="w">      </span><span class="nt">MLFLOW_S3_ENDPOINT_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://minio:9000</span>
+<span class="w">      </span><span class="nt">NVIDIA_VISIBLE_DEVICES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">      </span><span class="nt">RQ_REDIS_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis://redis:6379/0</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytorch_gpu</span>
+<span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lab_deployment_backend</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs-datasets:/nfs/data</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">restapi-data:/work/data</span>
 </pre></div>
 </div>
 </div>
@@ -1151,27 +1151,27 @@ We placed these folders for our deployment under the directory <code class="docu
 <p>For the purposes of this guide, we are going to re-use the same folder structure for our deployment.
 We create them as follows:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create folders</span>
-mkdir -p /var/dioptra/lab-deployment/minio
-mkdir -p /var/dioptra/lab-deployment/mlflow-tracking
-mkdir -p /var/dioptra/lab-deployment/redis
-mkdir -p /var/dioptra/lab-deployment/restapi
+mkdir<span class="w"> </span>-p<span class="w"> </span>/var/dioptra/lab-deployment/minio
+mkdir<span class="w"> </span>-p<span class="w"> </span>/var/dioptra/lab-deployment/mlflow-tracking
+mkdir<span class="w"> </span>-p<span class="w"> </span>/var/dioptra/lab-deployment/redis
+mkdir<span class="w"> </span>-p<span class="w"> </span>/var/dioptra/lab-deployment/restapi
 </pre></div>
 </div>
 <p>Next, we need to set the folder permissions to match the user and group ids of the non-root user accounts used by most of these services.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Prevent access to deployment folders by non-root users</span>
-chmod <span class="m">0750</span> /var/dioptra
+chmod<span class="w"> </span><span class="m">0750</span><span class="w"> </span>/var/dioptra
 
 <span class="c1"># Configure folder owners for compatibility with Docker images</span>
-chown -R <span class="m">39000</span>:100 /var/dioptra/lab-deployment/mlflow-tracking
-chown -R <span class="m">39000</span>:100 /var/dioptra/lab-deployment/restapi
-chown -R <span class="m">39000</span>:100 /var/dioptra/lab-deployment/minio
-chown -R <span class="m">999</span>:100 /var/dioptra/lab-deployment/redis
+chown<span class="w"> </span>-R<span class="w"> </span><span class="m">39000</span>:100<span class="w"> </span>/var/dioptra/lab-deployment/mlflow-tracking
+chown<span class="w"> </span>-R<span class="w"> </span><span class="m">39000</span>:100<span class="w"> </span>/var/dioptra/lab-deployment/restapi
+chown<span class="w"> </span>-R<span class="w"> </span><span class="m">39000</span>:100<span class="w"> </span>/var/dioptra/lab-deployment/minio
+chown<span class="w"> </span>-R<span class="w"> </span><span class="m">999</span>:100<span class="w"> </span>/var/dioptra/lab-deployment/redis
 
 <span class="c1"># Configure folder permissions</span>
-chmod <span class="m">0700</span> /var/dioptra/lab-deployment/mlflow-tracking
-chmod <span class="m">0700</span> /var/dioptra/lab-deployment/restapi
-chmod <span class="m">0700</span> /var/dioptra/lab-deployment/minio
-chmod <span class="m">0700</span> /var/dioptra/lab-deployment/redis
+chmod<span class="w"> </span><span class="m">0700</span><span class="w"> </span>/var/dioptra/lab-deployment/mlflow-tracking
+chmod<span class="w"> </span><span class="m">0700</span><span class="w"> </span>/var/dioptra/lab-deployment/restapi
+chmod<span class="w"> </span><span class="m">0700</span><span class="w"> </span>/var/dioptra/lab-deployment/minio
+chmod<span class="w"> </span><span class="m">0700</span><span class="w"> </span>/var/dioptra/lab-deployment/redis
 </pre></div>
 </div>
 </section>
@@ -1186,12 +1186,12 @@ chmod <span class="m">0700</span> /var/dioptra/lab-deployment/redis
 Datasets on NFS share</label><div class="sd-tab-content docutils">
 <p>The following Docker volume assumes that the NFS share is the directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code> on a device with the IP address <code class="docutils literal notranslate"><span class="pre">192.168.1.20</span></code>.
 Update it to match the details of your NFS share.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nfs-datasets</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
-<span class="w">  </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs</span><span class="w"></span>
-<span class="w">    </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addr=192.168.1.20,nfsvers=4,ro,soft,nolock,async,noatime,intr,tcp,rsize=131072,wsize=131072,actimeo=1800</span><span class="w"></span>
-<span class="w">    </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:/var/nfs/datasets&quot;</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nfs-datasets</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
+<span class="w">  </span><span class="nt">driver_opts</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs</span>
+<span class="w">    </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">addr=192.168.1.20,nfsvers=4,ro,soft,nolock,async,noatime,intr,tcp,rsize=131072,wsize=131072,actimeo=1800</span>
+<span class="w">    </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:/var/nfs/datasets&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -1200,12 +1200,12 @@ Update it to match the details of your NFS share.</p>
 Datasets in local directory</label><div class="sd-tab-content docutils">
 <p>The following Docker volume assumes that the data is stored in the local directory <code class="docutils literal notranslate"><span class="pre">/var/nfs/datasets</span></code>.
 Update this to match the folder where you store your datasets.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nfs-datasets</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span><span class="w"></span>
-<span class="w">  </span><span class="nt">driver_opts</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
-<span class="w">    </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span><span class="w"></span>
-<span class="w">    </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/nfs/datasets</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">nfs-datasets</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
+<span class="w">  </span><span class="nt">driver_opts</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="w">    </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span>
+<span class="w">    </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/nfs/datasets</span>
 </pre></div>
 </div>
 </div>
@@ -1231,53 +1231,53 @@ GPU-enabled containers must have the <code class="docutils literal notranslate">
 The GPUs are zero-indexed, so for example, if you have 2 GPUs, then the first one can be assigned using <code class="docutils literal notranslate"><span class="pre">NVIDIA_VISIBLE_DEVICES:</span> <span class="pre">0</span></code> and the second one using <code class="docutils literal notranslate"><span class="pre">NVIDIA_VISIBLE_DEVICES:</span> <span class="pre">1</span></code>.</p>
 <p>To allocate the CPUs, we use the <code class="docutils literal notranslate"><span class="pre">cpuset</span></code> and <code class="docutils literal notranslate"><span class="pre">cpu_shares</span></code> options.
 Our deployment used the following:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># Block 1: CPUs 0 to 3</span><span class="w"></span>
-<span class="w">  </span><span class="nt">redis</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">  </span><span class="nt">minio</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">  </span><span class="nt">mlflow-tracking</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">  </span><span class="nt">nginx</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">  </span><span class="nt">restpai</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Block 1: CPUs 0 to 3</span>
+<span class="w">  </span><span class="nt">redis</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">  </span><span class="nt">minio</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">  </span><span class="nt">mlflow-tracking</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">  </span><span class="nt">nginx</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">  </span><span class="nt">restpai</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0-3</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
 
-<span class="w">  </span><span class="c1"># Block 2: CPUs 10 to 14</span><span class="w"></span>
-<span class="w">  </span><span class="nt">tfcpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10-14</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">  </span><span class="nt">pytorchcpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10-14</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># Block 2: CPUs 10 to 14</span>
+<span class="w">  </span><span class="nt">tfcpu-01</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10-14</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">  </span><span class="nt">pytorchcpu-01</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10-14</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
 
-<span class="w">  </span><span class="c1"># Block 3: CPUs 15 to 19</span><span class="w"></span>
-<span class="w">  </span><span class="nt">tfcpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
-<span class="w">  </span><span class="nt">pytorchcpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># Block 3: CPUs 15 to 19</span>
+<span class="w">  </span><span class="nt">tfcpu-02</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
+<span class="w">  </span><span class="nt">pytorchcpu-02</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
 
-<span class="w">  </span><span class="c1"># Block 4: CPUs 4 to 19</span><span class="w"></span>
-<span class="w">  </span><span class="nt">tfgpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span><span class="w"></span>
-<span class="w">  </span><span class="nt">tfgpu-02</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span><span class="w"></span>
-<span class="w">  </span><span class="nt">tfgpu-03</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span><span class="w"></span>
-<span class="w">  </span><span class="nt">pytorchgpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span><span class="w"></span>
-<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># Block 4: CPUs 4 to 19</span>
+<span class="w">  </span><span class="nt">tfgpu-01</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">  </span><span class="nt">tfgpu-02</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">  </span><span class="nt">tfgpu-03</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">  </span><span class="nt">pytorchgpu-01</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">cpuset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4-19</span>
+<span class="w">    </span><span class="nt">cpu_shares</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
 </pre></div>
 </div>
 <p>So, as we can see, in this arrangement the GPU Workers in Block 4 have exclusive access to CPUs 4 to 9, but also share CPUs 10 to 19 with Blocks 2 and 3.
@@ -1290,20 +1290,20 @@ So, for example, this means that the Workers in Block 2 have twice the CPU prior
 <p class="rubric">Initialize the REST API database</p>
 <p>The <a class="reference internal" href="../glossary.html#term-REST"><span class="xref std std-term">REST</span></a>  <a class="reference internal" href="../glossary.html#term-API"><span class="xref std std-term">API</span></a> database must be initialized as follows before you start using it,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Initialize the database</span>
-docker-compose run --rm restapi --upgrade-db
+docker-compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>restapi<span class="w"> </span>--upgrade-db
 
 <span class="c1"># Teardown</span>
-docker-compose down
+docker-compose<span class="w"> </span>down
 </pre></div>
 </div>
 <p class="rubric">Create the S3 workflow bucket</p>
 <p>The bucket used to cache the job submissions must be created before jobs can be submitted to the Testbed.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create workflow bucket</span>
-docker-compose run --rm --entrypoint <span class="s2">&quot;/bin/bash&quot;</span> restapi -c <span class="s1">&#39;/usr/local/bin/s3-mb.sh \</span>
+docker-compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--entrypoint<span class="w"> </span><span class="s2">&quot;/bin/bash&quot;</span><span class="w"> </span>restapi<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;/usr/local/bin/s3-mb.sh \</span>
 <span class="s1">  --endpoint-url ${MLFLOW_S3_ENDPOINT_URL} workflow&#39;</span>
 
 <span class="c1"># Teardown</span>
-docker-compose down
+docker-compose<span class="w"> </span>down
 </pre></div>
 </div>
 <p class="rubric">Configure and synchronize the task plugins</p>
@@ -1312,11 +1312,11 @@ docker-compose down
 <section id="deployment">
 <h3>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">#</a></h3>
 <p>With everything configured and initialized, you can deploy the Testbed.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker-compose up -d
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker-compose<span class="w"> </span>up<span class="w"> </span>-d
 </pre></div>
 </div>
 <p>To tear down the deployment, use</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker-compose down
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker-compose<span class="w"> </span>down
 </pre></div>
 </div>
 </section>

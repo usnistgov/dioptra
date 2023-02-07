@@ -782,7 +782,7 @@ Windows</label><div class="sd-tab-content docutils">
 </div>
 <p>Next, navigate to the directory where you will clone the repository,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE: Substitute path/to/your/directory with a path that exists on your device.</span>
-<span class="nb">cd</span> path/to/your/directory
+<span class="nb">cd</span><span class="w"> </span>path/to/your/directory
 </pre></div>
 </div>
 <div class="admonition attention">
@@ -791,8 +791,8 @@ Windows</label><div class="sd-tab-content docutils">
 This problem is due to the way that Docker is implemented on these operating systems.
 For WSL users, these issues may occur if you clone the repository within any folder on the Windows filesystem under <code class="docutils literal notranslate"><span class="pre">/mnt/c</span></code>, while for MacOS users it may occur if the repository is cloned within the <code class="docutils literal notranslate"><span class="pre">Downloads</span></code> or <code class="docutils literal notranslate"><span class="pre">Documents</span></code> directory.
 For this reason, WSL and MacOS users are both encouraged to create and clone the repository into a projects directory in their home directory,</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>mkdir ~/Projects
-<span class="nb">cd</span> ~/Projects
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>~/Projects
+<span class="nb">cd</span><span class="w"> </span>~/Projects
 </pre></div>
 </div>
 </div>
@@ -801,20 +801,20 @@ For this reason, WSL and MacOS users are both encouraged to create and clone the
 <input checked="checked" id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
 </input><label class="sd-tab-label" for="sd-tab-item-5">
 Clone with HTTPS</label><div class="sd-tab-content docutils">
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/usnistgov/dioptra.git
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/usnistgov/dioptra.git
 </pre></div>
 </div>
 </div>
 <input id="sd-tab-item-6" name="sd-tab-set-2" type="radio">
 </input><label class="sd-tab-label" for="sd-tab-item-6">
 Clone with SSH</label><div class="sd-tab-content docutils">
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:usnistgov/dioptra.git
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:usnistgov/dioptra.git
 </pre></div>
 </div>
 </div>
 </div>
 <p>Finally, verify the repository was downloaded and is up to date,</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> dioptra <span class="o">&amp;&amp;</span> git pull
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>dioptra<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>pull
 </pre></div>
 </div>
 <p>The message <em>Already up to date.</em> should be echoed, verifying the repository was successfully cloned to your device.</p>
@@ -823,20 +823,20 @@ Clone with SSH</label><div class="sd-tab-content docutils">
 <span id="quickstart-config-environment"></span><h3>Using Pre-made Configuration Files to Create a Conda Environment<a class="headerlink" href="#using-pre-made-configuration-files-to-create-a-conda-environment" title="Permalink to this headline">#</a></h3>
 <p>Throughout the project codebase, there are a multitude of files named <cite>environment.yml</cite>.
 These <a class="reference internal" href="../glossary.html#term-YAML"><span class="xref std std-term">YAML</span></a> files, or rather configuration files, can be used as parameters when <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands">creating a Conda Environment</a>.</p>
-<p>Demo-specific instructions for creating a suitable environment will be provided in the examples contained within <a class="reference external" href="https://docs.python.org/3/tutorial/index.html#tutorial-index" title="(in Python v3.10)"><span>The Python Tutorial</span></a>, but the following example outlines the generic steps that can be taken to <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands">create a Conda Environment</a>:</p>
+<p>Demo-specific instructions for creating a suitable environment will be provided in the examples contained within <a class="reference external" href="https://docs.python.org/3/tutorial/index.html#tutorial-index" title="(in Python v3.11)"><span>The Python Tutorial</span></a>, but the following example outlines the generic steps that can be taken to <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands">create a Conda Environment</a>:</p>
 <ol class="arabic">
 <li><p>Navigate to the directory where the desired <em>environment.yml</em> (the pre-made configuration file) file is located.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> Path/To/Your/Directory
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>Path/To/Your/Directory
 </pre></div>
 </div>
 </li>
 <li><p>Create a Conda Environment with a pre-made configuration file.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda env create --file environment.yml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>--file<span class="w"> </span>environment.yml
 </pre></div>
 </div>
 </li>
 <li><p>Activate the newly created Conda Environment.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda activate name-of-the-environment
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>name-of-the-environment
 </pre></div>
 </div>
 <p><strong>NOTE</strong>: The <em>name-of-the-environment</em> used for the demos provided in the project codebase can be found by inspecting the specific <em>environment.yml</em> file for the tag labeled <em>name</em>.</p>
@@ -851,7 +851,7 @@ These <a class="reference internal" href="../glossary.html#term-YAML"><span clas
 If you are a developer using a separate branch please see <a class="reference internal" href="../dev-guide/contributing-build-dev-images.html#dev-guide-build-dev-images"><span class="std std-ref">Building Development Docker Images</span></a>.</p>
 <ol class="arabic">
 <li><p>Navigate the the root directory of the project.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> path/to/dioptra
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>path/to/dioptra
 </pre></div>
 </div>
 <p><strong>NOTE</strong>: You must substitute the code snippet <code class="docutils literal notranslate"><span class="pre">path/to/</span></code> with the true path for the project codebase on your device.
@@ -859,7 +859,7 @@ This should be the same path used in step 2 of <a class="reference internal" hre
 </li>
 <li><p>Pull the latest vendor, Continuous Integration (CI), and Testbed images.
 These are most current images that are pre-built to be used by the <em>master</em> branch.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make pull-latest-hub pull-latest-ci pull-latest-testbed
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>pull-latest-hub<span class="w"> </span>pull-latest-ci<span class="w"> </span>pull-latest-testbed
 </pre></div>
 </div>
 </li>

@@ -549,7 +549,7 @@ title="Source repository"
 
 <div class="viewcode-block" id="log_metrics"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-tracking.html#dioptra_builtins.tracking.mlflow.log_metrics">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="k">def</span> <span class="nf">log_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Logs metrics to the MLFlow Tracking service for the current run.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Logs metrics to the MLFlow Tracking service for the current run.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        metrics: A dictionary with the metrics to be logged. The keys are the metric</span>
@@ -569,7 +569,7 @@ title="Source repository"
 
 <div class="viewcode-block" id="log_parameters"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-tracking.html#dioptra_builtins.tracking.mlflow.log_parameters">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="k">def</span> <span class="nf">log_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Logs parameters to the MLFlow Tracking service for the current run.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Logs parameters to the MLFlow Tracking service for the current run.</span>
 
 <span class="sd">    Parameters can only be set once per run.</span>
 
@@ -592,7 +592,7 @@ title="Source repository"
 <div class="viewcode-block" id="log_tensorflow_keras_estimator"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-tracking.html#dioptra_builtins.tracking.mlflow.log_tensorflow_keras_estimator">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">log_tensorflow_keras_estimator</span><span class="p">(</span><span class="n">estimator</span><span class="p">:</span> <span class="n">Sequential</span><span class="p">,</span> <span class="n">model_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Logs a Keras estimator trained during the current run to the MLFlow registry.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Logs a Keras estimator trained during the current run to the MLFlow registry.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        estimator: A trained Keras estimator.</span>

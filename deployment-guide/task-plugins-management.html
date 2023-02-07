@@ -630,30 +630,30 @@ Readers that have not are referred to the <a class="reference internal" href="si
 We now use a <cite>dioptra/restapi</cite> container to create the <cite>plugins</cite> bucket and upload the task plugins,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Start a bash shell in a restapi container</span>
 <span class="c1"># NOTE: REPLACE /path/to/task-plugins WITH ABSOLUTE PATH TO THE TESTBED REPO&#39;S task-plugins DIRECTORY</span>
-docker-compose run --rm --entrypoint <span class="s2">&quot;/bin/bash&quot;</span> -u <span class="k">$(</span>id -u<span class="k">)</span>:<span class="k">$(</span>id -g<span class="k">)</span> <span class="se">\</span>
-  -v /path/to/task-plugins:/task-plugins restapi
+docker-compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--entrypoint<span class="w"> </span><span class="s2">&quot;/bin/bash&quot;</span><span class="w"> </span>-u<span class="w"> </span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span>:<span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span>/path/to/task-plugins:/task-plugins<span class="w"> </span>restapi
 
 <span class="c1"># Run inside the container</span>
-s3-mb.sh --endpoint-url <span class="si">${</span><span class="nv">MLFLOW_S3_ENDPOINT_URL</span><span class="si">}</span> plugins
-s3-sync.sh --endpoint-url <span class="si">${</span><span class="nv">MLFLOW_S3_ENDPOINT_URL</span><span class="si">}</span> --delete <span class="se">\</span>
-  /task-plugins/dioptra_builtins s3://plugins/dioptra_builtins
+s3-mb.sh<span class="w"> </span>--endpoint-url<span class="w"> </span><span class="si">${</span><span class="nv">MLFLOW_S3_ENDPOINT_URL</span><span class="si">}</span><span class="w"> </span>plugins
+s3-sync.sh<span class="w"> </span>--endpoint-url<span class="w"> </span><span class="si">${</span><span class="nv">MLFLOW_S3_ENDPOINT_URL</span><span class="si">}</span><span class="w"> </span>--delete<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>/task-plugins/dioptra_builtins<span class="w"> </span>s3://plugins/dioptra_builtins
 
 <span class="c1"># Exit the container</span>
 <span class="nb">exit</span>
 
 <span class="c1"># Teardown</span>
-docker-compose down
+docker-compose<span class="w"> </span>down
 </pre></div>
 </div>
 <p>To set the <code class="docutils literal notranslate"><span class="pre">DIOPTRA_PLUGINS_S3_URI</span></code> environment variable for the Testbed Workers, open your <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file and add <code class="docutils literal notranslate"><span class="pre">DIOPTRA_PLUGINS_S3_URI:</span> <span class="pre">s3://plugins/dioptra_builtins</span></code> to each Worker’s <code class="docutils literal notranslate"><span class="pre">environment:</span></code> block,</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tfcpu-01</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-cpu:latest</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># ...Truncated...</span><span class="w"></span>
-<span class="w">  </span><span class="nt">environment</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span><span class="w"></span>
-<span class="w">    </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span><span class="w"></span>
-<span class="w">    </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># ...Truncated...</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tfcpu-01</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra/tensorflow2-cpu:latest</span>
+<span class="w">  </span><span class="c1"># ...Truncated...</span>
+<span class="w">  </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">DIOPTRA_PLUGINS_S3_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://plugins/dioptra_builtins</span>
+<span class="w">    </span><span class="nt">DIOPTRA_RESTAPI_DATABASE_URI</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlite:////work/data/dioptra.db</span>
+<span class="w">    </span><span class="nt">DIOPTRA_RESTAPI_ENV</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prod</span>
+<span class="w">  </span><span class="c1"># ...Truncated...</span>
 </pre></div>
 </div>
 </section>
@@ -669,13 +669,13 @@ Like before, we assume that,</p>
 </ul>
 <p>So, just as before, we run <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">-s</span></code> to become root, navigate to the <code class="docutils literal notranslate"><span class="pre">/etc/dioptra/lab_deployment</span></code>, and perform the task plugins update,</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE: REPLACE /path/to/task-plugins WITH ABSOLUTE PATH TO THE TESTBED REPO&#39;S task-plugins DIRECTORY</span>
-docker-compose run --rm --entrypoint <span class="s2">&quot;/bin/bash&quot;</span> -u <span class="k">$(</span>id -u<span class="k">)</span>:<span class="k">$(</span>id -g<span class="k">)</span> <span class="se">\</span>
-  -v /path/to/task-plugins:/task-plugins restapi -c <span class="s1">&#39;/usr/local/bin/s3-sync.sh \</span>
+docker-compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--entrypoint<span class="w"> </span><span class="s2">&quot;/bin/bash&quot;</span><span class="w"> </span>-u<span class="w"> </span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span>:<span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span>/path/to/task-plugins:/task-plugins<span class="w"> </span>restapi<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;/usr/local/bin/s3-sync.sh \</span>
 <span class="s1">  --endpoint-url ${MLFLOW_S3_ENDPOINT_URL} --delete \</span>
 <span class="s1">  /task-plugins/dioptra_builtins s3://plugins/dioptra_builtins&#39;</span>
 
 <span class="c1"># Teardown</span>
-docker-compose down
+docker-compose<span class="w"> </span>down
 </pre></div>
 </div>
 </section>

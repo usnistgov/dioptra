@@ -600,41 +600,41 @@ title="Print to PDF"
 <ul>
 <li><p>Clone the repository to your local computer:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone with HTTPS</span>
-git clone https://github.com/usnistgov/dioptra.git
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/usnistgov/dioptra.git
 
 <span class="c1"># Clone with SSH</span>
-git clone git@github.com:usnistgov/dioptra.git
+git<span class="w"> </span>clone<span class="w"> </span>git@github.com:usnistgov/dioptra.git
 </pre></div>
 </div>
 </li>
 <li><p><a class="reference external" href="README.md">Set up a development environment by following the Install instructions in the project README</a> and installing the project’s pre-commit hooks:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pre-commit install --install-hooks
-pre-commit install --hook-type commit-msg
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pre-commit<span class="w"> </span>install<span class="w"> </span>--install-hooks
+pre-commit<span class="w"> </span>install<span class="w"> </span>--hook-type<span class="w"> </span>commit-msg
 </pre></div>
 </div>
 </li>
 <li><p>Make your changes in a new git branch:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git checkout -b my-branch master
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>my-branch<span class="w"> </span>master
 </pre></div>
 </div>
 </li>
 <li><p>Commit your changes using commit messages that follow the <a class="reference external" href="#commit-guidelines">commit message styleguide</a>:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE: the optional commit `-a` option will automatically &quot;add&quot; and &quot;rm&quot; edited files</span>
-git commit -a
+git<span class="w"> </span>commit<span class="w"> </span>-a
 </pre></div>
 </div>
 <p>The pre-commit hooks will run a linter that scans your commit message for formatting errors.
 Adherence to these guidelines is required because these commit messages are used to automatically generate the project <a class="reference external" href="CHANGELOG.md">CHANGELOG</a>.</p>
 </li>
 <li><p>Push your branch to GitHub:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git push origin my-branch
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>my-branch
 </pre></div>
 </div>
 </li>
 <li><p>In GitHub, open a merge request and set <code class="docutils literal notranslate"><span class="pre">my-branch</span></code> as the source branch and <code class="docutils literal notranslate"><span class="pre">master</span></code> as the target branch.
 If you need to make changes, you can either push them as additional commits to <code class="docutils literal notranslate"><span class="pre">my-branch</span></code> or use <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">rebase</span></code> to amend your initial commits and force push them:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git rebase master -i
-git push origin my-branch -f
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>rebase<span class="w"> </span>master<span class="w"> </span>-i
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>my-branch<span class="w"> </span>-f
 </pre></div>
 </div>
 </li>

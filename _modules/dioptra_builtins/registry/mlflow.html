@@ -554,7 +554,7 @@ title="Source repository"
 <span class="k">def</span> <span class="nf">add_model_to_registry</span><span class="p">(</span>
     <span class="n">active_run</span><span class="p">:</span> <span class="n">MlflowRun</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model_dir</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ModelVersion</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Registers a trained model logged during the current run to the MLFlow registry.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Registers a trained model logged during the current run to the MLFlow registry.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        active_run: The :py:class:`mlflow.ActiveRun` object managing the current run&#39;s</span>
@@ -590,7 +590,7 @@ title="Source repository"
 
 <div class="viewcode-block" id="get_experiment_name"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-registry.html#dioptra_builtins.registry.mlflow.get_experiment_name">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="k">def</span> <span class="nf">get_experiment_name</span><span class="p">(</span><span class="n">active_run</span><span class="p">:</span> <span class="n">MlflowRun</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Gets the name of the experiment for the current run.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gets the name of the experiment for the current run.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        active_run: The :py:class:`mlflow.ActiveRun` object managing the current run&#39;s</span>
@@ -612,7 +612,7 @@ title="Source repository"
 <div class="viewcode-block" id="load_tensorflow_keras_classifier"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-registry.html#dioptra_builtins.registry.mlflow.load_tensorflow_keras_classifier">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">TensorflowDependencyError</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">load_tensorflow_keras_classifier</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequential</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Loads a registered Keras classifier.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Loads a registered Keras classifier.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name: The name of the registered model in the MLFlow model registry.</span>

@@ -598,7 +598,7 @@ title="Source repository"
     <span class="n">minimal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">norm</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Generates an adversarial dataset using the Fast Gradient Method attack.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates an adversarial dataset using the Fast Gradient Method attack.</span>
 
 <span class="sd">    Each generated adversarial image is saved as an image file in the directory</span>
 <span class="sd">    specified by `adv_data_dir` and the distance metric functions passed to</span>
@@ -718,7 +718,7 @@ title="Source repository"
 <span class="k">def</span> <span class="nf">_init_fgm</span><span class="p">(</span>
     <span class="n">keras_classifier</span><span class="p">:</span> <span class="n">KerasClassifier</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FastGradientMethod</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Initializes :py:class:`~art.attacks.evasion.FastGradientMethod`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initializes :py:class:`~art.attacks.evasion.FastGradientMethod`.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        keras_classifier: A trained :py:class:`~art.estimators.classification\\</span>
@@ -735,7 +735,7 @@ title="Source repository"
 
 
 <span class="k">def</span> <span class="nf">_save_adv_batch</span><span class="p">(</span><span class="n">adv_batch</span><span class="p">,</span> <span class="n">adv_data_dir</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">clean_filenames</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Saves a batch of adversarial images to disk.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Saves a batch of adversarial images to disk.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        adv_batch: A generated batch of adversarial images.</span>
@@ -759,7 +759,7 @@ title="Source repository"
 <span class="k">def</span> <span class="nf">_evaluate_distance_metrics</span><span class="p">(</span>
     <span class="n">clean_filenames</span><span class="p">,</span> <span class="n">distance_metrics_</span><span class="p">,</span> <span class="n">clean_batch</span><span class="p">,</span> <span class="n">adv_batch</span><span class="p">,</span> <span class="n">distance_metrics_list</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculates distance metrics for a batch of clean/adversarial image pairs.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates distance metrics for a batch of clean/adversarial image pairs.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        clean_filenames: A list containing the filenames of the original images.</span>
@@ -779,7 +779,7 @@ title="Source repository"
 
 
 <span class="k">def</span> <span class="nf">_log_distance_metrics</span><span class="p">(</span><span class="n">distance_metrics_</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Logs the distance metrics summary statistics to the MLFlow Tracking service.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Logs the distance metrics summary statistics to the MLFlow Tracking service.</span>
 
 <span class="sd">    The following summary statistics are calculated and logged to the MLFlow Tracking</span>
 <span class="sd">    service for each of the distributions recorded in the `distance_metrics_`</span>

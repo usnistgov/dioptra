@@ -568,7 +568,7 @@ title="Source repository"
 <span class="k">def</span> <span class="nf">generate_rsa_key_pair</span><span class="p">(</span>
     <span class="n">public_exponent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">65537</span><span class="p">,</span> <span class="n">key_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4096</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">RSAPrivateKeyWithSerialization</span><span class="p">,</span> <span class="n">RSAPublicKey</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Generate a public/private key pair using the RSA algorithm&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a public/private key pair using the RSA algorithm&quot;&quot;&quot;</span>
     <span class="n">private_key</span><span class="p">:</span> <span class="n">RSAPrivateKeyWithSerialization</span> <span class="o">=</span> <span class="n">generate_private_key</span><span class="p">(</span>
         <span class="n">public_exponent</span><span class="o">=</span><span class="n">public_exponent</span><span class="p">,</span>
         <span class="n">key_size</span><span class="o">=</span><span class="n">key_size</span><span class="p">,</span>
@@ -581,7 +581,7 @@ title="Source repository"
 
 <div class="viewcode-block" id="save_private_key"><a class="viewcode-back" href="../../../../user-guide/api-sdk/api-cryptography.html#dioptra.sdk.cryptography.keygen.save_private_key">[docs]</a><span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;cryptography&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">CryptographyDependencyError</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">save_private_key</span><span class="p">(</span><span class="n">private_key</span><span class="p">:</span> <span class="n">RSAPrivateKeyWithSerialization</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Save the private RSA key to a file&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save the private RSA key to a file&quot;&quot;&quot;</span>
     <span class="n">private_key_bytes</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">private_key</span><span class="o">.</span><span class="n">private_bytes</span><span class="p">(</span>
         <span class="n">encoding</span><span class="o">=</span><span class="n">Encoding</span><span class="o">.</span><span class="n">PEM</span><span class="p">,</span>
         <span class="nb">format</span><span class="o">=</span><span class="n">PrivateFormat</span><span class="o">.</span><span class="n">TraditionalOpenSSL</span><span class="p">,</span>
@@ -594,7 +594,7 @@ title="Source repository"
 
 <div class="viewcode-block" id="save_public_key"><a class="viewcode-back" href="../../../../user-guide/api-sdk/api-cryptography.html#dioptra.sdk.cryptography.keygen.save_public_key">[docs]</a><span class="nd">@require_package</span><span class="p">(</span><span class="s2">&quot;cryptography&quot;</span><span class="p">,</span> <span class="n">exc_type</span><span class="o">=</span><span class="n">CryptographyDependencyError</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">save_public_key</span><span class="p">(</span><span class="n">public_key</span><span class="p">:</span> <span class="n">RSAPublicKey</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Save the public RSA key to a file&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save the public RSA key to a file&quot;&quot;&quot;</span>
     <span class="n">public_key_bytes</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="n">public_key</span><span class="o">.</span><span class="n">public_bytes</span><span class="p">(</span>
         <span class="n">encoding</span><span class="o">=</span><span class="n">Encoding</span><span class="o">.</span><span class="n">PEM</span><span class="p">,</span>
         <span class="nb">format</span><span class="o">=</span><span class="n">PublicFormat</span><span class="o">.</span><span class="n">SubjectPublicKeyInfo</span><span class="p">,</span>
@@ -655,7 +655,7 @@ title="Source repository"
 <span class="k">def</span> <span class="nf">keygen</span><span class="p">(</span>
     <span class="n">private_key_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">public_key_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">public_exponent</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">key_size</span><span class="p">:</span> <span class="nb">int</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">RSAPrivateKeyWithSerialization</span><span class="p">,</span> <span class="n">RSAPublicKey</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Generate a public/private key pair using the RSA algorithm&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a public/private key pair using the RSA algorithm&quot;&quot;&quot;</span>
     <span class="n">private_key</span><span class="p">,</span> <span class="n">public_key</span> <span class="o">=</span> <span class="n">generate_rsa_key_pair</span><span class="p">(</span>
         <span class="n">public_exponent</span><span class="o">=</span><span class="n">public_exponent</span><span class="p">,</span> <span class="n">key_size</span><span class="o">=</span><span class="n">key_size</span>
     <span class="p">)</span>

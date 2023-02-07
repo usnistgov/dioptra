@@ -550,7 +550,7 @@ title="Source repository"
 <span class="k">def</span> <span class="nf">get_performance_metric_list</span><span class="p">(</span>
     <span class="n">request</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
-    <span class="sd">&quot;&quot;&quot;Gets multiple performance metric functions from the registry.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gets multiple performance metric functions from the registry.</span>
 
 <span class="sd">    The following metrics are available in the registry,</span>
 
@@ -595,7 +595,7 @@ title="Source repository"
 
 <div class="viewcode-block" id="get_performance_metric"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.get_performance_metric">[docs]</a><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="k">def</span> <span class="nf">get_performance_metric</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Gets a performance metric function from the registry.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gets a performance metric function from the registry.</span>
 
 <span class="sd">    The following metrics are available in the registry,</span>
 
@@ -633,7 +633,7 @@ title="Source repository"
 
 
 <div class="viewcode-block" id="accuracy"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.accuracy">[docs]</a><span class="k">def</span> <span class="nf">accuracy</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculates the accuracy score.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the accuracy score.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        y_true: A 1d array-like, or label indicator array containing the ground truth</span>
@@ -652,7 +652,7 @@ title="Source repository"
 
 
 <div class="viewcode-block" id="roc_auc"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.roc_auc">[docs]</a><span class="k">def</span> <span class="nf">roc_auc</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculates the Area Under the Receiver Operating Characteristic Curve (ROC AUC).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the Area Under the Receiver Operating Characteristic Curve (ROC AUC).</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        y_true: An array-like of shape `(n_samples,)` or `(n_samples, n_classes)`</span>
@@ -671,7 +671,7 @@ title="Source repository"
 
 
 <div class="viewcode-block" id="categorical_accuracy"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.categorical_accuracy">[docs]</a><span class="k">def</span> <span class="nf">categorical_accuracy</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculates the categorical accuracy.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the categorical accuracy.</span>
 
 <span class="sd">    This function is a port of the Keras metric</span>
 <span class="sd">    :py:class:`~tf.keras.metrics.CategoricalAccuracy`.</span>
@@ -699,7 +699,7 @@ title="Source repository"
 
 
 <div class="viewcode-block" id="mcc"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.mcc">[docs]</a><span class="k">def</span> <span class="nf">mcc</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculates the Matthews correlation coefficient.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the Matthews correlation coefficient.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        y_true: A 1d array containing the ground truth labels.</span>
@@ -717,7 +717,7 @@ title="Source repository"
 
 
 <div class="viewcode-block" id="f1"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.f1">[docs]</a><span class="k">def</span> <span class="nf">f1</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculates the F1 score.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the F1 score.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        y_true: A 1d array-like, or label indicator array containing the ground truth</span>
@@ -737,7 +737,7 @@ title="Source repository"
 
 
 <div class="viewcode-block" id="precision"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.precision">[docs]</a><span class="k">def</span> <span class="nf">precision</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculates the precision score.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the precision score.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        y_true: A 1d array-like, or label indicator array containing the ground truth</span>
@@ -757,7 +757,7 @@ title="Source repository"
 
 
 <div class="viewcode-block" id="recall"><a class="viewcode-back" href="../../../user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.recall">[docs]</a><span class="k">def</span> <span class="nf">recall</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculates the recall score.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the recall score.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        y_true: A 1d array-like, or label indicator array containing the ground truth</span>
