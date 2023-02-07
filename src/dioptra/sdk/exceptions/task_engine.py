@@ -15,10 +15,12 @@ class StepError(BaseTaskEngineError):
         """
         Initialize this error instance.
 
-        :param message: An error message
-        :param context_step_name: The name of the step which was the context of
-            the error, or None.  If None, the step name can be populated later,
-            e.g. filled in at a higher stack frame where the info is known.
+        Args:
+            message: An error message
+            context_step_name: The name of the step which was the context of
+                the error, or None.  If None, the step name can be populated
+                later, e.g. filled in at a higher stack frame where the info is
+                known.
         """
 
         super().__init__(message)
@@ -34,7 +36,8 @@ class StepError(BaseTaskEngineError):
         have for the error.  With more context, we can produce a better error
         message.
 
-        :return: A composed error message string
+        Returns:
+            A composed error message string
         """
         msg_parts = []
         if self.context_step_name:
