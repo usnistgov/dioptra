@@ -16,8 +16,11 @@ def is_iterable(value: Any) -> bool:
     Determine whether the given value is iterable.  Works by attempting to
     get an iterator from it.
 
-    :param value: The value to check
-    :return: True if the value is iterable; False if not
+    Args:
+        value: The value to check
+
+    Returns:
+        True if the value is iterable; False if not
     """
     try:
         iter(value)
@@ -37,14 +40,17 @@ def schema_validate(
     """
     Validate the given instance against the given JSON-Schema.
 
-    :param instance: A value to validate
-    :param schema: JSON-Schema as a data structure, e.g. parsed JSON
-    :param location_desc_callback: A callback function used to customize the
-        description of the location of errors.  Takes a programmatic "path"
-        structure as a sequence of strings/ints, and should return a nice
-        one-line string description.  Defaults to a simple generic
-        implementation which produces descriptions which aren't very nice.
-    :return: A list of error messages; will be empty if validation succeeded
+    Args:
+        instance: A value to validate
+        schema: JSON-Schema as a data structure, e.g. parsed JSON
+        location_desc_callback: A callback function used to customize the
+            description of the location of errors.  Takes a programmatic "path"
+            structure as a sequence of strings/ints, and should return a nice
+            one-line string description.  Defaults to a simple generic
+            implementation which produces descriptions which aren't very nice.
+
+    Returns:
+        A list of error messages; will be empty if validation succeeded
     """
     # Make use of a more complex API to try to produce better schema
     # validation error messages.
@@ -66,8 +72,11 @@ def step_get_plugin_short_name(step: Mapping[str, Any]) -> Optional[str]:
     some properties can have special meanings and should not be mistaken for a
     task plugin short name.
 
-    :param step: A step description, as a mapping
-    :return: A task plugin short name, or None if one was not found
+    Args:
+        step: A step description, as a mapping
+
+    Returns:
+        A task plugin short name, or None if one was not found
     """
     plugin_name = None
     if "task" in step:
@@ -93,8 +102,11 @@ def is_reference(value: str) -> bool:
     This function does not try to actually resolve the reference, so if the
     value is a reference, this function does not guarantee it is valid.
 
-    :param value: The string to check
-    :return: True if the given string is a reference; False if not
+    Args:
+        value: The string to check
+
+    Returns:
+        True if the given string is a reference; False if not
     """
 
     return value != "$" and value.startswith("$") and not value.startswith("$$")
@@ -106,7 +118,11 @@ def get_references(input_: Any) -> Iterator[str]:
     the names.  This just makes the reference determination syntactically, and
     doesn't attempt to resolve any reference.
 
-    :param input_: The arg spec structure to search for references
+    Args:
+        input_: The arg spec structure to search for references
+
+    Yields:
+        References, as strings without the leading "$"
     """
 
     if isinstance(input_, str):
@@ -134,9 +150,13 @@ def _get_step_references(input_: Any, step_names: Container[str]) -> Iterator[st
     """
     Generate step names from references in the input which refer to steps.
 
-    :param input_: The arg spec structure to search for references to steps
-    :param step_names: A container with all of the step names.  This allows us
-        to recognize a step name when we see one.
+    Args:
+        input_: The arg spec structure to search for references to steps
+        step_names: A container with all of the step names.  This allows us
+            to recognize a step name when we see one.
+
+    Yields:
+        Referenced step names
     """
     # Note: erroneous references will not be caught here (i.e. those which
     # don't refer to either a step name or a global parameter).  Those errors
@@ -162,19 +182,22 @@ def _step_dfs(
     Perform depth-first search through the task graph, to produce a total order
     over step names which is compatible with the steps' dependencies.
 
-    :param step_graph: The task graph data from the experiment description.
-        This maps step names to task invocations.
-    :param curr_step_name: The start node of the DFS (since the algorithm is
-        recursive, this actually tracks the "current node" through the
-        recursive calls).
-    :param visited_steps: Set containing steps which have already been visited,
-        to avoid visiting any step more than once.  Steps are added to this
-        set as the search proceeds.
-    :param search_path: A list (acting as a stack) of step names on the current
-        search path, used to detect cycles.  Steps are pushed and popped from
-        this list as the search proceeds.
-    :return: A list of the steps reachable from the start, in topological
-        sorted order
+    Args:
+        step_graph: The task graph data from the experiment description.  This
+            maps step names to task invocations.
+        curr_step_name: The start node of the DFS (since the algorithm is
+            recursive, this actually tracks the "current node" through the
+            recursive calls).
+        visited_steps: Set containing steps which have already been visited, to
+            avoid visiting any step more than once.  Steps are added to this
+            set as the search proceeds.
+        search_path: A list (acting as a stack) of step names on the current
+            search path, used to detect cycles.  Steps are pushed and popped
+            from this list as the search proceeds.
+
+    Returns:
+        A list of the steps reachable from the start, in topological sorted
+        order
     """
 
     if curr_step_name not in step_graph:
@@ -222,10 +245,13 @@ def get_sorted_steps(step_graph: Mapping[str, Any]) -> list[str]:
     """
     Topological sorts the step graph to obtain a sequential execution order.
 
-    :param step_graph: The task graph data from the experiment description.
-        This maps step names to task invocations.
-    :return: A list of all step names in the graph, in topological sorted order
-        according to their dependencies
+    Args:
+        step_graph: The task graph data from the experiment description.  This
+            maps step names to task invocations.
+
+    Returns:
+        A list of all step names in the graph, in topological sorted order
+            according to their dependencies
     """
 
     sorted_steps = []

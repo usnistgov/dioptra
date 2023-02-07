@@ -78,8 +78,9 @@ def pyplugs_register(*funcs: Callable[..., Any]) -> Iterator[None]:
     A contextmanager which registers the given function(s) with pyplugs, and
     then un-registers them again to clean up after itself.
 
-    :param funcs: An iterable of functions (which must support iteration over
-        the values multiple times).
+    Args:
+        *funcs: An iterable of functions (which must support iteration over
+            the values multiple times).
     """
     try:
         for func in funcs:
@@ -131,8 +132,11 @@ def require_plugins(
     Decorator which causes the given plugins to be registered before the
     function runs, and unregistered after it returns.
 
-    :param funcs: The plugin functions to register
-    :return: A wrap function
+    Args:
+        *funcs: The plugin functions to register
+
+    Returns:
+        A wrap function
     """
 
     def wrap(f):

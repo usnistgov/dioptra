@@ -19,8 +19,11 @@ def _instance_path_to_description(  # noqa: C901
     pointed to by instance_path.  This implementation is crafted specifically
     to the structure of a declarative experiment description.
 
-    :param instance_path: A path, as a sequence of strings/ints.
-    :return: A string description
+    Args:
+        instance_path: A path, as a sequence of strings/ints.
+
+    Returns:
+        A string description
     """
 
     path_len = len(instance_path)
@@ -80,7 +83,8 @@ def _get_json_schema() -> Union[dict, bool]:  # hypothetical types of schemas
     """
     Read and parse the declarative experiment description JSON-Schema file.
 
-    :return: The schema, as parsed JSON
+    Returns:
+        The schema, as parsed JSON
     """
     # Currently assumes the schema json file and this source file are in the
     # same directory.
@@ -98,9 +102,12 @@ def _schema_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue
     Validate the given declarative experiment description against a JSON-Schema
     schema.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
 
@@ -139,10 +146,14 @@ def _structure_paths_preorder(
     The path, value tuples are generated in preorder: parents are generated
     before children.
 
-    :param value: A value to search
-    :param parent_path: The path to the given value as a list, or None.  None
-        is treated as [], i.e. that 'value' is the root of the data structure,
-        so its path is empty.
+    Args:
+        value: A value to search
+        parent_path: The path to the given value as a list, or None.  None
+            is treated as [], i.e. that 'value' is the root of the data structure,
+            so its path is empty.
+
+    Yields:
+        path, value 2-tuples
     """
     if parent_path is None:
         parent_path = []
@@ -171,7 +182,11 @@ def _structure_paths_to_objects_preorder(
     The path, value tuples are generated in preorder: parents are generated
     before children.
 
-    :param value: A value to search
+    Args:
+        value: A value to search
+
+    Yields:
+        path, value 2-tuples
     """
     for path, sub_value in _structure_paths_preorder(value):
         if isinstance(sub_value, Mapping):
@@ -189,9 +204,12 @@ def _check_string_keys(experiment_desc: Mapping[str, Any]) -> list[ValidationIss
 
     This check ensures all keys in all objects are strings.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
 
@@ -220,9 +238,12 @@ def _check_name_collisions(experiment_desc: Mapping[str, Any]) -> list[Validatio
     """
     Check whether any graph step names collide with any parameter names.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
 
@@ -248,9 +269,12 @@ def _check_task_plugin_references(
     """
     Check whether all task plugin short names refer to known task plugins.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
     task_defs = experiment_desc["tasks"]
@@ -280,9 +304,12 @@ def _check_task_plugin_pyplugs_coords(
     Check task plugin IDs for validity.  They must at minimum include a module
     name and a function name.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
     task_defs = experiment_desc["tasks"]
@@ -317,9 +344,12 @@ def _check_graph_references(
     Scan for references within task invocations, check whether they are legal,
     and whether they refer to recognized parameters, steps, and/or step outputs.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
     graph = experiment_desc["graph"]
@@ -395,9 +425,12 @@ def _check_graph_dependencies(
     Check explicitly declared dependencies for each step and ensure they refer
     to other steps.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
     graph = experiment_desc["graph"]
@@ -427,9 +460,12 @@ def _check_graph_cycle(experiment_desc: Mapping[str, Any]) -> list[ValidationIss
     """
     Check for a cycle in the task graph.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
 
@@ -458,9 +494,12 @@ def _check_parameter_names_dots(
     because references to the parameter would have the same syntax as a step
     output (<step>.<output>) and be ambiguous or misinterpreted.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
     parameters = experiment_desc.get("parameters", [])
@@ -492,9 +531,12 @@ def _check_short_form_task_invocation_structure(
     "dependencies".  In other words, a task plugin short name must always be
     one of the properties.  Ensure these requirements are met.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
 
@@ -543,9 +585,12 @@ def _manually_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIss
     Do any extra domain-specific handwritten validation we can think of, which
     can't be done (or awkward to do) via JSON-Schema.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
 
@@ -593,9 +638,12 @@ def validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: A list of ValidationIssue objects; will be an empty list if the
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
 
@@ -616,9 +664,12 @@ def is_valid(experiment_desc: Mapping[str, Any]) -> bool:
     care about whether the description is valid or not, and don't need to know
     the reasons.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :return: True if the description is valid; False if not
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        True if the description is valid; False if not
     """
 
     issues = validate(experiment_desc)

@@ -77,8 +77,10 @@ def _setup_logging(log_level: Union[int, str] = logging.INFO) -> None:
     """
     Set up logging.
 
-    :param log_level: The logging level to use.  May be one of the integer log
-        level constants or names recognized by the logging module, or "all".
+    Args:
+        log_level: The logging level to use.  May be one of the integer log
+            level constants or names recognized by the logging module, or
+            "all".
     """
 
     if isinstance(log_level, str):
@@ -123,9 +125,12 @@ def _cmdline_params_to_map(params: Iterable[str]) -> dict[str, str]:
     =<value> this is an error: a parameter name is required.  If the format is
     <name>= this is not an error: the value is the empty string.
 
-    :param params: The commandline parameters defining global experiment
-        parameters, as collected by argparse.
-    :return: A mapping from name (string) to value (some python type)
+    Args:
+        params: The commandline parameters defining global experiment
+            parameters, as collected by argparse.
+
+    Returns:
+        A mapping from name (string) to value (some python type)
     """
     param_value: Any
     param_map = {}

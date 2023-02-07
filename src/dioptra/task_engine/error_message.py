@@ -29,8 +29,11 @@ def _indent_lines(lines: MutableSequence[str]) -> MutableSequence[str]:
     Add a level of indentation to each of the given lines.  The given
     line sequence is modified in-place, and for convenience also returned.
 
-    :param lines: A mutable sequence of line strings
-    :return: The same sequence object as was passed in, but containing indented
+    Args:
+        lines: A mutable sequence of line strings
+
+    Returns:
+        The same sequence object as was passed in, but containing indented
         lines.
     """
     for i, line in enumerate(lines):
@@ -49,10 +52,13 @@ def _schema_reference_to_path(ref: str) -> list[str]:
     path components to any other type.  Absent context, all-digits path
     components are ambiguous (keys or list indices?), so we mustn't change them.
 
-    :param ref: A reference value, as a fragment: "#" followed by a
-        JSON-Pointer value.  If the fragment is "#" by itself, return an empty
-        list.
-    :return: A path as a list of strings
+    Args:
+        ref: A reference value, as a fragment: "#" followed by a
+            JSON-Pointer value.  If the fragment is "#" by itself, return an
+            empty list.
+
+    Returns:
+        A path as a list of strings
     """
 
     if ref == "#":
@@ -78,14 +84,17 @@ def _extract_schema_by_schema_path(
     include any "$ref" elements; references are transparently dereferenced as
     they are encountered.
 
-    :param schema_path: A path relative to "schema" (or if it is None, then
-        relative to "full_schema"), as an iterable of strings/ints.
-    :param full_schema: The full schema we are looking inside of.  This is used
-        when traversing references, which are always absolute and therefore
-        require restarting traversal from the top of the full schema.
-    :param schema: The sub-part of full_schema being examined, or None.  If
-        None, examine full_schema.
-    :return: The sub-part of schema referred to by the given path
+    Args:
+        schema_path: A path relative to "schema" (or if it is None, then
+            relative to "full_schema"), as an iterable of strings/ints.
+        full_schema: The full schema we are looking inside of.  This is used
+            when traversing references, which are always absolute and therefore
+            require restarting traversal from the top of the full schema.
+        schema: The sub-part of full_schema being examined, or None.  If
+            None, examine full_schema.
+
+    Returns:
+        The sub-part of schema referred to by the given path
     """
 
     if schema is None:
@@ -159,9 +168,12 @@ def _extract_schema_by_reference(
     """
     Extract a sub-part of the given schema, according to the given reference.
 
-    :param ref: A JSON-Schema reference, starting with "#"
-    :param schema: A schema
-    :return: A sub-part of the schema
+    Args:
+        ref: A JSON-Schema reference, starting with "#"
+        schema: A schema
+
+    Returns:
+        A sub-part of the schema
     """
     ref_schema_path = _schema_reference_to_path(ref)
     return _extract_schema_by_schema_path(ref_schema_path, schema)
@@ -175,11 +187,14 @@ def _get_one_of_alternative_names(
     "title" properties of the schemas.  Numeric suffixes may be introduced if
     necessary, to make them unique.
 
-    :param alternative_schemas: An iterable of sub-schemas, relative to
-        full_schema
-    :param full_schema: The full schema, of which the alternatives are a part.
-        Important for being able to resolve references.
-    :return: A list of names
+    Args:
+        alternative_schemas: An iterable of sub-schemas, relative to
+            full_schema
+        full_schema: The full schema, of which the alternatives are a part.
+            Important for being able to resolve references.
+
+    Returns:
+        A list of names
     """
 
     # It is possible, though unlikely, that more than one alternative has the
@@ -221,11 +236,14 @@ def _is_valid_for_sub_schema(
     """
     Run a validation of document sub_instance against sub_schema.
 
-    :param full_schema: The full schema, of which sub_schema is a part.
-        Important for being able to resolve references.
-    :param sub_schema: The schema to use for validation
-    :param sub_instance: The instance document to validate
-    :return: True if sub_instance is valid; False if not
+    Args:
+        full_schema: The full schema, of which sub_schema is a part.
+            Important for being able to resolve references.
+        sub_schema: The schema to use for validation
+        sub_instance: The instance document to validate
+
+    Returns:
+        True if sub_instance is valid; False if not
     """
     validator_class = jsonschema.validators.validator_for(full_schema)
 
@@ -250,10 +268,13 @@ def _one_of_too_many_alternatives_satisfied_message_lines(
     Create an error message specifically about the situation where too many
     alternatives in a oneOf schema were valid.
 
-    :param error: The ValidationError object representing the aforementioned
-        type of error
-    :param schema: The schema whose validation failed
-    :return: An error message, as a list of lines (strings).  Returning a list
+    Args:
+        error: The ValidationError object representing the aforementioned
+            type of error
+        schema: The schema whose validation failed
+
+    Returns:
+        An error message, as a list of lines (strings).  Returning a list
         of lines is convenient for callers, who may want to nest this message
         in another, with indented lines.
     """
@@ -284,14 +305,17 @@ def _one_of_no_alternatives_satisfied_message_lines(
     Create an error message specifically about the situation where none of the
     alternatives in a oneOf schema were valid.
 
-    :param error: The ValidationError object representing the aforementioned
-        type of error
-    :param schema: The schema whose validation failed
-    :param location_desc_callback: A callback function used to customize the
-        description of the location of errors.  Takes a programmatic "path"
-        structure as a sequence of strings/ints, and should return a nice
-        one-line string description.
-    :return: An error message, as a list of lines (strings).  Returning a list
+    Args:
+        error: The ValidationError object representing the aforementioned
+            type of error
+        schema: The schema whose validation failed
+        location_desc_callback: A callback function used to customize the
+            description of the location of errors.  Takes a programmatic "path"
+            structure as a sequence of strings/ints, and should return a nice
+            one-line string description.
+
+    Returns:
+        An error message, as a list of lines (strings).  Returning a list
         of lines is convenient for callers, who may want to nest this message
         in another, with indented lines.
     """
@@ -356,14 +380,17 @@ def _validation_error_to_message_lines(
     """
     Create a nice error message for the given error object.
 
-    :param error: A ValidationError object which represents some schema
-        validation error
-    :param schema: The schema whose validation failed
-    :param location_desc_callback: A callback function used to customize the
-        description of the location of errors.  Takes a programmatic "path"
-        structure as a sequence of strings/ints, and should return a nice
-        one-line string description.
-    :return: An error message, as a list of lines (strings).  Returning a list
+    Args:
+        error: A ValidationError object which represents some schema
+            validation error
+        schema: The schema whose validation failed
+        location_desc_callback: A callback function used to customize the
+            description of the location of errors.  Takes a programmatic "path"
+            structure as a sequence of strings/ints, and should return a nice
+            one-line string description.
+
+    Returns:
+        An error message, as a list of lines (strings).  Returning a list
         of lines is convenient for callers, who may want to nest this message
         in another, with indented lines.
     """
@@ -405,9 +432,12 @@ def json_path_to_string(path: Iterable[Any]) -> str:
     slash-delimited strings, which I think winds up being the same as
     JSON-Pointer syntax (rfc6901).
 
-    :param path: A "path" into a JSON structure, as an iterable of values
-        (strings and ints).
-    :return: A string representation of the path
+    Args:
+        path: A "path" into a JSON structure, as an iterable of values
+            (strings and ints).
+
+    Returns:
+        A string representation of the path
     """
     # Use a filesystem-like syntax?
     return "/" + "/".join(str(elt) for elt in path)
@@ -421,15 +451,18 @@ def validation_error_to_message(
     """
     Create a nice error message for the given error object.
 
-    :param error: A ValidationError object which represents some schema
-        validation error
-    :param schema: The schema whose validation failed
-    :param location_desc_callback: A callback function used to customize the
-        description of the location of errors.  Takes a programmatic "path"
-        structure as a sequence of strings/ints, and should return a nice
-        one-line string description.  Defaults to a simple generic
-        implementation which produces descriptions which aren't very nice.
-    :return: An error message as a string
+    Args:
+        error: A ValidationError object which represents some schema
+            validation error
+        schema: The schema whose validation failed
+        location_desc_callback: A callback function used to customize the
+            description of the location of errors.  Takes a programmatic "path"
+            structure as a sequence of strings/ints, and should return a nice
+            one-line string description.  Defaults to a simple generic
+            implementation which produces descriptions which aren't very nice.
+
+    Returns:
+        An error message as a string
     """
 
     if location_desc_callback is None:
@@ -454,15 +487,18 @@ def validation_errors_to_message(
     just creates error messages for each error individually, and then
     concatenates them all together with blank lines in between.
 
-    :param errors: An iterable of ValidationError objects which represent some
-        schema validation errors
-    :param schema: The schema whose validation failed, as a dict
-    :param location_desc_callback: A callback function used to customize the
-        description of the location of errors.  Takes a programmatic "path"
-        structure as a sequence of strings/ints, and should return a nice
-        one-line string description.  Defaults to a simple generic
-        implementation which produces descriptions which aren't very nice.
-    :return: An error message as a string.
+    Args:
+        errors: An iterable of ValidationError objects which represent some
+            schema validation errors
+        schema: The schema whose validation failed, as a dict
+        location_desc_callback: A callback function used to customize the
+            description of the location of errors.  Takes a programmatic "path"
+            structure as a sequence of strings/ints, and should return a nice
+            one-line string description.  Defaults to a simple generic
+            implementation which produces descriptions which aren't very nice.
+
+    Returns:
+        An error message as a string.
     """
     messages = [
         validation_error_to_message(error, schema, location_desc_callback)

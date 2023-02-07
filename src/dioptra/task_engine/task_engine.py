@@ -25,7 +25,8 @@ def _get_logger() -> logging.Logger:
     """
     Get a logger to use for functions in this module.
 
-    :return: The logger
+    Returns:
+        The logger
     """
     return logging.getLogger(__name__)
 
@@ -38,12 +39,15 @@ def _resolve_reference(
     """
     Resolve a reference to a task output or global parameter.
 
-    :param reference: The reference to resolve, without the "$" prefix
-    :param global_parameters: The global parameters in use for this run, as a
-        mapping from parameter name to value
-    :param step_outputs: The step outputs we have thus far.  This is a nested
-        mapping: step name => output name => output value.
-    :return: The referenced value
+    Args:
+        reference: The reference to resolve, without the "$" prefix
+        global_parameters: The global parameters in use for this run, as a
+            mapping from parameter name to value
+        step_outputs: The step outputs we have thus far.  This is a nested
+            mapping: step name => output name => output value.
+
+    Returns:
+        The referenced value
     """
 
     if "." in reference:
@@ -85,12 +89,15 @@ def _resolve_task_parameter_value(
     Resolve a specification for one argument of a task invocation, to the
     actual value to be used in the invocation.
 
-    :param arg_spec: The argument specification
-    :param global_parameters: The global parameters in use for this run, as a
-        mapping from parameter name to value
-    :param step_outputs: The step outputs we have thus far.  This is a nested
-        mapping: step name => output name => output value.
-    :return: The value to use for the given parameter
+    Args:
+        arg_spec: The argument specification
+        global_parameters: The global parameters in use for this run, as a
+            mapping from parameter name to value
+        step_outputs: The step outputs we have thus far.  This is a nested
+            mapping: step name => output name => output value.
+
+    Returns:
+        The value to use for the given parameter
     """
 
     if isinstance(arg_spec, str):
@@ -134,13 +141,16 @@ def _positional_specs_to_args(
     Resolve a positional parameter style invocation specification to a list
     of actual parameter values to use in the task invocation.
 
-    :param arg_specs: A single or list of argument specifications.  A single
-        (non-list) value is treated as a length one list.
-    :param global_parameters: The global parameters in use for this run, as a
-        mapping from parameter name to value
-    :param step_outputs: The step outputs we have thus far.  This is a nested
-        mapping: step name => output name => output value.
-    :return: A list of values to use for the invocation
+    Args:
+        arg_specs: A single or list of argument specifications.  A single
+            (non-list) value is treated as a length one list.
+        global_parameters: The global parameters in use for this run, as a
+            mapping from parameter name to value
+        step_outputs: The step outputs we have thus far.  This is a nested
+            mapping: step name => output name => output value.
+
+    Returns:
+        A list of values to use for the invocation
     """
     # Let a non-list value mean the same as a length-1 list, i.e.
     # just one positional argument.
@@ -164,12 +174,15 @@ def _kwarg_specs_to_kwargs(
     Resolve a keyword arg style invocation specification to a mapping of actual
     parameter values to use in the task invocation.
 
-    :param kwarg_specs: A mapping from keyword arg name to value specification
-    :param global_parameters: The global parameters in use for this run, as a
-        mapping from parameter name to value
-    :param step_outputs: The step outputs we have thus far.  This is a nested
-        mapping: step name => output name => output value.
-    :return: A mapping from parameter name to actual value to use for the
+    Args:
+        kwarg_specs: A mapping from keyword arg name to value specification
+        global_parameters: The global parameters in use for this run, as a
+            mapping from parameter name to value
+        step_outputs: The step outputs we have thus far.  This is a nested
+            mapping: step name => output name => output value.
+
+    Returns:
+        A mapping from parameter name to actual value to use for the
         task invocation
     """
     kwarg_values = {
@@ -191,12 +204,15 @@ def _arg_specs_to_args(
     Resolve a task invocation specification to all of the positional and
     keyword arg values to use in the invocation.
 
-    :param arg_specs: The task invocation specification
-    :param global_parameters: The global parameters in use for this run, as a
-        mapping from parameter name to value
-    :param step_outputs: The step outputs we have thus far.  This is a nested
-        mapping: step name => output name => output value.
-    :return: A 2-tuple including a list of positional values to use in the
+    Args:
+        arg_specs: The task invocation specification
+        global_parameters: The global parameters in use for this run, as a
+            mapping from parameter name to value
+        step_outputs: The step outputs we have thus far.  This is a nested
+            mapping: step name => output name => output value.
+
+    Returns:
+        A 2-tuple including a list of positional values to use in the
         task invocation, followed by a mapping with keyword arg names and
         values.
     """
@@ -246,12 +262,13 @@ def _update_output_map(
     Update the step outputs mapping according to task metadata regarding output
     name(s), and actual task plugin return value(s).
 
-    :param step_outputs: The step outputs we have thus far.  This a is nested
-        mapping: step name => output name => output value.
-    :param step_name: The name of the step for which we have output values
-    :param new_output_names: Task metadata regarding output names.  This may
-        be either a single or list of strings.
-    :param new_outputs: The output(s) from the completed step
+    Args:
+        step_outputs: The step outputs we have thus far.  This a is nested
+            mapping: step name => output name => output value.
+        step_name: The name of the step for which we have output values
+        new_output_names: Task metadata regarding output names.  This may
+            be either a single or list of strings.
+        new_outputs: The output(s) from the completed step
     """
 
     log = _get_logger()
@@ -307,11 +324,12 @@ def _resolve_global_parameters(
     parameters are not considered an error.  Any parameters defined in the
     description for which a value can't be obtained, will produce an error.
 
-    :param global_parameter_spec: The global parameter spec from the experiment
-        description
-    :param global_parameters: A mapping from parameter name to value,
-        representing global parameters given from some external source, e.g. on
-        a commandline.
+    Args:
+        global_parameter_spec: The global parameter spec from the experiment
+            description
+        global_parameters: A mapping from parameter name to value, representing
+            global parameters given from some external source, e.g. on a
+            commandline.
     """
 
     log = _get_logger()
@@ -375,9 +393,12 @@ def _get_pyplugs_coords(task_plugin: str) -> list[str]:
 
         etc...
 
-    :param task_plugin: The dotted plugin string from the declarative
-        experiment description
-    :return: A length-3 list of pyplugs coordinates
+    Args:
+        task_plugin: The dotted plugin string from the declarative experiment
+            description
+
+    Returns:
+        A length-3 list of pyplugs coordinates
     """
     coords = task_plugin.rsplit(".", 2)
 
@@ -399,14 +420,17 @@ def _run_step(
     """
     Run one step of a task graph.
 
-    :param step: The step description
-    :param task_plugin_id: The task plugin to call, in a composed dotted
-        string form with all the parts needed by pyplugs, e.g. "a.b.c.d"
-    :param global_parameters: The global parameters in use for this run, as a
-        mapping from parameter name to value
-    :param step_outputs: The step outputs we have thus far.  This is a nested
-        mapping: step name => output name => output value.
-    :return: The step output (i.e. whatever the task plugin returned)
+    Args:
+        step: The step description
+        task_plugin_id: The task plugin to call, in a composed dotted
+            string form with all the parts needed by pyplugs, e.g. "a.b.c.d"
+        global_parameters: The global parameters in use for this run, as a
+            mapping from parameter name to value
+        step_outputs: The step outputs we have thus far.  This is a nested
+            mapping: step name => output name => output value.
+
+    Returns:
+        The step output (i.e. whatever the task plugin returned)
     """
 
     log = _get_logger()
@@ -447,10 +471,11 @@ def _run_experiment(
     """
     Run an experiment via a declarative experiment description.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :param global_parameters: External parameter values to use in the
-        experiment, as a dict
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+        global_parameters: External parameter values to use in the
+            experiment, as a dict
     """
 
     log = _get_logger()
@@ -518,14 +543,15 @@ def run_experiment(
     """
     Run an experiment via a declarative experiment description.
 
-    :param experiment_desc: The experiment description, as parsed YAML or
-        equivalent
-    :param global_parameters: External parameter values to use in the
-        experiment, as a dict
-    :param mlflow_run: Whether and how to use an MLflow run.  If falsey, don't
-        use a run.  If truthy and this parameter is a string, treat it as a
-        run ID, and resume that run.  If truthy but not a string (e.g. True),
-        start a new run.
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+        global_parameters: External parameter values to use in the
+            experiment, as a dict
+        mlflow_run: Whether and how to use an MLflow run.  If falsey, don't
+            use a run.  If truthy and this parameter is a string, treat it as a
+            run ID, and resume that run.  If truthy but not a string (e.g.
+            True), start a new run.
     """
 
     # Establish mlflow contextual things first, if needed
