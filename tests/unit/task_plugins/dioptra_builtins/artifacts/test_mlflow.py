@@ -22,7 +22,8 @@ from dioptra import pyplugs
 from dioptra.sdk.utilities.paths import set_path_ext 
 from mlflow.tracking import MlflowClient 
 from mlflow.tracking.fluent import ActiveRun
-from mlflow.entities import Experiment, Run, RunStatus, RunTag
+from mlflow.entities import Experiment, Run, RunStatus, RunTag, RunInfo, RunData
+from mlflow.entities.lifecycle_stage import LifecycleStage
 from mlflow.utils.mlflow_tags import (
     MLFLOW_USER,
     MLFLOW_PARENT_RUN_ID,
@@ -44,6 +45,7 @@ import pandas as pd
 import pytest
 import structlog 
 import tarfile 
+import uuid
 import os
 
 class MockMLFlowClient(object):
@@ -58,7 +60,7 @@ class MockMLFlowClient(object):
     def log_artifact(self,  run_id: str, local_path: str, artifact_path=None) -> None:
         print("REACHED")
         return None
-    def create_run(self, experiment_id, start_time=None, tags=None, run_name=None):
+    def create_run(self, experiment_id, start_time=56020, tags=None, run_name=None):
         tags = tags if tags else {}
         user_id = tags.get(MLFLOW_USER, "unknown")
         experiment_id = FileStore.DEFAULT_EXPERIMENT_ID if experiment_id is None else experiment_id
@@ -74,7 +76,10 @@ class MockMLFlowClient(object):
         if not run_name_tag:
             tags.append(RunTag(key=MLFLOW_RUN_NAME, value=run_name))
         run_uuid = uuid.uuid4().hex
-        artifact_uri = self._get_artifact_dir(experiment_id, run_uuid)
+        artifact_uri =  os.path.join('/path/to/artifacts/',
+                                   run_uuid,
+                                   'artifacts')
+        
         run_info = RunInfo(
             run_uuid=run_uuid,
             run_id=run_uuid,
@@ -87,7 +92,7 @@ class MockMLFlowClient(object):
             end_time=None,
             lifecycle_stage=LifecycleStage.ACTIVE,
         )
-        return run
+        return Run(run_info, RunData(None, None, tags))
 class MockActiveRun(object):
     def __init__(self, run):
         if run_info is None:
@@ -131,16 +136,20 @@ def mock_start_run(
         experiment_id=exp_id_for_run, tags=resolved_tags, run_name=run_name
     )
     return ActiveRun(active_run_obj)
+def mock_log_artifact(local_path: str, artifact_path: Optional[str] = None) -> None:
+    run_id = "ex123456"
+    MockMLFlowClient().log_artifact(run_id, local_path, artifact_path)
 @pytest.fixture
 def mlflow_client(monkeypatch: MonkeyPatch):
-    import mlflow 
-    monkeypatch.setattr(mlflow, "MlflowClient", MockMLFlowClient)
+    import mlflow
+    monkeypatch.setattr(mlflow.tracking, "MlflowClient", MockMLFlowClient)
     monkeypatch.setattr(mlflow.tracking.fluent, "start_run", mock_start_run)
+    monkeypatch.setattr(mlflow, "log_artifact", mock_log_artifact)
 
 @pytest.mark.parametrize(
     "run_id",
     [
-        123,456,621
+        "ex123","ex456","ex621"
     ],
 )
 @pytest.mark.parametrize(
@@ -176,60 +185,77 @@ def test_download_all_artifacts_in_run(mlflow_client, run_id, artifact_path, des
     ],
 )
 @pytest.mark.parametrize(
-    "file_name",
+    ("file_name", "file_format", "output"),
     [
-        'pddf.csv'
-    ],
-)
-@pytest.mark.parametrize(
-    "file_format",
-    [
-        'csv',
+        ('pddf.csv', 'csv.gz', 'csv.gz'),
+        ('pddf.csv', 'csv', 'csv'),
+        ('pddf.csv', 'csv.bz2', 'csv.bz2'),
+        ('pddf.csv', 'csv.xz', 'csv.xz'),
+        ('pddf.json', 'json', 'json'),
+        ('pddf.feather', 'feather', 'feather'),
+        ('pddf.pkl', 'pickle', 'pkl'),
+        
     ],
 )
 @pytest.mark.parametrize(
     "working_dir",
     [
-        None,
+        None, "./tmp"
     ],
 )
-def test_upload_data_frame_artifact(mlflow_client, data_frame, file_name, file_format, working_dir) -> None:
+def test_upload_data_frame_artifact(mlflow_client, data_frame, file_name, file_format, output, working_dir) -> None:
     from dioptra_builtins.artifacts.mlflow import upload_data_frame_artifact
     upload_data_frame_artifact(data_frame, file_name, file_format, None, working_dir)
     
     pwd = '.' if working_dir is None else working_dir
-    assert os.path.isfile(Path(os.path.abspath(pwd)) / Path(file_name).with_suffix(file_format))
+    assert os.path.isfile(Path(os.path.abspath(pwd)) / Path(file_name).with_suffix('.' + output))
 
 @pytest.mark.parametrize(
     "source_dir",
-    [
+    [ "./tmp"
     ],
 )
 @pytest.mark.parametrize(
     "tarball_filename",
     [
+        "workflow.tar.gz"
     ],
 )
 @pytest.mark.parametrize(
     "tarball_write_mode",
     [
+        "w:gz"
     ],
 )
 @pytest.mark.parametrize(
     "working_dir",
     [
+        None
     ],
 )
-def test_upload_directory_as_tarball_artifact(source_dir, tarball_filename, tarball_write_mode, working_dir) -> None:
+def test_upload_directory_as_tarball_artifact(mlflow_client, source_dir, tarball_filename, tarball_write_mode, working_dir) -> None:
     from dioptra_builtins.artifacts.mlflow import upload_directory_as_tarball_artifact
-    pass
+    Path(source_dir).mkdir(parents=True, exist_ok=True)
+    fp = open(Path(source_dir) / 'myfile.py', 'w+')
+    fp.close()
+    Path(source_dir).mkdir(parents=True, exist_ok=True)
+    fp = open(Path(source_dir) / 'myfile2.py', 'w+')
+    fp.close()
+    upload_directory_as_tarball_artifact(source_dir, tarball_filename, tarball_write_mode, working_dir)
+    pwd = '.' if working_dir is None else working_dir
+    assert os.path.isfile(Path(os.path.abspath(pwd)) / Path(tarball_filename))
 
 @pytest.mark.parametrize(
-    "artifact_path",
+    ("working_dir", "file"),
     [
+        ('./tmp', 'this.py'),
+        ('.', 'test2.tar.gz'),
+        ('./tmp', 'MLProject'),
     ],
 )
-def test_upload_file_as_artifact(artifact_path) -> None:
+def test_upload_file_as_artifact(mlflow_client, working_dir, file) -> None:
     from dioptra_builtins.artifacts.mlflow import upload_file_as_artifact
-    pass
-
+    Path(working_dir).mkdir(parents=True, exist_ok=True)
+    fp = open(Path(working_dir) / file, 'w+')
+    fp.close()    
+    upload_file_as_artifact(Path(working_dir) / file)
