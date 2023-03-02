@@ -24,6 +24,7 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[dioptra])
 # ARG_OPTIONAL_SINGLE([gunicorn-module],[],[Python module used to start Gunicorn WSGI server],[dioptra.restapi.cli.gunicorn])
 # ARG_OPTIONAL_SINGLE([output],[o],[Path to save exported environment.yml file (ignored unless paired with --export-conda-env)],[])
+# ARG_OPTIONAL_REPEATED([wait-for],[],[Wait on the availability of a host and TCP port before proceeding],[])
 # ARG_OPTIONAL_ACTION([export-conda-env],[],[Freeze and export the container's conda environment (--output must be set)],[export_conda_environment])
 # ARG_OPTIONAL_ACTION([upgrade-db],[],[Upgrade the database schema],[upgrade_database])
 # ARG_DEFAULTS_POS
@@ -48,26 +49,6 @@ set_parsed_globals() {
   readonly conda_env="${_arg_conda_env}"
   readonly gunicorn_module="${_arg_gunicorn_module}"
   readonly server_backend="${_arg_backend}"
-}
-
-###########################################################################################
-# Secure the container at runtime
-#
-# Globals:
-#   logname
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-secure_container() {
-  if [[ -f /usr/local/bin/secure-container.sh ]]; then
-    /usr/local/bin/secure-container.sh
-  else
-    echo "${logname}: ERROR - /usr/local/bin/secure-container.sh script missing" 1>&2
-    exit 1
-  fi
 }
 
 ###########################################################################################
@@ -97,6 +78,26 @@ export_conda_environment() {
 }
 
 ###########################################################################################
+# Wait for services to start
+#
+# Globals:
+#   _arg_wait_for
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+wait_for_services() {
+  for service in ${_arg_wait_for[@]}; do
+    if ! (/usr/local/bin/wait-for-it.sh -t 0 ${service}); then
+      echo "${logname}: ERROR - Unexpected error while waiting for ${service}." 1>&2
+      exit 1
+    fi
+  done
+}
+
+###########################################################################################
 # Upgrade the Dioptra database
 #
 # Globals:
@@ -114,6 +115,7 @@ upgrade_database() {
   echo "${logname}: INFO - Upgrading the Dioptra database"
 
   set_parsed_globals
+  wait_for_services
 
   bash -c "\
   source ${conda_dir}/etc/profile.d/conda.sh &&\
@@ -178,6 +180,6 @@ start_restapi() {
 
 parse_commandline "$@"
 set_parsed_globals
-secure_container
+wait_for_services
 start_restapi
 # ] <-- needed because of Argbash

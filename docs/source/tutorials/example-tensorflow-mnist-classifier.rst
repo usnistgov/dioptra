@@ -20,6 +20,12 @@
 First Steps - MNIST Tensorflow Classifier
 =========================================
 
+.. important::
+
+   This page is out of date and will be updated in the near future.
+
+   There is a new setup tool that all users should use to configure and run Dioptra, please see the new sections :ref:`Building the containers <getting-started-building-the-containers>` and :ref:`Running Dioptra <getting-started-running-dioptra>` that have been added to the documentation.
+
 .. include:: /_glossary_note.rst
 
 This demo provides a practical example that you can run on your personal computer to see how Dioptra can be used to run a simple experiment on the transferability of the :term:`FGM` evasion attack between two neural network architectures.

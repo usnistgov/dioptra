@@ -23,6 +23,7 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([output],[o],[Path to save exported environment.yml file (ignored unless paired with --export-conda-env)],[])
 # ARG_OPTIONAL_SINGLE([results-ttl],[],[Job results will be kept for this number of seconds],[500])
 # ARG_OPTIONAL_SINGLE([rq-worker-module],[],[Python module used to start the RQ Worker],[dioptra.rq.cli.rq])
+# ARG_OPTIONAL_REPEATED([wait-for],[],[Wait on the availability of a host and TCP port before proceeding],[])
 # ARG_OPTIONAL_BOOLEAN([export-conda-env],[],[Freeze and export the container's conda environment (--output must be set)])
 # ARG_LEFTOVERS([Queues to watch])
 # ARG_DEFAULTS_POS
@@ -49,26 +50,6 @@ readonly rq_redis_uri="${RQ_REDIS_URI-}"
 readonly rq_results_ttl="${_arg_results_ttl}"
 
 ###########################################################################################
-# Secure the container at runtime
-#
-# Globals:
-#   logname
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-secure_container() {
-  if [[ -f /usr/local/bin/secure-container.sh ]]; then
-    /usr/local/bin/secure-container.sh
-  else
-    echo "${logname}: ERROR - /usr/local/bin/secure-container.sh script missing" 1>&2
-    exit 1
-  fi
-}
-
-###########################################################################################
 # Freeze and export the worker's conda virtual environment
 #
 # Globals:
@@ -90,6 +71,26 @@ export_conda_environment() {
   if ! /usr/local/bin/conda-env.sh --env ${conda_env} --output ${_arg_output} --freeze; then
     exit 1
   fi
+}
+
+###########################################################################################
+# Wait for services to start
+#
+# Globals:
+#   _arg_wait_for
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+wait_for_services() {
+  for service in ${_arg_wait_for[@]}; do
+    if ! (/usr/local/bin/wait-for-it.sh -t 0 ${service}); then
+      echo "${logname}: ERROR - Unexpected error while waiting for ${service}." 1>&2
+      exit 1
+    fi
+  done
 }
 
 ###########################################################################################
@@ -144,7 +145,6 @@ main() {
       export_conda_environment
       ;;
     off)
-      secure_container
       start_rq
       ;;
     *)
@@ -159,5 +159,6 @@ main() {
 # Main script
 ###########################################################################################
 
+wait_for_services
 main
 # ] <-- needed because of Argbash

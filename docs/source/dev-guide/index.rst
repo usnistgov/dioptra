@@ -29,4 +29,3 @@ Please follow the guidelines linked below when contributing to this project.
 
    contributing-merge-request-guidelines
    contributing-commit-styleguide
-   contributing-build-dev-images
