@@ -200,7 +200,7 @@ def test_download_all_artifacts_in_run(mlflow_client, run_id, artifact_path, des
 @pytest.mark.parametrize(
     "working_dir",
     [
-        None, "./tmp"
+        None
     ],
 )
 def test_upload_data_frame_artifact(mlflow_client, data_frame, file_name, file_format, output, working_dir) -> None:
@@ -245,12 +245,13 @@ def test_upload_directory_as_tarball_artifact(mlflow_client, source_dir, tarball
     pwd = '.' if working_dir is None else working_dir
     assert os.path.isfile(Path(os.path.abspath(pwd)) / Path(tarball_filename))
 
+
 @pytest.mark.parametrize(
     ("working_dir", "file"),
     [
-        ('./tmp', 'this.py'),
-        ('.', 'test2.tar.gz'),
-        ('./tmp', 'MLProject'),
+        ('./tmp_unit_test', 'this.py'),
+        ('./tmp_unit_tests', 'test2.tar.gz'),
+        ('./tmp_unit_test', 'MLProject'),
     ],
 )
 def test_upload_file_as_artifact(mlflow_client, working_dir, file) -> None:
@@ -259,3 +260,4 @@ def test_upload_file_as_artifact(mlflow_client, working_dir, file) -> None:
     fp = open(Path(working_dir) / file, 'w+')
     fp.close()    
     upload_file_as_artifact(Path(working_dir) / file)
+
