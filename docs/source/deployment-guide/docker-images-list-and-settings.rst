@@ -52,15 +52,18 @@ The MLFlow Tracking service is an :term:`API` and UI for logging and querying pa
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-| :kbd:`AWS_ACCESS_KEY_ID`
+:kbd:`AWS_ACCESS_KEY_ID`
+
 The username for accessing S3 storage.
 Must match ``MINIO_ROOT_USER`` set for the Minio image.
 
-| :kbd:`AWS_SECRET_ACCESS_KEY`
+:kbd:`AWS_SECRET_ACCESS_KEY`
+
 The password for accessing S3 storage.
 Must match ``MINIO_ROOT_PASSWORD`` set for the Minio image.
 
-| :kbd:`MLFLOW_S3_ENDPOINT_URL`
+:kbd:`MLFLOW_S3_ENDPOINT_URL`
+
 The URL endpoint for accessing the S3 storage.
 
 Command
@@ -89,35 +92,43 @@ The :term:`REST` :term:`API` service is an :term:`API` for registering experimen
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-| :kbd:`DIOPTRA_RESTAPI_DATABASE_URI`
+:kbd:`DIOPTRA_RESTAPI_DATABASE_URI`
+
 The |URI| to use to connect to the :term:`REST` :term:`API` database.
 (default: ``'$(pwd)/dioptra.db'``)
 
-| :kbd:`DIOPTRA_RESTAPI_ENV`
+:kbd:`DIOPTRA_RESTAPI_ENV`
+
 Selects a set of configurations for the Flask app to use.
 Must be 'prod', 'dev', or 'test'.
 (default: ``'prod'``)
 
-| :kbd:`DIOPTRA_DEPLOY_SECRET_KEY`
+:kbd:`DIOPTRA_DEPLOY_SECRET_KEY`
+
 Secret key used by Flask to sign cookies.
 While cookies are not used when accessing the :term:`REST` :term:`API`, per best practices this should still be changed to a long, random value.
 (default: ``'deploy123'``)
 
-| :kbd:`AWS_ACCESS_KEY_ID`
+:kbd:`AWS_ACCESS_KEY_ID`
+
 The username for accessing S3 storage.
 Must match ``MINIO_ROOT_USER`` set for the Minio image.
 
-| :kbd:`AWS_SECRET_ACCESS_KEY`
+:kbd:`AWS_SECRET_ACCESS_KEY`
+
 The password for accessing S3 storage.
 Must match ``MINIO_ROOT_PASSWORD`` set for the Minio image.
 
-| :kbd:`MLFLOW_TRACKING_URI`
+:kbd:`MLFLOW_TRACKING_URI`
+
 The |URI| to use for connecting to the MLFlow Tracking service.
 
-| :kbd:`MLFLOW_S3_ENDPOINT_URL`
+:kbd:`MLFLOW_S3_ENDPOINT_URL`
+
 The URL endpoint for accessing the S3 storage.
 
-| :kbd:`RQ_REDIS_URI`
+:kbd:`RQ_REDIS_URI`
+
 The ``redis://`` |URI| to the Redis queue.
 
 Command
@@ -144,32 +155,40 @@ The Testbed Workers come in different flavors, with each one provisioned to supp
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-| :kbd:`DIOPTRA_PLUGIN_DIR`
+:kbd:`DIOPTRA_PLUGIN_DIR`
+
 Directory to use for syncing the task plugins.
 (default: ``'/work/plugins'``)
 
-| :kbd:`DIOPTRA_PLUGINS_S3_URI`
+:kbd:`DIOPTRA_PLUGINS_S3_URI`
+
 The S3 |URI| to the directory containing the builtin plugins
 
-| :kbd:`DIOPTRA_RESTAPI_DATABASE_URI`
+:kbd:`DIOPTRA_RESTAPI_DATABASE_URI`
+
 The |URI| to use to connect to the :term:`REST` :term:`API` database.
 (default: ``'$(pwd)/dioptra.db'``)
 
-| :kbd:`AWS_ACCESS_KEY_ID`
+:kbd:`AWS_ACCESS_KEY_ID`
+
 The username for accessing S3 storage.
 Must match ``MINIO_ROOT_USER`` set for the Minio image.
 
-| :kbd:`AWS_SECRET_ACCESS_KEY`
+:kbd:`AWS_SECRET_ACCESS_KEY`
+
 The password for accessing S3 storage.
 Must match ``MINIO_ROOT_PASSWORD`` set for the Minio image.
 
-| :kbd:`MLFLOW_TRACKING_URI`
+:kbd:`MLFLOW_TRACKING_URI`
+
 The |URI| to use for connecting to the MLFlow Tracking service.
 
-| :kbd:`MLFLOW_S3_ENDPOINT_URL`
+:kbd:`MLFLOW_S3_ENDPOINT_URL`
+
 The URL endpoint for accessing the S3 storage.
 
-| :kbd:`RQ_REDIS_URI`
+:kbd:`RQ_REDIS_URI`
+
 The ``redis://`` |URI| to the Redis queue.
 
 Command
@@ -181,7 +200,8 @@ Command
 
 .. rubric:: Positional Arguments
 
-| :kbd:`...`
+:kbd:`...`
+
 Queues to watch
 
 .. rubric:: Options
@@ -206,7 +226,8 @@ Command
 
 .. rubric:: Positional Arguments
 
-| :kbd:`...`
+:kbd:`...`
+
 A list of paths to data storage locations.
 For a single machine deployment, the path should point to a bind mounted or docker volume directory, e.g. ``/data``.
 For a distributed deployment, pass a list of URLs instead, e.g. ``http://minio{1...4}/data{1...2}``.
@@ -215,10 +236,12 @@ The ellipses syntax ``{1...4}`` expands into a list of URLs at runtime.
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-| :kbd:`MINIO_ROOT_USER`
+:kbd:`MINIO_ROOT_USER`
+
 Sets the username for logging into the Minio deployment.
 
-| :kbd:`MINIO_ROOT_PASSWORD`
+:kbd:`MINIO_ROOT_PASSWORD`
+
 Sets the password for logging into the Minio deployment.
 
 Redis

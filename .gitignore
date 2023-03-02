@@ -4,6 +4,7 @@
 # BEGIN ignore project files
 # ---------------------------
 
+**/ca-certificates/**/*
 examples/**/redis
 examples/**/restapi
 examples/**/mlruns
@@ -420,4 +421,5 @@ vignettes/*.pdf
 !.rstcheck.cfg
 !.style.yapf
 !.travis.yml
+!**/ca-certificates/**/README.md
 !docker/**/etc

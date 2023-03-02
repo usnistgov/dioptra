@@ -39,8 +39,9 @@ Email us: dioptra@nist.gov
    :maxdepth: -1
    :caption: Getting Started
 
-   getting-started/installation
-   getting-started/newcomer-tips
+   getting-started/building-the-containers
+   getting-started/running-dioptra
+.. getting-started/installation
 
 .. toctree::
    :hidden:
@@ -79,16 +80,4 @@ Email us: dioptra@nist.gov
 
    deployment-guide/system-requirements
    deployment-guide/docker-images-list-and-settings
-   deployment-guide/single-machine-deployment
-   deployment-guide/task-plugins-management
    deployment-guide/obtaining-datasets
-   deployment-guide/testbed-ansible-collection
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: Developer Guides
-
-   dev-guide/index
-   dev-guide/programming-style
-   dev-guide/restapi

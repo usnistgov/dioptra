@@ -263,7 +263,6 @@ endef
 
 define run_build_script
 CORES=$(CORES)\
-BASE_IMAGE=${CONTAINER_BASE_IMAGE}\
 IMAGE_TAG=$(strip $(2))\
 CODE_PKG_VERSION=$(CODE_PKG_VERSION)\
 PROJECT_PREFIX=$(PROJECT_PREFIX)\
@@ -362,47 +361,42 @@ define define_docker_image_sentinel_vars
 CONTAINER_$(strip $(1))_COMPONENT_NAME = $(strip $(3))
 CONTAINER_$(strip $(1))_IMAGE = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):$$($(strip $(2)))
 CONTAINER_$(strip $(1))_IMAGE_LATEST = $$(PROJECT_PREFIX)/$$(CONTAINER_$(strip $(1))_COMPONENT_NAME):latest
-CONTAINER_$(strip $(1))_DIR =
-CONTAINER_$(strip $(1))_INCLUDE_DIR =
 CONTAINER_$(strip $(1))_DOCKERFILE = $$(PROJECT_DOCKER_DIR)/Dockerfile.$(strip $(3))
 CONTAINER_$(strip $(1))_BUILD_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-$$($(strip $(2))).sentinel
 CONTAINER_$(strip $(1))_BUILD_LATEST_SENTINEL = $$(PROJECT_BUILD_DIR)/.docker-image-$$(CONTAINER_$(strip $(1))_COMPONENT_NAME)-tag-latest.sentinel
 endef
 
 define generate_docker_image_pipeline
-$(eval $(call build_docker_image_recipe,$(1),$(strip $(strip $(2) $(7)) $(10)),$(5),$(6)))
-$(eval $(call set_latest_tag_docker_image_recipe,$(9),$(1),$(3),$(4)))
+$(eval $(call build_docker_image_recipe,$(1),$(strip $(2)),$(5),$(6)))
+$(eval $(call set_latest_tag_docker_image_recipe,$(7),$(1),$(3),$(4)))
 endef
 
 define generate_full_docker_image_vars
-$(eval $(call define_docker_image_sentinel_vars,$(1),$(2),$(3),$(4)))
+$(eval $(call define_docker_image_sentinel_vars,$(1),$(2),$(3)))
 endef
 
 define generate_full_docker_image_recipe
 $(eval $(call generate_docker_image_pipeline,\
 	$$(CONTAINER_$(1)_BUILD_SENTINEL),\
-	$$($(2)) $$(CONTAINER_$(1)_DOCKERFILE) $$(CONTAINER_$(1)_INCLUDE_FILES),\
+	$$(CONTAINER_$(1)_DOCKERFILE) $$(CONTAINER_$(1)_INCLUDE_FILES),\
 	$$(CONTAINER_$(1)_IMAGE),\
 	$$(CONTAINER_$(1)_IMAGE_LATEST),\
 	$$(CONTAINER_$(1)_COMPONENT_NAME),\
-	$$($(3)),\
-	$$(CONTAINER_$(1)_SCRIPTS),\
-	$$(CONTAINER_$(1)_INCLUDE_DIR),\
-	$$(CONTAINER_$(1)_BUILD_LATEST_SENTINEL),\
-	$$(CONTAINER_$(1)_CONDA_ENV_FILES)))
+	$$($(2)),\
+	$$(CONTAINER_$(1)_BUILD_LATEST_SENTINEL)))
 endef
 
 #################################################################################
 # AUTO-GENERATED GLOBALS                                                        #
 #################################################################################
 
-$(call generate_full_docker_image_vars,MLFLOW_TRACKING,CONTAINER_IMAGE_TAG,mlflow-tracking,)
-$(call generate_full_docker_image_vars,NGINX,CONTAINER_IMAGE_TAG,nginx,)
-$(call generate_full_docker_image_vars,RESTAPI,CONTAINER_IMAGE_TAG,restapi,)
-$(call generate_full_docker_image_vars,PYTORCH_CPU,CONTAINER_IMAGE_TAG,pytorch-cpu,)
-$(call generate_full_docker_image_vars,PYTORCH_GPU,CONTAINER_IMAGE_TAG,pytorch-gpu,)
-$(call generate_full_docker_image_vars,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG,tensorflow2-cpu,)
-$(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tensorflow2-gpu,)
+$(call generate_full_docker_image_vars,MLFLOW_TRACKING,CONTAINER_IMAGE_TAG,mlflow-tracking)
+$(call generate_full_docker_image_vars,NGINX,CONTAINER_IMAGE_TAG,nginx)
+$(call generate_full_docker_image_vars,RESTAPI,CONTAINER_IMAGE_TAG,restapi)
+$(call generate_full_docker_image_vars,PYTORCH_CPU,CONTAINER_IMAGE_TAG,pytorch-cpu)
+$(call generate_full_docker_image_vars,PYTORCH_GPU,CONTAINER_IMAGE_TAG,pytorch-gpu)
+$(call generate_full_docker_image_vars,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG,tensorflow2-cpu)
+$(call generate_full_docker_image_vars,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG,tensorflow2-gpu)
 
 #################################################################################
 # PROJECT RULES                                                                 #
@@ -460,7 +454,7 @@ docs: $(DOCS_SENTINEL)
 hooks: $(PRE_COMMIT_HOOKS_SENTINEL)
 
 ## Manually set "latest" tag on all Dioptra images
-tag-latest: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL) $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL) $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW21_CPU_BUILD_SENTINEL) $(CONTAINER_TENSORFLOW21_GPU_BUILD_SENTINEL)
+tag-latest: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL) $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL) $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL)
 
 ## Run all tests
 tests: tests-unit tests-containers tests-integration
@@ -575,13 +569,13 @@ $(TOX_INTEGRATION_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_INTEGRATION_TESTS_FILES) 
 # AUTO-GENERATED PROJECT BUILD RECEIPES                                         #
 #################################################################################
 
-$(call generate_full_docker_image_recipe,MLFLOW_TRACKING,,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,NGINX,,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,RESTAPI,,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,PYTORCH_CPU,,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,PYTORCH_GPU,,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,TENSORFLOW2_CPU,,CONTAINER_IMAGE_TAG)
-$(call generate_full_docker_image_recipe,TENSORFLOW2_GPU,,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,MLFLOW_TRACKING,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,NGINX,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,RESTAPI,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,PYTORCH_CPU,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,PYTORCH_GPU,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,TENSORFLOW2_CPU,CONTAINER_IMAGE_TAG)
+$(call generate_full_docker_image_recipe,TENSORFLOW2_GPU,CONTAINER_IMAGE_TAG)
 
 #################################################################################
 # Self Documenting Commands                                                     #

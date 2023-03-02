@@ -20,6 +20,12 @@
 Hello World!
 ============
 
+.. important::
+
+   This page is out of date and will be updated in the near future.
+
+   There is a new setup tool that all users should use to configure and run Dioptra, please see the new sections :ref:`Building the containers <getting-started-building-the-containers>` and :ref:`Running Dioptra <getting-started-running-dioptra>` that have been added to the documentation.
+
 .. include:: /_glossary_note.rst
 
 This demo provides a baseline skeleton example for user entry point customization and job submission.

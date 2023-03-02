@@ -75,7 +75,7 @@ master_doc = "index"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "dev-guide", "getting-started/installation.rst"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -111,7 +111,7 @@ html_js_files = [
 
 html_theme_options = {
     "repository_url": "https://github.com/usnistgov/dioptra",
-    "repository_branch": "master",
+    "repository_branch": "main",
     "use_repository_button": True,
     "home_page_in_toc": True,
     "path_to_docs": "docs/source",
@@ -131,16 +131,19 @@ autodoc_mock_imports = [
     "entrypoints",
     "flask_injector",
     "flask_migrate",
+    "flask_sqlalchemy",
     "injector",
     "mlflow",
     "numpy",
     "pandas",
+    "passlib",
     "redis",
     "rq",
     "scipy",
     "sklearn",
     "structlog",
     "tensorflow",
+    "wtforms",
 ]
 autodoc_inherit_docstrings = True
 autodoc_member_order = "bysource"

@@ -16,7 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 CODE_PKG_VERSION = 0.0.0
 
-CONTAINER_BASE_IMAGE ?= public-base
 CONTAINER_IMAGE_TAG = dev
 CONTAINER_MINICONDA3_PREFIX = Miniconda3-py39_
 CONTAINER_MINICONDA_VERSION = 4.11.0

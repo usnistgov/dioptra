@@ -76,6 +76,7 @@ dependencies:
       - boto3
       - build
       - Click>=8.0.0
+      - cookiecutter
       - commitizen
       - databricks-cli>=0.8.7 # mlflow requirement
       - docformatter

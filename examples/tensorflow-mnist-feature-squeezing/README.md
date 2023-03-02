@@ -1,5 +1,11 @@
 # Tensorflow MNIST Feature Squeezing Demo
 
+> ⚠️ **IMPORTANT!**
+>
+> This README is out of date and will be updated in the near future.
+>
+> There is a new setup tool that all users should use to configure and run Dioptra, please see the new sections [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) that have been added to the documentation.
+
 >⚠️ **Warning:** Some of the attacks in this demo, _deepfool_ and _CW_ in particular, are computationally expensive and will take a very long to complete if run using the CPUs found in a typical personal computer.
 > For this reason, it is highly recommended that you run these demos on a CUDA-compatible GPU.
 

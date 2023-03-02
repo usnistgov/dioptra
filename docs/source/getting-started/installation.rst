@@ -28,6 +28,8 @@ General instructions on how to deploy the Testbed in an on-premises server can b
 Package Installation
 --------------------
 
+.. _quickstart-system-requirements:
+
 Requirements
 ^^^^^^^^^^^^
 
@@ -199,29 +201,3 @@ Demo-specific instructions for creating a suitable environment will be provided 
       conda activate name-of-the-environment
 
    **NOTE**: The *name-of-the-environment* used for the demos provided in the project codebase can be found by inspecting the specific *environment.yml* file for the tag labeled *name*.
-
-.. _quickstart-build-images:
-
-Pulling the Latest Docker Images
---------------------------------
-
-The last step to setup the Dioptra Testbed is to build the necessary docker images used by the repository's various tutorials.
-
-**NOTE**: The following steps will only work if you are attempting to use the *master* branch of the repository.
-If you are a developer using a separate branch please see :ref:`dev-guide-build-dev-images`.
-
-1. Navigate the the root directory of the project.
-
-   .. code-block:: bash
-
-      cd path/to/dioptra
-
-   **NOTE**: You must substitute the code snippet ``path/to/`` with the true path for the project codebase on your device.
-   This should be the same path used in step 2 of :ref:`Clone the Repository <quickstart-clone-repository>`.
-
-2. Pull the latest vendor, Continuous Integration (CI), and Testbed images.
-   These are most current images that are pre-built to be used by the *master* branch.
-
-   .. code-block:: bash
-
-      make pull-latest-hub pull-latest-ci pull-latest-testbed
