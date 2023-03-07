@@ -21,10 +21,12 @@ import tarfile
 from typing import Any, BinaryIO, List
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from boto3.session import Session
 from botocore.client import BaseClient
 from flask import Flask
 from flask_injector import FlaskInjector, request
+from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from injector import Binder, Injector
 from redis import Redis
@@ -145,8 +147,27 @@ def dependency_injector(dependency_modules: List[Any]) -> Injector:
 
 
 @pytest.fixture
-def app(dependency_modules: List[Any]) -> Flask:
+def app(dependency_modules: List[Any], monkeypatch: MonkeyPatch) -> Flask:
+    import dioptra.restapi.routes
     from dioptra.restapi import create_app
+
+    # Override register_routes in dioptra.restapi.routes to enable testing of endpoints
+    # that are under development.
+    def register_test_routes(api: Api, app: Flask) -> None:
+        from dioptra.restapi.experiment import register_routes as attach_experiment
+        from dioptra.restapi.job import register_routes as attach_job
+        from dioptra.restapi.queue import register_routes as attach_job_queue
+        from dioptra.restapi.task_plugin import register_routes as attach_task_plugin
+        from dioptra.restapi.user import register_routes as attach_user
+
+        # Add routes
+        attach_experiment(api, app)
+        attach_job(api, app)
+        attach_job_queue(api, app)
+        attach_task_plugin(api, app)
+        attach_user(api, app)
+
+    monkeypatch.setattr(dioptra.restapi.routes, "register_routes", register_test_routes)
 
     app: Flask = create_app(env="test", inject_dependencies=False)
     FlaskInjector(app=app, modules=dependency_modules)
