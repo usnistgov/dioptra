@@ -1,0 +1,1096 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Running Dioptra &#8212; Dioptra 0.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/jquery.visible.js"></script>
+    <script src="../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../_static/applyLeaveNotice.js"></script>
+    <script src="../_static/smoothNavScroll.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started/running-dioptra';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The Basics" href="../user-guide/the-basics.html" />
+    <link rel="prev" title="Building the containers" href="building-the-containers.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 0.0.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    What is Dioptra?
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="building-the-containers.html">Building the containers</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Running Dioptra</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/the-basics.html">The Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/entry-points.html">Entry Points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/task-plugins.html">Task Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/custom-entry-points.html">Creating a New Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/custom-task-plugins.html">Custom Task Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/generics-plugin-system.html">Generics Plugin System</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user-guide/task-plugins-collection.html">Task Plugins Collection</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-artifacts.html">artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-attacks.html">attacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-backend_configs.html">backend_configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-estimators.html">estimators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-metrics.html">metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-random.html">random</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-registry.html">registry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-tracking.html">tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user-guide/api-reference-sdk.html">Testbed SDK API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-generics.html">generics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-utilities.html">utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-exceptions.html">exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-pyplugs.html">pyplugs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-rq.html">rq</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-cryptography.html">cryptography</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/api-reference-restapi.html">Testbed REST API Reference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials and Examples</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">Hello World!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">First Steps - MNIST Tensorflow Classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">Tensorflow MNIST Feature Squeezing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">Tensorflow MNIST Model Inversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">Tensorflow Adversarial Patch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">Tensorflow Backdoor Poisoning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">Tensorflow ImageNet Resnet50 FGM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">Tensorflow ImageNet Pixel Threshold</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">PyTorch MNIST Membership Inference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/system-requirements.html">System Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">Docker Images List and Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/obtaining-datasets.html">How to Obtain Common Datasets</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/getting-started/running-dioptra.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Running Dioptra</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quickstart">Quickstart</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#applying-the-template">Applying the template</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#folder-organization">Folder organization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-configuration">Additional configuration</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-extra-ca-certificates">Adding extra CA certificates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enabling-ssl-tls-in-nginx-and-postgres">Enabling SSL/TLS in NGINX and Postgres</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mounting-folders-in-the-worker-containers">Mounting folders in the worker containers</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mounting-a-folder-on-the-host-machine">Mounting a folder on the host machine</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mounting-a-folder-on-an-nfs-share">Mounting a folder on an NFS share</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initializing-the-deployment">Initializing the deployment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#starting-the-deployment">Starting the deployment</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-docker-compose">Using Docker Compose</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-systemd">Using systemd</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#managing-the-deployment">Managing the deployment</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="running-dioptra">
+<span id="getting-started-running-dioptra"></span><h1>Running Dioptra<a class="headerlink" href="#running-dioptra" title="Permalink to this headline">#</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
+<p>The Dioptra GitHub repository provides a <a class="reference external" href="https://cookiecutter.readthedocs.io/en/latest/">Cookiecutter</a> template in the <code class="docutils literal notranslate"><span class="pre">cookiecutter-templates/cookiecutter-dioptra-deployment/</span></code> folder that you can use to generate the scripts, configuration files, and Docker Compose files needed to run Dioptra on a single machine.
+This guide will show you how to apply the template, run the initialization script, and start the application services for the first time.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://tiswww.case.edu/php/chet/bash/bashtop.html">Bash v5 or higher</a></p></li>
+<li><p><a class="reference external" href="https://www.python.org/">Python 3.9 or higher</a></p></li>
+<li><p><a class="reference external" href="https://cookiecutter.readthedocs.io/en/latest/">Cookiecutter v2 or higher</a></p></li>
+<li><p><a class="reference external" href="https://docs.docker.com/engine/install/">Docker Engine 20.10.13 or higher</a></p></li>
+<li><p><a class="reference external" href="https://docs.docker.com/compose/install/">Docker Compose</a></p></li>
+<li><p>Dictionary of words at <code class="docutils literal notranslate"><span class="pre">/usr/share/dict/words</span></code> (<code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">wamerican</span></code>)</p></li>
+<li><p><a class="reference internal" href="building-the-containers.html#getting-started-building-the-containers"><span class="std std-ref">Working builds of the Dioptra container images</span></a></p></li>
+</ul>
+</section>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">#</a></h2>
+<p>The minimal terminal commands needed to configure and run a fresh installation of Dioptra are provided below.
+This will generate a setup that is appropriate for testing Dioptra on your personal computer or laptop.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Move to the base directory where you plan to store your Dioptra</span>
+<span class="c1"># configuration folder</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span>/path/to/deployments/folder<span class="w">  </span><span class="c1"># Create it if it doesn&#39;t exist</span>
+<span class="nb">cd</span><span class="w"> </span>/path/to/deployments/folder
+
+<span class="c1"># Run cookiecutter and set the template&#39;s variables</span>
+cookiecutter<span class="w"> </span>gh:usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>main<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment
+
+<span class="c1"># Move into the new folder created by the template. The new folder&#39;s name</span>
+<span class="c1"># is based on the deployment_name variable. The default name for the folder</span>
+<span class="c1"># is dioptra-deployment.</span>
+<span class="nb">cd</span><span class="w"> </span>dioptra-deployment
+
+<span class="c1"># Initialize Dioptra using the init-deployment.sh script</span>
+./init-deployment.sh
+
+<span class="c1"># Start Dioptra</span>
+docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</pre></div>
+</div>
+<p>When you are done using Dioptra, navigate back to the configuration folder <code class="docutils literal notranslate"><span class="pre">/path/to/deployments/folder/dioptra-deployment</span></code> in your terminal and run,</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Stop Dioptra</span>
+docker<span class="w"> </span>compose<span class="w"> </span>down
+</pre></div>
+</div>
+<p>The rest of this page is a detailed walk-through of the above commands, which includes information about more advanced topics, such as <a class="reference internal" href="#running-dioptra-enabling-ssl-tls-in-nginx-and-postgres"><span class="std std-ref">enabling SSL/TLS for the NGINX and postgres services</span></a> and <a class="reference internal" href="#running-dioptra-mounting-folders-in-the-worker-containers"><span class="std std-ref">how to mount additional folders in the worker containers</span></a>.</p>
+</section>
+<section id="applying-the-template">
+<span id="getting-started-running-dioptra-applying-the-template"></span><h2>Applying the template<a class="headerlink" href="#applying-the-template" title="Permalink to this headline">#</a></h2>
+<p>Create the folder where you plan to keep the deployment folder and change into it so that it becomes your working directory.
+Next, run cookiecutter and apply the Dioptra Deployment template.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># To use the template published on the dev branch, use &#39;--checkout dev&#39; instead</span>
+cookiecutter<span class="w"> </span>gh:usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>main<span class="w"> </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment
+</pre></div>
+</div>
+<aside class="margin sidebar">
+<p class="sidebar-title"></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you make a mistake, such as accidentally accepting a default or making a typo, it is recommended that you interrupt cookiecutter and start over.
+To interrupt the cookiecutter prompts at any time, press <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd> <kbd class="kbd docutils literal notranslate"></kbd>+<kbd class="kbd docutils literal notranslate"></kbd> <kbd class="kbd docutils literal notranslate">C</kbd></kbd>, then check if cookiecutter has created a new folder in your working directory (if present, the folder’s name will be a <a class="reference external" href="https://www.stackbit.com/blog/what-is-a-content-slug">“slugified”</a> version of the <strong>deployment_name</strong> variable).
+If it has, remove it.
+To start over, re-run the <code class="docutils literal notranslate"><span class="pre">cookiecutter</span></code> command.</p>
+</div>
+</aside>
+<p>You will now be asked to set the variables needed to customize the generated configuration files.
+In most cases you can just use the default value, but there are a few that you may need to customize.
+Below is a full list of the variables, their default values, and explanations of what they mean.</p>
+<ul class="simple">
+<li><p><strong>deployment_name:</strong> A name to associate with the deployment.
+The template will <a class="reference external" href="https://www.stackbit.com/blog/what-is-a-content-slug">“slugify”</a> the deployment name you provide and use it to name files, folders, and in configuration settings.
+For example, it will be used to name the main folder created by the template.
+(default: <code class="docutils literal notranslate"><span class="pre">Dioptra</span> <span class="pre">deployment</span></code>)</p></li>
+<li><p><strong>container_registry:</strong> This is only needed if you are building and pushing Dioptra container images to your own Docker registry.
+As an example, if you are using a Docker registry <a class="reference external" href="https://www.jfrog.com/confluence/display/JFROG/Getting+Started+with+Artifactory+as+a+Docker+Registry">hosted on a hypothetical JFrog Artifactory instance</a> at the URL <code class="docutils literal notranslate"><span class="pre">acme-dockerv2-virtual.jfrog.io</span></code>, then you would answer <code class="docutils literal notranslate"><span class="pre">acme-dockerv2-virtual.jfrog.io</span></code>.
+Otherwise, leave this blank.
+(default: <em>empty string</em>)</p></li>
+<li><p><strong>container_tag:</strong> This should match the tags of the Dioptra container images you will be using (if you are using Docker, you can see the available tags by running <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">images</span></code>).
+If you built the images manually, the images will have the <code class="docutils literal notranslate"><span class="pre">dev</span></code> tag.
+(default: <code class="docutils literal notranslate"><span class="pre">dev</span></code>)</p></li>
+<li><p><strong>docker_compose_path:</strong> This should match the way you invoke Docker Compose on the host machine.
+If you are running an up-to-date version of Docker and have Docker Compose v2 or higher installed, then you should answer <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span></code>.
+If instead you are using the Python-based Docker Compose v1, or <a class="reference external" href="https://docs.docker.com/compose/install/other/">you installed Docker Compose v2 in a standalone manner</a>, then this should be the absolute path to the <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code> binary, for example <code class="docutils literal notranslate"><span class="pre">/usr/local/bin/docker-compose</span></code>.
+(default: <code class="docutils literal notranslate"><span class="pre">/usr/local/bin/docker-compose</span></code>)</p></li>
+<li><p><strong>systemd_required_mounts:</strong> This applies only if you are deploying Dioptra on a Linux distribution that uses systemd, such as Ubuntu, Fedora, or Red Hat Enterprise Linux, otherwise leave this blank.
+The “required mounts” would be the storage devices mounted on the host machine, which may include NFS volumes or block storage volumes, that must be accessible before the Dioptra application containers can start.
+This list should include all the devices that store the container images, runtime files, and volume data for Dioptra.
+Run <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">systemctl</span> <span class="pre">list-units</span> <span class="pre">-t</span> <span class="pre">mount</span></code> to print the full list of mounted devices for your virtual machine.
+The names you should use are in the first column labeled UNIT.
+Multiple mounts should be separated by spaces, i.e. <code class="docutils literal notranslate"><span class="pre">data.mount</span> <span class="pre">var.mount</span></code>.
+(default: <em>empty string</em>)</p></li>
+<li><p><strong>nginx_server_name:</strong> If you are hosting Dioptra on an remote machine, such as a virtual private server, then this will either be a domain name like <code class="docutils literal notranslate"><span class="pre">dioptra.example.org</span></code> or the IP address you use to access the machine.
+If you are running Dioptra on your personal computer or laptop, then answer <code class="docutils literal notranslate"><span class="pre">_</span></code>.
+(default: <code class="docutils literal notranslate"><span class="pre">dioptra.example.org</span></code>)</p></li>
+<li><p><strong>nginx_expose_ports_on_localhost_only:</strong> Choosing <code class="docutils literal notranslate"><span class="pre">True</span></code> will generate a <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file that binds the NGINX ports to the loopback interface (localhost, 127.0.0.1).
+In this configuration, you will need to use port forwarding via SSH or a firewall in order to access the services.
+If <code class="docutils literal notranslate"><span class="pre">False</span></code>, the NGINX ports will be exposed on all available network interfaces.
+Dioptra currently does not have an access control system, so for now it is recommended that you choose <code class="docutils literal notranslate"><span class="pre">True</span></code> on remote machines and use SSH or firewall rules to manage access.
+If you are running Dioptra on your personal computer or laptop, also choose <code class="docutils literal notranslate"><span class="pre">True</span></code>.
+(default: <code class="docutils literal notranslate"><span class="pre">True</span></code>)</p></li>
+<li><p><strong>postgres_container_tag:</strong> Sets the version of postgres to be used in the deployment.
+For a full list of available versions, visit the <em>Tags</em> tab on the <a class="reference external" href="https://hub.docker.com/_/postgres">postgres image page on Docker Hub</a>.
+(default: <code class="docutils literal notranslate"><span class="pre">15</span></code>)</p></li>
+<li><p><strong>pgadmin_default_email:</strong> This email address will be used to create the default account on the <a class="reference external" href="https://www.pgadmin.org/docs/pgadmin4/latest/index.html">pgadmin4 app</a>.
+(default: <code class="docutils literal notranslate"><span class="pre">dioptra&#64;example.com</span></code>)</p></li>
+<li><p><strong>num_tensorflow_cpu_workers:</strong> Sets the number of Tensorflow CPU workers to use in your Dioptra deployment.
+Each worker is dedicated to watching a named queue and running one job at a time.
+(default: <code class="docutils literal notranslate"><span class="pre">1</span></code>)</p></li>
+<li><p><strong>num_tensorflow_gpu_workers:</strong> Sets the number of Tensorflow GPU workers to use in your Dioptra deployment.
+Each worker is assigned a dedicated GPU, watches a named queue, and runs one job at a time.
+The combined number of Tensorflow and PyTorch GPU workers cannot be greater than the number of GPUs available on the host machine.
+(default: <code class="docutils literal notranslate"><span class="pre">0</span></code>)</p></li>
+<li><p><strong>num_pytorch_cpu_workers:</strong> Sets the number of PyTorch CPU workers to use in your Dioptra deployment.
+Each worker is dedicated to watching a named queue and running one job at a time.
+(default: <code class="docutils literal notranslate"><span class="pre">1</span></code>)</p></li>
+<li><p><strong>num_pytorch_gpu_workers:</strong> Sets the number of PyTorch GPU workers to use in your Dioptra deployment.
+Each worker is assigned a dedicated GPU, watches a named queue, and runs one job at a time.
+The combined number of Tensorflow and PyTorch GPU workers cannot be greater than the number of GPUs available on the host machine.
+(default: <code class="docutils literal notranslate"><span class="pre">0</span></code>)</p></li>
+</ul>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">#</a></h3>
+<p>Below is an example of what it looks like to customize some of the template variables after invoking the template using <code class="docutils literal notranslate"><span class="pre">cookiecutter</span></code>.</p>
+<aside class="margin sidebar">
+<p class="sidebar-title"></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The words between the square brackets <code class="docutils literal notranslate"><span class="pre">[]</span></code> show the default answer for each question.</p>
+</div>
+</aside>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>deployment_name [Dioptra deployment]: Dioptra deployment
+container_registry []:
+container_tag [dev]: dev
+docker_compose_path [/usr/local/bin/docker-compose]: docker compose
+systemd_required_mounts []:
+nginx_server_name [dioptra.example.org]: _
+Select nginx_expose_ports_on_localhost_only:
+1 - True
+2 - False
+Choose from 1, 2 [1]: 1
+postgres_container_tag [15]: 15
+pgadmin_default_email [dioptra@example.com]: dioptra@example.com
+num_tensorflow_cpu_workers [1]: 1
+num_tensorflow_gpu_workers [0]: 0
+num_pytorch_cpu_workers [1]: 1
+num_pytorch_gpu_workers [0]: 0
+</pre></div>
+</div>
+</section>
+</section>
+<section id="folder-organization">
+<h2>Folder organization<a class="headerlink" href="#folder-organization" title="Permalink to this headline">#</a></h2>
+<aside class="margin sidebar">
+<p class="sidebar-title"></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <em>dioptra-deployment</em> prefix prepended to the files in the <code class="docutils literal notranslate"><span class="pre">envs/</span></code> and <code class="docutils literal notranslate"><span class="pre">secrets/</span></code> folders assumes the default value for the <strong>deployment_name</strong> variable.
+Setting this variable to a different value would alter the filename prefixes.</p>
+</div>
+</aside>
+<p>The following tree-like diagram shows the files created by the cookiecutter template.
+The annotations explain the purpose of the configuration files.
+Note that this diagram includes server certificates and private keys for the NGINX and Postgres services, which may or may not apply to your use case.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>.
+├── config
+│   ├── db
+│   │   └── init-db.sh                                       &lt;- Postgres initialization script that creates the accounts and databases used in the Dioptra app.
+│   ├── minio
+│   │   ├── builtin-plugins-readonly-policy.json             &lt;- A Minio access policy. Configures a readonly role for the dioptra_builtins/ folder in the plugins bucket.
+│   │   ├── builtin-plugins-readwrite-policy.json            &lt;- A Minio access policy. Configures a readwrite role for the dioptra_builtins/ folder in the plugins bucket.
+│   │   ├── custom-plugins-readonly-policy.json              &lt;- A Minio access policy. Configures a readonly role for the dioptra_custom/ folder in the plugins bucket.
+│   │   ├── custom-plugins-readwrite-policy.json             &lt;- A Minio access policy. Configures a readwrite role for the dioptra_custom/ folder in the plugins bucket.
+│   │   ├── dioptra-readonly-policy.json                     &lt;- A Minio access policy. Configures a readonly role for all folders and buckets created and used by Dioptra.
+│   │   ├── mlflow-tracking-readwrite-policy.json            &lt;- A Minio access policy. Configures a readwrite role for the artifacts/ folder in the mlflow-tracking bucket.
+│   │   ├── plugins-readonly-policy.json                     &lt;- A Minio access policy. Configures a readonly role for the dioptra_builtins/ and dioptra_custom/ folders in the plugins bucket.
+│   │   ├── workflow-downloadonly-policy.json                &lt;- A Minio access policy. Configures a downloadonly role for the workflow bucket.
+│   │   └── workflow-uploadonly-policy.json                  &lt;- A Minio access policy. Configures a uploadonly role for the for the workflow bucket.
+│   └── nginx
+│       ├── http_dbadmin.conf                                &lt;- (HTTP) Configures Nginx to serve the pgadmin4 dashboard over http connections.
+│       ├── http_default.conf                                &lt;- (HTTP) Configures the basic defaults for Nginx to use when serving content over http connections.
+│       ├── http_minio.conf                                  &lt;- (HTTP) Configures Nginx to serve the Minio service over http connections.
+│       ├── http_mlflow.conf                                 &lt;- (HTTP) Configures Nginx to serve the MLflow Tracking service over http connections.
+│       ├── http_proxy.conf                                  &lt;- (HTTP) Configures the general reverse proxy settings for Nginx when serving content over http connections, including how Nginx modifies the request header fields.
+│       ├── http_restapi.conf                                &lt;- (HTTP) Configures Nginx to serve the Dioptra REST API service over http connections.
+│       ├── https_dbadmin.conf                               &lt;- (HTTPS) Configures Nginx to serve the pgadmin4 dashboard over https connections.
+│       ├── https_default.conf                               &lt;- (HTTPS) Configures the basic defaults for Nginx to use when serving content over https connections, which includes setting the path to the server certificate and private key.
+│       ├── https_minio.conf                                 &lt;- (HTTPS) Configures Nginx to serve the Minio service over https connections.
+│       ├── https_mlflow.conf                                &lt;- (HTTPS) Configures Nginx to serve the MLflow Tracking service over https connections.
+│       ├── https_proxy.conf                                 &lt;- (HTTPS) Configures the general reverse proxy settings for Nginx when serving content over https connections, including how Nginx modifies the request header fields.
+│       ├── https_restapi.conf                               &lt;- (HTTPS) Configures Nginx to serve the Dioptra REST API service over https connections.
+│       └── stream_db.conf                                   &lt;- Configures Nginx to proxy tcp requests to the Postgres database. This is a simple passthrough, so any SSL encryption must be enabled in the Postgres service itself, see ssl/db/README.md for more info.
+├── envs
+│   ├── ca-certificates.env                                  &lt;- Sets common environment variables that applications use to find extra CA certificates. Safe to commit to a git repo.
+│   ├── dioptra-deployment-db.env                            &lt;- Sets environment variables that customize the Postgres database. Safe to commit to a git repo.
+│   ├── dioptra-deployment-dbadmin.env                       &lt;- Sets environment variables that customize the pgadmin4 dashboard. Safe to commit to a git repo.
+│   ├── dioptra-deployment-mlflow-tracking.env               &lt;- Sets environment variables that customize the MLflow Tracking service. Safe to commit to a git repo.
+│   ├── dioptra-deployment-restapi.env                       &lt;- Sets environment variables that customize the Dioptra REST API service. Safe to commit to a git repo.
+│   ├── dioptra-deployment-worker-cpu.env                    &lt;- Sets environment variables that customize the CPU-based Dioptra workers. Safe to commit to a git repo.
+│   └── dioptra-deployment-worker.env                        &lt;- Sets environment variables that customize the Dioptra workers. Safe to commit to a git repo.
+├── scripts
+│   ├── copy-extra-ca-certificates.m4                        &lt;- Used in the init-deployment.sh and init-named-volumes.m4 scripts to inject the extra CA certificates in the ssl/ca-certificates folder into the services.
+│   ├── file-copy.m4                                         &lt;- Used in the init-named-volumes.m4 script to handle file copying. Emits logging information and sets appropriate access and ownership permissions.
+│   ├── git-clone.m4                                         &lt;- Used in the init-named-volumes.m4 script to handle cloning git repositories. Emits logging information and sets appropriate access and ownership permissions.
+│   ├── globbed-copy.m4                                      &lt;- Used in the init-named-volumes.m4 script to handle globbed file copying. Emits logging information and sets appropriate access and ownership permissions.
+│   ├── init-minio.sh                                        &lt;- Used in the init-deployment.sh script to set the Minio policies in config/minio.
+│   ├── init-named-volumes.m4                                &lt;- Used in the init-deployment.sh script to prepare the named storage volumes used by each container. Actions include copying in configuration files and setting file access and ownership permissions.
+│   ├── init-scripts.sh                                      &lt;- Used in the init-deployment.sh script to translate this folder&#39;s *.m4 files into executable bash scripts using argbash.
+│   ├── manage-postgres-ssl.m4                               &lt;- Used in the init-deployment.sh script to enable and disable SSL in Postgres.
+│   └── set-permissions.m4                                   &lt;- Used in the init-named-volumes.m4 script to set appropriate access and ownership permissions.
+├── secrets
+│   ├── dioptra-deployment-db.env                            &lt;- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│   ├── dioptra-deployment-dbadmin.env                       &lt;- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│   ├── dioptra-deployment-minio-accounts.env                &lt;- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│   ├── dioptra-deployment-minio.env                         &lt;- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│   ├── dioptra-deployment-mlflow-tracking-database-uri.env  &lt;- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│   ├── dioptra-deployment-mlflow-tracking.env               &lt;- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│   ├── dioptra-deployment-restapi-database-uri.env          &lt;- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│   ├── dioptra-deployment-restapi.env                       &lt;- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│   ├── dioptra-deployment-worker.env                        &lt;- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│   └── postgres-passwd.env                                  &lt;- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+├── ssl
+│   ├── ca-certificates
+│   │   └── README.md            &lt;- README file explaining the folder&#39;s purpose and which files need to be copied here.
+│   ├── db
+│   │   ├── server.crt           &lt;- MUST BE COPIED HERE MANUALLY. The server certificate for enabling encrypted traffic to the Postgres database.
+│   │   ├── server.key           &lt;- MUST BE COPIED HERE MANUALLY. The private key for enabling encrypted traffic to the Postgres database. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│   │   └── README.md            &lt;- README file explaining the folder&#39;s purpose and which files need to be copied here.
+│   └── nginx
+│       ├── server.crt           &lt;- MUST BE COPIED HERE MANUALLY. The server certificate for enabling HTTPS in the Nginx webserver.
+│       ├── server.key           &lt;- MUST BE COPIED HERE MANUALLY. The private key for enabling HTTPS in the Nginx webserver. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+│       └── README.md            &lt;- README file explaining the folder&#39;s purpose and which files need to be copied here.
+├── systemd
+│   └── dioptra.service          &lt;- A systemd service that can be used to manage the full Dioptra application.
+├── .gitignore                   &lt;- A list of patterns that configures the files and directories that git should ignore. Used if the deployment configuration is placed under version control with git.
+├── docker-compose.init.yml      &lt;- Used in the init-deployment.sh script to initialize the deployment.
+├── docker-compose.yml           &lt;- Orchestrates how to start the containers, configure the network, set the environment variables, attach the storage volumes, and publish the NGINX web server ports.
+├── init-deployment.sh           &lt;- The deployment initialization script. Used to copy configuration files into named volumes, configure Minio policies, and enable/disable SSL in the NGINX and Postgres services.
+└── README.md                    &lt;- README file that explains how to initialize and run Dioptra using the provided scripts and configuration files.
+</pre></div>
+</div>
+</section>
+<section id="additional-configuration">
+<h2>Additional configuration<a class="headerlink" href="#additional-configuration" title="Permalink to this headline">#</a></h2>
+<p>The generated template takes care of most of the configuration work for you.
+However, depending on your use case, you may need to complete some additional steps before you initialize and boot up the deployment for the first time.
+The following subsections explain how to:</p>
+<ul class="simple">
+<li><p>Copy extra CA certificates into the containers</p></li>
+<li><p>Copy the certificate-key pairs that enable SSL/TLS encrypted connections in the NGINX and Postgres services</p></li>
+<li><p>Mount additional folders in the worker containers, for example a folder that contains your datasets</p></li>
+</ul>
+<p>In addition to the above, you may want to further customize the <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file to suit your needs, such as allocating explicit CPUs you want each container to use.
+See the <a class="reference external" href="https://docs.docker.com/compose/compose-file/">Compose specification documentation</a> for the full list of available options.</p>
+<section id="adding-extra-ca-certificates">
+<h3>Adding extra CA certificates<a class="headerlink" href="#adding-extra-ca-certificates" title="Permalink to this headline">#</a></h3>
+<p>The deployment initialization scripts will look for extra CA certificates in the <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/</span></code> folder and copy and bundle them into named volumes so they are available at runtime.
+Only CA certificate files copied into the <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/</span></code> folder that meet the following criteria will be bundled:</p>
+<ul class="simple">
+<li><p>Each CA certificate file must be in the PEM format.
+The PEM format encodes the certificate using base64 and stores it in a plain text file between two lines, <code class="docutils literal notranslate"><span class="pre">-----BEGIN</span> <span class="pre">CERTIFICATE-----</span></code> and <code class="docutils literal notranslate"><span class="pre">-----END</span> <span class="pre">CERTIFICATE-----</span></code>.</p></li>
+<li><p>Each file should include one, and only one, CA certificate.
+Do not bundle multiple CA certificates together.</p></li>
+<li><p>Each PEM-formatted CA certificate file <strong>must</strong> have the file extension <code class="docutils literal notranslate"><span class="pre">crt</span></code>, for example <code class="docutils literal notranslate"><span class="pre">ca-root.crt</span></code>.
+If your CA certificate has a different file extension (such as <code class="docutils literal notranslate"><span class="pre">pem</span></code>), rename it to <code class="docutils literal notranslate"><span class="pre">crt</span></code> after copying to this folder.</p></li>
+</ul>
+<p>For further information about including extra CA certificates, please see the <code class="docutils literal notranslate"><span class="pre">README.md</span></code> file in the <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/</span></code> folder.</p>
+</section>
+<section id="enabling-ssl-tls-in-nginx-and-postgres">
+<span id="running-dioptra-enabling-ssl-tls-in-nginx-and-postgres"></span><h3>Enabling SSL/TLS in NGINX and Postgres<a class="headerlink" href="#enabling-ssl-tls-in-nginx-and-postgres" title="Permalink to this headline">#</a></h3>
+<p>When the deployment initialization scripts are directed to enable SSL/TLS in the NGINX and/or Postgres services, it will scan the <code class="docutils literal notranslate"><span class="pre">ssl/db/</span></code> and <code class="docutils literal notranslate"><span class="pre">ssl/nginx/</span></code> folders for server certificate(s) and private key(s).
+The server certificate must be named <code class="docutils literal notranslate"><span class="pre">server.crt</span></code> and the private key must be named <code class="docutils literal notranslate"><span class="pre">server.key</span></code> when copying them into the <code class="docutils literal notranslate"><span class="pre">ssl/db/</span></code> and <code class="docutils literal notranslate"><span class="pre">ssl/nginx/</span></code> folders.
+This applies even when you are using a different certificate-key pair for each service.
+As an example, if the certificate and key files start in the folder <code class="docutils literal notranslate"><span class="pre">/home/username/certs</span></code> with different names, you would copy the files as follows,</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># These commands assume you are in the folder you just created using cookiecutter.</span>
+cp<span class="w"> </span>/home/username/certs/db.crt<span class="w"> </span>./ssl/db/server.crt
+cp<span class="w"> </span>/home/username/certs/db.key<span class="w"> </span>./ssl/db/server.key
+cp<span class="w"> </span>/home/username/certs/nginx.crt<span class="w"> </span>./ssl/nginx/server.crt
+cp<span class="w"> </span>/home/username/certs/nginx.key<span class="w"> </span>./ssl/nginx/server.key
+</pre></div>
+</div>
+<aside class="margin sidebar">
+<p class="sidebar-title"></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The NGINX SSL/TLS disabled and enabled tabs are just snippets.
+The snippets omit the lines that come both before and after the <code class="docutils literal notranslate"><span class="pre">healthcheck:</span></code> and <code class="docutils literal notranslate"><span class="pre">ports:</span></code> sections.
+<strong>Do not delete these surrounding lines in your actual file!</strong></p>
+</div>
+</aside>
+<p>If you are enabling SSL/TLS in the NGINX service, you will also need to comment/uncomment a few lines in the <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file that configure the NGINX service’s published ports and health check test.
+Open the file in a text editor, find the block for the NGINX service (the block starts with <code class="docutils literal notranslate"><span class="pre">dioptra-deployment-nginx:</span></code> if you used the default value for <strong>deployment_name</strong>), and edit its ports and health check test to match the appropriate YAML snippet below.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-0">
+NGINX SSL/TLS disabled</label><div class="sd-tab-content docutils">
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dioptra-deployment-nginx</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">test</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">[</span>
+<span class="w">        </span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;/usr/local/bin/healthcheck.sh&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;http://localhost:30080&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;http://localhost:35000&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;http://localhost:35050/login&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;http://localhost:39000&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;http://localhost:39001&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="c1"># &quot;https://localhost:30443&quot;,</span>
+<span class="w">        </span><span class="c1"># &quot;https://localhost:35000&quot;,</span>
+<span class="w">        </span><span class="c1"># &quot;https://localhost:35050/login&quot;,</span>
+<span class="w">        </span><span class="c1"># &quot;https://localhost:39000&quot;,</span>
+<span class="w">        </span><span class="c1"># &quot;https://localhost:39001&quot;,</span>
+<span class="w">      </span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:80:30080/tcp</span>
+<span class="w">    </span><span class="c1"># - 127.0.0.1:443:30443/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:35432:5432/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:35000:35000/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:35050:35050/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:39000:39000/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:39001:39001/tcp</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-1">
+NGINX SSL/TLS enabled</label><div class="sd-tab-content docutils">
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dioptra-deployment-nginx</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">test</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">[</span>
+<span class="w">        </span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;/usr/local/bin/healthcheck.sh&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;http://localhost:30080&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="c1"># &quot;http://localhost:35000&quot;,</span>
+<span class="w">        </span><span class="c1"># &quot;http://localhost:35050/login&quot;,</span>
+<span class="w">        </span><span class="c1"># &quot;http://localhost:39000&quot;,</span>
+<span class="w">        </span><span class="c1"># &quot;http://localhost:39001&quot;,</span>
+<span class="w">        </span><span class="s">&quot;https://localhost:30443&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;https://localhost:35000&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;https://localhost:35050/login&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;https://localhost:39000&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">        </span><span class="s">&quot;https://localhost:39001&quot;</span><span class="p p-Indicator">,</span>
+<span class="w">      </span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:80:30080/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:443:30443/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:35432:5432/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:35000:35000/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:35050:35050/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:39000:39000/tcp</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1:39001:39001/tcp</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>For further information about adding the certificate-key pairs, please see the <code class="docutils literal notranslate"><span class="pre">README.md</span></code> files in the <code class="docutils literal notranslate"><span class="pre">ssl/db</span></code> and <code class="docutils literal notranslate"><span class="pre">ssl/nginx/</span></code> folders.</p>
+</section>
+<section id="mounting-folders-in-the-worker-containers">
+<span id="running-dioptra-mounting-folders-in-the-worker-containers"></span><h3>Mounting folders in the worker containers<a class="headerlink" href="#mounting-folders-in-the-worker-containers" title="Permalink to this headline">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file generated by the cookiecutter template does not mount any folders from the host machine into worker containers.
+Common reasons for mounting additional folders in the worker containers include:</p>
+<ol class="arabic simple">
+<li><p>Your datasets are stored in a folder on your host machine or in an NFS share</p></li>
+<li><p>You want to make other artifacts available to the worker containers, such as pre-trained models</p></li>
+</ol>
+<p>An example that illustrates how to mount a folder on the host machine and a folder in an NFS share is shown in the subsections below.</p>
+<section id="mounting-a-folder-on-the-host-machine">
+<h4>Mounting a folder on the host machine<a class="headerlink" href="#mounting-a-folder-on-the-host-machine" title="Permalink to this headline">#</a></h4>
+<p>For this example, let’s assume the datasets are stored on the host machine under the absolute path <code class="docutils literal notranslate"><span class="pre">/home/datasets</span></code> and that we want to make these available in the worker containers under the absolute path <code class="docutils literal notranslate"><span class="pre">/datasets</span></code>.
+We also want to make the folders read-only to prevent a job from accidentally modifying or deleting the data.
+To do this, first verify that the folder <code class="docutils literal notranslate"><span class="pre">/home/datasets</span></code> and all of its files are world-readable.
+If they are not, you can fix this as follows:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>find<span class="w"> </span>/home/datasets<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>chmod<span class="w"> </span><span class="nv">o</span><span class="o">=</span>rx
+find<span class="w"> </span>/home/datasets<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>chmod<span class="w"> </span><span class="nv">o</span><span class="o">=</span>r
+</pre></div>
+</div>
+<p>Next, open <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> with a text editor and find the blocks for the worker containers.
+The worker container blocks will have <strong>tfcpu</strong>, <strong>tfgpu</strong>, <strong>pytorch-cpu</strong>, or <strong>pytorch-gpu</strong> in their names.
+Append the line <code class="docutils literal notranslate"><span class="pre">-</span> <span class="pre">/home/datasets:/datasets:ro</span></code> to the <code class="docutils literal notranslate"><span class="pre">volumes:</span></code> subsection.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dioptra-deployment-tfcpu-01</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">worker-ca-certificates:/usr/local/share/ca-certificates:rw</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">worker-etc-ssl:/etc/ssl:rw</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/home/datasets:/datasets:ro</span>
+</pre></div>
+</div>
+</section>
+<section id="mounting-a-folder-on-an-nfs-share">
+<h4>Mounting a folder on an NFS share<a class="headerlink" href="#mounting-a-folder-on-an-nfs-share" title="Permalink to this headline">#</a></h4>
+<aside class="margin sidebar">
+<p class="sidebar-title"></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are mounting an NFS share, don’t forget to change the IP address and exported directory to match your setup.</p>
+</div>
+</aside>
+<p>For this example, let’s assume the datasets are stored on a NFS version 4 server with IP address 10.0.0.10 and in the exported directory <code class="docutils literal notranslate"><span class="pre">/dioptra/datasets</span></code> and that we want to make these available in the worker containers under the absolute path <code class="docutils literal notranslate"><span class="pre">/datasets</span></code>.
+First, we need to configure a named NFS volume in the <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file so that Docker knows where the NFS server is and which exported directory to use.
+Open <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> with a text editor and find the <strong>top-level</strong> <code class="docutils literal notranslate"><span class="pre">volumes:</span></code> section (this should <strong>not</strong> be nested under the <code class="docutils literal notranslate"><span class="pre">services:</span></code> section) near the bottom of the file and add the following:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">dioptra-datasets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
+<span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;addr=10.0.0.10,auto,rw,bg,nfsvers=4,intr,actimeo=1800&quot;</span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:/dioptra/datasets&quot;</span>
+</pre></div>
+</div>
+<aside class="margin sidebar">
+<p class="sidebar-title"></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The NFS share does not need to be mounted on the host machine in order for the worker containers to have access to an exported directory.</p>
+</div>
+</aside>
+<p>Next, verify that the exported directory <code class="docutils literal notranslate"><span class="pre">/dioptra/datasets</span></code> and all of its files are world-readable.
+If they are not, access the NFS share and update the file access permissions.
+For example, if the NFS share is also mounted on the host machine at <code class="docutils literal notranslate"><span class="pre">/dioptra/datasets</span></code>, then you would run:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>find<span class="w"> </span>/dioptra/datasets<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>chmod<span class="w"> </span><span class="nv">o</span><span class="o">=</span>rx
+find<span class="w"> </span>/dioptra/datasets<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>chmod<span class="w"> </span><span class="nv">o</span><span class="o">=</span>r
+</pre></div>
+</div>
+<p>Next, find the blocks for the worker containers in <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>.
+The worker container blocks will have <strong>tfcpu</strong>, <strong>tfgpu</strong>, <strong>pytorch-cpu</strong>, or <strong>pytorch-gpu</strong> in their names.
+Append the line <code class="docutils literal notranslate"><span class="pre">-</span> <span class="pre">dioptra-datasets:/datasets:ro</span></code> to the <code class="docutils literal notranslate"><span class="pre">volumes:</span></code> subsection.
+The <code class="docutils literal notranslate"><span class="pre">:ro</span></code> at the end will mount the NFS share as read-only within the worker container to prevent a job from accidentally modifying or deleting the data.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dioptra-deployment-tfcpu-01</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">worker-ca-certificates:/usr/local/share/ca-certificates:rw</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">worker-etc-ssl:/etc/ssl:rw</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dioptra-datasets:/datasets:ro</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="initializing-the-deployment">
+<h2>Initializing the deployment<a class="headerlink" href="#initializing-the-deployment" title="Permalink to this headline">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code> script is the main tool for initializing the deployment and automates the following steps:</p>
+<ul class="simple">
+<li><p>Copies and bundles the extra CA certificates for the containers</p></li>
+<li><p>Copies the configuration files in <code class="docutils literal notranslate"><span class="pre">config/</span></code> folder and the server certificates and private keys into named volumes</p></li>
+<li><p>Sets the appropriate file and folder access permissions in the named volumes</p></li>
+<li><p>Creates the Minio S3 accounts and configures their access permissions</p></li>
+<li><p>Syncs the built-in task plugins from the Dioptra GitHub repository with the appropriate Minio S3 bucket</p></li>
+<li><p>Enables SSL/TLS in the Postgres service (if applicable)</p></li>
+<li><p>Upgrades the schema for the Dioptra REST API database (if applicable)</p></li>
+</ul>
+<p>This script should be executed if this is the first time you are starting the deployment <strong>or</strong> if you have changed at least one of the files in the <code class="docutils literal notranslate"><span class="pre">config/</span></code> or <code class="docutils literal notranslate"><span class="pre">ssl/</span></code> directory.
+If you run <code class="docutils literal notranslate"><span class="pre">./init-deployment.sh</span> <span class="pre">--help</span></code>, you will print the script’s help message:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Utility that prepares the deployment initialization scripts.
+
+Usage: init-deployment.sh [--enable-nginx-ssl] [--enable-postgres-ssl]
+                          [--plugins-branch &lt;arg&gt;]
+                          [--worker-ssl-service [tfcpu|pytorchcpu]] [-h|--help]
+        --enable-nginx-ssl: Enable the SSL-enabled configuration settings for nginx image
+        --enable-postgres-ssl: Enable the SSL-enabled configuration settings for postgres
+                               image
+        --plugins-branch: The Dioptra GitHub branch to use when syncing the built-in task
+                          plugins (default: &#39;main&#39;)
+        --worker-ssl-service: Image to use when bootstrapping the SSL named volumes for
+                              the worker containers, must be &#39;tfcpu&#39; or &#39;pytorchcpu&#39;
+                              (default: &#39;tfcpu&#39;)
+        -h, --help: Prints help
+</pre></div>
+</div>
+<p>As a rule of thumb, use the <code class="docutils literal notranslate"><span class="pre">--enable-nginx-ssl</span></code> option if you copied a server certificate and private key into the <code class="docutils literal notranslate"><span class="pre">ssl/nginx/</span></code> folder and use the <code class="docutils literal notranslate"><span class="pre">--enable-postgres-ssl</span></code> option if you copied a server certificate and private key into the <code class="docutils literal notranslate"><span class="pre">ssl/db/</span></code> folder.
+In addition, if you wish to sync the plugins from a different Dioptra GitHub branch, such as the main branch, use the <code class="docutils literal notranslate"><span class="pre">--plugins-branch</span> <span class="pre">&lt;arg&gt;</span></code> option.
+Otherwise, you do not need to specify any of the other options when running the script.</p>
+<p>As an example, if you copied a server certificate and private key into both the <code class="docutils literal notranslate"><span class="pre">ssl/nginx/</span></code> and <code class="docutils literal notranslate"><span class="pre">ssl/db/</span></code> folders, then you would run the following to initialize the deployment:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--enable-nginx-ssl<span class="w"> </span>--enable-postgres-ssl
+</pre></div>
+</div>
+<p>You should see a series of log messages as the initialization scripts run.
+If you do not see any error messages while the script runs, then initialization is complete and you are ready to start the deployment.</p>
+<p>Please note that you need to specify the <code class="docutils literal notranslate"><span class="pre">--enable-nginx-ssl</span></code> and <code class="docutils literal notranslate"><span class="pre">--enable-postgres-ssl</span></code> options <strong>each time</strong> you run the <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code> script.
+If you omit them on a subsequent run, then SSL/TLS will be disabled for the services.
+To enable SSL/TLS again, simply re-run the script with the options included.</p>
+</section>
+<section id="starting-the-deployment">
+<h2>Starting the deployment<a class="headerlink" href="#starting-the-deployment" title="Permalink to this headline">#</a></h2>
+<p>There are two options for starting the Dioptra deployment, using Docker Compose directly and using systemd.</p>
+<section id="using-docker-compose">
+<h3>Using Docker Compose<a class="headerlink" href="#using-docker-compose" title="Permalink to this headline">#</a></h3>
+<p>Run the following in the generated folder to start the deployment using Docker Compose.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using Docker Compose v1</span>
+docker-compose<span class="w"> </span>up<span class="w"> </span>-d
+
+<span class="c1"># Using Docker Compose v2</span>
+docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</pre></div>
+</div>
+</section>
+<section id="using-systemd">
+<h3>Using systemd<a class="headerlink" href="#using-systemd" title="Permalink to this headline">#</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This will only work if you are deploying Dioptra on a Linux distribution that uses systemd, such as Ubuntu, Fedora, or Red Hat Enterprise Linux.</p>
+</div>
+<p>Run the following to install the Dioptra systemd service generated by the template.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>cp<span class="w"> </span>./systemd/dioptra.service<span class="w"> </span>/etc/systemd/system
+</pre></div>
+</div>
+<p>Next, use systemd to start the deployment.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>dioptra
+</pre></div>
+</div>
+<p>Finally, enable the Dioptra systemd service so that the deployment will survive reboots.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>dioptra
+</pre></div>
+</div>
+</section>
+</section>
+<section id="managing-the-deployment">
+<h2>Managing the deployment<a class="headerlink" href="#managing-the-deployment" title="Permalink to this headline">#</a></h2>
+<p>Run the following in the generated folder to check the status of the deployment.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using Docker Compose v1</span>
+docker-compose<span class="w"> </span>ps
+
+<span class="c1"># Using Docker Compose v2</span>
+docker<span class="w"> </span>compose<span class="w"> </span>ps
+</pre></div>
+</div>
+<p>Run the following in the generated folder to check the status of the application logs.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using Docker Compose v1</span>
+docker-compose<span class="w"> </span>logs<span class="w"> </span>-f
+
+<span class="c1"># Using Docker Compose v2</span>
+docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>-f
+</pre></div>
+</div>
+<p>Use <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd> <kbd class="kbd docutils literal notranslate"></kbd>+<kbd class="kbd docutils literal notranslate"></kbd> <kbd class="kbd docutils literal notranslate">C</kbd></kbd> to stop following the logs.</p>
+<p>Run the following in the generated folder to restart the deployment.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-2" name="sd-tab-set-1" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-2">
+Docker Compose</label><div class="sd-tab-content docutils">
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using Docker Compose v1</span>
+docker-compose<span class="w"> </span>restart
+
+<span class="c1"># Using Docker Compose v2</span>
+docker<span class="w"> </span>compose<span class="w"> </span>restart
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-3" name="sd-tab-set-1" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-3">
+systemd</label><div class="sd-tab-content docutils">
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>systemctl<span class="w"> </span>restart<span class="w"> </span>dioptra
+</pre></div>
+</div>
+</div>
+</div>
+<p>Run the following in the generated folder to stop the deployment.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-4" name="sd-tab-set-2" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-4">
+Docker Compose</label><div class="sd-tab-content docutils">
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using Docker Compose v1</span>
+docker-compose<span class="w"> </span>down
+
+<span class="c1"># Using Docker Compose v2</span>
+docker<span class="w"> </span>compose<span class="w"> </span>down
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
+</input><label class="sd-tab-label" for="sd-tab-item-5">
+systemd</label><div class="sd-tab-content docutils">
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>systemctl<span class="w"> </span>stop<span class="w"> </span>dioptra
+</pre></div>
+</div>
+</div>
+</div>
+<p>Run the following to prevent the deployment from restarting on reboot (systemd only),</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>systemctl<span class="w"> </span>disable<span class="w"> </span>dioptra
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="building-the-containers.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Building the containers</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../user-guide/the-basics.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">The Basics</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quickstart">Quickstart</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#applying-the-template">Applying the template</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#folder-organization">Folder organization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-configuration">Additional configuration</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-extra-ca-certificates">Adding extra CA certificates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enabling-ssl-tls-in-nginx-and-postgres">Enabling SSL/TLS in NGINX and Postgres</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mounting-folders-in-the-worker-containers">Mounting folders in the worker containers</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mounting-a-folder-on-the-host-machine">Mounting a folder on the host machine</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mounting-a-folder-on-an-nfs-share">Mounting a folder on an NFS share</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initializing-the-deployment">Initializing the deployment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#starting-the-deployment">Starting the deployment</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-docker-compose">Using Docker Compose</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-systemd">Using systemd</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#managing-the-deployment">Managing the deployment</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
+      </p>
+    </div>
+</footer>
+  </body>
+</html>
