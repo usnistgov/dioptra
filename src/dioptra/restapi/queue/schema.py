@@ -125,7 +125,7 @@ class QueueRegistrationFormSchema(Schema):
         self, data: Dict[str, Any], many: bool, **kwargs
     ) -> QueueRegistrationFormData:
         """Creates a |QueueRegistrationFormData| object from the validated data."""
-        return self.__model__(**data)  # type: ignore
+        return self.__model__(**data)
 
 
 QueueRegistrationSchema = [

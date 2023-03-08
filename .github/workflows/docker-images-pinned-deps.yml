@@ -100,7 +100,6 @@ jobs:
           no-cache: true
           pull: true
           build-args: |
-            BASE_IMAGE=${{ env.BASE_IMAGE }}
             CODE_PKG_VERSION=${{ env.CODE_PKG_VERSION }}
             MINICONDA3_PREFIX=${{ env.MINICONDA3_PREFIX }}
             MINICONDA_VERSION=${{ env.MINICONDA_VERSION }}
@@ -190,72 +189,6 @@ jobs:
       - name: run ${{ matrix.tox-env }} container test
         run: |
           tox -e containers-${{ matrix.dioptra-app }}
-
-  shellscripts-test:
-    runs-on: ubuntu-20.04
-    needs:
-      - build-docker-dioptra-apps
-    strategy:
-      matrix:
-        dioptra-app:
-          - nginx
-          - mlflow-tracking
-          - restapi
-          - pytorch-cpu
-          - pytorch-gpu
-          - tensorflow2-cpu
-          - tensorflow2-gpu
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: setup python 3.9
-        uses: actions/setup-python@v3.1.2
-        with:
-          python-version: "3.9"
-
-      - name: upgrade pip
-        run: |
-          # install pip=>20.1 to use "pip cache dir"
-          python3 -m pip install --upgrade pip
-
-      - name: get pip cache dir
-        id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
-
-      - name: cache dependencies
-        uses: actions/cache@v3.0.3
-        with:
-          path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: install dependencies
-        run: python3 -m pip install tox
-
-      - name: download the container image
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
-          path: /tmp
-
-      - name: set up docker qemu
-        uses: docker/setup-qemu-action@v2
-
-      - name: set up docker buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: load the container image
-        run: |
-          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
-          rm /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
-
-      - name: run shellscripts test in ${{ matrix.tox-env }} container
-        run: |
-          tox -e containers-shellscripts
-        env:
-          DIOPTRA_TEST_CONTAINER: ${{ matrix.dioptra-app }}
 
   integration-test:
     runs-on: ubuntu-20.04

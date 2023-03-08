@@ -35,9 +35,11 @@ def register_error_handlers(api: Api) -> None:
     from .task_plugin import (
         register_error_handlers as attach_task_plugin_error_handlers,
     )
+    from .user import register_error_handlers as attach_user_error_handlers
 
     # Add error handlers
     attach_experiment_error_handlers(api)
     attach_job_error_handlers(api)
     attach_job_queue_error_handlers(api)
     attach_task_plugin_error_handlers(api)
+    attach_user_error_handlers(api)

@@ -19,12 +19,7 @@
 # m4_ignore(
 echo "This is just a script template, not the script (yet) - pass it to 'argbash' to fix this." >&2
 exit 11 #)Created by argbash-init v2.8.1
-# ARG_OPTIONAL_SINGLE([restapi-host],[],[Dioptra REST API Service host],[restapi])
-# ARG_OPTIONAL_SINGLE([restapi-port],[],[Dioptra REST API Service port],[5000])
-# ARG_OPTIONAL_SINGLE([mlflow-tracking-host],[],[MLflow Tracking Service host],[mlflow-tracking])
-# ARG_OPTIONAL_SINGLE([mlflow-tracking-port],[],[MLflow Tracking Service port],[5000])
-# ARG_OPTIONAL_SINGLE([nginx-restapi-port],[],[Nginx Dioptra REST API listening port],[30080])
-# ARG_OPTIONAL_SINGLE([nginx-mlflow-port],[],[Nginx MLflow Tracking listening port],[35000])
+# ARG_OPTIONAL_REPEATED([wait-for],[],[Wait on the availability of a host and TCP port before proceeding],[])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
 # ARG_HELP([Nginx Entry Point\n])"
@@ -38,77 +33,33 @@ set -euo pipefail
 # Global parameters
 ###########################################################################################
 
-readonly restapi_host="${_arg_restapi_host}"
-readonly restapi_port="${_arg_restapi_port}"
-readonly mlflow_tracking_host="${_arg_mlflow_tracking_host}"
-readonly mlflow_tracking_port="${_arg_mlflow_tracking_port}"
-readonly nginx_restapi_port="${_arg_nginx_restapi_port}"
-readonly nginx_mlflow_port="${_arg_nginx_mlflow_port}"
 readonly logname="Container Entry Point"
 
 ###########################################################################################
-# Secure the container at runtime
+# Wait for services to start
 #
 # Globals:
-#   None
+#   _arg_wait_for
 # Arguments:
 #   None
 # Returns:
 #   None
 ###########################################################################################
 
-secure_container() {
-  if [[ -f /usr/local/bin/secure-container.sh ]]; then
-    /usr/local/bin/secure-container.sh
-  else
-    echo "${logname}: ERROR - /usr/local/bin/secure-container.sh script missing" 1>&2
-    exit 1
-  fi
-}
-
-###########################################################################################
-# Set nginx configuration variables
-#
-# Globals:
-#   mlflow_tracking_host
-#   mlflow_tracking_port
-#   nginx_restapi_port
-#   nginx_mlflow_port
-#   restapi_host
-#   restapi_port
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-set_nginx_variables() {
-  echo "${logname}: INFO - Set nginx variables  |  \
-  MLFLOW_TRACKING_HOST=${mlflow_tracking_host} \
-  MLFLOW_TRACKING_PORT=${mlflow_tracking_port} \
-  NGINX_MLFLOW_PORT=${nginx_mlflow_port} \
-  NGINX_RESTAPI_PORT=${nginx_restapi_port} \
-  RESTAPI_HOST=${restapi_host} \
-  RESTAPI_PORT=${restapi_port}"
-  sed -i -e 's/$MLFLOW_TRACKING_HOST/'"${mlflow_tracking_host}"'/g' \
-    /etc/nginx/conf.d/default.conf
-  sed -i -e 's/$MLFLOW_TRACKING_PORT/'"${mlflow_tracking_port}"'/g' \
-    /etc/nginx/conf.d/default.conf
-  sed -i -e 's/$NGINX_MLFLOW_PORT/'"${nginx_mlflow_port}"'/g' /etc/nginx/conf.d/default.conf
-  sed -i -e 's/$NGINX_RESTAPI_PORT/'"${nginx_restapi_port}"'/g' /etc/nginx/conf.d/default.conf
-  sed -i -e 's/$RESTAPI_HOST/'"${restapi_host}"'/g' /etc/nginx/conf.d/default.conf
-  sed -i -e 's/$RESTAPI_PORT/'"${restapi_port}"'/g' /etc/nginx/conf.d/default.conf
-
-  local default_conf=$(cat /etc/nginx/conf.d/default.conf)
-  echo "${logname}: INFO - Updated contents of /etc/nginx/conf.d/default.conf"
-  echo "${default_conf}"
+wait_for_services() {
+  for service in ${_arg_wait_for[@]}; do
+    if ! (/usr/local/bin/wait-for-it.sh -t 0 ${service}); then
+      echo "${logname}: ERROR - Unexpected error while waiting for ${service}." 1>&2
+      exit 1
+    fi
+  done
 }
 
 ###########################################################################################
 # Start nginx server
 #
 # Globals:
-#   None
+#   logname
 # Arguments:
 #   None
 # Returns:
@@ -124,7 +75,6 @@ start_nginx() {
 # Main script
 ###########################################################################################
 
-secure_container
-set_nginx_variables
+wait_for_services
 start_nginx
 # ] <-- needed because of Argbash

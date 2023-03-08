@@ -1,5 +1,11 @@
 # Tensorflow Adversarial Patch Demo
 
+> ⚠️ **IMPORTANT!**
+>
+> This README is out of date and will be updated in the near future.
+>
+> There is a new setup tool that all users should use to configure and run Dioptra, please see the new sections [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) that have been added to the documentation.
+
 >⚠️ **Warning:** Some of the demos assume that you have access to an on-prem deployment of Dioptra that provides a copy of the Fruits360 and ImageNet datasets and a CUDA-compatible GPU.
 > These demos cannot be run on a typical personal computer.
 

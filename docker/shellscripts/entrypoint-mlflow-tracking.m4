@@ -27,6 +27,7 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([output],[o],[Path to save exported environment.yml file (ignored unless paired with --export-conda-env)],[])
 # ARG_OPTIONAL_SINGLE([port],[],[The port to listen on.],[5000])
 # ARG_OPTIONAL_SINGLE([workers],[],[Number of gunicorn worker processes to handle requests.],[4])
+# ARG_OPTIONAL_REPEATED([wait-for],[],[Wait on the availability of a host and TCP port before proceeding],[])
 # ARG_OPTIONAL_ACTION([export-conda-env],[],[Freeze and export the container's conda environment (--output must be set)],[export_conda_environment])
 # ARG_OPTIONAL_ACTION([upgrade-db],[],[Upgrade the database schema],[upgrade_database])
 # ARG_DEFAULTS_POS
@@ -57,61 +58,6 @@ set_parsed_globals() {
 }
 
 ###########################################################################################
-# Secure the container at runtime
-#
-# Globals:
-#   logname
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-secure_container() {
-  if [[ -f /usr/local/bin/secure-container.sh ]]; then
-    /usr/local/bin/secure-container.sh
-  else
-    echo "${logname}: ERROR - /usr/local/bin/secure-container.sh script missing" 1>&2
-    exit 1
-  fi
-}
-
-###########################################################################################
-# Create bucket on S3 storage
-#
-# Globals:
-#   default_artifact_root
-#   mlflow_s3_endpoint_url
-#   logname
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-s3_mb() {
-  local proto=$(echo ${default_artifact_root} | grep :// | sed -e "s,^\(.*://\).*,\1,g")
-  local url=$(echo ${default_artifact_root/${proto}/})
-
-  echo "${logname}: artifacts storage backend protocol is ${proto}"
-
-  if [[ ${proto} == s3:// && ! -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-mb.sh ]]; then
-    local bucket=${url%%/*}
-    echo "${logname}: artifacts storage path is ${default_artifact_root}, ensuring bucket ${bucket} exists"
-    /usr/local/bin/s3-mb.sh --endpoint-url ${mlflow_s3_endpoint_url} ${bucket}
-  elif [[ ${proto} == s3:// && -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-mb.sh ]]; then
-    local bucket=${url%%/*}
-    echo "${logname}: artifacts storage path is ${default_artifact_root}, ensuring bucket ${bucket} exists"
-    /usr/local/bin/s3-mb.sh ${bucket}
-  elif [[ ! -f /usr/local/bin/s3-mb.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/s3-mb.sh script missing" 1>&2
-    exit 1
-  else
-    echo "${logname}: artifacts storage path is ${default_artifact_root}"
-  fi
-}
-
-###########################################################################################
 # Freeze and export the container's conda virtual environment
 #
 # Globals:
@@ -138,6 +84,26 @@ export_conda_environment() {
 }
 
 ###########################################################################################
+# Wait for services to start
+#
+# Globals:
+#   _arg_wait_for
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+wait_for_services() {
+  for service in ${_arg_wait_for[@]}; do
+    if ! (/usr/local/bin/wait-for-it.sh -t 0 ${service}); then
+      echo "${logname}: ERROR - Unexpected error while waiting for ${service}." 1>&2
+      exit 1
+    fi
+  done
+}
+
+###########################################################################################
 # Upgrade the MLFlow Tracking database
 #
 # Globals:
@@ -155,6 +121,7 @@ upgrade_database() {
   echo "${logname}: INFO - Upgrading the MLFlow Tracking database"
 
   set_parsed_globals
+  wait_for_services
 
   bash -c "\
   source ${conda_dir}/etc/profile.d/conda.sh &&\
@@ -216,7 +183,6 @@ start_mlflow_server() {
 
 parse_commandline "$@"
 set_parsed_globals
-secure_container
-s3_mb
+wait_for_services
 start_mlflow_server
 # ] <-- needed because of Argbash

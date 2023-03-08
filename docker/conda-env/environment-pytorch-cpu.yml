@@ -97,3 +97,4 @@ dependencies:
       - torchaudio # cpu
       - typing-extensions>=3.7.4.3
       - werkzeug>=1.0.0,<=2.1.2
+      - wtforms[email]>=3.0.0

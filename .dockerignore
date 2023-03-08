@@ -37,6 +37,7 @@ wheels
 **/.cache
 **/.eggs
 **/.git
+**/.gitkeep
 **/.idea
 **/.lsp_symlink
 **/.mypy_cache

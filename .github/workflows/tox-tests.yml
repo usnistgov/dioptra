@@ -33,6 +33,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: install English words dictionary
+        run: sudo apt install -y wamerican
+
       - name: setup python ${{ matrix.python-version }}
         uses: actions/setup-python@v3.1.2
         with:

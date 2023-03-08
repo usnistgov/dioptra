@@ -30,27 +30,21 @@ CONTAINER_MLFLOW_TRACKING_INCLUDE_FILES =\
     docker/shellscripts/conda-env.m4\
     docker/shellscripts/entrypoint-mlflow-tracking.m4\
     docker/shellscripts/fix-permissions.m4\
-    docker/shellscripts/init-copy.m4\
-    docker/shellscripts/init-git-clone.m4\
-    docker/shellscripts/init-set-permissions.m4\
     docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
     docker/shellscripts/s3-sync.m4\
-    docker/shellscripts/secure-container.m4\
-    docker/shellscripts/unpack-archive.m4
+    docker/shellscripts/unpack-archive.m4\
+    docker/shellscripts/wait-for-it.sh
 
 # Nginx -------------------------------------------------------------------------
 
 CONTAINER_NGINX_INCLUDE_FILES =\
     docker/configs/nginx.conf\
-    docker/configs/nginx.default.conf\
     docker/shellscripts/entrypoint-nginx.m4\
-    docker/shellscripts/init-copy.m4\
-    docker/shellscripts/init-git-clone.m4\
-    docker/shellscripts/init-set-permissions.m4\
     docker/shellscripts/parse-uri.m4\
-    docker/shellscripts/secure-container.m4
+    docker/shellscripts/wait-for-it.sh
 
 # PyTorch (CPU) -----------------------------------------------------------------
 
@@ -63,16 +57,14 @@ CONTAINER_PYTORCH_CPU_INCLUDE_FILES =\
     docker/shellscripts/conda-env.m4\
     docker/shellscripts/entrypoint-worker.m4\
     docker/shellscripts/fix-permissions.m4\
-    docker/shellscripts/init-copy.m4\
-    docker/shellscripts/init-git-clone.m4\
-    docker/shellscripts/init-set-permissions.m4\
     docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/run-mlflow-job.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
     docker/shellscripts/s3-sync.m4\
-    docker/shellscripts/secure-container.m4\
     docker/shellscripts/unpack-archive.m4\
+    docker/shellscripts/wait-for-it.sh\
     $(CODE_PACKAGING_FILES)\
     $(CODE_SRC_FILES)
 
@@ -87,16 +79,14 @@ CONTAINER_PYTORCH_GPU_INCLUDE_FILES =\
     docker/shellscripts/conda-env.m4\
     docker/shellscripts/entrypoint-worker.m4\
     docker/shellscripts/fix-permissions.m4\
-    docker/shellscripts/init-copy.m4\
-    docker/shellscripts/init-git-clone.m4\
-    docker/shellscripts/init-set-permissions.m4\
     docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/run-mlflow-job.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
     docker/shellscripts/s3-sync.m4\
-    docker/shellscripts/secure-container.m4\
     docker/shellscripts/unpack-archive.m4\
+    docker/shellscripts/wait-for-it.sh\
     $(CODE_PACKAGING_FILES)\
     $(CODE_SRC_FILES)
 
@@ -112,15 +102,13 @@ CONTAINER_RESTAPI_INCLUDE_FILES =\
     docker/shellscripts/conda-env.m4\
     docker/shellscripts/entrypoint-restapi.m4\
     docker/shellscripts/fix-permissions.m4\
-    docker/shellscripts/init-copy.m4\
-    docker/shellscripts/init-git-clone.m4\
-    docker/shellscripts/init-set-permissions.m4\
     docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
     docker/shellscripts/s3-sync.m4\
-    docker/shellscripts/secure-container.m4\
     docker/shellscripts/unpack-archive.m4\
+    docker/shellscripts/wait-for-it.sh\
     wsgi.py\
     $(CODE_DB_MIGRATIONS_FILES)\
     $(CODE_PACKAGING_FILES)\
@@ -137,16 +125,14 @@ CONTAINER_TENSORFLOW2_CPU_INCLUDE_FILES =\
     docker/shellscripts/conda-env.m4\
     docker/shellscripts/entrypoint-worker.m4\
     docker/shellscripts/fix-permissions.m4\
-    docker/shellscripts/init-copy.m4\
-    docker/shellscripts/init-git-clone.m4\
-    docker/shellscripts/init-set-permissions.m4\
     docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/run-mlflow-job.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
     docker/shellscripts/s3-sync.m4\
-    docker/shellscripts/secure-container.m4\
     docker/shellscripts/unpack-archive.m4\
+    docker/shellscripts/wait-for-it.sh\
     $(CODE_PACKAGING_FILES)\
     $(CODE_SRC_FILES)
 
@@ -161,15 +147,13 @@ CONTAINER_TENSORFLOW2_GPU_INCLUDE_FILES =\
     docker/shellscripts/conda-env.m4\
     docker/shellscripts/entrypoint-worker.m4\
     docker/shellscripts/fix-permissions.m4\
-    docker/shellscripts/init-copy.m4\
-    docker/shellscripts/init-git-clone.m4\
-    docker/shellscripts/init-set-permissions.m4\
     docker/shellscripts/parse-uri.m4\
+    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/run-mlflow-job.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
     docker/shellscripts/s3-sync.m4\
-    docker/shellscripts/secure-container.m4\
     docker/shellscripts/unpack-archive.m4\
+    docker/shellscripts/wait-for-it.sh\
     $(CODE_PACKAGING_FILES)\
     $(CODE_SRC_FILES)

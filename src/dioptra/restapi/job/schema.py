@@ -225,7 +225,7 @@ class JobFormSchema(Schema):
         self, data: Dict[str, Any], many: bool, **kwargs
     ) -> JobFormData:
         """Creates a |JobFormData| object from the validated data."""
-        return self.__model__(**data)  # type: ignore
+        return self.__model__(**data)
 
 
 job_submit_form_schema = [

@@ -32,12 +32,14 @@ def bind_dependencies(binder: Binder) -> None:
     from .job import bind_dependencies as attach_job_dependencies
     from .queue import bind_dependencies as attach_job_queue_dependencies
     from .task_plugin import bind_dependencies as attach_task_plugin_dependencies
+    from .user import bind_dependencies as attach_user_dependencies
 
     # Bind configurations
     attach_experiment_dependencies(binder)
     attach_job_dependencies(binder)
     attach_job_queue_dependencies(binder)
     attach_task_plugin_dependencies(binder)
+    attach_user_dependencies(binder)
 
 
 def register_providers(modules: List[Callable[..., Any]]) -> None:
@@ -51,9 +53,11 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
     from .job import register_providers as attach_job_providers
     from .queue import register_providers as attach_job_queue_providers
     from .task_plugin import register_providers as attach_task_plugin_providers
+    from .user import register_providers as attach_user_providers
 
     # Append modules to list
     attach_experiment_providers(modules)
     attach_job_providers(modules)
     attach_job_queue_providers(modules)
     attach_task_plugin_providers(modules)
+    attach_user_providers(modules)
