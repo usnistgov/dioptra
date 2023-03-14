@@ -6,7 +6,9 @@ import pytest
 
 from dioptra.sdk.utilities.contexts import plugin_dirs
 
-TASK_PLUGINS_DIR = (Path(__file__).parent / ".." / ".." / ".." / "task-plugins").resolve()
+TASK_PLUGINS_DIR = (
+    Path(__file__).parent / ".." / ".." / ".." / "task-plugins"
+).resolve()
 
 
 @pytest.fixture(scope="session", autouse=True)
