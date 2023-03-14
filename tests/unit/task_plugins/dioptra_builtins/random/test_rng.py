@@ -14,25 +14,19 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
 
-from __future__ import annotations 
-from dioptra import pyplugs 
-from numpy.random._generator import Generator as RNGenerator
-from structlog.stdlib import BoundLogger 
-from typing import Tuple 
-import numpy as np
 import pytest
-import structlog 
+from numpy.random._generator import Generator as RNGenerator
+
 
 @pytest.mark.parametrize(
     "seed",
-    [
-        -200, 400, 42, 0
-    ],
+    [-200, 400, 42, 0],
 )
 def test_init_rng(seed) -> None:
     from dioptra_builtins.random.rng import init_rng
+
     s, rng = init_rng(seed)
     assert isinstance(rng, RNGenerator)
     assert isinstance(seed, int)
-

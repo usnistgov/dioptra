@@ -14,87 +14,58 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
 
-from __future__ import annotations 
-from dioptra import pyplugs 
-from numpy.random._generator import Generator as RNGenerator
-from structlog.stdlib import BoundLogger 
-from typing import Optional 
-from typing import Tuple 
-from typing import Union 
 import numpy as np
 import pytest
-import structlog 
-from functools import reduce
+
 
 @pytest.mark.parametrize(
     "seed",
-    [
-        -200, 400, 42, 0
-    ],
+    [-200, 400, 42, 0],
 )
 @pytest.mark.parametrize(
     ("low", "high"),
-    [
-        (1, None),
-        (20, None),
-        (200, 204),
-        (-200, 10),
-        (-40, -30),
-        (0, 20),
-        (-20, 0)
-    ]
+    [(1, None), (20, None), (200, 204), (-200, 10), (-40, -30), (0, 20), (-20, 0)],
 )
 def test_draw_random_integer(seed, low, high) -> None:
     from dioptra_builtins.random.sample import draw_random_integer
-    from dioptra_builtins.random.rng import init_rng
-    
+
     rng = np.random.default_rng(seed if seed >= 0 else None)
     if seed < 0:
-        seed = rng.bit_generator._seed_seq.entropy  
-    
+        seed = rng.bit_generator._seed_seq.entropy
+
     result: int = draw_random_integer(rng, low, high)
-    
-    if high != None:
+
+    if high is not None:
         assert low <= result and result < high
     else:
         assert 0 <= result and result < low
 
+
 @pytest.mark.parametrize(
     "seed",
-    [
-        -200, 400, 42, 0
-    ],
+    [-200, 400, 42, 0],
 )
 @pytest.mark.parametrize(
     ("low", "high"),
-    [
-        (1, None),
-        (20, None),
-        (200, 204),
-        (-200, 10),
-        (-40, -30),
-        (0, 20),
-        (-20, 0)
-    ]
+    [(1, None), (20, None), (200, 204), (-200, 10), (-40, -30), (0, 20), (-20, 0)],
 )
 @pytest.mark.parametrize(
     "size",
-    [
-         0, 10, (15, 20), (3,4,5), (6,0,7)
-    ],
+    [0, 10, (15, 20), (3, 4, 5), (6, 0, 7)],
 )
 def test_draw_random_integers(seed, low, high, size) -> None:
     from dioptra_builtins.random.sample import draw_random_integers
-    
+
     rng = np.random.default_rng(seed if seed >= 0 else None)
     if seed < 0:
-        seed = rng.bit_generator._seed_seq.entropy    
-        
+        seed = rng.bit_generator._seed_seq.entropy
+
     result: np.ndarray = draw_random_integers(rng, low, high, size)
-    
-    if (size == 0): size = 1
-    if (type(size) is not tuple): size = (size,)
+
+    if size == 0:
+        size = 1
+    if type(size) is not tuple:
+        size = (size,)
     assert result.shape == size
-
-
