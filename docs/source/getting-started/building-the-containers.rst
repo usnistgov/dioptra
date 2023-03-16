@@ -61,7 +61,7 @@ Next, use the Makefile to build the container images.
 .. code:: sh
 
    # NOTE: the PyTorch and Tensorflow images may take a while to build
-   make build-nginx build-mlflow-tracking build-restapi build-pytorch-cpu build-tensorflow2-cpu
+   make build-nginx build-mlflow-tracking build-restapi build-pytorch-cpu build-tensorflow-cpu
 
 If you are running Dioptra on a host machine that has one or more CUDA-compatible GPUs, then it is recommended that you also build the GPU-enabled images:
 
