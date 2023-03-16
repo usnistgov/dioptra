@@ -394,6 +394,10 @@ vignettes/*.html
 vignettes/*.pdf
 *.Rcheck/
 
+# Javascript
+node_modules/
+package-lock.json
+
 # ---------------------------
 # BEGIN Whitelisted Files
 # ---------------------------

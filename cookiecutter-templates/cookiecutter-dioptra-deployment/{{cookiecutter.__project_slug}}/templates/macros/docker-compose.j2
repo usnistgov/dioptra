@@ -156,7 +156,7 @@ volumes:
 {% macro nginx_service(cookiecutter) %}
 {%- set _nginx_env_files = ["envs/ca-certificates.env"] -%}
 {%- set _nginx_port_prefix = "127.0.0.1:" if cookiecutter.nginx_expose_ports_on_localhost_only.lower() == "true" else "" -%}
-{%- set _nginx_volumes = ["nginx-ca-certificates:/usr/local/share/ca-certificates:rw", "nginx-conf-d:/etc/nginx/conf.d:rw", "nginx-etc-ssl:/etc/ssl:rw"] -%}
+{%- set _nginx_volumes = ["nginx-ca-certificates:/usr/local/share/ca-certificates:rw", "nginx-conf-d:/etc/nginx/conf.d:rw", "nginx-etc-ssl:/etc/ssl:rw", "nginx-frontend:/frontend:ro"] -%}
 {{ cookiecutter.__project_slug }}-nginx:
   image: {{ container_image(cookiecutter.__containers.nginx) }}
   restart: always

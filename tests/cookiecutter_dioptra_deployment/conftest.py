@@ -45,71 +45,77 @@ def context():
                 "image": "nginx",
                 "namespace": "dioptra",
                 "tag": "dev",
-                "registry": ""
+                "registry": "",
             },
             "mlflow_tracking": {
                 "image": "mlflow-tracking",
                 "namespace": "dioptra",
                 "tag": "dev",
-                "registry": ""
+                "registry": "",
             },
             "restapi": {
                 "image": "restapi",
                 "namespace": "dioptra",
                 "tag": "dev",
-                "registry": ""
+                "registry": "",
             },
             "tfcpu": {
                 "image": "tensorflow2-cpu",
                 "namespace": "dioptra",
                 "tag": "dev",
-                "registry": ""
+                "registry": "",
             },
             "tfgpu": {
                 "image": "tensorflow2-gpu",
                 "namespace": "dioptra",
                 "tag": "dev",
-                "registry": ""
+                "registry": "",
             },
             "pytorchcpu": {
                 "image": "pytorch-cpu",
                 "namespace": "dioptra",
                 "tag": "dev",
-                "registry": ""
+                "registry": "",
             },
             "pytorchgpu": {
                 "image": "pytorch-gpu",
                 "namespace": "dioptra",
                 "tag": "dev",
-                "registry": ""
+                "registry": "",
             },
             "argbash": {
                 "image": "argbash",
                 "namespace": "matejak",
                 "tag": "latest",
-                "registry": ""
+                "registry": "",
             },
             "db": {
                 "image": "postgres",
                 "namespace": "",
                 "tag": "{{ cookiecutter.postgres_container_tag }}",
-                "registry": ""
+                "registry": "",
             },
             "dbadmin": {
                 "image": "pgadmin4",
                 "namespace": "dpage",
                 "tag": "latest",
-                "registry": ""
+                "registry": "",
             },
             "mc": {
                 "image": "mc",
                 "namespace": "minio",
                 "tag": "latest",
-                "registry": ""
+                "registry": "",
             },
             "minio": {
                 "image": "minio",
                 "namespace": "minio",
+                "tag": "latest",
+                "registry": "",
+            },
+            "nodejs": {
+                "image": "node",
+                "namespace": "",
                 "tag": "latest",
                 "registry": ""
             },
@@ -117,8 +123,8 @@ def context():
                 "image": "redis",
                 "namespace": "",
                 "tag": "latest",
-                "registry": ""
-            }
+                "registry": "",
+            },
         },
         "_is_pytest": "True",
     }

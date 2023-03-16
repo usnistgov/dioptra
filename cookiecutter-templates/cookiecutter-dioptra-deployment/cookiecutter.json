@@ -92,6 +92,12 @@
             "tag": "latest",
             "registry": ""
         },
+        "nodejs": {
+            "image": "node",
+            "namespace": "",
+            "tag": "latest",
+            "registry": ""
+        },
         "redis": {
             "image": "redis",
             "namespace": "",

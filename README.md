@@ -5,21 +5,25 @@ There is enough functionality to demonstrate the direction of the project, but t
 
 The project documentation is available at https://pages.nist.gov/dioptra/.
 
-## Building Documentation
+## User setup
 
-To build the documentation locally, they are in the `docs` folder and compiled using Sphinx, make sure you have Docker installed and try to pull the builder images:
+For instructions on how to build and run a fresh instance of Dioptra, see [cookiecutter-templates/README.md](cookiecutter-templates/README.md) and the [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) sections of the published documentation.
 
-    make pull-latest-ci
+## Developer setup
 
-If you do not have access to the project's Docker registry, then you can build and tag them manually:
+### Python virtual environment
 
-    make build-ci tag-latest-ci
+Ensure a Python interpreter version 3.9 or higher is in your PATH, and then run the following,
 
-The documentation can then be built with,
+```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev,sdk]"
+```
 
-    make docs
+### Frontend development setup
 
-When the build is done, open `docs/build/index.html` in your web browser.
+For instructions on how to prepare the frontend development environment, [see the src/frontend/README.md file](src/frontend/README.md)
 
 ## License
 
