@@ -103,6 +103,7 @@ dependencies:
     - flask-migrate==3.1.0
     - flask-restx==0.5.1
     - flask-sqlalchemy==2.5.1
+    - flask-cors==3.0.10
     - flask-wtf==1.0.1
     - gorilla==0.4.0
     - greenlet==1.1.3

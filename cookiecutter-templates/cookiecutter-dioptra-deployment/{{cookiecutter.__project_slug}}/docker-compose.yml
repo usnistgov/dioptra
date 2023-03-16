@@ -75,6 +75,8 @@ services:
     name: {{ cookiecutter.__project_slug }}_nginx-conf-d
   nginx-etc-ssl:
     name: {{ cookiecutter.__project_slug }}_nginx-etc-ssl
+  nginx-frontend:
+    name: {{ cookiecutter.__project_slug }}_nginx-frontend
   postgres-data:
     name: {{ cookiecutter.__project_slug }}_postgres-data
   postgres-docker-entrypoint-initdb-d:

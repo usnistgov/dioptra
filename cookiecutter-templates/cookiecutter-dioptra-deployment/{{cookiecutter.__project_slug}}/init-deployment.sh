@@ -34,6 +34,7 @@ CONTAINER_SSL_DIR="/ssl"
 
 INIT_ARGBASH_SERVICE="argbash"
 INIT_DB_SERVICE="db"
+INIT_FRONTEND_SERVICE="frontend-build"
 INIT_MLFLOW_TRACKING_SSL_SERVICE="mlflow-tracking-ssl"
 INIT_NAMED_VOLUMES_SERVICE="named-volumes"
 INIT_NGINX_SSL_SERVICE="nginx-ssl"
@@ -42,21 +43,21 @@ INIT_RESTAPI_SERVICE="restapi"
 INIT_RESTAPI_SSL_SERVICE="restapi-ssl"
 INIT_TFCPU_SSL_SERVICE="tfcpu-ssl"
 
+DEFAULT_ARG_BRANCH="main"
 DEFAULT_ARG_ENABLE_NGINX_SSL="off"
 DEFAULT_ARG_ENABLE_POSTGRES_SSL="off"
-DEFAULT_ARG_PLUGINS_BRANCH="main"
 DEFAULT_ARG_WORKER_SSL_SERVICE="tfcpu"
 
+_arg_branch="${DEFAULT_ARG_BRANCH}"
 _arg_enable_nginx_ssl="${DEFAULT_ARG_ENABLE_NGINX_SSL}"
 _arg_enable_postgres_ssl="${DEFAULT_ARG_ENABLE_POSTGRES_SSL}"
-_arg_plugins_branch="${DEFAULT_ARG_PLUGINS_BRANCH}"
 _arg_worker_ssl_service="${DEFAULT_ARG_WORKER_SSL_SERVICE}"
 
 ###########################################################################################
 # Print the script help message
 #
 # Globals:
-#   DEFAULT_ARG_PLUGINS_BRANCH
+#   DEFAULT_ARG_BRANCH
 #   DEFAULT_ARG_WORKER_SSL_SERVICE
 #   SCRIPT_CMDNAME
 # Arguments:
@@ -70,13 +71,13 @@ print_help() {
 		Utility that prepares the deployment initialization scripts.
 
 		Usage: init-deployment.sh [--enable-nginx-ssl] [--enable-postgres-ssl]
-		                          [--plugins-branch <arg>]
+		                          [--branch <arg>]
 		                          [--worker-ssl-service [tfcpu|pytorchcpu]] [-h|--help]
 		        --enable-nginx-ssl: Enable the SSL-enabled configuration settings for nginx image
 		        --enable-postgres-ssl: Enable the SSL-enabled configuration settings for postgres
 		                               image
-		        --plugins-branch: The Dioptra GitHub branch to use when syncing the built-in task
-		                          plugins (default: '${DEFAULT_ARG_PLUGINS_BRANCH}')
+		        --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
+		                  and the frontend files (default: '${DEFAULT_ARG_BRANCH}')
 		        --worker-ssl-service: Image to use when bootstrapping the SSL named volumes for
 		                              the worker containers, must be 'tfcpu' or 'pytorchcpu'
 		                              (default: '${DEFAULT_ARG_WORKER_SSL_SERVICE}')
@@ -146,7 +147,7 @@ validate_worker_ssl_service() {
 # Globals:
 #   _arg_enable_nginx_ssl
 #   _arg_enable_postgres_ssl
-#   _arg_plugins_branch
+#   _arg_branch
 #   _arg_worker_ssl_service
 # Arguments:
 #   Script arguments, an array
@@ -169,8 +170,8 @@ parse_args() {
         _arg_enable_postgres_ssl="on"
         shift 1
         ;;
-      --plugins-branch)
-        _arg_plugins_branch="${2}"
+      --branch)
+        _arg_branch="${2}"
         shift 2
         ;;
       --worker-ssl-service)
@@ -394,6 +395,7 @@ init_scripts() {
     "/scripts-src/file-copy.m4"
     "/scripts-src/git-clone.m4"
     "/scripts-src/globbed-copy.m4"
+    "/scripts-src/init-frontend.sh"
     "/scripts-src/init-minio.sh"
     "/scripts-src/init-named-volumes.m4"
     "/scripts-src/manage-postgres-ssl.m4"
@@ -451,7 +453,7 @@ init_extra_ca_certificates() {
 #   INIT_NAMED_VOLUMES_SERVICE
 #   _arg_enable_nginx_ssl
 #   _arg_enable_postgres_ssl
-#   _arg_plugins_branch
+#   _arg_branch
 # Arguments:
 #   None
 # Returns:
@@ -464,7 +466,7 @@ init_named_volumes() {
     "--scripts-dir"
     "/scripts"
     "--clone-branch"
-    "${_arg_plugins_branch}"
+    "${_arg_branch}"
   )
 
   if [[ "${_arg_enable_nginx_ssl}" == "on" ]]; then
@@ -502,6 +504,31 @@ init_minio() {
 }
 
 ###########################################################################################
+# Wrapper for the init-frontend.sh utility script
+#
+# Globals:
+#   DOCKER_COMPOSE_INIT_YML
+#   INIT_FRONTEND_SERVICE
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+init_frontend() {
+  local args=(
+    "/scripts/init-frontend.sh"
+    "--output"
+    "/frontend"
+  )
+
+  docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" run \
+    --rm \
+    "${INIT_FRONTEND_SERVICE}" \
+    "${args[@]}"
+}
+
+###########################################################################################
 # The top-level function in the script
 #
 # Globals:
@@ -518,6 +545,7 @@ main() {
   init_extra_ca_certificates
   init_named_volumes
   init_minio
+  init_frontend
   start_db_service
   manage_postgres_ssl
   migrate_restapi_db

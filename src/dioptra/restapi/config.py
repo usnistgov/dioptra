@@ -34,7 +34,10 @@ class BaseConfig(object):
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = False
+    DIOPTRA_CORS_ORIGIN = os.getenv("DIOPTRA_CORS_ORIGIN", "http://localhost:5173")
     DIOPTRA_PLUGINS_BUCKET = os.getenv("DIOPTRA_PLUGINS_BUCKET", "plugins")
+    DIOPTRA_SWAGGER_PATH = os.getenv("DIOPTRA_SWAGGER_PATH", "/")
+    DIOPTRA_BASE_URL = os.getenv("DIOPTRA_BASE_URL")
 
 
 class DevelopmentConfig(BaseConfig):
