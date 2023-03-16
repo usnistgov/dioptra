@@ -17,7 +17,7 @@
 
 .. _getting-started-building-the-containers:
 
-Building the containers
+Building the Containers
 =======================
 
 .. include:: /_glossary_note.rst
@@ -68,7 +68,7 @@ If you are running Dioptra on a host machine that has one or more CUDA-compatibl
 .. code:: sh
 
    # NOTE: the PyTorch and Tensorflow images may take a while to build
-   make build-pytorch-gpu build-tensorflow2-gpu
+   make build-pytorch-gpu build-tensorflow-gpu
 
 Finally, run ``docker images`` to verify that the container images are now available with the ``dev`` tag.
 You should see output that looks like the following,

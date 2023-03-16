@@ -82,6 +82,7 @@ parts/
 sdist/
 var/
 tmp/
+deployments/
 
 # ---------------------------
 # BEGIN ignore editor files
