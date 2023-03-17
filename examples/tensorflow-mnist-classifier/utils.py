@@ -20,6 +20,8 @@ from posixpath import join as urljoin
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse, urlunparse
 
+import tarfile
+
 import requests
 from IPython.display import HTML
 
@@ -248,3 +250,54 @@ def notebook_gallery(images: PathLike, row_height: str = "auto") -> HTML:
         </div>
     """
     )
+
+def tar_helper(
+    source_dir: list[Union[str, Path]],
+    tarball_filename: str,
+    tarball_write_mode: str = "w:gz",
+    working_dir: Optional[Union[str, Path]] = None,
+) -> None:
+    """Archives a list of directories and files and compresses the archive.
+    Args:
+        source_dir: The directories and files which should be archived.
+        tarball_filename: The filename to use for the archived tarball.
+        tarball_write_mode: The write mode for the tarball, see :py:func:`tarfile.open`
+            for the full list of compression options. The default is `"w:gz"` (gzip
+            compression).
+        working_dir: The location where the file should be saved. If `None`, then the
+            current working directory is used. The default is `None`.
+    Returns:
+        Path: Path of the archive.
+    See Also:
+        - :py:func:`tarfile.open`
+    """
+    if working_dir is None:
+        working_dir = Path.cwd()
+    
+
+    working_dir = Path(working_dir)
+    tarball_path = working_dir / tarball_filename
+
+    with tarfile.open(tarball_path, tarball_write_mode) as f:
+        for dir in source_dir:
+            dir = Path(dir)
+            f.add(dir, arcname=dir.name)
+
+    os.chmod(tarball_path, 436)
+
+    return tarball_path
+
+def workflows():
+    """Wrapper for tar_helper to replace previous "make workflows" command in tensorflow-minst example notebook.
+    Returns:
+        Path: Path of the archive.
+    """
+    return tar_helper(["src", "MLproject"], "workflows.tar.gz")
+
+def custom_plugins():
+    """Wrapper for tar_helper to replace previous "make custom_plugins" command in tensorflow-minst example notebook.
+    Returns:
+        Path: Path of the archive.
+    """
+    return tar_helper(["task-plugins/dioptra_custom/evaluation"], "custom-plugins-evaluation.tar.gz", working_dir="task-plugins/dioptra_custom/evaluation")
+
