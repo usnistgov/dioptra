@@ -107,8 +107,6 @@ def _setup_logging(log_level: Union[int, str] = logging.INFO) -> None:
         logger_config["level"] = "DEBUG"
         config["root"] = logger_config
     else:
-        # TODO: when this code is integrated into dioptra, update to reflect
-        # the final location of the task_engine module!
         logger_config["level"] = log_level
         config["loggers"] = {"dioptra.task_engine": logger_config}
 

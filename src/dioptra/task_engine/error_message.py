@@ -101,7 +101,6 @@ def _extract_schema_by_schema_path(
         schema = full_schema
 
     if isinstance(schema, dict) and "$ref" in schema:
-
         # jsonschema's schema paths don't actually contain "$ref" as an
         # element.  The paths pass through as if the referent was substituted
         # for the reference, and the reference wasn't even there.
@@ -127,7 +126,6 @@ def _extract_schema_by_schema_path(
         result_schema = _extract_schema_by_schema_path(ref_schema_path, full_schema)
 
     else:
-
         schema_path_it = iter(schema_path)
         next_path_component = next(schema_path_it, None)
 
@@ -135,7 +133,6 @@ def _extract_schema_by_schema_path(
             result_schema = schema
 
         else:
-
             if isinstance(schema, list):
                 # If current schema is a list, this path step must be
                 # interpretable as an integer.  We won't actually know whether
@@ -205,7 +202,6 @@ def _get_one_of_alternative_names(
 
     for idx, alternative_schema in enumerate(alternative_schemas):
         if isinstance(alternative_schema, dict):
-
             # dereference if it's just a "$ref" schema
             alternative_schema = _extract_schema_by_schema_path(
                 [], full_schema, alternative_schema
@@ -400,7 +396,6 @@ def _validation_error_to_message_lines(
 
     # Describe "what" error(s) occurred
     if error.validator == "oneOf":
-
         if error.context:
             what_lines = _one_of_no_alternatives_satisfied_message_lines(
                 error, schema, location_desc_callback

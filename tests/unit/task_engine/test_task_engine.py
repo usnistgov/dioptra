@@ -89,7 +89,6 @@ def pyplugs_register(*funcs: Callable[..., Any]) -> Iterator[None]:
         yield
 
     finally:
-
         # I don't know of any other way to unregister a plugin, so this uses
         # non-public API.
         plugin_registry = dioptra.pyplugs._plugins._PLUGINS
@@ -236,24 +235,9 @@ def test_single_call_no_args_mixed() -> None:
 
 
 @require_plugins(add)
-def test_globals_list() -> None:
-    desc = {
-        "parameters": ["global_in"],
-        "tasks": {"add": {"plugin": "tests.unit.task_engine.test_task_engine.add"}},
-        "graph": {"step1": {"add": [1, "$global_in"]}},
-    }
-
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {"global_in": 2}, mlflow_run=None
-    )
-
-    assert _output == 3
-
-
-@require_plugins(add)
 def test_globals_dict_nodefault() -> None:
     desc = {
-        "parameters": {"global_in": None},
+        "parameters": {"global_in": {"type": "integer"}},
         "tasks": {"add": {"plugin": "tests.unit.task_engine.test_task_engine.add"}},
         "graph": {"step1": {"add": [1, "$global_in"]}},
     }
@@ -295,7 +279,7 @@ def test_task_nonlist_output() -> None:
         "tasks": {
             "addsub": {
                 "plugin": "tests.unit.task_engine.test_task_engine.addsub",
-                "outputs": "value",
+                "outputs": {"value": "sometype"},
             }
         },
         "graph": {"step1": {"addsub": [1, 2]}},
@@ -312,11 +296,11 @@ def test_task_list_output() -> None:
         "tasks": {
             "addsub": {
                 "plugin": "tests.unit.task_engine.test_task_engine.addsub",
-                "outputs": ["sum", "diff"],
+                "outputs": [{"sum": "sometype"}, {"diff": "sometype"}],
             },
             "add": {
                 "plugin": "tests.unit.task_engine.test_task_engine.add",
-                "outputs": "value",
+                "outputs": {"value": "sometype"},
             },
         },
         "graph": {
@@ -341,11 +325,11 @@ def test_task_dependencies_ambig() -> None:
         "tasks": {
             "add": {
                 "plugin": "tests.unit.task_engine.test_task_engine.add",
-                "outputs": "value",
+                "outputs": {"value": "sometype"},
             },
             "square": {
                 "plugin": "tests.unit.task_engine.test_task_engine.square",
-                "outputs": "value",
+                "outputs": {"value": "sometype"},
             },
             # Bad name for a plugin.
             "dependencies": {
@@ -374,11 +358,11 @@ def test_task_task_ambig() -> None:
         "tasks": {
             "add": {
                 "plugin": "tests.unit.task_engine.test_task_engine.add",
-                "outputs": "value",
+                "outputs": {"value": "sometype"},
             },
             "square": {
                 "plugin": "tests.unit.task_engine.test_task_engine.square",
-                "outputs": "value",
+                "outputs": {"value": "sometype"},
             },
             # Bad name for a plugin.
             "task": {"plugin": "tests.unit.task_engine.test_task_engine.addsub"},
@@ -471,7 +455,7 @@ def test_output_not_found_explicit() -> None:
         "tasks": {
             "add": {
                 "plugin": "tests.unit.task_engine.test_task_engine.add",
-                "outputs": "value",
+                "outputs": {"value": "sometype"},
             },
             "square": {"plugin": "tests.unit.task_engine.test_task_engine.square"},
         },

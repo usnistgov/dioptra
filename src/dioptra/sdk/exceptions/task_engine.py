@@ -1,6 +1,8 @@
 from collections.abc import Iterable
 from typing import Any, Optional
 
+import dioptra.task_engine.types
+
 from .base import BaseTaskEngineError
 
 
@@ -92,7 +94,6 @@ class NonIterableTaskOutputError(StepError):
     """
 
     def __init__(self, value: Any, context_step_name: Optional[str] = None) -> None:
-
         super().__init__(
             "Task output was defined using a list, but the task invocation did"
             " not return an iterable value: {} ({})".format(value, type(value)),
@@ -169,5 +170,147 @@ class StepReferenceCycleError(BaseTaskEngineError):
 
     def __init__(self, cycle: Iterable[str]) -> None:
         super().__init__("Step cycle detected: {}".format(" > ".join(cycle)))
+
+        self.cycle = cycle
+
+
+class DioptraTypeError(BaseTaskEngineError):
+    # Can't name this "TypeError", since that's a builtin Python exception
+    # type!
+    """
+    An error which can occur or exist within the context of a particular
+    top-level type definition.  This class has support for storing the
+    contextual type name and producing a better error message.
+    """
+
+    def __init__(self, message: str, context_type_name: Optional[str] = None) -> None:
+        """
+        Initialize this error instance.
+
+        :param message: An error message
+        :param context_type_name: The name of the type which was the context of
+            the error, or None.  If None, the type name can be populated later,
+            e.g. filled in at a higher stack frame where the info is known.
+        """
+
+        super().__init__(message)
+
+        # Step name which is the context for this error.
+        self.context_type_name = context_type_name
+
+        self.__message = message
+
+    def __str__(self) -> str:
+        """
+        Override string representation such that it depends on what context we
+        have for the error.  With more context, we can produce a better error
+        message.
+
+        :return: A composed error message string
+        """
+        msg_parts = []
+        if self.context_type_name:
+            msg_parts.append(
+                'In definition of type "{}": '.format(self.context_type_name)
+            )
+
+        msg_parts.append(self.__message)
+
+        return "".join(msg_parts)
+
+
+class TypeNotFoundError(DioptraTypeError):
+    """
+    A reference to an unknown type was found.
+    """
+
+    def __init__(self, type_name: str, context_type_name: Optional[str] = None) -> None:
+        message = "Type not found: " + type_name
+        super().__init__(message, context_type_name)
+
+        self.type_name = type_name
+
+
+class NonSimpleSuperTypeError(DioptraTypeError):
+    """
+    A simple type definition referenced a super-type which was not simple.
+    """
+
+    def __init__(
+        self, super_type_name: str, context_type_name: Optional[str] = None
+    ) -> None:
+        message = "Super-types must be simple: " + super_type_name
+        super().__init__(message, context_type_name)
+
+        self.super_type_name = super_type_name
+
+
+class InvalidKeyTypeError(DioptraTypeError):
+    """
+    A mapping structured type was defined with an invalid key type.
+    """
+
+    def __init__(
+        self,
+        invalid_key_type: "dioptra.task_engine.types.Type",
+        context_type_name: Optional[str] = None,
+    ) -> None:
+        message = "Invalid key type; require string or integer: {!s}".format(
+            invalid_key_type
+        )
+
+        super().__init__(message, context_type_name)
+
+        self.invalid_key_type = invalid_key_type
+
+
+class TooManyTypeStructuresError(DioptraTypeError):
+    """
+    A type definition included more than one structure type.
+    """
+
+    def __init__(
+        self,
+        structure_types: Iterable["dioptra.task_engine.types.StructureType"],
+        context_type_name: Optional[str] = None,
+    ) -> None:
+        message = (
+            "A type definition may include at most one structure type." "  Found: {}"
+        ).format(", ".join(structure_type.name for structure_type in structure_types))
+
+        super().__init__(message, context_type_name)
+
+        self.structure_types = structure_types
+
+
+class InvalidTypeStructureDefinitionError(DioptraTypeError):
+    """
+    The definition of a structured type was invalid.
+    """
+
+    def __init__(self, message: str, context_type_name: Optional[str] = None) -> None:
+        super().__init__(message, context_type_name)
+
+
+class BuiltinTypeRedefinitionError(DioptraTypeError):
+    """
+    A type definition tried to redefine a builtin type.
+    """
+
+    def __init__(self, builtin_type_name: str) -> None:
+        message = "Redefinition of builtin types not allowed: {}".format(
+            builtin_type_name
+        )
+
+        super().__init__(message)
+
+        self.builtin_type_name = builtin_type_name
+
+
+class TypeReferenceCycleError(BaseTaskEngineError):
+    """A cycle was detected in a set of type definitions."""
+
+    def __init__(self, cycle: Iterable[str]) -> None:
+        super().__init__("Type reference cycle detected: {}".format(" > ".join(cycle)))
 
         self.cycle = cycle

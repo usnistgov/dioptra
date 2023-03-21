@@ -1,6 +1,7 @@
 import collections
+import itertools
 import logging
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, Union
 
 import mlflow
@@ -101,7 +102,6 @@ def _resolve_task_parameter_value(
     """
 
     if isinstance(arg_spec, str):
-
         if util.is_reference(arg_spec):
             arg_value = _resolve_reference(
                 arg_spec[1:], global_parameters, step_outputs
@@ -133,7 +133,7 @@ def _resolve_task_parameter_value(
 
 
 def _positional_specs_to_args(
-    arg_specs: Any,
+    arg_specs: Iterable[Any],
     global_parameters: Mapping[str, Any],
     step_outputs: Mapping[str, Mapping[str, Any]],
 ) -> list[Any]:
@@ -142,8 +142,7 @@ def _positional_specs_to_args(
     of actual parameter values to use in the task invocation.
 
     Args:
-        arg_specs: A single or list of argument specifications.  A single
-            (non-list) value is treated as a length one list.
+        arg_specs: A list of argument specifications.
         global_parameters: The global parameters in use for this run, as a
             mapping from parameter name to value
         step_outputs: The step outputs we have thus far.  This is a nested
@@ -152,10 +151,6 @@ def _positional_specs_to_args(
     Returns:
         A list of values to use for the invocation
     """
-    # Let a non-list value mean the same as a length-1 list, i.e.
-    # just one positional argument.
-    if not isinstance(arg_specs, list):
-        arg_specs = [arg_specs]
 
     arg_values = [
         _resolve_task_parameter_value(arg_spec, global_parameters, step_outputs)
@@ -195,8 +190,8 @@ def _kwarg_specs_to_kwargs(
     return kwarg_values
 
 
-def _arg_specs_to_args(
-    arg_specs: Any,
+def _get_invocation_args(
+    step: Mapping[str, Any],
     global_parameters: Mapping[str, Any],
     step_outputs: Mapping[str, Mapping[str, Any]],
 ) -> tuple[list[Any], dict[str, Any]]:
@@ -205,7 +200,7 @@ def _arg_specs_to_args(
     keyword arg values to use in the invocation.
 
     Args:
-        arg_specs: The task invocation specification
+        step: The step description
         global_parameters: The global parameters in use for this run, as a
             mapping from parameter name to value
         step_outputs: The step outputs we have thus far.  This is a nested
@@ -216,38 +211,16 @@ def _arg_specs_to_args(
         task invocation, followed by a mapping with keyword arg names and
         values.
     """
-    arg_values = []
-    kwarg_values = {}
 
-    if isinstance(arg_specs, dict):
-        if "task" in arg_specs:
-            # Use presence of "task" key to signal a more structured
-            # arrangement: "args" key for positional args and "kwargs" key for
-            # keyword args.
-            pos_arg_specs = arg_specs.get("args")
-            kwarg_specs = arg_specs.get("kwargs")
+    pos_arg_specs, kwarg_specs = util.step_get_invocation_arg_specs(step)
 
-            if pos_arg_specs:
-                arg_values = _positional_specs_to_args(
-                    pos_arg_specs, global_parameters, step_outputs
-                )
+    # Assume for now that validation has completed successfully, so we always
+    # have a correct step definition with arg specs?
+    arg_values = _positional_specs_to_args(
+        pos_arg_specs, global_parameters, step_outputs
+    )
 
-            if kwarg_specs:
-                kwarg_values = _kwarg_specs_to_kwargs(
-                    kwarg_specs, global_parameters, step_outputs
-                )
-
-        else:
-            # Simple kwarg-only invocation
-            kwarg_values = _kwarg_specs_to_kwargs(
-                arg_specs, global_parameters, step_outputs
-            )
-
-    else:
-        # A non-dict means a positional-arg-only invocation.
-        arg_values = _positional_specs_to_args(
-            arg_specs, global_parameters, step_outputs
-        )
+    kwarg_values = _kwarg_specs_to_kwargs(kwarg_specs, global_parameters, step_outputs)
 
     return arg_values, kwarg_values
 
@@ -255,7 +228,7 @@ def _arg_specs_to_args(
 def _update_output_map(
     step_outputs: MutableMapping[str, MutableMapping[str, Any]],
     step_name: str,
-    new_output_names: Union[str, Sequence[str]],
+    output_defs: Union[Mapping[str, str], Sequence[Mapping[str, str]]],
     new_outputs: Any,
 ) -> None:
     """
@@ -266,20 +239,21 @@ def _update_output_map(
         step_outputs: The step outputs we have thus far.  This a is nested
             mapping: step name => output name => output value.
         step_name: The name of the step for which we have output values
-        new_output_names: Task metadata regarding output names.  This may
-            be either a single or list of strings.
+        output_defs: Task metadata regarding outputs.  This may be either a
+            single or list of mappings.
         new_outputs: The output(s) from the completed step
     """
 
     log = _get_logger()
 
-    if isinstance(new_output_names, str):
-        # If output names is a string, store the task return value directly
+    if isinstance(output_defs, Mapping):
+        # If a single output is defined, store the task return value directly
         # under that name.
-        step_outputs[step_name][new_output_names] = new_outputs
+        output_name = next(iter(output_defs))
+        step_outputs[step_name][output_name] = new_outputs
 
     else:
-        # else, new_output_names is a list.  Task plugin return value must
+        # else, output_defs is a list.  Task plugin return value must
         # be iterable.
         if not util.is_iterable(new_outputs):
             raise NonIterableTaskOutputError(new_outputs, step_name)
@@ -293,23 +267,24 @@ def _update_output_map(
         except TypeError:
             num_outputs = None
 
-        num_output_names = len(new_output_names)
+        num_output_names = len(output_defs)
 
         if num_outputs is not None and num_outputs != num_output_names:
             log.warning(
-                "Warning: different numbers of outputs and output names for"
-                ' step "%s": %d != %d',
+                'Different numbers of outputs and output definitions for step "%s": %d != %d',  # noqa: B950
                 step_name,
                 num_outputs,
                 num_output_names,
             )
 
-        for output_name, output_value in zip(new_output_names, new_outputs):
+        output_names = itertools.chain.from_iterable(output_defs)
+
+        for output_name, output_value in zip(output_names, new_outputs):
             step_outputs[step_name][output_name] = output_value
 
 
 def _resolve_global_parameters(
-    global_parameter_spec: Union[list[str], Mapping[str, Any]],
+    global_parameter_spec: Mapping[str, Any],
     global_parameters: MutableMapping[str, Any],
 ) -> None:
     """
@@ -336,28 +311,17 @@ def _resolve_global_parameters(
 
     missing_parameters = []
 
-    if isinstance(global_parameter_spec, list):
-        # Global parameter spec was given as a list of names.  Semantics for
-        # this style: all parameters are required, none are defaulted.
-        for param_name in global_parameter_spec:
-            if param_name not in global_parameters:
-                missing_parameters.append(param_name)
-
-        extra_parameters = global_parameters.keys() - set(global_parameter_spec)
-
-    else:
-        # Global parameter spec is a dict/mapping.  Semantics for this style
-        # are that all parameters are required; some may be defaulted.
-        for param_name, spec_value in global_parameter_spec.items():
-            if param_name not in global_parameters:
-                if isinstance(spec_value, dict):
-                    global_parameters[param_name] = spec_value["default"]
-                elif spec_value is not None:
-                    global_parameters[param_name] = spec_value
+    for param_name, param_def in global_parameter_spec.items():
+        if param_name not in global_parameters:
+            if isinstance(param_def, dict):
+                if "default" in param_def:
+                    global_parameters[param_name] = param_def["default"]
                 else:
                     missing_parameters.append(param_name)
+            else:
+                global_parameters[param_name] = param_def
 
-        extra_parameters = global_parameters.keys() - global_parameter_spec.keys()
+    extra_parameters = global_parameters.keys() - global_parameter_spec.keys()
 
     if missing_parameters:
         raise MissingGlobalParametersError(missing_parameters)
@@ -435,20 +399,8 @@ def _run_step(
 
     log = _get_logger()
 
-    # Make a shallow-copy without "dependencies", as it is not relevant to
-    # finding task plugin arguments.  Removing the property means subsequent
-    # code won't have to deal with it.  (A shallow copy avoids modifying the
-    # caller's structure.)
-    step = dict(step)
-    step.pop("dependencies", None)
-
-    if "task" in step:
-        arg_specs = step
-    else:
-        _, arg_specs = next(iter(step.items()))
-
-    arg_values, kwarg_values = _arg_specs_to_args(
-        arg_specs, global_parameters, step_outputs
+    arg_values, kwarg_values = _get_invocation_args(
+        step, global_parameters, step_outputs
     )
 
     if arg_values:
@@ -480,7 +432,7 @@ def _run_experiment(
 
     log = _get_logger()
 
-    global_parameter_spec = experiment_desc.get("parameters", [])
+    global_parameter_spec = experiment_desc.get("parameters", {})
     tasks = experiment_desc["tasks"]
     graph = experiment_desc["graph"]
 
@@ -502,7 +454,6 @@ def _run_experiment(
     log.debug("Step order:\n  %s", "\n  ".join(step_order))
 
     for step_name in step_order:
-
         try:
             log.info("Running step: %s", step_name)
 
@@ -520,9 +471,9 @@ def _run_experiment(
 
             output = _run_step(step, task_plugin_id, global_parameters, step_outputs)
 
-            output_names = task_def.get("outputs")
-            if output_names:
-                _update_output_map(step_outputs, step_name, output_names, output)
+            output_defs = task_def.get("outputs")
+            if output_defs:
+                _update_output_map(step_outputs, step_name, output_defs, output)
                 log.debug("Output(s): %s", str(step_outputs[step_name]))
 
             # else: should I warn if there was an output from the task but no

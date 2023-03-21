@@ -1,6 +1,6 @@
-import itertools
-from collections.abc import Container, Iterator, Mapping, MutableSequence, MutableSet
-from typing import Any, Callable, Optional, Sequence, Union
+import graphlib
+from collections.abc import Callable, Container, Iterator, Mapping, Sequence
+from typing import Any, Optional, Union
 
 import jsonschema.validators
 
@@ -91,6 +91,54 @@ def step_get_plugin_short_name(step: Mapping[str, Any]) -> Optional[str]:
     return plugin_name
 
 
+def step_get_invocation_arg_specs(
+    step_def: Mapping[str, Any]
+) -> Union[tuple[list[Any], Mapping[str, Any]], tuple[None, None]]:
+    """
+    Get invocation positional and keyword arg specs from the given step.  This
+    just extracts and returns the specs as they are and doesn't resolve any
+    references.
+
+    :param step_def: A task graph step definition
+    :return: A 2-tuple consisting of positional args and keyword args.
+        Positional args are returned as a list of values; keyword args are
+        returned as a mapping from name to value.  Either collection may be
+        empty.  If no arg specs could be found in the step definition, (None,
+        None) is returned.  This is different from empty arg specs.  If no arg
+        specs are found, that means the step definition is malformed.
+    """
+
+    task_plugin_short_name = step_get_plugin_short_name(step_def)
+    if task_plugin_short_name is None:
+        pos_arg_specs = kwarg_specs = None
+
+    else:
+        if "task" in step_def:
+            # Mixed step definition
+            pos_arg_specs = step_def.get("args", [])
+            kwarg_specs = step_def.get("kwargs", {})
+
+        else:
+            # Positional or keyword step definition
+            arg_specs = step_def[task_plugin_short_name]
+
+            if isinstance(arg_specs, dict):
+                # Must be keyword
+                pos_arg_specs = []
+                kwarg_specs = arg_specs
+
+            else:
+                # Must be positional
+                pos_arg_specs = arg_specs
+                kwarg_specs = {}
+
+        if not isinstance(pos_arg_specs, list):
+            # ensure positional args are in a list
+            pos_arg_specs = [pos_arg_specs]
+
+    return pos_arg_specs, kwarg_specs
+
+
 def is_reference(value: str) -> bool:
     """
     Determine whether the given string, as may be found in a task invocation
@@ -126,7 +174,6 @@ def get_references(input_: Any) -> Iterator[str]:
     """
 
     if isinstance(input_, str):
-
         if is_reference(input_):
             yield input_[1:]  # drop the leading "$"
 
@@ -172,92 +219,85 @@ def _get_step_references(input_: Any, step_names: Container[str]) -> Iterator[st
             yield step_name
 
 
-def _step_dfs(
-    step_graph: Mapping[str, Any],
-    curr_step_name: str,
-    visited_steps: MutableSet[str],
-    search_path: MutableSequence[str],
-) -> list[str]:
+def get_sorted_steps(step_graph: Mapping[str, Any]) -> list[str]:
     """
-    Perform depth-first search through the task graph, to produce a total order
-    over step names which is compatible with the steps' dependencies.
+    Find a topological sorted list of step names for the given graph.
 
     Args:
-        step_graph: The task graph data from the experiment description.  This
-            maps step names to task invocations.
-        curr_step_name: The start node of the DFS (since the algorithm is
-            recursive, this actually tracks the "current node" through the
-            recursive calls).
-        visited_steps: Set containing steps which have already been visited, to
-            avoid visiting any step more than once.  Steps are added to this
-            set as the search proceeds.
-        search_path: A list (acting as a stack) of step names on the current
-            search path, used to detect cycles.  Steps are pushed and popped
-            from this list as the search proceeds.
+        step_graph: Step definitions, as a mapping from step name to step
+            definition.
 
     Returns:
-        A list of the steps reachable from the start, in topological sorted
-        order
+        A list of step names
     """
+    topo_sorter: graphlib.TopologicalSorter = graphlib.TopologicalSorter()
 
-    if curr_step_name not in step_graph:
-        raise StepNotFoundError(curr_step_name)
+    for step_name, step_def in step_graph.items():
+        topo_sorter.add(step_name)
 
-    if curr_step_name in search_path:
-        cycle_start_idx = search_path.index(curr_step_name)
-        cycle = search_path[cycle_start_idx:]
-        cycle.append(curr_step_name)
-        raise StepReferenceCycleError(cycle)
+        for dep_step_name in _get_step_references(step_def, step_graph.keys()):
+            if dep_step_name in step_graph:
+                topo_sorter.add(step_name, dep_step_name)
+            else:
+                raise StepNotFoundError(dep_step_name, step_name)
 
-    sorted_steps = []
-
-    if curr_step_name not in visited_steps:
-
-        curr_step = step_graph[curr_step_name]
-        visited_steps.add(curr_step_name)
-        search_path.append(curr_step_name)
-
-        # All dependencies include those implied by declared task inputs,
-        # and those explicitly listed as dependencies (via the "dependencies"
-        # key).
-
-        implicit_deps = _get_step_references(curr_step, step_graph.keys())
-
-        explicit_deps = curr_step.get("dependencies", [])
+        explicit_deps = step_def.get("dependencies", [])
         if isinstance(explicit_deps, str):
             explicit_deps = [explicit_deps]
 
-        all_dependencies = itertools.chain(implicit_deps, explicit_deps)
+        for dep_step_name in explicit_deps:
+            if dep_step_name in step_graph:
+                topo_sorter.add(step_name, dep_step_name)
+            else:
+                raise StepNotFoundError(dep_step_name, step_name)
 
-        for next_step_name in all_dependencies:
-            sub_sorted = _step_dfs(
-                step_graph, next_step_name, visited_steps, search_path
-            )
-            sorted_steps.extend(sub_sorted)
-
-        search_path.pop()
-        sorted_steps.append(curr_step_name)
-
-    return sorted_steps
-
-
-def get_sorted_steps(step_graph: Mapping[str, Any]) -> list[str]:
-    """
-    Topological sorts the step graph to obtain a sequential execution order.
-
-    Args:
-        step_graph: The task graph data from the experiment description.  This
-            maps step names to task invocations.
-
-    Returns:
-        A list of all step names in the graph, in topological sorted order
-            according to their dependencies
-    """
-
-    sorted_steps = []
-    visited_steps: MutableSet[str] = set()
-    for step in step_graph:
-        sub_sorted = _step_dfs(step_graph, step, visited_steps, [])
-        sorted_steps.extend(sub_sorted)
+    try:
+        sorted_steps = list(topo_sorter.static_order())
+    except graphlib.CycleError as e:
+        raise StepReferenceCycleError(e.args[1]) from e
 
     return sorted_steps
+
+
+def input_def_get_name_type(in_def: Mapping[str, Any]) -> tuple[str, str]:
+    """
+    Get a parameter name and type from a task input parameter definition.
+
+    :param in_def: A task input definition
+    :return: A (name, type) 2-tuple
+    """
+    if "name" in in_def:
+        in_name = in_def["name"]
+        in_type = in_def["type"]
+
+    else:
+        in_name, in_type = next(iter(in_def.items()))
+
+    return in_name, in_type
+
+
+def make_task_input_map(task_def: Mapping[str, Any]) -> Mapping[str, Any]:
+    """
+    Make a mapping from task input parameter name to parameter definition,
+    from the given task definition.  Since python dicts remember insertion
+    order (as iteration order), if we are deliberate about insertion order, we
+    can use the mapping for both positional and keyword arg validation: we can
+    be sure that the Nth positional task invocation parameter can be matched to
+    the Nth map item in iteration order.
+
+    :param task_def: A task definition
+    :return: A mapping from task input parameter name to definition
+    """
+    task_inputs = task_def.get("inputs", [])
+
+    if not isinstance(task_inputs, list):
+        task_inputs = [task_inputs]
+
+    task_inputs_map = {}
+    for task_input in task_inputs:
+        input_name, _ = input_def_get_name_type(task_input)
+
+        # Assume all these names are unique.
+        task_inputs_map[input_name] = task_input
+
+    return task_inputs_map
