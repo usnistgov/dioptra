@@ -1,0 +1,8 @@
+aiohttp>=3.8.0
+Click>=8.0.0,<9
+kaggle>=1.15.0
+numpy>=1.22.0,<2
+Pillow>=9.2.0
+requests>=2.25,<3
+rich>=13.3.0
+universal_pathlib>=0.0.23
