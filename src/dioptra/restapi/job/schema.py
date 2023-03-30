@@ -27,6 +27,8 @@ from typing import Any, Dict
 from marshmallow import Schema, fields, post_dump, post_load, pre_dump, validate
 from werkzeug.datastructures import FileStorage
 
+from dioptra.restapi.utils import slugify
+
 from .model import Job, JobForm, JobFormData
 
 
@@ -206,9 +208,6 @@ class JobFormSchema(Schema):
         self, data: JobForm, many: bool, **kwargs
     ) -> Dict[str, Any]:
         """Extracts data from the |JobForm| for validation."""
-
-        def slugify(text: str) -> str:
-            return text.lower().strip().replace(" ", "-")
 
         return {
             "experiment_name": slugify(data.experiment_name.data),

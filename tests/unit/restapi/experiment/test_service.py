@@ -157,3 +157,32 @@ def test_extract_data_from_form(
     )
 
     assert experiment_registration_form_data["name"] == "mnist"
+
+
+@freeze_time("2020-08-17T18:46:28.717559")
+@pytest.mark.parametrize(
+    "slugified_name,requested_name",
+    [
+        ("mnist", "MNIST"),
+        ("my-experiment", "My Experiment"),
+        ("abc_my-experiment", "ABc_My Experiment"),
+    ],
+)
+def test_get_by_name_slugification(
+    db: SQLAlchemy,
+    experiment_service: ExperimentService,
+    slugified_name: str,
+    requested_name: str,
+):
+    timestamp: datetime.datetime = datetime.datetime.now()
+
+    new_experiment: Experiment = Experiment(
+        name=slugified_name, created_on=timestamp, last_modified=timestamp
+    )
+
+    db.session.add(new_experiment)
+    db.session.commit()
+
+    experiment: Experiment = experiment_service.get_by_name(requested_name)
+
+    assert experiment == new_experiment
