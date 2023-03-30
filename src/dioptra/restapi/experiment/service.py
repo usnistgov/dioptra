@@ -27,6 +27,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.app import db
 from dioptra.restapi.shared.mlflow_tracking.service import MLFlowTrackingService
+from dioptra.restapi.utils import slugify
 
 from .errors import (
     ExperimentAlreadyExistsError,
@@ -120,6 +121,8 @@ class ExperimentService(object):
         self, experiment: Experiment, new_name: str, **kwargs
     ) -> Experiment:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+
+        new_name = slugify(new_name)
         reply: Optional[bool] = self._mlflow_tracking_service.rename_experiment(
             experiment_id=experiment.experiment_id, new_name=new_name
         )
@@ -151,6 +154,7 @@ class ExperimentService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Lookup experiment by unique name", experiment_name=experiment_name)
 
+        experiment_name = slugify(experiment_name)
         return Experiment.query.filter_by(  # type: ignore
             name=experiment_name, is_deleted=False
         ).first()

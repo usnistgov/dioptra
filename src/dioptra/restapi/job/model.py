@@ -30,6 +30,7 @@ from wtforms.validators import Optional as OptionalField
 from wtforms.validators import Regexp, ValidationError
 
 from dioptra.restapi.app import db
+from dioptra.restapi.utils import slugify
 
 from .interface import JobUpdateInterface
 
@@ -174,9 +175,6 @@ class JobForm(FlaskForm):
         """
         from dioptra.restapi.models import Experiment
 
-        def slugify(text: str) -> str:
-            return text.lower().strip().replace(" ", "-")
-
         standardized_name: str = slugify(field.data)
 
         if (
@@ -195,9 +193,6 @@ class JobForm(FlaskForm):
             field: The form field for `queue`.
         """
         from dioptra.restapi.models import Queue, QueueLock
-
-        def slugify(text: str) -> str:
-            return text.lower().strip().replace(" ", "-")
 
         standardized_name: str = slugify(field.data)
         queue: Optional[Queue] = (
