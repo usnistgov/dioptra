@@ -8,6 +8,7 @@ marshmallow>=3.9.0,<4
 mistune<2
 multimethod>=1.5
 plantuml-markdown
+pydata-sphinx-theme==0.13.1
 pymdown-extensions
 recommonmark
 Sphinx>=4.5.0,<5
