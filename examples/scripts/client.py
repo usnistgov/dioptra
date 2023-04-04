@@ -14,20 +14,19 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
 import os
 from pathlib import Path
 from posixpath import join as urljoin
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 import requests
-from IPython.display import HTML
-
-PathLike = List[Union[str, Path]]
 
 
 class DioptraClient(object):
-    def __init__(self, address: Optional[str] = None) -> None:
+    def __init__(self, address: str | None = None) -> None:
         address = (
             f"{address}/api" if address else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api"
         )
@@ -115,22 +114,22 @@ class DioptraClient(object):
         task_plugin_name_query: str = urljoin(self.task_plugin_custom_endpoint, name)
         return requests.get(task_plugin_name_query).json()
 
-    def list_experiments(self) -> List[Dict[str, Any]]:
+    def list_experiments(self) -> list[dict[str, Any]]:
         return requests.get(self.experiment_endpoint).json()
 
-    def list_jobs(self) -> List[Dict[str, Any]]:
+    def list_jobs(self) -> list[dict[str, Any]]:
         return requests.get(self.job_endpoint).json()
 
-    def list_queues(self) -> List[Dict[str, Any]]:
+    def list_queues(self) -> list[dict[str, Any]]:
         return requests.get(self.queue_endpoint).json()
 
-    def list_all_task_plugins(self) -> List[Dict[str, Any]]:
+    def list_all_task_plugins(self) -> list[dict[str, Any]]:
         return requests.get(self.task_plugin_endpoint).json()
 
-    def list_builtin_task_plugins(self) -> List[Dict[str, Any]]:
+    def list_builtin_task_plugins(self) -> list[dict[str, Any]]:
         return requests.get(self.task_plugin_builtins_endpoint).json()
 
-    def list_custom_task_plugins(self) -> List[Dict[str, Any]]:
+    def list_custom_task_plugins(self) -> list[dict[str, Any]]:
         return requests.get(self.task_plugin_custom_endpoint).json()
 
     def lock_queue(self, name: str):
@@ -141,7 +140,7 @@ class DioptraClient(object):
         queue_name_query: str = urljoin(self.queue_endpoint, "name", name, "lock")
         return requests.delete(queue_name_query).json()
 
-    def register_experiment(self, name: str) -> Dict[str, Any]:
+    def register_experiment(self, name: str) -> dict[str, Any]:
         experiment_registration_form = {"name": name}
 
         response = requests.post(
@@ -151,7 +150,7 @@ class DioptraClient(object):
 
         return response.json()
 
-    def register_queue(self, name: str = "tensorflow_cpu") -> Dict[str, Any]:
+    def register_queue(self, name: str = "tensorflow_cpu") -> dict[str, Any]:
         queue_registration_form = {"name": name}
 
         response = requests.post(
@@ -163,14 +162,14 @@ class DioptraClient(object):
 
     def submit_job(
         self,
-        workflows_file: PathLike,
+        workflows_file: str | Path,
         experiment_name: str,
         entry_point: str,
-        entry_point_kwargs: Optional[str] = None,
-        depends_on: Optional[str] = None,
+        entry_point_kwargs: str | None = None,
+        depends_on: str | None = None,
         queue: str = "tensorflow_cpu",
         timeout: str = "24h",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         job_form = {
             "experiment_name": experiment_name,
             "queue": queue,
@@ -199,9 +198,9 @@ class DioptraClient(object):
     def upload_custom_plugin_package(
         self,
         custom_plugin_name: str,
-        custom_plugin_file: PathLike,
+        custom_plugin_file: str | Path,
         collection: str = "dioptra_custom",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         plugin_upload_form = {
             "task_plugin_name": custom_plugin_name,
             "collection": collection,
@@ -218,35 +217,3 @@ class DioptraClient(object):
             )
 
         return response.json()
-
-
-def notebook_gallery(images: PathLike, row_height: str = "auto") -> HTML:
-    """Display a set of images in a gallery that flexes with the width of the notebook.
-
-    Adapted from https://mindtrove.info/jupyter-tidbit-image-gallery/.
-
-    Args:
-        images: Filepaths of images to display
-
-        row_height: CSS height value to assign to all images. Set to 'auto' by default
-            to show images with their native dimensions. Set to a value like '250px' to
-            make all rows in the gallery equal height.
-    """
-    figures = []
-    for image in images:
-        caption = f'<figcaption style="font-size: 0.6em">{image}</figcaption>'
-        figures.append(
-            f"""
-            <figure style="margin: 5px !important;">
-              <img src="{image}" style="height: {row_height}">
-              {caption}
-            </figure>
-        """
-        )
-    return HTML(
-        data=f"""
-        <div style="display: flex; flex-flow: row wrap; text-align: center;">
-        {''.join(figures)}
-        </div>
-    """
-    )
