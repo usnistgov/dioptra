@@ -41,6 +41,7 @@ Email us: dioptra@nist.gov
 
    getting-started/building-the-containers
    getting-started/running-dioptra
+   getting-started/acquiring-datasets
 .. getting-started/installation
 
 .. toctree::
@@ -80,4 +81,3 @@ Email us: dioptra@nist.gov
 
    deployment-guide/system-requirements
    deployment-guide/docker-images-list-and-settings
-   deployment-guide/obtaining-datasets
