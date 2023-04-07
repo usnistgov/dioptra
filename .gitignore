@@ -11,6 +11,11 @@ examples/**/mlruns
 examples/**/s3
 
 # ---------------------------
+# BEGIN Development files
+# ---------------------------
+dioptra-dev.db
+
+# ---------------------------
 # BEGIN ignore basic files
 # ---------------------------
 
