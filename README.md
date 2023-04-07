@@ -7,7 +7,7 @@ The project documentation is available at https://pages.nist.gov/dioptra/.
 
 ## User setup
 
-For instructions on how to build and run a fresh instance of Dioptra, see [cookiecutter-templates/README.md](cookiecutter-templates/README.md) and the [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) sections of the published documentation.
+For instructions on how to build and run a fresh instance of Dioptra, see [cookiecutter-templates/cookiecutter-dioptra-deployment/README.md](cookiecutter-templates/cookiecutter-dioptra-deployment/README.md) and the [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) sections of the published documentation.
 
 ## Developer setup
 
