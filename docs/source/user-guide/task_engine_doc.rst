@@ -9,12 +9,12 @@ This document describes the data structure used to represent an experiment.
 Goals
 =====
 
-The goal of this declarative description is to describe a task graph in a DAG
-topology.  The nodes of this graph correspond to simple Python functions,
-where the outputs of some functions may be fed into others as inputs.  The
-operation of the overall graph may be parameterized via a set of name-value
-pairs.  This allows the invoker some control over what the graph of functions
-does.
+The goal of this declarative description is to describe a task graph in a
+directed acyclic graph (DAG) topology.  The nodes of this graph correspond to
+simple Python functions, where the outputs of some functions may be fed into
+others as inputs.  The operation of the overall graph may be parameterized via
+a set of name-value pairs.  This allows the invoker some control over what the
+graph of functions does.
 
 Structure and Format
 ====================
@@ -26,6 +26,47 @@ obtained somehow.  It consists of a nesting of basic types, including lists,
 dicts, ints, etc, in the structure prescribed below.  Nevertheless, to describe
 the structure textually in this document, a familiar format is chosen: YAML.
 Implementations may make different choices.
+
+Notes on YAML
+-------------
+
+A full description of `YAML <https://yaml.org/>`_ is out of scope for this
+document, but to help readers less familiar with the syntax, below are some
+brief notes about how it works.
+
+YAML can represent a data structure similar to JSON.  Whereas JSON's container
+types include "array" and "object", in YAML these are called "sequence" and
+"mapping".  YAML allows flexibility in how these types are serialized
+(represented textually); these choices are called *styles*.  There are two
+broad YAML styles, called *block style* and *flow style*.  The YAML snippets
+given in this document will use either style, depending on what results in the
+clearest presentation of the content.
+
+Example YAML mapping, block style:
+
+.. code:: YAML
+
+    key1: value1
+    key2: value2
+
+Example YAML mapping, flow style:
+
+.. code:: YAML
+
+    {key1: value1, key2: value2}
+
+Example YAML sequence, block style:
+
+.. code:: YAML
+
+    - value1
+    - value2
+
+Example YAML sequence, flow style:
+
+.. code:: YAML
+
+    [value1, value2]
 
 Structure Description
 =====================
@@ -70,6 +111,10 @@ definition:
 
 There are three kinds of types: *simple*, *structured*, and *union*.  These are
 discussed in the following subsections.
+
+There are a handful of `builtin <builtin_types_>`_ types as well, whose names
+are reserved: authors must not try to redefine them.  These include ``string``,
+``integer``, ``number``, ``boolean``, ``null``, and ``any``.
 
 Simple Types
 ~~~~~~~~~~~~
@@ -347,6 +392,7 @@ The long form is distinguished by the presence of the ``name`` key.  That means
 if a task plugin input is named "name", the long form must be used.  The above
 example also shows the ``required`` key.  Usage of this key is optional and
 defaults to true, i.e. all defined task plugin inputs are required by default.
+Long form must be used in order to define an input as optional.
 
 Task Outputs
 ~~~~~~~~~~~~
