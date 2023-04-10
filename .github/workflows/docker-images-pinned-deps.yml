@@ -24,7 +24,7 @@ on:
       - "main"
       - "dev"
     tags:
-      - "v*.*.*"
+      - "*.*.*"
   pull_request:
     branches:
       - "main"
@@ -156,7 +156,7 @@ jobs:
 
       - name: get pip cache dir
         id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: cache dependencies
         uses: actions/cache@v3.3.1
@@ -216,7 +216,7 @@ jobs:
 
       - name: get pip cache dir
         id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: cache dependencies
         uses: actions/cache@v3.3.1
