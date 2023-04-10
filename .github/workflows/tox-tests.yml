@@ -21,14 +21,71 @@ on:
     branches:
       - "**"
     tags:
-      - "v*.*.*"
+      - "*.*.*"
 
 jobs:
+  linting-and-style-checks:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+        tox-testenv:
+          - "black"
+          - "flake8"
+          - "gitlint"
+          - "isort"
+          - "mypy"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4.5.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: upgrade pip
+        run: |
+          # install pip=>20.1 to use "pip cache dir"
+          python3 -m pip install --upgrade pip
+
+      - name: get pip cache dir
+        id: pip-cache
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: cache dependencies
+        uses: actions/cache@v3.3.1
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: install dependencies
+        run: python3 -m pip install tox
+
+      - name: run tox
+        run: python3 -m tox run -e ${{ matrix.tox-testenv }}
+
   unit-tests:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         python-version: ["3.9", "3.10"]
+        tox-testenv:
+          - "clean,py39-pytest-cov,report"
+          - "clean,py310-pytest-cov,report"
+          - "py39-cookiecutter"
+          - "py310-cookiecutter"
+        exclude:
+          - python-version: "3.9"
+            tox-testenv: "clean,py310-pytest-cov,report"
+          - python-version: "3.9"
+            tox-testenv: "py310-cookiecutter"
+          - python-version: "3.10"
+            tox-testenv: "clean,py39-pytest-cov,report"
+          - python-version: "3.10"
+            tox-testenv: "py39-cookiecutter"
 
     steps:
       - uses: actions/checkout@v3
@@ -48,13 +105,13 @@ jobs:
 
       - name: get pip cache dir
         id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: cache dependencies
         uses: actions/cache@v3.3.1
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini', '**/setup.cfg') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -62,10 +119,11 @@ jobs:
         run: python3 -m pip install tox
 
       - name: run tox
-        run: tox
+        run: python3 -m tox run -e ${{ matrix.tox-testenv }}
 
       - name: archive the code coverage results
+        if: ${{ contains(matrix.tox-testenv, 'pytest-cov') }}
         uses: actions/upload-artifact@v3
         with:
-          name: code-coverage-report
+          name: code-coverage-report-${{ matrix.python-version }}
           path: coverage

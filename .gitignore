@@ -384,6 +384,7 @@ site/
 target/
 venv/
 venv.bak/
+venvs/
 wheels/
 
 # R

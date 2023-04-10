@@ -21,37 +21,6 @@
 
 ARG TENSORFLOW_NVIDIA_CUDA_VERSION
 
-# -- Prerequisite: render bash script templates ------------------------------------------------------
-
-FROM matejak/argbash:latest AS shellscripts
-
-COPY --chown=root:root --chmod=0755 docker/shellscripts/conda-env.m4 /templates/conda-env.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-worker.m4 /templates/entrypoint-worker.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/fix-permissions.m4 /templates/fix-permissions.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/healthcheck-worker.m4 /templates/healthcheck-worker.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/parse-uri.m4 /templates/parse-uri.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/render-conda-env.m4 /templates/render-conda-env.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/run-mlflow-job.m4 /templates/run-mlflow-job.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-cp.m4 /templates/s3-cp.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-mb.m4 /templates/s3-mb.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-sync.m4 /templates/s3-sync.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/unpack-archive.m4 /templates/unpack-archive.m4
-
-COPY --chown=root:root --chmod=0755 docker/shellscripts/wait-for-it.sh /shellscripts/wait-for-it.sh
-
-RUN mkdir -p /shellscripts && \
-    argbash /templates/conda-env.m4 -o /shellscripts/conda-env.sh && \
-    argbash /templates/entrypoint-worker.m4 -o /shellscripts/entrypoint-worker.sh && \
-    argbash /templates/fix-permissions.m4 -o /shellscripts/fix-permissions.sh && \
-    argbash /templates/healthcheck-worker.m4 -o /shellscripts/healthcheck-worker.sh && \
-    argbash /templates/parse-uri.m4 -o /shellscripts/parse-uri.sh && \
-    argbash /templates/render-conda-env.m4 -o /shellscripts/render-conda-env.sh && \
-    argbash /templates/run-mlflow-job.m4 -o /shellscripts/run-mlflow-job.sh && \
-    argbash /templates/s3-cp.m4 -o /shellscripts/s3-cp.sh && \
-    argbash /templates/s3-mb.m4 -o /shellscripts/s3-mb.sh && \
-    argbash /templates/s3-sync.m4 -o /shellscripts/s3-sync.sh && \
-    argbash /templates/unpack-archive.m4 -o /shellscripts/unpack-archive.sh
-
 # -- Prerequisite: copy files ------------------------------------------------------------------------
 
 FROM nvidia/cuda:${TENSORFLOW_NVIDIA_CUDA_VERSION} AS copy-files
@@ -132,7 +101,21 @@ FROM certs-base AS build-base
 
 RUN echo "===> Installing compilers...." && \
     apt-get update && \
-    apt-get install -yq --no-install-recommends build-essential swig
+    apt-get install -yq --no-install-recommends autoconf build-essential swig
+
+# -- Base image (argbash) ----------------------------------------------------------------------------
+
+FROM build-base AS argbash-base
+
+ARG ARGBASH_VERSION=2.10.0
+
+RUN cd /tmp && \
+    curl -L -o "/tmp/argbash.tar.gz" "https://github.com/matejak/argbash/archive/refs/tags/${ARGBASH_VERSION}.tar.gz" && \
+    tar xf /tmp/argbash.tar.gz && \
+    cd /tmp/argbash-${ARGBASH_VERSION}/resources && \
+    make install PREFIX=/usr/local && \
+    cd / && \
+    rm -rf /tmp/argbash.tar.gz /tmp/argbash-${ARGBASH_VERSION}
 
 # -- Base image (includes system Python with build package) ------------------------------------------
 
@@ -164,6 +147,37 @@ RUN mkdir -p /conda-env && \
 ######################################################################################################
 # Build
 ######################################################################################################
+
+# -- Build: render bash script templates ------------------------------------------------------
+
+FROM matejak/argbash:latest AS shellscripts
+
+COPY --chown=root:root --chmod=0755 docker/shellscripts/conda-env.m4 /templates/conda-env.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-worker.m4 /templates/entrypoint-worker.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/fix-permissions.m4 /templates/fix-permissions.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/healthcheck-worker.m4 /templates/healthcheck-worker.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/parse-uri.m4 /templates/parse-uri.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/render-conda-env.m4 /templates/render-conda-env.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/run-mlflow-job.m4 /templates/run-mlflow-job.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-cp.m4 /templates/s3-cp.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-mb.m4 /templates/s3-mb.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-sync.m4 /templates/s3-sync.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/unpack-archive.m4 /templates/unpack-archive.m4
+
+COPY --chown=root:root --chmod=0755 docker/shellscripts/wait-for-it.sh /shellscripts/wait-for-it.sh
+
+RUN mkdir -p /shellscripts && \
+    argbash /templates/conda-env.m4 -o /shellscripts/conda-env.sh && \
+    argbash /templates/entrypoint-worker.m4 -o /shellscripts/entrypoint-worker.sh && \
+    argbash /templates/fix-permissions.m4 -o /shellscripts/fix-permissions.sh && \
+    argbash /templates/healthcheck-worker.m4 -o /shellscripts/healthcheck-worker.sh && \
+    argbash /templates/parse-uri.m4 -o /shellscripts/parse-uri.sh && \
+    argbash /templates/render-conda-env.m4 -o /shellscripts/render-conda-env.sh && \
+    argbash /templates/run-mlflow-job.m4 -o /shellscripts/run-mlflow-job.sh && \
+    argbash /templates/s3-cp.m4 -o /shellscripts/s3-cp.sh && \
+    argbash /templates/s3-mb.m4 -o /shellscripts/s3-mb.sh && \
+    argbash /templates/s3-sync.m4 -o /shellscripts/s3-sync.sh && \
+    argbash /templates/unpack-archive.m4 -o /shellscripts/unpack-archive.sh
 
 # -- Build: render environment.yml templates ---------------------------------------------------------
 
@@ -249,8 +263,6 @@ COPY --chown=root:root --chmod=0644 LICENSE /code/LICENSE
 COPY --chown=root:root --chmod=0644 MANIFEST.in /code/MANIFEST.in
 COPY --chown=root:root --chmod=0644 pyproject.toml /code/pyproject.toml
 COPY --chown=root:root --chmod=0644 README.md /code/README.md
-COPY --chown=root:root --chmod=0644 setup.cfg /code/setup.cfg
-COPY --chown=root:root --chmod=0644 setup.py /code/setup.py
 COPY --chown=root:root --chmod=0644 tox.ini /code/tox.ini
 COPY --chown=root:root --chmod=0644 docs/make.bat /code/docs/make.bat
 COPY --chown=root:root --chmod=0644 docs/Makefile /code/docs/Makefile
