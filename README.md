@@ -41,6 +41,9 @@ Ensure that you have Python 3.9 installed and that it is available in your PATH,
 | macos-x86_64-py3.9-requirements-dev.txt | MacOS | x86-64 | ❌ | ❌ |
 | macos-x86_64-py3.9-requirements-dev-tensorflow.txt | MacOS | x86-64 | ✅ | ❌ |
 | macos-x86_64-py3.9-requirements-dev-pytorch.txt | MacOS | x86-64 | ❌ | ✅ |
+| macos-arm64-py3.9-requirements-dev.txt | MacOS | arm64 | ❌ | ❌ |
+| macos-arm64-py3.9-requirements-dev-tensorflow.txt | MacOS | arm64 | ✅ | ❌ |
+| macos-arm64-py3.9-requirements-dev-pytorch.txt | MacOS | arm64 | ❌ | ✅ |
 | win-x86_64-py3.9-requirements-dev.txt | Windows | x86-64 | ❌ | ❌ |
 | win-x86_64-py3.9-requirements-dev-tensorflow.txt | Windows | x86-64 | ✅ | ❌ |
 | win-x86_64-py3.9-requirements-dev-pytorch.txt | Windows | x86-64 | ❌ | ✅ |
