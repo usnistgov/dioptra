@@ -16,6 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+import os
 import tarfile
 from pathlib import Path
 
@@ -26,7 +27,10 @@ def make_tar(
     tarball_write_mode: str = "w:gz",
     working_dir: str | Path | None = None,
 ) -> Path:
-    """Archives a list of directories and files and compresses the archive.
+    """Archive a list of directories and files.
+    
+    This implementation flattens the source directory structure so that all the files
+    are placed in the root of the archive, and then the archive is compressed.
 
     Args:
         source_dir: The directories and files which should be archived.
@@ -52,6 +56,12 @@ def make_tar(
     with tarfile.open(tarball_path, tarball_write_mode) as f:
         for dir in source_dir:
             dir = Path(dir)
-            f.add(dir, arcname=dir.name)
+            if dir.is_dir():
+                for dirpath, dirnames, filenames in os.walk(dir):
+                    for name in filenames:
+                        name = Path(dirpath, name)
+                        f.add(name, name.name)
+            else:
+                f.add(dir, dir.name)
 
     return tarball_path
