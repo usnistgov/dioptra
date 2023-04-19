@@ -56,7 +56,7 @@ def make_tar(
     with tarfile.open(tarball_path, tarball_write_mode) as f:
         for dir in source_dir:
             dir = Path(dir)
-            if os.path.isdir(dir):
+            if dir.is_dir():
                 for dirpath, dirnames, filenames in os.walk(dir):
                     for name in filenames:
                         name = Path(os.path.join(dirpath, name))
