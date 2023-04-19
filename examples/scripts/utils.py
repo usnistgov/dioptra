@@ -59,7 +59,7 @@ def make_tar(
             if dir.is_dir():
                 for dirpath, dirnames, filenames in os.walk(dir):
                     for name in filenames:
-                        name = Path(os.path.join(dirpath, name))
+                        name = Path(dirpath, name)
                         f.add(name, name.name)
             else:
                 f.add(dir, dir.name)
