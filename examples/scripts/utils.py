@@ -27,8 +27,10 @@ def make_tar(
     tarball_write_mode: str = "w:gz",
     working_dir: str | Path | None = None,
 ) -> Path:
-    """Archives a list of directories and files, flattening the directory struture
-    and then compresses the archive.
+    """Archive a list of directories and files.
+    
+    This implementation flattens the source directory structure so that all the files
+    are placed in the root of the archive, and then the archive is compressed.
 
     Args:
         source_dir: The directories and files which should be archived.
