@@ -181,6 +181,7 @@ dependencies:
     - flask-migrate==3.1.0
     - flask-restx==0.5.1
     - flask-sqlalchemy==2.5.1
+    - flask-cors==3.0.10
     - flask-wtf==1.0.1
     - flatbuffers==1.12
     - gast==0.4.0
