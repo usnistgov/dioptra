@@ -112,7 +112,6 @@ Classes:
     ImageNetDataset: Fetches the ImageNet Object Localization Challenge dataset hosted
         on Kaggle.
     KaggleApi: A wrapper for the Kaggle API command line tool.
-    RichConsole: A simple API for printing formatted text in the terminal.
 
 Functions:
     download_kaggle_competition: Download the dataset for a Kaggle competition.
@@ -142,8 +141,16 @@ import numpy.typing as npt
 from click import Context
 from PIL import Image
 from rich.console import Console
-from rich.panel import Panel
 from upath import UPath
+
+# The try/except ImportError block allows this script to be invoked using:
+#     python ./scripts/download_data.py  # OR
+#     python -m scripts.download_data
+try:
+    from .utils import RichConsole
+
+except ImportError:
+    from utils import RichConsole
 
 _CURRENT_DIR = Path(__file__).parent
 _PATCHES_DIR = _CURRENT_DIR / "patches"
@@ -819,81 +826,6 @@ class KaggleApi(object):
             return str(cmd_path)
 
         raise RuntimeError("Unable to find kaggle command.")
-
-
-class RichConsole(object):
-    """A simple API for printing formatted text in the terminal.
-
-    Args:
-        console: A rich.console.Console object.
-    """
-
-    def __init__(self, console: Console) -> None:
-        self._console = console
-
-    def print_alert(self, text: str) -> None:
-        """Print an alert message.
-
-        Args:
-            text: The text to print.
-        """
-        content: str = f":heavy_exclamation_mark: {text}"
-        self._console.print(content)
-
-    def print_failure(self, text: str) -> None:
-        """Print a failure message.
-
-        Args:
-            text: The text to print.
-        """
-        content: str = f":x:  {text}"
-        self._console.print(content)
-
-    def print_info(self, text: str) -> None:
-        """Print an informational message.
-
-        Args:
-            text: The text to print.
-        """
-        content: str = f"[bold yellow]Ⓘ[/bold yellow]  {text}"
-        self._console.print(content)
-
-    def print_parameter(self, name: str, value: str) -> None:
-        """Print a parameter name and its value.
-
-        Args:
-            name: The name of the parameter.
-            value: The value of the parameter.
-        """
-        content: str = f" ‣ [bold]{name}:[/bold] {value}"
-        self._console.print(content)
-
-    def print_success(self, text: str) -> None:
-        """Print a success message.
-
-        Args:
-            text: The text to print.
-        """
-        content: str = f" [bold bright_green]✔[/bold bright_green] {text}"
-        self._console.print(content)
-
-    def print_title(self, text: str) -> None:
-        """Print a title.
-
-        Args:
-            text: The text to print.
-        """
-        content: Panel = Panel(renderable=text, expand=False)
-        self._console.print(content, style="bold cyan")
-
-    def print_warning(self, text: str) -> None:
-        """Print a warning message.
-
-        Args:
-            text: The text to print.
-        """
-        content: str = f":warning: {text}"
-        self._console.print(content)
 
 
 def download_kaggle_competition(
