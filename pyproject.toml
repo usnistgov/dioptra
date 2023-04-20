@@ -63,6 +63,7 @@ dependencies = [
     "passlib>=1.7.0",
     "python-dateutil>=2.8.0",
     "redis>=3.5.0",
+    "requests>=2.25,<3",
     "rq>=1.5.0",
     "scipy>=1.4.1",
     "structlog>=20.2.0",
@@ -101,6 +102,13 @@ dioptra = "dioptra.mlflow_plugins.dioptra_backend:DioptraProjectBackend"
 [project.optional-dependencies]
 cookiecutter = [
     "cookiecutter>=2.0.0",
+]
+examples = [
+    "aiohttp>=3.8.0",
+    "kaggle>=1.5.0",
+    "Pillow>=9.2.0",
+    "rich>=13.3.0",
+    "universal_pathlib>=0.0.23",
 ]
 sdk = [
     "cryptography==3.*",
