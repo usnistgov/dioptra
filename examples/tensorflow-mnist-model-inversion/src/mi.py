@@ -18,11 +18,9 @@
 
 import os
 from pathlib import Path
-from typing import Dict, List
 
 import click
 import mlflow
-import numpy as np
 import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
@@ -45,35 +43,7 @@ _CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
-def _map_norm(ctx, param, value):
-    norm_mapping: Dict[str, float] = {"inf": np.inf, "1": 1, "2": 2}
-    processed_norm: float = norm_mapping[value]
-
-    return processed_norm
-
-
-def _coerce_comma_separated_ints(ctx, param, value):
-    return tuple(int(x.strip()) for x in value.split(","))
-
-
-def _coerce_int_to_bool(ctx, param, value):
-    return bool(int(value))
-
-
 @click.command()
-@click.option(
-    "--data-dir",
-    type=click.Path(
-        exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
-    ),
-    help="Root directory for NFS mounted datasets (in container)",
-)
-@click.option(
-    "--image-size",
-    type=click.STRING,
-    callback=_coerce_comma_separated_ints,
-    help="Dimensions for the input images",
-)
 @click.option(
     "--adv-tar-name",
     type=click.STRING,
@@ -138,10 +108,7 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
-
 def mi_attack(
-    data_dir,
-    image_size,
     adv_tar_name,
     adv_data_dir,
     model_name,
@@ -152,13 +119,11 @@ def mi_attack(
     window_length,
     threshold,
     learning_rate,
-    seed
+    seed,
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
         entry_point="mi",
-        data_dir=data_dir,
-        image_size=image_size,
         adv_tar_name=adv_tar_name,
         adv_data_dir=adv_data_dir,
         model_name=model_name,
@@ -169,15 +134,13 @@ def mi_attack(
         window_length=window_length,
         threshold=threshold,
         learning_rate=learning_rate,
-        seed=seed
+        seed=seed,
     )
 
     with mlflow.start_run() as active_run:  # noqa: F841
         flow: Flow = init_mi_flow()
         state = flow.run(
             parameters=dict(
-                testing_dir=Path(data_dir) / "testing",
-                image_size=image_size,
                 adv_tar_name=adv_tar_name,
                 adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
                 model_name=model_name,
@@ -188,7 +151,7 @@ def mi_attack(
                 window_length=window_length,
                 threshold=threshold,
                 learning_rate=learning_rate,
-                seed=seed
+                seed=seed,
             )
         )
 
@@ -198,8 +161,6 @@ def mi_attack(
 def init_mi_flow() -> Flow:
     with Flow("Model Inversion") as flow:
         (
-            testing_dir,
-            image_size,
             adv_tar_name,
             adv_data_dir,
             model_name,
@@ -212,8 +173,6 @@ def init_mi_flow() -> Flow:
             learning_rate,
             seed,
         ) = (
-            Parameter("testing_dir"),
-            Parameter("image_size"),
             Parameter("adv_tar_name"),
             Parameter("adv_data_dir"),
             Parameter("model_name"),
@@ -270,11 +229,9 @@ def init_mi_flow() -> Flow:
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.model_inversion",
             "modelinversion",
             "infer_model_inversion",
-            data_dir=testing_dir,
             keras_classifier=keras_classifier,
             adv_data_dir=adv_data_dir,
             batch_size=batch_size,
-            image_size=image_size,
             classes=classes,
             max_iter=max_iter,
             window_length=window_length,
@@ -282,7 +239,7 @@ def init_mi_flow() -> Flow:
             learning_rate=learning_rate,
             upstream_tasks=[make_directories_results],
         )
-        
+
         log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
             "mlflow",

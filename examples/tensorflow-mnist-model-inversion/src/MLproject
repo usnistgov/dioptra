@@ -20,12 +20,10 @@ name: mnist-model-inversion
 entry_points:
   mi:
     parameters:
-      image_size: { type: string, default: "28,28,1" }
-      data_dir: { type: path, default: "/nfs/data" }
       adv_tar_name: {type: string, default: "testing_adversarial_mi.tar.gz"}
       adv_data_dir: {type: string, default: "adv_testing"}
       model_name: {type: string, default: "mnist_le_net"}
-      model_version: {type: int, default: 1}
+      model_version: {type: string, default: "1"}
       batch_size: {type: float, default: 32}
       classes: {type: int, default: 10}
       max_iter: {type: int, default: 10000}
@@ -34,9 +32,7 @@ entry_points:
       learning_rate: {type: float, default: 0.1}
       seed: {type: float, default: -1}
     command: >
-      python src/mi.py
-      --data-dir {data_dir}
-      --image-size {image_size}
+      python mi.py
       --adv-tar-name {adv_tar_name}
       --adv-data-dir {adv_data_dir}
       --model-name {model_name}
@@ -50,7 +46,7 @@ entry_points:
 
   train:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
       image_size: { type: string, default: "28,28,1" }
       model_architecture: { type: string, default: "le_net" }
       epochs: { type: float, default: 30 }
@@ -61,7 +57,7 @@ entry_points:
       validation_split: { type: float, default: 0.2 }
       seed: { type: float, default: -1 }
     command: >
-      python src/train.py
+      python train.py
       --data-dir {data_dir}
       --image-size {image_size}
       --model-architecture {model_architecture}
