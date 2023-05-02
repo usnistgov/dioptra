@@ -19,7 +19,7 @@ name: mnist-pixel-threshold
 entry_points:
   pt:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
       image_size: { type: string, default: "28,28,1" }
       adv_tar_name: { type: string, default: "testing_adversarial_pt.tar.gz" }
       adv_data_dir: { type: string, default: "adv_testing" }
@@ -29,8 +29,9 @@ entry_points:
       th: { type: int, default 1 }
       es: { type: int, default 0 }
       seed: { type: float, default: -1 }
+      clip_values: { type: string, default: "0,1" }
     command: >
-      python src/pt.py
+      python pt.py
       --data-dir {data_dir}
       --image-size {image_size}
       --adv-tar-name {adv_tar_name}
@@ -41,6 +42,7 @@ entry_points:
       --th {th}
       --es {es}
       --seed {seed}
+      --clip-values {clip_values}
 
   infer:
     parameters:
@@ -52,7 +54,7 @@ entry_points:
       adv_data_dir: { type: string, default: "adv_testing" }
       seed: { type: float, default: -1 }
     command: >
-      python src/infer.py
+      python infer.py
       --run-id {run_id}
       --image-size {image_size}
       --model-name {model_name}
@@ -63,7 +65,7 @@ entry_points:
 
   train:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
       image_size: { type: string, default: "28,28,1" }
       model_architecture: { type: string, default: "le_net" }
       epochs: { type: float, default: 30 }
@@ -74,7 +76,7 @@ entry_points:
       validation_split: { type: float, default: 0.2 }
       seed: { type: float, default: -1 }
     command: >
-      python src/train.py
+      python train.py
       --data-dir {data_dir}
       --image-size {image_size}
       --model-architecture {model_architecture}

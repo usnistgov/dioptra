@@ -51,14 +51,11 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-from structlog.stdlib import BoundLogger
 from prefect import task
+from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -97,7 +94,7 @@ def create_pt_dataset(
     batch_size: int = 32,
     label_mode: str = "categorical",
     th: int = 1,
-    es: int = 0
+    es: int = 0,
 ) -> pd.DataFrame:
     """Generates an adversarial dataset using the Pixel Threshold attack.
     This attack attempts to evade a classifier by changing a set number of
@@ -125,10 +122,7 @@ def create_pt_dataset(
     adv_data_dir = Path(adv_data_dir)
 
     attack = _init_pt(
-        keras_classifier=keras_classifier,
-        batch_size=batch_size,
-        th=th,
-        es=es
+        keras_classifier=keras_classifier, batch_size=batch_size, th=th, es=es
     )
 
     data_generator: ImageDataGenerator = ImageDataGenerator(rescale=rescale)
@@ -190,9 +184,7 @@ def create_pt_dataset(
 def _init_pt(
     keras_classifier: KerasClassifier, batch_size: int, **kwargs
 ) -> PixelAttack:
-    attack: PixelAttack = PixelAttack(
-        classifier=keras_classifier, **kwargs
-    )
+    attack: PixelAttack = PixelAttack(classifier=keras_classifier, **kwargs)
     return attack
 
 

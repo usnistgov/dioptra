@@ -130,6 +130,12 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
+@click.option(
+    "--clip-values",
+    type=click.STRING,
+    callback=_coerce_comma_separated_ints,
+    help="Set the range for pixel values in the ART Estimator",
+)
 def pt_attack(
     data_dir,
     image_size,
@@ -140,7 +146,8 @@ def pt_attack(
     batch_size,
     th,
     es,
-    seed
+    seed,
+    clip_values,
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
@@ -154,7 +161,8 @@ def pt_attack(
         batch_size=batch_size,
         th=th,
         es=es,
-        seed=seed
+        seed=seed,
+        clip_values=clip_values,
     )
 
     with mlflow.start_run() as active_run:  # noqa: F841
@@ -171,7 +179,8 @@ def pt_attack(
                 batch_size=batch_size,
                 th=th,
                 es=es,
-                seed=seed
+                seed=seed,
+                clip_values=clip_values,
             )
         )
 
@@ -192,6 +201,7 @@ def init_pt_flow() -> Flow:
             th,
             es,
             seed,
+            clip_values,
         ) = (
             Parameter("testing_dir"),
             Parameter("image_size"),
@@ -204,6 +214,7 @@ def init_pt_flow() -> Flow:
             Parameter("th"),
             Parameter("es"),
             Parameter("seed"),
+            Parameter("clip_values"),
         )
         seed, rng = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
@@ -243,6 +254,7 @@ def init_pt_flow() -> Flow:
             "load_wrapped_tensorflow_keras_classifier",
             name=model_name,
             version=model_version,
+            classifier_kwargs={"clip_values": clip_values},
             upstream_tasks=[init_tensorflow_results],
         )
         distance_metrics_list = pyplugs.call_task(
