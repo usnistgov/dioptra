@@ -113,6 +113,59 @@ jobs:
           name: py${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.requirements }}
           path: venvs
 
+  pip-compile-containers:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["ubuntu-20.04"]
+        python-version: ["3.9"]
+        architecture: ["x86_64"]
+        requirements:
+          - "mlflow-tracking-requirements"
+          - "restapi-requirements"
+          - "pytorch-cpu-requirements"
+          - "pytorch-gpu-requirements"
+          - "tensorflow2-cpu-requirements"
+          - "tensorflow2-gpu-requirements"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4.5.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: upgrade pip
+        run: |
+          # install pip=>20.1 to use "pip cache dir"
+          python3 -m pip install --upgrade pip
+
+      - name: get pip cache dir
+        id: pip-cache
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: cache dependencies
+        uses: actions/cache@v3.3.1
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini', '**/requirements-dev*.in', '**/docker/pip-tools/*-requirements.in') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: install dependencies
+        run: python3 -m pip install --upgrade tox
+
+      - name: run tox
+        run: |
+          python3 -m tox run -e py39-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
+
+      - name: archive the requirements file
+        uses: actions/upload-artifact@v3
+        with:
+          name: py${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.requirements }}
+          path: venvs
+
   pip-compile-aarch64:
     runs-on: ubuntu-20.04
     strategy:
@@ -121,6 +174,10 @@ jobs:
           - "py39-linux-aarch64-requirements-dev"
           - "py39-linux-aarch64-requirements-dev-pytorch"
           - "py39-linux-aarch64-requirements-dev-tensorflow"
+          - "py39-linux-aarch64-mlflow-tracking-requirements"
+          - "py39-linux-aarch64-restapi-requirements"
+          - "py39-linux-aarch64-pytorch-cpu-requirements"
+          # - "py39-linux-aarch64-tensorflow2-cpu-requirements"
 
     steps:
       - uses: actions/checkout@v3
@@ -164,6 +221,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - pip-compile
+      - pip-compile-containers
       - pip-compile-aarch64
 
     steps:
@@ -177,13 +235,13 @@ jobs:
 
       - name: standardize and consolidate files into venvs directory
         run: |
-          find artifacts -type f -name "*requirements-dev*.txt" -exec chmod 0644 {} \;
-          find artifacts -type f -name "*requirements-dev*.txt" -exec dos2unix {} \;
+          find artifacts -type f -name "*requirements*.txt" -exec chmod 0644 {} \;
+          find artifacts -type f -name "*requirements*.txt" -exec dos2unix {} \;
           mkdir venvs
           mv artifacts/**/*.txt venvs
 
       - name: archive the consolidated requirements files
         uses: actions/upload-artifact@v3
         with:
-          name: requirements-dev-files
+          name: requirements-files
           path: venvs

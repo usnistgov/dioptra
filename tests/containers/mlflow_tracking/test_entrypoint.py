@@ -96,7 +96,7 @@ def test_db_exists(host: Host, print_db_tables_pyscript: str) -> None:
             if timer.timeout_exceeded:
                 raise TimeoutError("Failed to initialize mlflow-tracking.db.")
 
-    cmd = "/opt/conda/condabin/conda run -n dioptra python %s"
+    cmd = "python %s"
     result = host.run(cmd, print_db_tables_pyscript)
 
     tables = result.stdout.split("\n")

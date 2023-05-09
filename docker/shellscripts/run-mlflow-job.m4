@@ -20,7 +20,7 @@
 echo "This is just a script template, not the script (yet) - pass it to 'argbash' to fix this." >&2
 exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([backend],[],[[dioptra|local] Execution backend for MLFlow],[dioptra])
-# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[base])
+# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment (deprecated, to be removed in future release)],[base])
 # ARG_OPTIONAL_SINGLE([experiment-id],[],[ID of the experiment under which to launch the run],[])
 # ARG_OPTIONAL_SINGLE([entry-point],[],[MLproject entry point to invoke],[main])
 # ARG_OPTIONAL_SINGLE([mlflow-run-module],[],[Python module used to invoke 'mlflow run'],[dioptra.rq.cli.mlflow])
@@ -43,8 +43,6 @@ set -euo pipefail
 # Global parameters
 ###########################################################################################
 
-readonly conda_dir="${CONDA_DIR}"
-readonly conda_env="${_arg_conda_env}"
 readonly dioptra_plugin_dir="${DIOPTRA_PLUGIN_DIR-}"
 readonly dioptra_plugins_s3_uri="${DIOPTRA_PLUGINS_S3_URI-}"
 readonly dioptra_custom_plugins_s3_uri="${DIOPTRA_CUSTOM_PLUGINS_S3_URI-}"
@@ -91,83 +89,6 @@ validate_mlflow_inputs() {
       exit 1
       ;;
   esac
-}
-
-###########################################################################################
-# Validate existence of builtin plugins bucket
-#
-# Globals:
-#   dioptra_plugins_s3_uri
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-validate_builtin_plugins_s3_uri() {
-  local scheme=$(/usr/local/bin/parse-uri.sh --scheme ${dioptra_plugins_s3_uri})
-  local bucket=$(/usr/local/bin/parse-uri.sh --authority ${dioptra_plugins_s3_uri})
-
-  if [[ ${scheme} != s3 ]]; then
-    echo "${logname}: ERROR - URI for builtin plugins does not use the s3 protocol" 1>&2
-    exit 1
-  fi
-
-  if ! s3_bucket_exists ${bucket} "dioptra_builtins/" &>/dev/null; then
-    echo "${logname}: ERROR - S3 bucket for builtin plugins does not exist" 1>&2
-    exit 1
-  fi
-}
-
-###########################################################################################
-# Validate existence of custom plugins bucket
-#
-# Globals:
-#   dioptra_custom_plugins_s3_uri
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-validate_custom_plugins_s3_uri() {
-  local scheme=$(/usr/local/bin/parse-uri.sh --scheme ${dioptra_custom_plugins_s3_uri})
-  local bucket=$(/usr/local/bin/parse-uri.sh --authority ${dioptra_custom_plugins_s3_uri})
-
-  if [[ ${scheme} != s3 ]]; then
-    echo "${logname}: ERROR - URI for custom plugins does not use the s3 protocol" 1>&2
-    exit 1
-  fi
-
-  if ! s3_bucket_exists ${bucket} "dioptra_custom/" &>/dev/null; then
-    echo "${logname}: ERROR - S3 bucket for custom plugins does not exist" 1>&2
-    exit 1
-  fi
-}
-
-###########################################################################################
-# Check if S3 bucket exists
-#
-# Globals:
-#   mlflow_s3_endpoint_url
-# Arguments:
-#   bucket
-#   prefix
-# Returns:
-#   None
-###########################################################################################
-
-s3_bucket_exists() {
-  local bucket=${1}
-  local prefix=${2}
-
-  if [[ ! -z ${mlflow_s3_endpoint_url} ]]; then
-    aws --endpoint-url ${mlflow_s3_endpoint_url} s3api list-objects-v2 --bucket ${bucket} \
-      --prefix ${prefix} --max-items 0 --no-cli-pager
-  else
-    aws s3api list-objects-v2 --bucket ${bucket} --prefix ${prefix} --max-items 0 \
-      --no-cli-pager
-  fi
 }
 
 ###########################################################################################
@@ -220,6 +141,33 @@ download_workflow() {
     echo "${logname}: ERROR - /usr/local/bin/s3-cp.sh script missing" 1>&2
     exit 1
   fi
+}
+
+###########################################################################################
+# Clear plugins directories
+#
+# Globals:
+#   dioptra_plugin_dir
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+clear_plugins_dirs() {
+  local plugin_dirs=(
+    "${dioptra_plugin_dir}/dioptra_builtins"
+    "${dioptra_plugin_dir}/dioptra_custom"
+  )
+
+  for dir in "${plugin_dirs[@]}"; do
+    if [[ -d "${dir}" ]]; then
+      if ! rm -rf "${dir}"; then
+        echo "${logname}: ERROR - Unexpected error while clearing the plugin directories." 1>&2
+        exit 1
+      fi
+    fi
+  done
 }
 
 ###########################################################################################
@@ -280,8 +228,6 @@ sync_custom_plugins() {
 # Start MLFlow pipeline defined in MLproject file
 #
 # Globals:
-#   conda_dir
-#   conda_env
 #   entry_point
 #   entry_point_kwargs
 #   mlflow_backend
@@ -324,8 +270,7 @@ start_mlflow() {
 ###########################################################################################
 
 validate_mlflow_inputs
-validate_builtin_plugins_s3_uri
-validate_custom_plugins_s3_uri
+clear_plugins_dirs
 sync_builtin_plugins
 sync_custom_plugins
 download_workflow
