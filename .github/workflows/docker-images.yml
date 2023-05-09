@@ -14,14 +14,21 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-name: Docker images (latest dependencies)
+name: Docker images
 
 on:
   schedule:
-    - cron: "0 3 1-28/14 * *" # at 3am on the 1st and 15th day of every month
+    - cron: "0 3 * * *" # everyday at 3am
   push:
     branches:
-      - "latest-deps-*"
+      - "main"
+      - "dev"
+    tags:
+      - "*.*.*"
+  pull_request:
+    branches:
+      - "main"
+      - "dev"
 
 env:
   PROJECT_PREFIX: dioptra
@@ -44,11 +51,6 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/remove-extra-software
 
-      - name: set version variables
-        uses: ./.github/actions/setenv
-        with:
-          env-path: ./.github/env/version-vars.env
-
       - name: set docker metadata
         id: meta
         uses: docker/metadata-action@v4
@@ -56,8 +58,14 @@ jobs:
           images: |
             ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}
           tags: |
-            type=schedule,prefix=latest-deps-,pattern={{date 'YYYYMMDD'}}
+            type=schedule,pattern=nightly
+            type=schedule,prefix=nightly-,pattern={{date 'YYYYMMDD'}}
             type=ref,event=branch
+            type=ref,event=pr
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
             type=sha,format=long,prefix=,suffix=
           labels: |
             maintainer=NCCoE Artificial Intelligence Team <dioptra@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>
@@ -78,7 +86,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          target: image-latest-deps
+          target: final
           push: false
           load: true
           file: docker/Dockerfile.${{ matrix.dioptra-app }}
@@ -86,44 +94,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           no-cache: true
           pull: true
-          build-args: |
-            CODE_PKG_VERSION=${{ env.CODE_PKG_VERSION }}
-            MINICONDA3_PREFIX=${{ env.MINICONDA3_PREFIX }}
-            MINICONDA_VERSION=${{ env.MINICONDA_VERSION }}
-            IBM_ART_VERSION=${{ env.IBM_ART_VERSION }}
-            MLFLOW_VERSION=${{ env.MLFLOW_VERSION }}
-            PREFECT_VERSION=${{ env.PREFECT_VERSION }}
-            PYTHON_VERSION=${{ env.PYTHON_VERSION }}
-            PYTORCH_CUDA_VERSION=${{ env.PYTORCH_CUDA_VERSION }}
-            PYTORCH_MAJOR_MINOR_VERSION=${{ env.PYTORCH_MAJOR_MINOR_VERSION }}
-            PYTORCH_TORCHAUDIO_VERSION=${{ env.PYTORCH_TORCHAUDIO_VERSION }}
-            PYTORCH_TORCHVISION_VERSION=${{ env.PYTORCH_TORCHVISION_VERSION }}
-            PYTORCH_VERSION=${{ env.PYTORCH_VERSION }}
-            SKLEARN_VERSION=${{ env.SKLEARN_VERSION }}
-            TENSORFLOW_VERSION=${{ env.TENSORFLOW_VERSION }}
-            PYTORCH_NVIDIA_CUDA_VERSION=${{ env.PYTORCH_NVIDIA_CUDA_VERSION }}
-            TENSORFLOW_NVIDIA_CUDA_VERSION=${{ env.TENSORFLOW_NVIDIA_CUDA_VERSION }}
 
       - name: create 'dev' tag
         run: |
           docker tag ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }} ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev
-
-      - name: generate frozen conda environment file
-        if: ${{ matrix.dioptra-app != 'nginx' }}
-        shell: bash
-        run: |
-          mkdir -p /tmp/conda-env
-          chmod 0777 /tmp/conda-env
-          docker run --rm -v /tmp/conda-env:/conda-env:rw ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev --output /conda-env/environment-pinned-${{ matrix.dioptra-app }}.yml --export-conda-env
-          sudo chown $(id -u):$(id -g) /tmp/conda-env/environment-pinned-${{ matrix.dioptra-app }}.yml
-          sudo chmod 0644 /tmp/conda-env/environment-pinned-${{ matrix.dioptra-app }}.yml
-
-      - name: archive the frozen conda environment file
-        if: ${{ matrix.dioptra-app != 'nginx' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: pinned-conda-environment-${{ matrix.dioptra-app }}
-          path: /tmp/conda-env/environment-pinned-${{ matrix.dioptra-app }}.yml
 
       - name: export dev-tagged image to tar.gz file
         shell: bash

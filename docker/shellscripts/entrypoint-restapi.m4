@@ -21,11 +21,8 @@ echo "This is just a script template, not the script (yet) - pass it to 'argbash
 exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([app-module],[],[Application module],[wsgi:app])
 # ARG_OPTIONAL_SINGLE([backend],[],[Server backend],[gunicorn])
-# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[dioptra])
 # ARG_OPTIONAL_SINGLE([gunicorn-module],[],[Python module used to start Gunicorn WSGI server],[dioptra.restapi.cli.gunicorn])
-# ARG_OPTIONAL_SINGLE([output],[o],[Path to save exported environment.yml file (ignored unless paired with --export-conda-env)],[])
 # ARG_OPTIONAL_REPEATED([wait-for],[],[Wait on the availability of a host and TCP port before proceeding],[])
-# ARG_OPTIONAL_ACTION([export-conda-env],[],[Freeze and export the container's conda environment (--output must be set)],[export_conda_environment])
 # ARG_OPTIONAL_ACTION([upgrade-db],[],[Upgrade the database schema],[upgrade_database])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
@@ -40,41 +37,13 @@ set -euo pipefail
 # Global parameters
 ###########################################################################################
 
-readonly conda_dir="${CONDA_DIR}"
 readonly dioptra_workdir="${DIOPTRA_WORKDIR}"
 readonly logname="Container Entry Point"
 
 set_parsed_globals() {
   readonly app_module="${_arg_app_module}"
-  readonly conda_env="${_arg_conda_env}"
   readonly gunicorn_module="${_arg_gunicorn_module}"
   readonly server_backend="${_arg_backend}"
-}
-
-###########################################################################################
-# Freeze and export the container's conda virtual environment
-#
-# Globals:
-#   conda_env
-#   logname
-#   _arg_output
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-export_conda_environment() {
-  if [[ ! -f /usr/local/bin/conda-env.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/conda-env.sh script missing" 1>&2
-    exit 1
-  fi
-
-  set_parsed_globals
-
-  if ! /usr/local/bin/conda-env.sh --env ${conda_env} --output ${_arg_output} --freeze; then
-    exit 1
-  fi
 }
 
 ###########################################################################################
@@ -101,8 +70,6 @@ wait_for_services() {
 # Upgrade the Dioptra database
 #
 # Globals:
-#   conda_dir
-#   conda_env
 #   dioptra_workdir
 #   logname
 # Arguments:
@@ -117,11 +84,8 @@ upgrade_database() {
   set_parsed_globals
   wait_for_services
 
-  bash -c "\
-  source ${conda_dir}/etc/profile.d/conda.sh &&\
-  conda activate ${conda_env} &&\
-  cd ${dioptra_workdir} &&\
-  flask db upgrade -d ${dioptra_workdir}/migrations"
+  cd ${dioptra_workdir}
+  flask db upgrade -d ${dioptra_workdir}/migrations
 }
 
 ###########################################################################################
@@ -129,8 +93,6 @@ upgrade_database() {
 #
 # Globals:
 #   app_module
-#   conda_dir
-#   conda_env
 #   dioptra_workdir
 #   gunicorn_module
 #   logname
@@ -143,11 +105,8 @@ upgrade_database() {
 start_gunicorn() {
   echo "${logname}: INFO - Starting gunicorn server"
 
-  bash -c "\
-  source ${conda_dir}/etc/profile.d/conda.sh &&\
-  conda activate ${conda_env} &&\
-  cd ${dioptra_workdir} &&\
-  python -m ${gunicorn_module} -c /etc/gunicorn/gunicorn.conf.py ${app_module}"
+  cd ${dioptra_workdir}
+  python -m ${gunicorn_module} -c /etc/gunicorn/gunicorn.conf.py ${app_module}
 }
 
 ###########################################################################################

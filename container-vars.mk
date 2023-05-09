@@ -23,15 +23,11 @@
 
 CONTAINER_MLFLOW_TRACKING_INCLUDE_FILES =\
     docker/configs/aws-config\
-    docker/configs/bash.bashrc\
     docker/configs/build.pip.conf\
-    docker/configs/dot-condarc\
-    docker/conda-env/environment-mlflow-tracking.yml\
-    docker/shellscripts/conda-env.m4\
+    docker/requirements/linux-x86_64-py3.9-mlflow-tracking-requirements.txt\
     docker/shellscripts/entrypoint-mlflow-tracking.m4\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
-    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
     docker/shellscripts/s3-sync.m4\
@@ -49,16 +45,12 @@ CONTAINER_NGINX_INCLUDE_FILES =\
 # PyTorch (CPU) -----------------------------------------------------------------
 
 CONTAINER_PYTORCH_CPU_INCLUDE_FILES =\
-    docker/conda-env/environment-pytorch-cpu.yml\
     docker/configs/aws-config\
-    docker/configs/bash.bashrc\
     docker/configs/build.pip.conf\
-    docker/configs/dot-condarc\
-    docker/shellscripts/conda-env.m4\
+    docker/requirements/linux-x86_64-py3.9-pytorch-cpu-requirements.txt\
     docker/shellscripts/entrypoint-worker.m4\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
-    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/run-mlflow-job.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
@@ -71,16 +63,12 @@ CONTAINER_PYTORCH_CPU_INCLUDE_FILES =\
 # PyTorch (GPU) -----------------------------------------------------------------
 
 CONTAINER_PYTORCH_GPU_INCLUDE_FILES =\
-    docker/conda-env/environment-pytorch-gpu.yml\
     docker/configs/aws-config\
-    docker/configs/bash.bashrc\
     docker/configs/build.pip.conf\
-    docker/configs/dot-condarc\
-    docker/shellscripts/conda-env.m4\
+    docker/requirements/linux-x86_64-py3.9-pytorch-gpu-requirements.txt\
     docker/shellscripts/entrypoint-worker.m4\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
-    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/run-mlflow-job.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
@@ -93,17 +81,13 @@ CONTAINER_PYTORCH_GPU_INCLUDE_FILES =\
 # restapi -----------------------------------------------------------------------
 
 CONTAINER_RESTAPI_INCLUDE_FILES =\
-    docker/conda-env/environment-restapi.yml\
     docker/configs/aws-config\
-    docker/configs/bash.bashrc\
     docker/configs/build.pip.conf\
-    docker/configs/dot-condarc\
     docker/configs/gunicorn.restapi.conf.py\
-    docker/shellscripts/conda-env.m4\
+    docker/requirements/linux-x86_64-py3.9-restapi-requirements.txt\
     docker/shellscripts/entrypoint-restapi.m4\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
-    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
     docker/shellscripts/s3-sync.m4\
@@ -117,16 +101,12 @@ CONTAINER_RESTAPI_INCLUDE_FILES =\
 # Tensorflow v2 (CPU) -----------------------------------------------------------
 
 CONTAINER_TENSORFLOW2_CPU_INCLUDE_FILES =\
-    docker/conda-env/environment-tensorflow2-cpu.yml\
     docker/configs/aws-config\
-    docker/configs/bash.bashrc\
     docker/configs/build.pip.conf\
-    docker/configs/dot-condarc\
-    docker/shellscripts/conda-env.m4\
+    docker/requirements/linux-x86_64-py3.9-tensorflow2-cpu-requirements.txt\
     docker/shellscripts/entrypoint-worker.m4\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
-    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/run-mlflow-job.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\
@@ -139,16 +119,12 @@ CONTAINER_TENSORFLOW2_CPU_INCLUDE_FILES =\
 # Tensorflow v2 (GPU) -----------------------------------------------------------
 
 CONTAINER_TENSORFLOW2_GPU_INCLUDE_FILES =\
-    docker/conda-env/environment-tensorflow2-gpu.yml\
     docker/configs/aws-config\
-    docker/configs/bash.bashrc\
     docker/configs/build.pip.conf\
-    docker/configs/dot-condarc\
-    docker/shellscripts/conda-env.m4\
+    docker/requirements/linux-x86_64-py3.9-tensorflow2-gpu-requirements.txt\
     docker/shellscripts/entrypoint-worker.m4\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
-    docker/shellscripts/render-conda-env.m4\
     docker/shellscripts/run-mlflow-job.m4\
     docker/shellscripts/s3-cp.m4\
     docker/shellscripts/s3-mb.m4\

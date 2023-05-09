@@ -122,12 +122,10 @@ RUN mkdir -p /shellscripts && \
     /usr/local/bin/argbash /templates/parse-uri.m4 -o /shellscripts/parse-uri.sh
 
 ######################################################################################################
-# Target images
+# Final image
 ######################################################################################################
 
-# -- Target image: add scripts, add configs ----------------------------------------------------------
-
-FROM base AS image-non-root-user-configs-scripts
+FROM base AS final
 
 ARG DIOPTRA_USER=dioptra
 ARG DIOPTRA_UID=39000
@@ -146,8 +144,7 @@ RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashr
     chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/nginx/conf.d && \
     chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/cache/nginx && \
     chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/lib/nginx && \
-    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/log/nginx && \
-    chmod g+w /etc/passwd
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/log/nginx
 
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/entrypoint-nginx.sh /usr/local/bin/entrypoint.sh
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/healthcheck-nginx.sh /usr/local/bin/healthcheck.sh
@@ -162,11 +159,3 @@ ENV DIOPTRA_GID ${DIOPTRA_GID}
 USER ${DIOPTRA_UID}
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 VOLUME ["/etc/ssl", "/usr/local/share/ca-certificates"]
-
-# -- Target image: pinned deps -----------------------------------------------------------------------
-
-FROM image-non-root-user-configs-scripts AS image-pinned-deps
-
-# -- Target image: latest deps -----------------------------------------------------------------------
-
-FROM image-non-root-user-configs-scripts AS image-latest-deps
