@@ -19,7 +19,7 @@ Implement static type validation for a declarative experiment description.
 """
 
 import functools
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Optional
 
 from dioptra.task_engine import type_registry, types, util
@@ -61,7 +61,7 @@ def _get_reference_type(
         ref_name = reference
         ref_output_name = None
 
-    # Lots of correctness assumptions inherent below.  I.e. that other
+    # Lots of correctness assumptions inherent below.  E.g. that other
     # validation has previously occurred, to catch things like bad references.
     if ref_output_name is None and ref_name in global_parameter_types:
         type_ = global_parameter_types[ref_name]
@@ -69,6 +69,11 @@ def _get_reference_type(
     else:
         step_def = graph[ref_name]
         task_short_name = util.step_get_plugin_short_name(step_def)
+
+        # Assume well-formed step definition (see the comment about
+        # correctness assumptions above... but we still have to satisfy mypy)
+        assert task_short_name is not None
+
         task_def = tasks[task_short_name]
         task_outputs = task_def.get("outputs", [])
 
@@ -105,6 +110,8 @@ def _find_common_base_of_two_types(type1: types.Type, type2: types.Type) -> type
     Returns:
         A Type instance
     """
+    common_base: Optional[types.Type]
+
     if isinstance(type1, types.SimpleType) and isinstance(type2, types.SimpleType):
         if type1 == type2:
             common_base = type1
@@ -174,6 +181,8 @@ def _infer_type_from_mapping(
     Returns:
         The value type
     """
+    type_: types.Type
+
     if mapping:
         key_types = (
             # disable reference resolution here
@@ -365,6 +374,16 @@ def _mapping_structures_compatible(
         # Mappings must have the same properties, and property types must
         # be compatible
 
+        # This is redundant because this is what invoc_is_enumerated and
+        # task_is_enumerated (being True) means.  The code is more
+        # understandable with those variables.  I want readers to not only
+        # understand the Python types but the ramifications regarding the type
+        # system implemented here: that both the invocation arg and task
+        # parameter types are *enumerated* mappings in this case.  But mypy
+        # can't see that.
+        assert isinstance(invoc_struct_def, Mapping)
+        assert isinstance(task_struct_def, Mapping)
+
         result = len(invoc_struct_def) == len(task_struct_def)
 
         if result:
@@ -382,6 +401,10 @@ def _mapping_structures_compatible(
     elif invoc_is_enumerated and not task_is_enumerated:
         # Task key type must be string, and all invocation property types
         # must be compatible with the task value type
+
+        # Redundant, for mypy
+        assert isinstance(invoc_struct_def, Mapping)
+        assert isinstance(task_struct_def, Sequence)
 
         task_key_type, task_value_type = task_struct_def
 
@@ -401,6 +424,10 @@ def _mapping_structures_compatible(
     else:
         # Neither mapping structure is enumerated.  Key types and value
         # types must be compatible.
+
+        # Redundant, for mypy
+        assert isinstance(invoc_struct_def, Sequence)
+        assert isinstance(task_struct_def, Sequence)
 
         invoc_key_type, invoc_value_type = invoc_struct_def
         task_key_type, task_value_type = task_struct_def
@@ -428,6 +455,10 @@ def _tuple_structures_compatible(
     """
     invoc_struct_def = invoc_tuple_struct.struct_def
     task_struct_def = task_tuple_struct.struct_def
+
+    # For mypy: tuple structures are sequences (the element types)
+    assert isinstance(invoc_struct_def, Sequence)
+    assert isinstance(task_struct_def, Sequence)
 
     result = len(invoc_struct_def) == len(task_struct_def)
 
@@ -467,6 +498,10 @@ def _types_compatible_structured(
         tuple_elt_types = invocation_arg_type.structure.struct_def
         list_elt_type = task_param_type.structure.struct_def
 
+        # Redundant, for mypy.
+        assert isinstance(tuple_elt_types, Sequence)
+        assert isinstance(list_elt_type, types.Type)
+
         result = all(
             _types_compatible(tuple_elt_type, list_elt_type)
             for tuple_elt_type in tuple_elt_types
@@ -493,6 +528,10 @@ def _types_compatible_structured(
         invocation_arg_type.structure.struct_type
         is types.StructureType.LIST  # noqa: E721
     ):
+        # Redundant, for mypy.
+        assert isinstance(invocation_arg_type.structure.struct_def, types.Type)
+        assert isinstance(task_param_type.structure.struct_def, types.Type)
+
         result = _types_compatible(
             invocation_arg_type.structure.struct_def,
             task_param_type.structure.struct_def,
@@ -655,8 +694,18 @@ def _step_check_types(
         invocation_keyword_arg_specs,
     ) = util.step_get_invocation_arg_specs(step_def)
 
+    # For mypy: assume a step definition well-formedness check has already
+    # occurred, so we know we can get invocation arguments.
+    assert invocation_pos_arg_specs is not None
+    assert invocation_keyword_arg_specs is not None
+
     # Get info about the task plugin: how it needs to be invoked
     task_plugin_short_name = util.step_get_plugin_short_name(step_def)
+
+    # For mypy: assume a step definition well-formedness check has already
+    # occurred, so we know we can get a task plugin short name.
+    assert task_plugin_short_name is not None
+
     task_def = tasks[task_plugin_short_name]
     task_inputs_map = util.make_task_input_map(task_def)
 

@@ -230,6 +230,13 @@ def _get_invocation_args(
 
     pos_arg_specs, kwarg_specs = util.step_get_invocation_arg_specs(step)
 
+    # step_get_invocation_args() is written to be graceful in the face of a
+    # malformed step definition (and return nulls), but at this point I think
+    # we can assume validation has already been done, as would be the normal
+    # workflow, so nulls won't happen here.
+    assert pos_arg_specs is not None
+    assert kwarg_specs is not None
+
     # Assume for now that validation has completed successfully, so we always
     # have a correct step definition with arg specs?
     arg_values = _positional_specs_to_args(

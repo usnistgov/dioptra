@@ -50,7 +50,7 @@ def is_iterable(value: Any) -> bool:
 
 def schema_validate(
     instance: Any,
-    schema: Union[dict, bool],
+    schema: Union[dict[str, Any], bool],
     location_desc_callback: Optional[Callable[[Sequence[Union[int, str]]], str]] = None,
 ) -> list[str]:
     """

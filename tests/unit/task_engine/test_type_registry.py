@@ -23,6 +23,7 @@ from typing import Any
 import pytest
 
 from dioptra.sdk.exceptions.task_engine import (
+    AnonymousSimpleTypeError,
     BuiltinTypeRedefinitionError,
     DioptraTypeError,
     InvalidKeyTypeError,
@@ -304,3 +305,27 @@ def test_redefine_builtin_type() -> None:
         build_type_registry(types)
 
     assert e.value.builtin_type_name == "integer"
+
+
+def test_anonymous_simple_type() -> None:
+    types = {
+        # In normal use, this would actually produce a semantic validation
+        # error due to the non-string key, before we ever tried to build a type
+        # out of it.
+        None: {}
+    }
+
+    with pytest.raises(AnonymousSimpleTypeError):
+        build_type_registry(types)
+
+    types = {
+        None: {
+            # Since there is no union or structure detected in this definition,
+            # it is considered a simple type by build_type_registry().  In
+            # reality, this would not pass schema validation.
+            "foo": 1
+        }
+    }
+
+    with pytest.raises(AnonymousSimpleTypeError):
+        build_type_registry(types)

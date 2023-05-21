@@ -36,6 +36,12 @@ import jsonschema.exceptions
 import jsonschema.protocols
 import jsonschema.validators
 
+# Type alias for general JSON schemas
+_JsonSchema = Union[dict[str, Any], bool]
+
+# Type alias for non-boolean JSON schemas
+_JsonSchemaNonBool = dict[str, Any]
+
 # Controls indentation of sub-parts of error messages
 _INDENT_SIZE = 4
 
@@ -92,7 +98,7 @@ def _schema_reference_to_path(ref: str) -> list[str]:
 
 def _extract_schema_by_schema_path(
     schema_path: Iterable[Union[int, str]],
-    full_schema: dict[str, Any],
+    full_schema: _JsonSchemaNonBool,
     schema: Optional[Union[dict[str, Any], list[Any]]] = None,
 ) -> Union[dict[str, Any], list[Any]]:
     """
@@ -175,25 +181,8 @@ def _extract_schema_by_schema_path(
     return result_schema
 
 
-def _extract_schema_by_reference(
-    ref: str, schema: dict[str, Any]
-) -> Union[dict[str, Any], list[Any]]:
-    """
-    Extract a sub-part of the given schema, according to the given reference.
-
-    Args:
-        ref: A JSON-Schema reference, starting with "#"
-        schema: A schema
-
-    Returns:
-        A sub-part of the schema
-    """
-    ref_schema_path = _schema_reference_to_path(ref)
-    return _extract_schema_by_schema_path(ref_schema_path, schema)
-
-
 def _get_one_of_alternative_names(
-    alternative_schemas: Iterable[Any], full_schema: dict[str, Any]
+    alternative_schemas: Iterable[Any], full_schema: _JsonSchemaNonBool
 ) -> list[str]:
     """
     Find names for the given alternative schemas.  The names are derived from
@@ -243,7 +232,7 @@ def _get_one_of_alternative_names(
 
 
 def _is_valid_for_sub_schema(
-    full_schema: dict[str, Any], sub_schema: dict[str, Any], sub_instance: Any
+    full_schema: _JsonSchemaNonBool, sub_schema: _JsonSchema, sub_instance: Any
 ) -> bool:
     """
     Run a validation of document sub_instance against sub_schema.
@@ -274,7 +263,7 @@ def _is_valid_for_sub_schema(
 
 
 def _one_of_too_many_alternatives_satisfied_message_lines(
-    error: jsonschema.exceptions.ValidationError, schema: dict[str, Any]
+    error: jsonschema.exceptions.ValidationError, schema: _JsonSchemaNonBool
 ) -> list[str]:
     """
     Create an error message specifically about the situation where too many
@@ -310,7 +299,7 @@ def _one_of_too_many_alternatives_satisfied_message_lines(
 
 def _one_of_no_alternatives_satisfied_message_lines(
     error: jsonschema.exceptions.ValidationError,
-    schema: dict[str, Any],
+    schema: _JsonSchemaNonBool,
     location_desc_callback: Callable[[Sequence[Union[int, str]]], str],
 ) -> list[str]:
     """
@@ -386,7 +375,7 @@ def _one_of_no_alternatives_satisfied_message_lines(
 
 def _validation_error_to_message_lines(
     error: jsonschema.exceptions.ValidationError,
-    schema: dict[str, Any],
+    schema: _JsonSchema,
     location_desc_callback: Callable[[Sequence[Union[int, str]]], str],
 ) -> list[str]:
     """
@@ -412,6 +401,11 @@ def _validation_error_to_message_lines(
 
     # Describe "what" error(s) occurred
     if error.validator == "oneOf":
+        # If a "oneOf" error, the schema can't be a bool schema.  Bool schemas
+        # have no subcomponents (it's just true or false), so they can't have a
+        # "oneOf" validator.
+        assert isinstance(schema, dict)
+
         if error.context:
             what_lines = _one_of_no_alternatives_satisfied_message_lines(
                 error, schema, location_desc_callback
@@ -456,7 +450,7 @@ def json_path_to_string(path: Iterable[Any]) -> str:
 
 def validation_error_to_message(
     error: jsonschema.exceptions.ValidationError,
-    schema: dict[str, Any],
+    schema: _JsonSchema,
     location_desc_callback: Optional[Callable[[Sequence[Union[int, str]]], str]] = None,
 ) -> str:
     """
@@ -490,7 +484,7 @@ def validation_error_to_message(
 
 def validation_errors_to_message(
     errors: Iterable[jsonschema.exceptions.ValidationError],
-    schema: dict[str, Any],
+    schema: _JsonSchema,
     location_desc_callback: Optional[Callable[[Sequence[Union[int, str]]], str]] = None,
 ) -> str:
     """
@@ -501,7 +495,7 @@ def validation_errors_to_message(
     Args:
         errors: An iterable of ValidationError objects which represent some
             schema validation errors
-        schema: The schema whose validation failed, as a dict
+        schema: The schema whose validation failed
         location_desc_callback: A callback function used to customize the
             description of the location of errors.  Takes a programmatic "path"
             structure as a sequence of strings/ints, and should return a nice

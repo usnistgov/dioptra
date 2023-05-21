@@ -19,10 +19,11 @@ Build a "type registry", i.e. a mapping from type name to Type instance,
 from a set of type definitions.
 """
 import graphlib
-from collections.abc import Iterable, Iterator, Mapping, Sequence
-from typing import Any, Optional, Union
+from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
+from typing import Any, Optional, Union, cast
 
 from dioptra.sdk.exceptions.task_engine import (
+    AnonymousSimpleTypeError,
     BuiltinTypeRedefinitionError,
     DioptraTypeError,
     InvalidKeyTypeError,
@@ -148,7 +149,7 @@ def _build_tuple_structure(
 
 def _build_structure(
     type_def: _TypeDefinition, type_registry: _TypeRegistry
-) -> types.TypeStructure:
+) -> Optional[types.TypeStructure]:
     """
     Build a TypeStructure instance from a structure definition within a
     type definition.
@@ -158,7 +159,8 @@ def _build_structure(
         type_registry: A type registry, used to look up type references
 
     Returns:
-        The structure instance
+        The structure instance, or None if the type definition did not define
+        any structure.
     """
     structures = {
         structure_type: type_def[structure_type.name.lower()]
@@ -238,23 +240,27 @@ def build_or_get_type(
 
 
 def build_type(
-    type_name: Optional[str], type_def: _TypeDefinition, type_registry: _TypeRegistry
+    type_name: Optional[str],
+    type_def: Optional[_TypeDefinition],
+    type_registry: _TypeRegistry,
 ) -> types.Type:
     """
     Create a Type instance from a name and a type definition.
 
     Args:
-        type_name: The type name, or None
-        type_def: The type definition
+        type_name: The type name; may be None if creating an anonymous type
+        type_def: The type definition; may be None if creating a simple type
         type_registry: A type registry, used to look up type references
 
     Returns:
         A Type instance
     """
     if type_def is None:
+        # Simple type
         member_type_defs = super_type_name = structure = None
 
     else:
+        # Non-simple type
         member_type_defs = type_def.get("union")
         super_type_name = type_def.get("is_a")
         structure = _build_structure(type_def, type_registry)
@@ -273,19 +279,29 @@ def build_type(
     if super_type and (structure or member_types):
         raise DioptraTypeError("Structure/union types can't have a super-type")
 
-    elif structure and member_types:
+    if structure and member_types:
         raise DioptraTypeError("A type may not be both structured and union")
 
-    if super_type and not isinstance(super_type, types.SimpleType):
-        raise NonSimpleSuperTypeError(super_type.name)
-
+    type_: types.Type
     if structure:
         type_ = types.StructuredType(structure, type_name)
 
     elif member_types:
         type_ = types.UnionType(member_types, type_name)
 
-    else:
+    else:  # else, a simple type
+        if super_type and not isinstance(super_type, types.SimpleType):
+            raise NonSimpleSuperTypeError(super_type_name)
+
+        # Here, super_type must either be null or an instance of SimpleType
+        # (the negation of the above if condition).  I.e. it satisfies
+        # Optional[SimpleType].  But mypy can't seem to grok this.  And I
+        # don't think there's a simple type guard you can use.  So just cast.
+        super_type = cast(Optional[types.SimpleType], super_type)
+
+        if type_name is None:
+            raise AnonymousSimpleTypeError()
+
         type_ = types.SimpleType(type_name, super_type)
 
     return type_
@@ -380,7 +396,7 @@ def get_sorted_types(type_defs: Mapping[str, _TypeDefinition]) -> list[str]:
 
 def build_type_registry(
     type_defs: Mapping[str, _TypeDefinition]
-) -> dict[str, types.Type]:
+) -> Mapping[str, types.Type]:
     """
     Create a type registry from a set of type definitions.
 
@@ -393,8 +409,12 @@ def build_type_registry(
         defined in the given type definitions, so that the registry includes
         all known types.
     """
-    # start with our "builtin" types
-    type_registry = BUILTIN_TYPES.copy()
+    # start with our "builtin" types.  Need a cast because the inferred type
+    # of BUILTIN_TYPES is dict[str, SimpleType] since I just have simple types
+    # in it for now.  So it's not technically wrong... but I intend to do
+    # whatever I want with my copy, including putting other kinds of types into
+    # it.
+    type_registry = cast(MutableMapping[str, types.Type], BUILTIN_TYPES.copy())
 
     sorted_type_names = get_sorted_types(type_defs)
 

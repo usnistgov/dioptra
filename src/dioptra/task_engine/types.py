@@ -312,6 +312,25 @@ class SimpleType(Type):
         self.__super_type = super_type
 
     @property
+    def name(self) -> str:
+        """
+        Overrides superclass "name" property to have "str" return type.  Simple
+        types always have names (there is a check in the constructor), but the
+        superclass property has type Optional[str] since other kinds of types
+        may be anonymous (have no name).  I think it's easier to have this
+        override in place, than to have to add asserts for mypy every single
+        time I refer to the name of a simple type in a non-optional "str"
+        context.
+
+        Returns:
+            The name of this type
+        """
+        name = super().name
+        # Required for mypy: simple types always have names.
+        assert name is not None
+        return name
+
+    @property
     def super_type(self) -> Optional["SimpleType"]:
         """
         The super-type
@@ -388,9 +407,6 @@ class SimpleType(Type):
         Returns:
             The string representation
         """
-        # for mypy.  SimpleTypes always have names, but the base class property
-        # is optional since names are optional for other kinds of types.
-        assert self.name
         # Just name, to decrease verbosity
         return self.name
 

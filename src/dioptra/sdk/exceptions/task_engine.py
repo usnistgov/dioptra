@@ -323,6 +323,21 @@ class BuiltinTypeRedefinitionError(DioptraTypeError):
         self.builtin_type_name = builtin_type_name
 
 
+class AnonymousSimpleTypeError(DioptraTypeError):
+    """
+    An attempt to create an anonymous type from a null type definition (which
+    signifies a simple type).
+    """
+
+    def __init__(self) -> None:
+        message = (
+            "Unable to create an anonymous type from a null type"
+            " definition: simple types can't be anonymous."
+        )
+
+        super().__init__(message)
+
+
 class TypeReferenceCycleError(BaseTaskEngineError):
     """A cycle was detected in a set of type definitions."""
 

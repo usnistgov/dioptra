@@ -906,6 +906,12 @@ def _check_task_invocation(experiment_desc: Mapping[str, Any]) -> list[Validatio
         task_input_map = util.make_task_input_map(task_def)
         invoc_pos_args, invoc_kwargs = util.step_get_invocation_arg_specs(step_def)
 
+        # step_get_invocation_arg_specs() returns nulls if the step definition
+        # is malformed, but we already checked that.  This code does not run
+        # unless the step definition is well formed.
+        assert invoc_pos_args is not None
+        assert invoc_kwargs is not None
+
         # Sanity check number of positional args given
         num_pos_args = len(invoc_pos_args)
         num_task_inputs = len(task_input_map)
