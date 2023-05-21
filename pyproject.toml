@@ -55,6 +55,7 @@ dependencies = [
     "Flask-SQLAlchemy>=2.4.0",
     "Flask-WTF>=0.14.3",
     "injector>=0.18.0",
+    "jsonschema>=4.17.0",
     "marshmallow>=3.9.0,<4",
     "multimethod>=1.5",
     "mlflow>=1.12.1,<2",
@@ -62,6 +63,7 @@ dependencies = [
     "pandas>=1.5.0",
     "passlib>=1.7.0",
     "python-dateutil>=2.8.0",
+    "PyYAML>=6.0.0",
     "redis>=3.5.0",
     "requests>=2.25,<3",
     "rq>=1.5.0",
@@ -89,6 +91,10 @@ repository = "https://github.com/usnistgov/dioptra"
 documentation = "https://pages.nist.gov/dioptra"
 Changelog = "https://github.com/usnistgov/dioptra/blob/main/CHANGELOG.md"
 "Issue Tracker" = "https://github.com/usnistgov/dioptra/issues"
+
+[project.scripts]
+run-experiment = "dioptra.task_engine.run_experiment:main"
+validate-experiment = "dioptra.task_engine.validate:main"
 
 [project.entry-points."dioptra.generics.estimator_predict"]
 tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"

@@ -1,0 +1,393 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "types": {
+            "$ref": "#/$defs/type_definitions"
+        },
+        "parameters": {
+            "$ref": "#/$defs/parameters"
+        },
+        "tasks": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/task_plugin"
+            },
+            "minProperties": 1
+        },
+        "graph": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/graph_step"
+            },
+            "minProperties": 1
+        }
+    },
+    "required": ["tasks", "graph"],
+    "additionalProperties": false,
+    "$defs": {
+        "type_definitions": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/type_definition"
+            }
+        },
+
+        "type_definition": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/simple_type_definition"
+                },
+                {
+                    "$ref": "#/$defs/complex_type_definition"
+                }
+            ]
+        },
+
+        "simple_type_definition": {
+            "title": "Simple type definition",
+            "oneOf": [
+                {
+                    "title": "Null simple type definition",
+                    "type": "null"
+                },
+                {
+                    "title": "Simple type definition with supertype",
+                    "type": "object",
+                    "properties": {
+                        "is_a": {
+                            "$ref": "#/$defs/type_reference"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            ]
+        },
+
+        "complex_type_definition": {
+            "title": "Complex type definition",
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/list_structure"
+                },
+                {
+                    "$ref": "#/$defs/tuple_structure"
+                },
+                {
+                    "$ref": "#/$defs/mapping_structure"
+                },
+                {
+                    "$ref": "#/$defs/union_type_definition"
+                }
+            ]
+        },
+
+        "complex_type_def_or_reference": {
+            "title": "Complex type definition or type name",
+            "$comment": "Useful in nested contexts within type definitions",
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/complex_type_definition"
+                },
+                {
+                    "$ref": "#/$defs/type_reference"
+                }
+            ]
+        },
+
+        "list_structure": {
+            "title": "List structure",
+            "type": "object",
+            "properties": {
+                "list": {
+                    "$ref": "#/$defs/complex_type_def_or_reference"
+                }
+            },
+            "required": ["list"],
+            "additionalProperties": false
+        },
+
+        "tuple_structure": {
+            "title": "Tuple structure",
+            "type": "object",
+            "properties": {
+                "tuple": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/complex_type_def_or_reference"
+                    }
+                }
+            },
+            "required": ["tuple"],
+            "additionalProperties": false
+        },
+
+        "mapping_structure": {
+            "title": "Mapping structure",
+            "type": "object",
+            "properties": {
+                "mapping": {
+                    "oneOf": [
+                        {
+                            "title": "Keytype/valuetype mapping structure",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/complex_type_def_or_reference"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                        },
+                        {
+                            "title": "Enumerated mapping structure",
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/$defs/complex_type_def_or_reference"
+                            }
+                        }
+                    ]
+                }
+            },
+            "required": ["mapping"],
+            "additionalProperties": false
+        },
+
+        "union_type_definition": {
+            "title": "Union type definition",
+            "type": "object",
+            "properties": {
+                "union": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/complex_type_def_or_reference"
+                    }
+                }
+            },
+            "required": ["union"],
+            "additionalProperties": false
+        },
+
+        "type_reference": {
+            "title": "The name of a type",
+            "type": "string"
+        },
+
+        "parameters": {
+            "title": "Parameter definitions",
+            "type": "object",
+            "additionalProperties": {
+                "oneOf": [
+                    {
+                        "title": "Parameter with simple default",
+                        "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null",
+                            "array"
+                        ]
+                    },
+                    {
+                        "title": "Parameter with type and/or default",
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "$ref": "#/$defs/type_reference"
+                            },
+                            "default": {
+                                "title": "Any default value"
+                            }
+                        },
+                        "minProperties": 1,
+                        "additionalProperties": false
+                    }
+                ]
+            }
+        },
+
+        "task_plugin": {
+            "type": "object",
+            "properties": {
+                "plugin": {
+                    "$comment": "Shortest plugin is X.Y, 3 chars",
+                    "type": "string",
+                    "minLength": 3
+                },
+                "inputs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/task_plugin_input"
+                    }
+                },
+                "outputs": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/task_plugin_output"
+                        },
+                        {
+                            "title": "List of outputs",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/task_plugin_output"
+                            }
+                        }
+                    ]
+                }
+            },
+            "required": ["plugin"],
+            "additionalProperties": false
+        },
+
+        "task_plugin_input": {
+            "type": "object",
+            "oneOf": [
+                {
+                    "title": "Short form input definition",
+                    "type": "object",
+                    "not": {
+                        "$comment": "Disambiguate from the longer form input",
+                        "required": ["name"]
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/$defs/type_reference"
+                    },
+                    "minProperties": 1,
+                    "maxProperties": 1
+                },
+                {
+                    "title": "Long form input definition",
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "type": {
+                            "$ref": "#/$defs/type_reference"
+                        },
+                        "required": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": ["name", "type"],
+                    "additionalProperties": false
+                }
+            ]
+        },
+
+        "task_plugin_output": {
+            "title": "Single output",
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/type_reference"
+            },
+            "minProperties": 1,
+            "maxProperties": 1
+        },
+
+        "graph_step": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/positional_invocation"
+                },
+                {
+                    "$ref": "#/$defs/keyword_invocation"
+                },
+                {
+                    "$ref": "#/$defs/mixed_invocation"
+                }
+            ]
+        },
+
+        "positional_invocation": {
+            "title": "Positional invocation",
+            "type": "object",
+            "not": {
+                "$comment": "If the 'task' property is present, we always treat as a mixed invocation.",
+                "required": ["task"]
+            },
+            "properties": {
+                "dependencies": {
+                    "$ref": "#/$defs/step_dependencies"
+                }
+            },
+            "additionalProperties": {
+                "$comment": "The task plugin short name + arg value(s)",
+                "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null",
+                    "array"
+                ]
+            },
+            "minProperties": 1,
+            "maxProperties": 2
+        },
+
+        "keyword_invocation": {
+            "title": "Keyword invocation",
+            "type": "object",
+            "not": {
+                "$comment": "If the 'task' property is present, we always treat as a mixed invocation.",
+                "required": ["task"]
+            },
+            "properties": {
+                "dependencies": {
+                    "$ref": "#/$defs/step_dependencies"
+                }
+            },
+            "additionalProperties": {
+                "$comment": "The task plugin short name + kwargs",
+                "type": "object"
+            },
+            "minProperties": 1,
+            "maxProperties": 2
+        },
+
+        "mixed_invocation": {
+            "title": "Mixed position/keyword invocation",
+            "type": "object",
+            "properties": {
+                "task": {
+                    "$comment": "Task plugin short name",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "args": {
+                    "$comment": "Positional args",
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null",
+                        "array"
+                    ]
+                },
+                "kwargs": {
+                    "$comment": "Keyword args",
+                    "type": "object"
+                },
+                "dependencies": {
+                    "$ref": "#/$defs/step_dependencies"
+                }
+            },
+            "required": ["task"],
+            "additionalProperties": false
+        },
+
+        "step_dependencies": {
+            "oneOf": [
+                {
+                    "title": "Dependencies as a list",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "title": "Single dependency as a string",
+                    "type": "string"
+                }
+            ]
+        }
+    }
+}

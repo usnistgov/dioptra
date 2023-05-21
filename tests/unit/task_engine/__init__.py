@@ -14,28 +14,3 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Base classes for exceptions in the Dioptra package"""
-
-
-class BaseDioptraError(Exception):
-    """Base class for all Dioptra exceptions."""
-
-
-class BaseGenericsRegistryError(BaseDioptraError):
-    """Base class for all generics registration exceptions."""
-
-
-class BaseOptionalDependencyError(BaseDioptraError):
-    """Base class for all optional dependency exceptions."""
-
-
-class BasePyPlugsException(BaseDioptraError):
-    """Base class for all PyPlugs exceptions."""
-
-
-class BaseTaskPluginError(BaseDioptraError):
-    """Base class for all task plugin exceptions."""
-
-
-class BaseTaskEngineError(BaseDioptraError):
-    """Base class for all declarative task engine errors."""

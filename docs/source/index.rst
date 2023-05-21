@@ -54,6 +54,7 @@ Email us: dioptra@nist.gov
    user-guide/entry-points
    user-guide/task-plugins
    user-guide/custom-entry-points
+   user-guide/task_engine_doc
    user-guide/custom-task-plugins
    user-guide/generics-plugin-system
    user-guide/task-plugins-collection
