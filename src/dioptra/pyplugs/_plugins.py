@@ -280,16 +280,25 @@ def _import(package: str, plugin: str) -> None:
     if package in _PLUGINS and plugin in _PLUGINS[package]:
         return None
 
-    plugin_module = f"{package}.{plugin}"
+    # If the plugin does not have a package, it is registered with package ""
+    # (empty string).  Don't prepend the package in that case.
+    if package:
+        plugin_module = f"{package}.{plugin}"
+    else:
+        plugin_module = plugin
 
     try:
         importlib.import_module(plugin_module)
 
     except ImportError as err:
         if repr(plugin_module) in err.msg:
-            raise UnknownPluginError(
-                f"Plugin {plugin!r} not found in {package!r}"
-            ) from None
+            #   Plugin not found in ''
+            # is a confusing error message... don't mention a package in the
+            # error message if there wasn't one.
+            message = f"Plugin {plugin!r} not found"
+            if package:
+                message += f" in {package!r}"
+            raise UnknownPluginError(message) from None
 
         elif repr(package) in err.msg:
             raise UnknownPackageError(f"Package {package!r} does not exist") from None

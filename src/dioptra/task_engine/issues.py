@@ -14,28 +14,49 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Base classes for exceptions in the Dioptra package"""
+import enum
 
 
-class BaseDioptraError(Exception):
-    """Base class for all Dioptra exceptions."""
+class IssueSeverity(enum.Enum):
+    """
+    Validation issue severity levels
+    """
+
+    ERROR = enum.auto()
+    WARNING = enum.auto()
 
 
-class BaseGenericsRegistryError(BaseDioptraError):
-    """Base class for all generics registration exceptions."""
+class IssueType(enum.Enum):
+    """
+    Validation issue types
+    """
+
+    SYNTAX = enum.auto()
+    SCHEMA = enum.auto()
+    SEMANTIC = enum.auto()
+    TYPE = enum.auto()
 
 
-class BaseOptionalDependencyError(BaseDioptraError):
-    """Base class for all optional dependency exceptions."""
+class ValidationIssue:
+    """
+    Represents a validation "issue", including errors, warnings, etc.
+    """
 
+    def __init__(self, type_: IssueType, severity: IssueSeverity, message: str) -> None:
+        self.type = type_
+        self.severity = severity
+        self.message = message
 
-class BasePyPlugsException(BaseDioptraError):
-    """Base class for all PyPlugs exceptions."""
+    def __repr__(self) -> str:
+        value = "ValidationIssue({!s}, {!s}, {!r})".format(
+            self.type, self.severity, self.message
+        )
 
+        return value
 
-class BaseTaskPluginError(BaseDioptraError):
-    """Base class for all task plugin exceptions."""
+    def __str__(self) -> str:
+        value = "{}.{}: {}".format(
+            self.type.name.lower(), self.severity.name.lower(), self.message
+        )
 
-
-class BaseTaskEngineError(BaseDioptraError):
-    """Base class for all declarative task engine errors."""
+        return value
