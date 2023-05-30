@@ -18,9 +18,11 @@
 
 from __future__ import annotations
 
+import os
 import tarfile
 from pathlib import Path
-from typing import List, Union
+from tarfile import TarFile
+from typing import Any, List, Union
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -30,9 +32,29 @@ from dioptra import pyplugs
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
+def is_within_directory(directory: Union[str, Path], target: Union[str, Path]) -> bool:
+    abs_directory = os.path.abspath(directory)
+    abs_target = os.path.abspath(target)
+
+    prefix = os.path.commonprefix([abs_directory, abs_target])
+
+    return prefix == abs_directory
+
+
+def safe_extract(tar: TarFile, path: Union[str, Path] = ".") -> None:
+    for member in tar.getmembers():
+        member_path = os.path.join(path, member.name)
+        if not is_within_directory(path, member_path):
+            raise Exception("Attempted Path Traversal in Tar File")
+
+    tar.extractall(path, members=None, numeric_owner=False)
+
+
 @pyplugs.register
 def extract_tarfile(
-    filepath: Union[str, Path], tarball_read_mode: str = "r:gz"
+    filepath: Union[str, Path],
+    tarball_read_mode: str = "r:gz",
+    output_dir: Any = None,
 ) -> None:
     """Extracts a tarball archive into the current working directory.
 
@@ -46,9 +68,11 @@ def extract_tarfile(
     See Also:
         - :py:func:`tarfile.open`
     """
+    output_dir = Path(output_dir) if output_dir is not None else Path.cwd()
+
     filepath = Path(filepath)
     with tarfile.open(filepath, tarball_read_mode) as f:
-        f.extractall(path=Path.cwd())
+        safe_extract(f, path=output_dir)
 
 
 @pyplugs.register
