@@ -167,7 +167,7 @@ class JobForm(FlaskForm):
         "MLproject file and its associated entry point scripts.",
     )
 
-    def validate_experiment_name(self, field):
+    def validate_experiment_name(self, field: StringField) -> None:
         """Validates that the experiment is registered and not deleted.
 
         Args:
@@ -186,7 +186,7 @@ class JobForm(FlaskForm):
                 "Please check spelling and resubmit."
             )
 
-    def validate_queue(self, field):
+    def validate_queue(self, field: StringField) -> None:
         """Validates that the queue is registered, active and not deleted.
 
         Args:

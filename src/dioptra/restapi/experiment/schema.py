@@ -27,7 +27,7 @@ from typing import Any, Dict
 
 from marshmallow import Schema, fields, post_dump, pre_dump
 
-from dioptra.restapi.utils import slugify
+from dioptra.restapi.utils import ParametersSchema, slugify
 
 from .model import (
     Experiment,
@@ -113,7 +113,7 @@ class ExperimentRegistrationFormSchema(Schema):
         return self.__model__(**data)
 
 
-ExperimentRegistrationSchema = [
+ExperimentRegistrationSchema: list[ParametersSchema] = [
     dict(
         name="name",
         type=str,

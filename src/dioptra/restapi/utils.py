@@ -36,6 +36,7 @@ class ParametersSchema(TypedDict, total=False):
     name: str
     type: object
     location: str
+    required: bool
     help: str
 
 

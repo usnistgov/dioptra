@@ -120,4 +120,4 @@ class UserIdResource(Resource):
         log.info("Request received", user_id=userId)
         id: list[int] = self._user_service.delete(user_id=userId)
 
-        return jsonify(dict(status="Success", id=id))  # type: ignore
+        return jsonify(dict(status="Success", id=id))

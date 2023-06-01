@@ -113,7 +113,7 @@ class QueueRegistrationForm(FlaskForm):
         description="The name to register as a new queue.",
     )
 
-    def validate_name(self, field):
+    def validate_name(self, field: StringField) -> None:
         """Validates that the queue does not exist in the registry.
 
         Args:
