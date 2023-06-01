@@ -27,7 +27,7 @@ from typing import Any, Dict
 from marshmallow import Schema, fields, post_dump, post_load, pre_dump, validate
 from werkzeug.datastructures import FileStorage
 
-from dioptra.restapi.utils import slugify
+from dioptra.restapi.utils import ParametersSchema, slugify
 
 from .model import Job, JobForm, JobFormData
 
@@ -227,7 +227,7 @@ class JobFormSchema(Schema):
         return self.__model__(**data)
 
 
-job_submit_form_schema = [
+job_submit_form_schema: list[ParametersSchema] = [
     dict(
         name="experiment_name",
         type=str,

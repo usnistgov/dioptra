@@ -122,7 +122,7 @@ class QueueIdResource(Resource):
         log.info("Request received", queue_id=queueId)
         id: List[int] = self._queue_service.delete_queue(queueId, log=log)
 
-        return jsonify(dict(status="Success", id=id))  # type: ignore
+        return jsonify(dict(status="Success", id=id))
 
     @accepts(schema=QueueNameUpdateSchema, api=api)
     @responds(schema=QueueSchema, api=api)
@@ -169,7 +169,7 @@ class QueueIdLockResource(Resource):
 
         id: List[int] = self._queue_service.unlock_queue(queue, log=log)
 
-        return jsonify(dict(status="Success", id=id))  # type: ignore
+        return jsonify(dict(status="Success", id=id))
 
     def put(self, queueId: int) -> Queue:
         """Locks the queue (id reference) if it is unlocked."""
@@ -229,11 +229,11 @@ class QueueNameResource(Resource):
         )
 
         if queue is None:
-            return jsonify(dict(status="Success", id=[]))  # type: ignore
+            return jsonify(dict(status="Success", id=[]))
 
         id: List[int] = self._queue_service.delete_queue(queue_id=queue.queue_id)
 
-        return jsonify(dict(status="Success", id=id))  # type: ignore
+        return jsonify(dict(status="Success", id=id))
 
     @accepts(schema=QueueNameUpdateSchema, api=api)
     @responds(schema=QueueSchema, api=api)
@@ -285,7 +285,7 @@ class QueueNameLockResource(Resource):
         id: List[int] = self._queue_service.unlock_queue(queue, log=log)
         name: List[str] = [queueName] if id else []
 
-        return jsonify(dict(status="Success", name=name))  # type: ignore
+        return jsonify(dict(status="Success", name=name))
 
     def put(self, queueName: str) -> Queue:
         """Locks the queue (name reference) if it is unlocked."""

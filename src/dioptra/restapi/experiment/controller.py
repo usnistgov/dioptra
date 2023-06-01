@@ -136,7 +136,7 @@ class ExperimentIdResource(Resource):
             experiment_id=experimentId
         )
 
-        return jsonify(dict(status="Success", id=id))  # type: ignore
+        return jsonify(dict(status="Success", id=id))
 
     @accepts(schema=ExperimentUpdateSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
@@ -202,13 +202,13 @@ class ExperimentNameResource(Resource):
         )
 
         if experiment is None:
-            return jsonify(dict(status="Success", id=[]))  # type: ignore
+            return jsonify(dict(status="Success", id=[]))
 
         id: List[int] = self._experiment_service.delete_experiment(
             experiment_id=experiment.experiment_id
         )
 
-        return jsonify(dict(status="Success", id=id))  # type: ignore
+        return jsonify(dict(status="Success", id=id))
 
     @accepts(schema=ExperimentUpdateSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)

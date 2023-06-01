@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import datetime
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import structlog
 from flask import Flask
@@ -152,7 +152,11 @@ class DioptraDatabaseClient(object):
                 raise
 
     def get_experiment_by_id(self, experiment_id: int) -> Optional[Experiment]:
-        return Experiment.query.get(experiment_id)
+        result = Experiment.query.get(experiment_id)
+        # 1.4 SQLAlchemy type stubs don't seem to have a return type annotation for the
+        # get() method, so mypy assumes Any. Latest SQLAlchemy code uses Optional[Any].
+        # https://github.com/sqlalchemy/sqlalchemy/blob/d9d0ffd96c632750be9adcb03a207d75aecaa80f/lib/sqlalchemy/orm/query.py#L1048
+        return cast(Optional[Experiment], result)
 
     def create_experiment(self, experiment_name: str, experiment_id: int) -> None:
         timestamp = datetime.datetime.now()

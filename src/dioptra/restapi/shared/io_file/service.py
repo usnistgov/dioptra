@@ -19,7 +19,7 @@ from __future__ import annotations
 import tarfile
 from pathlib import Path
 from tarfile import TarFile, TarInfo
-from typing import BinaryIO, List, Optional, Union
+from typing import IO, List, Optional, Union
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -32,7 +32,7 @@ class IOFileService(object):
         self,
         output_dir: Union[str, Path],
         archive_file_path: Optional[str] = None,
-        archive_fileobj: Optional[BinaryIO] = None,
+        archive_fileobj: Optional[IO[bytes]] = None,
         **kwargs,
     ) -> List[str]:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -99,7 +99,7 @@ class IOFileService(object):
     @staticmethod
     def _tarfile_open(
         file_path: Optional[str] = None,
-        fileobj: Optional[BinaryIO] = None,
+        fileobj: Optional[IO[bytes]] = None,
         **kwargs,
     ) -> TarFile:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841

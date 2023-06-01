@@ -27,6 +27,8 @@ from typing import Any, Dict
 from marshmallow import Schema, fields, post_dump, post_load, pre_dump
 from werkzeug.datastructures import FileStorage
 
+from dioptra.restapi.utils import ParametersSchema
+
 from .model import TaskPlugin, TaskPluginUploadForm, TaskPluginUploadFormData
 
 
@@ -125,7 +127,7 @@ class TaskPluginUploadFormSchema(Schema):
         return TaskPluginUploadFormData(**data)  # type: ignore
 
 
-TaskPluginUploadSchema = [
+TaskPluginUploadSchema: list[ParametersSchema] = [
     dict(
         name="task_plugin_name",
         type=str,

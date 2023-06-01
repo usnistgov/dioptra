@@ -76,7 +76,7 @@ class RQService(object):
     ) -> RQJob:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        q: RQQueue = RQQueue(queue, default_timeout="24h", connection=self._redis)
+        q: RQQueue = RQQueue(queue, default_timeout=24 * 3600, connection=self._redis)
         cmd_kwargs = {
             "workflow_uri": workflow_uri,
             "experiment_id": str(experiment_id),

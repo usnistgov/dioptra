@@ -77,7 +77,7 @@ class ExperimentRegistrationForm(FlaskForm):
 
     name = StringField("Name of Experiment", validators=[InputRequired()])
 
-    def validate_name(self, field):
+    def validate_name(self, field: StringField) -> None:
         """Validates that the experiment does not exist in the registry.
 
         Args:

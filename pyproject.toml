@@ -245,6 +245,8 @@ honor_noqa = true
 [tool.mypy]
 python_version = "3.9"
 platform = "linux"
+mypy_path = "src,task-plugins"
+explicit_package_bases = true
 namespace_packages = true
 show_column_numbers = true
 follow_imports = "normal"

@@ -27,7 +27,7 @@ from typing import Any, Dict
 
 from marshmallow import Schema, fields, post_dump, pre_dump
 
-from dioptra.restapi.utils import slugify
+from dioptra.restapi.utils import ParametersSchema, slugify
 
 from .model import Queue, QueueLock, QueueRegistrationForm, QueueRegistrationFormData
 
@@ -127,7 +127,7 @@ class QueueRegistrationFormSchema(Schema):
         return self.__model__(**data)
 
 
-QueueRegistrationSchema = [
+QueueRegistrationSchema: list[ParametersSchema] = [
     dict(
         name="name",
         type=str,

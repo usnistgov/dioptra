@@ -29,7 +29,7 @@ from werkzeug.datastructures import FileStorage
 from dioptra.restapi.shared.io_file.service import IOFileService
 from dioptra.restapi.shared.s3.service import S3Service
 
-from .errors import TaskPluginAlreadyExistsError
+from .errors import TaskPluginAlreadyExistsError, TaskPluginStorageError
 from .model import TaskPlugin, TaskPluginUploadForm, TaskPluginUploadFormData
 from .schema import TaskPluginUploadFormSchema
 
@@ -65,18 +65,26 @@ class TaskPluginService(object):
         with TemporaryDirectory() as tmpdir:
             self._io_file_service.safe_extract_archive(
                 output_dir=tmpdir,
-                archive_fileobj=task_plugin_file,
+                # FileStorage proxies its stream, but does so via __getattr__
+                # override, which is opaque to mypy (we want to use FileStorage
+                # as if it were an IO stream, but mypy can't tell that is
+                # correct).  Passing the wrapped stream directly provides a
+                # clearer type to mypy.
+                archive_fileobj=task_plugin_file.stream,
                 log=log,
             )
 
             prefix: Path = Path(collection) / task_plugin_name
-            plugin_uri_list: List[str] = self._s3_service.upload_directory(
+            plugin_uri_list: Optional[List[str]] = self._s3_service.upload_directory(
                 directory=tmpdir,
                 bucket=bucket,
                 prefix=str(prefix),
                 include_suffixes=[".py"],
                 log=log,
             )
+
+        if plugin_uri_list is None:
+            raise TaskPluginStorageError
 
         new_task_plugin: TaskPlugin = TaskPlugin(
             task_plugin_name=task_plugin_name,

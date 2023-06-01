@@ -32,6 +32,10 @@ class TaskPluginUploadError(Exception):
     """The task plugin upload form contains invalid parameters."""
 
 
+class TaskPluginStorageError(Exception):
+    """The task plugin files could not be located on the storage backend."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(TaskPluginDoesNotExistError)
     def handle_task_plugin_does_not_exist_error(error):
@@ -60,4 +64,14 @@ def register_error_handlers(api: Api) -> None:
                 "parameters. Please verify and resubmit."
             },
             400,
+        )
+
+    @api.errorhandler(TaskPluginStorageError)
+    def handle_task_plugin_storage_error(error):
+        return (
+            {
+                "message": "Internal Server Error - The task plugin files could not be "
+                "located on the storage backend."
+            },
+            500,
         )

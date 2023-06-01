@@ -249,6 +249,6 @@ class TaskPluginCustomCollectionNameResource(Resource):
         )
         name: List[str] = [x.task_plugin_name for x in task_plugins]
 
-        return jsonify(  # type: ignore
+        return jsonify(
             dict(status="Success", collection="dioptra_custom", taskPluginName=name)
         )

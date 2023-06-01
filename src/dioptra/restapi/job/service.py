@@ -29,7 +29,9 @@ from structlog.stdlib import BoundLogger
 from werkzeug.utils import secure_filename
 
 from dioptra.restapi.app import db
+from dioptra.restapi.experiment.errors import ExperimentDoesNotExistError
 from dioptra.restapi.experiment.service import ExperimentService
+from dioptra.restapi.queue.errors import QueueDoesNotExistError
 from dioptra.restapi.queue.service import QueueService
 from dioptra.restapi.shared.rq.service import RQService
 from dioptra.restapi.shared.s3.service import S3Service
@@ -92,12 +94,19 @@ class JobService(object):
 
         job_form_data: JobFormData = self._job_form_schema.dump(job_form)
 
-        experiment: Experiment = self._experiment_service.get_by_name(
+        experiment: Optional[Experiment] = self._experiment_service.get_by_name(
             job_form_data["experiment_name"], log=log
         )
-        queue: Queue = self._queue_service.get_unlocked_by_name(
+
+        if experiment is None:
+            raise ExperimentDoesNotExistError
+
+        queue: Optional[Queue] = self._queue_service.get_unlocked_by_name(
             job_form_data["queue"], log=log
         )
+
+        if queue is None:
+            raise QueueDoesNotExistError
 
         job_form_data["experiment_id"] = experiment.experiment_id
         job_form_data["queue_id"] = queue.queue_id

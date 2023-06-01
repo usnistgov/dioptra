@@ -25,6 +25,8 @@ from typing import Any
 
 from marshmallow import Schema, fields, pre_dump
 
+from dioptra.restapi.utils import ParametersSchema
+
 from .model import User, UserRegistrationForm
 
 
@@ -134,7 +136,7 @@ class UserRegistrationFormSchema(Schema):
         }
 
 
-UserRegistrationSchema = [
+UserRegistrationSchema: list[ParametersSchema] = [
     dict(
         name="username",
         type=str,
