@@ -59,7 +59,6 @@ def load_wrapped_tensorflow_keras_classifier(
     clip_values: Tuple = None,
     imagenet_preprocessing: bool = False,
 ) -> KerasClassifier:
-
     uri = f"models:/{name}/{version}"
     LOGGER.info("Load Keras classifier from model registry", uri=uri)
     keras_classifier = mlflow.keras.load_model(uri)
@@ -71,7 +70,10 @@ def load_wrapped_tensorflow_keras_classifier(
         wrapped_keras_classifier = KerasClassifier(
             model=keras_classifier,
             clip_values=clip_values,
-            preprocessing=(np.array([mean_b, mean_g, mean_r]), np.array([1.0, 1.0, 1.0])),
+            preprocessing=(
+                np.array([mean_b, mean_g, mean_r]),
+                np.array([1.0, 1.0, 1.0]),
+            ),
         )
     else:
         wrapped_keras_classifier = KerasClassifier(
@@ -82,3 +84,61 @@ def load_wrapped_tensorflow_keras_classifier(
     )
 
     return wrapped_keras_classifier
+
+
+def get_target_class_name(poison_dir):
+    poison_dir = poison_dir.resolve()
+    for item in os.listdir(poison_dir):
+        if os.path.isdir(poison_dir / item):
+            return item
+    return "None"
+
+
+def copy_poisoned_images(src, dst, num_poisoned_images):
+    poison_image_list = [
+        os.path.join(src, f)
+        for f in os.listdir(src)
+        if os.path.isfile(os.path.join(src, f))
+    ]
+    np.random.shuffle(poison_image_list)
+    if not (num_poisoned_images < 0 or num_poisoned_images > len(poison_image_list)):
+        poison_image_list = poison_image_list[:num_poisoned_images]
+
+    for file in poison_image_list:
+        shutil.copy(file, dst)
+
+
+@pyplugs.register
+@require_package("art", exc_type=ARTDependencyError)
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def deploy_poison_images(
+    data_dir: str,
+    adv_data_dir: Union[str, Path],
+    poison_deployment_method: str,
+    num_poisoned_images: int,
+) -> str:
+    LOGGER.info("Copying original dataset.")
+    if poison_deployment_method == "add":
+        shutil.copytree(data_dir, adv_data_dir)
+        LOGGER.info("Adding poisoned images.")
+        copy_poisoned_images(
+            src=poison_images_dir / target_class_name,
+            dst=adv_data_dir / target_class_name,
+            num_poisoned_images=num_poisoned_images,
+        )
+    elif poison_deployment_method == "replace":
+        shutil.copytree(data_dir, adv_data_dir)
+        LOGGER.info("Replacing original images with poisoned counterparts.")
+        poison_class_dir = adv_data_dir / target_class_name
+
+        for object in os.listdir(poison_class_dir):
+            if os.path.isfile(poison_class_dir / object):
+                file_id = object.split("poisoned_")[-1]
+                os.remove(poison_class_dir / file_id)
+
+        copy_poisoned_images(
+            src=poison_images_dir / target_class_name,
+            dst=adv_data_dir / target_class_name,
+            num_poisoned_images=num_poisoned_images,
+        )
+    return adv_data_dir

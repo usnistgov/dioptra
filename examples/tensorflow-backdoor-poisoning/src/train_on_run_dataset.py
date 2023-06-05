@@ -40,8 +40,8 @@ from dioptra.sdk.utilities.logging import (
     set_logging_level,
 )
 
-_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 CALLBACKS: List[Dict[str, Any]] = [
     {
         "name": "EarlyStopping",
@@ -68,18 +68,11 @@ def _coerce_comma_separated_ints(ctx, param, value):
 
 @click.command()
 @click.option(
-    "--data-dir-training",
-    type=click.Path(
-        exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
-    ),
-    help="Root directory for NFS mounted training dataset (in container)",
-)
-@click.option(
     "--data-dir-testing",
     type=click.Path(
         exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
     ),
-    help="Root directory for NFS mounted test dataset (in container)",
+    help="Root directory for mounted test dataset (in container)",
 )
 @click.option(
     "--image-size",
@@ -138,40 +131,34 @@ def _coerce_comma_separated_ints(ctx, param, value):
     default=False,
 )
 @click.option(
-    "--target-class-id",
-    type=click.INT,
-    help="Index of target class for backdoor poison.",
-    default=1,
+    "--load-dataset-from-mlruns",
+    type=click.BOOL,
+    help="If set to true, instead loads the training and test datasets from a previous patch mlruns.",
+    default=False,
 )
 @click.option(
-    "--feature-layer-index",
-    type=click.INT,
-    help="Index of feature layer for backdoor poisoning.",
-    default=6,
+    "--dataset-run-id-testing",
+    type=click.STRING,
+    help="MLFlow Run ID of a successful patch attack on a test dataset.",
+    default="None",
 )
 @click.option(
-    "--discriminator-layer-1-size",
-    type=click.INT,
-    help="The size of the first discriminator layer.",
-    default=256,
+    "--dataset-run-id-training",
+    type=click.STRING,
+    help="MLFlow Run ID of a successful patch attack on a training dataset.",
+    default="None",
 )
 @click.option(
-    "--discriminator-layer-2-size",
-    type=click.INT,
-    help="The size of the second discriminator layer.",
-    default=128,
+    "--adv-tar-name",
+    type=click.STRING,
+    default="adversarial_patch_dataset.tar.gz",
+    help="Name of tarfile artifact containing images",
 )
 @click.option(
-    "--regularization-factor",
-    type=click.FLOAT,
-    help="The regularization constant for the backdoor recognition part of the loss function.",
-    default=30.0,
-)
-@click.option(
-    "--poison-fraction",
-    type=click.FLOAT,
-    help="The fraction of training data to be poisoned. Range 0 to 1.",
-    default=0.10,
+    "--adv-data-dir",
+    type=click.STRING,
+    default="adv_patch_dataset",
+    help="Directory in tarfile containing images",
 )
 @click.option(
     "--seed",
@@ -181,7 +168,7 @@ def _coerce_comma_separated_ints(ctx, param, value):
 )
 def train(
     data_dir_testing,
-    data_dir_training,
+    # data_dir_training,
     image_size,
     model_architecture,
     epochs,
@@ -191,19 +178,17 @@ def train(
     optimizer,
     validation_split,
     imagenet_preprocessing,
-    target_class_id,
-    feature_layer_index,
-    discriminator_layer_1_size,
-    discriminator_layer_2_size,
-    regularization_factor,
-    poison_fraction,
+    load_dataset_from_mlruns,
+    dataset_run_id_testing,
+    dataset_run_id_training,
+    adv_tar_name,
+    adv_data_dir,
     seed,
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
         entry_point="train",
         data_dir_testing=data_dir_testing,
-        data_dir_training=data_dir_training,
         image_size=image_size,
         model_architecture=model_architecture,
         epochs=epochs,
@@ -213,12 +198,10 @@ def train(
         optimizer=optimizer,
         validation_split=validation_split,
         imagenet_preprocessing=imagenet_preprocessing,
-        target_class_id=target_class_id,
-        feature_layer_index=feature_layer_index,
-        discriminator_layer_1_size=discriminator_layer_1_size,
-        discriminator_layer_2_size=discriminator_layer_2_size,
-        regularization_factor=regularization_factor,
-        poison_fraction=poison_fraction,
+        load_dataset_from_mlruns=load_dataset_from_mlruns,
+        dataset_run_id_testing=dataset_run_id_testing,
+        dataset_run_id_training=dataset_run_id_training,
+        adv_tar_name=adv_tar_name,
         seed=seed,
     )
 
@@ -227,7 +210,7 @@ def train(
         state = flow.run(
             parameters=dict(
                 active_run=active_run,
-                training_dir=Path(data_dir_training),
+                training_dir=(Path.cwd() / adv_data_dir).resolve(),
                 testing_dir=Path(data_dir_testing),
                 image_size=image_size,
                 model_architecture=model_architecture,
@@ -238,12 +221,8 @@ def train(
                 optimizer_name=optimizer,
                 validation_split=validation_split,
                 imagenet_preprocessing=imagenet_preprocessing,
-                target_class_id=target_class_id,
-                feature_layer_index=feature_layer_index,
-                discriminator_layer_1_size=discriminator_layer_1_size,
-                discriminator_layer_2_size=discriminator_layer_2_size,
-                regularization_factor=regularization_factor,
-                poison_fraction=poison_fraction,
+                adv_tar_name=adv_tar_name,
+                run_id=dataset_run_id_training,
                 seed=seed,
             )
         )
@@ -265,16 +244,12 @@ def init_train_flow() -> Flow:
             optimizer_name,
             validation_split,
             imagenet_preprocessing,
-            target_class_id,
-            feature_layer_index,
-            discriminator_layer_1_size,
-            discriminator_layer_2_size,
-            regularization_factor,
-            poison_fraction,
             seed,
+            run_id,
+            adv_tar_name,
         ) = (
             Parameter("active_run"),
-            Parameter("training_dir"),
+            Parameter("training_dir"),  # leave
             Parameter("testing_dir"),
             Parameter("image_size"),
             Parameter("model_architecture"),
@@ -285,13 +260,9 @@ def init_train_flow() -> Flow:
             Parameter("optimizer_name"),
             Parameter("validation_split"),
             Parameter("imagenet_preprocessing"),
-            Parameter("target_class_id"),
-            Parameter("feature_layer_index"),
-            Parameter("discriminator_layer_1_size"),
-            Parameter("discriminator_layer_2_size"),
-            Parameter("regularization_factor"),
-            Parameter("poison_fraction"),
             Parameter("seed"),
+            Parameter("run_id"),
+            Parameter("adv_tar_name"),
         )
         seed, rng = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
@@ -346,7 +317,19 @@ def init_train_flow() -> Flow:
             callbacks_list=CALLBACKS,
             upstream_tasks=[init_tensorflow_results],
         )
-
+        adv_tar_path = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "download_all_artifacts_in_run",
+            run_id=run_id,
+            artifact_path=adv_tar_name,
+        )
+        extract_tarfile_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "utils",
+            "extract_tarfile",
+            filepath=adv_tar_path,
+        )
         training_ds = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
             "data_tensorflow",
@@ -357,10 +340,9 @@ def init_train_flow() -> Flow:
             seed=dataset_seed,
             validation_split=validation_split,
             batch_size=batch_size,
-            upstream_tasks=[init_tensorflow_results],
+            upstream_tasks=[init_tensorflow_results, extract_tarfile_results],
             rescale=rescale,
             imagenet_preprocessing=imagenet_preprocessing,
-            set_to_max_size=True,
         )
         validation_ds = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
@@ -372,7 +354,7 @@ def init_train_flow() -> Flow:
             seed=dataset_seed,
             validation_split=validation_split,
             batch_size=batch_size,
-            upstream_tasks=[init_tensorflow_results],
+            upstream_tasks=[init_tensorflow_results, extract_tarfile_results],
             rescale=rescale,
             imagenet_preprocessing=imagenet_preprocessing,
         )
@@ -386,7 +368,7 @@ def init_train_flow() -> Flow:
             seed=dataset_seed + 1,
             validation_split=None,
             batch_size=batch_size,
-            upstream_tasks=[init_tensorflow_results],
+            upstream_tasks=[init_tensorflow_results, extract_tarfile_results],
             rescale=rescale,
             imagenet_preprocessing=imagenet_preprocessing,
         )
@@ -407,32 +389,26 @@ def init_train_flow() -> Flow:
             n_classes=n_classes,
             upstream_tasks=[init_tensorflow_results],
         )
-
-        classifier = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
-            "attacks_poison",
-            "create_adv_embedding_model",
-            model=classifier,
-            training_ds=training_ds,
-            target_class_id=target_class_id,
-            feature_layer_index=feature_layer_index,
-            poison_fraction=poison_fraction,
-            regularization_factor=regularization_factor,
-            learning_rate=learning_rate,
-            batch_size=batch_size,
-            epochs=epochs,
-            discriminator_layer_1_size=discriminator_layer_1_size,
-            discriminator_layer_2_size=discriminator_layer_2_size,
-            optimizer=optimizer,
-            metrics=metrics,
+        history = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.estimators",
+            "methods",
+            "fit",
+            estimator=classifier,
+            x=training_ds,
+            fit_kwargs=dict(
+                nb_epochs=epochs,
+                validation_data=validation_ds,
+                callbacks=callbacks_list,
+                verbose=2,
+            ),
         )
-
         classifier_performance_metrics = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "evaluate_metrics_tensorflow",
             classifier=classifier,
             dataset=testing_ds,
+            upstream_tasks=[history],
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
@@ -440,15 +416,24 @@ def init_train_flow() -> Flow:
             "log_metrics",
             metrics=classifier_performance_metrics,
         )
-        model_storage = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
-            "tensorflow",
-            "register_init_model",
-            model=classifier,
+        logged_tensorflow_keras_estimator = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.tracking",
+            "mlflow",
+            "log_tensorflow_keras_estimator",
+            estimator=classifier,
+            model_dir="model",
+            upstream_tasks=[history],
+        )
+        model_version = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.registry",
+            "mlflow",
+            "add_model_to_registry",
             active_run=active_run,
             name=register_model_name,
             model_dir="model",
+            upstream_tasks=[logged_tensorflow_keras_estimator],
         )
+
     return flow
 
 

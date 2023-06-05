@@ -1,4 +1,3 @@
-#!/bin/bash
 # This Software (Dioptra) is being made available as a public service by the
 # National Institute of Standards and Technology (NIST), an Agency of the United
 # States Department of Commerce. This software was developed in part by employees of
@@ -15,5 +14,28 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
 
-pip install --no-cache-dir 'alembic==1.4.1' 'boto3' 'mlflow==1.12.1' 'structlog>=20.2.0'
+import structlog
+from structlog.stdlib import BoundLogger
+
+from dioptra import pyplugs
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+
+@pyplugs.register
+def select_rescale_value(imagenet_preprocessing: bool) -> float:
+    if imagenet_preprocessing:
+        rescale = 1.0
+    else:
+        rescale = 1.0 / 255
+    return rescale
+
+
+@pyplugs.register
+def select_clip_values(image_size):
+    if image_size[2] == 3:
+        return (0, 255)
+    else:
+        return (0, 1)

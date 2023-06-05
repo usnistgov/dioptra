@@ -121,6 +121,12 @@ def _coerce_int_to_bool(ctx, param, value):
     default=1.0,
 )
 @click.option(
+    "--rescale",
+    type=click.FLOAT,
+    help="Image rescaling parameter. 1.0 for Mnist data, 1/255.0 for ImageNet.",
+    default=1.0,
+)
+@click.option(
     "--label-type",
     type=click.Choice(["train", "training", "test", "testing"], case_sensitive=False),
     default="test",
@@ -135,9 +141,9 @@ def poison_attack(
     target_class,
     poison_fraction,
     label_type,
+    rescale,
     seed,
 ):
-
     LOGGER.info(
         "Execute MLFlow entry point",
         entry_point="gen_poison_data",
@@ -149,13 +155,9 @@ def poison_attack(
         target_class=target_class,
         poison_fraction=poison_fraction,
         label_type=label_type,
+        rescale=rescale,
         seed=seed,
     )
-
-    if image_size[2] == 3:
-        rescale = 1.0
-    else:
-        rescale = 1.0 / 255
 
     with mlflow.start_run() as active_run:  # noqa: F841
         flow: Flow = generate_poison_data()
