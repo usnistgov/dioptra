@@ -27,8 +27,6 @@ from dioptra import pyplugs
 from dioptra.sdk.exceptions import TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
-from . import import_keras
-
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
@@ -57,45 +55,3 @@ def register_init_model(active_run, name, model_dir, model) -> Model:
         keras_model=model, artifact_path=model_dir, registered_model_name=name
     )
     return model
-
-
-@pyplugs.register
-@require_package("tensorflow", exc_type=TensorflowDependencyError)
-def evaluate_metrics_tensorflow(classifier, dataset) -> Dict[str, float]:
-    result = classifier.evaluate(dataset, verbose=0)
-    return dict(zip(classifier.metrics_names, result))
-
-
-@pyplugs.register
-@require_package("tensorflow", exc_type=TensorflowDependencyError)
-def get_optimizer(optimizer: str, learning_rate: float) -> Optimizer:
-    return import_keras.get_optimizer(optimizer)(learning_rate)
-
-
-@pyplugs.register
-@require_package("tensorflow", exc_type=TensorflowDependencyError)
-def get_model_callbacks(callbacks_list: List[Dict[str, Any]]) -> List[Callback]:
-    return [
-        import_keras.get_callback(callback["name"])(**callback.get("parameters", {}))
-        for callback in callbacks_list
-    ]
-
-
-@pyplugs.register
-@require_package("tensorflow", exc_type=TensorflowDependencyError)
-def get_performance_metrics(
-    metrics_list: List[Dict[str, Any]]
-) -> List[Union[Metric, FunctionType]]:
-    performance_metrics: List[Metric] = []
-
-    for metric in metrics_list:
-        new_metric: Union[Metric, FunctionType] = import_keras.get_metric(
-            metric["name"]
-        )
-        performance_metrics.append(
-            new_metric(**metric.get("parameters"))
-            if not isinstance(new_metric, FunctionType) and metric.get("parameters")
-            else new_metric
-        )
-
-    return performance_metrics

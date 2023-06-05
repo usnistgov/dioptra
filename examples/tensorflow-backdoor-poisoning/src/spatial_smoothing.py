@@ -74,13 +74,6 @@ def _coerce_int_to_bool(ctx, param, value):
 
 @click.command()
 @click.option(
-    "--data-dir",
-    type=click.Path(
-        exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
-    ),
-    help="Root directory for NFS mounted datasets (in container)",
-)
-@click.option(
     "--image-size",
     type=click.STRING,
     callback=_coerce_comma_separated_ints,
@@ -153,7 +146,6 @@ def _coerce_int_to_bool(ctx, param, value):
     default=-1,
 )
 def spatial_smoothing(
-    data_dir,
     image_size,
     def_tar_name,
     def_data_dir,
@@ -167,11 +159,9 @@ def spatial_smoothing(
     dataset_name,
     seed,
 ):
-
     LOGGER.info(
         "Execute MLFlow entry point",
         entry_point="spatial_smoothing",
-        data_dir=data_dir,
         image_size=image_size,
         def_tar_name=def_tar_name,
         def_data_dir=def_data_dir,
@@ -186,20 +176,11 @@ def spatial_smoothing(
         seed=seed,
     )
 
-    if load_dataset_from_mlruns:
-        data_dir = Path.cwd() / "dataset" / dataset_name
-        data_tar_name = dataset_tar_name
-        data_tar_path = download_image_archive(
-            run_id=dataset_run_id, archive_path=data_tar_name
-        )
-        with tarfile.open(data_tar_path, "r:gz") as f:
-            f.extractall(path=(Path.cwd() / "dataset"))
-
     with mlflow.start_run() as active_run:  # noqa: F841
         flow: Flow = init_spatial_smoothing_flow()
         state = flow.run(
             parameters=dict(
-                testing_dir=Path(data_dir),
+                testing_dir=(Path.cwd() / dataset_name).resolve(),
                 image_size=image_size,
                 def_tar_name=def_tar_name,
                 def_data_dir=(Path.cwd() / def_data_dir).resolve(),
@@ -209,31 +190,16 @@ def spatial_smoothing(
                 spatial_smoothing_apply_fit=spatial_smoothing_apply_fit,
                 spatial_smoothing_apply_predict=spatial_smoothing_apply_predict,
                 seed=seed,
+                dataset_run_id=dataset_run_id,
+                dataset_tar_name=dataset_tar_name,
             )
         )
 
     return state
 
 
-# Update data dir path if user is applying defense over image artifacts.
-def download_image_archive(
-    run_id: str, archive_path: str, destination_path: Optional[str] = None
-) -> str:
-    client: MlflowClient = MlflowClient()
-    image_archive_path: str = client.download_artifacts(
-        run_id=run_id, path=archive_path, dst_path=destination_path
-    )
-    LOGGER.info(
-        "Image archive downloaded",
-        run_id=run_id,
-        storage_path=archive_path,
-        dst_path=image_archive_path,
-    )
-    return image_archive_path
-
-
 def init_spatial_smoothing_flow() -> Flow:
-    with Flow("Fast Gradient Method") as flow:
+    with Flow("Spatial Smoothing Flow") as flow:
         (
             testing_dir,
             image_size,
@@ -245,6 +211,8 @@ def init_spatial_smoothing_flow() -> Flow:
             spatial_smoothing_apply_fit,
             spatial_smoothing_apply_predict,
             seed,
+            dataset_run_id,
+            dataset_tar_name,
         ) = (
             Parameter("testing_dir"),
             Parameter("image_size"),
@@ -256,6 +224,8 @@ def init_spatial_smoothing_flow() -> Flow:
             Parameter("spatial_smoothing_apply_fit"),
             Parameter("spatial_smoothing_apply_predict"),
             Parameter("seed"),
+            Parameter("dataset_run_id"),
+            Parameter("dataset_tar_name"),
         )
         seed, rng = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
@@ -290,6 +260,20 @@ def init_spatial_smoothing_flow() -> Flow:
             ),
         )
 
+        adv_tar_path = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "download_all_artifacts_in_run",
+            run_id=dataset_run_id,
+            artifact_path=dataset_tar_name,
+        )
+        extract_tarfile_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "utils",
+            "extract_tarfile",
+            filepath=adv_tar_path,
+        )
+
         distance_metrics_list = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.metrics",
             "distance",
@@ -300,7 +284,7 @@ def init_spatial_smoothing_flow() -> Flow:
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
             "defenses_image_preprocessing",
             "create_defended_dataset",
-            data_dir=testing_dir,
+            data_dir=testing_dir,  # was testing_dir
             distance_metrics_list=distance_metrics_list,
             def_data_dir=def_data_dir,
             batch_size=batch_size,
@@ -308,7 +292,7 @@ def init_spatial_smoothing_flow() -> Flow:
             window_size=spatial_smoothing_window_size,
             apply_fit=spatial_smoothing_apply_fit,
             apply_predict=spatial_smoothing_apply_predict,
-            upstream_tasks=[make_directories_results],
+            upstream_tasks=[make_directories_results, extract_tarfile_results],
         )
         log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
