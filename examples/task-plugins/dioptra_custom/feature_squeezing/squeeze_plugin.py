@@ -18,36 +18,25 @@
 
 import tarfile
 import warnings
+from pathlib import Path
+from typing import Tuple
 
-warnings.filterwarnings("ignore")
-
-import tensorflow as tf
-
-tf.compat.v1.disable_eager_execution()
-
-import click
 import mlflow
 import mlflow.tensorflow
 import numpy as np
 import structlog
-import pandas as pd
-import os
-from pathlib import Path
-
+import tensorflow as tf
+from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
 
 from dioptra import pyplugs
-from prefect import task
-from typing import Callable, Dict, List, Optional, Tuple, Union
-from data import create_image_dataset, download_image_archive
-from log import configure_stdlib_logger, configure_structlog_logger
-from models import load_model_in_registry
-from tensorflow.keras.preprocessing.image import save_img
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
 
+warnings.filterwarnings("ignore")
+
+tf.compat.v1.disable_eager_execution()
+
+LOGGER = structlog.get_logger()
 
 try:
     from art.defences.preprocessor import FeatureSqueezing
@@ -56,8 +45,6 @@ except ImportError:
         "Unable to import one or more optional packages, functionality may be reduced",
         package="art",
     )
-
-LOGGER = structlog.get_logger()
 
 
 @pyplugs.register
@@ -94,45 +81,22 @@ def feature_squeeze(
     )
 
     batch_size = 32  # There is currently a bug preventing batch size from getting passsed in correctly
-    tensorflow_global_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
-    dataset_seed: int = rng.integers(low=0, high=2 ** 31 - 1)
+    tensorflow_global_seed: int = rng.integers(low=0, high=2**31 - 1)
+    dataset_seed: int = rng.integers(low=0, high=2**31 - 1)
 
     tf.random.set_seed(tensorflow_global_seed)
     defense = FeatureSqueezing(bit_depth=bit_depth, clip_values=(0.0, 1.0))
     adv_testing_tar_name = "testing_adversarial_fgm.tar.gz"
     adv_testing_data_dir = Path.cwd() / "adv_testing"
     def_testing_data_dir = Path.cwd() / "def_testing"
-    adv_perturbation_tar_name = "distance_metrics.csv.gz"
     #       image_size = (28, 28)
     color_mode = "grayscale"
     LOGGER.info("adv_data_dir: ", path=adv_data_dir)
     LOGGER.info("adv_tar_name: ", path=adv_tar_name)
     if model_architecture == "alex_net" or model_architecture == "mobilenet":
-        #            image_size = (224, 224)
+        image_size = (224, 224)
         color_mode = "rgb"
     LOGGER.info("Downloading image archive at ", path=adv_testing_tar_name)
-    """   
-    adv_testing_tar_path = download_image_archive(
-        run_id=run_id, archive_path=adv_testing_tar_name
-    )
-    
-       adv_perturbation_tar_path = download_image_archive(
-            run_id=run_id, archive_path=adv_data_dir  #adv_perturbation_tar_name
-        )
-   
-    with tarfile.open(adv_testing_tar_path, "r:gz") as f:
-        f.extractall(path=Path.cwd())
-
-    adv_ds = create_image_dataset(
-        data_dir=str(adv_testing_data_dir.resolve()),
-        subset=None,
-        validation_split=None,
-        image_size=image_size,
-        color_mode=color_mode,
-        seed=dataset_seed,
-        batch_size=batch_size,
-    )
-    """
     data_flow = data_flow  # dv_data_dir
     #    data_flow = adv_ds
     num_images = data_flow.n
@@ -140,8 +104,6 @@ def feature_squeeze(
     num_images = int(num_images)
     class_names_list = sorted(data_flow.class_indices, key=data_flow.class_indices.get)
     LOGGER.info("num_images ", path=num_images)
-    distance_metrics_ = {"image": [], "label": []}
-    df = enumerate(data_flow)
 
     for batch_num, (x, y) in enumerate(data_flow):
         LOGGER.info("batch_num ", path=batch_num)
@@ -166,7 +128,6 @@ def feature_squeeze(
             class_names_list,
         )
 
-    testing_dir = Path(data_dir) / "testing"
     adv_data_dir = Path().cwd() / "adv_testing"
     def_data_dir = Path().cwd() / "def_testing"
     adv_data_dir.mkdir(parents=True, exist_ok=True)
@@ -179,7 +140,7 @@ def feature_squeeze(
     with tarfile.open(adv_testing_tar, "w:gz") as f:
         f.add(str(def_data_dir.resolve()), arcname=adv_data_dir.name)
 
-    tar = tarfile.open(adv_testing_tar)
+    tarfile.open(adv_testing_tar)
     #       LOGGER.info("Saved to : ", dir=adv_testing_tar_path)
     LOGGER.info("Log defended images", filename=adv_testing_tar.name)
     print("Base: ", str(adv_testing_tar))
@@ -191,7 +152,7 @@ def feature_squeeze(
     )
 
     LOGGER.info("Finishing run ID: ", run_id=run_id)
-    adv_ds_defend = create_image_dataset(
+    adv_ds_defend = create_image_dataset(  # noqa: F841
         data_dir=str(adv_testing_data_dir.resolve()),
         subset=None,
         validation_split=None,
@@ -229,24 +190,28 @@ def _evaluate_classification_metrics(classifier, adv_ds):
         mlflow.log_metric(key=metric_name, value=metric_value)
 
 
-def _log_distance_metrics(distance_metrics_: Dict[str, List[List[float]]]) -> None:
-    distance_metrics_ = distance_metrics_.copy()
-    del distance_metrics_["image"]
-    del distance_metrics_["label"]
-    for metric_name, metric_values_list in distance_metrics_.items():
-        metric_values = np.array(metric_values_list)
-        mlflow.log_metric(key=f"{metric_name}_mean", value=metric_values.mean())
-        mlflow.log_metric(key=f"{metric_name}_median", value=np.median(metric_values))
-        mlflow.log_metric(key=f"{metric_name}_stdev", value=metric_values.std())
-        mlflow.log_metric(
-            key=f"{metric_name}_iqr", value=scipy.stats.iqr(metric_values)
-        )
-        mlflow.log_metric(key=f"{metric_name}_min", value=metric_values.min())
-        mlflow.log_metric(key=f"{metric_name}_max", value=metric_values.max())
-        LOGGER.info("logged distance-based metric", metric_name=metric_name)
+def create_image_dataset(
+    data_dir: str,
+    subset: str,
+    rescale: float = 1.0 / 255,
+    validation_split: float = 0.2,
+    batch_size: int = 32,
+    seed: int = 8237131,
+    label_mode: str = "categorical",
+    color_mode: str = "grayscale",
+    image_size: Tuple[int, int] = (28, 28),
+):
+    data_generator: ImageDataGenerator = ImageDataGenerator(
+        rescale=rescale,
+        validation_split=validation_split,
+    )
 
-
-"""
-        classifier = load_model_in_registry(model=model)
-        evaluate_classification_metrics(classifier=classifier, adv_ds=adv_ds_defend)
-"""
+    return data_generator.flow_from_directory(
+        directory=data_dir,
+        target_size=image_size,
+        color_mode=color_mode,
+        class_mode=label_mode,
+        batch_size=batch_size,
+        seed=seed,
+        subset=subset,
+    )

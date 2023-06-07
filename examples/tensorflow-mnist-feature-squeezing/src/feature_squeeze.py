@@ -16,7 +16,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
-import tarfile
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -25,34 +24,27 @@ import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
 
-import click
-import mlflow
-import mlflow.tensorflow
-import numpy as np
-import structlog
-import pandas as pd
 import os
 from pathlib import Path
-
-from data import create_image_dataset, download_image_archive
-from log import configure_stdlib_logger, configure_structlog_logger
-from models import load_model_in_registry
-from tensorflow.keras.preprocessing.image import save_img
-from art.defences.preprocessor import FeatureSqueezing
 from typing import Dict, List
 
-from prefect import Flow, Parameter, task
+import click
+import mlflow
+import numpy as np
+import structlog
+from prefect import Flow, Parameter
+
 from dioptra import pyplugs
 from dioptra.sdk.utilities.contexts import plugin_dirs
 from dioptra.sdk.utilities.logging import (
     StderrLogStream,
     StdoutLogStream,
     attach_stdout_stream_handler,
-    clear_logger_handlers,
     configure_structlog,
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
@@ -70,34 +62,6 @@ def _coerce_comma_separated_ints(ctx, param, value):
 
 
 LOGGER = structlog.get_logger()
-
-"""
-def save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames, class_names_list):
-    for batch_image_num, adv_image in enumerate(adv_batch):
-        out_label = class_names_list[y[batch_image_num]]
-        adv_image_path = (
-            adv_data_dir
-            / f"{out_label}"
-            / f"adv_{clean_filenames[batch_image_num].name}"
-        )
-
-        if not adv_image_path.parent.exists():
-            adv_image_path.parent.mkdir(parents=True)
-
-        save_img(path=str(adv_image_path), x=adv_image)
-
-
-def evaluate_classification_metrics(classifier, adv_ds):
-    LOGGER.info("evaluating classification metrics using adversarial images")
-    result = classifier.evaluate(adv_ds, verbose=0)
-    adv_metrics = dict(zip(classifier.metrics_names, result))
-    LOGGER.info(
-        "computation of classification metrics for adversarial images complete",
-        **adv_metrics,
-    )
-    for metric_name, metric_value in adv_metrics.items():
-        mlflow.log_metric(key=metric_name, value=metric_value)
-"""
 
 
 @click.command()
@@ -180,10 +144,6 @@ def feature_squeeze(
     adv_tar_name,
     image_size,
 ):
-    rng = np.random.default_rng(seed if seed >= 0 else None)
-
-    if seed < 0:
-        seed = rng.bit_generator._seed_seq.entropy
 
     LOGGER.info(
         "Execute MLFlow entry point",
@@ -282,17 +242,7 @@ def init_squeeze_flow() -> Flow:
                 dataset_seed=dataset_seed,
             ),
         )
-        """
-        keras_classifier = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.registry",
-            "art",
-            "load_wrapped_tensorflow_keras_classifier",
-            name=model,
-            version=model_version,
-            upstream_tasks=[init_tensorflow_results],
-        )
-        """
-        distance_metrics_list = pyplugs.call_task(
+        distance_metrics_list = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.metrics",
             "distance",
             "get_distance_metric_list",
@@ -323,8 +273,8 @@ def init_squeeze_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results, extract_tarfile_results],
         )
 
-        feature_squeeze = pyplugs.call_task(
-            "src",
+        feature_squeeze = pyplugs.call_task(  # noqa: F841
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.feature_squeezing",
             "squeeze_plugin",
             "feature_squeeze",
             data_dir=data_dir,
@@ -341,26 +291,6 @@ def init_squeeze_flow() -> Flow:
             image_size=image_size,
             upstream_tasks=[make_directories_results],
         )
-        """
-        log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
-            f"{_PLUGINS_IMPORT_PATH}.artifacts",
-            "mlflow",
-            "upload_directory_as_tarball_artifact",
-            source_dir=data_dir,
-            tarball_filename=adv_tar_name,
-            upstream_tasks=[distance_metrics],
-        )
-        
-        log_distance_metrics_result = pyplugs.call_task(  # noqa: F841
-            f"{_PLUGINS_IMPORT_PATH}.artifacts",
-            "mlflow",
-            "upload_data_frame_artifact",
-            data_frame=distance_metrics,
-            file_name=distance_metrics_filename,
-            file_format="csv.gz",
-            file_format_kwargs=dict(index=False),
-        )
-        """
     return flow
 
 

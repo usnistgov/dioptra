@@ -39,6 +39,7 @@ from dioptra.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
@@ -147,18 +148,6 @@ def _coerce_int_to_bool(ctx, param, value):
     help=" Confidence of adversarial examples",
 )
 @click.option(
-    "--max-halving",
-    type=click.INT,
-    help="Maximum number of halving steps in the line search optimization",
-    default=5,
-)
-@click.option(
-    "--max-doubling",
-    type=click.INT,
-    help="Maximum number of doubling steps in the line search optimization",
-    default=5,
-)
-@click.option(
     "--seed",
     type=click.INT,
     help="Set the entry point rng seed",
@@ -190,8 +179,6 @@ def cw_l2_attack(
     targeted,
     learning_rate,
     max_iter,
-    max_doubling,
-    max_halving,
     verbose,
     binary_search_steps,
     initial_const,
@@ -212,8 +199,6 @@ def cw_l2_attack(
         targeted=targeted,
         learning_rate=learning_rate,
         max_iter=max_iter,
-        max_doubling=max_doubling,
-        max_halving=max_halving,
         verbose=verbose,
         binary_search_steps=binary_search_steps,
         initial_const=initial_const,
@@ -237,8 +222,6 @@ def cw_l2_attack(
                 targeted=targeted,
                 learning_rate=learning_rate,
                 max_iter=max_iter,
-                max_doubling=max_doubling,
-                max_halving=max_halving,
                 verbose=verbose,
                 initial_const=initial_const,
                 binary_search_steps=binary_search_steps,
@@ -265,8 +248,6 @@ def init_cw_flow() -> Flow:
             targeted,
             learning_rate,
             max_iter,
-            max_doubling,
-            max_halving,
             verbose,
             binary_search_steps,
             initial_const,
@@ -285,8 +266,6 @@ def init_cw_flow() -> Flow:
             Parameter("targeted"),
             Parameter("learning_rate"),
             Parameter("max_iter"),
-            Parameter("max_doubling"),
-            Parameter("max_halving"),
             Parameter("verbose"),
             Parameter("binary_search_steps"),
             Parameter("initial_const"),
@@ -338,7 +317,7 @@ def init_cw_flow() -> Flow:
             request=DISTANCE_METRICS,
         )
         distance_metrics = pyplugs.call_task(
-            "src",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.feature_squeezing",
             "cw_l2_plugin",
             "create_adversarial_cw_l2_dataset",
             model_name=model_name,
@@ -349,14 +328,12 @@ def init_cw_flow() -> Flow:
             adv_data_dir=adv_data_dir,
             batch_size=batch_size,
             image_size=image_size,
-            max_doubling=max_doubling,
             max_iter=max_iter,
             targeted=targeted,
             binary_search_steps=binary_search_steps,
             confidence=confidence,
             learning_rate=learning_rate,
             model_architecture=model_architecture,
-            max_halving=max_halving,
             verbose=verbose,
             initial_const=initial_const,
             upstream_tasks=[make_directories_results],
