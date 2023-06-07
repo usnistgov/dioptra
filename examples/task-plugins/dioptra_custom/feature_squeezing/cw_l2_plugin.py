@@ -16,29 +16,24 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+import random
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple
 
 import mlflow
 import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-import random
-import tensorflow as tf
 from structlog.stdlib import BoundLogger
-from models import load_model_in_registry
+
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from art.attacks.evasion import CarliniLInfMethod
     from art.attacks.evasion import CarliniL2Method
     from art.estimators.classification import KerasClassifier
 
@@ -62,16 +57,16 @@ except ImportError:  # pragma: nocover
 @pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def create_adversarial_cw_inf_dataset(
+def create_adversarial_cw_l2_dataset(
     data_dir: str,
     model_name: str,
     model_version: str,
+    confidence: float,
+    targeted: bool,
     learning_rate: float,
+    binary_search_steps: int,
     max_iter: int,
-    max_halving: int,
-    max_doubling: int,
-    verbose: str,
-    # eps: float,
+    initial_const: float,
     keras_classifier: KerasClassifier,
     adv_data_dir: Path = None,
     rescale: float = 1.0 / 255,
@@ -79,24 +74,24 @@ def create_adversarial_cw_inf_dataset(
     label_mode: str = "categorical",
     color_mode: str = "grayscale",
     image_size: Tuple[int, int] = (28, 28),
-    confidence: float = 0.0,
     **kwargs,
 ):
-    model_name = model_name
+    model_name = model_name + "/" + model_version
     LOGGER.info("Model Selected: ", model_name=model_name)
     color_mode: str = "color" if image_size[2] == 3 else "grayscale"
     target_size: Tuple[int, int] = image_size[:2]
     adv_data_dir = Path(adv_data_dir)
     LOGGER.info("initiating classifier: ", keras_classifier=keras_classifier)
-    attack = _init_cw_inf(
+    attack = _init_cw_l2(
         keras_classifier=keras_classifier,
         batch_size=batch_size,
         confidence=confidence,
-        learning_rate=learning_rate,  # placeholder
+        targeted=targeted,
+        learning_rate=learning_rate,
+        binary_search_steps=binary_search_steps,
         max_iter=max_iter,
-        max_halving=max_halving,
-        max_doubling=max_doubling,
-        verbose=verbose,
+        initial_const=initial_const,
+        verbose=True,
     )
 
     data_generator: ImageDataGenerator = ImageDataGenerator(rescale=rescale)
@@ -118,14 +113,9 @@ def create_adversarial_cw_inf_dataset(
         distance_metrics_[metric_name] = []
     LOGGER.info(
         "Generate adversarial images",
-        attack="cw_inf",
+        attack="cw_l2",
         model_version=model_version,
         num_batches=num_images // batch_size,
-        confidence=confidence,
-        learning_rate=learning_rate,
-        max_iter=max_iter,
-        max_doubling=max_doubling,
-        max_halving=max_halving,
     )
     # Here
     n_classes = len(class_names_list)
@@ -136,22 +126,27 @@ def create_adversarial_cw_inf_dataset(
         clean_filenames = img_filenames[
             batch_num * batch_size : (batch_num + 1) * batch_size
         ]
+        test = []
+        for item in clean_filenames:
+            test.append(item.resolve())
 
         LOGGER.info(
             "Generate adversarial image batch",
-            attack="cw_inf",
+            attack="cw_l2",
             batch_num=batch_num,
-            attack_object=attack,
+            clean_filenames=test,
         )
 
         y_int = np.argmax(y, axis=1)
-
         target_index = random.randint(0, n_classes - 1)
-
-        adv_batch = attack.generate(x=x, y=y)
+        y_one_hot = np.zeros(n_classes)
+        y_one_hot[target_index] = 1.0
+        y_one_hot[1] = 1.0
+        y_target = np.tile(y_one_hot, (x.shape[0], 1))
+        adv_batch = attack.generate(x=x, y=y_target)  # ,y_target=y_target)
         LOGGER.info(
             "Saving adversarial image batch",
-            attack="cw_inf",
+            attack="cw_l2",
             batch_num=batch_num,
         )
         _save_adv_batch(
@@ -166,15 +161,15 @@ def create_adversarial_cw_inf_dataset(
             distance_metrics_list=distance_metrics_list,
         )
 
-    LOGGER.info("Adversarial Carlini-Wagner image generation complete", attack="cw_inf")
+    LOGGER.info("Adversarial Carlini-Wagner image generation complete", attack="cw_l2")
     _log_distance_metrics(distance_metrics_)
 
     return pd.DataFrame(distance_metrics_)
 
 
-def _init_cw_inf(
+def _init_cw_l2(
     keras_classifier: KerasClassifier, batch_size: int, **kwargs
-) -> CarliniLInfMethod:
+) -> CarliniL2Method:
     """Initializes :py:class:`~art.attacks.evasionCarliniLInfMethod`.
 
     Args:
@@ -185,7 +180,7 @@ def _init_cw_inf(
     Returns:
         A :py:class:`~art.attacks.evasion.CarliniLInfMethod` object.
     """
-    attack: CarliniLInfMethod = CarliniLInfMethod(
+    attack: CarliniL2Method = CarliniL2Method(
         classifier=keras_classifier, batch_size=batch_size, **kwargs
     )
     return attack

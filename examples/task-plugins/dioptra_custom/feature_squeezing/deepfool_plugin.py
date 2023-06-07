@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # This Software (Dioptra) is being made available as a public service by the
 # National Institute of Standards and Technology (NIST), an Agency of the United
 # States Department of Commerce. This software was developed in part by employees of
@@ -14,30 +15,27 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple
 
 import mlflow
 import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-import random
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from art.attacks.evasion import SaliencyMapMethod
+    from art.attacks.evasion import DeepFool
     from art.estimators.classification import KerasClassifier
 
 except ImportError:  # pragma: nocover
@@ -57,92 +55,92 @@ except ImportError:  # pragma: nocover
     )
 
 
+def evaluate_classification_metrics(classifier, adv_ds):
+    LOGGER.info("evaluating classification metrics using adversarial images")
+    result = classifier.model.evaluate(adv_ds, verbose=0)
+    adv_metrics = dict(zip(classifier.model.metrics_names, result))
+    LOGGER.info(
+        "computation of classification metrics for adversarial images complete",
+        **adv_metrics,
+    )
+    for metric_name, metric_value in adv_metrics.items():
+        mlflow.log_metric(key=metric_name, value=metric_value)
+
+
 @pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def create_adversarial_jsma_dataset(
+def create_adversarial_deepfool_dataset(
     data_dir: str,
     model_name: str,
     model_version: str,
-    theta: float,
-    gamma: float,
+    epsilon: float,
+    nb_grads: int,
+    max_iter: int,
+    image_size: Tuple[int, int],  # = (224, 224),
     keras_classifier: KerasClassifier,
     adv_data_dir: Path = None,
-    rescale: float = 1.0 / 255,
-    batch_size: int = 32,
+    rescale: float = 1.0,
+    batch_size: int = 40,
     label_mode: str = "categorical",
-    color_mode: str = "grayscale",
-    image_size: Tuple[int, int] = (28, 28),
-    verbose: bool = True,
+    color_mode: str = "rgb",
     **kwargs,
 ):
     model_name = model_name + "/" + model_version
-    LOGGER.info("Model Selected: ", model_name=model_name)
-    color_mode: str = "color" if image_size[2] == 3 else "grayscale"
-    target_size: Tuple[int, int] = image_size[:2]
-    adv_data_dir = Path(adv_data_dir)
-    """
-    attack = _init_jsma(
-        keras_classifier=keras_classifier,
-        batch_size=batch_size,
-        verbose = True,
-        theta = theta,
-        gamma = gamma
-    )
-    """
-    attack = SaliencyMapMethod(
+    attack = DeepFool(
         classifier=keras_classifier,
         batch_size=batch_size,
-        gamma=gamma,
-        theta=theta,
-        verbose=True,
+        epsilon=epsilon,
+        nb_grads=nb_grads,
+        max_iter=max_iter,
     )
+    LOGGER.info("Deepfool Batch Size: ", batch_size=batch_size)
+    adv_data_dir = Path(adv_data_dir)
     data_generator: ImageDataGenerator = ImageDataGenerator(rescale=rescale)
-
+    if image_size[0] == 28:
+        color_mode = "grayscale"
     data_flow = data_generator.flow_from_directory(
         directory=data_dir,
-        target_size=target_size,
+        target_size=image_size,
         color_mode=color_mode,
         class_mode=label_mode,
         batch_size=batch_size,
-        shuffle=True,  # alse,
+        shuffle=False,
     )
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]
     class_names_list = sorted(data_flow.class_indices, key=data_flow.class_indices.get)
+
+    LOGGER.info("Class names len: ", classes=len(class_names_list))
+
     distance_metrics_list = []  # distance_metrics_list or []
     distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
     for metric_name, _ in distance_metrics_list:
         distance_metrics_[metric_name] = []
+
     LOGGER.info(
         "Generate adversarial images",
-        attack="jsma",
+        attack="deepfool",
         num_batches=num_images // batch_size,
     )
-    # Here
-    n_classes = len(class_names_list)
-    # End
+
     for batch_num, (x, y) in enumerate(data_flow):
         if batch_num >= num_images // batch_size:
             break
+
         clean_filenames = img_filenames[
             batch_num * batch_size : (batch_num + 1) * batch_size
         ]
 
         LOGGER.info(
             "Generate adversarial image batch",
-            attack="jsma",
+            attack="deepfool",
             batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)
         adv_batch = attack.generate(x=x)
-        LOGGER.info(
-            "Saving adversarial image batch", attack="jsma", batch_num=batch_num
-        )
-        _save_adv_batch(
-            adv_batch, adv_data_dir, y_int, clean_filenames  # ,class_names_list
-        )
+        _save_adv_batch(adv_batch, adv_data_dir, y_int, clean_filenames)
 
         _evaluate_distance_metrics(
             clean_filenames=clean_filenames,
@@ -152,29 +150,10 @@ def create_adversarial_jsma_dataset(
             distance_metrics_list=distance_metrics_list,
         )
 
-    LOGGER.info("Adversarial Carlini-Wagner image generation complete", attack="jsma")
+    LOGGER.info("Adversarial image generation complete", attack="deepfool")
     _log_distance_metrics(distance_metrics_)
 
     return pd.DataFrame(distance_metrics_)
-
-
-def _init_jsma(
-    keras_classifier: KerasClassifier, batch_size: int, **kwargs
-) -> JSMAMethod:
-    """Initializes :py:class:`~art.attacks.evasionCarliniLInfMethod`.
-
-    Args:
-        keras_classifier: A trained :py:class:`~art.estimators.classification\\
-            .KerasClassifier`.
-        batch_size: The size of the batch on which adversarial samples are generated.
-
-    Returns:
-        A :py:class:`~art.attacks.evasion.CarliniLInfMethod` object.
-    """
-    attack: SaliencyMapMethod = SaliencyMapMethod(
-        classifier=keras_classifier, batch_size=batch_size, **kwargs
-    )
-    return attack
 
 
 def _save_adv_batch(adv_batch, adv_data_dir, y, clean_filenames) -> None:
