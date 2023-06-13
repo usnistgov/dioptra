@@ -36,6 +36,8 @@ import jsonschema.exceptions
 import jsonschema.protocols
 import jsonschema.validators
 
+from dioptra.task_engine import util
+
 # Type alias for general JSON schemas
 _JsonSchema = Union[dict[str, Any], bool]
 
@@ -430,24 +432,6 @@ def _validation_error_to_message_lines(
     return message_lines
 
 
-def json_path_to_string(path: Iterable[Any]) -> str:
-    """
-    Create a string representation of a JSON path as is used in jsonschema
-    ValidationError objects.  For now, a filesystem-like syntax is used with
-    slash-delimited strings, which I think winds up being the same as
-    JSON-Pointer syntax (rfc6901).
-
-    Args:
-        path: A "path" into a JSON structure, as an iterable of values
-            (strings and ints).
-
-    Returns:
-        A string representation of the path
-    """
-    # Use a filesystem-like syntax?
-    return "/" + "/".join(str(elt) for elt in path)
-
-
 def validation_error_to_message(
     error: jsonschema.exceptions.ValidationError,
     schema: _JsonSchema,
@@ -471,7 +455,7 @@ def validation_error_to_message(
     """
 
     if location_desc_callback is None:
-        location_desc_callback = json_path_to_string
+        location_desc_callback = util.json_path_to_string
 
     message_lines = _validation_error_to_message_lines(
         error, schema, location_desc_callback

@@ -15,16 +15,13 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import graphlib
-from collections.abc import Callable, Container, Iterator, Mapping, Sequence
+from collections.abc import Container, Iterable, Iterator, Mapping
 from typing import Any, Optional, Union
-
-import jsonschema.validators
 
 from dioptra.sdk.exceptions.task_engine import (
     StepNotFoundError,
     StepReferenceCycleError,
 )
-from dioptra.task_engine.error_message import validation_error_to_message
 
 
 def is_iterable(value: Any) -> bool:
@@ -48,37 +45,22 @@ def is_iterable(value: Any) -> bool:
     return result
 
 
-def schema_validate(
-    instance: Any,
-    schema: Union[dict[str, Any], bool],
-    location_desc_callback: Optional[Callable[[Sequence[Union[int, str]]], str]] = None,
-) -> list[str]:
+def json_path_to_string(path: Iterable[Any]) -> str:
     """
-    Validate the given instance against the given JSON-Schema.
+    Create a string representation of a JSON path as is used in jsonschema
+    ValidationError objects.  For now, a filesystem-like syntax is used with
+    slash-delimited strings, which I think winds up being the same as
+    JSON-Pointer syntax (rfc6901).
 
     Args:
-        instance: A value to validate
-        schema: JSON-Schema as a data structure, e.g. parsed JSON
-        location_desc_callback: A callback function used to customize the
-            description of the location of errors.  Takes a programmatic "path"
-            structure as a sequence of strings/ints, and should return a nice
-            one-line string description.  Defaults to a simple generic
-            implementation which produces descriptions which aren't very nice.
+        path: A "path" into a JSON structure, as an iterable of values
+            (strings and ints).
 
     Returns:
-        A list of error messages; will be empty if validation succeeded
+        A string representation of the path
     """
-    # Make use of a more complex API to try to produce better schema
-    # validation error messages.
-    validator_class = jsonschema.validators.validator_for(schema)
-    validator = validator_class(schema=schema)
-
-    error_messages = [
-        validation_error_to_message(error, schema, location_desc_callback)
-        for error in validator.iter_errors(instance)
-    ]
-
-    return error_messages
+    # Use a filesystem-like syntax?
+    return "/" + "/".join(str(elt) for elt in path)
 
 
 def step_get_plugin_short_name(step: Mapping[str, Any]) -> Optional[str]:

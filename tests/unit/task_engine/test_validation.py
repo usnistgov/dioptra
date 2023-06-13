@@ -709,3 +709,18 @@ def test_union_dupes():
     # Since this is only a warning, ensure that is_valid() returns True, even
     # though there are issues.
     assert is_valid(experiment_desc)
+
+
+def test_no_tasks_section():
+    experiment_desc = {
+        "parameters": {
+            "param1": 123
+        },
+        "graph": {
+            "step1": {
+                "my_task": "$param1"
+            }
+        }
+    }
+
+    assert not is_valid(experiment_desc)

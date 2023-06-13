@@ -874,6 +874,7 @@ def check_types(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     """
     types_ = experiment_desc.get("types", {})
     global_parameter_spec = experiment_desc.get("parameters", {})
+    # this section must exist, due to previous checks having passed
     tasks = experiment_desc["tasks"]
     graph = experiment_desc["graph"]
 

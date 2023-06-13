@@ -9,21 +9,13 @@
             "$ref": "#/$defs/parameters"
         },
         "tasks": {
-            "type": "object",
-            "additionalProperties": {
-                "$ref": "#/$defs/task_plugin"
-            },
-            "minProperties": 1
+            "$ref": "#/$defs/tasks"
         },
         "graph": {
-            "type": "object",
-            "additionalProperties": {
-                "$ref": "#/$defs/graph_step"
-            },
-            "minProperties": 1
+            "$ref": "#/$defs/graph"
         }
     },
-    "required": ["tasks", "graph"],
+    "required": ["graph"],
     "additionalProperties": false,
     "$defs": {
         "type_definitions": {
@@ -204,6 +196,13 @@
             }
         },
 
+        "tasks": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/task_plugin"
+            }
+        },
+
         "task_plugin": {
             "type": "object",
             "properties": {
@@ -281,6 +280,14 @@
             },
             "minProperties": 1,
             "maxProperties": 1
+        },
+
+        "graph": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/graph_step"
+            },
+            "minProperties": 1
         },
 
         "graph_step": {

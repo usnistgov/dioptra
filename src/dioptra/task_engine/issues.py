@@ -35,6 +35,7 @@ class IssueType(enum.Enum):
     SCHEMA = enum.auto()
     SEMANTIC = enum.auto()
     TYPE = enum.auto()
+    ENTITY = enum.auto()
 
 
 class ValidationIssue:

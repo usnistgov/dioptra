@@ -138,6 +138,7 @@ dev = [
     "pycodestyle",
     "pydocstyle",
     "pytoml",
+    "responses",
     "Sphinx>=4.5.0,<5",
     "tomli",
     "tox>=4.4.0",

@@ -14,134 +14,18 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import json
-import pathlib
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Union
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from dioptra.sdk.exceptions.base import BaseTaskEngineError
-from dioptra.task_engine import type_registry, type_validation, types, util
-from dioptra.task_engine.error_message import json_path_to_string
+from dioptra.task_engine import (
+    schema_validation,
+    type_registry,
+    type_validation,
+    types,
+    util,
+)
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
-
-_SCHEMA_FILENAME = "experiment_schema.json"
-
-
-def _instance_path_to_description(  # noqa: C901
-    instance_path: Sequence[Union[int, str]]
-) -> str:
-    """
-    Create a nice description of the location in an experiment description
-    pointed to by instance_path.  This implementation is crafted specifically
-    to the structure of a declarative experiment description.
-
-    Args:
-        instance_path: A path, as a sequence of strings/ints.
-
-    Returns:
-        A string description
-    """
-
-    path_len = len(instance_path)
-
-    message_parts = []
-    if path_len == 0:
-        message_parts.append("root level of experiment description")
-
-    else:
-        if instance_path[0] == "types":
-            if path_len == 1:
-                message_parts.append("types section")
-            else:
-                message_parts.append('definition of type "{}"'.format(instance_path[1]))
-
-                if path_len > 2:
-                    # Can't slice a Sequence! :-P
-                    def_loc = list(instance_path)[2:]
-                    message_parts.append("at location " + json_path_to_string(def_loc))
-
-        elif instance_path[0] == "parameters":
-            if path_len == 1:
-                message_parts.append("global parameters section")
-            else:
-                message_parts.append("parameter")
-                message_parts.append('"{}"'.format(instance_path[1]))
-
-        elif instance_path[0] == "tasks":
-            if path_len == 1:
-                message_parts.append("tasks section")
-            else:
-                message_parts.append('task plugin "' + str(instance_path[1]) + '"')
-                if path_len > 2:
-                    if instance_path[2] == "outputs":
-                        message_parts.append("outputs")
-                    elif instance_path[2] == "inputs":
-                        message_parts.append("inputs")
-                    elif instance_path[2] == "plugin":
-                        message_parts.append("plugin ID")
-
-        elif instance_path[0] == "graph":
-            if path_len == 1:
-                message_parts.append("graph section")
-            else:
-                message_parts.append('step "' + str(instance_path[1]) + '"')
-                if len(instance_path) > 2 and instance_path[2] == "dependencies":
-                    message_parts.append("dependencies")
-
-    if message_parts:
-        description = " ".join(message_parts)
-    else:
-        # fallbacks if we don't know another way of describing the location
-        instance_path_str = json_path_to_string(instance_path)
-        description = "experiment description location " + instance_path_str
-
-    return description
-
-
-def _get_json_schema() -> Union[dict, bool]:  # hypothetical types of schemas
-    """
-    Read and parse the declarative experiment description JSON-Schema file.
-
-    Returns:
-        The schema, as parsed JSON
-    """
-    # Currently assumes the schema json file and this source file are in the
-    # same directory.
-    schema_path = pathlib.Path(__file__).with_name(_SCHEMA_FILENAME)
-
-    schema: Union[dict, bool]
-    with schema_path.open("r", encoding="utf-8") as fp:
-        schema = json.load(fp)
-
-    return schema
-
-
-def _schema_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
-    """
-    Validate the given declarative experiment description against a JSON-Schema
-    schema.
-
-    Args:
-        experiment_desc: The experiment description, as parsed YAML or
-            equivalent
-
-    Returns:
-        A list of ValidationIssue objects; will be an empty list if the
-        experiment description was valid.
-    """
-
-    schema = _get_json_schema()
-
-    error_messages = util.schema_validate(
-        experiment_desc, schema, _instance_path_to_description
-    )
-
-    issues = [
-        ValidationIssue(IssueType.SCHEMA, IssueSeverity.ERROR, message)
-        for message in error_messages
-    ]
-
-    return issues
 
 
 def _find_non_string_keys(mapping: Mapping, key_meaning: str) -> list[ValidationIssue]:
@@ -196,7 +80,7 @@ def _check_string_keys(experiment_desc: Mapping[str, Any]) -> list[ValidationIss
 
     types = experiment_desc.get("types", {})
     parameters = experiment_desc.get("parameters", {})
-    tasks = experiment_desc["tasks"]
+    tasks = experiment_desc.get("tasks", {})
     graph = experiment_desc["graph"]
     issues = []
 
@@ -435,7 +319,7 @@ def _check_task_plugin_references(
         A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
-    task_defs = experiment_desc["tasks"]
+    task_defs = experiment_desc.get("tasks", {})
     graph = experiment_desc["graph"]
 
     issues = []
@@ -467,7 +351,7 @@ def _check_task_plugin_pyplugs_coords(
         A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
-    task_defs = experiment_desc["tasks"]
+    task_defs = experiment_desc.get("tasks", {})
 
     issues = []
     for task_short_name, task_def in task_defs.items():
@@ -506,7 +390,7 @@ def _check_task_plugin_io_names(
         experiment description was valid.
     """
 
-    task_defs = experiment_desc["tasks"]
+    task_defs = experiment_desc.get("tasks", {})
     issues = []
 
     for short_task_name, task_def in task_defs.items():
@@ -573,7 +457,7 @@ def _check_task_plugin_io_types(
     """
 
     type_defs = experiment_desc.get("types", {})
-    task_defs = experiment_desc["tasks"]
+    task_defs = experiment_desc.get("tasks", {})
     issues = []
 
     type_names = type_registry.BUILTIN_TYPES.keys() | type_defs.keys()
@@ -1091,7 +975,7 @@ def validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
         experiment description was valid.
     """
 
-    issues = _schema_validate(experiment_desc)
+    issues = schema_validation.schema_validate_experiment_description(experiment_desc)
 
     # If the description is not schema-valid, the basic structure is incorrect,
     # so we won't even try to dig inside it to check anything.
