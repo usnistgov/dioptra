@@ -16,7 +16,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
-from pathlib import Path
 from typing import Any, Dict, List
 
 import click
@@ -25,10 +24,6 @@ import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-
-import detectron2
-import torchvision
-import torchvision.ops
 
 from dioptra import pyplugs
 from dioptra.sdk.utilities.contexts import plugin_dirs
@@ -170,7 +165,6 @@ def train(
         seed=seed,
     )
 
-    mlflow.autolog()
 
     with mlflow.start_run() as active_run:
         flow: Flow = init_train_flow()

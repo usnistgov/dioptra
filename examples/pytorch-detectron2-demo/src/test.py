@@ -16,7 +16,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
-from pathlib import Path
 from typing import Any, Dict, List
 
 import click
@@ -25,11 +24,6 @@ import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-
-import detectron2
-import torchvision
-print(torchvision.__version__)
-import torchvision.ops
 
 from dioptra import pyplugs
 from dioptra.sdk.utilities.contexts import plugin_dirs
@@ -53,6 +47,8 @@ PERFORMANCE_METRICS: List[Dict[str, Any]] = [
     {"name": "Recall", "parameters": {"name": "recall"}},
     {"name": "AUC", "parameters": {"name": "auc"}},
 ]
+
+
 def _coerce_comma_separated_values(ctx, param, value):
     return list((x.strip()) for x in value.split(","))
 
@@ -135,8 +131,6 @@ def train(
         seed=seed,
     )
 
-    mlflow.autolog()
-
     with mlflow.start_run() as active_run:
         flow: Flow = init_train_flow()
         state = flow.run(
@@ -217,7 +211,7 @@ def init_train_flow() -> Flow:
             dataset_path=data_dir_train,
             dataset_type=dataset_type,
             class_names=class_names,
-            upstream_tasks=[log_mlflow_params_result]
+            upstream_tasks=[log_mlflow_params_result],
         )
 
         test_ds_meta = pyplugs.call_task(
@@ -228,7 +222,7 @@ def init_train_flow() -> Flow:
             dataset_path=data_dir_test,
             dataset_type=dataset_type,
             class_names=class_names,
-            upstream_tasks=[log_mlflow_params_result]
+            upstream_tasks=[log_mlflow_params_result],
         )
 
         classifier, config = pyplugs.call_task(
@@ -243,7 +237,7 @@ def init_train_flow() -> Flow:
             max_iter=max_iter,
             dataloader_num_workers=dataloader_num_workers,
             gpu=gpu,
-            upstream_tasks=[train_ds_meta, test_ds_meta]
+            upstream_tasks=[train_ds_meta, test_ds_meta],
         )
 
         eval_results = pyplugs.call_task(
@@ -252,7 +246,7 @@ def init_train_flow() -> Flow:
             "eval_dataset",
             dataset_name="data_test",
             classifier=classifier,
-            cfg=config
+            cfg=config,
         )
 
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
@@ -269,10 +263,11 @@ def init_train_flow() -> Flow:
             active_run=active_run,
             name=register_model_name,
             model_dir="output",
-            upstream_tasks=[classifier]
+            upstream_tasks=[classifier],
         )
 
     return flow
+
 
 if __name__ == "__main__":
     log_level: str = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")
