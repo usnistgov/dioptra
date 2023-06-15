@@ -1,20 +1,14 @@
 # Tensorflow Adversarial Patch Demo
 
-> ⚠️ **IMPORTANT!**
->
-> This README is out of date and will be updated in the near future.
->
-> There is a new setup tool that all users should use to configure and run Dioptra, please see the new sections [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) that have been added to the documentation.
-
->⚠️ **Warning:** Some of the demos assume that you have access to an on-prem deployment of Dioptra that provides a copy of the Fruits360 and ImageNet datasets and a CUDA-compatible GPU.
-> These demos cannot be run on a typical personal computer.
+>⚠️ **Warning:** The attack used in this demo is computationally expensive and will take a very long to complete if run using the CPUs found in a typical personal computer.
+> For this reason, it is necessary that you run these demos on a CUDA-compatible GPU.
 
 This demo provides three different versions of the adversarial patch attack on separate image classification datasets and model architectures.
 The three available Jupyter notebooks explore the following poisoning attacks:
 
 -   `demo-mnist-patches.ipynb`: Applies adversarial patch attack on the MNIST dataset. Includes preprocessing and adversarial training defenses.
--   `demo-fruits360-patches.ipynb`: Applies adversarial patch attack  on Fruits360 dataset. Includes adversarial training defenses.
--   `demo-imagenet-patches.ipynb`: Applies attack on the ImageNet dataset. Uses a pretrained model with the `init` entrypoint, rather than train a new model with the `train` entrypoint.
+-   `demo-fruits360-patches.ipynb`: Applies adversarial patch attack on Fruits360 dataset. Includes adversarial training defenses.
+-   `demo-imagenet-patches.ipynb`: Applies attack on the ImageNet dataset. Uses a pretrained model with the `init_model` entrypoint, rather than train a new model with the `train` entrypoint.
 
 Users are welcome to run the demos in any order.
 The MNIST demo takes the shortest time to complete and contains an additional set of defense examples.
@@ -28,41 +22,25 @@ Users can also explore the following preprocessing defenses from their associate
 
 Please note that the patch attack generally bypasses most preprocessing defenses, see `demo-mnist-patches.ipynb` for details.
 
-## Getting started
 
-### MNIST patches demo
+## Running the example
 
-Everything you need to run the `demo-mnist-patches.ipynb` demo on your local computer is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running `make pull-latest`.
-Once you have downloaded the images, navigate to this example's directory using the terminal and run the demo startup sequence:
+To prepare your environment for running this example, follow the linked instructions below:
 
-```bash
-make demo
-```
+1.  [Create and activate a Python virtual environment and install the necessary dependencies](../README.md#creating-a-virtual-environment)
+2.  [Download the MNIST dataset using the download_data.py script.](../README.md#downloading-datasets)
+3.  [Follow the links in these User Setup instructions](../../README.md#user-setup) to do the following:
+    -   Build the containers
+    -   Use the cookiecutter template to generate the scripts, configuration files, and Docker Compose files you will need to run Dioptra
+4.  [Edit the docker-compose.yml file to mount the data folder in the worker containers](../README.md#mounting-the-data-folder-in-the-worker-containers)
+5.  [Initialize and start Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html#initializing-the-deployment)
+6.  [Register the custom task plugins for Dioptra's examples and demos](../README.md#registering-custom-task-plugins)
+7.  [Register the queues for Dioptra's examples and demos](../README.md#registering-queues)
+8.  [Start JupyterLab and open `demo.ipynb`](../README.md#starting-jupyter-lab)
 
-The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
-Once the startup process completes, open up your web browser and enter `http://localhost:38888` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
-Double click the `work` folder and open the `demo-mnist-patches.ipynb` file.
-From here, follow the provided instructions to run the demo provided in the Jupyter notebook.
-**Don't forget to update the `DATASET_DIR` variable to be: `DATASET_DIR = "/nfs/data"`.**
+Steps 1–4 and 6–7 only need to be run once.
+**Returning users only need to repeat Steps 5 (if you stopped Dioptra using `docker compose down`) and 8 (if you stopped the `jupyter lab` process)**.
 
-If you want to watch the output logs for the Tensorflow worker containers as you step through the demo, run `docker-compose logs -f tfcpu-01 tfcpu-02` in your terminal.
-
-When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
-If you were watching the output logs, you will need to press <kbd>Ctrl</kbd>-<kbd>C</kbd> to stop following the logs before you can run `make teardown`.
-
-### On-prem deployment
-
-To run any of the demo notebooks using an on-prem deployment, all you need to do is download and start the **jupyter** service defined in this example's `docker-compose.yml` file.
-Open a terminal and navigate to this example's directory and run the **jupyter** startup sequence,
-
-```bash
-make jupyter
-```
-
-Once the startup process completes, open up your web browser and enter `http://localhost:38888` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
-Double click the `work` folder, open the notebook of your choosing, and follow the provided instructions in the Jupyter notebook.
-
-When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
 
 ## MLflow Entrypoint Overview
 

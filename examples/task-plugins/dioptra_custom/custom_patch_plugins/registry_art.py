@@ -16,16 +16,15 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+from typing import Tuple
+
 import mlflow
-import structlog
 import numpy as np
+import structlog
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -37,16 +36,6 @@ except ImportError:  # pragma: nocover
     LOGGER.warn(
         "Unable to import one or more optional packages, functionality may be reduced",
         package="art",
-    )
-
-
-try:
-    from tensorflow.keras.models import Sequential
-
-except ImportError:  # pragma: nocover
-    LOGGER.warn(
-        "Unable to import one or more optional packages, functionality may be reduced",
-        package="tensorflow",
     )
 
 

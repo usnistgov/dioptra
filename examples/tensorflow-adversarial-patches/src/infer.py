@@ -123,12 +123,6 @@ def infer_adversarial(
         seed=seed,
     )
 
-    # Allow imagenet preprocessing.
-    if imagenet_preprocessing:
-        rescale = 1.0
-    else:
-        rescale = 1.0 / 255
-
     with mlflow.start_run() as active_run:  # noqa: F841
         flow: Flow = init_infer_flow()
         state = flow.run(
@@ -140,7 +134,6 @@ def infer_adversarial(
                 adv_tar_name=adv_tar_name,
                 adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
                 imagenet_preprocessing=imagenet_preprocessing,
-                rescale=rescale,
                 batch_size=batch_size,
                 seed=seed,
             )
@@ -159,7 +152,6 @@ def init_infer_flow() -> Flow:
             adv_tar_name,
             adv_data_dir,
             imagenet_preprocessing,
-            rescale,
             batch_size,
             seed,
         ) = (
@@ -170,7 +162,6 @@ def init_infer_flow() -> Flow:
             Parameter("adv_tar_name"),
             Parameter("adv_data_dir"),
             Parameter("imagenet_preprocessing"),
-            Parameter("rescale"),
             Parameter("batch_size"),
             Parameter("seed"),
         )
@@ -190,6 +181,13 @@ def init_infer_flow() -> Flow:
             seed=tensorflow_global_seed,
         )
 
+        rescale = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "datasetup",
+            "select_rescale_value",
+            imagenet_preprocessing=imagenet_preprocessing,
+        )
+
         log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
@@ -198,6 +196,7 @@ def init_infer_flow() -> Flow:
                 entry_point_seed=seed,
                 tensorflow_global_seed=tensorflow_global_seed,
                 dataset_seed=dataset_seed,
+                rescale=rescale,
             ),
         )
         adv_tar_path = pyplugs.call_task(
@@ -238,7 +237,7 @@ def init_infer_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
         )
         classifier_performance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "evaluate_metrics_tensorflow",
             classifier=classifier,

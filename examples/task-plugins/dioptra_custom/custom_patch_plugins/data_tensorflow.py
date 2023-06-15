@@ -19,7 +19,6 @@ from __future__ import annotations
 from typing import Optional, Tuple
 
 import structlog
-from prefect import task
 from structlog.stdlib import BoundLogger
 from tensorflow.keras.applications.imagenet_utils import preprocess_input
 

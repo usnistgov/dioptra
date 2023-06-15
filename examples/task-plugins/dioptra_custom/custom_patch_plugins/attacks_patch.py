@@ -28,10 +28,7 @@ from prefect import task
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -195,7 +192,6 @@ def create_adversarial_patch_dataset(
         subset=subset,
     )
 
-    n_classes = len(data_flow.class_indices)
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]
     class_names_list = sorted(data_flow.class_indices, key=data_flow.class_indices.get)
