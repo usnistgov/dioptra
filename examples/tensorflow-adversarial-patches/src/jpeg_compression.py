@@ -17,15 +17,13 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
 import os
-import tarfile
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import click
 import mlflow
 import numpy as np
 import structlog
-from mlflow.tracking import MlflowClient
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
@@ -73,13 +71,6 @@ def _coerce_int_to_bool(ctx, param, value):
 
 
 @click.command()
-@click.option(
-    "--data-dir",
-    type=click.Path(
-        exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
-    ),
-    help="Root directory for NFS mounted datasets (in container)",
-)
 @click.option(
     "--image-size",
     type=click.STRING,
@@ -129,12 +120,6 @@ def _coerce_int_to_bool(ctx, param, value):
     default=True,
 )
 @click.option(
-    "--load-dataset-from-mlruns",
-    type=click.BOOL,
-    help="If set to true, instead loads the test dataset from a previous mlrun.",
-    default=False,
-)
-@click.option(
     "--dataset-run-id",
     type=click.STRING,
     help="MLFlow Run ID of an updated dataset.",
@@ -159,7 +144,6 @@ def _coerce_int_to_bool(ctx, param, value):
     default=-1,
 )
 def jpeg_compression(
-    data_dir,
     image_size,
     def_tar_name,
     def_data_dir,
@@ -168,7 +152,6 @@ def jpeg_compression(
     jpeg_compression_channels_first,
     jpeg_compression_apply_fit,
     jpeg_compression_apply_predict,
-    load_dataset_from_mlruns,
     dataset_run_id,
     dataset_tar_name,
     dataset_name,
@@ -178,7 +161,6 @@ def jpeg_compression(
     LOGGER.info(
         "Execute MLFlow entry point",
         entry_point="jpeg_compression",
-        data_dir=data_dir,
         image_size=image_size,
         def_tar_name=def_tar_name,
         def_data_dir=def_data_dir,
@@ -187,27 +169,17 @@ def jpeg_compression(
         jpeg_compression_channels_first=jpeg_compression_channels_first,
         jpeg_compression_apply_fit=jpeg_compression_apply_fit,
         jpeg_compression_apply_predict=jpeg_compression_apply_predict,
-        load_dataset_from_mlruns=load_dataset_from_mlruns,
         dataset_run_id=dataset_run_id,
         dataset_tar_name=dataset_tar_name,
         dataset_name=dataset_name,
         seed=seed,
     )
 
-    if load_dataset_from_mlruns:
-        data_dir = Path.cwd() / "dataset" / dataset_name
-        data_tar_name = dataset_tar_name
-        data_tar_path = download_image_archive(
-            run_id=dataset_run_id, archive_path=data_tar_name
-        )
-        with tarfile.open(data_tar_path, "r:gz") as f:
-            f.extractall(path=(Path.cwd() / "dataset"))
-
     with mlflow.start_run() as active_run:  # noqa: F841
         flow: Flow = init_jpeg_compression_flow()
         state = flow.run(
             parameters=dict(
-                testing_dir=Path(data_dir),
+                testing_dir=(Path.cwd() / dataset_name).resolve(),
                 image_size=image_size,
                 def_tar_name=def_tar_name,
                 def_data_dir=(Path.cwd() / def_data_dir).resolve(),
@@ -218,27 +190,12 @@ def jpeg_compression(
                 jpeg_compression_apply_fit=jpeg_compression_apply_fit,
                 jpeg_compression_apply_predict=jpeg_compression_apply_predict,
                 seed=seed,
+                dataset_run_id=dataset_run_id,
+                dataset_tar_name=dataset_tar_name,
             )
         )
 
     return state
-
-
-# Update data dir path if user is applying defense over image artifacts.
-def download_image_archive(
-    run_id: str, archive_path: str, destination_path: Optional[str] = None
-) -> str:
-    client: MlflowClient = MlflowClient()
-    image_archive_path: str = client.download_artifacts(
-        run_id=run_id, path=archive_path, dst_path=destination_path
-    )
-    LOGGER.info(
-        "Image archive downloaded",
-        run_id=run_id,
-        storage_path=archive_path,
-        dst_path=image_archive_path,
-    )
-    return image_archive_path
 
 
 def init_jpeg_compression_flow() -> Flow:
@@ -255,6 +212,8 @@ def init_jpeg_compression_flow() -> Flow:
             jpeg_compression_apply_fit,
             jpeg_compression_apply_predict,
             seed,
+            dataset_run_id,
+            dataset_tar_name,
         ) = (
             Parameter("testing_dir"),
             Parameter("image_size"),
@@ -267,6 +226,8 @@ def init_jpeg_compression_flow() -> Flow:
             Parameter("jpeg_compression_apply_fit"),
             Parameter("jpeg_compression_apply_predict"),
             Parameter("seed"),
+            Parameter("dataset_run_id"),
+            Parameter("dataset_tar_name"),
         )
         seed, rng = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
@@ -277,7 +238,7 @@ def init_jpeg_compression_flow() -> Flow:
         dataset_seed = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
         )
-        init_tensorflow_results = pyplugs.call_task(
+        init_tensorflow_results = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.backend_configs",
             "tensorflow",
             "init_tensorflow",
@@ -300,7 +261,19 @@ def init_jpeg_compression_flow() -> Flow:
                 dataset_seed=dataset_seed,
             ),
         )
-
+        adv_tar_path = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "download_all_artifacts_in_run",
+            run_id=dataset_run_id,
+            artifact_path=dataset_tar_name,
+        )
+        extract_tarfile_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "utils",
+            "extract_tarfile",
+            filepath=adv_tar_path,
+        )
         distance_metrics_list = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.metrics",
             "distance",
@@ -321,7 +294,7 @@ def init_jpeg_compression_flow() -> Flow:
             channels_first=jpeg_compression_channels_first,
             apply_fit=jpeg_compression_apply_fit,
             apply_predict=jpeg_compression_apply_predict,
-            upstream_tasks=[make_directories_results],
+            upstream_tasks=[make_directories_results, extract_tarfile_results],
         )
         log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
