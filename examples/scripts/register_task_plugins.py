@@ -24,6 +24,10 @@ Classes:
 Functions:
     make_custom_plugins: Create a tarball for each custom task plugin package under a
         directory.
+    upload_custom_plugin_package: Upload a custom task plugin package via the Dioptra
+        REST API.
+    delete_custom_plugin_package: Delete a custom task plugin package via the Dioptra
+        REST API.
     register_task_plugins: The Click command for registering the custom task plugins
         used in Dioptra's examples and demos.
 """
@@ -87,6 +91,54 @@ def make_custom_plugins(
         yield CustomTaskPlugin(name=plugin_name, path=plugin_path)
 
 
+def upload_custom_plugin_package(
+    client: DioptraClient, custom_plugin: CustomTaskPlugin
+) -> None:
+    """Upload a custom task plugin package via the Dioptra REST API.
+
+    Args:
+        client: The Dioptra REST API client.
+        custom_plugin: A dictionary containing the name and path to the tarball for
+            the custom task plugin package.
+
+    Raises:
+        RuntimeError: If the custom task plugin package fails to upload.
+    """
+    response = client.upload_custom_plugin_package(
+        custom_plugin_name=custom_plugin["name"],
+        custom_plugin_file=custom_plugin["path"],
+    )
+    response_after = client.get_custom_task_plugin(name=custom_plugin["name"])
+
+    if response_after is None or "Not Found" in response_after.get("message", []):
+        raise RuntimeError(
+            "Failed to register the custom task plugin "
+            f"{custom_plugin['name']!r}. Is the API URL correct?"
+        )
+
+
+def delete_custom_plugin_package(
+    client: DioptraClient, custom_plugin: CustomTaskPlugin
+) -> None:
+    """Delete a custom task plugin package via the Dioptra REST API.
+
+    Args:
+        client: The Dioptra REST API client.
+        custom_plugin: A dictionary containing the name and path to the tarball for
+            the custom task plugin package.
+
+    Raises:
+        RuntimeError: If the custom task plugin package fails to delete.
+    """
+    response = client.delete_custom_task_plugin(custom_plugin["name"])
+
+    if response is None or "Success" not in response.get("status", []):
+        raise RuntimeError(
+            "Failed to delete the custom task plugin "
+            f"{custom_plugin['name']!r}. Is the API URL correct?"
+        )
+
+
 @click.command(context_settings=_CONTEXT_SETTINGS)
 @click.option(
     "--plugins-dir",
@@ -102,7 +154,16 @@ def make_custom_plugins(
     default="http://localhost",
     help="The url to the Dioptra REST API.",
 )
-def register_task_plugins(plugins_dir, api_url):
+@click.option(
+    "-f",
+    "--force",
+    type=click.BOOL,
+    is_flag=True,
+    show_default=True,
+    default=False,
+    help="Remove and re-register any existing custom task plugins.",
+)
+def register_task_plugins(plugins_dir, api_url, force):
     """Register the custom task plugins used in Dioptra's examples and demos."""
 
     console = RichConsole(Console())
@@ -111,6 +172,7 @@ def register_task_plugins(plugins_dir, api_url):
     console.print_title("Dioptra Examples - Register Custom Task Plugins")
     console.print_parameter("plugins_dir", value=click.format_filename(plugins_dir))
     console.print_parameter("api_url", value=f"[default not bold]{api_url}[/]")
+    console.print_parameter("force", value=f"{force}")
 
     with TemporaryDirectory() as temp_dir:
         custom_plugins = make_custom_plugins(
@@ -121,25 +183,18 @@ def register_task_plugins(plugins_dir, api_url):
             response = client.get_custom_task_plugin(name=custom_plugin["name"])
 
             if response is None or "Not Found" in response.get("message", []):
-                response = client.upload_custom_plugin_package(
-                    custom_plugin_name=custom_plugin["name"],
-                    custom_plugin_file=custom_plugin["path"],
-                )
-                response_after = client.get_custom_task_plugin(
-                    name=custom_plugin["name"]
-                )
-
-                if response_after is None or "Not Found" in response_after.get(
-                    "message", []
-                ):
-                    raise RuntimeError(
-                        "Failed to register the custom task plugin "
-                        f"{custom_plugin['name']!r}. Is the API URL correct?"
-                    )
-
+                upload_custom_plugin_package(client=client, custom_plugin=custom_plugin)
                 console.print_success(
                     "[bold green]Success![/] [default not bold]Registered the custom "
                     f"task plugin {custom_plugin['name']!r}.[/]"
+                )
+
+            elif force:
+                delete_custom_plugin_package(client=client, custom_plugin=custom_plugin)
+                upload_custom_plugin_package(client=client, custom_plugin=custom_plugin)
+                console.print_success(
+                    "[bold yellow]Overwritten.[/] [default not bold]Removed and "
+                    f"re-registered the custom task plugin {custom_plugin['name']!r}.[/]"
                 )
 
             else:

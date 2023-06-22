@@ -146,6 +146,8 @@ For the full list of options, run `python ./scripts/register_task_plugins.py -h`
                                plugins]
       --api-url TEXT           The url to the Dioptra REST API.  [default:
                                http://localhost]
+      -f, --force              Remove and re-register any existing custom task
+                               plugins.
       -h, --help               Show this message and exit.
 
 ### Examples
