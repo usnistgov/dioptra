@@ -42,6 +42,7 @@ Email us: dioptra@nist.gov
    getting-started/building-the-containers
    getting-started/running-dioptra
    getting-started/acquiring-datasets
+   getting-started/examples-setup
 .. getting-started/installation
 
 .. toctree::
@@ -58,21 +59,6 @@ Email us: dioptra@nist.gov
    user-guide/task-plugins-collection
    user-guide/api-reference-sdk
    user-guide/api-reference-restapi
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: Tutorials and Examples
-
-   tutorials/example-basic-mlflow-demo
-   tutorials/example-tensorflow-mnist-classifier
-   tutorials/example-tensorflow-mnist-feature-squeezing
-   tutorials/example-tensorflow-mnist-model-inversion
-   tutorials/example-tensorflow-adversarial-patches
-   tutorials/example-tensorflow-backdoor-poisoning
-   tutorials/example-tensorflow-imagenet-resnet50-fgm
-   tutorials/example-tensorflow-imagenet-pixel-threshold
-   tutorials/example-pytorch-mnist-membership-inference
 
 .. toctree::
    :hidden:
