@@ -483,6 +483,8 @@ The ``:ro`` at the end will mount the NFS share as read-only within the worker c
        - worker-etc-ssl:/etc/ssl:rw
        - dioptra-datasets:/datasets:ro
 
+.. _getting-started-running-dioptra-init-deployment:
+
 Initializing the deployment
 ---------------------------
 

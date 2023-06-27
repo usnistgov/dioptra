@@ -172,6 +172,8 @@ For the Road Signs Detection dataset, the data needs to be in this format::
                     ├── 00000_road1.png
                     ...
 
+.. _getting-started-acquiring-datasets-using-the-download-script:
+
 Using the Download Script
 -------------------------
 
