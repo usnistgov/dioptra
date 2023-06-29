@@ -25,10 +25,11 @@ from dioptra import pyplugs
 from dioptra.sdk.generics import estimator_predict, fit_estimator
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
-from torch.nn import CrossEntropyLoss
-from torch.autograd import Variable
-import torch
 import numpy as np
+import torch
+from torch.autograd import Variable
+from torch.nn import CrossEntropyLoss
+
 
 @pyplugs.register
 def fit(
@@ -37,7 +38,6 @@ def fit(
     training_ds: Any,
     fit_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Any:
-
     time_start: datetime.datetime = datetime.datetime.now()
 
     LOGGER.info(
@@ -48,7 +48,7 @@ def fit(
     loss_fn = CrossEntropyLoss()
     ave_loss = 0
     for batch_idx, (x, target) in enumerate(training_ds):
-        #LOGGER.info("data shape:", str(data.shape))
+        # LOGGER.info("data shape:", str(data.shape))
         optimizer.zero_grad()
         x, target = Variable(x), Variable(target)
         out = estimator(x)
@@ -56,7 +56,7 @@ def fit(
         ave_loss = ave_loss * 0.9 + loss.data.item() * 0.1
         loss.backward()
         optimizer.step()
-            
+
     time_end = datetime.datetime.now()
 
     total_seconds = (time_end - time_start).total_seconds()
@@ -80,10 +80,10 @@ def predict(
     predict_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Any:
     estimator.eval()
-    
+
     y_true = []
     y_pred = []
-    
+
     for batch_idx, (data, target) in enumerate(testing_ds):
         t_x = Variable(data)
         t_y = Variable(target)

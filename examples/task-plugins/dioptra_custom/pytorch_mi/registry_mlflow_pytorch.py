@@ -21,15 +21,14 @@ from typing import Optional
 import structlog
 from mlflow.entities import Run as MlflowRun
 from mlflow.entities.model_registry import ModelVersion
-from mlflow.tracking import MlflowClient
-from structlog.stdlib import BoundLogger
 from mlflow.keras import load_model as load_tf_keras_model
 from mlflow.pytorch import load_model as load_pytorch_model
+from mlflow.tracking import MlflowClient
+from structlog.stdlib import BoundLogger
+
 from dioptra import pyplugs
 from dioptra.sdk.exceptions import TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
-
-from dioptra import pyplugs
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
