@@ -29,16 +29,24 @@ from dioptra.sdk.utilities.decorators import require_package
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from torch.nn import Flatten, Sequential, Linear, Dropout, Conv2d, BatchNorm2d, MaxPool2d, ReLU, Softmax
     from torch import nn
+    from torch.nn import (
+        BatchNorm2d,
+        Conv2d,
+        Dropout,
+        Flatten,
+        Linear,
+        MaxPool2d,
+        ReLU,
+        Sequential,
+        Softmax,
+    )
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
         "Unable to import one or more optional packages, functionality may be reduced",
         package="torch",
     )
-
-
 
 
 @pyplugs.register
@@ -57,26 +65,22 @@ def init_classifier(
 def le_net(input_shape: Tuple[int, int, int], n_classes: int) -> Sequential:
     model = Sequential(
         # first convolutional layer:
-        Conv2d(1,20,5,1),
+        Conv2d(1, 20, 5, 1),
         ReLU(),
-        MaxPool2d(2,2),
-
+        MaxPool2d(2, 2),
         # second conv layer, with pooling and dropout:
-        Conv2d(20,50,5,1),
+        Conv2d(20, 50, 5, 1),
         ReLU(),
-        MaxPool2d(2,2),
+        MaxPool2d(2, 2),
         Flatten(),
-        
         # dense hidden layer, with dropout:
         Linear(4 * 4 * 50, 500),
         ReLU(),
-
         # output layer:
         Linear(500, 10),
-        Softmax()
+        Softmax(),
     )
     return model
-
 
 
 PYTORCH_CLASSIFIERS_REGISTRY: Dict[

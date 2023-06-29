@@ -19,7 +19,7 @@ name: pytorch-mnist-membership-inference
 entry_points:
   train:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
       image_size: { type: string, default: "28,28,1" }
       model_architecture: { type: string, default: "le_net" }
       batch_size: { type: float, default: 32 }
@@ -41,7 +41,7 @@ entry_points:
       --seed {seed}  
   mi:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
       image_size: { type: string, default: "1,28,28" }
       model_name: { type: string, default: "le_net" }
       model_version: { type: int, default: 1}

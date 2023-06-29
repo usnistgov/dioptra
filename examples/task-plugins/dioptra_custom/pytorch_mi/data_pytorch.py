@@ -35,20 +35,19 @@ except ImportError:  # pragma: nocover
         "Unable to import one or more optional packages, functionality may be reduced",
         package="torchvision",
     )
-    
+
 try:
-    from torch.utils.data import random_split
-    from torch.utils.data import DataLoader
-    from torch.utils.data import Subset
+    from torch.utils.data import DataLoader, Subset, random_split
 except ImportError:  # pragma: nocover
     LOGGER.warn(
         "Unable to import one or more optional packages, functionality may be reduced",
         package="torch",
     )
 
+
 @pyplugs.register
 @pyplugs.task_nout(2)
-def create_image_dataset(    
+def create_image_dataset(
     data_dir: str,
     image_size: Tuple[int, int, int],
     seed: int,
@@ -63,54 +62,50 @@ def create_image_dataset(
     Args:
         data_dir: A string representing the directory the class
             directories are located in.
-                        
+
         image_size:  The size in pixels of each image in the dataset.
 
         seed: Random seed for shuffling and transformations.
-                            
+
         batch_size: Size of the batches of data.
-        
+
         validation_split: A float value representing the split between
             training and validation data, if desired.
-        
+
         label_mode: One of 'int', 'categorical', or 'binary' depending on how the
             classes are organized.
-            
+
     Returns:
         One or two DataLoader object(s) which can be used to iterate over
-        images in the dataset. This will return two DataLoaders if 
+        images in the dataset. This will return two DataLoaders if
         validation_split is set, otherwise it will return one.
     """
     color_mode: str = "color" if image_size[2] == 3 else "grayscale"
     target_size: Tuple[int, int] = image_size[:2]
-    
-    if (color_mode == "grayscale"): 
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Grayscale(),
-        ])
-    else: 
-        transform = transforms.Compose([
-            transforms.ToTensor()
-        ])
+
+    if color_mode == "grayscale":
+        transform = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Grayscale(),
+            ]
+        )
+    else:
+        transform = transforms.Compose([transforms.ToTensor()])
 
     dataset = ImageFolder(root=data_dir, transform=transform)
-    if (validation_split != None):
-        train_size = (int) (validation_split * len(dataset))
-        val_size = len(dataset) - (int) (validation_split * len(dataset))
-    
+    if validation_split != None:
+        train_size = (int)(validation_split * len(dataset))
+        val_size = len(dataset) - (int)(validation_split * len(dataset))
+
         train, val = random_split(dataset, [train_size, val_size])
-    
+
         train_gen = DataLoader(train, batch_size=batch_size, shuffle=True)
         val_gen = DataLoader(val, batch_size=batch_size, shuffle=True)
         return (train_gen, val_gen)
-    else: 
-        data_generator = DataLoader(dataset,
-                      batch_size=batch_size,
-                      shuffle=True)
+    else:
+        data_generator = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         return (data_generator, None)
-
-    
 
 
 @pyplugs.register
@@ -120,12 +115,12 @@ def get_n_classes_from_directory_iterator(ds: DataLoader) -> int:
     Args:
         ds: A DataLoader object representing the directory
             containing the image data.
-            
+
     Returns:
         An integer representing the number of classes in the directory.
-        
+
     """
-    if (isinstance(ds.dataset, Subset)):
+    if isinstance(ds.dataset, Subset):
         return len(ds.dataset.dataset.classes)
     else:
         return len(ds.dataset.classes)
