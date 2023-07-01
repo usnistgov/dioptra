@@ -72,39 +72,22 @@ def _coerce_int_to_bool(ctx, param, value):
 
 @click.command()
 @click.option(
-    "--data-dir",
-    type=click.Path(
-        exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
-    ),
-    help="Root directory for NFS mounted datasets (in container)",
-)
-@click.option(
     "--image-size",
     type=click.STRING,
     callback=_coerce_comma_separated_ints,
     help="Dimensions for the input images",
 )
 @click.option(
-    "--adv-tar-name",
+    "--def-tar-name",
     type=click.STRING,
-    default="testing_adversarial_fgm.tar.gz",
-    help="Name to give to tarfile artifact containing fgm images",
+    default="jpeg_compression_dataset.tar.gz",
+    help="Name to give to tarfile artifact containing preprocessed  images",
 )
 @click.option(
-    "--adv-data-dir",
+    "--def-data-dir",
     type=click.STRING,
     default="adv_testing",
-    help="Directory for saving fgm images",
-)
-@click.option(
-    "--model-name",
-    type=click.STRING,
-    help="Name of model to load from registry",
-)
-@click.option(
-    "--model-version",
-    type=click.STRING,
-    help="Version of model to load from registry",
+    help="Directory for saving preprocessed images",
 )
 @click.option(
     "--batch-size",
@@ -113,43 +96,46 @@ def _coerce_int_to_bool(ctx, param, value):
     default=32,
 )
 @click.option(
-    "--eps",
-    type=click.FLOAT,
-    help="FGM attack step size (input variation)",
-    default=0.3,
+    "--jpeg-compression-quality",
+    type=click.INT,
+    help="The image quality, on a scale from 1 (worst) to 95 (best). Values above 95 should be avoided.",
+    default=50,
 )
 @click.option(
-    "--eps-step",
-    type=click.FLOAT,
-    help="FGM attack step size of input variation for minimal perturbation computation",
-    default=0.1,
-)
-@click.option(
-    "--minimal",
-    type=click.Choice(["0", "1"]),
-    callback=_coerce_int_to_bool,
-    help="If 1, compute the minimal perturbation using eps_step for the step size and "
-    "eps for the maximum perturbation.",
-    default="0",
-)
-@click.option(
-    "--norm",
-    type=click.Choice(["inf", "1", "2"]),
-    default="inf",
-    callback=_map_norm,
-    help="FGM attack norm of adversarial perturbation",
-)
-@click.option(
-    "--imagenet-preprocessing",
+    "--jpeg-compression-channels-first",
     type=click.BOOL,
-    help="If true, initializes model with Imagenet image preprocessing settings.",
+    help="Set channels first or last.",
     default=False,
 )
 @click.option(
-    "--target-index",
-    type=click.INT,
-    help="Class index for targeted attack. If set to a negative value, the fgm attack will be untargeted.",
-    default="-1",
+    "--jpeg-compression-apply-fit",
+    type=click.BOOL,
+    help="Defense applied on images used for training.",
+    default=False,
+)
+@click.option(
+    "--jpeg-compression-apply-predict",
+    type=click.BOOL,
+    help="Defense applied on images used for testing.",
+    default=True,
+)
+@click.option(
+    "--dataset-run-id",
+    type=click.STRING,
+    help="MLFlow Run ID of an updated dataset.",
+    default="",
+)
+@click.option(
+    "--dataset-tar-name",
+    type=click.STRING,
+    help="Name of dataset tarfile.",
+    default="adversarial_poison.tar.gz",
+)
+@click.option(
+    "--dataset-name",
+    type=click.STRING,
+    help="Name of dataset directory.",
+    default="adv_poison_data",
 )
 @click.option(
     "--seed",
@@ -157,117 +143,106 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
-def fgm_attack(
-    data_dir,
+def jpeg_compression(
     image_size,
-    adv_tar_name,
-    adv_data_dir,
-    model_name,
-    model_version,
+    def_tar_name,
+    def_data_dir,
     batch_size,
-    eps,
-    eps_step,
-    minimal,
-    norm,
-    imagenet_preprocessing,
-    target_index,
+    jpeg_compression_quality,
+    jpeg_compression_channels_first,
+    jpeg_compression_apply_fit,
+    jpeg_compression_apply_predict,
+    dataset_run_id,
+    dataset_tar_name,
+    dataset_name,
     seed,
 ):
-    targeted = False
-    if target_index >= 0:
-        targeted = True
     LOGGER.info(
         "Execute MLFlow entry point",
-        entry_point="fgm",
-        data_dir=data_dir,
+        entry_point="jpeg_compression",
         image_size=image_size,
-        adv_tar_name=adv_tar_name,
-        adv_data_dir=adv_data_dir,
-        model_name=model_name,
-        model_version=model_version,
+        def_tar_name=def_tar_name,
+        def_data_dir=def_data_dir,
         batch_size=batch_size,
-        eps=eps,
-        eps_step=eps_step,
-        minimal=minimal,
-        targeted=targeted,
-        target_index=target_index,
-        imagenet_preprocessing=imagenet_preprocessing,
-        norm=norm,
+        jpeg_compression_quality=jpeg_compression_quality,
+        jpeg_compression_channels_first=jpeg_compression_channels_first,
+        jpeg_compression_apply_fit=jpeg_compression_apply_fit,
+        jpeg_compression_apply_predict=jpeg_compression_apply_predict,
         seed=seed,
+        dataset_run_id=dataset_run_id,
+        dataset_name=dataset_name,
+        dataset_tar_name=dataset_tar_name,
     )
 
-    # Allow imagenet preprocessing.
-    if imagenet_preprocessing:
-        rescale = 1.0
-    else:
-        rescale = 1.0 / 255
-
     with mlflow.start_run() as active_run:  # noqa: F841
-        flow: Flow = init_fgm_flow()
+        flow: Flow = init_jpeg_compression_flow()
         state = flow.run(
             parameters=dict(
-                testing_dir=Path(data_dir),
                 image_size=image_size,
-                rescale=rescale,
-                adv_tar_name=adv_tar_name,
-                adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
+                def_tar_name=def_tar_name,
+                def_data_dir=(Path.cwd() / def_data_dir).resolve(),
                 distance_metrics_filename="distance_metrics.csv",
-                model_name=model_name,
-                model_version=model_version,
                 batch_size=batch_size,
-                eps=eps,
-                eps_step=eps_step,
-                minimal=minimal,
-                norm=norm,
-                targeted=targeted,
-                target_index=target_index,
-                imagenet_preprocessing=imagenet_preprocessing,
+                jpeg_compression_quality=jpeg_compression_quality,
+                jpeg_compression_channels_first=jpeg_compression_channels_first,
+                jpeg_compression_apply_fit=jpeg_compression_apply_fit,
+                jpeg_compression_apply_predict=jpeg_compression_apply_predict,
                 seed=seed,
+                dataset_run_id=dataset_run_id,
+                dataset_name=dataset_name,
+                dataset_tar_name=dataset_tar_name,
             )
         )
 
     return state
 
 
-def init_fgm_flow() -> Flow:
+def init_jpeg_compression_flow() -> Flow:
     with Flow("Fast Gradient Method") as flow:
         (
-            testing_dir,
             image_size,
-            rescale,
-            adv_tar_name,
-            adv_data_dir,
+            def_tar_name,
+            def_data_dir,
             distance_metrics_filename,
-            model_name,
-            model_version,
             batch_size,
-            eps,
-            eps_step,
-            minimal,
-            norm,
-            targeted,
-            target_index,
-            imagenet_preprocessing,
+            jpeg_compression_quality,
+            jpeg_compression_channels_first,
+            jpeg_compression_apply_fit,
+            jpeg_compression_apply_predict,
             seed,
+            dataset_run_id,
+            dataset_name,
+            dataset_tar_name,
         ) = (
-            Parameter("testing_dir"),
             Parameter("image_size"),
-            Parameter("rescale"),
-            Parameter("adv_tar_name"),
-            Parameter("adv_data_dir"),
+            Parameter("def_tar_name"),
+            Parameter("def_data_dir"),
             Parameter("distance_metrics_filename"),
-            Parameter("model_name"),
-            Parameter("model_version"),
             Parameter("batch_size"),
-            Parameter("eps"),
-            Parameter("eps_step"),
-            Parameter("minimal"),
-            Parameter("norm"),
-            Parameter("targeted"),
-            Parameter("target_index"),
-            Parameter("imagenet_preprocessing"),
+            Parameter("jpeg_compression_quality"),
+            Parameter("jpeg_compression_channels_first"),
+            Parameter("jpeg_compression_apply_fit"),
+            Parameter("jpeg_compression_apply_predict"),
             Parameter("seed"),
+            Parameter("dataset_run_id"),
+            Parameter("dataset_name"),
+            Parameter("dataset_tar_name"),
         )
+        data_tar_path = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "download_all_artifacts_in_run",
+            run_id=dataset_run_id,
+            artifact_path=dataset_tar_name,
+        )
+
+        output_dir = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "utils",
+            "extract_tarfile_in_unique_subdir",
+            filepath=data_tar_path,
+        )
+
         seed, rng = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
         )
@@ -277,7 +252,7 @@ def init_fgm_flow() -> Flow:
         dataset_seed = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
         )
-        init_tensorflow_results = pyplugs.call_task(
+        init_tensorflow_results = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.backend_configs",
             "tensorflow",
             "init_tensorflow",
@@ -287,7 +262,7 @@ def init_fgm_flow() -> Flow:
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
             "utils",
             "make_directories",
-            dirs=[adv_data_dir],
+            dirs=[def_data_dir],
         )
 
         log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
@@ -301,49 +276,35 @@ def init_fgm_flow() -> Flow:
             ),
         )
 
-        keras_classifier = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
-            "registry_art",
-            "load_wrapped_tensorflow_keras_classifier",
-            name=model_name,
-            version=model_version,
-            imagenet_preprocessing=imagenet_preprocessing,
-            upstream_tasks=[init_tensorflow_results],
-        )
-
         distance_metrics_list = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.metrics",
             "distance",
             "get_distance_metric_list",
             request=DISTANCE_METRICS,
         )
-
         distance_metrics = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
-            "attacks_fgm",
-            "create_adversarial_fgm_dataset",
-            data_dir=testing_dir,
-            keras_classifier=keras_classifier,
+            "defenses_image_preprocessing",
+            "create_defended_dataset",
+            def_type="jpeg_compression",
+            data_dir=output_dir,
+            dataset_name=dataset_name,
             distance_metrics_list=distance_metrics_list,
-            adv_data_dir=adv_data_dir,
+            def_data_dir=def_data_dir,
             batch_size=batch_size,
             image_size=image_size,
-            rescale=rescale,
-            eps=eps,
-            eps_step=eps_step,
-            minimal=minimal,
-            norm=norm,
-            targeted=targeted,
-            target_index=target_index,
+            quality=jpeg_compression_quality,
+            channels_first=jpeg_compression_channels_first,
+            apply_fit=jpeg_compression_apply_fit,
+            apply_predict=jpeg_compression_apply_predict,
             upstream_tasks=[make_directories_results],
         )
-
         log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
             "mlflow",
             "upload_directory_as_tarball_artifact",
-            source_dir=adv_data_dir,
-            tarball_filename=adv_tar_name,
+            source_dir=def_data_dir,
+            tarball_filename=def_tar_name,
             upstream_tasks=[distance_metrics],
         )
         log_distance_metrics_result = pyplugs.call_task(  # noqa: F841
@@ -369,4 +330,4 @@ if __name__ == "__main__":
     configure_structlog()
 
     with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
-        _ = fgm_attack()
+        _ = jpeg_compression()

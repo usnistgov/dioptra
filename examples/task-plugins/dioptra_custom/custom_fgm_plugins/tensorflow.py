@@ -14,40 +14,38 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import warnings
-from typing import Tuple
+from __future__ import annotations
 
-warnings.filterwarnings("ignore")
+import mlflow
+import structlog
+from structlog.stdlib import BoundLogger
 
-import tensorflow as tf
+from dioptra import pyplugs
+from dioptra.sdk.exceptions import TensorflowDependencyError
+from dioptra.sdk.utilities.decorators import require_package
 
-tf.compat.v1.disable_eager_execution()
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+try:
+    from tensorflow.keras.models import Model
 
-
-def create_image_dataset(
-    data_dir: str,
-    subset: str,
-    rescale: float = 1.0,
-    validation_split: float = 0.2,
-    batch_size: int = 32,
-    seed: int = 8237131,
-    label_mode: str = "categorical",
-    color_mode: str = "rgb",
-    image_size: Tuple[int, int] = (224, 224),
-):
-    data_generator: ImageDataGenerator = ImageDataGenerator(
-        rescale=rescale,
-        validation_split=validation_split,
+except ImportError:  # pragma: nocover
+    LOGGER.warn(
+        "Unable to import one or more optional packages, functionality may be reduced",
+        package="tensorflow",
     )
 
-    return data_generator.flow_from_directory(
-        directory=data_dir,
-        target_size=image_size,
-        color_mode=color_mode,
-        class_mode=label_mode,
-        batch_size=batch_size,
-        seed=seed,
-        subset=subset,
+
+@pyplugs.register
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def register_init_model(active_run, name, model_dir, model) -> Model:
+    LOGGER.info(
+        "registering initialized model",
+        active_run=active_run,
+        name=name,
+        model_dir=model_dir,
     )
+    mlflow.keras.log_model(
+        keras_model=model, artifact_path=model_dir, registered_model_name=name
+    )
+    return model

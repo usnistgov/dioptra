@@ -16,9 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-import importlib
 from pathlib import Path
-from types import FunctionType, ModuleType
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import mlflow
@@ -29,17 +27,17 @@ import structlog
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from art.attacks.evasion import FastGradientMethod
-    from art.estimators.classification import KerasClassifier
+    from art.defences.preprocessor import (
+        GaussianAugmentation,
+        JpegCompression,
+        SpatialSmoothing,
+    )
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -57,39 +55,39 @@ except ImportError:  # pragma: nocover
         package="tensorflow",
     )
 
+DEFENSE_LIST = {
+    "spatial_smoothing": SpatialSmoothing,
+    "jpeg_compression": JpegCompression,
+    "gaussian_augmentation": GaussianAugmentation,
+}
+
 
 @pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def create_adversarial_fgm_dataset(
+def create_defended_dataset(
     data_dir: str,
-    adv_data_dir: Union[str, Path],
-    keras_classifier: KerasClassifier,
+    dataset_name: str,
+    def_data_dir: Union[str, Path],
     image_size: Tuple[int, int, int],
     distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
-    rescale: float = 1.0 / 255,
     batch_size: int = 32,
     label_mode: str = "categorical",
-    eps: float = 0.3,
-    eps_step: float = 0.1,
-    minimal: float = 0,
-    norm: float = np.inf,
-    target_index: int = -1,
-    targeted: bool = False,
+    def_type: str = "spatial_smoothing",
+    **kwargs,
 ) -> pd.DataFrame:
     distance_metrics_list = distance_metrics_list or []
     color_mode: str = "rgb" if image_size[2] == 3 else "grayscale"
+    rescale: float = 1.0 if image_size[2] == 3 else 1.0 / 255
+    clip_values: Tuple[float, float] = (0, 255) if image_size[2] == 3 else (0, 1.0)
     target_size: Tuple[int, int] = image_size[:2]
-    adv_data_dir = Path(adv_data_dir)
+    def_data_dir = Path(def_data_dir)
+    data_dir = Path(data_dir) / dataset_name
 
-    attack = _init_fgm(
-        keras_classifier=keras_classifier,
-        batch_size=batch_size,
-        eps=eps,
-        eps_step=eps_step,
-        minimal=minimal,
-        norm=norm,
-        targeted=targeted,
+    defense = init_defense(
+        clip_values=clip_values,
+        def_type=def_type,
+        **kwargs,
     )
 
     data_generator: ImageDataGenerator = ImageDataGenerator(rescale=rescale)
@@ -102,7 +100,6 @@ def create_adversarial_fgm_dataset(
         batch_size=batch_size,
         shuffle=False,
     )
-    n_classes = len(data_flow.class_indices)
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]
     class_names_list = sorted(data_flow.class_indices, key=data_flow.class_indices.get)
@@ -112,8 +109,8 @@ def create_adversarial_fgm_dataset(
         distance_metrics_[metric_name] = []
 
     LOGGER.info(
-        "Generate adversarial images",
-        attack="fgm",
+        "Generate defended images",
+        defense=def_type,
         num_batches=num_images // batch_size,
     )
 
@@ -126,57 +123,49 @@ def create_adversarial_fgm_dataset(
         ]
 
         LOGGER.info(
-            "Generate adversarial image batch",
-            attack="fgm",
+            "Generate defended image batch",
+            defense=def_type,
             batch_num=batch_num,
         )
 
         y_int = np.argmax(y, axis=1)
-        if target_index >= 0:
-            y_one_hot = np.zeros(n_classes)
-            y_one_hot[target_index] = 1.0
-            y_target = np.tile(y_one_hot, (x.shape[0], 1))
+        adv_batch_defend, _ = defense(x)
 
-            adv_batch = attack.generate(x=x, y=y_target)
-        else:
-            adv_batch = attack.generate(x=x)
-
-        _save_adv_batch(
-            adv_batch, adv_data_dir, y_int, clean_filenames, class_names_list
+        _save_def_batch(
+            adv_batch_defend, def_data_dir, y_int, clean_filenames, class_names_list
         )
 
         _evaluate_distance_metrics(
             clean_filenames=clean_filenames,
             distance_metrics_=distance_metrics_,
             clean_batch=x,
-            adv_batch=adv_batch,
+            adv_batch=adv_batch_defend,
             distance_metrics_list=distance_metrics_list,
         )
 
-    LOGGER.info("Adversarial image generation complete", attack="fgm")
+    LOGGER.info("Defended image generation complete", defense=def_type)
     _log_distance_metrics(distance_metrics_)
 
     return pd.DataFrame(distance_metrics_)
 
 
-def _init_fgm(
-    keras_classifier: KerasClassifier, batch_size: int, **kwargs
-) -> FastGradientMethod:
-    attack: FastGradientMethod = FastGradientMethod(
-        estimator=keras_classifier, batch_size=batch_size, **kwargs
+def init_defense(clip_values, def_type, **kwargs):
+    defense = DEFENSE_LIST[def_type](
+        clip_values=clip_values,
+        **kwargs,
     )
-    return attack
+    return defense
 
 
-def _save_adv_batch(
-    adv_batch, adv_data_dir, y, clean_filenames, class_names_list
+def _save_def_batch(
+    adv_batch, def_data_dir, y, clean_filenames, class_names_list
 ) -> None:
     for batch_image_num, adv_image in enumerate(adv_batch):
         out_label = class_names_list[y[batch_image_num]]
         adv_image_path = (
-            adv_data_dir
+            def_data_dir
             / f"{out_label}"
-            / f"adv_{clean_filenames[batch_image_num].name}"
+            / f"def_{clean_filenames[batch_image_num].name}"
         )
 
         if not adv_image_path.parent.exists():

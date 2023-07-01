@@ -19,11 +19,11 @@ name: imagenet-resnet50-fgm
 entry_points:
   fgm:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
+      data_dir: { type: path, default: "/dioptra/data/ImageNet-Kaggle/testing" }
       image_size: { type: string, default: "28,28,1" }
       adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
       adv_data_dir: { type: string, default: "adv_testing" }
-      model_name: { type: string, default: "mnist_le_net" }
+      model_name: { type: string, default: "imagenet_fgm_defense_pretrained_resnet50" }
       model_version: { type: string, default: "1" }
       batch_size: { type: float, default: 32 }
       eps: { type: float, default: 0.3 }
@@ -34,7 +34,7 @@ entry_points:
       imagenet_preprocessing: { type: string, default: "false"}
       seed: { type: float, default: -1 }
     command: >
-      python src/fgm.py
+      python fgm.py
       --data-dir {data_dir}
       --image-size {image_size}
       --adv-tar-name {adv_tar_name}
@@ -52,7 +52,6 @@ entry_points:
 
   spatial_smoothing:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
       image_size: { type: string, default: "28,28,1" }
       def_tar_name: { type: string, default: "spatial_smoothing_dataset.tar.gz" }
       def_data_dir: { type: string, default: "adv_testing" }
@@ -60,14 +59,12 @@ entry_points:
       spatial_smoothing_window_size: {type: int, default: 3}
       spatial_smoothing_apply_fit: {type: string, default: "false"}
       spatial_smoothing_apply_predict: {type: string, default: "true"}
-      load_dataset_from_mlruns: {type: string, default: "false"}
       dataset_run_id: {type: string, default: "none"}
       dataset_tar_name: {type: string, default: "none"}
       dataset_name: {type: string, default: "none"}
       seed: { type: float, default: -1 }
     command: >
-      python src/spatial_smoothing.py
-      --data-dir {data_dir}
+      python spatial_smoothing.py
       --image-size {image_size}
       --def-tar-name {def_tar_name}
       --def-data-dir {def_data_dir}
@@ -75,7 +72,6 @@ entry_points:
       --spatial-smoothing-window-size {spatial_smoothing_window_size}
       --spatial-smoothing-apply-fit {spatial_smoothing_apply_fit}
       --spatial-smoothing-apply-predict {spatial_smoothing_apply_predict}
-      --load-dataset-from-mlruns {load_dataset_from_mlruns}
       --dataset-run-id {dataset_run_id}
       --dataset-tar-name {dataset_tar_name}
       --dataset-name {dataset_name}
@@ -83,7 +79,6 @@ entry_points:
 
   jpeg_compression:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
       image_size: { type: string, default: "28,28,1" }
       def_tar_name: { type: string, default: "jpeg_compression_dataset.tar.gz" }
       def_data_dir: { type: string, default: "adv_testing" }
@@ -92,14 +87,12 @@ entry_points:
       jpeg_compression_quality: {type: int, default: 50}
       jpeg_compression_apply_fit: {type: string, default: "false"}
       jpeg_compression_apply_predict: {type: string, default: "true"}
-      load_dataset_from_mlruns: {type: string, default: "false"}
       dataset_run_id: {type: string, default: "none"}
       dataset_tar_name: {type: string, default: "none"}
       dataset_name: {type: string, default: "none"}
       seed: { type: float, default: -1 }
     command: >
-      python src/jpeg_compression.py
-      --data-dir {data_dir}
+      python jpeg_compression.py
       --image-size {image_size}
       --def-tar-name {def_tar_name}
       --def-data-dir {def_data_dir}
@@ -108,7 +101,6 @@ entry_points:
       --jpeg-compression-quality {jpeg_compression_quality}
       --jpeg-compression-apply-fit {jpeg_compression_apply_fit}
       --jpeg-compression-apply-predict {jpeg_compression_apply_predict}
-      --load-dataset-from-mlruns {load_dataset_from_mlruns}
       --dataset-run-id {dataset_run_id}
       --dataset-tar-name {dataset_tar_name}
       --dataset-name {dataset_name}
@@ -116,7 +108,6 @@ entry_points:
 
   gaussian_augmentation:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
       image_size: { type: string, default: "28,28,1" }
       def_tar_name: { type: string, default: "gaussian_augmentation_dataset.tar.gz" }
       def_data_dir: { type: string, default: "adv_testing" }
@@ -126,14 +117,12 @@ entry_points:
       gaussian_augmentation_sigma: {type: float, default: 1}
       gaussian_augmentation_apply_fit: {type: string, default: "false"}
       gaussian_augmentation_apply_predict: {type: string, default: "true"}
-      load_dataset_from_mlruns: {type: string, default: "false"}
       dataset_run_id: {type: string, default: "none"}
       dataset_tar_name: {type: string, default: "none"}
       dataset_name: {type: string, default: "none"}
       seed: { type: float, default: -1 }
     command: >
-      python src/gaussian_augmentation.py
-      --data-dir {data_dir}
+      python gaussian_augmentation.py
       --image-size {image_size}
       --def-tar-name {def_tar_name}
       --def-data-dir {def_data_dir}
@@ -143,18 +132,15 @@ entry_points:
       --gaussian-augmentation-sigma {gaussian_augmentation_sigma}
       --gaussian-augmentation-apply-fit {gaussian_augmentation_apply_fit}
       --gaussian-augmentation-apply-predict {gaussian_augmentation_apply_predict}
-      --load-dataset-from-mlruns {load_dataset_from_mlruns}
       --dataset-run-id {dataset_run_id}
       --dataset-tar-name {dataset_tar_name}
       --dataset-name {dataset_name}
       --seed {seed}
-
-
   infer:
     parameters:
       run_id: { type: string }
-      image_size: { type: string, default: "28,28,1" }
-      model_name: { type: string, default: "mnist_le_net" }
+      image_size: { type: string, default: "224,224,3" }
+      model_name: { type: string, default: "imagenet_fgm_defense_pretrained_resnet50" }
       model_version: { type: string, default: "1" }
       batch_size: { type: float, default: 32 }
       adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
@@ -162,7 +148,7 @@ entry_points:
       imagenet_preprocessing: { type: string, default: "false"}
       seed: { type: float, default: -1 }
     command: >
-      python src/infer.py
+      python infer.py
       --run-id {run_id}
       --image-size {image_size}
       --model-name {model_name}
@@ -172,47 +158,20 @@ entry_points:
       --adv-data-dir {adv_data_dir}
       --imagenet-preprocessing {imagenet_preprocessing}
       --seed {seed}
-
-  train:
-    parameters:
-      data_dir: { type: path, default: "/nfs/data" }
-      image_size: { type: string, default: "28,28,1" }
-      model_architecture: { type: string, default: "le_net" }
-      epochs: { type: float, default: 30 }
-      batch_size: { type: float, default: 32 }
-      register_model_name: { type: string, default: "" }
-      learning_rate: { type: float, default: 0.001 }
-      optimizer: { type: string, default: "Adam" }
-      validation_split: { type: float, default: 0.2 }
-      imagenet_preprocessing: { type: string, default: "false"}
-      seed: { type: float, default: -1 }
-    command: >
-      python src/train.py
-      --data-dir {data_dir}
-      --image-size {image_size}
-      --model-architecture {model_architecture}
-      --epochs {epochs}
-      --batch-size {batch_size}
-      --register-model-name {register_model_name}
-      --learning-rate {learning_rate}
-      --optimizer {optimizer}
-      --validation-split {validation_split}
-      --imagenet-preprocessing {imagenet_preprocessing}
-      --seed {seed}
-
   init_model:
     parameters:
-      data_dir: { type: path, default: "/nfs/data" }
-      image_size: { type: string, default: "28,28,1" }
-      model_architecture: { type: string, default: "le_net" }
-      batch_size: { type: float, default: 32 }
+      data_dir: { type: path, default: "/dioptra/data/ImageNet-Kaggle/testing" }
+      image_size: { type: string, default: "224,224,3" }
+      model_architecture: { type: string, default: "resnet50" }
+      batch_size: { type: float, default: 20 }
       register_model_name: { type: string, default: "" }
       learning_rate: { type: float, default: 0.001 }
       optimizer: { type: string, default: "Adam" }
-      imagenet_preprocessing: { type: string, default: "false"}
+      imagenet_preprocessing: { type: string, default: "true"}
       seed: { type: float, default: -1 }
     command: >
-      python src/init_model.py
+      python 
+      init_model.py
       --data-dir {data_dir}
       --image-size {image_size}
       --model-architecture {model_architecture}
@@ -222,3 +181,29 @@ entry_points:
       --optimizer {optimizer}
       --imagenet-preprocessing {imagenet_preprocessing}
       --seed {seed}
+  pt:
+    parameters:
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
+      image_size: { type: string, default: "28,28,1" }
+      adv_tar_name: { type: string, default: "testing_adversarial_pt.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      model_name: { type: string, default: "mnist_le_net" }
+      model_version: { type: string, default: "1" }
+      batch_size: { type: float, default: 32 }
+      th: { type: int, default 1 }
+      es: { type: int, default 0 }
+      seed: { type: float, default: -1 }
+      clip_values: { type: string, default: "0,1" }
+    command: >
+      python pt.py
+      --data-dir {data_dir}
+      --image-size {image_size}
+      --adv-tar-name {adv_tar_name}
+      --adv-data-dir {adv_data_dir}
+      --model-name {model_name}
+      --model-version {model_version}
+      --batch-size {batch_size}
+      --th {th}
+      --es {es}
+      --seed {seed}
+      --clip-values {clip_values}

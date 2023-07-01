@@ -18,15 +18,14 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List
 
 import click
 import mlflow
+import mlflow.tensorflow
 import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-from tensorflow.keras.applications.resnet_v2 import ResNet50V2
 
 from dioptra import pyplugs
 from dioptra.sdk.utilities.contexts import plugin_dirs
@@ -41,24 +40,7 @@ from dioptra.sdk.utilities.logging import (
 
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 _CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
-CALLBACKS: List[Dict[str, Any]] = [
-    {
-        "name": "EarlyStopping",
-        "parameters": {
-            "monitor": "val_loss",
-            "min_delta": 1e-2,
-            "patience": 5,
-            "restore_best_weights": True,
-        },
-    },
-]
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
-PERFORMANCE_METRICS: List[Dict[str, Any]] = [
-    {"name": "CategoricalAccuracy", "parameters": {"name": "accuracy"}},
-    {"name": "Precision", "parameters": {"name": "precision"}},
-    {"name": "Recall", "parameters": {"name": "recall"}},
-    {"name": "AUC", "parameters": {"name": "auc"}},
-]
 
 
 def _coerce_comma_separated_ints(ctx, param, value):
@@ -67,11 +49,9 @@ def _coerce_comma_separated_ints(ctx, param, value):
 
 @click.command()
 @click.option(
-    "--data-dir",
-    type=click.Path(
-        exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
-    ),
-    help="Root directory for NFS mounted datasets (in container)",
+    "--run-id",
+    type=click.STRING,
+    help="MLFlow Run ID of a successful fgm attack",
 )
 @click.option(
     "--image-size",
@@ -80,36 +60,26 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Dimensions for the input images",
 )
 @click.option(
-    "--model-architecture",
-    type=click.Choice(
-        ["shallow_net", "le_net", "alex_net", "resnet50", "vgg16"], case_sensitive=False
-    ),
-    default="le_net",
-    help="Model architecture",
-)
-@click.option(
-    "--batch-size",
-    type=click.INT,
-    help="Batch size to use for testing",
-    default=32,
-)
-@click.option(
-    "--register-model-name",
+    "--model-name",
     type=click.STRING,
-    default="",
-    help=(
-        "Register the new model under the provided name. If an empty string, "
-        "then the model will not be registered."
-    ),
+    help="Name of model to load from registry",
 )
 @click.option(
-    "--learning-rate", type=click.FLOAT, help="Model learning rate", default=0.001
+    "--model-version",
+    type=click.STRING,
+    help="Version of model to load from registry",
 )
 @click.option(
-    "--optimizer",
-    type=click.Choice(["Adam", "Adagrad", "RMSprop", "SGD"], case_sensitive=True),
-    help="Optimizer to use to train the model",
-    default="Adam",
+    "--adv-tar-name",
+    type=click.STRING,
+    default="testing_adversarial_fgm.tar.gz",
+    help="Name of tarfile artifact containing fgm images",
+)
+@click.option(
+    "--adv-data-dir",
+    type=click.STRING,
+    default="adv_testing",
+    help="Directory in tarfile containing fgm images",
 )
 @click.option(
     "--imagenet-preprocessing",
@@ -118,89 +88,90 @@ def _coerce_comma_separated_ints(ctx, param, value):
     default=False,
 )
 @click.option(
+    "--batch-size",
+    type=click.INT,
+    help="Batch size to use for testing",
+    default=32,
+)
+@click.option(
     "--seed",
     type=click.INT,
     help="Set the entry point rng seed",
     default=-1,
 )
-def init_model(
-    data_dir,
+def infer_adversarial(
+    run_id,
     image_size,
-    model_architecture,
-    batch_size,
-    register_model_name,
-    learning_rate,
-    optimizer,
+    model_name,
+    model_version,
+    adv_tar_name,
+    adv_data_dir,
     imagenet_preprocessing,
+    batch_size,
     seed,
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
-        entry_point="train",
-        data_dir=data_dir,
+        entry_point="infer",
         image_size=image_size,
-        model_architecture=model_architecture,
-        batch_size=batch_size,
-        register_model_name=register_model_name,
-        learning_rate=learning_rate,
-        optimizer=optimizer,
+        model_name=model_name,
+        model_version=model_version,
+        adv_tar_name=adv_tar_name,
+        adv_data_dir=adv_data_dir,
         imagenet_preprocessing=imagenet_preprocessing,
+        batch_size=batch_size,
         seed=seed,
     )
 
-    mlflow.autolog()
+    # Allow imagenet preprocessing.
 
-    if imagenet_preprocessing:
-        rescale = 1.0
-    else:
-        rescale = 1.0 / 255
-
-    with mlflow.start_run() as active_run:
-        flow: Flow = init_train_flow()
+    with mlflow.start_run() as active_run:  # noqa: F841
+        flow: Flow = init_infer_flow()
         state = flow.run(
             parameters=dict(
-                active_run=active_run,
-                testing_dir=Path(data_dir),
                 image_size=image_size,
-                model_architecture=model_architecture,
-                batch_size=batch_size,
-                register_model_name=register_model_name,
-                learning_rate=learning_rate,
-                optimizer_name=optimizer,
+                model_name=model_name,
+                model_version=model_version,
+                run_id=run_id,
+                adv_tar_name=adv_tar_name,
+                adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
                 imagenet_preprocessing=imagenet_preprocessing,
-                rescale=rescale,
+                batch_size=batch_size,
                 seed=seed,
             )
         )
+
     return state
 
 
-def init_train_flow() -> Flow:
-    with Flow("Train Model") as flow:
+def init_infer_flow() -> Flow:
+    with Flow("Inference") as flow:
         (
-            active_run,
-            testing_dir,
             image_size,
-            model_architecture,
-            batch_size,
-            register_model_name,
-            learning_rate,
-            optimizer_name,
+            model_name,
+            model_version,
+            run_id,
+            adv_tar_name,
+            adv_data_dir,
             imagenet_preprocessing,
-            rescale,
+            batch_size,
             seed,
         ) = (
-            Parameter("active_run"),
-            Parameter("testing_dir"),
             Parameter("image_size"),
-            Parameter("model_architecture"),
-            Parameter("batch_size"),
-            Parameter("register_model_name"),
-            Parameter("learning_rate"),
-            Parameter("optimizer_name"),
+            Parameter("model_name"),
+            Parameter("model_version"),
+            Parameter("run_id"),
+            Parameter("adv_tar_name"),
+            Parameter("adv_data_dir"),
             Parameter("imagenet_preprocessing"),
-            Parameter("rescale"),
+            Parameter("batch_size"),
             Parameter("seed"),
+        )
+        rescale = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
+            "data_tensorflow",
+            "rescale",
+            imagenet_preprocessing=imagenet_preprocessing,
         )
         seed, rng = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
@@ -228,81 +199,55 @@ def init_train_flow() -> Flow:
                 dataset_seed=dataset_seed,
             ),
         )
-        optimizer = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
-            "tensorflow",
-            "get_optimizer",
-            optimizer=optimizer_name,
-            learning_rate=learning_rate,
-            upstream_tasks=[init_tensorflow_results],
+        adv_tar_path = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "mlflow",
+            "download_all_artifacts_in_run",
+            run_id=run_id,
+            artifact_path=adv_tar_name,
         )
-        metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
-            "tensorflow",
-            "get_performance_metrics",
-            metrics_list=PERFORMANCE_METRICS,
-            upstream_tasks=[init_tensorflow_results],
+        extract_tarfile_results = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.artifacts",
+            "utils",
+            "extract_tarfile",
+            filepath=adv_tar_path,
         )
-        callbacks_list = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
-            "tensorflow",
-            "get_model_callbacks",
-            callbacks_list=CALLBACKS,
-            upstream_tasks=[init_tensorflow_results],
-        )
-        testing_ds = pyplugs.call_task(
+
+        adv_ds = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
             "data_tensorflow",
             "create_image_dataset",
-            data_dir=testing_dir,
+            data_dir=adv_data_dir,
             subset=None,
-            image_size=image_size,
-            seed=dataset_seed + 1,
             validation_split=None,
-            batch_size=batch_size,
-            upstream_tasks=[init_tensorflow_results],
-            rescale=rescale,
+            image_size=image_size,
             imagenet_preprocessing=imagenet_preprocessing,
+            seed=dataset_seed,
+            rescale=rescale,
+            batch_size=batch_size,
+            upstream_tasks=[init_tensorflow_results, extract_tarfile_results],
         )
-        n_classes = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.data",
-            "tensorflow",
-            "get_n_classes_from_directory_iterator",
-            ds=testing_ds,
-        )
+
         classifier = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
-            "estimators_keras_classifiers",
-            "init_classifier",
-            model_architecture=model_architecture,
-            optimizer=optimizer,
-            metrics=metrics,
-            input_shape=image_size,
-            n_classes=n_classes,
+            f"{_PLUGINS_IMPORT_PATH}.registry",
+            "mlflow",
+            "load_tensorflow_keras_classifier",
+            name=model_name,
+            version=model_version,
             upstream_tasks=[init_tensorflow_results],
-            training=False,
         )
         classifier_performance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "evaluate_metrics_tensorflow",
             classifier=classifier,
-            dataset=testing_ds,
+            dataset=adv_ds,
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
             "log_metrics",
             metrics=classifier_performance_metrics,
-        )
-        model_storage = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_fgm_plugins",
-            "tensorflow",
-            "register_init_model",
-            model=classifier,
-            active_run=active_run,
-            name=register_model_name,
-            model_dir="model",
         )
 
     return flow
@@ -318,4 +263,4 @@ if __name__ == "__main__":
     configure_structlog()
 
     with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
-        _ = init_model()
+        _ = infer_adversarial()
