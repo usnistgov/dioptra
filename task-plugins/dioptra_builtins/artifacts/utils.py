@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import os
 import tarfile
+import uuid
 from pathlib import Path
 from tarfile import TarFile
 from typing import Any, List, Union
@@ -87,3 +88,30 @@ def make_directories(dirs: List[Union[str, Path]]) -> None:
         d = Path(d)
         d.mkdir(parents=True, exist_ok=True)
         LOGGER.info("Directory created", directory=d)
+
+
+@pyplugs.register
+def extract_tarfile_in_unique_subdir(
+    filepath: Union[str, Path],
+    tarball_read_mode: str = "r:gz",
+) -> Path:
+    """Extracts a tarball archive into a unique subdirectory of the
+    current working directory.
+
+    Args:
+        filepath: The location of the tarball archive file provided as a string or a
+            :py:class:`~pathlib.Path` object.
+        tarball_read_mode: The read mode for the tarball, see :py:func:`tarfile.open`
+            for the full list of compression options. The default is `"r:gz"` (gzip
+            compression).
+
+    See Also:
+        - :py:func:`tarfile.open`
+    """
+    output_dir = Path(uuid.uuid4().hex)
+    output_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+
+    filepath = Path(filepath)
+    with tarfile.open(filepath, tarball_read_mode) as f:
+        safe_extract(f, path=output_dir)
+    return output_dir

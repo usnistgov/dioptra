@@ -51,7 +51,6 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 import structlog
-from prefect import task
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
@@ -117,7 +116,7 @@ def create_pt_dataset(
             Evolution Strategy.
     """
     distance_metrics_list = distance_metrics_list or []
-    color_mode: str = "color" if image_size[2] == 3 else "grayscale"
+    color_mode: str = "rgb" if image_size[2] == 3 else "grayscale"
     target_size: Tuple[int, int] = image_size[:2]
     adv_data_dir = Path(adv_data_dir)
 
