@@ -21,7 +21,7 @@
 
 # -- Prerequisite: copy files ------------------------------------------------------------------------
 
-FROM nvidia/cuda:11.5.1-cudnn8-runtime-ubuntu20.04 AS copy-files
+FROM nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04 AS copy-files
 
 COPY --chown=root:root --chmod=0644 docker/configs/aws-config /files/aws-config
 COPY --chown=root:root --chmod=0644 docker/configs/build.pip.conf /files/build.pip.conf
@@ -33,7 +33,7 @@ COPY --chown=root:root --chmod=0644 docker/requirements/linux-x86_64-py3.9-tenso
 
 # -- Base image --------------------------------------------------------------------------------------
 
-FROM nvidia/cuda:11.5.1-cudnn8-runtime-ubuntu20.04 AS base
+FROM nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04 AS base
 
 USER root
 
