@@ -19,7 +19,7 @@ line-length=100
 min-length=5
 
 [ignore-by-title]
-regex=^release
+regex=(^release|^Merge)
 ignore=all
 
 [contrib-title-conventional-commits]
