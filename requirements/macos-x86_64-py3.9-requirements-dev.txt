@@ -436,7 +436,7 @@ mdurl==0.1.2
     # via markdown-it-py
 mistune==2.0.5
     # via nbconvert
-mlflow==1.27.0
+mlflow==2.3.1
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
