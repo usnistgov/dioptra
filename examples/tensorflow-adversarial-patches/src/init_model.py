@@ -26,7 +26,6 @@ import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-from tensorflow.keras.applications.resnet_v2 import ResNet50V2
 
 from dioptra import pyplugs
 from dioptra.sdk.utilities.contexts import plugin_dirs
@@ -148,13 +147,6 @@ def init_model(
         seed=seed,
     )
 
-    mlflow.autolog()
-
-    if imagenet_preprocessing:
-        rescale = 1.0
-    else:
-        rescale = 1.0 / 255
-
     with mlflow.start_run() as active_run:
         flow: Flow = init_train_flow()
         state = flow.run(
@@ -168,7 +160,6 @@ def init_model(
                 learning_rate=learning_rate,
                 optimizer_name=optimizer,
                 imagenet_preprocessing=imagenet_preprocessing,
-                rescale=rescale,
                 seed=seed,
             )
         )
@@ -187,7 +178,6 @@ def init_train_flow() -> Flow:
             learning_rate,
             optimizer_name,
             imagenet_preprocessing,
-            rescale,
             seed,
         ) = (
             Parameter("active_run"),
@@ -199,7 +189,6 @@ def init_train_flow() -> Flow:
             Parameter("learning_rate"),
             Parameter("optimizer_name"),
             Parameter("imagenet_preprocessing"),
-            Parameter("rescale"),
             Parameter("seed"),
         )
         seed, rng = pyplugs.call_task(
@@ -218,6 +207,13 @@ def init_train_flow() -> Flow:
             seed=tensorflow_global_seed,
         )
 
+        rescale = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "datasetup",
+            "select_rescale_value",
+            imagenet_preprocessing=imagenet_preprocessing,
+        )
+
         log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
@@ -226,10 +222,11 @@ def init_train_flow() -> Flow:
                 entry_point_seed=seed,
                 tensorflow_global_seed=tensorflow_global_seed,
                 dataset_seed=dataset_seed,
+                rescale=rescale,
             ),
         )
         optimizer = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "get_optimizer",
             optimizer=optimizer_name,
@@ -237,14 +234,14 @@ def init_train_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
         )
         metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "get_performance_metrics",
             metrics_list=PERFORMANCE_METRICS,
             upstream_tasks=[init_tensorflow_results],
         )
-        callbacks_list = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
+        callbacks_list = pyplugs.call_task(  # noqa: F841
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "get_model_callbacks",
             callbacks_list=CALLBACKS,
@@ -283,7 +280,7 @@ def init_train_flow() -> Flow:
             training=False,
         )
         classifier_performance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "evaluate_metrics_tensorflow",
             classifier=classifier,
@@ -295,7 +292,7 @@ def init_train_flow() -> Flow:
             "log_metrics",
             metrics=classifier_performance_metrics,
         )
-        model_storage = pyplugs.call_task(
+        model_storage = pyplugs.call_task(  # noqa: F841
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
             "tensorflow",
             "register_init_model",

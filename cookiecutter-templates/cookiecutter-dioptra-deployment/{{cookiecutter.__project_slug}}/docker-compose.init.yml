@@ -193,6 +193,20 @@ services:
       - worker-ca-certificates:/usr/local/share/ca-certificates:rw
       - worker-etc-ssl:/etc/ssl:rw
 
+  frontend-build:
+    image: {{ container_image(cookiecutter.__containers.nodejs) }}
+    user: root
+    entrypoint:
+      - "/bin/bash"
+    env_file:
+      - ./envs/ca-certificates.env
+    volumes:
+      - init-scripts:/scripts:ro
+      - init-repos:/repo:rw
+      - nginx-ca-certificates:/usr/local/share/ca-certificates:rw
+      - nginx-etc-ssl:/etc/ssl:rw
+      - nginx-frontend:/frontend:rw
+
 volumes:
   init-repos:
     name: {{ cookiecutter.__project_slug }}_init-repos
@@ -218,6 +232,8 @@ volumes:
     name: {{ cookiecutter.__project_slug }}_nginx-conf-d
   nginx-etc-ssl:
     name: {{ cookiecutter.__project_slug }}_nginx-etc-ssl
+  nginx-frontend:
+    name: {{ cookiecutter.__project_slug }}_nginx-frontend
   postgres-data:
     name: {{ cookiecutter.__project_slug }}_postgres-data
   postgres-docker-entrypoint-initdb-d:

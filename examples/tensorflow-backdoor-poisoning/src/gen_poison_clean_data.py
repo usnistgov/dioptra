@@ -178,7 +178,6 @@ def poison_attack(
     target_index,
     seed,
 ):
-
     LOGGER.info(
         "Execute MLFlow entry point",
         entry_point="gen_poison_clean_label",
@@ -199,21 +198,12 @@ def poison_attack(
         seed=seed,
     )
 
-    clip_values: Tuple[float, float] = (0, 255) if image_size[2] == 3 else (0, 1)
-
-    # Allow imagenet preprocessing.
-    if imagenet_preprocessing:
-        rescale = 1.0
-    else:
-        rescale = 1.0 / 255
-
     with mlflow.start_run() as active_run:  # noqa: F841
         flow: Flow = init_poison_flow()
         state = flow.run(
             parameters=dict(
                 testing_dir=Path(data_dir),
                 image_size=image_size,
-                rescale=rescale,
                 adv_tar_name=adv_tar_name,
                 adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
                 distance_metrics_filename="distance_metrics.csv",
@@ -224,7 +214,6 @@ def poison_attack(
                 label_type=label_type,
                 target_index=target_index,
                 imagenet_preprocessing=imagenet_preprocessing,
-                clip_values=clip_values,
                 eps=eps,
                 eps_step=eps_step,
                 norm=norm,
@@ -240,7 +229,6 @@ def init_poison_flow() -> Flow:
         (
             testing_dir,
             image_size,
-            rescale,
             adv_tar_name,
             adv_data_dir,
             distance_metrics_filename,
@@ -252,7 +240,6 @@ def init_poison_flow() -> Flow:
             targeted,
             target_index,
             imagenet_preprocessing,
-            clip_values,
             eps,
             eps_step,
             norm,
@@ -260,7 +247,6 @@ def init_poison_flow() -> Flow:
         ) = (
             Parameter("testing_dir"),
             Parameter("image_size"),
-            Parameter("rescale"),
             Parameter("adv_tar_name"),
             Parameter("adv_data_dir"),
             Parameter("distance_metrics_filename"),
@@ -272,7 +258,6 @@ def init_poison_flow() -> Flow:
             Parameter("targeted"),
             Parameter("target_index"),
             Parameter("imagenet_preprocessing"),
-            Parameter("clip_values"),
             Parameter("eps"),
             Parameter("eps_step"),
             Parameter("norm"),
@@ -300,6 +285,19 @@ def init_poison_flow() -> Flow:
             dirs=[adv_data_dir],
         )
 
+        rescale = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "datasetup",
+            "select_rescale_value",
+            imagenet_preprocessing=imagenet_preprocessing,
+        )
+        clip_values = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "datasetup",
+            "select_clip_values",
+            image_size=image_size,
+        )
+
         log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
@@ -308,6 +306,9 @@ def init_poison_flow() -> Flow:
                 entry_point_seed=seed,
                 tensorflow_global_seed=tensorflow_global_seed,
                 dataset_seed=dataset_seed,
+                imagenet_preprocessing=imagenet_preprocessing,
+                clip_values=clip_values,
+                rescale=rescale,
             ),
         )
 

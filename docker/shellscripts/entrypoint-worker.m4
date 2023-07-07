@@ -19,12 +19,9 @@
 # m4_ignore(
 echo "This is just a script template, not the script (yet) - pass it to 'argbash' to fix this." >&2
 exit 11 #)Created by argbash-init v2.8.1
-# ARG_OPTIONAL_SINGLE([conda-env],[],[Conda environment],[dioptra])
-# ARG_OPTIONAL_SINGLE([output],[o],[Path to save exported environment.yml file (ignored unless paired with --export-conda-env)],[])
 # ARG_OPTIONAL_SINGLE([results-ttl],[],[Job results will be kept for this number of seconds],[500])
 # ARG_OPTIONAL_SINGLE([rq-worker-module],[],[Python module used to start the RQ Worker],[dioptra.rq.cli.rq])
 # ARG_OPTIONAL_REPEATED([wait-for],[],[Wait on the availability of a host and TCP port before proceeding],[])
-# ARG_OPTIONAL_BOOLEAN([export-conda-env],[],[Freeze and export the container's conda environment (--output must be set)])
 # ARG_LEFTOVERS([Queues to watch])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
@@ -39,39 +36,12 @@ set -euo pipefail
 # Global parameters
 ###########################################################################################
 
-readonly conda_dir="${CONDA_DIR}"
-readonly conda_env="${_arg_conda_env}"
 readonly dioptra_workdir="${DIOPTRA_WORKDIR}"
-readonly export_conda_env="${_arg_export_conda_env}"
 readonly job_queues="${_arg_leftovers[*]}"
 readonly logname="Container Entry Point"
 readonly rq_worker_module="${_arg_rq_worker_module}"
 readonly rq_redis_uri="${RQ_REDIS_URI-}"
 readonly rq_results_ttl="${_arg_results_ttl}"
-
-###########################################################################################
-# Freeze and export the worker's conda virtual environment
-#
-# Globals:
-#   conda_env
-#   logname
-#   _arg_output
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-export_conda_environment() {
-  if [[ ! -f /usr/local/bin/conda-env.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/conda-env.sh script missing" 1>&2
-    exit 1
-  fi
-
-  if ! /usr/local/bin/conda-env.sh --env ${conda_env} --output ${_arg_output} --freeze; then
-    exit 1
-  fi
-}
 
 ###########################################################################################
 # Wait for services to start
@@ -97,8 +67,6 @@ wait_for_services() {
 # Start Redis Queue Worker
 #
 # Globals:
-#   conda_dir
-#   conda_env
 #   dioptra_workdir
 #   job_queues
 #   logname
@@ -116,43 +84,11 @@ start_rq() {
   echo "${logname}: rq worker --url ${rq_redis_uri} --results-ttl ${rq_results_ttl} \
   ${job_queues}"
 
-  bash -c "\
-  source ${conda_dir}/etc/profile.d/conda.sh &&\
-  conda activate ${conda_env} &&\
-  cd ${dioptra_workdir} &&\
+  cd ${dioptra_workdir}
   python -m ${rq_worker_module} worker\
-  --url ${rq_redis_uri}\
-  --results-ttl ${rq_results_ttl}\
-  ${job_queues}"
-}
-
-###########################################################################################
-# The top-level function in the script
-#
-# Globals:
-#   export_conda_env
-#   logname
-#   _arg_output
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-main() {
-  case "${export_conda_env}" in
-    on)
-      export_conda_environment
-      ;;
-    off)
-      start_rq
-      ;;
-    *)
-      echo "${logname}: ERROR - Unexcepted value of export_conda_env"
-        "'${export_conda_env}'." 1>&2
-      exit 1
-      ;;
-  esac
+    --url ${rq_redis_uri}\
+    --results-ttl ${rq_results_ttl}\
+    ${job_queues}
 }
 
 ###########################################################################################
@@ -160,5 +96,5 @@ main() {
 ###########################################################################################
 
 wait_for_services
-main
+start_rq
 # ] <-- needed because of Argbash

@@ -27,6 +27,8 @@ from typing import Any, Dict
 
 from marshmallow import Schema, fields, post_dump, pre_dump
 
+from dioptra.restapi.utils import slugify
+
 from .model import Queue, QueueLock, QueueRegistrationForm, QueueRegistrationFormData
 
 
@@ -114,9 +116,6 @@ class QueueRegistrationFormSchema(Schema):
         self, data: QueueRegistrationForm, many: bool, **kwargs
     ) -> Dict[str, Any]:
         """Extracts data from the |QueueRegistrationForm| for validation."""
-
-        def slugify(text: str) -> str:
-            return text.lower().strip().replace(" ", "-")
 
         return {"name": slugify(data.name.data)}
 

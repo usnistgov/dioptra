@@ -15,8 +15,132 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 [build-system]
-requires = ["setuptools >= 40.9.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "dioptra"
+version = "0.0.0"
+authors = [
+    { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
+    { name="Julian Sexton", email="jtsexton@mitre.org" },
+    { name="Howard Huang", email="hhuang@mitre.org" },
+    { name="Michael Chisholm", email="chisholm@mitre.org" },
+    { name="Andrew Hand", email="ahand@mitre.org" },
+    { name="Alexander Byrne", email="alexanderbyrne@mitre.org" },
+    { name="Luke Barber", email="lbarber@mitre.org" },
+    { name="Cory Miniter" },
+    { name="Paul Rowe", email="prowe@mitre.org" },
+    { name="Harold Booth", email="harold.booth@nist.gov" },
+]
+maintainers = [
+    { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
+    { name="Paul Rowe", email="prowe@mitre.org" },
+    { name="Harold Booth", email="harold.booth@nist.gov" },
+]
+description = "Dioptra provides Machine Learning Security researchers with an environment for organizing and running experiments."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "alembic<2.0.0",
+    "boto3>=1.16.0",
+    "Click>=8.0.0,<9",
+    "entrypoints>=0.3",
+    "Flask>=2.0.0,<2.2.0",
+    "flask-accepts>=0.17.0",
+    "Flask-Cors>=3.0.1",
+    "Flask-Injector>=0.14.0",
+    "Flask-Migrate>=2.5.0",
+    "flask-restx>=0.5.1",
+    "Flask-SQLAlchemy>=2.4.0",
+    "Flask-WTF>=0.14.3",
+    "injector>=0.18.0",
+    "marshmallow>=3.9.0,<4",
+    "multimethod>=1.5",
+    "mlflow>=1.12.1,<2",
+    "numpy>=1.22.0",
+    "pandas>=1.5.0",
+    "passlib>=1.7.0",
+    "python-dateutil>=2.8.0",
+    "redis>=3.5.0",
+    "requests>=2.25,<3",
+    "rq>=1.5.0",
+    "scipy>=1.4.1",
+    "structlog>=20.2.0",
+    "SQLAlchemy>=1.4.0,<2",
+    "typing-extensions>=3.7.4.3",
+    "werkzeug>=1.0.0,<=2.1.2",
+    "wtforms[email]>=3.0.0",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Framework :: Flask",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Security",
+]
+
+[project.urls]
+repository = "https://github.com/usnistgov/dioptra"
+documentation = "https://pages.nist.gov/dioptra"
+Changelog = "https://github.com/usnistgov/dioptra/blob/main/CHANGELOG.md"
+"Issue Tracker" = "https://github.com/usnistgov/dioptra/issues"
+
+[project.entry-points."dioptra.generics.estimator_predict"]
+tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"
+
+[project.entry-points."dioptra.generics.fit_estimator"]
+tf_keras_model = "dioptra.generics_plugins.fit_estimator.tf_keras_model"
+
+[project.entry-points."mlflow.project_backend"]
+dioptra = "dioptra.mlflow_plugins.dioptra_backend:DioptraProjectBackend"
+
+[project.optional-dependencies]
+cookiecutter = [
+    "cookiecutter>=2.0.0,<2.2.0",
+]
+examples = [
+    "aiohttp>=3.8.0",
+    "kaggle>=1.5.0",
+    "Pillow>=9.2.0",
+    "rich>=13.3.0",
+    "universal_pathlib>=0.0.23",
+]
+sdk = [
+    "cryptography==3.*",
+    "imgaug>=0.4.0,<1",
+    "prefect>=1.0.0,<2",
+]
+taskplugins = [
+    "adversarial-robustness-toolbox>=1.9.0,<2",
+    "pyarrow",
+    "scikit-learn>=1.0.0,<1.1.0",
+]
+dev = [
+    "autopep8",
+    "build",
+    "entrypoints",
+    "esbonio",
+    "flake8-bugbear",
+    "flake8>=3.8.0",
+    "ipykernel",
+    "ipython",
+    "jupyter",
+    "jupyterlab",
+    "nbconvert",
+    "pip-tools",
+    "pycodestyle",
+    "pydocstyle",
+    "pytoml",
+    "Sphinx>=4.5.0,<5",
+    "tomli",
+    "tox>=4.4.0",
+    "wheel",
+]
 
 [tool.black]
 line-length = 88
@@ -37,21 +161,44 @@ exclude = '''
 )/
 '''
 
+[tool.bumpver]
+current_version = "0.0.0"
+version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
+commit_message = "release {old_version} → {new_version}"
+commit = true
+tag = true
+push = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    "{version}",
+]
+"version-vars.mk" = [
+    "CODE_PKG_VERSION = {version}"
+]
+".github/workflows/env/version-vars.env" = [
+    "CODE_PKG_VERSION={version}"
+]
+"docs/source/conf.py" = [
+    'release = "{version}"'
+]
+"src/dioptra/mlflow_plugins/__version__.py" = [
+    "{version}",
+]
+"src/dioptra/pyplugs/__version__.py" = [
+    "{version}",
+]
+"src/dioptra/restapi/__version__.py" = [
+    "{version}",
+]
+"src/dioptra/rq/__version__.py" = [
+    "{version}",
+]
+
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.0.0"
 changelog_file = "CHANGELOG.md"
-version_files = [
-    "src/dioptra/mlflow_plugins/__version__.py",
-    "src/dioptra/pyplugs/__version__.py",
-    "src/dioptra/restapi/__version__.py",
-    "src/dioptra/rq/__version__.py",
-    ".github/workflows/docker-images.yml:CODE_PKG_VERSION",
-    "docs/source/conf.py:release",
-    "pyproject.toml:version",
-    "setup.cfg:version",
-    "version-vars.mk:CODE_PKG_VERSION",
-]
 style = [
     ["qmark", "fg:#ff9d00 bold"],
     ["question", "bold"],
@@ -64,8 +211,101 @@ style = [
     ["text", ""],
     ["disabled", "fg:#858585 italic"],
 ]
-tag_format = "v$major.$minor.$patch"
-bump_message = "release $current_version → $new_version"
+
+[tool.coverage.report]
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about missing debug-only and type checking-only code:
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    # Don't complain if non-runnable code isn't run:
+    '\.\.\.',
+    "if __name__ == .__main__.:",
+]
+
+[tool.coverage.run]
+omit = [
+    # omit __init__.py files since they are just for mypy and pytest purposes
+    "*/__init__.py",
+    # omit __version__.py files since they contain no functionality
+    "*/__version__.py",
+    # omit config and models files in restapi module since these are just configurations and imports
+    "restapi/config.py",
+    "restapi/models.py",
+]
+
+[tool.doc8]
+ignore = ["D001"]
 
 [tool.isort]
 profile = "black"
+honor_noqa = true
+
+[tool.mypy]
+python_version = "3.9"
+platform = "linux"
+namespace_packages = true
+show_column_numbers = true
+follow_imports = "normal"
+ignore_missing_imports = true
+disallow_untyped_calls = true
+warn_return_any = true
+strict_optional = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+cache_dir = "/dev/null"
+plugins = "numpy.typing.mypy_plugin,sqlalchemy.ext.mypy.plugin"
+
+[tool.pyright]
+include = ["src"]
+exclude = [
+    "**/.ipynb_checkpoints",
+    "**/__pycache__",
+    "**/.tox"
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "--import-mode=importlib -ra"
+testpaths = [
+    "tests/unit",
+]
+log_cli = false
+log_cli_level = "INFO"
+markers = [
+    "info: marks tests as info (deselect with '-m \"not info\"')",
+]
+norecursedirs = [
+    "*.egg",
+    ".*",
+    "_darcs",
+    "build",
+    "CVS",
+    "dist",
+    "node_modules",
+    "venv",
+    '{arch}',
+    "alembic",
+]
+
+[tool.rstcheck]
+ignore_directives = [
+    "autoclass",
+    "autodecorator",
+    "autofunction",
+    "automodule",
+    "autoexception",
+    "dropdown",
+    "panels",
+    "margin",
+    "tab-set",
+    "tabbed",
+]
+ignore_messages = '(Hyperlink target ".*?" is not referenced\.)'
+ignore_roles = [
+    "kbd",
+]
+report_level = "INFO"

@@ -22,11 +22,13 @@ dependencies.
 """
 from __future__ import annotations
 
+import os
 import uuid
 from typing import Any, Callable, List, Optional
 
 import structlog
 from flask import Flask, jsonify
+from flask_cors import CORS
 from flask_injector import FlaskInjector
 from flask_migrate import Migrate
 from flask_restx import Api
@@ -39,6 +41,7 @@ from .__version__ import __version__ as API_VERSION
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
+cors: CORS = CORS()
 csrf: CSRFProtect = CSRFProtect()
 db: SQLAlchemy = SQLAlchemy(
     metadata=MetaData(
@@ -76,7 +79,7 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
     from .routes import register_routes
 
     if env is None:
-        env = "test"
+        env = os.getenv("DIOPTRA_RESTAPI_ENV", "test")
 
     app: Flask = Flask(__name__)
     app.config.from_object(config_by_name[env])
@@ -85,6 +88,8 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
         app,
         title="Dioptra REST API",
         version=API_VERSION,
+        doc=app.config["DIOPTRA_SWAGGER_PATH"],
+        url_scheme=app.config["DIOPTRA_BASE_URL"],
     )
     modules: List[Callable[..., Any]] = [bind_dependencies]
 
@@ -93,6 +98,11 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
     register_providers(modules)
     csrf.init_app(app)
     db.init_app(app)
+
+    if env != "prod":
+        cors.init_app(
+            app, resources={r"/api/*": {"origins": app.config["DIOPTRA_CORS_ORIGIN"]}}
+        )
 
     with app.app_context():
         migrate.init_app(app, db, render_as_batch=True)

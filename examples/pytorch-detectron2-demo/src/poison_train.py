@@ -16,7 +16,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
-from pathlib import Path
 from typing import Any, Dict, List
 
 import click
@@ -25,11 +24,6 @@ import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-
-import detectron2
-import torchvision
-
-import torchvision.ops
 
 from dioptra import pyplugs
 from dioptra.sdk.utilities.contexts import plugin_dirs
@@ -183,6 +177,12 @@ def _coerce_comma_separated_values_float(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
+@click.option(
+    "--poison",
+    type=click.BOOL,
+    help="Flag for to enable poisoning in task plugins",
+    default=False,
+)
 def poison_train(
     data_dir_train,
     data_dir_test,
@@ -203,6 +203,7 @@ def poison_train(
     dataloader_num_workers,
     gpu,
     seed,
+    poison
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
@@ -226,8 +227,8 @@ def poison_train(
         poison_rel_y_location=poison_rel_y_location,
         gpu=gpu,
         seed=seed,
+        poison=poison
     )
-    mlflow.autolog()
 
     with mlflow.start_run() as active_run:
         flow: Flow = init_train_flow()
@@ -253,6 +254,7 @@ def poison_train(
                 poison_rel_y_location=poison_rel_y_location,
                 gpu=gpu,
                 seed=seed,
+                poison= poison
             )
         )
 
@@ -282,6 +284,7 @@ def init_train_flow() -> Flow:
             poison_rel_y_location,
             gpu,
             seed,
+            poison
         ) = (
             Parameter("active_run"),
             Parameter("data_dir_train"),
@@ -303,8 +306,8 @@ def init_train_flow() -> Flow:
             Parameter("poison_rel_y_location"),
             Parameter("gpu"),
             Parameter("seed"),
+            Parameter("poison")
         )
-        poison = True
         seed, rng = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
         )
@@ -340,7 +343,7 @@ def init_train_flow() -> Flow:
             upstream_tasks=[log_mlflow_params_result]
         )
 
-        test_ds_meta_poison = pyplugs.call_task(
+        test_ds_meta_poison = pyplugs.call_task(  # noqa: F841
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.pytorch_d2",
             "data_detectron2",
             "register_dataset",
@@ -369,8 +372,6 @@ def init_train_flow() -> Flow:
             class_names=class_names,
             upstream_tasks=[log_mlflow_params_result]
         )
-
-
 
         classifier, config = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.pytorch_d2",
@@ -433,6 +434,7 @@ def init_train_flow() -> Flow:
         )
 
     return flow
+
 
 if __name__ == "__main__":
     log_level: str = os.getenv("DIOPTRA_JOB_LOG_LEVEL", default="INFO")

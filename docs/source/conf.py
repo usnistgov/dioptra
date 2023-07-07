@@ -115,7 +115,6 @@ html_theme_options = {
     "use_repository_button": True,
     "home_page_in_toc": True,
     "path_to_docs": "docs/source",
-    "extra_navbar": False,
 }
 
 # -- Extension configuration -------------------------------------------------

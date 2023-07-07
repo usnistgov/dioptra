@@ -39,6 +39,7 @@ from dioptra.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
@@ -98,17 +99,12 @@ def _coerce_int_to_bool(ctx, param, value):
 @click.option(
     "--model-name",
     type=click.STRING,
+    default="mnist_le_net",
     help="Name of model to load from registry",
 )
 @click.option(
     "--model-version",
     type=click.STRING,
-)
-@click.option(
-    "--model-architecture",
-    type=click.Choice(["shallow_net", "le_net", "alex_net"], case_sensitive=False),
-    default="le_net",
-    help="Model architecture",
 )
 @click.option(
     "--batch-size",
@@ -133,12 +129,6 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
-@click.option(
-    "--verbose",
-    type=click.BOOL,
-    help="Show progress bars",
-    default=True,
-)
 def jsma_attack(
     data_dir,
     image_size,
@@ -148,8 +138,6 @@ def jsma_attack(
     model_version,
     batch_size,
     seed,
-    model_architecture,
-    verbose,
     theta,
     gamma,
 ):
@@ -164,8 +152,6 @@ def jsma_attack(
         model_version=model_version,
         batch_size=batch_size,
         seed=seed,
-        model_architecture=model_architecture,
-        verbose=verbose,
         theta=theta,
         gamma=gamma,
     )
@@ -179,12 +165,10 @@ def jsma_attack(
                 adv_tar_name=adv_tar_name,
                 adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
                 distance_metrics_filename="distance_metrics.csv",
-                #               model_name=model_name,
+                model_name=model_name,
                 model_version=model_version,
                 batch_size=batch_size,
                 seed=seed,
-                #               model_architecture=model_architecture,
-                #               verbose=verbose,
                 theta=theta,
                 gamma=gamma,
             )
@@ -205,8 +189,6 @@ def init_jsma_flow() -> Flow:
             model_version,
             batch_size,
             seed,
-            model_architecture,
-            verbose,
             theta,
             gamma,
         ) = (
@@ -219,8 +201,6 @@ def init_jsma_flow() -> Flow:
             Parameter("model_version"),
             Parameter("batch_size"),
             Parameter("seed"),
-            Parameter("model_architecture"),
-            Parameter("verbose"),
             Parameter("theta"),
             Parameter("gamma"),
         )
@@ -260,7 +240,7 @@ def init_jsma_flow() -> Flow:
             f"{_PLUGINS_IMPORT_PATH}.registry",
             "art",
             "load_wrapped_tensorflow_keras_classifier",
-            name="plugin_feature_squeeze_le_net",  # model_name,
+            name=model_name,
             version=model_version,
             upstream_tasks=[init_tensorflow_results],
         )
@@ -271,10 +251,10 @@ def init_jsma_flow() -> Flow:
             request=DISTANCE_METRICS,
         )
         distance_metrics = pyplugs.call_task(
-            "src",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.feature_squeezing",
             "jsma_plugin",
             "create_adversarial_jsma_dataset",
-            model_name="plugin_feature_squeeze_le_net",  # model_name,
+            model_name=model_name,
             model_version=model_version,
             data_dir=testing_dir,
             keras_classifier=keras_classifier,

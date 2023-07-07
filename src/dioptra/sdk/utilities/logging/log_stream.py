@@ -65,6 +65,12 @@ class StdoutLogStream(LogStream):
         self._as_json = as_json
         self._redirector = contextlib.redirect_stdout(self)  # type: ignore
 
+    def close(self):
+        pass
+
+    def flush(self):
+        pass
+
 
 class StderrLogStream(LogStream):
     def __init__(self, as_json: bool):
@@ -73,3 +79,9 @@ class StderrLogStream(LogStream):
         self.level = logging.INFO
         self._as_json = as_json
         self._redirector = contextlib.redirect_stderr(self)  # type: ignore
+
+    def close(self):
+        pass
+
+    def flush(self):
+        pass

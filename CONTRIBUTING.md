@@ -64,7 +64,7 @@ Dioptra is following the [Gitflow workflow model](https://www.atlassian.com/git/
 
 [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) this repository.
 
-Create a [new branch](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging) to get started.
+Create a [new branch](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging) off the `dev` branch to get started.
 
 ### Commit Style Guide
 

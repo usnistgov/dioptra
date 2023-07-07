@@ -26,6 +26,9 @@ Glossary
       An acronym for the term *Application Programming Interface*, which refers to an interface that allows two applications to talk to one another.
       More recently, the term has been used as a shorthand for a *Web API*, see https://en.wikipedia.org/wiki/Web_API for further details.
 
+   AML
+      An acronym for the term *Adversarial Machine Learning*.
+
    CW
       An abbreviation for the Carlini-Wagner adversarial attack, which was first proposed in the conference paper titled "Towards Evaluating the Robustness of Neural Networks" by Nicholas Carlini and David Wagner.
       A copy of the paper is available on the arXiv at https://arxiv.org/abs/1608.04644.
@@ -37,6 +40,10 @@ Glossary
    HTTP
       An acronym for the term *Hypertext Transfer Protocol*, which are a set of rules that control the way data is sent and received over the internet.
       The HTTP specification is available at https://httpwg.org/specs/.
+
+   JSMA
+      An acronym for the term *Jacobian Saliency Map Attack*, a type of adversarial machine learning evasion attack that was first proposed in the paper titled "The Limitations of Deep Learning in Adversarial Settings" by Nicolas Papernot, Patrick McDaniel, Somesh Jha, Matt Fredrikson, Z. Berkay Celik, and Ananthram Swami.
+      A copy of the paper is available on the arXiv at https://arxiv.org/abs/1511.07528.
 
    JSON
       An acronym for the term *Javascript Object Notation*.

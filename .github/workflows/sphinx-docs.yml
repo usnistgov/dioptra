@@ -21,7 +21,7 @@ on:
     branches:
       - "**"
     tags:
-      - "v*.*.*"
+      - "*.*.*"
 
 jobs:
   docs:
@@ -41,21 +41,21 @@ jobs:
 
       - name: get pip cache dir
         id: pip-cache
-        run: echo "::set-output name=dir::$(pip cache dir)"
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: cache dependencies
         uses: actions/cache@v3.3.1
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/.github/pip-envs/requirements-sphinx.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
       - name: install dependencies
-        run: python3 -m pip install -r ./.github/pip-envs/requirements-sphinx.txt
+        run: python3 -m pip install tox
 
       - name: build the documentation
-        run: sphinx-build -b html docs/source docs/build
+        run: python3 -m tox run -e docs
 
       - name: archive the documentation
         uses: actions/upload-artifact@v3

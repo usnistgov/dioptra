@@ -1,48 +1,21 @@
-# PyTorch MNIST Membership Inference Demo
+# PyTorch Detectron2 Demo
 
-> ⚠️ **IMPORTANT!**
->
-> This README is out of date and will be updated in the near future.
->
-> There is a new setup tool that all users should use to configure and run Dioptra, please see the new sections [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) that have been added to the documentation.
+The demo provided in the Jupyter notebook `demo.ipynb` uses Dioptra to run experiments with the Detectron2 framework. The current demo also demonstrates the poisoning attack on the Road Sign detection dataset.
 
-The demo provided in the Jupyter notebook `demo.ipynb` uses Dioptra to run experiments with the Detectron2 framework. The current demo also demonstrates the poisoning attack on the Balloon and Road Sign detection datasets.
+## Running the example
 
-## Getting started
+To prepare your environment for running this example, follow the linked instructions below:
 
-Everything you need to run this demo is packaged into a set of Docker images that you can obtain by opening a terminal, navigating to the root directory of the repository, and running `make pull-latest`.
-Once you have downloaded the images, navigate to this example's directory using the terminal and run the demo startup sequence:
+1.  [Create and activate a Python virtual environment and install the necessary dependencies](../README.md#creating-a-virtual-environment)
+2.  [Download the Road Sign detection dataset using the download_data.py script.](../README.md#downloading-datasets)
+3.  [Follow the links in these User Setup instructions](../../README.md#user-setup) to do the following:
+    -   Build the containers
+    -   Use the cookiecutter template to generate the scripts, configuration files, and Docker Compose files you will need to run Dioptra
+4.  [Edit the docker-compose.yml file to mount the data folder in the worker containers](../README.md#mounting-the-data-folder-in-the-worker-containers)
+5.  [Initialize and start Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html#initializing-the-deployment)
+6.  [Register the custom task plugins for Dioptra's examples and demos](../README.md#registering-custom-task-plugins)
+7.  [Register the queues for Dioptra's examples and demos](../README.md#registering-queues)
+8.  [Start JupyterLab and open `demo.ipynb`](../README.md#starting-jupyter-lab)
 
-```bash
-make demo
-```
-
-The startup sequence will take more time to finish the first time you use this demo, as you will need to download the MNIST dataset, initialize the Testbed API database, and synchronize the task plugins to the S3 storage.
-Once the startup process completes, open up your web browser and enter `http://localhost:38888` in the address bar to access the Jupyter Lab interface (if nothing shows up, wait 10-15 more seconds and try again).
-Double click the `work` folder and open the `demo.ipynb` file.
-From here, follow the provided instructions to run the demo provided in the Jupyter notebook.
-
-If you are running the demos locally and want to watch the output logs for the Tensorflow worker containers as you step through the demo, run `docker-compose logs -f pytorchcpu-01 pytorchcpu-02` in your terminal.
-
-When you are done running the demo, close the browser tab containing this Jupyter notebook and shut down the services by running `make teardown` on the command-line.
-If you were watching the output logs, you will need to press <kbd>Ctrl</kbd>-<kbd>C</kbd> to stop following the logs before you can run `make teardown`.
-
-For accessing the Balloon and Road Sign Datasets, please following the following steps:
-
-## Balloon dataset:
-
-In your dataset directory folder, run the following commands:
-
-```
-wget https://github.com/matterport/Mask_RCNN/releases/download/v2.1/balloon_dataset.zip
-unzip balloon_dataset.zip
-rm balloon_dataset.zip
-```
-
-## Road Sign Detection Kaggle Dataset:
-
-To download the Road Sign Detection dataset, please run the following command:
-
-`make data`
-
-Afterwards, the dataset would be stored in `./data/Road-Sign-Detection-v2`.
+Steps 1–4 and 6–7 only need to be run once.
+**Returning users only need to repeat Steps 5 (if you stopped Dioptra using `docker compose down`) and 8 (if you stopped the `jupyter lab` process)**.

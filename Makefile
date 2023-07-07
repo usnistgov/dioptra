@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-.PHONY: beautify build-all build-mlflow-tracking build-nginx build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-tensorflow build-tensorflow-cpu build-tensorflow-gpu clean code-check code-pkg conda-env docs help hooks tag-latest tests tests-integration tests-unit tox
+.PHONY: beautify build-all build-mlflow-tracking build-nginx build-pytorch build-pytorch-cpu build-pytorch-gpu build-restapi build-tensorflow build-tensorflow-cpu build-tensorflow-gpu clean code-check code-pkg commit-check docs docs-check help tag-latest tests tests-containers tests-integration tests-unit tox venv
 SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -O extglob -o pipefail -c
@@ -27,7 +27,6 @@ MAKEFLAGS += --no-builtin-rules
 #################################################################################
 
 include container-vars.mk
-include version-vars.mk
 
 ifeq ($(OS),Windows_NT)
 DETECTED_OS := Windows
@@ -35,15 +34,43 @@ else
 DETECTED_OS := $(shell sh -c "uname 2>/dev/null || echo Unknown")
 endif
 
+PY ?= python
+PYTHON_VERSION := $(word 2,$(strip $(shell /usr/bin/env $(PY) --version)))
+PYTHON_VERSION_MAJOR := $(word 1,$(subst ., ,$(PYTHON_VERSION)))
+PYTHON_VERSION_MINOR := $(word 2,$(subst ., ,$(PYTHON_VERSION)))
+
+ARCH := $(strip $(shell /usr/bin/env $(PY) -c 'import platform; print(platform.machine().lower())'))
+
+ifeq ($(ARCH),x86_64)
+DETECTED_ARCH := x86_64
+else ifeq ($(ARCH),amd64)
+DETECTED_ARCH := x86_64
+else ifeq ($(ARCH),aarch64)
+DETECTED_ARCH := aarch64
+else ifeq ($(ARCH),arm64)
+DETECTED_ARCH := aarch64
+endif
+
+VENV_EXTRA ?=
+
 ifeq ($(DETECTED_OS),Darwin)
 CORES = $(shell sysctl -n hw.physicalcpu_max)
+PIPTOOLS_SYNC := CFLAGS="-stdlib=libc++" pip-sync
+VENV_REQUIREMENTS = requirements/macos-$(if $(filter aarch64, $(DETECTED_ARCH)),arm64,x86_64)-py$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)-requirements-dev$(VENV_EXTRA).txt
 else ifeq ($(DETECTED_OS),Linux)
 CORES = $(shell lscpu -p | egrep -v '^\#' | sort -u -t, -k 2,4 | wc -l)
+PIPTOOLS_SYNC := pip-sync
+VENV_REQUIREMENTS = requirements/linux-$(DETECTED_ARCH)-py$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)-requirements-dev$(VENV_EXTRA).txt
 else
 CORES = 1
+PIPTOOLS_SYNC := pip-sync
+VENV_REQUIREMENTS = requirements/win-$(DETECTED_ARCH)-py$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)-requirements-dev$(VENV_EXTRA).txt
 endif
 
 COMMA := ,
+NO_CACHE ?=
+VENV := .venv
+PIPTOOLS_SYNC_COMMAND_AVAILABLE := $(shell command -v $(VENV)/bin/pip-sync 2> /dev/null)
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = dioptra
@@ -70,23 +97,18 @@ GIT = git
 ISORT = isort
 MV = mv
 MYPY = mypy
-PRE_COMMIT = pre-commit
-PY ?= python
-PYTEST = $(PY) -m pytest
 RM = rm
 SPHINX_BUILD = sphinx-build
-TOX = $(PY) -m tox
+TOX = tox
 
 CONTAINER_VARS_FILE = container-vars.mk
 MAKEFILE_FILE = Makefile
-PRE_COMMIT_CONFIG_FILE = .pre-commit-config.yaml
-SETUP_CFG_FILE = setup.cfg
 TOX_CONFIG_FILE = tox.ini
 VERSION_VARS_FILE = version-vars.mk
 
 CODE_PKG_NAME = dioptra
 CODE_BUILD_DIR = dist
-CODE_PIP_CACHE_DIR = .pip-cache
+CODE_COOKIECUTTER_TESTS_DIR = $(PROJECT_TESTS_DIR)/cookiecutter_dioptra_deployment
 CODE_CONTAINER_TESTS_DIR = $(PROJECT_TESTS_DIR)/containers
 CODE_INTEGRATION_TESTS_DIR = $(PROJECT_TESTS_DIR)/integration
 CODE_DIOPTRA_BUILTINS_DIR = $(PROJECT_TASK_PLUGINS_DIR)/dioptra_builtins
@@ -109,6 +131,10 @@ CODE_DB_MIGRATIONS_FILES :=\
     $(PROJECT_SRC_MIGRATIONS_DIR)/README\
     $(PROJECT_SRC_MIGRATIONS_DIR)/script.py.mako
 CODE_DB_MIGRATIONS_FILES += $(wildcard $(PROJECT_SRC_MIGRATIONS_DIR)/versions/*.py)
+CODE_COOKIECUTTER_TESTS_FILES := $(wildcard $(CODE_COOKIECUTTER_TESTS_DIR)/*.py)
+CODE_COOKIECUTTER_TESTS_FILES += $(wildcard $(CODE_COOKIECUTTER_TESTS_DIR)/*/*.py)
+CODE_COOKIECUTTER_TESTS_FILES += $(wildcard $(CODE_COOKIECUTTER_TESTS_DIR)/*/*/*.py)
+CODE_COOKIECUTTER_TESTS_FILES += $(wildcard $(CODE_COOKIECUTTER_TESTS_DIR)/*/*/*/*.py)
 CODE_CONTAINER_TESTS_FILES := $(wildcard $(CODE_CONTAINER_TESTS_DIR)/*.py)
 CODE_CONTAINER_TESTS_FILES += $(wildcard $(CODE_CONTAINER_TESTS_DIR)/*/*.py)
 CODE_CONTAINER_TESTS_FILES += $(wildcard $(CODE_CONTAINER_TESTS_DIR)/*/*/*.py)
@@ -127,7 +153,6 @@ CODE_TASK_PLUGINS_FILES += $(wildcard $(CODE_DIOPTRA_BUILTINS_DIR)/*/*/*.py)
 CODE_TASK_PLUGINS_FILES += $(wildcard $(CODE_DIOPTRA_BUILTINS_DIR)/*/*/*/*.py)
 CODE_PACKAGING_FILES =\
     $(DOCS_FILES)\
-    $(SETUP_CFG_FILE)\
     $(TOX_CONFIG_FILE)\
     MANIFEST.in\
     pyproject.toml
@@ -135,8 +160,10 @@ CODE_DISTRIBUTION_FILES =\
     $(CODE_BUILD_DIR)/$(CODE_PKG_NAME)-$(CODE_PKG_VERSION).tar.gz\
     $(CODE_BUILD_DIR)/$(subst -,_,$(CODE_PKG_NAME))-$(CODE_PKG_VERSION)-py3-none-any.whl
 
+DOCS_ASSETS_DIR = $(PROJECT_DOCS_DIR)/assets
 DOCS_BUILD_DIR = $(PROJECT_DOCS_DIR)/build
 DOCS_SOURCE_DIR = $(PROJECT_DOCS_DIR)/source
+DOCS_SCSS_DIR = $(DOCS_ASSETS_DIR)/scss
 DOCS_FILES := $(wildcard $(DOCS_SOURCE_DIR)/*.py)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/*.rst)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/deployment-guide/*.rst)
@@ -150,48 +177,34 @@ DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/user-guide/*.rst)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/user-guide/*/*.rst)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/_static/*)
 DOCS_FILES += $(wildcard $(DOCS_SOURCE_DIR)/_templates/*)
+DOCS_WEB_COMPILE_FILES := $(wildcard $(DOCS_SCSS_DIR)/*.scss)
 
 PIP :=
 ifeq ($(DETECTED_OS),Darwin)
-    PIP += CFLAGS="-stdlib=libc++" pip
+PIP += CFLAGS="-stdlib=libc++" $(PY) -m pip
 else
-    PIP += pip
+PIP += $(PY) -m pip
 endif
-CONDA = conda
-CONDA_CHANNELS = -c defaults
-CONDA_ENV_BASE := python=3.9 pip setuptools wheel
-ifeq ($(DETECTED_OS),Darwin)
-    CONDA_ENV_BASE +=
-endif
-CONDA_ENV_FILE = environment.yml
-CONDA_ENV_NAME = $(PROJECT_NAME)
-CONDA_ENV_PIP =
 
 USE_BUILDKIT ?= true
-USE_INLINE_CACHE ?= true
-BUILD_TARGET ?= image-pinned-deps
-NO_CACHE ?=
+BUILD_TARGET ?= final
 DOCKER_BUILDKIT_VALUE = $(if $(USE_BUILDKIT),1,)
-DOCKER_BUILDKIT_INLINE_CACHE_VALUE = $(if $(USE_INLINE_CACHE),1,)
 DOCKER_BUILD_TARGET = $(BUILD_TARGET)
 DOCKER_NO_CACHE = $(if $(NO_CACHE),--no-cache,)
+CONTAINER_IMAGE_TAG = dev
 
 BEAUTIFY_SENTINEL = $(PROJECT_BUILD_DIR)/.beautify.sentinel
 CODE_PACKAGING_SENTINEL = $(PROJECT_BUILD_DIR)/.code-packaging.sentinel
 CODE_CONTAINER_TESTS_SENTINEL = $(PROJECT_BUILD_DIR)/.container-tests.sentinel
 CODE_INTEGRATION_TESTS_SENTINEL = $(PROJECT_BUILD_DIR)/.integration-tests.sentinel
 CODE_UNIT_TESTS_SENTINEL = $(PROJECT_BUILD_DIR)/.unit-tests.sentinel
-CONDA_CREATE_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-create.sentinel
-CONDA_UPDATE_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-update.sentinel
-CONDA_ENV_DEV_INSTALL_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-env-dev-install.sentinel
-CONDA_ENV_PIP_INSTALL_SENTINEL = $(PROJECT_BUILD_DIR)/.conda-env-pip-install.sentinel
 DOCS_SENTINEL = $(PROJECT_BUILD_DIR)/.docs.sentinel
+DOCS_LINTING_SENTINEL = $(PROJECT_BUILD_DIR)/.docs-linting.sentinel
+GITLINT_SENTINEL = $(PROJECT_BUILD_DIR)/.gitlint.sentinel
 LINTING_SENTINEL = $(PROJECT_BUILD_DIR)/.linting.sentinel
-PRE_COMMIT_HOOKS_SENTINEL = $(PROJECT_BUILD_DIR)/.pre-commit-hooks.sentinel
-TOX_CONTAINERS_SENTINEL = $(PROJECT_BUILD_DIR)/.tox-containers.sentinel
-TOX_UNIT_SENTINEL = $(PROJECT_BUILD_DIR)/.tox-unit.sentinel
-TOX_INTEGRATION_SENTINEL = $(PROJECT_BUILD_DIR)/.tox-integration.sentinel
+TOX_SENTINEL = $(PROJECT_BUILD_DIR)/.tox.sentinel
 TYPE_CHECK_SENTINEL = $(PROJECT_BUILD_DIR)/.type-check.sentinel
+VENV_SENTINEL = $(PROJECT_BUILD_DIR)/.venv.sentinel
 
 #################################################################################
 # FUNCTIONS                                                                     #
@@ -201,21 +214,28 @@ define cleanup
 $(FIND) . \( -name "__pycache__" -and -not -path "./.tox*" \) -type d -exec $(RM) -rf {} +
 $(FIND) . \( -name "*.py[co]" -and -not -path "./.tox*" \) -type f -exec $(RM) -rf {} +
 $(FIND) . -name ".ipynb_checkpoints" -type d -exec $(RM) -rf {} +
-$(RM) -rf $(PROJECT_DIR)/.coverage
-$(RM) -rf $(PROJECT_DIR)/.pip-cache
-$(RM) -rf $(PROJECT_DIR)/coverage
-$(RM) -rf $(PROJECT_DIR)/dist
-$(RM) -rf $(PROJECT_DIR)/htmlcov
-$(RM) -rf $(PROJECT_DIR)/mlruns
+$(RM) -rf .coverage
+$(RM) -rf coverage
+$(RM) -rf dist
+$(RM) -rf htmlcov
+$(RM) -rf mlruns
 $(RM) -rf $(PROJECT_BUILD_DIR)/bdist*
 $(RM) -rf $(PROJECT_BUILD_DIR)/docs
 $(RM) -rf $(PROJECT_BUILD_DIR)/lib
-$(RM) -rf $(PROJECT_DOCS_DIR)/build/*
+$(RM) -f $(PROJECT_BUILD_DIR)/.docker-image-*.sentinel
+$(RM) -f $(BEAUTIFY_SENTINEL)
 $(RM) -f $(CODE_PACKAGING_SENTINEL)
-endef
-
-define create_conda_env
-bash -lc "$(CONDA) create -n $(1) $(CONDA_CHANNELS) -y $(CONDA_ENV_BASE)"
+$(RM) -f $(CODE_CONTAINER_TESTS_SENTINEL)
+$(RM) -f $(CODE_INTEGRATION_TESTS_SENTINEL)
+$(RM) -f $(CODE_UNIT_TESTS_SENTINEL)
+$(RM) -f $(DOCS_SENTINEL)
+$(RM) -f $(DOCS_LINTING_SENTINEL)
+$(RM) -f $(GITLINT_SENTINEL)
+$(RM) -f $(LINTING_SENTINEL)
+$(RM) -f $(TOX_SENTINEL)
+$(RM) -f $(TYPE_CHECK_SENTINEL)
+$(RM) -f $(VENV_SENTINEL)
+$(RM) -rf $(PROJECT_DOCS_DIR)/build
 endef
 
 define docker_image_tag
@@ -224,12 +244,6 @@ endef
 
 define make_subdirectory
 mkdir -p "$(strip $(1))"
-endef
-
-define run_in_conda_env
-bash -lc "$(3)$(CONDA) activate $(1) &&\
-$(2) &&\
-$(CONDA) deactivate"
 endef
 
 define get_host_user_id
@@ -241,49 +255,76 @@ $(shell id -g)
 endef
 
 define package_code
-$(call run_in_conda_env,$(CONDA_ENV_NAME),$(PY) -m build -sw,)
+$(call run_in_venv,$(VENV),$(PY) -m build,)
 endef
 
-define pre_commit_cmd
-$(call run_in_conda_env,$(CONDA_ENV_NAME),$(PRE_COMMIT) $(1),)
+define run_black
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) -e black $(1),)
 endef
 
-define run_argbash
-$(call run_docker,\
-    run\
-    -t\
-    --rm\
-    -e PROGRAM=argbash\
-    -u $(strip $(call get_host_user_id)):$(strip $(call get_host_group_id))\
-    -v $(strip $(1)):/work\
-    -v $(strip $(2)):/output\
-    matejak/argbash:latest\
-    $(strip $(3)))
+define run_doc8
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) -e doc8,)
+endef
+
+define run_flake8
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) -e flake8,)
+endef
+
+define run_gitlint
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) -e gitlint,)
+endef
+
+define run_isort
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) -e isort $(1),)
+endef
+
+define run_mypy
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) -e mypy,)
+endef
+
+define run_pip_install
+$(call run_in_venv,$(VENV),$(PIP) install $(1),)
+endef
+
+define run_piptools_sync
+$(call run_in_venv,$(VENV),$(PIPTOOLS_SYNC) $(1),)
+endef
+
+define run_pytest
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) -e py$(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)-pytest,)
+endef
+
+define run_rstcheck
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) -e rstcheck,)
+endef
+
+define run_sphinx_build
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) -e "web-compile$(COMMA)docs",)
+endef
+
+define run_tox
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) run -e $(1),)
+endef
+
+define run_tox_all
+$(call run_in_venv,$(VENV),$(PY) -m $(TOX) run-parallel --parallel $(CORES),)
+endef
+
+define run_venv
+$(PY) -m venv $(strip $(1))
+endef
+
+define run_in_venv
+bash -lc "source $(1)/bin/activate &&\
+$(2) &&\
+deactivate"
 endef
 
 define run_build_script
-CORES=$(CORES)\
 IMAGE_TAG=$(strip $(2))\
-CODE_PKG_VERSION=$(CODE_PKG_VERSION)\
 PROJECT_PREFIX=$(PROJECT_PREFIX)\
 PROJECT_COMPONENT=$(strip $(1))\
-MINICONDA3_PREFIX=$(CONTAINER_MINICONDA3_PREFIX)\
-MINICONDA_VERSION=$(CONTAINER_MINICONDA_VERSION)\
-IBM_ART_VERSION=$(CONTAINER_IBM_ART_VERSION)\
-MLFLOW_VERSION=$(CONTAINER_MLFLOW_VERSION)\
-PREFECT_VERSION=$(CONTAINER_PREFECT_VERSION)\
-PYTHON_VERSION=$(CONTAINER_PYTHON_VERSION)\
-PYTORCH_CUDA_VERSION=$(CONTAINER_PYTORCH_CUDA_VERSION)\
-PYTORCH_MAJOR_MINOR_VERSION=$(CONTAINER_PYTORCH_MAJOR_MINOR_VERSION)\
-PYTORCH_TORCHAUDIO_VERSION=$(CONTAINER_PYTORCH_TORCHAUDIO_VERSION)\
-PYTORCH_TORCHVISION_VERSION=$(CONTAINER_PYTORCH_TORCHVISION_VERSION)\
-PYTORCH_VERSION=$(CONTAINER_PYTORCH_VERSION)\
-SKLEARN_VERSION=$(CONTAINER_SKLEARN_VERSION)\
-TENSORFLOW_VERSION=$(CONTAINER_TENSORFLOW_VERSION)\
-PYTORCH_NVIDIA_CUDA_VERSION=$(CONTAINER_PYTORCH_NVIDIA_CUDA_VERSION)\
-TENSORFLOW_NVIDIA_CUDA_VERSION=$(CONTAINER_TENSORFLOW_NVIDIA_CUDA_VERSION)\
 DOCKER_BUILDKIT_VALUE=$(DOCKER_BUILDKIT_VALUE)\
-DOCKER_BUILDKIT_INLINE_CACHE_VALUE=$(DOCKER_BUILDKIT_INLINE_CACHE_VALUE)\
 DOCKER_BUILD_TARGET=$(DOCKER_BUILD_TARGET)\
 DOCKER_NO_CACHE=$(DOCKER_NO_CACHE)\
 docker/build.sh
@@ -291,38 +332,6 @@ endef
 
 define run_docker
 $(DOCKER) $(1)
-endef
-
-define run_flake8
-$(call run_in_conda_env,$(CONDA_ENV_NAME),$(FLAKE8) $(1),)
-endef
-
-define run_isort
-$(call run_in_conda_env,$(CONDA_ENV_NAME),$(ISORT) $(1),)
-endef
-
-define run_mypy
-$(call run_in_conda_env,$(CONDA_ENV_NAME),$(MYPY) $(1),)
-endef
-
-define run_pip_install
-$(call run_in_conda_env,$(1),$(PIP) install $(2),)
-endef
-
-define run_pytest
-$(call run_in_conda_env,$(CONDA_ENV_NAME),$(PYTEST) --import-mode=importlib $(1),)
-endef
-
-define run_python_black
-$(call run_in_conda_env,$(CONDA_ENV_NAME),$(BLACK) $(1),)
-endef
-
-define run_sphinx_build
-$(call run_in_conda_env,$(1),$(SPHINX_BUILD) -b html $(strip $(2)) $(strip $(3)),)
-endef
-
-define run_tox
-$(call run_in_conda_env,$(1),PIP_CACHE_DIR=$(CODE_PIP_CACHE_DIR) $(TOX) $(2),)
 endef
 
 define save_sentinel_file
@@ -339,10 +348,6 @@ endef
 
 define string_to_upper
 $(shell echo $(1) | tr '[:lower:]' '[:upper:]')
-endef
-
-define update_conda_env
-bash -lc "$(CONDA) env update --file $(1)"
 endef
 
 define build_docker_image_recipe
@@ -439,19 +444,19 @@ build-tensorflow-gpu: $(CONTAINER_TENSORFLOW2_GPU_BUILD_SENTINEL)
 clean: ; $(call cleanup)
 
 ## Lint and type check the source code
-code-check: $(LINTING_SENTINEL) $(TYPE_CHECK_SENTINEL)
+code-check: $(LINTING_SENTINEL) $(TYPE_CHECK_SENTINEL) $(GITLINT_SENTINEL)
 
 ## Package source code for distribution
 code-pkg: $(CODE_PACKAGING_SENTINEL)
 
-## Update conda-based virtual environment
-conda-env: $(CONDA_CREATE_SENTINEL) $(CONDA_UPDATE_SENTINEL) $(CONDA_ENV_PIP_INSTALL_SENTINEL) $(CONDA_ENV_DEV_INSTALL_SENTINEL)
+## Lint the most recent commit message
+commit-check: $(GITLINT_SENTINEL)
 
 ## Build project documentation
 docs: $(DOCS_SENTINEL)
 
-## Install pre-commit hooks
-hooks: $(PRE_COMMIT_HOOKS_SENTINEL)
+## Lint the docs
+docs-check: $(DOCS_LINTING_SENTINEL)
 
 ## Manually set "latest" tag on all Dioptra images
 tag-latest: $(CONTAINER_NGINX_BUILD_LATEST_SENTINEL) $(CONTAINER_RESTAPI_BUILD_LATEST_SENTINEL) $(CONTAINER_MLFLOW_TRACKING_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_PYTORCH_GPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_CPU_BUILD_LATEST_SENTINEL) $(CONTAINER_TENSORFLOW2_GPU_BUILD_LATEST_SENTINEL)
@@ -468,101 +473,74 @@ tests-integration: $(CODE_INTEGRATION_TESTS_SENTINEL)
 ## Run unit tests
 tests-unit: $(CODE_UNIT_TESTS_SENTINEL)
 
-## Run all tests using tox
-tox: tox-unit tox-containers tox-integration
+## Run all basic tox tests
+tox: $(TOX_SENTINEL)
 
-## Run container tests using tox
-tox-containers: $(TOX_CONTAINERS_SENTINEL)
-
-## Run integration tests using tox
-tox-integration: $(TOX_INTEGRATION_SENTINEL)
-
-## Run unit tests using tox
-tox-unit: $(TOX_UNIT_SENTINEL)
+## Install and update the project virtual environment
+venv: $(VENV_SENTINEL)
 
 #################################################################################
 # PROJECT BUILD RECIPES                                                         #
 #################################################################################
 
 $(PROJECT_BUILD_DIR): ; $(call make_subdirectory,$@)
-$(CODE_PIP_CACHE_DIR): ; $(call make_subdirectory,$@)
+$(VENV): ; $(call run_venv,$@)
 
 $(BEAUTIFY_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_CONTAINER_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_python_black,$(PROJECT_SRC_DIOPTRA_DIR) $(PROJECT_TESTS_DIR) $(CODE_DIOPTRA_BUILTINS_DIR))
-	$(call run_isort,$(PROJECT_SRC_DIOPTRA_DIR) $(CODE_DIOPTRA_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
+	$(call run_black,-- $(PROJECT_SRC_DIOPTRA_DIR) $(CODE_DIOPTRA_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
+	$(call run_isort,-- $(PROJECT_SRC_DIOPTRA_DIR) $(CODE_DIOPTRA_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
 	$(call save_sentinel_file,$@)
 
 $(CODE_CONTAINER_TESTS_SENTINEL): $(CODE_CONTAINER_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-ifneq ($(strip $(CODE_CONTAINER_TESTS_FILES)),)
-	$(call run_pytest,$(CODE_CONTAINER_TESTS_DIR))
-endif
+	$(call run_tox,py$(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)-pytest -- $(CODE_CONTAINER_TESTS_DIR))
 	$(call save_sentinel_file,$@)
 
 $(CODE_INTEGRATION_TESTS_SENTINEL): $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-ifneq ($(strip $(CODE_INTEGRATION_TESTS_FILES)),)
-	$(call run_pytest,$(CODE_INTEGRATION_TESTS_DIR))
-endif
+	$(call run_tox,py$(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)-pytest -- $(CODE_INTEGRATION_TESTS_DIR))
 	$(call save_sentinel_file,$@)
 
-$(CODE_UNIT_TESTS_SENTINEL): $(CODE_UNIT_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-ifneq ($(strip $(CODE_UNIT_TESTS_FILES)),)
-	$(call run_pytest, $(CODE_UNIT_TESTS_DIR))
-endif
+$(CODE_UNIT_TESTS_SENTINEL): $(CODE_UNIT_TESTS_FILES) $(CODE_COOKIECUTTER_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_tox,py$(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)-pytest -- $(CODE_UNIT_TESTS_DIR))
+	$(call run_tox,py$(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)-cookiecutter)
 	$(call save_sentinel_file,$@)
 
-$(CODE_PACKAGING_SENTINEL): $(VERSION_VARS_FILE) $(CODE_PACKAGING_FILES) $(CODE_SRC_FILES) $(DOCS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_CONTAINER_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR) $(CODE_PIP_CACHE_DIR)
-	$(call package_code,$(CODE_BUILD_DIR))
+$(CODE_PACKAGING_SENTINEL): $(VERSION_VARS_FILE) $(CODE_PACKAGING_FILES) $(CODE_SRC_FILES) $(DOCS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call package_code)
 	$(call save_sentinel_file,$@)
 	@echo ""
 	@echo "$(CODE_PKG_NAME) packaged for distribution in $(CODE_BUILD_DIR)"
 
-$(CONDA_CREATE_SENTINEL): | $(PROJECT_BUILD_DIR)
-	$(call create_conda_env,$(CONDA_ENV_NAME))
-	$(call save_sentinel_file,$@)
-
-$(CONDA_UPDATE_SENTINEL): $(CONDA_ENV_FILE) | $(PROJECT_BUILD_DIR)
-	$(call update_conda_env,$(CONDA_ENV_FILE))
-	$(call save_sentinel_file,$@)
-
-$(CONDA_ENV_PIP_INSTALL_SENTINEL): $(MAKEFILE_FILE) | $(PROJECT_BUILD_DIR)
-ifdef CONDA_ENV_PIP
-	$(call run_pip_install,$(CONDA_ENV_NAME),$(subst ",,$(CONDA_ENV_PIP)))
-endif
-	$(call save_sentinel_file,$@)
-
-$(CONDA_ENV_DEV_INSTALL_SENTINEL): | $(PROJECT_BUILD_DIR)
-	$(call run_pip_install,$(CONDA_ENV_NAME),-e .)
-	$(call save_sentinel_file,$@)
-
-$(DOCS_SENTINEL): $(DOCS_FILES) $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) | $(PROJECT_BUILD_DIR)
-	@$(RM) -rf $(DOCS_BUILD_DIR)
-	$(call run_sphinx_build,$(CONDA_ENV_NAME),$(DOCS_SOURCE_DIR),$(DOCS_BUILD_DIR))
+$(DOCS_SENTINEL): $(DOCS_WEB_COMPILE_FILES) $(DOCS_FILES) $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_sphinx_build)
 	@$(RM) -rf $(PROJECT_DOCS_DIR)/mlruns
 	$(call save_sentinel_file,$@)
 
-$(LINTING_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_CONTAINER_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_flake8,$(PROJECT_SRC_DIOPTRA_DIR) $(CODE_DIOPTRA_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
+$(DOCS_LINTING_SENTINEL): $(DOCS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_doc8)
+	$(call run_rstcheck)
 	$(call save_sentinel_file,$@)
 
-$(PRE_COMMIT_HOOKS_SENTINEL): $(PRE_COMMIT_CONFIG_FILE) | $(PROJECT_BUILD_DIR)
-	$(call pre_commit_cmd,install --install-hooks)
-	$(call pre_commit_cmd,install --hook-type commit-msg)
+$(GITLINT_SENTINEL): | $(PROJECT_BUILD_DIR)
+	$(call run_gitlint)
 	$(call save_sentinel_file,$@)
 
-$(TYPE_CHECK_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) $(CODE_CONTAINER_TESTS_FILES) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_mypy,$(PROJECT_SRC_DIOPTRA_DIR) $(CODE_DIOPTRA_BUILTINS_DIR) $(PROJECT_TESTS_DIR))
+$(LINTING_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_flake8)
 	$(call save_sentinel_file,$@)
 
-$(TOX_UNIT_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_UNIT_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_tox,$(CONDA_ENV_NAME),)
+$(TYPE_CHECK_SENTINEL): $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_mypy)
 	$(call save_sentinel_file,$@)
 
-$(TOX_CONTAINERS_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_CONTAINER_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_tox,$(CONDA_ENV_NAME),-e containers)
+$(TOX_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_SRC_FILES) $(CODE_TASK_PLUGINS_FILES) $(CODE_UNIT_TESTS_FILES) | $(PROJECT_BUILD_DIR)
+	$(call run_tox_all)
 	$(call save_sentinel_file,$@)
 
-$(TOX_INTEGRATION_SENTINEL): $(TOX_CONFIG_FILE) $(CODE_INTEGRATION_TESTS_FILES) | $(PROJECT_BUILD_DIR)
-	$(call run_tox,$(CONDA_ENV_NAME),-e integration)
+$(VENV_SENTINEL): $(VENV_REQUIREMENTS) | $(PROJECT_BUILD_DIR) $(VENV)
+ifndef PIPTOOLS_SYNC_COMMAND_AVAILABLE
+	$(call run_pip_install,--upgrade pip setuptools pip-tools)
+endif
+	$(call run_piptools_sync,$(VENV_REQUIREMENTS))
 	$(call save_sentinel_file,$@)
 
 #################################################################################

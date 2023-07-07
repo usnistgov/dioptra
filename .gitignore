@@ -31,6 +31,7 @@ Thumbs.db
 $RECYCLE.BIN/
 
 # log files and databases
+*.db
 *.log
 *.sqlite
 
@@ -384,6 +385,7 @@ site/
 target/
 venv/
 venv.bak/
+venvs/
 wheels/
 
 # R
@@ -393,6 +395,10 @@ wheels/
 vignettes/*.html
 vignettes/*.pdf
 *.Rcheck/
+
+# Javascript
+node_modules/
+package-lock.json
 
 # ---------------------------
 # BEGIN Whitelisted Files

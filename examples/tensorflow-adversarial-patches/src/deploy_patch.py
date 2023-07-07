@@ -228,20 +228,12 @@ def deploy_patch(
         seed=seed,
     )
 
-    clip_values: Tuple[float, float] = (0, 255) if image_size[2] == 3 else (0, 1)
-    if imagenet_preprocessing:
-        rescale = 1.0
-    else:
-        rescale = 1.0 / 255
-
     with mlflow.start_run() as active_run:  # noqa: F841
         flow: Flow = deploy_adversarial_patch()
         state = flow.run(
             parameters=dict(
                 testing_dir=Path(data_dir),
                 image_size=image_size,
-                rescale=rescale,
-                clip_values=clip_values,
                 adv_tar_name=adv_tar_name,
                 adv_data_dir=(Path.cwd() / adv_data_dir),
                 distance_metrics_filename="distance_metrics.csv",
@@ -271,8 +263,6 @@ def deploy_adversarial_patch() -> Flow:
         (
             testing_dir,
             image_size,
-            rescale,
-            clip_values,
             adv_tar_name,
             adv_data_dir,
             model_name,
@@ -294,8 +284,6 @@ def deploy_adversarial_patch() -> Flow:
         ) = (
             Parameter("testing_dir"),
             Parameter("image_size"),
-            Parameter("rescale"),
-            Parameter("clip_values"),
             Parameter("adv_tar_name"),
             Parameter("adv_data_dir"),
             Parameter("model_name"),
@@ -352,6 +340,20 @@ def deploy_adversarial_patch() -> Flow:
             filepath=adv_tar_path,
         )
 
+        rescale = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "datasetup",
+            "select_rescale_value",
+            imagenet_preprocessing=imagenet_preprocessing,
+        )
+
+        clip_values = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "datasetup",
+            "select_clip_values",
+            image_size=image_size,
+        )
+
         log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
@@ -360,6 +362,8 @@ def deploy_adversarial_patch() -> Flow:
                 entry_point_seed=seed,
                 tensorflow_global_seed=tensorflow_global_seed,
                 dataset_seed=dataset_seed,
+                rescale=rescale,
+                clip_values=clip_values,
             ),
         )
 

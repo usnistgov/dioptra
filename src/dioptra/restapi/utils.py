@@ -62,3 +62,19 @@ def as_api_parser(
         parser.add_argument(**form_kwargs)
 
     return parser
+
+
+def slugify(text: str) -> str:
+    """Slugify a string.
+
+    A "slugified" string is a string that has been lowercased and had all of its
+    spaces replaced with hyphens.
+
+    Args:
+        text: The text to slugifiy.
+
+    Returns:
+        A slugified string
+    """
+
+    return text.lower().strip().replace(" ", "-")

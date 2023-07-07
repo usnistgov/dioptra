@@ -26,7 +26,6 @@ import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
-from tasks import evaluate_metrics_tensorflow
 
 from dioptra import pyplugs
 from dioptra.sdk.utilities.contexts import plugin_dirs
@@ -39,6 +38,7 @@ from dioptra.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -195,8 +195,13 @@ def init_infer_flow() -> Flow:
             version=model_version,
             upstream_tasks=[init_tensorflow_results],
         )
-        classifier_performance_metrics = evaluate_metrics_tensorflow(
-            classifier=classifier, dataset=adv_ds
+        classifier_performance_metrics = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
+            "tensorflow",
+            "evaluate_metrics_tensorflow",
+            classifier=classifier,
+            dataset=adv_ds,
+            upstream_tasks=[classifier],
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",

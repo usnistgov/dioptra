@@ -1,0 +1,270 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: Docker images
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # everyday at 3am
+  push:
+    branches:
+      - "main"
+      - "dev"
+    tags:
+      - "*.*.*"
+  pull_request:
+    branches:
+      - "main"
+      - "dev"
+
+env:
+  PROJECT_PREFIX: dioptra
+
+jobs:
+  build-docker-dioptra-apps:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        dioptra-app:
+          - nginx
+          - mlflow-tracking
+          - restapi
+          - pytorch-cpu
+          - pytorch-gpu
+          - tensorflow2-cpu
+          - tensorflow2-gpu
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/remove-extra-software
+
+      - name: set docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}
+          tags: |
+            type=schedule,pattern=nightly
+            type=schedule,prefix=nightly-,pattern={{date 'YYYYMMDD'}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+            type=sha,format=long,prefix=,suffix=
+          labels: |
+            maintainer=NCCoE Artificial Intelligence Team <dioptra@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>
+            org.opencontainers.image.title=${{ matrix.dioptra-app }}
+            org.opencontainers.image.description=Provides the ${{ matrix.dioptra-app }} microservice within the Dioptra architecture.
+            org.opencontainers.image.vendor=National Institute of Standards and Technology
+            org.opencontainers.image.licenses=NIST-PD OR CC-BY-4.0
+            org.opencontainers.image.documentation=https://pages.nist.gov/dioptra
+            org.opencontainers.image.authors=NCCoE Artificial Intelligence Team <dioptra@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Cory Miniter <jminiter@mitre.org>, Howard Huang <hhuang@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Paul Rowe <prowe@mitre.org>
+
+      - name: set up docker qemu
+        uses: docker/setup-qemu-action@v2
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          target: final
+          push: false
+          load: true
+          file: docker/Dockerfile.${{ matrix.dioptra-app }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          no-cache: true
+          pull: true
+
+      - name: create 'dev' tag
+        run: |
+          docker tag ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }} ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev
+
+      - name: export dev-tagged image to tar.gz file
+        shell: bash
+        run: |
+          docker save ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev | gzip > /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
+
+      - name: archive the testing images
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
+          path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
+
+  container-test:
+    runs-on: ubuntu-20.04
+    needs:
+      - build-docker-dioptra-apps
+    strategy:
+      matrix:
+        dioptra-app:
+          - mlflow-tracking
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup python 3.9
+        uses: actions/setup-python@v4.6.1
+        with:
+          python-version: "3.9"
+
+      - name: upgrade pip
+        run: |
+          # install pip=>20.1 to use "pip cache dir"
+          python3 -m pip install --upgrade pip
+
+      - name: get pip cache dir
+        id: pip-cache
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: cache dependencies
+        uses: actions/cache@v3.3.1
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: install dependencies
+        run: python3 -m pip install tox
+
+      - name: download the container image
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
+          path: /tmp
+
+      - name: set up docker qemu
+        uses: docker/setup-qemu-action@v2
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: load the container image
+        run: |
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
+          rm /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
+
+      - name: run ${{ matrix.tox-env }} container test
+        run: |
+          tox -e containers-${{ matrix.dioptra-app }}
+
+  integration-test:
+    runs-on: ubuntu-20.04
+    if: ${{ false }}  # disable for now
+    needs:
+      - build-docker-dioptra-apps
+    strategy:
+      matrix:
+        tox-env:
+          - integration-hello-world
+          - integration-tf-mnist-classifier
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup python 3.9
+        uses: actions/setup-python@v4.6.1
+        with:
+          python-version: "3.9"
+
+      - name: upgrade pip
+        run: |
+          # install pip=>20.1 to use "pip cache dir"
+          python3 -m pip install --upgrade pip
+
+      - name: get pip cache dir
+        id: pip-cache
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: cache dependencies
+        uses: actions/cache@v3.3.1
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: install dependencies
+        run: python3 -m pip install tox
+
+      - name: set up docker qemu
+        uses: docker/setup-qemu-action@v2
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: download the nginx testing image
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-nginx-dev-image
+          path: /tmp
+
+      - name: load the nginx testing image
+        run: |
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_nginx_dev.tar.gz
+          rm /tmp/${{ env.PROJECT_PREFIX }}_nginx_dev.tar.gz
+
+      - name: download the mlflow-tracking testing image
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-mlflow-tracking-dev-image
+          path: /tmp
+
+      - name: load the mlflow-tracking testing image
+        run: |
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar.gz
+          rm /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar.gz
+
+      - name: download the restapi testing image
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-restapi-dev-image
+          path: /tmp
+
+      - name: load the restapi testing image
+        run: |
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar.gz
+          rm /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar.gz
+
+      - name: download the tensorflow2-cpu testing image
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.PROJECT_PREFIX }}-tensorflow2-cpu-dev-image
+          path: /tmp
+
+      - name: load the tensorflow2-cpu testing image
+        run: |
+          docker load --input /tmp/${{ env.PROJECT_PREFIX }}_tensorflow2-cpu_dev.tar.gz
+          rm /tmp/${{ env.PROJECT_PREFIX }}_tensorflow2-cpu_dev.tar.gz
+
+      - name: cache the mnist dataset download
+        if: ${{ matrix.tox-env != 'containers' }}
+        uses: actions/cache@v3.3.1
+        with:
+          path: /tmp/dioptra-cache/mnist
+          key: ${{ runner.os }}-dioptra-cache-mnist
+          restore-keys: |
+            ${{ runner.os }}-dioptra-cache-mnist
+
+      - name: run ${{ matrix.tox-env }} test
+        run: tox -e ${{ matrix.tox-env }}

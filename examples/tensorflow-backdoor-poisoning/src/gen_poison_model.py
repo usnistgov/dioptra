@@ -138,36 +138,6 @@ def _coerce_comma_separated_ints(ctx, param, value):
     default=False,
 )
 @click.option(
-    "--load-dataset-from-mlruns",
-    type=click.BOOL,
-    help="If set to true, instead loads the training and test datasets from a previous patch mlruns.",
-    default=False,
-)
-@click.option(
-    "--dataset-run-id-testing",
-    type=click.STRING,
-    help="MLFlow Run ID of a successful patch attack on a test dataset.",
-    default="None",
-)
-@click.option(
-    "--dataset-run-id-training",
-    type=click.STRING,
-    help="MLFlow Run ID of a successful patch attack on a training dataset.",
-    default="None",
-)
-@click.option(
-    "--adv-tar-name",
-    type=click.STRING,
-    default="adversarial_patch_dataset.tar.gz",
-    help="Name of tarfile artifact containing images",
-)
-@click.option(
-    "--adv-data-dir",
-    type=click.STRING,
-    default="adv_patch_dataset",
-    help="Directory in tarfile containing images",
-)
-@click.option(
     "--target-class-id",
     type=click.INT,
     help="Index of target class for backdoor poison.",
@@ -221,11 +191,6 @@ def train(
     optimizer,
     validation_split,
     imagenet_preprocessing,
-    load_dataset_from_mlruns,
-    dataset_run_id_testing,
-    dataset_run_id_training,
-    adv_tar_name,
-    adv_data_dir,
     target_class_id,
     feature_layer_index,
     discriminator_layer_1_size,
@@ -248,9 +213,6 @@ def train(
         optimizer=optimizer,
         validation_split=validation_split,
         imagenet_preprocessing=imagenet_preprocessing,
-        load_dataset_from_mlruns=load_dataset_from_mlruns,
-        dataset_run_id_testing=dataset_run_id_testing,
-        dataset_run_id_training=dataset_run_id_training,
         target_class_id=target_class_id,
         feature_layer_index=feature_layer_index,
         discriminator_layer_1_size=discriminator_layer_1_size,
@@ -259,33 +221,6 @@ def train(
         poison_fraction=poison_fraction,
         seed=seed,
     )
-
-    mlflow.autolog()
-    if imagenet_preprocessing:
-        rescale = 1.0
-    else:
-        rescale = 1.0 / 255
-
-    if load_dataset_from_mlruns:
-        if len(dataset_run_id_testing) > 0:
-            data_dir_testing = Path.cwd() / "testing" / adv_data_dir
-            data_test_tar_name = adv_tar_name
-            adv_testing_tar_path = download_image_archive(
-                run_id=dataset_run_id_testing, archive_path=data_test_tar_name
-            )
-            with tarfile.open(adv_testing_tar_path, "r:gz") as f:
-                f.extractall(path=(Path.cwd() / "testing"))
-        else:
-            LOGGER.info(
-                "No test run_id provided, defaulting to original test directory.",
-            )
-        data_dir_training = Path.cwd() / "training" / adv_data_dir
-        data_train_tar_name = adv_tar_name
-        adv_training_tar_path = download_image_archive(
-            run_id=dataset_run_id_training, archive_path=data_train_tar_name
-        )
-        with tarfile.open(adv_training_tar_path, "r:gz") as f:
-            f.extractall(path=(Path.cwd() / "training"))
 
     with mlflow.start_run() as active_run:
         flow: Flow = init_train_flow()
@@ -298,7 +233,6 @@ def train(
                 model_architecture=model_architecture,
                 epochs=epochs,
                 batch_size=batch_size,
-                rescale=rescale,
                 register_model_name=register_model_name,
                 learning_rate=learning_rate,
                 optimizer_name=optimizer,
@@ -326,7 +260,6 @@ def init_train_flow() -> Flow:
             model_architecture,
             epochs,
             batch_size,
-            rescale,
             register_model_name,
             learning_rate,
             optimizer_name,
@@ -347,7 +280,6 @@ def init_train_flow() -> Flow:
             Parameter("model_architecture"),
             Parameter("epochs"),
             Parameter("batch_size"),
-            Parameter("rescale"),
             Parameter("register_model_name"),
             Parameter("learning_rate"),
             Parameter("optimizer_name"),
@@ -376,6 +308,12 @@ def init_train_flow() -> Flow:
             "init_tensorflow",
             seed=tensorflow_global_seed,
         )
+        rescale = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            "datasetup",
+            "select_rescale_value",
+            imagenet_preprocessing=imagenet_preprocessing,
+        )
         log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
@@ -387,7 +325,7 @@ def init_train_flow() -> Flow:
             ),
         )
         optimizer = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "get_optimizer",
             optimizer=optimizer_name,
@@ -395,14 +333,14 @@ def init_train_flow() -> Flow:
             upstream_tasks=[init_tensorflow_results],
         )
         metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "get_performance_metrics",
             metrics_list=PERFORMANCE_METRICS,
             upstream_tasks=[init_tensorflow_results],
         )
         callbacks_list = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "get_model_callbacks",
             callbacks_list=CALLBACKS,
@@ -490,7 +428,7 @@ def init_train_flow() -> Flow:
         )
 
         classifier_performance_metrics = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "evaluate_metrics_tensorflow",
             classifier=classifier,
@@ -512,23 +450,6 @@ def init_train_flow() -> Flow:
             model_dir="model",
         )
     return flow
-
-
-# Update data dir path if user is applying defense over image artifacts.
-def download_image_archive(
-    run_id: str, archive_path: str, destination_path: Optional[str] = None
-) -> str:
-    client: MlflowClient = MlflowClient()
-    image_archive_path: str = client.download_artifacts(
-        run_id=run_id, path=archive_path, dst_path=destination_path
-    )
-    LOGGER.info(
-        "Image archive downloaded",
-        run_id=run_id,
-        storage_path=archive_path,
-        dst_path=image_archive_path,
-    )
-    return image_archive_path
 
 
 if __name__ == "__main__":

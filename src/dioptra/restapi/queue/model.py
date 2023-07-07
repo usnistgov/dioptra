@@ -26,6 +26,7 @@ from wtforms.fields import StringField
 from wtforms.validators import InputRequired, ValidationError
 
 from dioptra.restapi.app import db
+from dioptra.restapi.utils import slugify
 
 from .interface import QueueUpdateInterface
 
@@ -118,9 +119,6 @@ class QueueRegistrationForm(FlaskForm):
         Args:
             field: The form field for `name`.
         """
-
-        def slugify(text: str) -> str:
-            return text.lower().strip().replace(" ", "-")
 
         standardized_name: str = slugify(field.data)
 

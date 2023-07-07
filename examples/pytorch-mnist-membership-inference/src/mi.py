@@ -40,11 +40,11 @@ from dioptra.sdk.utilities.logging import (
 
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 _CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
-DISTANCE_METRICS: List[Dict[str, str]] = [
-]
+DISTANCE_METRICS: List[Dict[str, str]] = []
 
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
 
 def _coerce_comma_separated_ints(ctx, param, value):
     return tuple(int(x.strip()) for x in value.split(","))
@@ -176,7 +176,7 @@ def init_mi_flow() -> Flow:
         )
 
         ##START
-        
+
         seed, rng = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
         )
@@ -203,10 +203,10 @@ def init_mi_flow() -> Flow:
             batch_size=batch_size,
             seed=dataset_seed,
             image_size=image_size,
-            upstream_tasks=[]
+            upstream_tasks=[],
         )
-        
-        (testing_ds, _) =  pyplugs.call_task(
+
+        (testing_ds, _) = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.pytorch_mi",
             "data_pytorch",
             "create_image_dataset",
@@ -215,16 +215,16 @@ def init_mi_flow() -> Flow:
             batch_size=batch_size,
             seed=dataset_seed + 1,
             image_size=image_size,
-            upstream_tasks=[]
+            upstream_tasks=[],
         )
         model = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.pytorch_mi",
             "registry_mlflow_pytorch",
             "load_pytorch_classifier",
             name=model_name,
-            version=model_version            
+            version=model_version,
         )
-        
+
         out = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.pytorch_mi",
             "membership_inference",
@@ -236,7 +236,7 @@ def init_mi_flow() -> Flow:
             split=split,
             balance_sets=balance_sets,
             image_size=image_size,
-            upstream_tasks=[training_ds, testing_ds, model]
+            upstream_tasks=[training_ds, testing_ds, model],
         )
 
     return flow

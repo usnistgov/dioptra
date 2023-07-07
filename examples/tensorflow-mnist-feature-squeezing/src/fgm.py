@@ -39,6 +39,7 @@ from dioptra.sdk.utilities.logging import (
     set_logging_level,
 )
 
+_CUSTOM_PLUGINS_IMPORT_PATH: str = "dioptra_custom"
 _PLUGINS_IMPORT_PATH: str = "dioptra_builtins"
 DISTANCE_METRICS: List[Dict[str, str]] = [
     {"name": "l_infinity_norm", "func": "l_inf_norm"},
@@ -276,8 +277,8 @@ def init_fgm_flow() -> Flow:
             request=DISTANCE_METRICS,
         )
         distance_metrics = pyplugs.call_task(
-            "src",
-            "fgm_plugin",
+            f"{_PLUGINS_IMPORT_PATH}.attacks",
+            "fgm",
             "create_adversarial_fgm_dataset",
             data_dir=testing_dir,
             keras_classifier=keras_classifier,
