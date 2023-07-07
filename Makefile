@@ -214,11 +214,11 @@ define cleanup
 $(FIND) . \( -name "__pycache__" -and -not -path "./.tox*" \) -type d -exec $(RM) -rf {} +
 $(FIND) . \( -name "*.py[co]" -and -not -path "./.tox*" \) -type f -exec $(RM) -rf {} +
 $(FIND) . -name ".ipynb_checkpoints" -type d -exec $(RM) -rf {} +
-$(RM) -rf $(PROJECT_DIR)/.coverage
-$(RM) -rf $(PROJECT_DIR)/coverage
-$(RM) -rf $(PROJECT_DIR)/dist
-$(RM) -rf $(PROJECT_DIR)/htmlcov
-$(RM) -rf $(PROJECT_DIR)/mlruns
+$(RM) -rf .coverage
+$(RM) -rf coverage
+$(RM) -rf dist
+$(RM) -rf htmlcov
+$(RM) -rf mlruns
 $(RM) -rf $(PROJECT_BUILD_DIR)/bdist*
 $(RM) -rf $(PROJECT_BUILD_DIR)/docs
 $(RM) -rf $(PROJECT_BUILD_DIR)/lib
