@@ -95,7 +95,7 @@
         "nodejs": {
             "image": "node",
             "namespace": "",
-            "tag": "latest",
+            "tag": "18",
             "registry": ""
         },
         "redis": {
