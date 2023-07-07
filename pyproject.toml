@@ -101,7 +101,7 @@ dioptra = "dioptra.mlflow_plugins.dioptra_backend:DioptraProjectBackend"
 
 [project.optional-dependencies]
 cookiecutter = [
-    "cookiecutter>=2.0.0",
+    "cookiecutter>=2.0.0,<2.2.0",
 ]
 examples = [
     "aiohttp>=3.8.0",
