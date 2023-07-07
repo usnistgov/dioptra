@@ -156,8 +156,10 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="getting-started/building-the-containers.html">Building the containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/building-the-containers.html">Building the Containers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting-started/running-dioptra.html">Running Dioptra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/acquiring-datasets.html">Downloading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started/examples-setup.html">Examples</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul class="nav bd-sidenav">
@@ -190,23 +192,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/api-reference-restapi.html">Testbed REST API Reference</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials and Examples</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="tutorials/example-basic-mlflow-demo.html">Hello World!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/example-tensorflow-mnist-classifier.html">First Steps - MNIST Tensorflow Classifier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/example-tensorflow-mnist-feature-squeezing.html">Tensorflow MNIST Feature Squeezing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/example-tensorflow-mnist-model-inversion.html">Tensorflow MNIST Model Inversion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/example-tensorflow-adversarial-patches.html">Tensorflow Adversarial Patch</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/example-tensorflow-backdoor-poisoning.html">Tensorflow Backdoor Poisoning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/example-tensorflow-imagenet-resnet50-fgm.html">Tensorflow ImageNet Resnet50 FGM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/example-tensorflow-imagenet-pixel-threshold.html">Tensorflow ImageNet Pixel Threshold</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/example-pytorch-mnist-membership-inference.html">PyTorch MNIST Membership Inference</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="deployment-guide/system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment-guide/docker-images-list-and-settings.html">Docker Images List and Settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deployment-guide/obtaining-datasets.html">How to Obtain Common Datasets</a></li>
 </ul>
 
     </div>
@@ -359,6 +348,8 @@ document.write(`
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glossary.html#term-AML"><strong>AML</strong></a>
+</li>
       <li><a href="glossary.html#term-API"><strong>API</strong></a>
 </li>
       <li><a href="user-guide/api-sdk/api-exceptions.html#dioptra.sdk.exceptions.ARTDependencyError">ARTDependencyError</a>
@@ -381,10 +372,16 @@ document.write(`
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.categorical_accuracy">categorical_accuracy() (in module dioptra_builtins.metrics.performance)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.clear_logger_handlers">clear_logger_handlers() (in module dioptra.sdk.utilities.logging)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.StderrLogStream.close">close() (StderrLogStream method)</a>
+
+      <ul>
+        <li><a href="user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.StdoutLogStream.close">(StdoutLogStream method)</a>
+</li>
+      </ul></li>
       <li><a href="user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.configure_structlog">configure_structlog() (in module dioptra.sdk.utilities.logging)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-attacks.html#dioptra_builtins.attacks.fgm.create_adversarial_fgm_dataset">create_adversarial_fgm_dataset() (in module dioptra_builtins.attacks.fgm)</a>
@@ -691,10 +688,10 @@ document.write(`
 </li>
       <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentAlreadyExistsError">ExperimentAlreadyExistsError</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentDoesNotExistError">ExperimentDoesNotExistError</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError">ExperimentMLFlowTrackingAlreadyExistsError</a>
 </li>
       <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError">ExperimentMLFlowTrackingDoesNotExistError</a>
@@ -704,6 +701,8 @@ document.write(`
       <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentRegistrationError">ExperimentRegistrationError</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.extract_tarfile">extract_tarfile() (in module dioptra_builtins.artifacts.utils)</a>
+</li>
+      <li><a href="user-guide/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.extract_tarfile_in_unique_subdir">extract_tarfile_in_unique_subdir() (in module dioptra_builtins.artifacts.utils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -717,10 +716,16 @@ document.write(`
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-estimators.html#dioptra_builtins.estimators.methods.fit">fit() (in module dioptra_builtins.estimators.methods)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator">fit_estimator() (in module dioptra.sdk.generics)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.StderrLogStream.flush">flush() (StderrLogStream method)</a>
+
+      <ul>
+        <li><a href="user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.StdoutLogStream.flush">(StdoutLogStream method)</a>
+</li>
+      </ul></li>
       <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.funcs">funcs() (in module dioptra.pyplugs)</a>
 </li>
       <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.funcs_factory">funcs_factory() (in module dioptra.pyplugs)</a>
@@ -773,13 +778,15 @@ document.write(`
 </li>
       <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.info_factory">info_factory() (in module dioptra.pyplugs)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-task-plugins/api-builtins-estimators.html#dioptra_builtins.estimators.keras_classifiers.init_classifier">init_classifier() (in module dioptra_builtins.estimators.keras_classifiers)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-task-plugins/api-builtins-random.html#dioptra_builtins.random.rng.init_rng">init_rng() (in module dioptra_builtins.random.rng)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-backend_configs.html#dioptra_builtins.backend_configs.tensorflow.init_tensorflow">init_tensorflow() (in module dioptra_builtins.backend_configs.tensorflow)</a>
+</li>
+      <li><a href="user-guide/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.is_within_directory">is_within_directory() (in module dioptra_builtins.artifacts.utils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -794,6 +801,8 @@ document.write(`
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.job.errors.JobWorkflowUploadError">JobWorkflowUploadError</a>
+</li>
+      <li><a href="glossary.html#term-JSMA"><strong>JSMA</strong></a>
 </li>
       <li><a href="glossary.html#term-JSON"><strong>JSON</strong></a>
 </li>
@@ -1004,6 +1013,8 @@ document.write(`
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user-guide/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.safe_extract">safe_extract() (in module dioptra_builtins.artifacts.utils)</a>
+</li>
       <li><a href="user-guide/api-sdk/api-cryptography.html#dioptra.sdk.cryptography.keygen.save_private_key">save_private_key() (in module dioptra.sdk.cryptography.keygen)</a>
 </li>
       <li><a href="user-guide/api-sdk/api-cryptography.html#dioptra.sdk.cryptography.keygen.save_public_key">save_public_key() (in module dioptra.sdk.cryptography.keygen)</a>

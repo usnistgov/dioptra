@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Building the containers &#8212; Dioptra 0.0.0 documentation</title>
+    <title>Building the Containers &#8212; Dioptra 0.0.0 documentation</title>
   
   
   
@@ -159,8 +159,10 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Building the containers</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Building the Containers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running-dioptra.html">Running Dioptra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquiring-datasets.html">Downloading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples-setup.html">Examples</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul class="nav bd-sidenav">
@@ -193,23 +195,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../user-guide/api-reference-restapi.html">Testbed REST API Reference</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials and Examples</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">Hello World!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">First Steps - MNIST Tensorflow Classifier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">Tensorflow MNIST Feature Squeezing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">Tensorflow MNIST Model Inversion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">Tensorflow Adversarial Patch</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">Tensorflow Backdoor Poisoning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">Tensorflow ImageNet Resnet50 FGM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">Tensorflow ImageNet Pixel Threshold</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">PyTorch MNIST Membership Inference</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../deployment-guide/system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">Docker Images List and Settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/obtaining-datasets.html">How to Obtain Common Datasets</a></li>
 </ul>
 
     </div>
@@ -359,7 +348,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Building the containers</h1>
+    <h1>Building the Containers</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -374,7 +363,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="building-the-containers">
-<span id="getting-started-building-the-containers"></span><h1>Building the containers<a class="headerlink" href="#building-the-containers" title="Permalink to this headline">#</a></h1>
+<span id="getting-started-building-the-containers"></span><h1>Building the Containers<a class="headerlink" href="#building-the-containers" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
@@ -412,12 +401,12 @@ This is something you may need to do if you are building the containers in a cor
 See the <a class="reference external" href="https://github.com/usnistgov/dioptra/blob/main/docker/ca-certificates/README.md">docker/ca-certificates/README.md</a> file for additional information.</p>
 <p>Next, use the Makefile to build the container images.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE: the PyTorch and Tensorflow images may take a while to build</span>
-make<span class="w"> </span>build-nginx<span class="w"> </span>build-mlflow-tracking<span class="w"> </span>build-restapi<span class="w"> </span>build-pytorch-cpu<span class="w"> </span>build-tensorflow2-cpu
+make<span class="w"> </span>build-nginx<span class="w"> </span>build-mlflow-tracking<span class="w"> </span>build-restapi<span class="w"> </span>build-pytorch-cpu<span class="w"> </span>build-tensorflow-cpu
 </pre></div>
 </div>
 <p>If you are running Dioptra on a host machine that has one or more CUDA-compatible GPUs, then it is recommended that you also build the GPU-enabled images:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOTE: the PyTorch and Tensorflow images may take a while to build</span>
-make<span class="w"> </span>build-pytorch-gpu<span class="w"> </span>build-tensorflow2-gpu
+make<span class="w"> </span>build-pytorch-gpu<span class="w"> </span>build-tensorflow-gpu
 </pre></div>
 </div>
 <p>Finally, run <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">images</span></code> to verify that the container images are now available with the <code class="docutils literal notranslate"><span class="pre">dev</span></code> tag.

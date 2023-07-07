@@ -62,8 +62,8 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started/running-dioptra';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="The Basics" href="../user-guide/the-basics.html" />
-    <link rel="prev" title="Building the containers" href="building-the-containers.html" />
+    <link rel="next" title="Downloading Datasets" href="acquiring-datasets.html" />
+    <link rel="prev" title="Building the Containers" href="building-the-containers.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
@@ -159,8 +159,10 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="building-the-containers.html">Building the containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building-the-containers.html">Building the Containers</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Running Dioptra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquiring-datasets.html">Downloading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples-setup.html">Examples</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul class="nav bd-sidenav">
@@ -193,23 +195,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../user-guide/api-reference-restapi.html">Testbed REST API Reference</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials and Examples</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-basic-mlflow-demo.html">Hello World!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-mnist-classifier.html">First Steps - MNIST Tensorflow Classifier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-mnist-feature-squeezing.html">Tensorflow MNIST Feature Squeezing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-mnist-model-inversion.html">Tensorflow MNIST Model Inversion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-adversarial-patches.html">Tensorflow Adversarial Patch</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-backdoor-poisoning.html">Tensorflow Backdoor Poisoning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">Tensorflow ImageNet Resnet50 FGM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-tensorflow-imagenet-pixel-threshold.html">Tensorflow ImageNet Pixel Threshold</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/example-pytorch-mnist-membership-inference.html">PyTorch MNIST Membership Inference</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../deployment-guide/system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">Docker Images List and Settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/obtaining-datasets.html">How to Obtain Common Datasets</a></li>
 </ul>
 
     </div>
@@ -848,7 +837,7 @@ The <code class="docutils literal notranslate"><span class="pre">:ro</span></cod
 </section>
 </section>
 <section id="initializing-the-deployment">
-<h2>Initializing the deployment<a class="headerlink" href="#initializing-the-deployment" title="Permalink to this headline">#</a></h2>
+<span id="getting-started-running-dioptra-init-deployment"></span><h2>Initializing the deployment<a class="headerlink" href="#initializing-the-deployment" title="Permalink to this headline">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code> script is the main tool for initializing the deployment and automates the following steps:</p>
 <ul class="simple">
 <li><p>Copies and bundles the extra CA certificates for the containers</p></li>
@@ -864,13 +853,13 @@ If you run <code class="docutils literal notranslate"><span class="pre">./init-d
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Utility that prepares the deployment initialization scripts.
 
 Usage: init-deployment.sh [--enable-nginx-ssl] [--enable-postgres-ssl]
-                          [--plugins-branch &lt;arg&gt;]
+                          [--branch &lt;arg&gt;]
                           [--worker-ssl-service [tfcpu|pytorchcpu]] [-h|--help]
         --enable-nginx-ssl: Enable the SSL-enabled configuration settings for nginx image
         --enable-postgres-ssl: Enable the SSL-enabled configuration settings for postgres
                                image
-        --plugins-branch: The Dioptra GitHub branch to use when syncing the built-in task
-                          plugins (default: &#39;main&#39;)
+        --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
+                  and the frontend files (default: &#39;main&#39;)
         --worker-ssl-service: Image to use when bootstrapping the SSL named volumes for
                               the worker containers, must be &#39;tfcpu&#39; or &#39;pytorchcpu&#39;
                               (default: &#39;tfcpu&#39;)
@@ -878,7 +867,7 @@ Usage: init-deployment.sh [--enable-nginx-ssl] [--enable-postgres-ssl]
 </pre></div>
 </div>
 <p>As a rule of thumb, use the <code class="docutils literal notranslate"><span class="pre">--enable-nginx-ssl</span></code> option if you copied a server certificate and private key into the <code class="docutils literal notranslate"><span class="pre">ssl/nginx/</span></code> folder and use the <code class="docutils literal notranslate"><span class="pre">--enable-postgres-ssl</span></code> option if you copied a server certificate and private key into the <code class="docutils literal notranslate"><span class="pre">ssl/db/</span></code> folder.
-In addition, if you wish to sync the plugins from a different Dioptra GitHub branch, such as the main branch, use the <code class="docutils literal notranslate"><span class="pre">--plugins-branch</span> <span class="pre">&lt;arg&gt;</span></code> option.
+In addition, if you wish to sync the plugins from a different Dioptra GitHub branch, such as the main branch, use the <code class="docutils literal notranslate"><span class="pre">--branch</span> <span class="pre">&lt;arg&gt;</span></code> option.
 Otherwise, you do not need to specify any of the other options when running the script.</p>
 <p>As an example, if you copied a server certificate and private key into both the <code class="docutils literal notranslate"><span class="pre">ssl/nginx/</span></code> and <code class="docutils literal notranslate"><span class="pre">ssl/db/</span></code> folders, then you would run the following to initialize the deployment:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--enable-nginx-ssl<span class="w"> </span>--enable-postgres-ssl
@@ -1010,15 +999,15 @@ systemd</label><div class="sd-tab-content docutils">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Building the containers</p>
+        <p class="prev-next-title">Building the Containers</p>
       </div>
     </a>
     <a class="right-next"
-       href="../user-guide/the-basics.html"
+       href="acquiring-datasets.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">The Basics</p>
+        <p class="prev-next-title">Downloading Datasets</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

@@ -156,8 +156,10 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../../../../../getting-started/building-the-containers.html">Building the containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../getting-started/building-the-containers.html">Building the Containers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../getting-started/running-dioptra.html">Running Dioptra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../getting-started/acquiring-datasets.html">Downloading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../getting-started/examples-setup.html">Examples</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
 <ul class="nav bd-sidenav">
@@ -190,23 +192,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../user-guide/api-reference-restapi.html">Testbed REST API Reference</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials and Examples</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/example-basic-mlflow-demo.html">Hello World!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/example-tensorflow-mnist-classifier.html">First Steps - MNIST Tensorflow Classifier</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/example-tensorflow-mnist-feature-squeezing.html">Tensorflow MNIST Feature Squeezing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/example-tensorflow-mnist-model-inversion.html">Tensorflow MNIST Model Inversion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/example-tensorflow-adversarial-patches.html">Tensorflow Adversarial Patch</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/example-tensorflow-backdoor-poisoning.html">Tensorflow Backdoor Poisoning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/example-tensorflow-imagenet-resnet50-fgm.html">Tensorflow ImageNet Resnet50 FGM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/example-tensorflow-imagenet-pixel-threshold.html">Tensorflow ImageNet Pixel Threshold</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../tutorials/example-pytorch-mnist-membership-inference.html">PyTorch MNIST Membership Inference</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../../../deployment-guide/system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../deployment-guide/docker-images-list-and-settings.html">Docker Images List and Settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../deployment-guide/obtaining-datasets.html">How to Obtain Common Datasets</a></li>
 </ul>
 
     </div>
@@ -388,7 +377,13 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_as_json</span> <span class="o">=</span> <span class="n">as_json</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_redirector</span> <span class="o">=</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stdout</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>  <span class="c1"># type: ignore</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_redirector</span> <span class="o">=</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stdout</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+
+<div class="viewcode-block" id="StdoutLogStream.close"><a class="viewcode-back" href="../../../../../user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.StdoutLogStream.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="StdoutLogStream.flush"><a class="viewcode-back" href="../../../../../user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.StdoutLogStream.flush">[docs]</a>    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
 
 
 <div class="viewcode-block" id="StderrLogStream"><a class="viewcode-back" href="../../../../../user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.StderrLogStream">[docs]</a><span class="k">class</span> <span class="nc">StderrLogStream</span><span class="p">(</span><span class="n">LogStream</span><span class="p">):</span>
@@ -397,7 +392,13 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_as_json</span> <span class="o">=</span> <span class="n">as_json</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_redirector</span> <span class="o">=</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stderr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>  <span class="c1"># type: ignore</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_redirector</span> <span class="o">=</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stderr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+
+<div class="viewcode-block" id="StderrLogStream.close"><a class="viewcode-back" href="../../../../../user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.StderrLogStream.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="StderrLogStream.flush"><a class="viewcode-back" href="../../../../../user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.StderrLogStream.flush">[docs]</a>    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
 </pre></div>
 
                 </article>

@@ -483,6 +483,8 @@ The ``:ro`` at the end will mount the NFS share as read-only within the worker c
        - worker-etc-ssl:/etc/ssl:rw
        - dioptra-datasets:/datasets:ro
 
+.. _getting-started-running-dioptra-init-deployment:
+
 Initializing the deployment
 ---------------------------
 
@@ -504,20 +506,20 @@ If you run ``./init-deployment.sh --help``, you will print the script's help mes
    Utility that prepares the deployment initialization scripts.
 
    Usage: init-deployment.sh [--enable-nginx-ssl] [--enable-postgres-ssl]
-                             [--plugins-branch <arg>]
+                             [--branch <arg>]
                              [--worker-ssl-service [tfcpu|pytorchcpu]] [-h|--help]
            --enable-nginx-ssl: Enable the SSL-enabled configuration settings for nginx image
            --enable-postgres-ssl: Enable the SSL-enabled configuration settings for postgres
                                   image
-           --plugins-branch: The Dioptra GitHub branch to use when syncing the built-in task
-                             plugins (default: 'main')
+           --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
+                     and the frontend files (default: 'main')
            --worker-ssl-service: Image to use when bootstrapping the SSL named volumes for
                                  the worker containers, must be 'tfcpu' or 'pytorchcpu'
                                  (default: 'tfcpu')
            -h, --help: Prints help
 
 As a rule of thumb, use the ``--enable-nginx-ssl`` option if you copied a server certificate and private key into the ``ssl/nginx/`` folder and use the ``--enable-postgres-ssl`` option if you copied a server certificate and private key into the ``ssl/db/`` folder.
-In addition, if you wish to sync the plugins from a different Dioptra GitHub branch, such as the main branch, use the ``--plugins-branch <arg>`` option.
+In addition, if you wish to sync the plugins from a different Dioptra GitHub branch, such as the main branch, use the ``--branch <arg>`` option.
 Otherwise, you do not need to specify any of the other options when running the script.
 
 As an example, if you copied a server certificate and private key into both the ``ssl/nginx/`` and ``ssl/db/`` folders, then you would run the following to initialize the deployment:

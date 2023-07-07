@@ -1,0 +1,641 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Examples &#8212; Dioptra 0.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/jquery.visible.js"></script>
+    <script src="../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../_static/applyLeaveNotice.js"></script>
+    <script src="../_static/smoothNavScroll.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started/examples-setup';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The Basics" href="../user-guide/the-basics.html" />
+    <link rel="prev" title="Downloading Datasets" href="acquiring-datasets.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 0.0.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    What is Dioptra?
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="building-the-containers.html">Building the Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running-dioptra.html">Running Dioptra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquiring-datasets.html">Downloading Datasets</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Examples</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/the-basics.html">The Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/entry-points.html">Entry Points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/task-plugins.html">Task Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/custom-entry-points.html">Creating a New Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/custom-task-plugins.html">Custom Task Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/generics-plugin-system.html">Generics Plugin System</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user-guide/task-plugins-collection.html">Task Plugins Collection</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-artifacts.html">artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-attacks.html">attacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-backend_configs.html">backend_configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-data.html">data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-estimators.html">estimators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-metrics.html">metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-random.html">random</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-registry.html">registry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-task-plugins/api-builtins-tracking.html">tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user-guide/api-reference-sdk.html">Testbed SDK API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-generics.html">generics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-utilities.html">utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-exceptions.html">exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-pyplugs.html">pyplugs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-rq.html">rq</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/api-sdk/api-cryptography.html">cryptography</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/api-reference-restapi.html">Testbed REST API Reference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/system-requirements.html">System Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">Docker Images List and Settings</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/getting-started/examples-setup.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Examples</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-examples">List of Examples</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="examples">
+<span id="getting-started-examples"></span><h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h1>
+<p>There are multiple <a class="reference external" href="https://github.com/usnistgov/dioptra/blob/main/examples">examples</a> available for Dioptra that demonstrate its capabilities across different models, datasets, adversarial attacks, and adversarial defenses.
+Here you will find instructions on how to prepare your environment for running an example and a table that lists what is available.</p>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">#</a></h2>
+<p>To prepare your environment for running the <a class="reference external" href="https://github.com/usnistgov/dioptra/blob/main/examples">examples</a>, follow the linked instructions below:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="building-the-containers.html#getting-started-building-the-containers"><span class="std std-ref">Clone the repository and build the included containers</span></a></p></li>
+<li><p><a class="reference internal" href="running-dioptra.html#getting-started-running-dioptra"><span class="std std-ref">Apply the provided cookiecutter template and run Dioptra</span></a></p></li>
+<li><p><a class="reference internal" href="acquiring-datasets.html#getting-started-acquiring-datasets-using-the-download-script"><span class="std std-ref">Create and activate the Python virtual environment for the Dioptra examples and download the datasets using the download_data.py script</span></a></p></li>
+<li><p><a class="reference external" href="https://github.com/usnistgov/dioptra/blob/main/examples/README.md#mounting-the-data-folder-in-the-worker-containers">Edit the docker-compose.yml file to mount the data folder in the worker containers.</a></p></li>
+<li><p><a class="reference internal" href="running-dioptra.html#getting-started-running-dioptra-init-deployment"><span class="std std-ref">Initialize and start Dioptra</span></a></p></li>
+<li><p><a class="reference external" href="https://github.com/usnistgov/dioptra/blob/main/examples/README.md#registering-custom-task-plugins">Register the custom task plugins for Dioptra’s examples and demos</a></p></li>
+<li><p><a class="reference external" href="https://github.com/usnistgov/dioptra/blob/main/examples/README.md#registering-queues">Register the queues for Dioptra’s examples and demos</a></p></li>
+<li><p><a class="reference external" href="https://github.com/usnistgov/dioptra/blob/main/examples/README.md#starting-jupyter-lab">Start JupyterLab and open the demo Jupyter notebook (ipynb file extension)</a></p></li>
+</ol>
+<p>Steps 1–3 and 6–7 only need to be run once.
+Returning users only need to repeat Steps 4 (if you stopped Dioptra using <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">down</span></code>) and 8 (if you stopped the <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">lab</span></code> process).</p>
+</section>
+<section id="list-of-examples">
+<h2>List of Examples<a class="headerlink" href="#list-of-examples" title="Permalink to this headline">#</a></h2>
+<p>The current list of <a class="reference external" href="https://github.com/usnistgov/dioptra/blob/main/examples">examples</a> for Dioptra is provided in the table below.
+It is recommended that newcomers start with the <a class="reference external" href="https://github.com/usnistgov/dioptra/tree/main/examples/tensorflow-mnist-classifier">Tensorflow MNIST Classifier</a> example.</p>
+<table class="colwidths-given table">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Library</p></th>
+<th class="head"><p>Models</p></th>
+<th class="head"><p>Dataset</p></th>
+<th class="head"><p>Attacks</p></th>
+<th class="head"><p>Defenses</p></th>
+<th class="head"><p>GPU</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/usnistgov/dioptra/tree/main/examples/tensorflow-mnist-classifier">Tensorflow MNIST Classifier</a></p></td>
+<td><p>Tensorflow</p></td>
+<td><div class="line-block">
+<div class="line">ShallowNet,</div>
+<div class="line">LeNet</div>
+</div>
+</td>
+<td><p><a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a></p></td>
+<td><p><a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a></p></td>
+<td></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/usnistgov/dioptra/tree/main/examples/tensorflow-mnist-pixel-threshold">Tensorflow MNIST Pixel Threshold</a></p></td>
+<td><p>Tensorflow</p></td>
+<td><div class="line-block">
+<div class="line">ShallowNet,</div>
+<div class="line">LeNet</div>
+</div>
+</td>
+<td><p><a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a></p></td>
+<td><p>Pixel Threshold</p></td>
+<td></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/usnistgov/dioptra/tree/main/examples/tensorflow-mnist-model-inversion">Tensorflow MNIST Model Inversion</a></p></td>
+<td><p>Tensorflow</p></td>
+<td><div class="line-block">
+<div class="line">ShallowNet,</div>
+<div class="line">LeNet</div>
+</div>
+</td>
+<td><p><a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a></p></td>
+<td><p>Model Inversion</p></td>
+<td></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/usnistgov/dioptra/tree/main/examples/tensorflow-mnist-feature-squeezing">Tensorflow MNIST Feature Squeezing</a></p></td>
+<td><p>Tensorflow</p></td>
+<td><div class="line-block">
+<div class="line">ShallowNet,</div>
+<div class="line">LeNet</div>
+</div>
+</td>
+<td><p><a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a></p></td>
+<td><div class="line-block">
+<div class="line"><a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a>,</div>
+<div class="line">Feature Squeezing,</div>
+<div class="line"><a class="reference internal" href="../glossary.html#term-CW"><span class="xref std std-term">CW</span></a>,</div>
+<div class="line">Deepfool,</div>
+<div class="line"><a class="reference internal" href="../glossary.html#term-JSMA"><span class="xref std std-term">JSMA</span></a></div>
+</div>
+</td>
+<td></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/usnistgov/dioptra/tree/main/examples/tensorflow-backdoor-poisoning">Tensorflow Backdoor Poisoning</a></p></td>
+<td><p>Tensorflow</p></td>
+<td><p>LeNet</p></td>
+<td><p><a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a></p></td>
+<td><p>Backdoor Poisoning</p></td>
+<td><div class="line-block">
+<div class="line">Spatial Smoothing,</div>
+<div class="line">JPEG Compression,</div>
+<div class="line">Gaussian Augmentation</div>
+</div>
+</td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/usnistgov/dioptra/tree/main/examples/pytorch-mnist-membership-inference">PyTorch MNIST Membership Inference</a></p></td>
+<td><p>PyTorch</p></td>
+<td><p>LeNet</p></td>
+<td><p><a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a></p></td>
+<td><p>Membership Inference</p></td>
+<td></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/usnistgov/dioptra/tree/main/examples/tensorflow-imagenet-resnet50-fgm">Tensorflow ImageNet ResNet50 Demo</a></p></td>
+<td><p>Tensorflow</p></td>
+<td><p>ResNet50</p></td>
+<td><p>ImageNet</p></td>
+<td><div class="line-block">
+<div class="line"><a class="reference internal" href="../glossary.html#term-FGM"><span class="xref std std-term">FGM</span></a>,</div>
+<div class="line">Pixel Threshold</div>
+</div>
+</td>
+<td><div class="line-block">
+<div class="line"><em>(FGM only)</em></div>
+<div class="line">Spatial Smoothing,</div>
+<div class="line">JPEG Compression,</div>
+<div class="line">Gaussian Augmentation</div>
+</div>
+</td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/usnistgov/dioptra/tree/main/examples/tensorflow-adversarial-patches">Tensorflow Adversarial Patch Demo</a></p></td>
+<td><p>Tensorflow</p></td>
+<td><div class="line-block">
+<div class="line">LeNet <em>(MNIST)</em>,</div>
+<div class="line">VGG16 <em>(Fruits 360)</em>,</div>
+<div class="line">ResNet50 <em>(ImageNet)</em></div>
+</div>
+</td>
+<td><div class="line-block">
+<div class="line"><a class="reference internal" href="../glossary.html#term-MNIST"><span class="xref std std-term">MNIST</span></a>,</div>
+<div class="line">Fruits 360,</div>
+<div class="line">ImageNet</div>
+</div>
+</td>
+<td><p>Adversarial Patch</p></td>
+<td><div class="line-block">
+<div class="line">Spatial Smoothing,</div>
+<div class="line">JPEG Compression,</div>
+<div class="line">Gaussian Augmentation,</div>
+<div class="line">Adversarial Training</div>
+</div>
+</td>
+<td><div class="line-block">
+<div class="line">Yes</div>
+<div class="line"><em>(Fruits 360, ImageNet only)</em></div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/usnistgov/dioptra/tree/main/examples/pytorch-detectron2-demo">PyTorch Detectron2 Demo</a></p></td>
+<td><p>PyTorch</p></td>
+<td><p>RetinaNet</p></td>
+<td><p>Road Signs</p></td>
+<td><p>Backdoor Poisoning</p></td>
+<td></td>
+<td><p>Yes</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="acquiring-datasets.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Downloading Datasets</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../user-guide/the-basics.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">The Basics</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-examples">List of Examples</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
+      </p>
+    </div>
+</footer>
+  </body>
+</html>
