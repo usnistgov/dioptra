@@ -945,7 +945,7 @@ websocket-client==1.5.2
     # via
     #   docker
     #   jupyter-server
-werkzeug==2.1.2
+werkzeug==2.2.3
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
