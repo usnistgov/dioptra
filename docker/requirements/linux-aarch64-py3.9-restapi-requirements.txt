@@ -14,18 +14,20 @@ aniso8601==9.0.1
 async-timeout==4.0.2
     # via redis
 attrs==23.1.0
-    # via jsonschema
-boto3==1.26.148
+    # via
+    #   jsonschema
+    #   referencing
+boto3==1.28.2
     # via dioptra (pyproject.toml)
-botocore==1.29.148
+botocore==1.31.2
     # via
     #   boto3
     #   s3transfer
 certifi==2023.5.7
     # via requests
-charset-normalizer==3.1.0
+charset-normalizer==3.2.0
     # via requests
-click==8.1.3
+click==8.1.5
     # via
     #   databricks-cli
     #   dioptra (pyproject.toml)
@@ -59,7 +61,7 @@ flask==2.1.3
     #   prometheus-flask-exporter
 flask-accepts==0.18.4
     # via dioptra (pyproject.toml)
-flask-cors==3.0.10
+flask-cors==4.0.0
     # via dioptra (pyproject.toml)
 flask-injector==0.14.0
     # via dioptra (pyproject.toml)
@@ -77,7 +79,7 @@ flask-wtf==1.1.1
     # via dioptra (pyproject.toml)
 gitdb==4.0.10
     # via gitpython
-gitpython==3.1.31
+gitpython==3.1.32
     # via mlflow
 greenlet==2.0.2
     # via sqlalchemy
@@ -107,8 +109,10 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-jsonschema==4.17.3
+jsonschema==4.18.2
     # via flask-restx
+jsonschema-specifications==2023.6.1
+    # via jsonschema
 mako==1.2.4
     # via alembic
 markupsafe==2.1.3
@@ -124,7 +128,7 @@ mlflow==1.30.1
     # via dioptra (pyproject.toml)
 multimethod==1.9.1
     # via dioptra (pyproject.toml)
-numpy==1.24.3
+numpy==1.25.1
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
@@ -143,22 +147,20 @@ pandas==1.5.3
     #   mlflow
 passlib==1.7.4
     # via dioptra (pyproject.toml)
-pillow==9.5.0
+pillow==10.0.0
     # via -r docker/pip-tools/restapi-requirements.in
-prometheus-client==0.17.0
+prometheus-client==0.17.1
     # via prometheus-flask-exporter
 prometheus-flask-exporter==0.22.4
     # via mlflow
-protobuf==4.23.2
+protobuf==4.23.4
     # via mlflow
 psycopg2-binary==2.9.6
     # via -r docker/pip-tools/restapi-requirements.in
 pyjwt==2.7.0
     # via databricks-cli
-pyparsing==3.0.9
+pyparsing==3.1.0
     # via packaging
-pyrsistent==0.19.3
-    # via jsonschema
 python-dateutil==2.8.2
     # via
     #   botocore
@@ -175,21 +177,29 @@ pyyaml==6.0
     # via mlflow
 querystring-parser==1.2.4
     # via mlflow
-redis==4.5.5
+redis==4.6.0
     # via
     #   dioptra (pyproject.toml)
     #   rq
+referencing==0.29.1
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
 requests==2.31.0
     # via
     #   databricks-cli
     #   dioptra (pyproject.toml)
     #   docker
     #   mlflow
-rq==1.15.0
+rpds-py==0.8.10
+    # via
+    #   jsonschema
+    #   referencing
+rq==1.15.1
     # via dioptra (pyproject.toml)
 s3transfer==0.6.1
     # via boto3
-scipy==1.10.1
+scipy==1.11.1
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
@@ -198,12 +208,11 @@ simplejson==3.19.1
 six==1.16.0
     # via
     #   databricks-cli
-    #   flask-cors
     #   python-dateutil
     #   querystring-parser
 smmap==5.0.0
     # via gitdb
-sqlalchemy==1.4.48
+sqlalchemy==1.4.49
     # via
     #   alembic
     #   dioptra (pyproject.toml)
@@ -215,7 +224,7 @@ structlog==23.1.0
     # via dioptra (pyproject.toml)
 tabulate==0.9.0
     # via databricks-cli
-typing-extensions==4.6.3
+typing-extensions==4.7.1
     # via
     #   alembic
     #   dioptra (pyproject.toml)
@@ -225,7 +234,7 @@ urllib3==1.26.16
     #   databricks-cli
     #   docker
     #   requests
-websocket-client==1.5.2
+websocket-client==1.6.1
     # via docker
 werkzeug==2.1.2
     # via
@@ -237,7 +246,7 @@ wtforms[email]==3.0.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-wtf
-zipp==3.15.0
+zipp==3.16.1
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
