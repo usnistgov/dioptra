@@ -33,7 +33,7 @@ try:
     from tensorflow.keras.callbacks import Callback
     from tensorflow.keras.metrics import Metric
     from tensorflow.keras.models import Model
-    from tensorflow.keras.optimizers import Optimizer
+    from tensorflow.keras.optimizers.legacy import Optimizer
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(

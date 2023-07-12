@@ -36,7 +36,7 @@ Ensure that you have Python 3.9 installed and that it is available in your PATH,
 | linux-x86_64-py3.9-requirements-dev-tensorflow.txt | Linux | x86-64 | ✅ | ❌ |
 | linux-x86_64-py3.9-requirements-dev-pytorch.txt | Linux | x86-64 | ❌ | ✅ |
 | linux-aarch64-py3.9-requirements-dev.txt | Linux | arm64 | ❌ | ❌ |
-| linux-aarch64-py3.9-requirements-dev-tensorflow.txt<sup><b>†</b></sup> | Linux | arm64 | ❌ | ❌ |
+| linux-aarch64-py3.9-requirements-dev-tensorflow.txt | Linux | arm64 | ❌ | ❌ |
 | linux-aarch64-py3.9-requirements-dev-pytorch.txt | Linux | arm64 | ❌ | ✅ |
 | macos-x86_64-py3.9-requirements-dev.txt | MacOS | x86-64 | ❌ | ❌ |
 | macos-x86_64-py3.9-requirements-dev-tensorflow.txt | MacOS | x86-64 | ✅ | ❌ |
@@ -47,8 +47,6 @@ Ensure that you have Python 3.9 installed and that it is available in your PATH,
 | win-x86_64-py3.9-requirements-dev.txt | Windows | x86-64 | ❌ | ❌ |
 | win-x86_64-py3.9-requirements-dev-tensorflow.txt | Windows | x86-64 | ✅ | ❌ |
 | win-x86_64-py3.9-requirements-dev-pytorch.txt | Windows | x86-64 | ❌ | ✅ |
-
-**†**: This file is a placeholder. Tensorflow is currently pinned to 2.9.1, which is only available for the x86-64 architecture on Linux.
 
 Next, use the `venv` module to create a new virtual environment:
 

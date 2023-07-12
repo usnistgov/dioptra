@@ -1,1 +1,1 @@
-tensorflow==2.9.1; sys_platform == "linux" and (platform_machine == "x86_64" or platform_machine == "amd64" or platform_machine == "AMD64")
+tensorflow==2.12.1; (sys_platform == "linux") and (platform_machine == "x86_64" or platform_machine == "aarch64" or platform_machine == "arm64" or platform_machine == "amd64" or platform_machine == "AMD64")
