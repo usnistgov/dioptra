@@ -13,7 +13,7 @@ absl-py==1.4.0
     # via tensorboard
 adversarial-robustness-toolbox==1.14.1
     # via dioptra (pyproject.toml)
-aiohttp==3.8.4
+aiohttp==3.8.5
     # via
     #   dioptra (pyproject.toml)
     #   fsspec
