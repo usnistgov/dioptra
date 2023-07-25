@@ -82,7 +82,7 @@ cachetools==5.3.1
     # via tox
 cattrs==23.1.2
     # via lsprotocol
-certifi==2023.5.7
+certifi==2023.7.22
     # via
     #   kaggle
     #   requests
