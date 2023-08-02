@@ -15,57 +15,14 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-What is Dioptra?
-================
+.. _user-guide-api-reference-sdk-client:
+
+Testbed Client API Reference
+============================
 
 .. include:: /_glossary_note.rst
 
-.. include:: overview/executive-summary.rst
-
-Points of Contact
------------------
-
-Email us: dioptra@nist.gov
-
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-
-   glossary
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: Getting Started
-
-   getting-started/building-the-containers
-   getting-started/running-dioptra
-   getting-started/acquiring-datasets
-   getting-started/examples-setup
-.. getting-started/installation
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: User Guide
-
-   user-guide/the-basics
-   user-guide/entry-points
-   user-guide/task-plugins
-   user-guide/custom-entry-points
-   user-guide/task_engine_doc
-   user-guide/custom-task-plugins
-   user-guide/generics-plugin-system
-   user-guide/task-plugins-collection
-   user-guide/api-reference-sdk
-   user-guide/api-reference-client
-   user-guide/api-reference-restapi
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: Deployment Guide
-
-   deployment-guide/system-requirements
-   deployment-guide/docker-images-list-and-settings
+.. automodule:: dioptra.client
+   :members:
+   :undoc-members:
+   :show-inheritance:
