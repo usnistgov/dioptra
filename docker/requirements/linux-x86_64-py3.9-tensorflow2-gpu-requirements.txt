@@ -127,7 +127,7 @@ gast==0.4.0
     # via tensorflow
 gitdb==4.0.10
     # via gitpython
-gitpython==3.1.31
+gitpython==3.1.32
     # via mlflow
 google-auth==2.19.1
     # via
