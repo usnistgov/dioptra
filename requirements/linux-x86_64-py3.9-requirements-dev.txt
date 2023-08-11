@@ -238,7 +238,7 @@ fsspec==2023.5.0
     #   universal-pathlib
 gitdb==4.0.10
     # via gitpython
-gitpython==3.1.31
+gitpython==3.1.32
     # via mlflow
 greenlet==2.0.2
     # via sqlalchemy
