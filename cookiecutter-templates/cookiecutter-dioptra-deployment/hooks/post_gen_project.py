@@ -92,7 +92,8 @@ def insert_random_passwords(password_files, words_file, env):
 
         content = _render_template(
             env=env,
-            template_name=str(filepath),
+            # Jinja2 requires forward slashes in the template name.
+            template_name=str(filepath.as_posix()),
             variables=variables,
         )
 
@@ -111,12 +112,12 @@ def render_absolute_path_to_base_directory():
         for filename in filenames:
             filepath = Path(dirpath) / filename
 
-            with filepath.open("rt") as f:
+            with filepath.open("rt", encoding="utf-8") as f:
                 data = f.read()
 
             data = data.replace(BASE_DIRECTORY_SYMBOL, str(BASE_DIRECTORY))
 
-            with filepath.open("wt") as f:
+            with filepath.open("wt", encoding="utf-8") as f:
                 f.write(data)
 
 
