@@ -1,0 +1,114 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dioptra-flask-prototype"
+version = "0.0.0"
+authors = [
+    { name="Harold Booth", email="harold.booth@nist.gov" },
+    { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
+]
+description = "A simple Flask prototype for learning purposes."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "Flask>=2.3.0",
+    "flask-accepts>=0.18.0",
+    "flask-restx>=1.1.0",
+    "Flask-Login>=0.6.0",
+    "marshmallow>=3.9.0,<4",
+    "passlib>=1.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "autopep8",
+    "build",
+    "flake8-bugbear",
+    "flake8>=3.8.0",
+    "ipykernel",
+    "ipython",
+    "jupyter",
+    "jupyterlab",
+    "pip-tools",
+    "pycodestyle",
+    "pydocstyle",
+    "pytoml",
+    "tomli",
+    "tox>=4.4.0",
+    "wheel",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+honor_noqa = true
+
+[tool.mypy]
+python_version = "3.9"
+platform = "linux"
+mypy_path = "src"
+explicit_package_bases = true
+namespace_packages = true
+show_column_numbers = true
+follow_imports = "normal"
+ignore_missing_imports = true
+disallow_untyped_calls = true
+warn_return_any = true
+strict_optional = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+cache_dir = "/dev/null"
+
+[tool.pyright]
+include = ["src"]
+exclude = [
+    "**/.ipynb_checkpoints",
+    "**/__pycache__",
+    "**/.tox"
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "--import-mode=importlib -ra"
+testpaths = [
+    "tests",
+]
+log_cli = false
+log_cli_level = "INFO"
+markers = [
+    "info: marks tests as info (deselect with '-m \"not info\"')",
+]
+norecursedirs = [
+    "*.egg",
+    ".*",
+    "_darcs",
+    "build",
+    "CVS",
+    "dist",
+    "node_modules",
+    "venv",
+    '{arch}',
+    "alembic",
+]
