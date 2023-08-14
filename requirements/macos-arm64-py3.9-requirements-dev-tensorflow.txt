@@ -914,7 +914,7 @@ toolz==0.12.0
     #   dask
     #   distributed
     #   partd
-tornado==6.3.2
+tornado==6.3.3
     # via
     #   distributed
     #   ipykernel

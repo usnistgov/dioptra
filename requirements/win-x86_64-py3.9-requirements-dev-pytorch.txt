@@ -871,7 +871,7 @@ torchmetrics==0.11.4
     # via pytorch-lightning
 torchvision==0.11.3+cpu ; (sys_platform == "win32" or sys_platform == "linux") and python_version == "3.9" and (platform_machine == "x86_64" or platform_machine == "amd64" or platform_machine == "AMD64")
     # via -r requirements-dev-pytorch.in
-tornado==6.3.2
+tornado==6.3.3
     # via
     #   distributed
     #   ipykernel
