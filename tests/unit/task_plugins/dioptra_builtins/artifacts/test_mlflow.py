@@ -16,7 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-import os
 import uuid
 from copy import deepcopy
 from pathlib import Path
@@ -48,7 +47,7 @@ class MockMLFlowClient(object):
     ) -> str:
         if dst_path is None:
             dst_path = "tmp_unit_test"
-        dst_path = os.path.abspath(dst_path)
+        dst_path = str(Path(dst_path).absolute())
         dst_local_path = dst_path
         return dst_local_path
 
@@ -73,7 +72,7 @@ class MockMLFlowClient(object):
         if not run_name_tag:
             tags.append(RunTag(key=MLFLOW_RUN_NAME, value=run_name))
         run_uuid = uuid.uuid4().hex
-        artifact_uri = os.path.join("/path/to/artifacts/", run_uuid, "artifacts")
+        artifact_uri = Path("/path/to/artifacts/") / run_uuid / "artifacts"
 
         run_info = RunInfo(
             run_uuid=run_uuid,
@@ -157,7 +156,7 @@ def test_download_all_artifacts_in_run(
 
     dst_path = download_all_artifacts_in_run(run_id, artifact_path, destination_path)
     assert isinstance(dst_path, str)
-    assert destination_path == os.path.relpath(dst_path)
+    assert Path(destination_path) == Path(dst_path).relative_to(Path.cwd())
 
 
 @pytest.mark.parametrize(
@@ -199,10 +198,8 @@ def test_upload_data_frame_artifact(
 
     upload_data_frame_artifact(data_frame, file_name, file_format, None, working_dir)
 
-    pwd = "." if working_dir is None else working_dir
-    assert os.path.isfile(
-        Path(os.path.abspath(pwd)) / Path(file_name).with_suffix("." + output)
-    )
+    pwd = Path("." if working_dir is None else working_dir).absolute()
+    assert (pwd / Path(file_name).with_suffix(f".{output}")).is_file()
 
 
 @pytest.mark.parametrize(
@@ -235,8 +232,8 @@ def test_upload_directory_as_tarball_artifact(
     upload_directory_as_tarball_artifact(
         source_dir, tarball_filename, tarball_write_mode, working_dir
     )
-    pwd = "." if working_dir is None else working_dir
-    assert os.path.isfile(Path(os.path.abspath(pwd)) / Path(tarball_filename))
+    pwd = Path("." if working_dir is None else working_dir).absolute()
+    assert (pwd / tarball_filename).is_file()
 
 
 @pytest.mark.parametrize(

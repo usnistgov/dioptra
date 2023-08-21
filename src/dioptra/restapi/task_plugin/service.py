@@ -78,7 +78,7 @@ class TaskPluginService(object):
             plugin_uri_list: Optional[List[str]] = self._s3_service.upload_directory(
                 directory=tmpdir,
                 bucket=bucket,
-                prefix=str(prefix),
+                prefix=prefix.as_posix(),
                 include_suffixes=[".py"],
                 log=log,
             )
@@ -114,7 +114,11 @@ class TaskPluginService(object):
             return []
 
         prefix: Path = Path(collection) / task_plugin_name
-        self._s3_service.delete_prefix(bucket=bucket, prefix=str(prefix), log=log)
+        self._s3_service.delete_prefix(
+            bucket=bucket,
+            prefix=prefix.as_posix(),
+            log=log,
+        )
 
         log.info(
             "TaskPlugin deleted",
@@ -175,7 +179,7 @@ class TaskPluginService(object):
             task_plugin_name=task_plugin_name,
         )
 
-        prefix = Path(collection) / task_plugin_name
+        prefix: Path = Path(collection) / task_plugin_name
         modules: List[str] = self._s3_service.list_objects(
             bucket=bucket,
             prefix=self._s3_service.normalize_prefix(str(prefix), log=log),
