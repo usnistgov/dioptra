@@ -56,11 +56,11 @@ def get_dioptra_client(address: str | None = None) -> DioptraClient:
 
 class DioptraClient(object):
     """Connects to the Dioptra REST api, and provides access to endpoints.
-    
+
     Args:
         address: Address of the Dioptra REST api or if no address is given the
             DIOPTRA_RESTAPI_URI environment variable is used.
-            
+
     Notes:
         See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
         more information on Dioptra's REST api.
@@ -198,7 +198,7 @@ class ExperimentClient(object):
             name: The name of the experiment.
 
         Returns:
-            The Dioptra REST api's response containing the experiment id, name, and 
+            The Dioptra REST api's response containing the experiment id, name, and
             metadata.
 
             Example::
@@ -209,7 +209,7 @@ class ExperimentClient(object):
                     'createdOn': '2023-06-22T13:42:35.379462',
                     'lastModified': '2023-06-22T13:42:35.379462'
                 }
-                
+
         Notes:
             See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
             more information on Dioptra's REST api.
@@ -245,7 +245,7 @@ class ExperimentClient(object):
                 }]
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for 
+           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
            more information on Dioptra's REST api.
         """
         try:
@@ -696,7 +696,7 @@ class TaskPluginClient(object):
 
 
 class BuiltinTaskPluginClient(object):
-    """Connects to the Dioptra REST api, and provides access to builtin task plugin 
+    """Connects to the Dioptra REST api, and provides access to builtin task plugin
         endpoint.
 
     Args:
@@ -744,7 +744,7 @@ class BuiltinTaskPluginClient(object):
         """Gets a custom builtin plugin by its unique name.
 
         Args:
-            name: A unique string identifying a task plugin package within 
+            name: A unique string identifying a task plugin package within
                 dioptra_builtins collection.
 
         Returns:
@@ -809,7 +809,7 @@ class BuiltinTaskPluginClient(object):
 
 
 class CustomTaskPluginClient(object):
-    """Connects to the Dioptra REST api, and provides access to custom task plugin 
+    """Connects to the Dioptra REST api, and provides access to custom task plugin
         endpoint.
 
     Args:
@@ -870,7 +870,7 @@ class CustomTaskPluginClient(object):
         """Deletes a custom task plugin by its unique name.
 
         Args:
-            name: A unique string identifying a task plugin package within 
+            name: A unique string identifying a task plugin package within
                 dioptra_custom collection.
 
         Returns:
@@ -898,7 +898,7 @@ class CustomTaskPluginClient(object):
         """Gets a custom task plugin by its unique name.
 
         Args:
-            name: A unique string identifying a task plugin package within 
+            name: A unique string identifying a task plugin package within
                 dioptra_builtins collection.
 
         Returns:
@@ -975,7 +975,7 @@ class CustomTaskPluginClient(object):
         Args:
             custom_plugin_name: Plugin name for for the upload form.
             custom_plugin_file: Path to custom plugin.
-            collection: Collection to upload the plugin to. Defaults to 
+            collection: Collection to upload the plugin to. Defaults to
                 "dioptra_custom".
 
         Returns:
