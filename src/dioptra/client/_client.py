@@ -56,14 +56,15 @@ def get_dioptra_client(address: str | None = None) -> DioptraClient:
 
 class DioptraClient(object):
     """Connects to the Dioptra REST api, and provides access to endpoints.
-
+    
     Args:
-        address: Address of the Dioptra REST api or if no address is given the DIOPTRA_RESTAPI_URI environment variable is used.
-
+        address: Address of the Dioptra REST api or if no address is given the
+            DIOPTRA_RESTAPI_URI environment variable is used.
+            
     Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-    """  # noqa B950
+        See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+        more information on Dioptra's REST api.
+    """
 
     def __init__(
         self,
@@ -171,7 +172,6 @@ class ExperimentClient(object):
             The Dioptra REST api's response.
 
             Example::
-
                 {
                     'lastModified': '2023-06-22T13:42:35.379462',
                     'experimentId': 10,
@@ -180,9 +180,9 @@ class ExperimentClient(object):
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         experiment_id_query: str = urljoin(self.experiment_endpoint, str(id))
         try:
             ret = cast(dict[str, Any], self.session.get(experiment_id_query).json())
@@ -198,7 +198,8 @@ class ExperimentClient(object):
             name: The name of the experiment.
 
         Returns:
-            The Dioptra REST api's response containing the experiment id, name, and metadata.
+            The Dioptra REST api's response containing the experiment id, name, and 
+            metadata.
 
             Example::
 
@@ -208,11 +209,11 @@ class ExperimentClient(object):
                     'createdOn': '2023-06-22T13:42:35.379462',
                     'lastModified': '2023-06-22T13:42:35.379462'
                 }
-
+                
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         experiment_name_query: str = urljoin(self.experiment_endpoint, "name", name)
         try:
             ret = cast(dict[str, Any], self.session.get(experiment_name_query).json())
@@ -244,9 +245,9 @@ class ExperimentClient(object):
                 }]
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for 
+           more information on Dioptra's REST api.
+        """
         try:
             ret = cast(
                 list[dict[str, Any]], self.session.get(self.experiment_endpoint).json()
@@ -275,9 +276,9 @@ class ExperimentClient(object):
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         experiment_registration_form = {"name": name}
 
         try:
@@ -308,9 +309,9 @@ class ExperimentClient(object):
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
 
         experiment_id_query: str = urljoin(self.experiment_endpoint, str(id))
         try:
@@ -338,9 +339,9 @@ class ExperimentClient(object):
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
 
         experiment_name_query: str = urljoin(self.experiment_endpoint, "name", name)
         try:
@@ -371,9 +372,9 @@ class ExperimentClient(object):
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         experiment_id_query: str = urljoin(self.experiment_endpoint, str(id))
         experiment_update = {"name": new_name}
 
@@ -408,9 +409,9 @@ class ExperimentClient(object):
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         experiment_name_query: str = urljoin(self.experiment_endpoint, "name", name)
         experiment_update = {"name": new_name}
 
@@ -473,20 +474,20 @@ class JobClient(object):
                     'lastModified': '2023-06-26T15:26:43.100093',
                     'experimentId': 10,
                     'queueId': 2,
-                    'workflowUri': 's3://workflow/07d2c0a91aaf4901acd7afe1580aea47/workflows.tar.gz',
+                    'workflowUri': 's3://workflow/268a7620/workflows.tar.gz',
                     'entryPoint': 'train',
                     'dependsOn': None,
                     'status': 'queued',
                     'timeout': '24h',
                     'jobId': '4eb2305e-57c3-4867-a59f-1a1ecd2033d4',
-                    'entryPointKwargs': '-P model_architecture=shallow_net -P epochs=30 -P register_model_name=feature_squeezing_mnist_shallow_net -P data_dir=/dioptra/data/Mnist',
+                    'entryPointKwargs': '-P model_architecture=shallow_net -P epochs=30,
                     'createdOn': '2023-06-26T15:26:43.100093'
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         job_id_query: str = urljoin(self.job_endpoint, id)
         try:
             ret = cast(dict[str, Any], self.session.get(job_id_query).json())
@@ -508,7 +509,7 @@ class JobClient(object):
                     'lastModified': '2023-04-24T20:54:30.722304',
                     'experimentId': 2,
                     'queueId': 2,
-                    'workflowUri': 's3://workflow/268a7620de8247e3a00fbe466f023429/workflows.tar.gz',
+                    'workflowUri': 's3://workflow/268a7620/workflows.tar.gz',
                     'entryPoint': 'train',
                     'dependsOn': None,
                     'status': 'queued',
@@ -521,9 +522,9 @@ class JobClient(object):
 
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         try:
             ret = cast(list[dict[str, Any]], self.session.get(self.job_endpoint).json())
         except requests.ConnectionError as e:
@@ -544,26 +545,29 @@ class JobClient(object):
         """Creates a new job via a job submission form with an attached file.
 
         Args:
-            workflows_file: A tarball archive or zip file containing, at a minimum, a MLproject file and its associated entry point scripts.
+            workflows_file: A tarball archive or zip file containing, at a minimum,
+                a MLproject file and its associated entry point scripts.
             experiment_name:The name of a registered experiment.
             entry_point: Entrypoint name.
-            entry_point_kwargs: A string listing parameter values to pass to the entry point for the job. The list of parameters is specified using the following format: “-P param1=value1 -P param2=value2”. Defaults to None.
-            depends_on: A UUID for a previously submitted job to set as a dependency for the current job. Defaults to None.
-            queue: Name of the queue the job is submitted to. Defaults to "tensorflow_cpu".
-            timeout: The maximum alloted time for a job before it times out and is stopped. Defaults to "24h".
+            entry_point_kwargs: A string listing parameter values to pass to the
+                entry point for the job. The list of parameters is specified using the
+                following format: “-P param1=value1 -P param2=value2”. Defaults to None.
+            depends_on: A UUID for a previously submitted job to set as a dependency
+                for the current job. Defaults to None.
+            queue: Name of the queue the job is submitted to. Defaults to
+                "tensorflow_cpu".
+            timeout: The maximum alloted time for a job before it times out and is
+                stopped. Defaults to "24h".
 
         Returns:
             The Dioptra REST api's response.
 
             Example::
-
                 {
                     'createdOn': '2023-06-26T15:26:43.100093',
                     'dependsOn': None,
                     'entryPoint': 'train',
-                    'entryPointKwargs': '-P model_architecture=shallow_net -P epochs=30 -P '
-                    'register_model_name=feature_squeezing_mnist_shallow_net '
-                    '-P data_dir=/dioptra/data/Mnist',
+                    'entryPointKwargs': '-P data_dir=/dioptra/data/Mnist',
                     'experimentId': 10,
                     'jobId': '4eb2305e-57c3-4867-a59f-1a1ecd2033d4',
                     'lastModified': '2023-06-26T15:26:43.100093',
@@ -571,13 +575,13 @@ class JobClient(object):
                     'queueId': 2,
                     'status': 'queued',
                     'timeout': '24h',
-                    'workflowUri': 's3://workflow/07d2c0a91aaf4901acd7afe1580aea47/workflows.tar.gz'
+                    'workflowUri': 's3://workflow/07d2c0a9/workflows.tar.gz'
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         job_form = {
             "experiment_name": experiment_name,
             "queue": queue,
@@ -613,12 +617,13 @@ class TaskPluginClient(object):
 
     Args:
         session: Session object used to connect to the REST api.
-        address: Address of the Dioptra REST api or if no address is given the DIOPTRA_RESTAPI_URI environment variable is used.
+        address: Address of the Dioptra REST api or if no address is given the
+            DIOPTRA_RESTAPI_URI environment variable is used.
 
     Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-    """  # noqa B950
+        See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+        more information on Dioptra's REST api.
+    """
 
     def __init__(self, session: requests.Session, address: str | None = None):
         parsed = urlparse(address)
@@ -660,21 +665,25 @@ class TaskPluginClient(object):
 
             Example::
 
-                [{
-                    'taskPluginName': 'artifacts',
-                    'collection': 'dioptra_builtins',
-                    'modules': ['__init__.py', 'exceptions.py', 'mlflow.py', 'utils.py']},
+                [
+                    {
+                        'taskPluginName': 'artifacts',
+                        'collection': 'dioptra_builtins',
+                        'modules': ['__init__.py', 'mlflow.py', 'utils.py']
+                    },
                     ...
-                    {'taskPluginName': 'pixel_threshold',
-                    'collection': 'dioptra_custom',
-                    'modules': ['__init__.py', 'pixelthreshold.py']
-                }]
+                    {
+                        'taskPluginName': 'pixel_threshold',
+                        'collection': 'dioptra_custom',
+                        'modules': ['__init__.py', 'pixelthreshold.py']
+                    }
+                ]
 
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
 
         try:
             ret = cast(
@@ -687,16 +696,18 @@ class TaskPluginClient(object):
 
 
 class BuiltinTaskPluginClient(object):
-    """Connects to the Dioptra REST api, and provides access to builtin task plugin endpoint.
+    """Connects to the Dioptra REST api, and provides access to builtin task plugin 
+        endpoint.
 
     Args:
         session: Session object used to connect to the REST api.
-        address: Address of the Dioptra REST api or if no address is given the DIOPTRA_RESTAPI_URI environment variable is used.
+        address: Address of the Dioptra REST api or if no address is given the
+            DIOPTRA_RESTAPI_URI environment variable is used.
 
     Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-    """  # noqa B950
+        See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+        more information on Dioptra's REST api.
+    """
 
     def __init__(self, session: requests.Session, address: str | None = None):
         parsed = urlparse(address)
@@ -733,7 +744,8 @@ class BuiltinTaskPluginClient(object):
         """Gets a custom builtin plugin by its unique name.
 
         Args:
-            name: A unique string identifying a task plugin package within dioptra_builtins collection.
+            name: A unique string identifying a task plugin package within 
+                dioptra_builtins collection.
 
         Returns:
             The Dioptra REST api's response.
@@ -747,9 +759,9 @@ class BuiltinTaskPluginClient(object):
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         task_plugin_name_query: str = urljoin(self.task_plugin_builtins_endpoint, name)
         try:
             ret = cast(dict[str, Any], self.session.get(task_plugin_name_query).json())
@@ -764,22 +776,27 @@ class BuiltinTaskPluginClient(object):
         Returns:
             A list of responses detailing all builtin plugins.
 
+
             Example::
 
-                [{
-                    'taskPluginName': 'artifacts',
-                    'collection': 'dioptra_builtins',
-                    'modules': ['__init__.py', 'exceptions.py', 'mlflow.py', 'utils.py']},
+                [
+                    {
+                        'taskPluginName': 'artifacts',
+                        'collection': 'dioptra_builtins',
+                        'modules': ['__init__.py', 'mlflow.py', 'utils.py']
+                    },
                     ...
-                    {'taskPluginName': 'backend_configs',
-                    'collection': 'dioptra_builtins',
-                    'modules': ['__init__.py', 'tensorflow.py']
-                }]
+                    {
+                        'taskPluginName': 'pixel_threshold',
+                        'collection': 'dioptra_custom',
+                        'modules': ['__init__.py', 'pixelthreshold.py']
+                    }
+                ]
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         try:
             ret = cast(
                 list[dict[str, Any]],
@@ -792,16 +809,18 @@ class BuiltinTaskPluginClient(object):
 
 
 class CustomTaskPluginClient(object):
-    """Connects to the Dioptra REST api, and provides access to custom task plugin endpoint.
+    """Connects to the Dioptra REST api, and provides access to custom task plugin 
+        endpoint.
 
     Args:
         session: Session object used to connect to the REST api.
-        address: Address of the Dioptra REST api or if no address is given the DIOPTRA_RESTAPI_URI environment variable is used.
+        address: Address of the Dioptra REST api or if no address is given the
+            DIOPTRA_RESTAPI_URI environment variable is used.
 
     Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-    """  # noqa B950
+        See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+        more information on Dioptra's REST api.
+    """
 
     def __init__(self, session: requests.Session, address: str | None = None):
         parsed = urlparse(address)
@@ -851,7 +870,8 @@ class CustomTaskPluginClient(object):
         """Deletes a custom task plugin by its unique name.
 
         Args:
-            name: A unique string identifying a task plugin package within dioptra_custom collection.
+            name: A unique string identifying a task plugin package within 
+                dioptra_custom collection.
 
         Returns:
             The Dioptra REST api's response.
@@ -863,9 +883,9 @@ class CustomTaskPluginClient(object):
                 'taskPluginName': ['evaluation']}
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         plugin_name_query: str = urljoin(self.task_plugin_custom_endpoint, name)
         try:
             ret = cast(dict[str, Any], self.session.delete(plugin_name_query).json())
@@ -878,7 +898,8 @@ class CustomTaskPluginClient(object):
         """Gets a custom task plugin by its unique name.
 
         Args:
-            name: A unique string identifying a task plugin package within dioptra_builtins collection.
+            name: A unique string identifying a task plugin package within 
+                dioptra_builtins collection.
 
         Returns:
             The Dioptra REST api's response.
@@ -900,9 +921,9 @@ class CustomTaskPluginClient(object):
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         task_plugin_name_query: str = urljoin(self.task_plugin_custom_endpoint, name)
         try:
             ret = cast(dict[str, Any], self.session.get(task_plugin_name_query).json())
@@ -930,9 +951,9 @@ class CustomTaskPluginClient(object):
                 }]
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         try:
             ret = cast(
                 list[dict[str, Any]],
@@ -954,7 +975,8 @@ class CustomTaskPluginClient(object):
         Args:
             custom_plugin_name: Plugin name for for the upload form.
             custom_plugin_file: Path to custom plugin.
-            collection: Collection to upload the plugin to. Defaults to "dioptra_custom".
+            collection: Collection to upload the plugin to. Defaults to 
+                "dioptra_custom".
 
         Returns:
             The Dioptra REST api's response.
@@ -970,9 +992,9 @@ class CustomTaskPluginClient(object):
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         plugin_upload_form = {
             "task_plugin_name": custom_plugin_name,
             "collection": collection,
@@ -1002,12 +1024,13 @@ class QueueClient(object):
 
     Args:
         session: Session object used to connect to the REST api.
-        address: Address of the Dioptra REST api or if no address is given the DIOPTRA_RESTAPI_URI environment variable is used.
+        address: Address of the Dioptra REST api or if no address is given the
+            DIOPTRA_RESTAPI_URI environment variable is used.
 
     Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-    """  # noqa B950
+        See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+        more information on Dioptra's REST api.
+    """
 
     def __init__(
         self,
@@ -1062,10 +1085,10 @@ class QueueClient(object):
                     'createdOn': '2023-04-24T20:53:09.801442'
                 }
 
-        Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+    Notes:
+        See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+        more information on Dioptra's REST api.
+    """
         try:
             queue_id_query: str = urljoin(self.queue_endpoint, str(id))
             ret = cast(dict[str, Any], self.session.get(queue_id_query).json())
@@ -1093,9 +1116,9 @@ class QueueClient(object):
                 }
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         try:
             queue_name_query: str = urljoin(self.queue_endpoint, "name", name)
             ret = cast(dict[str, Any], self.session.get(queue_name_query).json())
@@ -1133,9 +1156,9 @@ class QueueClient(object):
                 }]
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         try:
             ret = cast(
                 list[dict[str, Any]], self.session.get(self.queue_endpoint).json()
@@ -1160,9 +1183,9 @@ class QueueClient(object):
 
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         try:
             queue_name_query: str = urljoin(self.queue_endpoint, "name", name, "lock")
             ret = cast(dict[str, Any], self.session.put(queue_name_query).json())
@@ -1185,9 +1208,9 @@ class QueueClient(object):
                 {'name': ['tensorflow_cpu'], 'status': 'Success'}
 
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         try:
             queue_name_query: str = urljoin(self.queue_endpoint, "name", name, "lock")
 
@@ -1211,9 +1234,9 @@ class QueueClient(object):
                     'createdOn': '2023-06-26T15:48:47.662293'
                 }
         Notes:
-           See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for more
-           information on Dioptra's REST api.
-        """  # noqa B950
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         queue_registration_form = {"name": name}
         try:
             response = requests.post(
