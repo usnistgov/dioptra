@@ -1070,25 +1070,25 @@ class QueueClient(object):
     def get_by_id(self, id: int) -> dict[str, Any]:
         """Gets a queue by its unique identifier.
 
-        Args:
-            id: An integer identifying a registered queue.
+            Args:
+                id: An integer identifying a registered queue.
 
-        Returns:
-            The Dioptra REST api's response.
+            Returns:
+                The Dioptra REST api's response.
 
-            Example::
+                Example::
 
-                {
-                    'lastModified': '2023-04-24T20:53:09.801442',
-                    'name': 'tensorflow_cpu',
-                    'queueId': 1,
-                    'createdOn': '2023-04-24T20:53:09.801442'
-                }
+                    {
+                        'lastModified': '2023-04-24T20:53:09.801442',
+                        'name': 'tensorflow_cpu',
+                        'queueId': 1,
+                        'createdOn': '2023-04-24T20:53:09.801442'
+                    }
 
-    Notes:
-        See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
-        more information on Dioptra's REST api.
-    """
+        Notes:
+            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+            more information on Dioptra's REST api.
+        """
         try:
             queue_id_query: str = urljoin(self.queue_endpoint, str(id))
             ret = cast(dict[str, Any], self.session.get(queue_id_query).json())
