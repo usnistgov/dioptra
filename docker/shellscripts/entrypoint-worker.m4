@@ -85,7 +85,7 @@ start_rq() {
   ${job_queues}"
 
   cd ${dioptra_workdir}
-  python -m ${rq_worker_module} worker\
+  PYTHONPATH="${DIOPTRA_PLUGIN_DIR}" python -m ${rq_worker_module} worker\
     --url ${rq_redis_uri}\
     --results-ttl ${rq_results_ttl}\
     ${job_queues}
