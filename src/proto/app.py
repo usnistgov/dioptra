@@ -35,7 +35,7 @@ class Config(object):
 login_manager = LoginManager()
 
 
-def create_app() -> Flask:
+def create_app(include_test_users: bool = True) -> Flask:
     """Create and configure an instance of the Flask application.
 
     Returns:
@@ -58,7 +58,8 @@ def create_app() -> Flask:
     login_manager.user_loader(SERVICES.user.load_user)
     login_manager.init_app(app)
 
-    _register_test_users_in_db()
+    if include_test_users:
+        _register_test_users_in_db()
 
     return app
 

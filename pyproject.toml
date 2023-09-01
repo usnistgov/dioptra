@@ -34,6 +34,7 @@ dev = [
     "pip-tools",
     "pycodestyle",
     "pydocstyle",
+    "pytest>=7",
     "pytoml",
     "tomli",
     "tox>=4.4.0",
@@ -91,8 +92,9 @@ exclude = [
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "--import-mode=importlib -ra"
+addopts = "--import-mode=importlib -ra --doctest-modules"
 testpaths = [
+    "src/proto",
     "tests",
 ]
 log_cli = false
