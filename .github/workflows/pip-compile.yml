@@ -34,7 +34,7 @@ jobs:
           - "requirements-dev-tensorflow"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: setup python ${{ matrix.python-version }}
         uses: actions/setup-python@v4.7.0
@@ -129,7 +129,7 @@ jobs:
           - "tensorflow2-gpu-requirements"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: setup python ${{ matrix.python-version }}
         uses: actions/setup-python@v4.7.0
@@ -180,7 +180,7 @@ jobs:
           # - "py39-linux-aarch64-tensorflow2-cpu-requirements"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: set up docker qemu
         uses: docker/setup-qemu-action@v2
