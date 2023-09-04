@@ -48,7 +48,7 @@ jobs:
           - tensorflow2-gpu
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/remove-extra-software
 
       - name: set docker metadata
@@ -120,7 +120,7 @@ jobs:
           - mlflow-tracking
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: setup python 3.9
         uses: actions/setup-python@v4.7.0
@@ -180,7 +180,7 @@ jobs:
           - integration-tf-mnist-classifier
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: setup python 3.9
         uses: actions/setup-python@v4.7.0
