@@ -93,6 +93,20 @@ class DeleteUserSchema(Schema):
         required=True,
     )
 
+class ShareResourceSchema(Schema):
+    resource_name = fields.String(
+        attribute="resource_name",
+        metadata=dict(
+            description="The resource to be shared with the group."
+        ),
+        required=True,
+    )
+    group_name = fields.String(
+        attribute="group_name",
+        metadata=dict(description="The group to give the permission to."),
+        required=True,
+    )
+
 
 if __name__ == "__main__":
     import doctest

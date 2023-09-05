@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from functools import wraps
+
 from flask import request
 from flask_accepts import accepts
 from flask_login import login_required
@@ -14,8 +16,47 @@ from .schemas import (
     LoginSchema,
     LogoutSchema,
     RegisterUserSchema,
+    ShareResourceSchema,
 )
 from .services import SERVICES
+
+from .models import db, User, Group, Dioptra_Resource
+
+from oso import Oso, NotFoundError, ForbiddenError
+
+oso = Oso()
+
+oso.register_class(User)
+oso.register_class(Dioptra_Resource)
+oso.register_class(Group)
+
+# Load your policy files.
+oso.load_files(["src/proto/main.polar"])
+
+
+# oso decorator definition
+def authorize(action):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            user = SERVICES.user.get_current_user()
+            # resource_id = request.headers.get('resource') # Extract resource_id from URL params
+            resource_id = request.path.split("/")[-2]  # or using url
+            resource = db["resources"][resource_id]
+
+            # Check if the user is allowed to perform the action on the resource
+            try:
+                oso.authorize(user, action, resource)
+                return f(*args, **kwargs)
+            except NotFoundError:
+                return f"<h1>Whoops!</h1><p>Not Found</p>", 404
+            except ForbiddenError:
+                return f"<h1>Whoops!</h1><p>Not Allowed</p>", 403
+
+        return wrapped
+
+    return decorator
+
 
 # -- Endpoint Namespaces --------------------------------------------------------------
 
@@ -43,7 +84,6 @@ foo_api: Namespace = Namespace(
     "Foo",
     description="Foo endpoint",
 )
-
 
 # -- Authentication Resources ---------------------------------------------------------
 
@@ -128,19 +168,64 @@ class UserPasswordResource(Resource):
         )
 
 
+@user_api.route("/shareread")
+class ShareResource(Resource):
+    @login_required
+    @accepts(schema=ShareResourceSchema, api=user_api)
+    def post(self) -> str:
+        """Give user the read permission on a given resource"""
+        parsed_obj = cast(
+            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
+        )
+        user = SERVICES.user.get_current_user()
+        resource = db["resources"][parsed_obj["resource_name"]]
+        try:
+            oso.authorize(user, "share-read", resource)
+            share_with = db["groups"][parsed_obj["group_name"]]
+            resource.share_read(share_with)
+
+            return f"<h1>A Repo</h1><p>read perms granted</p>"
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
+
+
+@user_api.route("/revokeshareread")
+class RevokeShareResource(Resource):
+    @login_required
+    @accepts(schema=ShareResourceSchema, api=user_api)
+    def post(self) -> str:
+        """Give user the read permission on a given resource"""
+        parsed_obj = cast(
+            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
+        )
+        user = SERVICES.user.get_current_user()
+        resource = db["resources"][parsed_obj["resource_name"]]
+        try:
+            oso.authorize(user, "share-read", resource)
+            share_with = db["groups"][parsed_obj["group_name"]]
+            resource.unshare(share_with)
+
+            return f"<h1>A Repo</h1><p>read perms revoked</p>"
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
+
+
 # -- Hello Resource -------------------------------------------------------------------
 
 
 @hello_api.route("/")
 class HelloResource(Resource):
+    @authorize("read")
     def get(self) -> str:
         """Responds "Hello, World!"."""
         return SERVICES.hello.say_hello_world()
 
+    @authorize("update")
     def post(self) -> str:
         """Responds "Hello, World!"."""
         return SERVICES.hello.say_hello_world()
 
+    @authorize("create")
     def put(self) -> str:
         """Responds "Hello, World!"."""
         return SERVICES.hello.say_hello_world()
@@ -152,6 +237,7 @@ class HelloResource(Resource):
 @test_api.route("/")
 class TestResource(Resource):
     @login_required
+    @authorize("read")
     def get(self) -> str:
         """Responds with the server's secret key.
 
@@ -160,6 +246,7 @@ class TestResource(Resource):
         return SERVICES.test.reveal_secret_key()
 
     @login_required
+    @authorize("update")
     def post(self) -> str:
         """Responds with the server's secret key.
 
@@ -168,7 +255,49 @@ class TestResource(Resource):
         return SERVICES.test.reveal_secret_key()
 
     @login_required
+    @authorize("create")
     def put(self) -> str:
+        """Responds with the server's secret key.
+
+        Must be logged in.
+        """
+        return SERVICES.test.reveal_secret_key()
+
+
+# testing with path variables
+@test_api.route("/<name>")
+class TestPluginResource(Resource):
+    @login_required
+    def get(self) -> str:
+        """Responds with the server's secret key.
+
+        Must be logged in.
+        """
+        resource = db["resources"]["test"]
+        user = SERVICES.user
+        try:
+            oso.authorize(user, "read", resource)
+            return SERVICES.test.reveal_secret_key()
+        except NotFoundError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 404
+
+    @login_required
+    def post(self) -> str:
+        """Responds with the server's secret key.
+
+        Must be logged in.
+        """
+        resource = db["resources"]["test"]
+        user = SERVICES.user
+        try:
+            oso.authorize(user, "write", resource)
+            return SERVICES.test.reveal_secret_key()
+        except NotFoundError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 404
+
+    @login_required
+    @authorize("write")
+    def put(self, name) -> str:
         """Responds with the server's secret key.
 
         Must be logged in.
@@ -182,6 +311,7 @@ class TestResource(Resource):
 @world_api.route("/")
 class WorldResource(Resource):
     @login_required
+    @authorize("read")
     def get(self) -> dict[str, Any]:
         """Responds with the user's information.
 
@@ -190,6 +320,7 @@ class WorldResource(Resource):
         return SERVICES.world.show_user_info()
 
     @login_required
+    @authorize("update")
     def post(self) -> dict[str, Any]:
         """Responds with the user's information.
 
@@ -198,6 +329,7 @@ class WorldResource(Resource):
         return SERVICES.world.show_user_info()
 
     @login_required
+    @authorize("create")
     def put(self) -> dict[str, Any]:
         """Responds with the user's information.
 

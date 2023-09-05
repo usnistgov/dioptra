@@ -233,6 +233,14 @@ class UserService(object):
             return user
 
         return None
+    
+    def get_current_user(self) -> User:
+        """Load the user associated with a provided id.
+
+        Returns:
+            The user object corresponding to the currently logged in user.
+        """
+        return cast(User, current_user)
 
     def register_new_user(
         self, name: str, password: str, confirm_password: str

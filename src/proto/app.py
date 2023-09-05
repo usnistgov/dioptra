@@ -13,7 +13,7 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_restx import Api
 
-from .models import User, db
+from .models import Group, Dioptra_Resource, User, Role, db
 from .services import SERVICES
 
 
@@ -59,6 +59,9 @@ def create_app() -> Flask:
     login_manager.init_app(app)
 
     _register_test_users_in_db()
+    _register_test_groups_in_db()
+    _register_test_resources_in_db()
+    _give_users_roles_on_groups()
 
     return app
 
@@ -91,6 +94,8 @@ def _register_test_users_in_db() -> None:
 
     - user:password
     - joe:hashed
+    - notallowed:password
+    - tester:testing
     """
     db["users"]["1"] = User(
         id=1,
@@ -98,6 +103,7 @@ def _register_test_users_in_db() -> None:
         name="user",
         password=SERVICES.password.hash("password"),
         deleted=False,
+        roles=[],
     )
     db["users"]["2"] = User(
         id=2,
@@ -105,4 +111,137 @@ def _register_test_users_in_db() -> None:
         name="joe",
         password=SERVICES.password.hash("hashed"),
         deleted=False,
+        roles=[],
     )
+    db["users"]["3"] = User(
+        id=3,
+        alternative_id=uuid.uuid4().hex,
+        name="not_allowed",
+        password=SERVICES.password.hash("password"),
+        deleted=False,
+        roles=[],
+    )
+
+    db["users"]["4"] = User(
+        id=4,
+        alternative_id=uuid.uuid4().hex,
+        name="tester",
+        password=SERVICES.password.hash("testing"),
+        deleted=False,
+        roles=[],
+    )
+
+
+def _register_test_groups_in_db() -> None:
+    """Register test groups in the simple key-value data store.
+
+    This registers the following groups into the "groups table":
+
+    - testers
+    - devs
+    - attackers
+    - my_group (unused currently)
+
+    """
+    db["groups"]["testers"] = Group(
+        id=1,
+        alternative_id=uuid.uuid4().hex,
+        name="testers",
+        # owner=db["users"]["1"],
+        deleted=False,
+        is_public=False,
+    )
+    db["groups"]["devs"] = Group(
+        id=2,
+        alternative_id=uuid.uuid4().hex,
+        name="devs",
+        # owner=db["users"]["2"],
+        deleted=False,
+        is_public=False,
+    )
+
+    db["groups"]["attackers"] = Group(
+        id=3,
+        alternative_id=uuid.uuid4().hex,
+        name="attackers",
+        # owner=db["users"]["2"],
+        deleted=False,
+        is_public=False,
+    )
+
+    db["groups"]["my_group"] = Group(
+        id=4,
+        alternative_id=uuid.uuid4().hex,
+        name="my_group",
+        # owner=db["users"]["2"],
+        deleted=False,
+        is_public=False,
+    )
+
+
+def _register_test_resources_in_db() -> None:
+    """Register test resources in the simple key-value data store.
+
+    This registers the following resources into the "resources table":
+
+    - foo
+    - test
+    - hello
+    - world
+
+    """
+    db["resources"]["foo"] = Dioptra_Resource(
+        id=1,
+        alternative_id=uuid.uuid4().hex,
+        name="foo",
+        owner=db["groups"]["devs"],
+        is_public=False,
+        shared_with=[],
+        deleted=False,
+    )
+    db["resources"]["test"] = Dioptra_Resource(
+        id=2,
+        alternative_id=uuid.uuid4().hex,
+        name="test",
+        owner=db["groups"]["testers"],
+        is_public=False,
+        shared_with=[],  # what if we share with the owning group?
+        deleted=False,
+    )
+
+    db["resources"]["hello"] = Dioptra_Resource(
+        id=3,
+        alternative_id=uuid.uuid4().hex,
+        name="hello",
+        owner=db["groups"]["testers"],
+        is_public=True,
+        shared_with=[],
+        deleted=False,
+    )
+
+    db["resources"]["world"] = Dioptra_Resource(
+        id=5,
+        alternative_id=uuid.uuid4().hex,
+        name="world",
+        owner=db["groups"]["attackers"],
+        is_public=False,
+        shared_with=[],
+        deleted=False,
+    )
+
+
+def _give_users_roles_on_groups() -> None:
+    """This creates the following roles and assigns them to users in the simple
+    key-value data store.
+
+    - user 1 given admin for group attackers
+    - user 2 given reader for group devs
+    - user 4 given reader for group attackers
+    - user 4 given writer for group attackers
+    """
+
+    db["users"]["1"].add_role(Role(name="admin", resource=db["groups"]["attackers"]))
+    db["users"]["2"].add_role(Role(name="reader", resource=db["groups"]["devs"]))
+    # User 3 has no roles and should be able to access nothing.
+    db["users"]["4"].add_role(Role(name="writer", resource=db["groups"]["attackers"]))
+    db["users"]["4"].add_role(Role(name="reader", resource=db["groups"]["attackers"]))
