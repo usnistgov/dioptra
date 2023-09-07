@@ -15,10 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
-import shutil
-import urllib.parse
-from pathlib import Path
-from typing import Any, Iterator, Mapping, MutableMapping, Optional
+from typing import Any, Mapping, MutableMapping, Optional
 
 import boto3
 import structlog
@@ -27,6 +24,7 @@ from rq.job import get_current_job
 
 from dioptra.task_engine.task_engine import run_experiment
 from dioptra.task_engine.validation import is_valid
+from dioptra.worker.setup_task_plugins import setup_task_plugins
 
 
 def _get_logger() -> Any:
@@ -37,135 +35,6 @@ def _get_logger() -> Any:
         A logger object
     """
     return structlog.get_logger(__name__)
-
-
-def _s3_uri_to_bucket_prefix(s3_uri: str) -> tuple[Optional[str], str]:
-    """
-    Given an S3 URI in the form:
-
-        s3://<bucket>/<key_prefix>
-
-    extract the bucket and key prefix parts, and return them.
-
-    Args:
-        s3_uri: An S3 URI
-
-    Returns:
-        A bucket, prefix 2-tuple.
-    """
-    uri_parts = urllib.parse.urlparse(s3_uri)
-    bucket = uri_parts.hostname
-    prefix = uri_parts.path.lstrip("/")
-
-    return bucket, prefix
-
-
-def _get_s3_keys(s3: BaseClient, bucket: str, prefix: str) -> Iterator[str]:
-    """
-    Generate all keys in the given S3 bucket, having the given prefix.
-
-    Args:
-        s3: A boto3 S3 client object
-        bucket: An S3 bucket name
-        prefix: A key prefix
-
-    Yields:
-        Key names
-    """
-
-    resp = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
-
-    for obj_info in resp.get("Contents", []):
-        yield obj_info["Key"]
-
-    while resp["IsTruncated"]:
-        resp = s3.list_objects_v2(
-            Bucket=bucket,
-            Prefix=prefix,
-            ContinuationToken=resp["NextContinuationToken"],
-        )
-
-        for obj_info in resp.get("Contents", []):
-            yield obj_info["Key"]
-
-
-def _download_task_plugins(s3: BaseClient, s3_uri: str, dest_dir: Path):
-    """
-    Download all task plugin files from the given S3 URI to the given
-    directory.
-
-    Args:
-        s3: A boto3 S3 client object
-        s3_uri: An S3 URI in the form "s3://<bucket>/<key_prefix>"
-        dest_dir: A Path object referring to the directory where files
-            will be downloaded to
-    """
-
-    log = _get_logger()
-
-    bucket, prefix = _s3_uri_to_bucket_prefix(s3_uri)
-    assert bucket  # For mypy; assume correct environment variables
-
-    # To satisfy S3 security policy, key prefixes must end with
-    # a "/".
-    if not prefix.endswith("/"):
-        prefix = prefix + "/"
-
-    for key in _get_s3_keys(s3, bucket, prefix):
-        key_path = dest_dir / key
-        key_path.parent.mkdir(parents=True, exist_ok=True)
-
-        log.debug("Downloading s3 key %s -> %s", key, str(key_path))
-        s3.download_file(bucket, key, str(key_path))
-
-
-def _clear_plugins_dir(plugin_dir: Path):
-    """
-    Remove the builtins and custom plugin collection subdirectories from
-    the given directory.
-
-    Args:
-        plugin_dir: A Path object referring to a directory
-    """
-    builtins_dir = plugin_dir / "dioptra_builtins"
-    custom_dir = plugin_dir / "dioptra_custom"
-
-    for subdir in (builtins_dir, custom_dir):
-        if subdir.exists():
-            shutil.rmtree(subdir)
-
-
-def _setup_task_plugins(
-    s3: BaseClient,
-    dioptra_plugin_dir: str,
-    dioptra_plugins_s3_uri: str,
-    dioptra_custom_plugins_s3_uri: str,
-):
-    """
-    Establish the given plugins directory, by downloading from the given
-    S3 buckets.
-
-    Args:
-        s3: A boto3 S3 client object
-        dioptra_plugin_dir: The directory to download to
-        dioptra_plugins_s3_uri: An S3 URI to download builtin plugins from
-        dioptra_custom_plugins_s3_uri: An S3 URI to download custom plugins
-            from
-    """
-    log = _get_logger()
-
-    # Make sure the plugins dir exists!
-    plugin_dir_path = Path(dioptra_plugin_dir)
-    plugin_dir_path.mkdir(parents=True, exist_ok=True)
-
-    log.info("Clearing directory: %s", dioptra_plugin_dir)
-    _clear_plugins_dir(plugin_dir_path)
-
-    log.info("Downloading plugins: %s", dioptra_plugins_s3_uri)
-    _download_task_plugins(s3, dioptra_plugins_s3_uri, plugin_dir_path)
-
-    log.info("Downloading plugins: %s", dioptra_custom_plugins_s3_uri)
-    _download_task_plugins(s3, dioptra_custom_plugins_s3_uri, plugin_dir_path)
 
 
 def run_task_engine(
@@ -206,7 +75,7 @@ def run_task_engine(
             s3 = boto3.client("s3", endpoint_url=mlflow_s3_endpoint_url)
 
         if is_valid(experiment_desc):
-            _setup_task_plugins(
+            setup_task_plugins(
                 s3,
                 dioptra_plugin_dir,
                 dioptra_plugins_s3_uri,

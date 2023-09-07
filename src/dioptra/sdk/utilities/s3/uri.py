@@ -14,7 +14,26 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._set_path_ext import set_path_ext
-from .clear_dir import clear_directory
+import urllib.parse
+from typing import Optional
 
-__all__ = ["set_path_ext", "clear_directory"]
+
+def s3_uri_to_bucket_prefix(s3_uri: str) -> tuple[Optional[str], str]:
+    """
+    Given an S3 URI in the form:
+
+        s3://<bucket>/<key_prefix>
+
+    extract the bucket and key prefix parts, and return them.
+
+    Args:
+        s3_uri: An S3 URI
+
+    Returns:
+        A bucket, prefix 2-tuple.
+    """
+    uri_parts = urllib.parse.urlparse(s3_uri)
+    bucket = uri_parts.hostname
+    prefix = uri_parts.path.lstrip("/")
+
+    return bucket, prefix
