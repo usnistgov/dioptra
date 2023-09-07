@@ -35,6 +35,8 @@ CONTAINER_SSL_DIR="/ssl"
 INIT_ARGBASH_SERVICE="argbash"
 INIT_DB_SERVICE="db"
 INIT_FRONTEND_SERVICE="frontend-build"
+INIT_MC_SERVICE="mc"
+INIT_MINIO_SERVICE="minio"
 INIT_MLFLOW_TRACKING_SSL_SERVICE="mlflow-tracking-ssl"
 INIT_NAMED_VOLUMES_SERVICE="named-volumes"
 INIT_NGINX_SSL_SERVICE="nginx-ssl"
@@ -296,6 +298,22 @@ start_db_service() {
 }
 
 ###########################################################################################
+# Starts a MinIO service as a background process
+#
+# Globals:
+#   DOCKER_COMPOSE_INIT_YML
+#   INIT_MINIO_SERVICE
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+start_minio_service() {
+  docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" up -d "${INIT_MINIO_SERVICE}"
+}
+
+###########################################################################################
 # Enable/disable SSL for the Postgres database
 #
 # Globals:
@@ -487,7 +505,8 @@ init_named_volumes() {
 # Wrapper for the init-minio.sh utility script
 #
 # Globals:
-#   SCRIPT_DIRPATH
+#   DOCKER_COMPOSE_INIT_YML
+#   INIT_MC_SERVICE
 # Arguments:
 #   None
 # Returns:
@@ -495,12 +514,14 @@ init_named_volumes() {
 ###########################################################################################
 
 init_minio() {
-  local script_path="${SCRIPT_DIRPATH}/scripts/init-minio.sh"
+  local args=(
+    "/scripts/init-minio.sh"
+  )
 
-  if ! /usr/bin/env bash "${script_path}" "${SCRIPT_DIRPATH}"; then
-    log_error "Encountered an error when executing ${script_path}, exiting..."
-    exit 1
-  fi
+  docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" run \
+    --rm \
+    "${INIT_MC_SERVICE}" \
+    "${args[@]}"
 }
 
 ###########################################################################################
@@ -544,7 +565,9 @@ main() {
   init_scripts
   init_extra_ca_certificates
   init_named_volumes
+  start_minio_service
   init_minio
+  stop_services
   init_frontend
   start_db_service
   manage_postgres_ssl

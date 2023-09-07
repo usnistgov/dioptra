@@ -82,14 +82,16 @@ services:
     image: {{ container_image(cookiecutter.__containers.mc) }}
     hostname: {{ cookiecutter.__project_slug }}-mc
     entrypoint:
-      - "/bin/sh"
+      - "/bin/bash"
     {% if cookiecutter.__containers.networks -%}
     {{ service_networks(cookiecutter.__containers.networks)|indent(4) }}
     {% endif -%}
     volumes:
       - ./config/minio:/s3-policy:ro
+      - ./secrets:/secrets:ro
       - minio-certs:/root/.mc/certs/CAs:ro
       - init-repos:/init-repos:ro
+      - init-scripts:/scripts:ro
 
   argbash:
     image: {{ container_image(cookiecutter.__containers.argbash) }}
