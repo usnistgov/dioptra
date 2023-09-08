@@ -26,6 +26,17 @@ import requests
 
 
 def get_dioptra_client(address: str | None = None) -> DioptraClient:
+    """Builder function for the DioptraClient class. Performs dependency injection and
+        sets up a persistent session with the Dioptra REST API.
+
+    Args:
+        address: Address of the Dioptra REST api or if no address is given the
+            DIOPTRA_RESTAPI_URI environment variable is used.
+
+    Notes:
+        See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
+        more information on Dioptra's REST api.
+    """
     address = (
         f"{address}/api" if address else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api"
     )
@@ -55,11 +66,18 @@ def get_dioptra_client(address: str | None = None) -> DioptraClient:
 
 
 class DioptraClient(object):
-    """Connects to the Dioptra REST api, and provides access to endpoints.
+    """Connects to the Dioptra REST api, and provides access to endpoints. The
+        get_dioptra_client function should be used to instantiate the client.
 
     Args:
-        address: Address of the Dioptra REST api or if no address is given the
-            DIOPTRA_RESTAPI_URI environment variable is used.
+        session: Session object used to connect to the REST api.
+        experiment: Experiment client for dependency injection.
+        job: Job client for dependency injection.
+        queue: Queue client for dependency injection.
+        tasks_plugins: Tasks Plugins client for dependency injection.
+        custom_task_plugins: Custom Task Plugins client for dependency injection.
+        builtin_task_plugins: Builtin Task Plugins client for dependency injection.
+
 
     Notes:
         See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
@@ -172,6 +190,7 @@ class ExperimentClient(object):
             The Dioptra REST api's response.
 
             Example::
+
                 {
                     'lastModified': '2023-06-22T13:42:35.379462',
                     'experimentId': 10,
@@ -230,19 +249,21 @@ class ExperimentClient(object):
 
             Example::
 
-                [{
-                    'lastModified': '2023-04-24T20:20:27.315687',
-                    'experimentId': 1,
-                    'name': 'mnist',
-                    'createdOn': '2023-04-24T20:20:27.315687'
-                },
-                ...
-                {
-                    'lastModified': '2023-06-22T13:42:35.379462',
-                    'experimentId': 10,
-                    'name': 'mnist_feature_squeezing',
-                    'createdOn': '2023-06-22T13:42:35.379462'
-                }]
+                [
+                    {
+                        'lastModified': '2023-04-24T20:20:27.315687',
+                        'experimentId': 1,
+                        'name': 'mnist',
+                        'createdOn': '2023-04-24T20:20:27.315687'
+                    },
+                    ...
+                    {
+                        'lastModified': '2023-06-22T13:42:35.379462',
+                        'experimentId': 10,
+                        'name': 'mnist_feature_squeezing',
+                        'createdOn': '2023-06-22T13:42:35.379462'
+                    }
+                ]
 
         Notes:
            See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
@@ -462,7 +483,7 @@ class JobClient(object):
         """Gets a job by its unique identifier.
 
         Args:
-            id: A string specifying a job’s UUID.
+            id: A string specifying a job's UUID.
 
         Returns:
             The Dioptra REST api's response.
@@ -504,21 +525,23 @@ class JobClient(object):
 
             Example::
 
-                [{
-                    'mlflowRunId': None,
-                    'lastModified': '2023-04-24T20:54:30.722304',
-                    'experimentId': 2,
-                    'queueId': 2,
-                    'workflowUri': 's3://workflow/268a7620/workflows.tar.gz',
-                    'entryPoint': 'train',
-                    'dependsOn': None,
-                    'status': 'queued',
-                    'timeout': '1h',
-                    'jobId': 'a4c574dd-cbd1-43c9-9afe-17d69cd1c73d',
-                    'entryPointKwargs': '-P dcd ata_dir=/nfs/data/Mnist',
-                    'createdOn': '2023-04-24T20:54:30.722304'
-                },
-                ...]
+                [
+                    {
+                        'mlflowRunId': None,
+                        'lastModified': '2023-04-24T20:54:30.722304',
+                        'experimentId': 2,
+                        'queueId': 2,
+                        'workflowUri': 's3://workflow/268a7620/workflows.tar.gz',
+                        'entryPoint': 'train',
+                        'dependsOn': None,
+                        'status': 'queued',
+                        'timeout': '1h',
+                        'jobId': 'a4c574dd-cbd1-43c9-9afe-17d69cd1c73d',
+                        'entryPointKwargs': '-P dcd ata_dir=/nfs/data/Mnist',
+                        'createdOn': '2023-04-24T20:54:30.722304'
+                    },
+                    ...
+                ]
 
 
         Notes:
@@ -563,6 +586,7 @@ class JobClient(object):
             The Dioptra REST api's response.
 
             Example::
+
                 {
                     'createdOn': '2023-06-26T15:26:43.100093',
                     'dependsOn': None,
@@ -878,9 +902,11 @@ class CustomTaskPluginClient(object):
 
             Example::
 
-                {'collection': 'dioptra_custom',
-                'status': 'Success',
-                'taskPluginName': ['evaluation']}
+                {
+                    'collection': 'dioptra_custom',
+                    'status': 'Success',
+                    'taskPluginName': ['evaluation']
+                }
 
         Notes:
             See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
@@ -940,15 +966,19 @@ class CustomTaskPluginClient(object):
 
             Example::
 
-                [{
-                    'taskPluginName': 'model_inversion',
-                    'collection': 'dioptra_custom',
-                    'modules': ['__init__.py', 'modelinversion.py']},
+                [
+                    {
+                        'taskPluginName': 'model_inversion',
+                        'collection': 'dioptra_custom',
+                        'modules': ['__init__.py', 'modelinversion.py']
+                    },
                     ...
-                    {'taskPluginName': 'pixel_threshold',
-                    'collection': 'dioptra_custom',
-                    'modules': ['__init__.py', 'pixelthreshold.py']
-                }]
+                    {
+                        'taskPluginName': 'pixel_threshold',
+                        'collection': 'dioptra_custom',
+                        'modules': ['__init__.py', 'pixelthreshold.py']
+                    }
+                ]
 
         Notes:
             See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
@@ -1136,24 +1166,32 @@ class QueueClient(object):
 
             Example::
 
-                [{
-                    'lastModified': '2023-04-24T20:53:09.801442',
-                    'name': 'tensorflow_cpu',
-                    'queueId': 1,
-                    'createdOn': '2023-04-24T20:53:09.801442'},
-                    {'lastModified': '2023-04-24T20:53:09.824101',
-                    'name': 'tensorflow_gpu',
-                    'queueId': 2,
-                    'createdOn': '2023-04-24T20:53:09.824101'},
-                    {'lastModified': '2023-04-24T20:53:09.867917',
-                    'name': 'pytorch_cpu',
-                    'queueId': 3,
-                    'createdOn': '2023-04-24T20:53:09.867917'},
-                    {'lastModified': '2023-04-24T20:53:09.893451',
-                    'name': 'pytorch_gpu',
-                    'queueId': 4,
-                    'createdOn': '2023-04-24T20:53:09.893451'
-                }]
+                [
+                    {
+                        'lastModified': '2023-04-24T20:53:09.801442',
+                        'name': 'tensorflow_cpu',
+                        'queueId': 1,
+                        'createdOn': '2023-04-24T20:53:09.801442'
+                    },
+                    {
+                        'lastModified': '2023-04-24T20:53:09.824101',
+                        'name': 'tensorflow_gpu',
+                        'queueId': 2,
+                        'createdOn': '2023-04-24T20:53:09.824101'
+                    },
+                    {
+                        'lastModified': '2023-04-24T20:53:09.867917',
+                        'name': 'pytorch_cpu',
+                        'queueId': 3,
+                        'createdOn': '2023-04-24T20:53:09.867917'
+                    },
+                    {
+                        'lastModified': '2023-04-24T20:53:09.893451',
+                        'name': 'pytorch_gpu',
+                        'queueId': 4,
+                        'createdOn': '2023-04-24T20:53:09.893451'
+                    }
+                ]
 
         Notes:
             See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
@@ -1220,13 +1258,15 @@ class QueueClient(object):
             print("Is the API endpoint running and available?")
         return ret
 
-    def register(self, name: str = "tensorflow_cpu") -> dict[str, Any]:  # no
+    def register(self, name: str = "tensorflow_cpu") -> dict[str, Any]:
         """Creates a new queue via a queue registration form.
         Args:
             name: The name to register as a new queue. Defaults to "tensorflow_cpu".
         Returns:
             The Dioptra REST api's response.
+
             Example::
+
                 {
                     'lastModified': '2023-06-26T15:48:47.662293',
                     'name': 'queue',
