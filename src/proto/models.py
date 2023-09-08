@@ -133,7 +133,8 @@ class Dioptra_Resource(object):
     name: str
     owner: User
     is_public: bool # not sure if useful
-    shared_with: list[Group]
+    shared_with: list[Group] #for reading/ writing
+    #shared_with_write: list[Group] #for wriiting
     deleted: bool
 
     
@@ -162,8 +163,14 @@ class Dioptra_Resource(object):
     def share_read(self, actor):
         self.shared_with.append(actor)
 
-    def unshare(self, actor):
+    def unshare_read(self, actor):
         self.shared_with.remove(actor)
+
+    # def share_write(self, actor):
+    #     self.shared_with_write.append(actor)
+
+    # def unshare_write(self, actor):
+    #     self.shared_with_write.remove(actor)
     
 @dataclass
 class Group(object):

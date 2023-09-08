@@ -5,6 +5,8 @@ resource Dioptra_Resource {
   roles = ["reader", "writer", "share-reader", "share-writer"];
 
   relations = { owner: Group, shared_with: Group};
+  #relations = { owner: Group, shared_with: Group, shared_with_writer: Group};
+
   #base level permissions
   "read" if "reader" on "owner";
   
@@ -15,9 +17,13 @@ resource Dioptra_Resource {
   "share-write" if "share-writer" on "owner";
   #"delete" if "owner";
 
-  #sharing perms
+  #sharing perms, sharing with the whole group and defaulting to group perms
   "read" if "reader" on "shared_with";
   "update" if "writer" on "shared_with";
+
+  # #sharing perms, sharing with the whole group but only with a certain role
+  # "read" if "reader" on "shared_with";
+  # "update" if "writer" on "shared_with_writer";
 }
 
 resource Group {
@@ -49,6 +55,9 @@ has_relation(group: Group, "owner", resource: Dioptra_Resource) if
 
 has_relation(group: Group, "shared_with", resource: Dioptra_Resource) if
     group in resource.shared_with;
+  
+# has_relation(group: Group, "shared_with_writer", resource: Dioptra_Resource) if
+#     group in resource.shared_with_writer;
 
 # This rule tells Oso how to fetch roles for a repository
 has_role(actor: User, role_name: String, resource: Dioptra_Resource) if

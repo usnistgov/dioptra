@@ -203,7 +203,7 @@ class RevokeShareResource(Resource):
         try:
             oso.authorize(user, "share-read", resource)
             share_with = db["groups"][parsed_obj["group_name"]]
-            resource.unshare(share_with)
+            resource.unshare_read(share_with)
 
             return f"<h1>A Repo</h1><p>read perms revoked</p>"
         except ForbiddenError:
