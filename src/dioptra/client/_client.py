@@ -800,7 +800,6 @@ class BuiltinTaskPluginClient(object):
         Returns:
             A list of responses detailing all builtin plugins.
 
-
             Example::
 
                 [
