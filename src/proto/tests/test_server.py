@@ -60,7 +60,7 @@ def test_world_api_decorator_other_user(client):
     assert response.status_code == 200
     logging.debug("Response: ",response)
 
-def test_world_api__admin_decorator(client):
+def test_world_api_admin_decorator(client):
     logging.basicConfig(level=logging.DEBUG)  # Set the log level
     
 

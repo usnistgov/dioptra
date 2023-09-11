@@ -173,7 +173,7 @@ class ShareResource(Resource):
     @login_required
     @accepts(schema=ShareResourceSchema, api=user_api)
     def post(self) -> str:
-        """Give user the read permission on a given resource"""
+        """Gives a group the read permission on a given resource"""
         parsed_obj = cast(
             dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
         )
@@ -194,7 +194,7 @@ class RevokeShareResource(Resource):
     @login_required
     @accepts(schema=ShareResourceSchema, api=user_api)
     def post(self) -> str:
-        """Give user the read permission on a given resource"""
+        """Revokes the read permission on a given resource from a group"""
         parsed_obj = cast(
             dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
         )

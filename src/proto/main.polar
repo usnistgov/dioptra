@@ -59,12 +59,13 @@ has_relation(group: Group, "shared_with", resource: Dioptra_Resource) if
 # has_relation(group: Group, "shared_with_writer", resource: Dioptra_Resource) if
 #     group in resource.shared_with_writer;
 
-# This rule tells Oso how to fetch roles for a repository
+# This rule tells Oso how to fetch roles for a endpoint
 has_role(actor: User, role_name: String, resource: Dioptra_Resource) if
   role in actor.roles and
   role_name = role.name and
   resource = role.resource;
 
+# This rule tells Oso how to fetch roles for a group
 has_role(actor: User, role_name: String, group: Group) if
   role in actor.roles and
   role_name = role.name and
