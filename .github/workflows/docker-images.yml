@@ -77,7 +77,7 @@ jobs:
             org.opencontainers.image.authors=NCCoE Artificial Intelligence Team <dioptra@nist.gov>, James Glasbrenner <jglasbrenner@mitre.org>, Cory Miniter <jminiter@mitre.org>, Howard Huang <hhuang@mitre.org>, Julian Sexton <jtsexton@mitre.org>, Paul Rowe <prowe@mitre.org>
 
       - name: set up docker qemu
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: set up docker buildx
         uses: docker/setup-buildx-action@v2
@@ -154,7 +154,7 @@ jobs:
           path: /tmp
 
       - name: set up docker qemu
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: set up docker buildx
         uses: docker/setup-buildx-action@v2
@@ -208,7 +208,7 @@ jobs:
         run: python3 -m pip install tox
 
       - name: set up docker qemu
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: set up docker buildx
         uses: docker/setup-buildx-action@v2
