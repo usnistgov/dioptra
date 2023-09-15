@@ -42,21 +42,21 @@ PYTHON_VERSION_MINOR := $(word 2,$(subst ., ,$(PYTHON_VERSION)))
 ARCH := $(strip $(shell /usr/bin/env $(PY) -c 'import platform; print(platform.machine().lower())'))
 
 ifeq ($(ARCH),x86_64)
-DETECTED_ARCH := x86_64
+DETECTED_ARCH := amd64
 else ifeq ($(ARCH),amd64)
-DETECTED_ARCH := x86_64
+DETECTED_ARCH := amd64
 else ifeq ($(ARCH),aarch64)
-DETECTED_ARCH := aarch64
+DETECTED_ARCH := arm64
 else ifeq ($(ARCH),arm64)
-DETECTED_ARCH := aarch64
+DETECTED_ARCH := arm64
 endif
 
 VENV_EXTRA ?=
 
 ifeq ($(DETECTED_OS),Darwin)
 CORES = $(shell sysctl -n hw.physicalcpu_max)
-PIPTOOLS_SYNC := CFLAGS="-stdlib=libc++" pip-sync
-VENV_REQUIREMENTS = requirements/macos-$(if $(filter aarch64, $(DETECTED_ARCH)),arm64,x86_64)-py$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)-requirements-dev$(VENV_EXTRA).txt
+PIPTOOLS_SYNC := CFLAGS="-stdlib=libc++ -std=c99" pip-sync
+VENV_REQUIREMENTS = requirements/macos-$(DETECTED_ARCH)-py$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)-requirements-dev$(VENV_EXTRA).txt
 else ifeq ($(DETECTED_OS),Linux)
 CORES = $(shell lscpu -p | egrep -v '^\#' | sort -u -t, -k 2,4 | wc -l)
 PIPTOOLS_SYNC := pip-sync
@@ -181,7 +181,7 @@ DOCS_WEB_COMPILE_FILES := $(wildcard $(DOCS_SCSS_DIR)/*.scss)
 
 PIP :=
 ifeq ($(DETECTED_OS),Darwin)
-PIP += CFLAGS="-stdlib=libc++" $(PY) -m pip
+PIP += CFLAGS="-stdlib=libc++ -std=c99" $(PY) -m pip
 else
 PIP += $(PY) -m pip
 endif
