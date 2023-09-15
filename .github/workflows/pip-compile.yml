@@ -177,7 +177,7 @@ jobs:
           - "py39-linux-aarch64-mlflow-tracking-requirements"
           - "py39-linux-aarch64-restapi-requirements"
           - "py39-linux-aarch64-pytorch-cpu-requirements"
-          # - "py39-linux-aarch64-tensorflow2-cpu-requirements"
+          - "py39-linux-aarch64-tensorflow2-cpu-requirements"
 
     steps:
       - uses: actions/checkout@v4

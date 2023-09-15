@@ -25,7 +25,7 @@ FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04 AS copy-files
 
 COPY --chown=root:root --chmod=0644 docker/configs/aws-config /files/aws-config
 COPY --chown=root:root --chmod=0644 docker/configs/build.pip.conf /files/build.pip.conf
-COPY --chown=root:root --chmod=0644 docker/requirements/linux-x86_64-py3.9-pytorch-gpu-requirements.txt /files/pytorch-gpu-requirements.txt
+COPY --chown=root:root --chmod=0644 docker/requirements/linux-amd64-py3.9-pytorch-gpu-requirements.txt /files/pytorch-gpu-requirements.txt
 
 ######################################################################################################
 # Base images

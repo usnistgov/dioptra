@@ -32,21 +32,21 @@ Ensure that you have Python 3.9 installed and that it is available in your PATH,
 
 | Filename | OS | Architecture | Tensorflow | PyTorch |
 | :--- | :---: | :---: | :--- | :--- |
-| linux-x86_64-py3.9-requirements-dev.txt | Linux | x86-64 | ❌ | ❌ |
-| linux-x86_64-py3.9-requirements-dev-tensorflow.txt | Linux | x86-64 | ✅ | ❌ |
-| linux-x86_64-py3.9-requirements-dev-pytorch.txt | Linux | x86-64 | ❌ | ✅ |
-| linux-aarch64-py3.9-requirements-dev.txt | Linux | arm64 | ❌ | ❌ |
-| linux-aarch64-py3.9-requirements-dev-tensorflow.txt | Linux | arm64 | ❌ | ❌ |
-| linux-aarch64-py3.9-requirements-dev-pytorch.txt | Linux | arm64 | ❌ | ✅ |
-| macos-x86_64-py3.9-requirements-dev.txt | MacOS | x86-64 | ❌ | ❌ |
-| macos-x86_64-py3.9-requirements-dev-tensorflow.txt | MacOS | x86-64 | ✅ | ❌ |
-| macos-x86_64-py3.9-requirements-dev-pytorch.txt | MacOS | x86-64 | ❌ | ✅ |
+| linux-amd64-py3.9-requirements-dev.txt | Linux | x86-64 | ❌ | ❌ |
+| linux-amd64-py3.9-requirements-dev-tensorflow.txt | Linux | x86-64 | ✅ | ❌ |
+| linux-amd64-py3.9-requirements-dev-pytorch.txt | Linux | x86-64 | ❌ | ✅ |
+| linux-arm64-py3.9-requirements-dev.txt | Linux | arm64 | ❌ | ❌ |
+| linux-arm64-py3.9-requirements-dev-tensorflow.txt | Linux | arm64 | ❌ | ❌ |
+| linux-arm64-py3.9-requirements-dev-pytorch.txt | Linux | arm64 | ❌ | ✅ |
+| macos-amd64-py3.9-requirements-dev.txt | MacOS | x86-64 | ❌ | ❌ |
+| macos-amd64-py3.9-requirements-dev-tensorflow.txt | MacOS | x86-64 | ✅ | ❌ |
+| macos-amd64-py3.9-requirements-dev-pytorch.txt | MacOS | x86-64 | ❌ | ✅ |
 | macos-arm64-py3.9-requirements-dev.txt | MacOS | arm64 | ❌ | ❌ |
 | macos-arm64-py3.9-requirements-dev-tensorflow.txt | MacOS | arm64 | ✅ | ❌ |
 | macos-arm64-py3.9-requirements-dev-pytorch.txt | MacOS | arm64 | ❌ | ✅ |
-| win-x86_64-py3.9-requirements-dev.txt | Windows | x86-64 | ❌ | ❌ |
-| win-x86_64-py3.9-requirements-dev-tensorflow.txt | Windows | x86-64 | ✅ | ❌ |
-| win-x86_64-py3.9-requirements-dev-pytorch.txt | Windows | x86-64 | ❌ | ✅ |
+| win-amd64-py3.9-requirements-dev.txt | Windows | x86-64 | ❌ | ❌ |
+| win-amd64-py3.9-requirements-dev-tensorflow.txt | Windows | x86-64 | ✅ | ❌ |
+| win-amd64-py3.9-requirements-dev-pytorch.txt | Windows | x86-64 | ❌ | ✅ |
 
 Next, use the `venv` module to create a new virtual environment:
 
@@ -77,15 +77,15 @@ Finally, use `pip-sync` to install the dependencies in your chosen requirements 
 On MacOS/Linux:
 
 ```sh
-# Replace "linux-x86_64-py3.9-requirements-dev.txt" with your chosen file
-pip-sync requirements/linux-x86_64-py3.9-requirements-dev.txt
+# Replace "linux-amd64-py3.9-requirements-dev.txt" with your chosen file
+pip-sync requirements/linux-amd64-py3.9-requirements-dev.txt
 ```
 
 On Windows:
 
 ```powershell
-# Replace "win-x86_64-py3.9-requirements-dev.txt" with your chosen file
-pip-sync requirements\win-x86_64-py3.9-requirements-dev.txt
+# Replace "win-amd64-py3.9-requirements-dev.txt" with your chosen file
+pip-sync requirements\win-amd64-py3.9-requirements-dev.txt
 ```
 
 If the requirements file you used is updated, or if you want to switch to another requirements file (you need access to the Tensorflow library, for example), just run `pip-sync` again using the appropriate filename.

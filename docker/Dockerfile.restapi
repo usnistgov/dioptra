@@ -23,11 +23,13 @@
 
 FROM ubuntu:focal AS copy-files
 
+ARG TARGETARCH
+
 COPY --chown=root:root src/migrations /files/migrations
 COPY --chown=root:root --chmod=0644 docker/configs/aws-config /files/aws-config
 COPY --chown=root:root --chmod=0644 docker/configs/build.pip.conf /files/build.pip.conf
 COPY --chown=root:root --chmod=0644 docker/configs/gunicorn.restapi.conf.py /files/gunicorn.restapi.conf.py
-COPY --chown=root:root --chmod=0644 docker/requirements/linux-x86_64-py3.9-restapi-requirements.txt /files/restapi-requirements.txt
+COPY --chown=root:root --chmod=0644 docker/requirements/linux-${TARGETARCH}-py3.9-restapi-requirements.txt /files/restapi-requirements.txt
 COPY --chown=root:root --chmod=0755 wsgi.py /files/wsgi.py
 
 RUN chmod 0755 /files/migrations && \
@@ -164,13 +166,17 @@ RUN mkdir -p /shellscripts && \
 
 FROM certs-base AS install-awscli
 
-ARG AWSCLI_DOWNLOAD_URL=https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+ARG TARGETARCH
+ARG AWSCLI_DOWNLOAD_BASE_URL=https://awscli.amazonaws.com
 ARG AWSCLI_INSTALL_DIR=/opt/aws-cli
 ARG AWSCLI_BIN_DIR=/usr/local/bin
 
+SHELL ["/bin/bash", "-c"]
+
 RUN cd /tmp && \
-    wget -qO /tmp/awscliv2.zip ${AWSCLI_DOWNLOAD_URL} && \
-    unzip awscliv2.zip && \
+    AWSCLIARCH=${TARGETARCH/arm/aarch} && \
+    wget -qO /tmp/awscliv2.zip ${AWSCLI_DOWNLOAD_BASE_URL}/awscli-exe-linux-${AWSCLIARCH/amd/x86_}.zip && \
+    unzip /tmp/awscliv2.zip && \
     rm /tmp/awscliv2.zip && \
     ./aws/install --install-dir ${AWSCLI_INSTALL_DIR} --bin-dir ${AWSCLI_BIN_DIR} && \
     rm -rf /tmp/aws
