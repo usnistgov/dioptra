@@ -200,7 +200,7 @@ jobs:
           sudo chmod 0777 /image
 
       - name: build and save to output folder
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/arm64
