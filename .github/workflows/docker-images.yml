@@ -80,7 +80,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: set up docker buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: build and push
         uses: docker/build-push-action@v5
@@ -157,7 +157,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: set up docker buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: load the container image
         run: |
@@ -211,7 +211,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: set up docker buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: download the nginx testing image
         uses: actions/download-artifact@v3
