@@ -8,13 +8,27 @@ from __future__ import annotations
 import os
 import uuid
 from dataclasses import dataclass, field
+from functools import wraps
+from importlib.resources import files
+from typing import Any, Callable, TypeVar, cast
 
 from flask import Flask
 from flask_login import LoginManager
 from flask_restx import Api
+from oso import Oso
 
-from .models import Group, Dioptra_Resource, User, Role, db
+from .models import (
+    Group,
+    GroupMembership,
+    PrototypeResource,
+    SharedPrototypeResource,
+    User,
+    db,
+)
 from .services import SERVICES
+
+Function = Callable[..., Any]
+T = TypeVar("T", bound=Function)
 
 
 @dataclass
@@ -33,10 +47,15 @@ class Config(object):
 
 
 login_manager = LoginManager()
+oso = Oso()
 
 
-def create_app() -> Flask:
+def create_app(include_test_data: bool = True) -> Flask:
     """Create and configure an instance of the Flask application.
+
+    Args:
+        include_test_data: Whether or not to populate database with test data. Defaults
+            to True.
 
     Returns:
         The configured Flask application.
@@ -53,17 +72,56 @@ def create_app() -> Flask:
         url_scheme=app.config["BASE_URL"],
     )
 
+    _init_oso(app)
     _register_routes(api)
 
     login_manager.user_loader(SERVICES.user.load_user)
     login_manager.init_app(app)
 
-    _register_test_users_in_db()
-    _register_test_groups_in_db()
-    _register_test_resources_in_db()
-    _give_users_roles_on_groups()
+    if include_test_data:
+        _init_test_db()
 
     return app
+
+
+def run_once(func: T) -> T:
+    """Create a decorator that ensures a function runs only once per Python session.
+
+    This decorator is intended for registration-like actions that should only be
+    executed once, but could be potentially be called multiple times during a Python
+    session. The most common situation where this could happen is while running unit
+    tests.
+
+    Args:
+        func: The function that should only run once.
+
+    Returns:
+        The decorated function that will run only once.
+    """
+    function_called_previously = False
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        nonlocal function_called_previously
+
+        if function_called_previously:
+            return None
+
+        func_output = func(*args, **kwargs)
+        function_called_previously = True
+        return func_output
+
+    return cast(T, wrapper)
+
+
+@run_once
+def _init_oso(app: Flask) -> None:
+    oso.register_class(User)  # type: ignore[no-untyped-call]
+    oso.register_class(Group)  # type: ignore[no-untyped-call]
+    oso.register_class(PrototypeResource)  # type: ignore[no-untyped-call]
+    oso.register_class(SharedPrototypeResource)  # type: ignore[no-untyped-call]
+    oso.load_files([str(files("proto").joinpath("authorization.polar"))])
+    app.oso = oso  # type: ignore[attr-defined]
 
 
 def _register_routes(api: Api, root: str = "api") -> None:
@@ -87,15 +145,21 @@ def _register_routes(api: Api, root: str = "api") -> None:
     api.add_namespace(foo_api, path=f"/{root}/foo")
 
 
+def _init_test_db() -> None:
+    _register_test_users_in_db()
+    _register_test_groups_in_db()
+    _register_group_memberships_in_db()
+    _register_test_resources_in_db()
+    _register_test_shared_resources_in_db()
+
+
 def _register_test_users_in_db() -> None:
     """Register test users in the simple key-value data store.
 
-    This registers the following users and passwords into the "users table":
+    This registers the following users and passwords into the "users" table:
 
     - user:password
     - joe:hashed
-    - notallowed:password
-    - tester:testing
     """
     db["users"]["1"] = User(
         id=1,
@@ -103,7 +167,6 @@ def _register_test_users_in_db() -> None:
         name="user",
         password=SERVICES.password.hash("password"),
         deleted=False,
-        roles=[],
     )
     db["users"]["2"] = User(
         id=2,
@@ -111,137 +174,118 @@ def _register_test_users_in_db() -> None:
         name="joe",
         password=SERVICES.password.hash("hashed"),
         deleted=False,
-        roles=[],
-    )
-    db["users"]["3"] = User(
-        id=3,
-        alternative_id=uuid.uuid4().hex,
-        name="not_allowed",
-        password=SERVICES.password.hash("password"),
-        deleted=False,
-        roles=[],
-    )
-
-    db["users"]["4"] = User(
-        id=4,
-        alternative_id=uuid.uuid4().hex,
-        name="tester",
-        password=SERVICES.password.hash("testing"),
-        deleted=False,
-        roles=[],
     )
 
 
 def _register_test_groups_in_db() -> None:
     """Register test groups in the simple key-value data store.
 
-    This registers the following groups into the "groups table":
+    This registers the following groups into the "groups" table:
 
-    - testers
-    - devs
-    - attackers
-    - my_group (unused currently)
-
+    - user's Group
+        - Creator: user
+        - Owner: user
+    - joe's Group
+        - Creator: joe
+        - Owner: joe
     """
-    db["groups"]["testers"] = Group(
+    db["groups"]["1"] = Group(
         id=1,
-        alternative_id=uuid.uuid4().hex,
-        name="testers",
-        # owner=db["users"]["1"],
+        name="user's Group",
+        creator_id=1,
+        owner_id=1,
         deleted=False,
-        is_public=False,
     )
-    db["groups"]["devs"] = Group(
+    db["groups"]["2"] = Group(
         id=2,
-        alternative_id=uuid.uuid4().hex,
-        name="devs",
-        # owner=db["users"]["2"],
+        name="joe's Group",
+        creator_id=2,
+        owner_id=2,
         deleted=False,
-        is_public=False,
     )
 
-    db["groups"]["attackers"] = Group(
-        id=3,
-        alternative_id=uuid.uuid4().hex,
-        name="attackers",
-        # owner=db["users"]["2"],
-        deleted=False,
-        is_public=False,
-    )
 
-    db["groups"]["my_group"] = Group(
-        id=4,
-        alternative_id=uuid.uuid4().hex,
-        name="my_group",
-        # owner=db["users"]["2"],
-        deleted=False,
-        is_public=False,
+def _register_group_memberships_in_db() -> None:
+    """Register test group memberships in the simple key-value data store.
+
+    This adds the following users to the following groups with the following
+    permissions:
+
+    - user's Group
+        - user: read, write, share_read, share_write
+    - joe's Group
+        - user: read, share_read
+        - joe: read, write, share_read, share_write
+    """
+    db["group_memberships"]["1"] = GroupMembership(
+        user_id=1,
+        group_id=1,
+        read=True,
+        write=True,
+        share_read=True,
+        share_write=True,
+    )
+    db["group_memberships"]["2"] = GroupMembership(
+        user_id=2,
+        group_id=2,
+        read=True,
+        write=True,
+        share_read=True,
+        share_write=True,
+    )
+    db["group_memberships"]["3"] = GroupMembership(
+        user_id=1,
+        group_id=2,
+        read=True,
+        write=False,
+        share_read=True,
+        share_write=False,
     )
 
 
 def _register_test_resources_in_db() -> None:
     """Register test resources in the simple key-value data store.
 
-    This registers the following resources into the "resources table":
+    This creates two resources:
 
-    - foo
-    - test
-    - hello
-    - world
-
+    - Resource 1
+        - Creator: user
+        - Owner: user's Group
+    - Resource 2
+        - Creator: joe
+        - Owner: joe's Group
     """
-    db["resources"]["foo"] = Dioptra_Resource(
+    db["resources"]["1"] = PrototypeResource(
         id=1,
-        alternative_id=uuid.uuid4().hex,
-        name="foo",
-        owner=db["groups"]["devs"],
-        is_public=False,
-        shared_with=[],
+        creator_id=1,
+        owner_id=1,
         deleted=False,
     )
-    db["resources"]["test"] = Dioptra_Resource(
+    db["resources"]["2"] = PrototypeResource(
         id=2,
-        alternative_id=uuid.uuid4().hex,
-        name="test",
-        owner=db["groups"]["testers"],
-        is_public=False,
-        shared_with=[],  # what if we share with the owning group?
-        deleted=False,
-    )
-
-    db["resources"]["hello"] = Dioptra_Resource(
-        id=3,
-        alternative_id=uuid.uuid4().hex,
-        name="hello",
-        owner=db["groups"]["testers"],
-        is_public=True,
-        shared_with=[],
-        deleted=False,
-    )
-
-    db["resources"]["world"] = Dioptra_Resource(
-        id=5,
-        alternative_id=uuid.uuid4().hex,
-        name="world",
-        owner=db["groups"]["attackers"],
-        is_public=False,
-        shared_with=[],
+        creator_id=2,
+        owner_id=2,
         deleted=False,
     )
 
 
-def _give_users_roles_on_groups() -> None:
-    """This creates the following roles and assigns them to users in the simple
-    key-value data store.
+def _register_test_shared_resources_in_db() -> None:
+    """Register a shared resource in the simple key-value data store.
 
-    - user 1 given admin for group attackers
-    - user 2 given reader for group devs
-    - user 4 given reader for group attackers
-    - user 4 given writer for group attackers
+    The information for the shared resource is as follows:
+
+    - Resource 2
+        - Owner: joe's Group
+        - Shared with: user's Group
+        - Shared created by: user
+        - Permissions: read
     """
-
-    db["users"]["1"].add_role(Role(name="admin", resource=db["groups"]["attackers"]))
-    db["users"]["2"].add_role(Role(name="reader", resource=db["groups"]["devs"]))
-    # User 3 has no roles and should be able to access nothing.
-    db["users"]["4"].add_role(Role(name="writer", resource=db["groups"]["attackers"]))
-    db["users"]["4"].add_role(Role(name="reader", resource=db["groups"]["attackers"]))
+    db["shared_resources"]["1"] = SharedPrototypeResource(
+        id=1,
+        creator_id=1,
+        resource_id=2,
+        group_id=1,
+        deleted=False,
+        readable=True,
+        writable=False,
+    )

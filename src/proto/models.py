@@ -32,7 +32,7 @@ Examples:
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Any, TypedDict, Union
+from typing import Any, TypedDict, cast
 
 
 class PrototypeDb(TypedDict):
@@ -47,10 +47,18 @@ class PrototypeDb(TypedDict):
 
     users: dict[str, User]
     groups: dict[str, Group]
-    resources: dict[str, Dioptra_Resource]
+    group_memberships: dict[str, GroupMembership]
+    resources: dict[str, PrototypeResource]
+    shared_resources: dict[str, SharedPrototypeResource]
 
 
-db: PrototypeDb = PrototypeDb(users={}, groups={}, resources= {})
+db: PrototypeDb = PrototypeDb(
+    users={},
+    groups={},
+    group_memberships={},
+    resources={},
+    shared_resources={},
+)
 
 
 @dataclass
@@ -73,7 +81,11 @@ class User(object):
     name: str
     password: str
     deleted: bool
-    roles: list[Role]
+
+    @property
+    def groups(self) -> list[GroupMembership]:
+        """A list of the user's group memberships."""
+        return [x for x in db["group_memberships"].values() if self.id == x.user_id]
 
     @property
     def is_authenticated(self) -> bool:
@@ -105,129 +117,203 @@ class User(object):
             A JSON serializable dictionary containing the user's information.
         """
         return asdict(self)
-    
-    def add_role(self, role: Role) -> None:
-        """Give a user a role on an item.
+
+
+@dataclass
+class Group(object):
+    """An application group.
+
+    Attributes:
+        id: The unique identifier of the group.
+        name: Human-readable name for the group.
+        creator_id: The id for the user that created the group.
+        owner_id: The id for the user that owns the group.
+        deleted: Whether the group has been deleted.
+    """
+
+    id: int
+    name: str
+    creator_id: int
+    owner_id: int
+    deleted: bool
+
+    @property
+    def creator(self) -> User:
+        """The user that created the group."""
+        return db["users"][str(self.creator_id)]
+
+    @property
+    def owner(self) -> User:
+        """The user that owns the group."""
+        return db["users"][str(self.owner_id)]
+
+    @property
+    def users(self) -> list[GroupMembership]:
+        """The users that are members of the group."""
+        return [x for x in db["group_memberships"].values() if self.id == x.group_id]
+
+    @property
+    def resources(self) -> list[PrototypeResource]:
+        """The resources that the group owns."""
+        return [x for x in db["resources"].values() if self.id == x.owner.id]
+
+    @property
+    def shared_resources(self) -> list[SharedPrototypeResource]:
+        """The resources that have been shared with the group."""
+        return [x for x in db["shared_resources"].values() if self.id == x.group.id]
+
+    def check_membership(self, user: User) -> bool:
+        """Check if the user is a member of the group.
+
+        Args:
+            user: The user to check.
 
         Returns:
-            None
+            True if the user is a member of the group, False otherwise.
         """
-        return self.roles.append(role)
-    
+        return user.id in {x.user_id for x in self.users}
+
+
 @dataclass
-class Dioptra_Resource(object):
-    """A registered resource of the application.
+class GroupMembership(object):
+    """A mapping of users to groups.
+
+    Attributes:
+        group_id: The id for the group that the user is a member of.
+        user_id: The id for the user that is a member of the group.
+        read: Whether the user can read the group's resources.
+        write: Whether the user can write to the group's resources.
+        share_read: Whether the user can attach read permissions when sharing a group
+            resource.
+        share_write: Whether the user can attach write permissions when sharing a
+            group resource.
+    """
+
+    user_id: int
+    group_id: int
+    read: bool
+    write: bool
+    share_read: bool
+    share_write: bool
+
+    @property
+    def user(self) -> User:
+        """The user that is a member of the group."""
+        return db["users"][str(self.user_id)]
+
+    @property
+    def group(self) -> Group:
+        """The group that the user is a member of."""
+        return db["groups"][str(self.group_id)]
+
+
+@dataclass
+class PrototypeResource(object):
+    """A representation of a resource in the application.
 
     Attributes:
         id: The unique identifier of the resource.
-        alternative_id: A UUID as a 32-character lowercase hexadecimal string that
-            serves as the user's alternative identifier. The alternative_id is
-            changed when the user's password is changed or the user revokes all
-            active sessions via a full logout.
-        name: The user's username used for logging in.
+        creator_id: The id for the user that created the resource.
+        owner_id: The id for the group that owns the resource.
         deleted: Whether the resource has been deleted.
     """
 
     id: int
-    alternative_id: str
-    name: str
-    owner: User
-    is_public: bool # not sure if useful
-    shared_with: list[Group] #for reading/ writing
-    #shared_with_write: list[Group] #for wriiting
+    creator_id: int
+    owner_id: int
     deleted: bool
 
-    
+    @property
+    def creator(self) -> User:
+        """The user that created the resource."""
+        return db["users"][str(self.creator_id)]
 
     @property
-    def is_active(self) -> bool:
-        """Return True if the user account is active, False otherwise."""
-        return not self.deleted
+    def owner(self) -> Group:
+        """The group that owns the resource."""
+        return db["groups"][str(self.owner_id)]
 
-    def get_id(self) -> str:
-        """Get the user's session identifier.
+    @property
+    def shares(self) -> list[SharedPrototypeResource]:
+        """The groups that the resource is shared with."""
+        return [x for x in db["shared_resources"].values() if self.id == x.resource.id]
+
+    def check_permission(self, user: User, action: str) -> bool:
+        """Check if the user has permission to perform the specified action.
+
+        Args:
+            user: The user to check.
+            action: The action to check.
 
         Returns:
-            The user's identifier as a string.
+            True if the user has permission to perform the action, False otherwise.
         """
-        return str(self.alternative_id)
+        membership = next((x for x in self.owner.users if x.user_id == user.id), None)
 
-    def to_json(self) -> dict[str, Any]:
-        """Convert the user model to a JSON serializable dictionary.
+        if membership is None:
+            return False
 
-        Returns:
-            A JSON serializable dictionary containing the user's information.
-        """
-        return asdict(self)
-    
-    def share_read(self, actor):
-        self.shared_with.append(actor)
+        return cast(bool, getattr(membership, action))
 
-    def unshare_read(self, actor):
-        self.shared_with.remove(actor)
 
-    # def share_write(self, actor):
-    #     self.shared_with_write.append(actor)
-
-    # def unshare_write(self, actor):
-    #     self.shared_with_write.remove(actor)
-    
 @dataclass
-class Group(object):
-    """A registered group of the application.
+class SharedPrototypeResource(object):
+    """A representation of a shared resource in the application.
 
     Attributes:
-        id: The unique identifier of the user.
-        alternative_id: A UUID as a 32-character lowercase hexadecimal string that
-            serves as the user's alternative identifier. The alternative_id is
-            changed when the user's password is changed or the user revokes all
-            active sessions via a full logout.
-        name: The user's username used for logging in.
-        password: The user's password.
-        deleted: Whether the user account has been deleted.
+        id: The unique identifier of the resource.
+        creator_id: The id for the user that created the shared resource.
+        resource_id: The id for the resource that is being shared.
+        group_id: The id for the group that the resource is being shared with.
+        deleted: Whether the shared resource has been deleted.
+        readable: Whether the shared resource is readable.
+        writable: Whether the shared resource is writable.
     """
 
     id: int
-    alternative_id: str
-    name: str
-    is_public: bool # not sure if useful
+    creator_id: int
+    resource_id: int
+    group_id: int
     deleted: bool
-
-
-     #resources:list[Dioptra_Resource] # I think this is unncessary and can be done with fields?
-
-    
+    readable: bool
+    writable: bool
 
     @property
-    def is_active(self) -> bool:
-        """Return True if the user account is active, False otherwise."""
-        return not self.deleted
+    def creator(self) -> User:
+        """The user that created the shared resource."""
+        return db["users"][str(self.creator_id)]
 
     @property
-    def is_anonymous(self) -> bool:
-        """Return True if the user is registered, False otherwise."""
-        return False
+    def resource(self) -> PrototypeResource:
+        """The resource that is being shared."""
+        return db["resources"][str(self.resource_id)]
 
-    def get_id(self) -> str:
-        """Get the user's session identifier.
+    @property
+    def group(self) -> Group:
+        """The group that the resource is being shared with."""
+        return db["groups"][str(self.group_id)]
+
+    def check_permission(self, user: User, action: str) -> bool:
+        """Check if the user has permission to perform the specified action.
+
+        Args:
+            user: The user to check.
+            action: The action to check.
 
         Returns:
-            The user's identifier as a string.
+            True if the user has permission to perform the action, False otherwise.
         """
-        return str(self.alternative_id)
+        membership = next((x for x in self.group.users if x.user_id == user.id), None)
 
-    def to_json(self) -> dict[str, Any]:
-        """Convert the user model to a JSON serializable dictionary.
+        if membership is None:
+            return False
 
-        Returns:
-            A JSON serializable dictionary containing the user's information.
-        """
-        return asdict(self)
+        group_permission = cast(bool, getattr(membership, action))
+        share_permission = cast(
+            bool, getattr(self, {"read": "readable", "write": "writable"}[action])
+        )
 
-@dataclass
-class Role:
-    name: str
-    resource: Union[ Group, Dioptra_Resource]
+        return group_permission and share_permission
 
 
 if __name__ == "__main__":

@@ -1,0 +1,5 @@
+recursive-include src/proto *.polar
+
+graft tests
+
+global-exclude .* *.py[co]

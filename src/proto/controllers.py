@@ -311,12 +311,12 @@ class TestPluginResource(Resource):
 @world_api.route("/")
 class WorldResource(Resource):
     @login_required
-    @authorize("read")
     def get(self) -> dict[str, Any]:
         """Responds with the user's information.
 
         Must be logged in.
         """
+        
         return SERVICES.world.show_user_info()
 
     @login_required
