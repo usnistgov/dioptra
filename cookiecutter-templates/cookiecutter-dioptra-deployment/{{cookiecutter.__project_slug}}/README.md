@@ -9,6 +9,7 @@ A collection of scripts, configuration files, and Docker Compose files for initi
   - [Mounting folders in the worker containers](#mounting-folders-in-the-worker-containers)
     - [Mounting a folder on the host machine](#mounting-a-folder-on-the-host-machine)
     - [Mounting a folder on an NFS share](#mounting-a-folder-on-an-nfs-share)
+  - [Assigning multiple GPUs per worker](#assigning-multiple-gpus-per-worker)
 - [Initializing the deployment](#initializing-the-deployment)
 - [Starting the deployment](#starting-the-deployment)
   - [Using Docker Compose](#using-docker-compose)
@@ -128,6 +129,22 @@ The `:ro` at the end will mount the NFS share as read-only within the worker con
     - worker-ca-certificates:/usr/local/share/ca-certificates:rw
     - worker-etc-ssl:/etc/ssl:rw
     - dioptra-datasets:/datasets:ro
+```
+
+### Assigning multiple GPUs per worker
+
+To assign multiple GPUs to a worker, modify the `NVIDIA_VISIBLE_DEVICES` environment variable that is set in the **tfgpu** and **pytorch-gpu** container blocks:
+
+```yaml
+  environment:
+    NVIDIA_VISIBLE_DEVICES: 0,1
+```
+
+To allow a worker to use all available GPUs, set `NVIDIA_VISIBLE_DEVICES` to `all`:
+
+```yaml
+  environment:
+    NVIDIA_VISIBLE_DEVICES: all
 ```
 
 ## Initializing the deployment

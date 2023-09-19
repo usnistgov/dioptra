@@ -483,6 +483,23 @@ The ``:ro`` at the end will mount the NFS share as read-only within the worker c
        - worker-etc-ssl:/etc/ssl:rw
        - dioptra-datasets:/datasets:ro
 
+Assigning multiple GPUs per worker
+##################################
+
+To assign multiple GPUs to a worker, modify the ``NVIDIA_VISIBLE_DEVICES`` environment variable that is set in the **tfgpu** and **pytorch-gpu** container blocks:
+
+.. code:: yaml
+
+     environment:
+       NVIDIA_VISIBLE_DEVICES: 0,1
+
+To allow a worker to use all available GPUs, set ``NVIDIA_VISIBLE_DEVICES`` to ``all``:
+
+.. code:: yaml
+
+     environment:
+       NVIDIA_VISIBLE_DEVICES: all
+
 .. _getting-started-running-dioptra-init-deployment:
 
 Initializing the deployment
