@@ -186,7 +186,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: set up docker buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: setup dockerfile and output folder
         run: |
