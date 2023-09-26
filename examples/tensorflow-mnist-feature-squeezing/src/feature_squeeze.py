@@ -20,6 +20,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+import sklearn  # noqa: F401
 import tensorflow as tf
 
 tf.compat.v1.disable_eager_execution()
@@ -30,7 +31,6 @@ from typing import Dict, List
 
 import click
 import mlflow
-import numpy as np
 import structlog
 from prefect import Flow, Parameter
 

@@ -21,7 +21,6 @@ from typing import Dict, List
 
 import click
 import mlflow
-import numpy as np
 import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger

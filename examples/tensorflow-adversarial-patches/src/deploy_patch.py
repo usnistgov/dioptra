@@ -15,7 +15,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-
 import os
 from pathlib import Path
 from typing import Dict, List
@@ -23,6 +22,7 @@ from typing import Dict, List
 import click
 import mlflow
 import numpy as np
+import sklearn  # noqa: F401
 import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger

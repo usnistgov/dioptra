@@ -17,15 +17,14 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
 import os
-import tarfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import click
 import mlflow
+import sklearn  # noqa: F401
 import structlog
-from mlflow.tracking import MlflowClient
-from prefect import Flow, Parameter, case
+from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
 from structlog.stdlib import BoundLogger
 
