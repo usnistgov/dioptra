@@ -29,13 +29,15 @@ from typing import Any, Callable, List, Optional
 import structlog
 from flask import Flask, jsonify
 from flask_cors import CORS
-from flask_injector import FlaskInjector
 from flask_migrate import Migrate
 from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
+from injector import Injector
 from sqlalchemy import MetaData
 from structlog.stdlib import BoundLogger
+
+from dioptra.restapi.utils import setup_injection
 
 from .__version__ import __version__ as API_VERSION
 
@@ -57,18 +59,15 @@ db: SQLAlchemy = SQLAlchemy(
 migrate: Migrate = Migrate()
 
 
-def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
+def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -> Flask:
     """Creates and configures a fresh instance of the Dioptra REST API.
 
     Args:
         env: The configuration environment to use for the application. The allowed
             values are `"dev"`, `"prod"` and `"test"`. If `None`, the `"test"`
             configuration is used. The default is `None`.
-        inject_dependencies: Controls whether or not the dependency injection settings
-            in the ``dependencies.py`` files will be used. If `False`, then dependency
-            injection is not used and the configuration of the shared services must be
-            handled after the :py:class:`~flask.Flask` object is created. This is mostly
-            useful when performing unit tests. The default is `True`.
+        injector: A dependency injector used to invoke restx views.  If None,
+            a default will be created.
 
     Returns:
         An initialized and configured :py:class:`~flask.Flask` object.
@@ -91,11 +90,9 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
         doc=app.config["DIOPTRA_SWAGGER_PATH"],
         url_scheme=app.config["DIOPTRA_BASE_URL"],
     )
-    modules: List[Callable[..., Any]] = [bind_dependencies]
 
     register_routes(api, app)
     register_error_handlers(api)
-    register_providers(modules)
     csrf.init_app(app)
     db.init_app(app)
 
@@ -113,9 +110,11 @@ def create_app(env: Optional[str] = None, inject_dependencies: bool = True):
         log = LOGGER.new(request_id=str(uuid.uuid4()))  # noqa: F841
         return jsonify("healthy")
 
-    if not inject_dependencies:
-        return app
+    if not injector:
+        modules: List[Callable[..., Any]] = [bind_dependencies]
+        register_providers(modules)
+        injector = Injector(modules)
 
-    FlaskInjector(app=app, modules=modules)
+    setup_injection(api, injector)
 
     return app
