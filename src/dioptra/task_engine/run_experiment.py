@@ -31,10 +31,6 @@ def _parse_args() -> argparse.Namespace:
     """
     arg_parser = argparse.ArgumentParser(
         description="Read/process declarative experiment description",
-        epilog="""
-        By default, if neither --no-run nor --run-id are given, an experiment
-        runs in the context of a new MLflow run.
-        """,
     )
 
     arg_parser.add_argument(
@@ -64,26 +60,6 @@ def _parse_args() -> argparse.Namespace:
         """,
         choices=["all", "debug", "info", "warning", "error", "critical"],
         default="info",
-    )
-
-    run_group = arg_parser.add_mutually_exclusive_group()
-
-    run_group.add_argument(
-        "--run-id",
-        help="""
-        Resume the given MLflow run, for this experiment.
-        """,
-    )
-
-    run_group.add_argument(
-        "--no-run",
-        help="""
-        Do not run the experiment in the context of a MLflow run.
-        """,
-        # This is a "negative" option, i.e. its presence turns something off,
-        # but I'd prefer to keep it positive in the resulting args object.
-        dest="use_run",
-        action="store_false",
     )
 
     return arg_parser.parse_args()
@@ -181,13 +157,7 @@ def main() -> None:
     experiment_desc = yaml.safe_load(args.file)
     global_parameters = _cmdline_params_to_map(args.P)
 
-    mlflow_run = args.use_run
-    if mlflow_run and args.run_id:
-        mlflow_run = args.run_id
-
-    dioptra.task_engine.task_engine.run_experiment(
-        experiment_desc, global_parameters, mlflow_run
-    )
+    dioptra.task_engine.task_engine.run_experiment(experiment_desc, global_parameters)
 
 
 if __name__ == "__main__":
