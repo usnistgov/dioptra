@@ -23,10 +23,10 @@ from typing import Any, Callable, List, Optional
 
 from boto3.session import Session
 from botocore.client import BaseClient
-from flask_injector import request
 from injector import Binder, Module, provider
 from redis import Redis
 
+from dioptra.restapi.shared.request_scope import request
 from dioptra.restapi.shared.rq.service import RQService
 
 from .schema import JobFormSchema

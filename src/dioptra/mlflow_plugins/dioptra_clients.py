@@ -36,7 +36,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 class DioptraDatabaseClient(object):
     @property
     def app(self) -> Flask:
-        app: Flask = create_app(env=self.restapi_env)
+        app = create_app(env=self.restapi_env)
         return app
 
     @property

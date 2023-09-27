@@ -19,9 +19,10 @@ from __future__ import annotations
 
 from typing import Any, Callable, List
 
-from flask_injector import request
 from injector import Binder, Module, provider
 from mlflow.tracking import MlflowClient
+
+from dioptra.restapi.shared.request_scope import request
 
 from .schema import ExperimentRegistrationFormSchema
 

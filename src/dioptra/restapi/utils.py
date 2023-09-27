@@ -23,11 +23,16 @@
 """
 from __future__ import annotations
 
-from typing import List
+import functools
+from typing import Any, Callable, List, Protocol, Type
 
-from flask_restx import Namespace
+from flask.views import View
+from flask_restx import Api, Namespace, Resource
 from flask_restx.reqparse import RequestParser
+from injector import Injector
 from typing_extensions import TypedDict
+
+from dioptra.restapi.shared.request_scope import set_request_scope_callbacks
 
 
 class ParametersSchema(TypedDict, total=False):
@@ -79,3 +84,98 @@ def slugify(text: str) -> str:
     """
 
     return text.lower().strip().replace(" ", "-")
+
+
+class _ClassBasedViewFunction(Protocol):
+    """
+    We distinguish a class-based view function from other view functions
+    by looking for a "view_class" attribute on the function.
+    """
+
+    view_class: Type[View]
+
+    def __call__(self, *args, **kwargs) -> Any:
+        ...
+
+
+def _new_class_view_function(
+    func: _ClassBasedViewFunction, injector: Injector, api: Api
+) -> Callable[..., Any]:
+    """
+    Create a view function which supports injection, based on the given
+    class-based view function.  "Wrapping" func won't work here, in the sense
+    that our view function can't delegate to func since the latter does not
+    support dependency-injected view object creation.  So we create a brand new
+    one (@wrap'd, so it has the look of func at least), which does
+    dependency-injected view creation.
+
+    Args:
+        func: The old class-based view function
+        injector: An injector
+        api: The flask_restx Api instance
+
+    Returns:
+        A new view function
+    """
+
+    is_restx_resource = issubclass(func.view_class, Resource)
+
+    additional_kwargs = {}
+    if is_restx_resource:
+        additional_kwargs["api"] = api
+
+    # Honoring init_every_request is simple enough to do, so why not.
+    # It was added in Flask 2.2.0; it behaved as though True, previously.
+    init_every_request = getattr(func.view_class, "init_every_request", True)
+
+    if not init_every_request:
+        view_obj = injector.create_object(
+            func.view_class, additional_kwargs=additional_kwargs
+        )
+
+    @functools.wraps(
+        func,
+        assigned=functools.WRAPPER_ASSIGNMENTS
+        + ("view_class", "methods", "provide_automatic_options"),
+    )
+    def new_view_func(*args, **kwargs):
+        nonlocal view_obj
+        if init_every_request:
+            view_obj = injector.create_object(
+                func.view_class, additional_kwargs=additional_kwargs
+            )
+
+        return view_obj.dispatch_request(*args, **kwargs)
+
+    if is_restx_resource:
+        new_view_func = api.output(new_view_func)
+
+    return new_view_func
+
+
+def setup_injection(api: Api, injector: Injector) -> None:
+    """
+    Fixup the given flask app such that class-based view functions support
+    dependency injection.
+
+    Args:
+        api: A flask_restx Api object.  This contains the flask app, and is
+            also necessary to make restx views (resources) work with
+            dependency injection.
+        injector: An injector
+    """
+
+    new_view_func: Callable[..., Any]
+
+    for key, func in api.app.view_functions.items():
+        if hasattr(func, "view_class"):
+            new_view_func = _new_class_view_function(func, injector, api)
+            api.app.view_functions[key] = new_view_func
+
+    set_request_scope_callbacks(api.app, injector)
+
+    # Uncomment to see more detailed logging regarding dependency injection
+    # in debug mode.
+    # if api.app.debug:
+    #     injector_logger = logging.getLogger("injector")
+    #     injector_logger.setLevel(logging.DEBUG)

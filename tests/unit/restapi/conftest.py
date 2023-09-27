@@ -25,11 +25,12 @@ from _pytest.monkeypatch import MonkeyPatch
 from boto3.session import Session
 from botocore.client import BaseClient
 from flask import Flask
-from flask_injector import FlaskInjector, request
 from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from injector import Binder, Injector
 from redis import Redis
+from dioptra.restapi.utils import setup_injection
+from dioptra.restapi.shared.request_scope import request
 
 
 @pytest.fixture(scope="session")
@@ -169,8 +170,8 @@ def app(dependency_modules: List[Any], monkeypatch: MonkeyPatch) -> Flask:
 
     monkeypatch.setattr(dioptra.restapi.routes, "register_routes", register_test_routes)
 
-    app: Flask = create_app(env="test", inject_dependencies=False)
-    FlaskInjector(app=app, modules=dependency_modules)
+    injector = Injector(dependency_modules)
+    app = create_app(env="test", injector=injector)
 
     return app
 
