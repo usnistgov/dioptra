@@ -20,8 +20,6 @@ import logging
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, Union
 
-import mlflow
-
 import dioptra.pyplugs
 from dioptra.sdk.exceptions.task_engine import (
     IllegalOutputReferenceError,
@@ -440,7 +438,7 @@ def _run_step(
     return output
 
 
-def _run_experiment(
+def run_experiment(
     experiment_desc: Mapping[str, Any], global_parameters: MutableMapping[str, Any]
 ) -> None:
     """
@@ -507,42 +505,3 @@ def _run_experiment(
             if not e.context_step_name:
                 e.context_step_name = step_name
             raise
-
-
-def run_experiment(
-    experiment_desc: Mapping[str, Any],
-    global_parameters: MutableMapping[str, Any],
-    mlflow_run: Any = True,
-):
-    """
-    Run an experiment via a declarative experiment description.
-
-    Args:
-        experiment_desc: The experiment description, as parsed YAML or
-            equivalent
-        global_parameters: External parameter values to use in the
-            experiment, as a dict
-        mlflow_run: Whether and how to use an MLflow run.  If falsey, don't
-            use a run.  If truthy and this parameter is a string, treat it as a
-            run ID, and resume that run.  If truthy but not a string (e.g.
-            True), start a new run.
-    """
-
-    # Establish mlflow contextual things first, if needed
-    if mlflow_run:
-        if isinstance(mlflow_run, str):
-            mlflow.start_run(run_id=mlflow_run)
-        else:
-            mlflow.start_run()
-
-    try:
-        _run_experiment(experiment_desc, global_parameters)
-
-        if mlflow_run:
-            mlflow.end_run()
-
-    except Exception:
-        if mlflow_run:
-            mlflow.end_run("FAILED")
-
-        raise
