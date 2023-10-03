@@ -927,7 +927,7 @@ universal-pathlib==0.0.23
     # via dioptra (pyproject.toml)
 uri-template==1.2.0
     # via jsonschema
-urllib3==1.26.16
+urllib3==1.26.17
     # via
     #   botocore
     #   databricks-cli
