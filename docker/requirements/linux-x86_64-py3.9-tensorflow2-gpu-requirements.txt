@@ -510,7 +510,7 @@ typing-extensions==4.6.3
     #   alembic
     #   dioptra (pyproject.toml)
     #   tensorflow
-urllib3==1.26.16
+urllib3==1.26.17
     # via
     #   botocore
     #   databricks-cli

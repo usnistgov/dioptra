@@ -519,7 +519,7 @@ typing-extensions==4.6.3
     #   lightning-utilities
     #   pytorch-lightning
     #   torch
-urllib3==1.26.16
+urllib3==1.26.17
     # via
     #   botocore
     #   databricks-cli
