@@ -349,7 +349,7 @@ pathspec==0.11.1
     # via black
 pendulum==2.1.2
     # via prefect
-pillow==9.5.0
+pillow==10.0.1
     # via
     #   -r docker/pip-tools/worker-requirements.in
     #   detectron2

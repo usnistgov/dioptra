@@ -311,7 +311,7 @@ passlib==1.7.4
     # via dioptra (pyproject.toml)
 pendulum==2.1.2
     # via prefect
-pillow==9.5.0
+pillow==10.0.1
     # via
     #   -r docker/pip-tools/worker-requirements.in
     #   imageio

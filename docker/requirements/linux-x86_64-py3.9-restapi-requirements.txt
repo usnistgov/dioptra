@@ -143,7 +143,7 @@ pandas==1.5.3
     #   mlflow
 passlib==1.7.4
     # via dioptra (pyproject.toml)
-pillow==9.5.0
+pillow==10.0.1
     # via -r docker/pip-tools/restapi-requirements.in
 prometheus-client==0.17.0
     # via prometheus-flask-exporter
