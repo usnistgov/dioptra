@@ -552,7 +552,7 @@ pendulum==2.1.2
     # via prefect
 pickleshare==0.7.5
     # via ipython
-pillow==9.5.0
+pillow==10.0.1
     # via
     #   dioptra (pyproject.toml)
     #   imageio

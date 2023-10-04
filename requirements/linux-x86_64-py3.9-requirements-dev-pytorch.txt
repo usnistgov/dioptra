@@ -618,7 +618,7 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pillow==9.5.0
+pillow==10.0.1
     # via
     #   detectron2
     #   dioptra (pyproject.toml)
