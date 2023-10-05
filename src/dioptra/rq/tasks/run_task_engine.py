@@ -45,6 +45,7 @@ def _get_logger() -> Any:
 
 
 def run_task_engine(
+    experiment_id: int,
     experiment_desc: Mapping[str, Any],
     global_parameters: MutableMapping[str, Any],
     s3: Optional[BaseClient] = None,
@@ -53,6 +54,7 @@ def run_task_engine(
     Run an experiment via the task engine.
 
     Args:
+        experiment_id: The ID of the experiment to use for this run
         experiment_desc: A declarative experiment description, as a mapping
         global_parameters: Global parameters for this run, as a mapping from
             parameter name to value
@@ -89,13 +91,16 @@ def run_task_engine(
                 dioptra_custom_plugins_s3_uri,
             )
 
-            _run_experiment(rq_job_id, experiment_desc, global_parameters)
+            _run_experiment(
+                rq_job_id, experiment_id, experiment_desc, global_parameters
+            )
         else:
             log.error("Experiment description was invalid!")
 
 
 def _run_experiment(
     rq_job_id: str,
+    experiment_id: int,
     experiment_desc: Mapping[str, Any],
     global_parameters: MutableMapping[str, Any],
 ):
@@ -106,6 +111,7 @@ def _run_experiment(
     Args:
         rq_job_id: The redis queue job ID for this job, which is also the
             Dioptra job ID
+        experiment_id: The ID of the experiment to use for this run
         experiment_desc: A declarative experiment description, as a mapping
         global_parameters: Global parameters for this run, as a mapping from
             parameter name to value
@@ -113,6 +119,7 @@ def _run_experiment(
     log = _get_logger()
     db_client = None
 
+    mlflow.set_experiment(experiment_id=str(experiment_id))
     run = mlflow.start_run()
 
     try:
