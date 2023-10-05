@@ -140,7 +140,7 @@ def _run_experiment(
         run_experiment(experiment_desc, global_parameters)
 
         log.info("=== Run succeeded ===")
-        mlflow.end_run("FINISHED")
+        mlflow.end_run()
         db_client.update_job_status(rq_job_id, "finished")
 
     except Exception:
