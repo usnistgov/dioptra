@@ -26,6 +26,7 @@ def test_run_task_engine(monkeypatch, tmp_path):
     mlflow_params = {}
     mlflow_artifacts = {}
     mlflow_run_status = None
+    mlflow_experiment_id = None
 
     mlflow_run_info = mlflow.entities.RunInfo(
         None, "exp1", "user1", "happy", "now", None, None, run_id="run_123"
@@ -61,6 +62,10 @@ def test_run_task_engine(monkeypatch, tmp_path):
         nonlocal mlflow_run_status
         mlflow_run_status = status
 
+    def mlflow_set_experiment(experiment_id):
+        nonlocal mlflow_experiment_id
+        mlflow_experiment_id = experiment_id
+
     def dioptra_set_job_status(self, job_id, status):
         dioptra_job["status"] = status
 
@@ -72,6 +77,7 @@ def test_run_task_engine(monkeypatch, tmp_path):
     monkeypatch.setattr(mlflow, "set_tag", mlflow_set_tag)
     monkeypatch.setattr(mlflow, "log_dict", mlflow_add_artifact)
     monkeypatch.setattr(mlflow, "log_params", mlflow_set_params)
+    monkeypatch.setattr(mlflow, "set_experiment", mlflow_set_experiment)
     monkeypatch.setattr(
         DioptraDatabaseClient, "get_job", lambda self, job_id: dioptra_job
     )
@@ -239,7 +245,7 @@ def test_run_task_engine(monkeypatch, tmp_path):
         )
 
         dioptra.rq.tasks.run_task_engine.run_task_engine(
-            silly_experiment, global_experiment_params, s3
+            1, silly_experiment, global_experiment_params, s3
         )
 
     file1 = tmp_path / "dioptra_builtins/file1.dat"
@@ -259,6 +265,7 @@ def test_run_task_engine(monkeypatch, tmp_path):
 
     assert dioptra_job["status"] == "finished"
     assert dioptra_job["mlflow_run_id"] == mlflow_run.info.run_id
+    assert mlflow_experiment_id == "1"
     assert mlflow_run_status == "FINISHED"
     assert mlflow_tags == {
         DIOPTRA_JOB_ID: dioptra_job["job_id"],
