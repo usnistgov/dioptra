@@ -22,7 +22,7 @@ entry_points:
       data_dir: {type: path, default: "/dioptra/data/Mnist/training" }
       model_name: { type: string, default: "mnist_adversarial_patch_le_net" }
       model_version: { type: string, default: "1" }
-      image_size: { type: string, default: "28,28,1" }
+      image_size: { type: string, default: "[28,28,1]" }
       adv_tar_name: { type: string, default: "adversarial_patch.tar.gz" }
       adv_data_dir: { type: string, default: "adv_patches" }
       rotation_max: {type: float, default: 22.5}
@@ -36,23 +36,23 @@ entry_points:
       imagenet_preprocessing: { type: string, default: "false"}
       seed: {type: float, default: -1}
     command: >
-      python generate_patch.py
-      --data-dir {data_dir}
-      --rotation-max {rotation_max}
-      --scale-max {scale_max}
-      --scale-min {scale_min}
-      --learning-rate {learning_rate}
-      --max-iter {max_iter}
-      --patch-target {patch_target}
-      --num-patch {num_patch}
-      --num-patch-gen-samples {num_patch_gen_samples}
-      --image-size {image_size}
-      --adv-tar-name {adv_tar_name}
-      --adv-data-dir {adv_data_dir}
-      --model-name {model_name}
-      --model-version {model_version}
-      --imagenet-preprocessing {imagenet_preprocessing}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment generate_patch.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment generate_patch.yml
+      -P data_dir={data_dir}
+      -P rotation_max={rotation_max}
+      -P scale_max={scale_max}
+      -P scale_min={scale_min}
+      -P learning_rate={learning_rate}
+      -P max_iter={max_iter}
+      -P patch_target={patch_target}
+      -P num_patch={num_patch}
+      -P num_patch_gen_samples={num_patch_gen_samples}
+      -P image_size={image_size}
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P imagenet_preprocessing={imagenet_preprocessing}
+      -P seed={seed}
 
   deploy_patch:
     parameters:
@@ -60,7 +60,7 @@ entry_points:
       run_id: {type: string}
       model_name: { type: string, default: "mnist_adversarial_patch_le_net" }
       model_version: { type: string, default: "1" }
-      image_size: { type: string, default: "28,28,1" }
+      image_size: { type: string, default: "[28,28,1]" }
       adv_tar_name: { type: string, default: "adversarial_patch_dataset.tar.gz" }
       adv_data_dir: { type: string, default: "adv_patch_dataset" }
       adv_patch_tar_name: { type: string, default: "adversarial_patch.tar.gz" }
@@ -75,29 +75,29 @@ entry_points:
       scale_max: {type: float, default: 1.0}
       seed: {type: float, default: -1}
     command: >
-      python deploy_patch.py
-      --run-id {run_id}
-      --data-dir {data_dir}
-      --patch-deployment-method {patch_deployment_method}
-      --patch-application-rate {patch_application_rate}
-      --patch-scale {patch_scale}
-      --batch-size {batch_size}
-      --rotation-max {rotation_max}
-      --scale-max {scale_max}
-      --scale-min {scale_min}
-      --model-name {model_name}
-      --model-version {model_version}
-      --image-size {image_size}
-      --adv-tar-name {adv_tar_name}
-      --adv-data-dir {adv_data_dir}
-      --adv-patch-tar-name {adv_patch_tar_name}
-      --adv-patch-dir {adv_patch_dir}
-      --imagenet-preprocessing {imagenet_preprocessing}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment deploy_patch.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment deploy_patch.yml
+      -P run_id={run_id}
+      -P data_dir={data_dir}
+      -P patch_deployment_method={patch_deployment_method}
+      -P patch_application_rate={patch_application_rate}
+      -P patch_scale={patch_scale}
+      -P batch_size={batch_size}
+      -P rotation_max={rotation_max}
+      -P scale_max={scale_max}
+      -P scale_min={scale_min}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P image_size={image_size}
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P adv_patch_tar-name={adv_patch_tar_name}
+      -P adv_patch_dir={adv_patch_dir}
+      -P imagenet_preprocessing={imagenet_preprocessing}
+      -P seed={seed}
 
   spatial_smoothing:
     parameters:
-      image_size: { type: string, default: "28,28,1" }
+      image_size: { type: string, default: "[28,28,1]" }
       def_tar_name: { type: string, default: "spatial_smoothing_dataset.tar.gz" }
       def_data_dir: { type: string, default: "adv_testing" }
       batch_size: { type: float, default: 32 }
@@ -109,22 +109,22 @@ entry_points:
       dataset_name: {type: string, default: "adv_patch_dataset"}
       seed: { type: float, default: -1 }
     command: >
-      python spatial_smoothing.py
-      --image-size {image_size}
-      --def-tar-name {def_tar_name}
-      --def-data-dir {def_data_dir}
-      --batch-size {batch_size}
-      --spatial-smoothing-window-size {spatial_smoothing_window_size}
-      --spatial-smoothing-apply-fit {spatial_smoothing_apply_fit}
-      --spatial-smoothing-apply-predict {spatial_smoothing_apply_predict}
-      --dataset-run-id {dataset_run_id}
-      --dataset-tar-name {dataset_tar_name}
-      --dataset-name {dataset_name}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment spatial_smoothing.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment spatial_smoothing.yml
+      -P image_size={image_size}
+      -P def_tar_name={def_tar_name}
+      -P def_data_dir={def_data_dir}
+      -P batch_size={batch_size}
+      -P spatial_smoothing_window_size={spatial_smoothing_window_size}
+      -P spatial_smoothing_apply_fit={spatial_smoothing_apply_fit}
+      -P spatial_smoothing_apply_predict={spatial_smoothing_apply_predict}
+      -P dataset_run_id={dataset_run_id}
+      -P dataset_tar_name={dataset_tar_name}
+      -P dataset_name={dataset_name}
+      -P seed={seed}
 
   jpeg_compression:
     parameters:
-      image_size: { type: string, default: "28,28,1" }
+      image_size: { type: string, default: "[28,28,1]" }
       def_tar_name: { type: string, default: "jpeg_compression_dataset.tar.gz" }
       def_data_dir: { type: string, default: "adv_testing" }
       batch_size: { type: float, default: 32 }
@@ -137,23 +137,23 @@ entry_points:
       dataset_name: {type: string, default: "adv_patch_dataset"}
       seed: { type: float, default: -1 }
     command: >
-      python jpeg_compression.py
-      --image-size {image_size}
-      --def-tar-name {def_tar_name}
-      --def-data-dir {def_data_dir}
-      --batch-size {batch_size}
-      --jpeg-compression-channels-first {jpeg_compression_channels_first}
-      --jpeg-compression-quality {jpeg_compression_quality}
-      --jpeg-compression-apply-fit {jpeg_compression_apply_fit}
-      --jpeg-compression-apply-predict {jpeg_compression_apply_predict}
-      --dataset-run-id {dataset_run_id}
-      --dataset-tar-name {dataset_tar_name}
-      --dataset-name {dataset_name}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment jpeg_compression.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment jpeg_compression.yml
+      -P image_size={image_size}
+      -P def_tar_name={def_tar_name}
+      -P def_data_dir={def_data_dir}
+      -P batch_size={batch_size}
+      -P jpeg_compression_channels_first={jpeg_compression_channels_first}
+      -P jpeg_compression_quality={jpeg_compression_quality}
+      -P jpeg_compression_apply_fit={jpeg_compression_apply_fit}
+      -P jpeg_compression_apply_predict={jpeg_compression_apply_predict}
+      -P dataset_run_id={dataset_run_id}
+      -P dataset_tar_name={dataset_tar_name}
+      -P dataset_name={dataset_name}
+      -P seed={seed}
 
   gaussian_augmentation:
     parameters:
-      image_size: { type: string, default: "28,28,1" }
+      image_size: { type: string, default: "[28,28,1]" }
       def_tar_name: { type: string, default: "gaussian_augmentation_dataset.tar.gz" }
       def_data_dir: { type: string, default: "adv_testing" }
       batch_size: { type: float, default: 32 }
@@ -167,26 +167,25 @@ entry_points:
       dataset_name: {type: string, default: "adv_patch_dataset"}
       seed: { type: float, default: -1 }
     command: >
-      python gaussian_augmentation.py
-      --image-size {image_size}
-      --def-tar-name {def_tar_name}
-      --def-data-dir {def_data_dir}
-      --batch-size {batch_size}
-      --gaussian-augmentation-perform-data-augmentation {gaussian_augmentation_perform_data_augmentation}
-      --gaussian-augmentation-ratio {gaussian_augmentation_ratio}
-      --gaussian-augmentation-sigma {gaussian_augmentation_sigma}
-      --gaussian-augmentation-apply-fit {gaussian_augmentation_apply_fit}
-      --gaussian-augmentation-apply-predict {gaussian_augmentation_apply_predict}
-      --dataset-run-id {dataset_run_id}
-      --dataset-tar-name {dataset_tar_name}
-      --dataset-name {dataset_name}
-      --seed {seed}
-
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment gaussian_augmentation.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment gaussian_augmentation.yml
+      -P image_size={image_size}
+      -P def_tar_name={def_tar_name}
+      -P def_data_dir={def_data_dir}
+      -P batch_size={batch_size}
+      -P gaussian_augmentation_perform_data_augmentation={gaussian_augmentation_perform_data_augmentation}
+      -P gaussian_augmentation_ratio={gaussian_augmentation_ratio}
+      -P gaussian_augmentation_sigma={gaussian_augmentation_sigma}
+      -P gaussian_augmentation_apply_fit={gaussian_augmentation_apply_fit}
+      -P gaussian_augmentation_apply_predict={gaussian_augmentation_apply_predict}
+      -P dataset_run_id={dataset_run_id}
+      -P dataset_tar_name={dataset_tar_name}
+      -P dataset_name={dataset_name}
+      -P seed={seed}
 
   infer:
     parameters:
       run_id: { type: string }
-      image_size: { type: string, default: "28,28,1" }
+      image_size: { type: string, default: "[28,28,1]" }
       model_name: { type: string, default: "mnist_adversarial_patch_le_net" }
       model_version: { type: string, default: "1" }
       batch_size: { type: float, default: 32 }
@@ -195,22 +194,22 @@ entry_points:
       imagenet_preprocessing: { type: string, default: "false"}
       seed: { type: float, default: -1 }
     command: >
-      python infer.py
-      --run-id {run_id}
-      --image-size {image_size}
-      --model-name {model_name}
-      --model-version {model_version}
-      --batch-size {batch_size}
-      --adv-tar-name {adv_tar_name}
-      --adv-data-dir {adv_data_dir}
-      --imagenet-preprocessing {imagenet_preprocessing}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment infer.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment infer.yml
+      -P run_id={run_id}
+      -P image_size={image_size}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P batch_size={batch_size}
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P imagenet_preprocessing={imagenet_preprocessing}
+      -P seed={seed}
 
   train:
     parameters:
       data_dir_testing: { type: path, default: "/dioptra/data/Mnist/testing" }
       data_dir_training: { type: path, default: "/dioptra/data/Mnist/training" }
-      image_size: { type: string, default: "28,28,1" }
+      image_size: { type: string, default: "[28,28,1]" }
       model_architecture: { type: string, default: "le_net" }
       epochs: { type: float, default: 30 }
       batch_size: { type: float, default: 32 }
@@ -220,23 +219,23 @@ entry_points:
       validation_split: { type: float, default: 0.2 }
       seed: { type: float, default: -1 }
     command: >
-      python train.py
-      --data-dir-testing {data_dir_testing}
-      --data-dir-training {data_dir_training}
-      --image-size {image_size}
-      --model-architecture {model_architecture}
-      --epochs {epochs}
-      --batch-size {batch_size}
-      --register-model-name {register_model_name}
-      --learning-rate {learning_rate}
-      --optimizer {optimizer}
-      --validation-split {validation_split}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment train.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment train.yml
+      -P data_dir_testing={data_dir_testing}
+      -P data_dir_training={data_dir_training}
+      -P image_size={image_size}
+      -P model_architecture={model_architecture}
+      -P epochs={epochs}
+      -P batch_size={batch_size}
+      -P register_model_name={register_model_name}
+      -P learning_rate={learning_rate}
+      -P optimizer={optimizer}
+      -P validation_split={validation_split}
+      -P seed={seed}
 
   train_on_Mnist_patched:
     parameters:
       data_dir_testing: { type: path, default: "/dioptra/data/Mnist/testing" }
-      image_size: { type: string, default: "28,28,1" }
+      image_size: { type: string, default: "[28,28,1]" }
       model_architecture: { type: string, default: "le_net" }
       epochs: { type: float, default: 30 }
       batch_size: { type: float, default: 32 }
@@ -250,26 +249,26 @@ entry_points:
       adv_data_dir: { type: string, default: "adv_patch_dataset" }
       seed: { type: float, default: -1 }
     command: >
-      python train_on_Mnist_patched.py
-      --data-dir-testing {data_dir_testing}
-      --image-size {image_size}
-      --model-architecture {model_architecture}
-      --epochs {epochs}
-      --batch-size {batch_size}
-      --register-model-name {register_model_name}
-      --learning-rate {learning_rate}
-      --optimizer {optimizer}
-      --validation-split {validation_split}
-      --dataset-run-id-testing {dataset_run_id_testing}
-      --dataset-run-id-training {dataset_run_id_training}
-      --adv-tar-name {adv_tar_name}
-      --adv-data-dir {adv_data_dir}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment train_on_Mnist_patched.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment train_on_Mnist_patched.yml
+      -P data_dir_testing={data_dir_testing}
+      -P image_size={image_size}
+      -P model_architecture={model_architecture}
+      -P epochs={epochs}
+      -P batch_size={batch_size}
+      -P register_model_name={register_model_name}
+      -P learning_rate={learning_rate}
+      -P optimizer={optimizer}
+      -P validation_split={validation_split}
+      -P dataset_run_id_testing={dataset_run_id_testing}
+      -P dataset_run_id_training={dataset_run_id_training}
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P seed={seed}
 
   train_on_Fruits360_patched:
     parameters:
       data_dir_testing: { type: path, default: "/dioptra/data/Mnist/testing" }
-      image_size: { type: string, default: "28,28,1" }
+      image_size: { type: string, default: "[28,28,1]" }
       model_architecture: { type: string, default: "le_net" }
       epochs: { type: float, default: 30 }
       batch_size: { type: float, default: 32 }
@@ -283,26 +282,26 @@ entry_points:
       adv_data_dir: { type: string, default: "adv_patch_dataset" }
       seed: { type: float, default: -1 }
     command: >
-      python train_on_Fruits360_patched.py
-      --data-dir-testing {data_dir_testing}
-      --image-size {image_size}
-      --model-architecture {model_architecture}
-      --epochs {epochs}
-      --batch-size {batch_size}
-      --register-model-name {register_model_name}
-      --learning-rate {learning_rate}
-      --optimizer {optimizer}
-      --validation-split {validation_split}
-      --dataset-run-id-testing {dataset_run_id_testing}
-      --dataset-run-id-training {dataset_run_id_training}
-      --adv-tar-name {adv_tar_name}
-      --adv-data-dir {adv_data_dir}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment train_on_Fruits360_patched.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment train_on_Fruits360_patched.yml
+      -P data_dir_testing={data_dir_testing}
+      -P image_size={image_size}
+      -P model_architecture={model_architecture}
+      -P epochs={epochs}
+      -P batch_size={batch_size}
+      -P register_model_name={register_model_name}
+      -P learning_rate={learning_rate}
+      -P optimizer={optimizer}
+      -P validation_split={validation_split}
+      -P dataset_run_id_testing={dataset_run_id_testing}
+      -P dataset_run_id_training={dataset_run_id_training}
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P seed={seed}
 
   init_model:
     parameters:
       data_dir: { type: path, default: "/dioptra/data/ImageNet-Kaggle-2017/images/ILSVRC/Data/CLS-LOC/val-sorted-1000" }
-      image_size: { type: string, default: "28,28,1" }
+      image_size: { type: string, default: "[28,28,1]" }
       model_architecture: { type: string, default: "resnet50" }
       batch_size: { type: float, default: 32 }
       register_model_name: { type: string, default: "imagenet_adversarial_patches_pretrained_resnet50" }
@@ -311,13 +310,13 @@ entry_points:
       imagenet_preprocessing: { type: string, default: "false"}
       seed: { type: float, default: -1 }
     command: >
-      python init_model.py
-      --data-dir {data_dir}
-      --image-size {image_size}
-      --model-architecture {model_architecture}
-      --batch-size {batch_size}
-      --register-model-name {register_model_name}
-      --learning-rate {learning_rate}
-      --optimizer {optimizer}
-      --imagenet-preprocessing {imagenet_preprocessing}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment init_model.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment init_model.yml
+      -P data_dir={data_dir}
+      -P image_size={image_size}
+      -P model_architecture={model_architecture}
+      -P batch_size={batch_size}
+      -P register_model_name={register_model_name}
+      -P learning_rate={learning_rate}
+      -P optimizer={optimizer}
+      -P imagenet_preprocessing={imagenet_preprocessing}
+      -P seed={seed}

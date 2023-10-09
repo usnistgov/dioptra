@@ -1,6 +1,7 @@
 types:
   rng:
   optimizer:
+  path:
   name_parameters:
     mapping:
       name: string
@@ -27,19 +28,23 @@ types:
     union: [string, "null"]
   num_null:
     union: [number, "null"]
-
+  str_path:
+    union: [string, path]
 parameters:
   seed: -1
   optimizer_name: Adam
   learning_rate: 0.001
-  training_dir: /nfs/data/training
-  testing_dir: /nfs/data/testing
+  testing_dir: /dioptra/data/Mnist/testing
   image_size: [28, 28, 1]
   validation_split: 0.2
   batch_size: 32
   model_architecture: le_net
   epochs: 30
   register_model_name: ""
+  adv_tar_name: adversarial_patch_dataset.tar.gz
+  dataset_run_id_testing: a123
+  dataset_run_id_training: a123
+  adv_data_dir: adv_patch_dataset
 
 tasks:
   init_rng:
@@ -179,6 +184,36 @@ tasks:
         type: string
       - model_dir: string
 
+  prepend_cwd:
+    plugin:
+      dioptra_custom.evaluation.mlflow.prepend_cwd
+    inputs:
+      - path: string
+    outputs: 
+      ret: string
+
+  download_all_artifacts_in_run:
+    plugin: dioptra_builtins.artifacts.mlflow.download_all_artifacts_in_run
+    inputs:
+      - run_id: string
+      - artifact_path: string
+      - name: destination_path
+        type: str_null
+        required: false
+    outputs:
+      ret: string
+
+  extract_tarfile:
+    plugin: dioptra_builtins.artifacts.utils.extract_tarfile
+    inputs:
+      - filepath: str_path
+      - name: tarball_read_mode
+        type: string
+        required: false
+      - name: output_dir
+        type: any
+        required: false
+
 graph:
   init_rng:
     init_rng: $seed
@@ -191,6 +226,9 @@ graph:
 
   init_tensorflow:
     init_tensorflow: $global_seed
+
+  training_dir:
+    prepend_cwd: $adv_data_dir
 
   log_params:
     log_params:
@@ -227,6 +265,15 @@ graph:
     dependencies:
       - init_tensorflow
 
+  adv_tar_training_path:
+    download_all_artifacts_in_run:
+      run_id: $dataset_run_id_training
+      artifact_path: $adv_tar_name
+  
+  extract_tarfile_results:
+    extract_tarfile:
+      filepath: $adv_tar_training_path
+  
   training_dataset:
     create_dataset:
       data_dir: $training_dir
@@ -237,6 +284,7 @@ graph:
       batch_size: $batch_size
     dependencies:
       - init_tensorflow
+      - extract_tarfile_results
 
   validation_dataset:
     create_dataset:
@@ -248,6 +296,7 @@ graph:
       batch_size: $batch_size
     dependencies:
       - init_tensorflow
+      - extract_tarfile_results
 
   testing_dataset:
     create_dataset:
@@ -259,6 +308,7 @@ graph:
       batch_size: $batch_size
     dependencies:
       - init_tensorflow
+      - extract_tarfile_results
 
   num_classes:
     get_num_classes: $training_dataset

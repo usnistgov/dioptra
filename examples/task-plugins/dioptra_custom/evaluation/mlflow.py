@@ -24,6 +24,7 @@ import mlflow
 import structlog
 from mlflow.entities.model_registry import ModelVersion
 from mlflow.tracking import MlflowClient
+from pathlib import Path
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
@@ -92,3 +93,8 @@ def get_experiment_name() -> str:
     )
 
     return experiment_name
+
+@pyplugs.register
+def prepend_cwd(path: str) -> Path:
+    ret = Path.cwd() / path
+    return ret
