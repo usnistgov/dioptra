@@ -107,6 +107,26 @@ class ShareResourceSchema(Schema):
         required=True,
     )
 
+class AccessResourceSchema(Schema):
+    resource_name = fields.String(
+        attribute="resource_name",
+        metadata=dict(
+            description="The resource to be accessed with the group."
+        ),
+        required=True,
+    )
+    group_name = fields.String(
+        attribute="group_name",
+        metadata=dict(description="The group you're accessing through."),
+        required=True,
+    )
+    action_name = fields.String(
+        attribute="action_name",
+        metadata=dict(description="The action to give the permission to."),
+        required=True,
+    )
+
+
 
 if __name__ == "__main__":
     import doctest

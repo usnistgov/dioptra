@@ -5,9 +5,9 @@ from typing import Any, cast
 
 from functools import wraps
 
-from flask import request
+from flask import request, current_app
 from flask_accepts import accepts
-from flask_login import login_required
+from flask_login import login_required, current_user
 from flask_restx import Namespace, Resource
 
 from .schemas import (
@@ -20,18 +20,19 @@ from .schemas import (
 )
 from .services import SERVICES
 
-from .models import db, User, Group, Dioptra_Resource
+from .models import db, User, Group, PrototypeResource, SharedPrototypeResource
 
 from oso import Oso, NotFoundError, ForbiddenError
 
 oso = Oso()
 
-oso.register_class(User)
-oso.register_class(Dioptra_Resource)
-oso.register_class(Group)
+# oso.register_class(User)
+# oso.register_class(PrototypeResource)
+# oso.register_class(SharedPrototypeResource)
+# oso.register_class(Group)
 
-# Load your policy files.
-oso.load_files(["src/proto/main.polar"])
+# # Load your policy files.
+# oso.load_files(["src/proto/authorization.polar"])
 
 
 # oso decorator definition
@@ -208,6 +209,131 @@ class RevokeShareResource(Resource):
             return f"<h1>A Repo</h1><p>read perms revoked</p>"
         except ForbiddenError:
             return f"<h1>Whoops!</h1><p>Not Found</p>", 403
+        
+
+
+# -- Sharing Resource -----------------------------------------------------------------
+@sharing_api.route("/")
+class InteractSharedResource(Resource):
+    @login_required
+    @accepts(schema=AccessResourceSchema, api= sharing_api)
+    def get(self) -> str:
+        """Gives a group the read permission on a given resource"""
+
+        ## TODO
+        parsed_obj = cast(
+            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
+        )
+        user = SERVICES.user.get_current_user()
+        resource = db["resources"][parsed_obj["resource_name"]]
+        try:
+            oso.authorize(user, "share-read", resource)
+            share_with = db["groups"][parsed_obj["group_name"]]
+            resource.share_read(share_with)
+
+            return f"<h1>A Repo</h1><p>read perms granted</p>"
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
+        
+    @login_required
+    @accepts(schema=AccessResourceSchema, api= sharing_api)
+    def put(self) -> str:
+        """Gives a group the read permission on a given resource"""
+
+        ## TODO
+        parsed_obj = cast(
+            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
+        )
+        user = SERVICES.user.get_current_user()
+        resource = db["resources"][parsed_obj["resource_name"]]
+        try:
+            oso.authorize(user, "share-read", resource)
+            share_with = db["groups"][parsed_obj["group_name"]]
+            resource.share_read(share_with)
+
+            return f"<h1>A Repo</h1><p>read perms granted</p>"
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
+        
+    @login_required
+    @accepts(schema=AccessResourceSchema, api= sharing_api)
+    def post(self) -> str:
+        """Gives a group the read permission on a given resource"""
+
+        ## TODO
+        parsed_obj = cast(
+            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
+        )
+        user = SERVICES.user.get_current_user()
+        resource = db["resources"][parsed_obj["resource_name"]]
+        try:
+            oso.authorize(user, "share-read", resource)
+            share_with = db["groups"][parsed_obj["group_name"]]
+            resource.share_read(share_with)
+
+            return f"<h1>A Repo</h1><p>read perms granted</p>"
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
+        
+
+    
+
+@sharing_api.route("/manage")
+class ManageSharedResource(Resource):
+    @login_required
+    @accepts(schema=ShareResourceSchema, api=user_api)
+    def put(self) -> str:
+        """Gives a group the read permission on a given resource"""
+        parsed_obj = cast(
+            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
+        )
+        user = SERVICES.user.get_current_user()
+        resource = db["resources"][parsed_obj["resource_name"]]
+        try:
+            oso.authorize(user, "share-read", resource)
+            share_with = db["groups"][parsed_obj["group_name"]]
+            resource.share_read(share_with)
+
+            return f"<h1>A Repo</h1><p>read perms granted</p>"
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
+        
+    @login_required
+    @accepts(schema=ShareResourceSchema, api=user_api)
+    def post(self) -> str:
+        """Gives a group the read permission on a given resource"""
+        parsed_obj = cast(
+            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
+        )
+        user = SERVICES.user.get_current_user()
+        resource = db["resources"][parsed_obj["resource_name"]]
+        try:
+            oso.authorize(user, "share-read", resource)
+            share_with = db["groups"][parsed_obj["group_name"]]
+            resource.share_read(share_with)
+
+            return f"<h1>A Repo</h1><p>read perms granted</p>"
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
+
+    @login_required
+    @accepts(schema=ShareResourceSchema, api=user_api)
+    def delete(self) -> str:
+        """Revokes the read permission on a given resource from a group"""
+        parsed_obj = cast(
+            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
+        )
+        user = SERVICES.user.get_current_user()
+        resource = db["resources"][parsed_obj["resource_name"]]
+        try:
+            oso.authorize(user, "share-read", resource)
+            share_with = db["groups"][parsed_obj["group_name"]]
+            resource.unshare_read(share_with)
+
+            return f"<h1>A Repo</h1><p>read perms revoked</p>"
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
+
 
 
 # -- Hello Resource -------------------------------------------------------------------
@@ -237,13 +363,20 @@ class HelloResource(Resource):
 @test_api.route("/")
 class TestResource(Resource):
     @login_required
-    @authorize("read")
     def get(self) -> str:
         """Responds with the server's secret key.
 
         Must be logged in.
         """
-        return SERVICES.test.reveal_secret_key()
+        resource = db["resources"]["2"]
+
+        # Check if the user is allowed to perform the action on the resource
+        try:
+            current_app.oso.authorize(current_user, "read", resource)
+            return SERVICES.test.reveal_secret_key()
+        except NotFoundError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 404
+        
 
     @login_required
     @authorize("update")
@@ -252,7 +385,13 @@ class TestResource(Resource):
 
         Must be logged in.
         """
-        return SERVICES.test.reveal_secret_key()
+        resource = db["resources"]["2"]
+
+        try:
+            current_app.oso.authorize(current_user, "write", resource)
+            return SERVICES.test.reveal_secret_key()
+        except NotFoundError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 404
 
     @login_required
     @authorize("create")
@@ -316,9 +455,19 @@ class WorldResource(Resource):
 
         Must be logged in.
         """
-        
-        return SERVICES.world.show_user_info()
+        # resource_id = request.headers.get('resource') #pip  Extract resource_id from URL params
+        #resource_id = request.path.split("/")[-2]  # or using url
+        resource = db["resources"]["1"]
 
+        # Check if the user is allowed to perform the action on the resource
+        try:
+            current_app.oso.authorize(current_user, "read", resource)
+            return SERVICES.world.show_user_info()
+        except NotFoundError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 404
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Allowed</p>", 403
+        
     @login_required
     @authorize("update")
     def post(self) -> dict[str, Any]:

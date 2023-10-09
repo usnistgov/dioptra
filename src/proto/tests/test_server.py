@@ -4,49 +4,91 @@ from proto.app import create_app
 
 import logging
 
+from typing import Iterable
 
-@pytest.fixture
-def client():
-    with create_app().test_client() as client:
-        yield client
+from flask import Flask
+from flask.testing import FlaskClient
 
-def test_user_login(client):
-    response = client.post('/api/auth/login', json={"username": "user", "password": "password"})
-    assert response.status_code == 200
-    #assert b'Logged in successfully' in response.data
 
-def test_world_api(client):
-    logging.basicConfig(level=logging.DEBUG)  # Set the log level
+# @pytest.fixture
+# def client():
+#     with create_app().test_client() as client:
+#         yield client
+
+
+class TestUser(object):
+    @pytest.fixture(scope="class")
+    def app(self) -> Iterable[Flask]:
+        app: Flask = create_app(include_test_data=True)
+        yield app
+
+    @pytest.fixture(scope="class")
+    def client(self, app: Flask) -> FlaskClient:
+        return app.test_client()
     
+    @pytest.fixture(scope="class")
+    def login(self, client: FlaskClient) -> Iterable[None]:
+        with client:
+            _ = client.post(
+                "/api/auth/login",
+                json={"username": "user", "password": "password"},
+            )
+            yield
 
-    #first login
-    response = client.post('/api/auth/login', json={"username": "user", "password": "password"}, follow_redirects=True)
-    assert response.status_code == 200
+    def test_world_api(self, client, login):        
+        #then access test_api resource
+        response = client.get('/api/world', follow_redirects=True)
+        assert response.status_code == 200
 
-    #set cookie
+    def test_world_api2(self, client, login):        
+        #the presence of this second seemingly redundant test is to confirm the behavior of
+        #run once decorator breaking pytest
+        response = client.get('/api/world', follow_redirects=True)
+        assert response.status_code == 200
+
+    def test_allow_user_on_test_read(self, client,login):
+        #then access test resource
+        response = client.get('/api/test', follow_redirects=True)
+        assert response.status_code == 200
+
+    @pytest.mark.xfail
+    def test_disallow_user_on_test_post(self, client, login):
+        #then access test_api resource
+        response = client.post('/api/test', follow_redirects=True)
+        assert response.status_code == 200
 
 
-    #then access test_api resource
-    response = client.get('/api/world', follow_redirects=True)
-    assert response.status_code == 200
-    logging.debug("Response: ",response)
+class TestJoe(object):
+    @pytest.fixture(scope="class")
+    def app(self) -> Iterable[Flask]:
+        app: Flask = create_app(include_test_data=True)
+        yield app
 
-
-# def test_world_api(client):
-#     logging.basicConfig(level=logging.DEBUG)  # Set the log level
+    @pytest.fixture(scope="class")
+    def client(self, app: Flask) -> FlaskClient:
+        return app.test_client()
     
+    @pytest.fixture(scope="class")
+    def login(self, client: FlaskClient) -> Iterable[None]:
+        with client:
+            _ = client.post(
+                "/api/auth/login",
+                json={"username": "joe", "password": "hashed"},
+            )
+            yield
+    
+    def test_allow_joe_on_test_get(self, client, login):
 
-#     #first login
-#     response = client.post('/api/auth/login', json={"username": "user", "password": "password"}, follow_redirects=True)
-#     assert response.status_code == 200
+        response = client.get('/api/test', follow_redirects=True)
+        assert response.status_code == 200
+        logging.debug("Response: ", response)
 
-#     #set cookie
+    @pytest.mark.xfail
+    def test_disallow_joe_on_world_get(self, client, login):
 
-
-#     #then access test_api resource
-#     response = client.get('/api/world', follow_redirects=True)
-#     assert response.status_code == 200
-#     logging.debug("Response: ",response)
+        response = client.get('/api/world', follow_redirects=True)
+        assert response.status_code == 200
+        logging.debug("Response: ", response)
 
 # def test_pulic_hello_api(client):
 #     logging.basicConfig(level=logging.DEBUG)  # Set the log level
@@ -77,21 +119,6 @@ def test_world_api(client):
 #     assert response.status_code == 200
 #     logging.debug("Response: ",response)
 
-# def test_world_api_admin_decorator(client):
-#     logging.basicConfig(level=logging.DEBUG)  # Set the log level
-    
-
-#     #first login
-#     response = client.post('/api/auth/login', json={"username": "user", "password": "password"}, follow_redirects=True)
-#     assert response.status_code == 200
-
-#     #set cookie
-
-
-#     #then access test_api resource
-#     response = client.post('/api/world', follow_redirects=True)
-#     assert response.status_code == 200
-#     logging.debug("Response: ",response)
 
 
 # def test_share_read(client):
@@ -103,7 +130,6 @@ def test_world_api(client):
 #     assert response.status_code == 200
 
 #     #set cookie
-
 
 #     #then access share the world resource with devs who don't have access
 #     response = client.post('/api/user/shareread',

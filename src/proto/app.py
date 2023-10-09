@@ -49,6 +49,12 @@ class Config(object):
 login_manager = LoginManager()
 oso = Oso()
 
+oso.register_class(User)  # type: ignore[no-untyped-call]
+oso.register_class(Group)  # type: ignore[no-untyped-call]
+oso.register_class(PrototypeResource)  # type: ignore[no-untyped-call]
+oso.register_class(SharedPrototypeResource)  # type: ignore[no-untyped-call]
+oso.load_files([str(files("proto").joinpath("authorization.polar"))])
+
 
 def create_app(include_test_data: bool = True) -> Flask:
     """Create and configure an instance of the Flask application.
@@ -114,13 +120,10 @@ def run_once(func: T) -> T:
     return cast(T, wrapper)
 
 
-@run_once
+# @run_once
 def _init_oso(app: Flask) -> None:
-    oso.register_class(User)  # type: ignore[no-untyped-call]
-    oso.register_class(Group)  # type: ignore[no-untyped-call]
-    oso.register_class(PrototypeResource)  # type: ignore[no-untyped-call]
-    oso.register_class(SharedPrototypeResource)  # type: ignore[no-untyped-call]
-    oso.load_files([str(files("proto").joinpath("authorization.polar"))])
+   
+    #setattr(app, "oso", oso)
     app.oso = oso  # type: ignore[attr-defined]
 
 
