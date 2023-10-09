@@ -15,6 +15,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+
 import os
 from pathlib import Path
 from typing import Dict, List
@@ -22,7 +23,6 @@ from typing import Dict, List
 import click
 import mlflow
 import numpy as np
-import sklearn  # noqa: F401
 import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
@@ -79,11 +79,6 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Root directory for NFS mounted datasets (in container)",
 )
 @click.option(
-    "--run-id",
-    type=click.STRING,
-    help="MLFlow Run ID of a successful patch attack",
-)
-@click.option(
     "--image-size",
     type=click.STRING,
     callback=_coerce_comma_separated_ints,
@@ -92,26 +87,14 @@ def _coerce_int_to_bool(ctx, param, value):
 @click.option(
     "--adv-tar-name",
     type=click.STRING,
-    default="adversarial_patch_dataset.tar.gz",
-    help="Name of output tarfile artifact containing patched images",
+    default="adversarial_patch.tar.gz",
+    help="Name to give to tarfile artifact containing patches",
 )
 @click.option(
     "--adv-data-dir",
     type=click.STRING,
-    default="adv_testing",
-    help="Directory for output patched images",
-)
-@click.option(
-    "--adv-patch-tar-name",
-    type=click.STRING,
-    default="adversarial_patch.tar.gz",
-    help="Name of input tarfile artifact containing adversarial patches",
-)
-@click.option(
-    "--adv-patch-dir",
-    type=click.STRING,
     default="adv_patches",
-    help="Directory for input adversarial patches",
+    help="Directory for saving adversarial patches",
 )
 @click.option(
     "--model-name",
@@ -122,33 +105,6 @@ def _coerce_int_to_bool(ctx, param, value):
     "--model-version",
     type=click.STRING,
     help="Version of model to load from registry",
-)
-@click.option(
-    "--patch-deployment-method",
-    type=click.Choice(["corrupt", "augment"], case_sensitive=False),
-    default="augment-original-images",
-    help="Deployment method for creating patched dataset. "
-    "If set to corrupt, patched images will replace a portion of original images. "
-    "If set to augment, patched images will be created with a copy of the original dataset. ",
-)
-@click.option(
-    "--patch-application-rate",
-    type=click.FLOAT,
-    help=" The fraction of images receiving an adversarial patch. "
-    "Values greater than 1 or less than 0 will use the entire dataset.",
-    default=1.0,
-)
-@click.option(
-    "--patch-scale",
-    type=click.FLOAT,
-    help=" The scale of the patch to apply to images. ",
-    default=0.4,
-)
-@click.option(
-    "--batch-size",
-    type=click.INT,
-    help="Image batch size to use for patch deployment.",
-    default=32,
 )
 @click.option(
     "--rotation-max",
@@ -172,6 +128,36 @@ def _coerce_int_to_bool(ctx, param, value):
     default=1.0,
 )
 @click.option(
+    "--learning-rate",
+    type=click.FLOAT,
+    help="The learning rate of the patch attack optimization procedure. ",
+    default=5.0,
+)
+@click.option(
+    "--max-iter",
+    type=click.INT,
+    help=" The number of patch optimization steps. ",
+    default=500,
+)
+@click.option(
+    "--patch-target",
+    type=click.INT,
+    help=" The target class index of the generated patch. Negative numbers will generate randomized id labels.",
+    default=-1,
+)
+@click.option(
+    "--num-patch",
+    type=click.INT,
+    help=" The number of patches generated. Each adversarial image recieves one patch. ",
+    default=1,
+)
+@click.option(
+    "--num-patch-gen-samples",
+    type=click.INT,
+    help=" The number of sample images used to generate each patch. ",
+    default=10,
+)
+@click.option(
     "--imagenet-preprocessing",
     type=click.BOOL,
     help="If true, initializes model with Imagenet image preprocessing settings.",
@@ -183,21 +169,19 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
-def deploy_patch(
+def patch_attack(
     data_dir,
-    run_id,
     image_size,
     adv_tar_name,
     adv_data_dir,
-    adv_patch_tar_name,
-    adv_patch_dir,
-    patch_deployment_method,
-    patch_application_rate,
-    patch_scale,
-    batch_size,
     rotation_max,
     scale_min,
     scale_max,
+    learning_rate,
+    max_iter,
+    patch_target,
+    num_patch,
+    num_patch_gen_samples,
     model_name,
     model_version,
     imagenet_preprocessing,
@@ -207,59 +191,53 @@ def deploy_patch(
 
     LOGGER.info(
         "Execute MLFlow entry point",
-        entry_point="deploy_patch",
-        run_id=run_id,
+        entry_point="gen_patch",
         data_dir=data_dir,
         image_size=image_size,
         adv_tar_name=adv_tar_name,
         adv_data_dir=adv_data_dir,
-        adv_patch_tar_name=adv_patch_tar_name,
-        adv_patch_dir=adv_patch_dir,
         model_name=model_name,
         model_version=model_version,
-        patch_deployment_method=patch_deployment_method,
-        patch_application_rate=patch_application_rate,
-        patch_scale=patch_scale,
-        batch_size=batch_size,
+        patch_target=patch_target,
+        num_patch=num_patch,
+        num_patch_gen_samples=num_patch_gen_samples,
         rotation_max=rotation_max,
         scale_min=scale_min,
         scale_max=scale_max,
+        learning_rate=learning_rate,
+        max_iter=max_iter,
         imagenet_preprocessing=imagenet_preprocessing,
         seed=seed,
     )
 
     with mlflow.start_run() as active_run:  # noqa: F841
-        flow: Flow = deploy_adversarial_patch()
+        flow: Flow = init_gen_patch_flow()
         state = flow.run(
             parameters=dict(
                 testing_dir=Path(data_dir),
                 image_size=image_size,
                 adv_tar_name=adv_tar_name,
-                adv_data_dir=(Path.cwd() / adv_data_dir),
-                distance_metrics_filename="distance_metrics.csv",
+                adv_data_dir=(Path.cwd() / adv_data_dir).resolve(),
                 model_name=model_name,
                 model_version=model_version,
+                patch_target=patch_target,
+                num_patch=num_patch,
+                num_patch_gen_samples=num_patch_gen_samples,
                 rotation_max=rotation_max,
                 scale_min=scale_min,
                 scale_max=scale_max,
+                learning_rate=learning_rate,
+                max_iter=max_iter,
                 patch_shape=patch_shape,
-                seed=seed,
-                run_id=run_id,
-                adv_patch_tar_name=adv_patch_tar_name,
-                adv_patch_dir=(Path.cwd() / adv_patch_dir),
-                patch_deployment_method=patch_deployment_method,
-                patch_application_rate=patch_application_rate,
-                patch_scale=patch_scale,
-                batch_size=batch_size,
                 imagenet_preprocessing=imagenet_preprocessing,
+                seed=seed,
             )
         )
-
     return state
 
 
-def deploy_adversarial_patch() -> Flow:
-    with Flow("Deploy Adversarial Patches") as flow:
+def init_gen_patch_flow() -> Flow:
+    with Flow("Fast Gradient Method") as flow:
         (
             testing_dir,
             image_size,
@@ -270,16 +248,13 @@ def deploy_adversarial_patch() -> Flow:
             rotation_max,
             scale_min,
             scale_max,
-            patch_shape,
-            run_id,
-            adv_patch_tar_name,
-            adv_patch_dir,
-            distance_metrics_filename,
-            patch_deployment_method,
-            patch_application_rate,
-            patch_scale,
-            batch_size,
+            learning_rate,
+            max_iter,
+            patch_target,
+            num_patch,
+            num_patch_gen_samples,
             imagenet_preprocessing,
+            patch_shape,
             seed,
         ) = (
             Parameter("testing_dir"),
@@ -291,20 +266,17 @@ def deploy_adversarial_patch() -> Flow:
             Parameter("rotation_max"),
             Parameter("scale_min"),
             Parameter("scale_max"),
-            Parameter("patch_shape"),
-            Parameter("run_id"),
-            Parameter("adv_patch_tar_name"),
-            Parameter("adv_patch_dir"),
-            Parameter("distance_metrics_filename"),
-            Parameter("patch_deployment_method"),
-            Parameter("patch_application_rate"),
-            Parameter("patch_scale"),
-            Parameter("batch_size"),
+            Parameter("learning_rate"),
+            Parameter("max_iter"),
+            Parameter("patch_target"),
+            Parameter("num_patch"),
+            Parameter("num_patch_gen_samples"),
             Parameter("imagenet_preprocessing"),
+            Parameter("patch_shape"),
             Parameter("seed"),
         )
         seed, rng = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH }.random", "rng", "init_rng", seed=seed
+            f"{_PLUGINS_IMPORT_PATH}.random", "rng", "init_rng", seed=seed
         )
         tensorflow_global_seed = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.random", "sample", "draw_random_integer", rng=rng
@@ -322,22 +294,7 @@ def deploy_adversarial_patch() -> Flow:
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
             "utils",
             "make_directories",
-            dirs=[adv_patch_dir],
-        )
-
-        adv_tar_path = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.artifacts",
-            "mlflow",
-            "download_all_artifacts_in_run",
-            run_id=run_id,
-            artifact_path=adv_patch_tar_name,
-        )
-
-        extract_tarfile_results = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.artifacts",
-            "utils",
-            "extract_tarfile",
-            filepath=adv_tar_path,
+            dirs=[adv_data_dir],
         )
 
         rescale = pyplugs.call_task(
@@ -363,7 +320,7 @@ def deploy_adversarial_patch() -> Flow:
                 tensorflow_global_seed=tensorflow_global_seed,
                 dataset_seed=dataset_seed,
                 rescale=rescale,
-                clip_values=clip_values,
+                clip_values=clip_values
             ),
         )
 
@@ -374,37 +331,28 @@ def deploy_adversarial_patch() -> Flow:
             name=model_name,
             version=model_version,
             clip_values=clip_values,
-            upstream_tasks=[init_tensorflow_results],
             imagenet_preprocessing=imagenet_preprocessing,
+            upstream_tasks=[init_tensorflow_results],
         )
-
-        distance_metrics_list = pyplugs.call_task(
-            f"{_PLUGINS_IMPORT_PATH}.metrics",
-            "distance",
-            "get_distance_metric_list",
-            request=DISTANCE_METRICS,
-        )
-
-        distance_metrics = pyplugs.call_task(
+        patch_dir = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
             "attacks_patch",
-            "create_adversarial_patch_dataset",
+            "create_adversarial_patches",
             data_dir=testing_dir,
             keras_classifier=keras_classifier,
-            distance_metrics_list=distance_metrics_list,
             adv_data_dir=adv_data_dir,
-            patch_dir=adv_patch_dir,
             image_size=image_size,
             rescale=rescale,
+            patch_target=patch_target,
+            num_patch=num_patch,
+            num_patch_samples=num_patch_gen_samples,
             rotation_max=rotation_max,
             scale_min=scale_min,
             scale_max=scale_max,
+            learning_rate=learning_rate,
+            max_iter=max_iter,
             patch_shape=patch_shape,
-            batch_size=batch_size,
-            patch_deployment_method=patch_deployment_method,
-            patch_application_rate=patch_application_rate,
-            patch_scale=patch_scale,
-            upstream_tasks=[make_directories_results, extract_tarfile_results],
+            upstream_tasks=[make_directories_results],
         )
         log_evasion_dataset_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.artifacts",
@@ -412,17 +360,9 @@ def deploy_adversarial_patch() -> Flow:
             "upload_directory_as_tarball_artifact",
             source_dir=adv_data_dir,
             tarball_filename=adv_tar_name,
-            upstream_tasks=[distance_metrics],
+            upstream_tasks=[patch_dir],
         )
-        log_distance_metrics_result = pyplugs.call_task(  # noqa: F841
-            f"{_PLUGINS_IMPORT_PATH}.artifacts",
-            "mlflow",
-            "upload_data_frame_artifact",
-            data_frame=distance_metrics,
-            file_name=distance_metrics_filename,
-            file_format="csv.gz",
-            file_format_kwargs=dict(index=False),
-        )
+
     return flow
 
 
@@ -436,4 +376,4 @@ if __name__ == "__main__":
     configure_structlog()
 
     with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
-        _ = deploy_patch()
+        _ = patch_attack()

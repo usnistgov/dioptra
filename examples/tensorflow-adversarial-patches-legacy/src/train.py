@@ -22,7 +22,6 @@ from typing import Any, Dict, List
 
 import click
 import mlflow
-import sklearn  # noqa: F401
 import structlog
 from prefect import Flow, Parameter
 from prefect.utilities.logging import get_logger as get_prefect_logger
@@ -67,11 +66,18 @@ def _coerce_comma_separated_ints(ctx, param, value):
 
 @click.command()
 @click.option(
-    "--data-dir",
+    "--data-dir-training",
     type=click.Path(
         exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
     ),
-    help="Root directory for NFS mounted datasets (in container)",
+    help="Root directory for NFS mounted training dataset (in container)",
+)
+@click.option(
+    "--data-dir-testing",
+    type=click.Path(
+        exists=True, file_okay=False, dir_okay=True, resolve_path=True, readable=True
+    ),
+    help="Root directory for NFS mounted test dataset (in container)",
 )
 @click.option(
     "--image-size",
@@ -88,9 +94,15 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Model architecture",
 )
 @click.option(
+    "--epochs",
+    type=click.INT,
+    help="Number of epochs to train model",
+    default=30,
+)
+@click.option(
     "--batch-size",
     type=click.INT,
-    help="Batch size to use for testing",
+    help="Batch size to use when training a single epoch",
     default=32,
 )
 @click.option(
@@ -98,8 +110,8 @@ def _coerce_comma_separated_ints(ctx, param, value):
     type=click.STRING,
     default="",
     help=(
-        "Register the new model under the provided name. If an empty string, "
-        "then the model will not be registered."
+        "Register the trained model under the provided name. If an empty string, "
+        "then the trained model will not be registered."
     ),
 )
 @click.option(
@@ -112,10 +124,10 @@ def _coerce_comma_separated_ints(ctx, param, value):
     default="Adam",
 )
 @click.option(
-    "--imagenet-preprocessing",
-    type=click.BOOL,
-    help="If true, initializes model with Imagenet image preprocessing settings.",
-    default=False,
+    "--validation-split",
+    type=click.FLOAT,
+    help="Fraction of training dataset to use for validation",
+    default=0.2,
 )
 @click.option(
     "--seed",
@@ -123,28 +135,32 @@ def _coerce_comma_separated_ints(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
-def init_model(
-    data_dir,
+def train(
+    data_dir_testing,
+    data_dir_training,
     image_size,
     model_architecture,
+    epochs,
     batch_size,
     register_model_name,
     learning_rate,
     optimizer,
-    imagenet_preprocessing,
+    validation_split,
     seed,
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
         entry_point="train",
-        data_dir=data_dir,
+        data_dir_testing=data_dir_testing,
+        data_dir_training=data_dir_training,
         image_size=image_size,
         model_architecture=model_architecture,
+        epochs=epochs,
         batch_size=batch_size,
         register_model_name=register_model_name,
         learning_rate=learning_rate,
         optimizer=optimizer,
-        imagenet_preprocessing=imagenet_preprocessing,
+        validation_split=validation_split,
         seed=seed,
     )
 
@@ -153,14 +169,16 @@ def init_model(
         state = flow.run(
             parameters=dict(
                 active_run=active_run,
-                testing_dir=Path(data_dir),
+                training_dir=Path(data_dir_training),
+                testing_dir=Path(data_dir_testing),
                 image_size=image_size,
                 model_architecture=model_architecture,
+                epochs=epochs,
                 batch_size=batch_size,
                 register_model_name=register_model_name,
                 learning_rate=learning_rate,
                 optimizer_name=optimizer,
-                imagenet_preprocessing=imagenet_preprocessing,
+                validation_split=validation_split,
                 seed=seed,
             )
         )
@@ -171,25 +189,29 @@ def init_train_flow() -> Flow:
     with Flow("Train Model") as flow:
         (
             active_run,
+            training_dir,
             testing_dir,
             image_size,
             model_architecture,
+            epochs,
             batch_size,
             register_model_name,
             learning_rate,
             optimizer_name,
-            imagenet_preprocessing,
+            validation_split,
             seed,
         ) = (
             Parameter("active_run"),
+            Parameter("training_dir"),
             Parameter("testing_dir"),
             Parameter("image_size"),
             Parameter("model_architecture"),
+            Parameter("epochs"),
             Parameter("batch_size"),
             Parameter("register_model_name"),
             Parameter("learning_rate"),
             Parameter("optimizer_name"),
-            Parameter("imagenet_preprocessing"),
+            Parameter("validation_split"),
             Parameter("seed"),
         )
         seed, rng = pyplugs.call_task(
@@ -207,14 +229,6 @@ def init_train_flow() -> Flow:
             "init_tensorflow",
             seed=tensorflow_global_seed,
         )
-
-        rescale = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_poisoning_plugins",
-            "datasetup",
-            "select_rescale_value",
-            imagenet_preprocessing=imagenet_preprocessing,
-        )
-
         log_mlflow_params_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
             "mlflow",
@@ -223,7 +237,6 @@ def init_train_flow() -> Flow:
                 entry_point_seed=seed,
                 tensorflow_global_seed=tensorflow_global_seed,
                 dataset_seed=dataset_seed,
-                rescale=rescale,
             ),
         )
         optimizer = pyplugs.call_task(
@@ -241,11 +254,35 @@ def init_train_flow() -> Flow:
             metrics_list=PERFORMANCE_METRICS,
             upstream_tasks=[init_tensorflow_results],
         )
-        callbacks_list = pyplugs.call_task(  # noqa: F841
+        callbacks_list = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
             "tensorflow",
             "get_model_callbacks",
             callbacks_list=CALLBACKS,
+            upstream_tasks=[init_tensorflow_results],
+        )
+        training_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
+            data_dir=training_dir,
+            subset="training",
+            image_size=image_size,
+            seed=dataset_seed,
+            validation_split=validation_split,
+            batch_size=batch_size,
+            upstream_tasks=[init_tensorflow_results],
+        )
+        validation_ds = pyplugs.call_task(
+            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
+            "data_tensorflow",
+            "create_image_dataset",
+            data_dir=training_dir,
+            subset="validation",
+            image_size=image_size,
+            seed=dataset_seed,
+            validation_split=validation_split,
+            batch_size=batch_size,
             upstream_tasks=[init_tensorflow_results],
         )
         testing_ds = pyplugs.call_task(
@@ -259,14 +296,12 @@ def init_train_flow() -> Flow:
             validation_split=None,
             batch_size=batch_size,
             upstream_tasks=[init_tensorflow_results],
-            rescale=rescale,
-            imagenet_preprocessing=imagenet_preprocessing,
         )
         n_classes = pyplugs.call_task(
             f"{_PLUGINS_IMPORT_PATH}.data",
             "tensorflow",
             "get_n_classes_from_directory_iterator",
-            ds=testing_ds,
+            ds=training_ds,
         )
         classifier = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
@@ -278,7 +313,19 @@ def init_train_flow() -> Flow:
             input_shape=image_size,
             n_classes=n_classes,
             upstream_tasks=[init_tensorflow_results],
-            training=False,
+        )
+        history = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.estimators",
+            "methods",
+            "fit",
+            estimator=classifier,
+            x=training_ds,
+            fit_kwargs=dict(
+                nb_epochs=epochs,
+                validation_data=validation_ds,
+                callbacks=callbacks_list,
+                verbose=2,
+            ),
         )
         classifier_performance_metrics = pyplugs.call_task(
             f"{_CUSTOM_PLUGINS_IMPORT_PATH}.evaluation",
@@ -286,6 +333,7 @@ def init_train_flow() -> Flow:
             "evaluate_metrics_tensorflow",
             classifier=classifier,
             dataset=testing_ds,
+            upstream_tasks=[history],
         )
         log_classifier_performance_metrics_result = pyplugs.call_task(  # noqa: F841
             f"{_PLUGINS_IMPORT_PATH}.tracking",
@@ -293,14 +341,22 @@ def init_train_flow() -> Flow:
             "log_metrics",
             metrics=classifier_performance_metrics,
         )
-        model_storage = pyplugs.call_task(  # noqa: F841
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
-            "tensorflow",
-            "register_init_model",
-            model=classifier,
+        logged_tensorflow_keras_estimator = pyplugs.call_task(
+            f"{_PLUGINS_IMPORT_PATH}.tracking",
+            "mlflow",
+            "log_tensorflow_keras_estimator",
+            estimator=classifier,
+            model_dir="model",
+            upstream_tasks=[history],
+        )
+        model_version = pyplugs.call_task(  # noqa: F841
+            f"{_PLUGINS_IMPORT_PATH}.registry",
+            "mlflow",
+            "add_model_to_registry",
             active_run=active_run,
             name=register_model_name,
             model_dir="model",
+            upstream_tasks=[logged_tensorflow_keras_estimator],
         )
 
     return flow
@@ -316,4 +372,4 @@ if __name__ == "__main__":
     configure_structlog()
 
     with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
-        _ = init_model()
+        _ = train()

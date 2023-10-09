@@ -73,7 +73,7 @@ def create_defended_dataset(
     batch_size: int = 32,
     label_mode: str = "categorical",
     def_type: str = "spatial_smoothing",
-    **kwargs,
+    defense_kwargs: Optional[Dict[str, Any]] = None,
 ) -> pd.DataFrame:
     distance_metrics_list = distance_metrics_list or []
     color_mode: str = "rgb" if image_size[2] == 3 else "grayscale"
@@ -85,7 +85,7 @@ def create_defended_dataset(
     defense = _init_defense(
         clip_values=clip_values,
         def_type=def_type,
-        **kwargs,
+        defense_kwargs=defense_kwargs,
     )
 
     data_generator: ImageDataGenerator = ImageDataGenerator(rescale=rescale)
@@ -147,10 +147,10 @@ def create_defended_dataset(
     return pd.DataFrame(distance_metrics_)
 
 
-def _init_defense(clip_values, def_type, **kwargs):
+def _init_defense(clip_values, def_type, defense_kwargs):
     defense = DEFENSE_LIST[def_type](
         clip_values=clip_values,
-        **kwargs,
+        **defense_kwargs,
     )
     return defense
 
