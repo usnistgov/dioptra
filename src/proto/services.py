@@ -33,7 +33,7 @@ from flask import Request, current_app
 from flask_login import current_user, login_user, logout_user
 from passlib.context import CryptContext
 
-from .models import User, db
+from .models import User, db, PrototypeDb, SharedPrototypeResource, Group, GroupMembership
 
 
 class HelloService(object):
@@ -341,7 +341,69 @@ class AuthService(object):
 
         logout_user()
         return {"status": 200, "message": "logout success"}
+    
+class SharedResourceService(object):
+    def __init__(self, db : PrototypeDb):
+        self.db =db
+    
+    def create(self,
+            creator_id: int,
+            resource_id:int,
+            group_id:int,
+            readable:bool,
+            writable:bool):
+        id= len(self.db["shared_resources"])+1
+        self.db["shared_resources"][str(id)] = SharedPrototypeResource(
+        id=id,
+        creator_id=creator_id,
+        resource_id=resource_id,
+        group_id=group_id,
+        deleted=False,
+        readable=readable,
+        writable=writable,
+    )
+    
+    def delete(self, id:int):
+         self.db["shared_resources"][str(id)].deleted=True
+        
+class GroupService(object):
+    def __init__(self, db : PrototypeDb):
+        self.db =db
+    
+    def create(self,
+        name:str,
+        creator_id:int,
+        owner_id:int):
 
+        id= len(self.db["groups"])+1
+        self.db["groups"][str(id)] = Group(
+        id=id,
+        name=name,
+        creator_id=creator_id,
+        owner_id=owner_id,
+        deleted=False,
+    )
+        
+    def add_member(self,
+        user_id:int,
+        group_id:int,
+        read:bool,
+        write:bool,
+        share_read:bool,
+        share_write:bool):
+
+        id= len(self.db["group_memberships"])+1
+        self.db["group_memberships"][str(id)] = GroupMembership(
+        user_id=user_id,
+        group_id=group_id,
+        read=read,
+        write=write,
+        share_read=share_read,
+        share_write=share_write,
+    )
+        
+    def delete(self, id:int):
+        self.db["group_memberships"][str(id)].deleted= True
 
 @dataclass
 class AppServices(object):
@@ -364,6 +426,8 @@ class AppServices(object):
     password: PasswordService
     user: UserService
     auth: AuthService
+    shared_resource: SharedResourceService
+    group: GroupService
 
 
 def _bootstrap_services() -> AppServices:
@@ -384,6 +448,8 @@ def _bootstrap_services() -> AppServices:
     )
     user = UserService(password_service=password)
     auth = AuthService(user_service=user)
+    shared_resource = SharedResourceService(db = db)
+    group = GroupService(db = db)
 
     return AppServices(
         hello=hello,
@@ -393,6 +459,8 @@ def _bootstrap_services() -> AppServices:
         password=password,
         user=user,
         auth=auth,
+        shared_resource=shared_resource,
+        group = group
     )
 
 

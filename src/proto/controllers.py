@@ -16,7 +16,12 @@ from .schemas import (
     LoginSchema,
     LogoutSchema,
     RegisterUserSchema,
-    ShareResourceSchema,
+    SharedPrototypeResourceSchema,
+    RevokeSharedPrototypeResourceSchema,
+    AccessResourceSchema,
+    CreateGroupSchema,
+    AddUserToGroupSchema,
+    DeleteGroupSchema
 )
 from .services import SERVICES
 
@@ -85,6 +90,15 @@ foo_api: Namespace = Namespace(
     "Foo",
     description="Foo endpoint",
 )
+group_api: Namespace = Namespace(
+    "Groups",
+    description="Groups endpoint",
+)
+sharing_api: Namespace = Namespace(
+    "Shared",
+    description="Shared Resource endpoint",
+)
+
 
 # -- Authentication Resources ---------------------------------------------------------
 
@@ -168,174 +182,146 @@ class UserPasswordResource(Resource):
             current_password=current_password, new_password=new_password
         )
 
-
-@user_api.route("/shareread")
-class ShareResource(Resource):
-    @login_required
-    @accepts(schema=ShareResourceSchema, api=user_api)
-    def post(self) -> str:
-        """Gives a group the read permission on a given resource"""
-        parsed_obj = cast(
-            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
-        )
-        user = SERVICES.user.get_current_user()
-        resource = db["resources"][parsed_obj["resource_name"]]
-        try:
-            oso.authorize(user, "share-read", resource)
-            share_with = db["groups"][parsed_obj["group_name"]]
-            resource.share_read(share_with)
-
-            return f"<h1>A Repo</h1><p>read perms granted</p>"
-        except ForbiddenError:
-            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
-
-
-@user_api.route("/revokeshareread")
-class RevokeShareResource(Resource):
-    @login_required
-    @accepts(schema=ShareResourceSchema, api=user_api)
-    def post(self) -> str:
-        """Revokes the read permission on a given resource from a group"""
-        parsed_obj = cast(
-            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
-        )
-        user = SERVICES.user.get_current_user()
-        resource = db["resources"][parsed_obj["resource_name"]]
-        try:
-            oso.authorize(user, "share-read", resource)
-            share_with = db["groups"][parsed_obj["group_name"]]
-            resource.unshare_read(share_with)
-
-            return f"<h1>A Repo</h1><p>read perms revoked</p>"
-        except ForbiddenError:
-            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
-        
-
-
 # -- Sharing Resource -----------------------------------------------------------------
 @sharing_api.route("/")
 class InteractSharedResource(Resource):
     @login_required
     @accepts(schema=AccessResourceSchema, api= sharing_api)
     def get(self) -> str:
-        """Gives a group the read permission on a given resource"""
-
-        ## TODO
+        """Read a shared resource"""
         parsed_obj = cast(
             dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
         )
-        user = SERVICES.user.get_current_user()
-        resource = db["resources"][parsed_obj["resource_name"]]
-        try:
-            oso.authorize(user, "share-read", resource)
-            share_with = db["groups"][parsed_obj["group_name"]]
-            resource.share_read(share_with)
 
-            return f"<h1>A Repo</h1><p>read perms granted</p>"
+        resource_id = str(parsed_obj["resource_id"])
+        action = str(parsed_obj["action_name"])
+        user = current_user
+        resource = db["shared_resources"][resource_id]
+
+        try:
+            current_app.oso.authorize(user, action, resource)
+
+            return f"<h1>Shared Resource</h1><p>read</p>"
         except ForbiddenError:
             return f"<h1>Whoops!</h1><p>Not Found</p>", 403
-        
+
+
+@sharing_api.route("/share")
+class SharedResource(Resource):
     @login_required
-    @accepts(schema=AccessResourceSchema, api= sharing_api)
-    def put(self) -> str:
-        """Gives a group the read permission on a given resource"""
-
-        ## TODO
-        parsed_obj = cast(
-            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
-        )
-        user = SERVICES.user.get_current_user()
-        resource = db["resources"][parsed_obj["resource_name"]]
-        try:
-            oso.authorize(user, "share-read", resource)
-            share_with = db["groups"][parsed_obj["group_name"]]
-            resource.share_read(share_with)
-
-            return f"<h1>A Repo</h1><p>read perms granted</p>"
-        except ForbiddenError:
-            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
-        
-    @login_required
-    @accepts(schema=AccessResourceSchema, api= sharing_api)
-    def post(self) -> str:
-        """Gives a group the read permission on a given resource"""
-
-        ## TODO
-        parsed_obj = cast(
-            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
-        )
-        user = SERVICES.user.get_current_user()
-        resource = db["resources"][parsed_obj["resource_name"]]
-        try:
-            oso.authorize(user, "share-read", resource)
-            share_with = db["groups"][parsed_obj["group_name"]]
-            resource.share_read(share_with)
-
-            return f"<h1>A Repo</h1><p>read perms granted</p>"
-        except ForbiddenError:
-            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
-        
-
-    
-
-@sharing_api.route("/manage")
-class ManageSharedResource(Resource):
-    @login_required
-    @accepts(schema=ShareResourceSchema, api=user_api)
-    def put(self) -> str:
-        """Gives a group the read permission on a given resource"""
-        parsed_obj = cast(
-            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
-        )
-        user = SERVICES.user.get_current_user()
-        resource = db["resources"][parsed_obj["resource_name"]]
-        try:
-            oso.authorize(user, "share-read", resource)
-            share_with = db["groups"][parsed_obj["group_name"]]
-            resource.share_read(share_with)
-
-            return f"<h1>A Repo</h1><p>read perms granted</p>"
-        except ForbiddenError:
-            return f"<h1>Whoops!</h1><p>Not Found</p>", 403
-        
-    @login_required
-    @accepts(schema=ShareResourceSchema, api=user_api)
+    @accepts(schema=SharedPrototypeResourceSchema, api=sharing_api)
     def post(self) -> str:
         """Gives a group the read permission on a given resource"""
         parsed_obj = cast(
             dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
         )
-        user = SERVICES.user.get_current_user()
-        resource = db["resources"][parsed_obj["resource_name"]]
-        try:
-            oso.authorize(user, "share-read", resource)
-            share_with = db["groups"][parsed_obj["group_name"]]
-            resource.share_read(share_with)
 
-            return f"<h1>A Repo</h1><p>read perms granted</p>"
+        creator_id =  SERVICES.user.get_current_user().id
+        resource_id = str(parsed_obj["resource_id"])
+        group_id = parsed_obj["group_id"]
+        readable = parsed_obj["readable"]
+        writable = parsed_obj["writable"]
+
+        user = db["users"]["1"]#SERVICES.user.get_current_user()
+        resource = db["resources"]["2"]
+        print(resource)
+        print(user)
+        try:
+            if readable:
+                current_app.oso.authorize(user, "share_read", resource)
+            if writable:
+                current_app.oso.authorize(current_user, "share_write", resource)
+            
+            SERVICES.shared_resource.create(
+                creator_id=creator_id,
+                resource_id=resource_id,
+                group_id=group_id,
+                readable=readable,
+                writable=writable
+            )
+            return f"<h1>A Repo</h1><p>perms granted</p>"
         except ForbiddenError:
             return f"<h1>Whoops!</h1><p>Not Found</p>", 403
 
     @login_required
-    @accepts(schema=ShareResourceSchema, api=user_api)
+    @accepts(schema=RevokeSharedPrototypeResourceSchema, api=sharing_api)
     def delete(self) -> str:
         """Revokes the read permission on a given resource from a group"""
         parsed_obj = cast(
             dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
         )
-        user = SERVICES.user.get_current_user()
-        resource = db["resources"][parsed_obj["resource_name"]]
-        try:
-            oso.authorize(user, "share-read", resource)
-            share_with = db["groups"][parsed_obj["group_name"]]
-            resource.unshare_read(share_with)
 
-            return f"<h1>A Repo</h1><p>read perms revoked</p>"
+        shared_resource_id = str(parsed_obj["id"])
+
+        user = SERVICES.user.get_current_user()
+        resource = db["shared_resources"][shared_resource_id]
+        try:
+            current_app.oso.authorize(user, "share_read", resource)
+            current_app.oso.authorize(user, "share_write", resource)
+            
+            SERVICES.shared_resource.delete(
+                resource_id=db["shared_resources"][shared_resource_id],
+            )
+            return f"<h1>A Repo</h1><p>perms granted</p>"
         except ForbiddenError:
             return f"<h1>Whoops!</h1><p>Not Found</p>", 403
 
+# -- Group Resource -------------------------------------------------------------------
 
+@group_api.route("/")
+class ManageGroup(Resource):
+    @login_required
+    @accepts(schema= CreateGroupSchema, api=group_api)
+    def post(self):
+        parsed_obj = cast(
+            dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
+        )
+        name = str(parsed_obj["name"])
+        creator_id= SERVICES.user.get_current_user().id
+        owner_id= SERVICES.user.get_current_user().id
+        return SERVICES.group.create(
+            name=name, creator_id=creator_id, owner_id=owner_id
+        )
 
+    @login_required
+    @accepts(schema=AddUserToGroupSchema, api=group_api)
+    def put(self):
+        parsed_obj = cast(
+            dict[str, Any],
+            request.parsed_obj  # type: ignore[attr-defined]
+        )
+        user_id = int(parsed_obj["user_id"])
+        group_id = int(parsed_obj["group_id"])
+        read = bool(parsed_obj["read"])
+        write = bool(parsed_obj["write"])
+        share_read = bool(parsed_obj["share_read"])
+        share_write = bool(parsed_obj["share_write"])
+
+        # Call the service to add the user to the group
+        result = SERVICES.group.add_member(
+            user_id=user_id,
+            group_id=group_id,
+            read=read,
+            write=write,
+            share_read=share_read,
+            share_write=share_write,
+        )
+
+        return result
+    
+    @login_required
+    @accepts(schema=DeleteGroupSchema, api=group_api)
+    def delete(self):
+        parsed_obj = cast(
+            dict[str, Any],
+            request.parsed_obj  # type: ignore[attr-defined]
+        )
+        group_id = str(parsed_obj["group_id"])
+
+        result = SERVICES.group.delete_group(group_id=group_id)
+
+        return result
+        
 # -- Hello Resource -------------------------------------------------------------------
 
 

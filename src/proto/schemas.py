@@ -93,31 +93,41 @@ class DeleteUserSchema(Schema):
         required=True,
     )
 
-class ShareResourceSchema(Schema):
-    resource_name = fields.String(
-        attribute="resource_name",
-        metadata=dict(
-            description="The resource to be shared with the group."
-        ),
-        required=True,
+class SharedPrototypeResourceSchema(Schema):
+    id = fields.Integer(
+        metadata={"description": "The unique identifier of the shared resource."}
     )
-    group_name = fields.String(
-        attribute="group_name",
-        metadata=dict(description="The group to give the permission to."),
-        required=True,
+    creator_id = fields.Integer(
+        metadata={"description": "The ID of the user that created the shared resource."}
+    )
+    resource_id = fields.Integer(
+        metadata={"description": "The ID of the resource being shared."}
+    )
+    group_id = fields.Integer(
+        metadata={"description": "The ID of the group with which the resource is shared."}
+    )
+    deleted = fields.Boolean(
+        metadata={"description": "Whether the shared resource has been deleted."}
+    )
+    readable = fields.Boolean(
+        metadata={"description": "Whether the shared resource is readable."}
+    )
+    writable = fields.Boolean(
+        metadata={"description": "Whether the shared resource is writable."}
+    )
+
+class RevokeSharedPrototypeResourceSchema(Schema):
+    id = fields.Integer(
+        metadata={"description": "The unique identifier of the shared resource."},
+        required=True
     )
 
 class AccessResourceSchema(Schema):
-    resource_name = fields.String(
-        attribute="resource_name",
+    resource_id = fields.Integer(
+        attribute="resource_id",
         metadata=dict(
             description="The resource to be accessed with the group."
         ),
-        required=True,
-    )
-    group_name = fields.String(
-        attribute="group_name",
-        metadata=dict(description="The group you're accessing through."),
         required=True,
     )
     action_name = fields.String(
@@ -125,6 +135,54 @@ class AccessResourceSchema(Schema):
         metadata=dict(description="The action to give the permission to."),
         required=True,
     )
+
+
+class CreateGroupSchema(Schema):
+    """Schema for creating a new group."""
+
+    id = fields.Integer(dump_only=True)
+    name = fields.String(
+        required=True,
+        metadata={"description": "Human-readable name for the group."},
+    )
+    deleted = fields.Boolean(dump_only=True)
+
+class AddUserToGroupSchema(Schema):
+    """Schema for adding a user to a group."""
+
+    user_id = fields.Integer(
+        required=True,
+        metadata={"description": "The ID of the user to be added to the group."},
+    )
+    group_id = fields.Integer(
+        required=True,
+        metadata={"description": "The ID of the group to which the user will be added."},
+    )
+    read = fields.Boolean(
+        required=True,
+        metadata={"description": "Whether the user can read the group's resources."},
+    )
+    write = fields.Boolean(
+        required=True,
+        metadata={"description": "Whether the user can write to the group's resources."},
+    )
+    share_read = fields.Boolean(
+        required=True,
+        metadata={"description": "Whether the user can attach read permissions when sharing a group resource."},
+    )
+    share_write = fields.Boolean(
+        required=True,
+        metadata={"description": "Whether the user can attach write permissions when sharing a group resource."},
+    )
+
+class DeleteGroupSchema(Schema):
+    """Deletes a group"""
+
+    group_id = fields.Integer(
+        required=True,
+        metadata={"description": "The ID of the group to be deleted."},
+    )
+
 
 
 
