@@ -343,6 +343,7 @@ class AuthService(object):
         return {"status": 200, "message": "logout success"}
     
 class SharedResourceService(object):
+    """The service methods accessed via the /api/sharing endpoint."""
     def __init__(self, db : PrototypeDb):
         self.db =db
     
@@ -351,7 +352,21 @@ class SharedResourceService(object):
             resource_id:int,
             group_id:int,
             readable:bool,
-            writable:bool):
+            writable:bool) -> dict[str, Any]:
+        """Register a new shared resource.
+
+        Args:
+            creator_id: The id of the user creating the shared resource.
+            resource_id: The id of the resource being shared.
+            group_id: The id of the group being shared with.
+            readable: If the shared resource can be read.
+            writable: if the shared resource can be written to.
+
+        Returns:
+            A dictionary containing the creation success message if the creation
+            is successful, otherwise a dictionary with the
+            creation failure message and a 403 status code.
+        """
         id= len(self.db["shared_resources"])+1
         self.db["shared_resources"][str(id)] = SharedPrototypeResource(
         id=id,
@@ -360,20 +375,57 @@ class SharedResourceService(object):
         group_id=group_id,
         deleted=False,
         readable=readable,
-        writable=writable,
-    )
+        writable=writable)
+
+        if not self.db["shared_resources"][str(id)]:
+            return {"status": 403, "message": "Could not create shared resource."}
+        else:
+            return {"status": 200, "message": f"Created shared resource with id: {id}"}
+
+        
     
-    def delete(self, id:int):
-         self.db["shared_resources"][str(id)].deleted=True
+    def delete(self, id:int)-> dict[str, Any]:
+        """Deletes a shared resource. It does not delete the underlying resource. This
+          effectively unshares the resource.
+
+        Args:
+           id: ID of the shared resource pointer to be deleted. 
+
+        Returns:
+            A dictionary containing the deletion success message if the deletion
+            is successful, otherwise a dictionary with the
+            creation failure message and a 403 status code.
+        """
+        self.db["shared_resources"][str(id)].deleted=True
+        if not self.db["shared_resources"][str(id)].deleted:
+            return {"status": 403, 
+                    "message": f"Could not delete the shared resource with {id}."}
+        else:
+            return {"status": 200, "message": f"Deleted shared resource with id: {id}"}
+
+
         
 class GroupService(object):
+    """The service methods accessed via the /api/group endpoint."""
     def __init__(self, db : PrototypeDb):
-        self.db =db
+        self.db = db
     
     def create(self,
         name:str,
         creator_id:int,
-        owner_id:int):
+        owner_id:int) -> dict[str, Any]:
+        """Register a new group.
+
+        Args:
+            name: Human readable name of the group.
+            creator_id: The id of the groups's creator.
+            group_id: The id of the group's owner.
+
+        Returns:
+            A dictionary containing the creation success message if the creation
+            is successful, otherwise a dictionary with the
+            creation failure message and a 403 status code.
+        """
 
         id= len(self.db["groups"])+1
         self.db["groups"][str(id)] = Group(
@@ -381,8 +433,12 @@ class GroupService(object):
         name=name,
         creator_id=creator_id,
         owner_id=owner_id,
-        deleted=False,
-    )
+        deleted=False)
+
+        if not self.db["groups"][str(id)]:
+            return {"status": 403, "message": f"Could not create group with {id}."}
+        else:
+            return {"status": 200, "message": f"Created group with id: {id}"}
         
     def add_member(self,
         user_id:int,
@@ -390,7 +446,26 @@ class GroupService(object):
         read:bool,
         write:bool,
         share_read:bool,
-        share_write:bool):
+        share_write:bool) -> dict[str, Any]:
+        """Register a new member with a group.
+
+        Args:
+            user_id: The ID of the user to be added to the group.
+            group_id: The ID of the group to which the user will be added.
+            read: Whether the user can read the group's resources.
+            write: Whether the user can write to the group's resources.
+            share_read: Whether the user can attach read permissions when sharing a
+              group resource.
+            share_write: Whether the user can attach write permissions when sharing a
+              group resource.
+            
+
+
+        Returns:
+            A dictionary containing the add success message if the add
+            is successful, otherwise a dictionary with the
+            add failure message and a 403 status code.
+        """
 
         id= len(self.db["group_memberships"])+1
         self.db["group_memberships"][str(id)] = GroupMembership(
@@ -399,11 +474,33 @@ class GroupService(object):
         read=read,
         write=write,
         share_read=share_read,
-        share_write=share_write,
-    )
+        share_write=share_write)
+
+        if not  self.db["group_memberships"][str(id)]:
+            return {"status": 403, 
+                    "message": f"Could not add user {user_id} to group {id}."}
+        else:
+            return {"status": 200, "message": f"Added user {user_id} to group {id}."}
         
-    def delete(self, id:int):
+    def delete(self, id:int) -> dict[str, Any]:
+        """Deletes a group membership. It does not delete the underlying group. This
+          effectively removes a user from the group.
+
+        Args:
+           id: ID of the group membership to be deleted. 
+
+        Returns:
+            A dictionary containing the deletion success message if the deletion
+            is successful, otherwise a dictionary with the
+            creation failure message and a 403 status code.
+        """
         self.db["group_memberships"][str(id)].deleted= True
+
+        if not self.db["shared_resources"][str(id)].deleted:
+            return {"status": 403, 
+                    "message": f"Could not delete the group membership with {id}."}
+        else:
+            return {"status": 200, "message": f"Deleted group membership with id: {id}"}
 
 @dataclass
 class AppServices(object):

@@ -25,19 +25,9 @@ from .schemas import (
 )
 from .services import SERVICES
 
-from .models import db, User, Group, PrototypeResource, SharedPrototypeResource
+from .models import db
 
-from oso import Oso, NotFoundError, ForbiddenError
-
-oso = Oso()
-
-# oso.register_class(User)
-# oso.register_class(PrototypeResource)
-# oso.register_class(SharedPrototypeResource)
-# oso.register_class(Group)
-
-# # Load your policy files.
-# oso.load_files(["src/proto/authorization.polar"])
+from oso import NotFoundError, ForbiddenError
 
 
 # oso decorator definition
@@ -52,7 +42,7 @@ def authorize(action):
 
             # Check if the user is allowed to perform the action on the resource
             try:
-                oso.authorize(user, action, resource)
+                current_app.oso.authorize(user, action, resource)
                 return f(*args, **kwargs)
             except NotFoundError:
                 return f"<h1>Whoops!</h1><p>Not Found</p>", 404
@@ -211,16 +201,16 @@ class SharedResource(Resource):
     @login_required
     @accepts(schema=SharedPrototypeResourceSchema, api=sharing_api)
     def post(self) -> str:
-        """Gives a group the read permission on a given resource"""
+        """Shares a given resource with a group."""
         parsed_obj = cast(
             dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
         )
 
         creator_id =  SERVICES.user.get_current_user().id
         resource_id = str(parsed_obj["resource_id"])
-        group_id = parsed_obj["group_id"]
-        readable = parsed_obj["readable"]
-        writable = parsed_obj["writable"]
+        group_id = int(parsed_obj["group_id"])
+        readable = bool(parsed_obj["readable"])
+        writable = bool(parsed_obj["writable"])
 
         user = db["users"]["1"]#SERVICES.user.get_current_user()
         resource = db["resources"]["2"]
@@ -246,7 +236,7 @@ class SharedResource(Resource):
     @login_required
     @accepts(schema=RevokeSharedPrototypeResourceSchema, api=sharing_api)
     def delete(self) -> str:
-        """Revokes the read permission on a given resource from a group"""
+        """Revokes the share on a given resource from a group"""
         parsed_obj = cast(
             dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
         )
@@ -273,6 +263,7 @@ class ManageGroup(Resource):
     @login_required
     @accepts(schema= CreateGroupSchema, api=group_api)
     def post(self):
+        """Creates a new group, responds with the success of the creation."""
         parsed_obj = cast(
             dict[str, Any], request.parsed_obj  # type: ignore[attr-defined]
         )
@@ -286,6 +277,7 @@ class ManageGroup(Resource):
     @login_required
     @accepts(schema=AddUserToGroupSchema, api=group_api)
     def put(self):
+        """Adds a user to a group, responds with the success of the add."""
         parsed_obj = cast(
             dict[str, Any],
             request.parsed_obj  # type: ignore[attr-defined]
@@ -312,6 +304,7 @@ class ManageGroup(Resource):
     @login_required
     @accepts(schema=DeleteGroupSchema, api=group_api)
     def delete(self):
+        """Deletes a group, responds with the success of the deletion."""
         parsed_obj = cast(
             dict[str, Any],
             request.parsed_obj  # type: ignore[attr-defined]
@@ -389,47 +382,6 @@ class TestResource(Resource):
         return SERVICES.test.reveal_secret_key()
 
 
-# testing with path variables
-@test_api.route("/<name>")
-class TestPluginResource(Resource):
-    @login_required
-    def get(self) -> str:
-        """Responds with the server's secret key.
-
-        Must be logged in.
-        """
-        resource = db["resources"]["test"]
-        user = SERVICES.user
-        try:
-            oso.authorize(user, "read", resource)
-            return SERVICES.test.reveal_secret_key()
-        except NotFoundError:
-            return f"<h1>Whoops!</h1><p>Not Found</p>", 404
-
-    @login_required
-    def post(self) -> str:
-        """Responds with the server's secret key.
-
-        Must be logged in.
-        """
-        resource = db["resources"]["test"]
-        user = SERVICES.user
-        try:
-            oso.authorize(user, "write", resource)
-            return SERVICES.test.reveal_secret_key()
-        except NotFoundError:
-            return f"<h1>Whoops!</h1><p>Not Found</p>", 404
-
-    @login_required
-    @authorize("write")
-    def put(self, name) -> str:
-        """Responds with the server's secret key.
-
-        Must be logged in.
-        """
-        return SERVICES.test.reveal_secret_key()
-
-
 # -- World Resource -------------------------------------------------------------------
 
 
@@ -461,7 +413,16 @@ class WorldResource(Resource):
 
         Must be logged in.
         """
-        return SERVICES.world.show_user_info()
+        resource = db["resources"]["1"]
+
+        # Check if the user is allowed to perform the action on the resource
+        try:
+            current_app.oso.authorize(current_user, "write", resource)
+            return SERVICES.world.show_user_info()
+        except NotFoundError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 404
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Allowed</p>", 403
 
     @login_required
     @authorize("create")
@@ -470,7 +431,16 @@ class WorldResource(Resource):
 
         Must be logged in.
         """
-        return SERVICES.world.show_user_info()
+        resource = db["resources"]["1"]
+
+        # Check if the user is allowed to perform the action on the resource
+        try:
+            current_app.oso.authorize(current_user, "write", resource)
+            return SERVICES.world.show_user_info()
+        except NotFoundError:
+            return f"<h1>Whoops!</h1><p>Not Found</p>", 404
+        except ForbiddenError:
+            return f"<h1>Whoops!</h1><p>Not Allowed</p>", 403
 
 
 # -- Foo Resource ---------------------------------------------------------------------
