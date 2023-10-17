@@ -9,13 +9,6 @@ from typing import Iterable
 from flask import Flask
 from flask.testing import FlaskClient
 
-
-# @pytest.fixture
-# def client():
-#     with create_app().test_client() as client:
-#         yield client
-
-
 class TestUser(object):
     @pytest.fixture(scope="class")
     def app(self) -> Iterable[Flask]:
