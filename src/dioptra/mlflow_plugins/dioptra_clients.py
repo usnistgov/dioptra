@@ -71,8 +71,7 @@ class DioptraDatabaseClient(object):
 
     def update_job_status(self, job_id: str, status: str) -> None:
         LOGGER.info(
-            f"=== Updating job status for job with ID '{job_id}' to "
-            f"{status} ==="
+            f"=== Updating job status for job with ID '{job_id}' to {status} ==="
         )
 
         with self.app.app_context():

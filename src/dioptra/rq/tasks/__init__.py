@@ -15,5 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from .run_mlflow import run_mlflow_task
+from .run_task_engine import run_task_engine
 
-__all__ = ["run_mlflow_task"]
+__all__ = ["run_mlflow_task", "run_task_engine"]

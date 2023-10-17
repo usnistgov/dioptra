@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module for registering the endpoint routes with the main application.
+"""Methods for registering the taskEngine endpoint routes with the main application.
 
 .. |Api| replace:: :py:class:`flask_restx.Api`
 .. |Flask| replace:: :py:class:`flask.Flask`
@@ -24,23 +24,18 @@ from __future__ import annotations
 from flask import Flask
 from flask_restx import Api
 
+BASE_ROUTE: str = "taskEngine"
 
-def register_routes(api: Api, app: Flask) -> None:
-    """Registers the endpoint routes with the main application.
+
+def register_routes(api: Api, app: Flask, root: str = "api") -> None:
+    """Registers the job endpoint routes with the main application.
 
     Args:
         api: The main REST |Api| object.
         app: The main |Flask| application.
+        root: The root path for the registration prefix of the namespace. The default
+            is `"api"`.
     """
-    from .experiment import register_routes as attach_experiment
-    from .job import register_routes as attach_job
-    from .queue import register_routes as attach_job_queue
-    from .task_engine import register_routes as attach_task_engine
-    from .task_plugin import register_routes as attach_task_plugin
+    from .controller import api as endpoint_api
 
-    # Add routes
-    attach_experiment(api, app)
-    attach_job(api, app)
-    attach_job_queue(api, app)
-    attach_task_plugin(api, app)
-    attach_task_engine(api, app)
+    api.add_namespace(endpoint_api, path=f"/{root}/{BASE_ROUTE}")

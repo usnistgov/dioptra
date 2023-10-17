@@ -14,33 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module for registering the endpoint routes with the main application.
+from .routes import register_routes
 
-.. |Api| replace:: :py:class:`flask_restx.Api`
-.. |Flask| replace:: :py:class:`flask.Flask`
-"""
-from __future__ import annotations
-
-from flask import Flask
-from flask_restx import Api
-
-
-def register_routes(api: Api, app: Flask) -> None:
-    """Registers the endpoint routes with the main application.
-
-    Args:
-        api: The main REST |Api| object.
-        app: The main |Flask| application.
-    """
-    from .experiment import register_routes as attach_experiment
-    from .job import register_routes as attach_job
-    from .queue import register_routes as attach_job_queue
-    from .task_engine import register_routes as attach_task_engine
-    from .task_plugin import register_routes as attach_task_plugin
-
-    # Add routes
-    attach_experiment(api, app)
-    attach_job(api, app)
-    attach_job_queue(api, app)
-    attach_task_plugin(api, app)
-    attach_task_engine(api, app)
+__all__ = [
+    "register_routes",
+]
