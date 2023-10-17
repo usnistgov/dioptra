@@ -23,12 +23,7 @@ from .experiment.model import (
     ExperimentRegistrationFormData,
 )
 from .job.model import Job, JobForm, JobFormData
-from .queue.model import (
-    Queue,
-    QueueLock,
-    QueueRegistrationForm,
-    QueueRegistrationFormData,
-)
+from .queue.model import Queue, QueueLock
 from .task_plugin.model import (
     TaskPlugin,
     TaskPluginUploadForm,
@@ -44,8 +39,6 @@ __all__ = [
     "JobForm",
     "JobFormData",
     "Queue",
-    "QueueRegistrationForm",
-    "QueueRegistrationFormData",
     "QueueLock",
     "TaskPlugin",
     "TaskPluginUploadForm",

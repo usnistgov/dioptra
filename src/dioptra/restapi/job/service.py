@@ -20,7 +20,7 @@ from __future__ import annotations
 import datetime
 import uuid
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import structlog
 from injector import inject
@@ -31,8 +31,7 @@ from werkzeug.utils import secure_filename
 from dioptra.restapi.app import db
 from dioptra.restapi.experiment.errors import ExperimentDoesNotExistError
 from dioptra.restapi.experiment.service import ExperimentService
-from dioptra.restapi.queue.errors import QueueDoesNotExistError
-from dioptra.restapi.queue.service import QueueService
+from dioptra.restapi.queue.service import QueueNameService
 from dioptra.restapi.shared.rq.service import RQService
 from dioptra.restapi.shared.s3.service import S3Service
 
@@ -51,13 +50,13 @@ class JobService(object):
         rq_service: RQService,
         s3_service: S3Service,
         experiment_service: ExperimentService,
-        queue_service: QueueService,
+        queue_name_service: QueueNameService,
     ) -> None:
         self._job_form_schema = job_form_schema
         self._rq_service = rq_service
         self._s3_service = s3_service
         self._experiment_service = experiment_service
-        self._queue_service = queue_service
+        self._queue_name_service = queue_name_service
 
     @staticmethod
     def create(job_form_data: JobFormData, **kwargs) -> Job:
@@ -101,12 +100,15 @@ class JobService(object):
         if experiment is None:
             raise ExperimentDoesNotExistError
 
-        queue: Optional[Queue] = self._queue_service.get_unlocked_by_name(
-            job_form_data["queue"], log=log
+        queue = cast(
+            Queue,
+            self._queue_name_service.get(
+                job_form_data["queue"],
+                unlocked_only=True,
+                error_if_not_found=True,
+                log=log,
+            ),
         )
-
-        if queue is None:
-            raise QueueDoesNotExistError
 
         job_form_data["experiment_id"] = experiment.experiment_id
         job_form_data["queue_id"] = queue.queue_id

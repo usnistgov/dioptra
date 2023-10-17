@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import List, Optional
+from typing import Any, cast
 
 import structlog
 from injector import inject
@@ -26,197 +26,321 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.app import db
 
-from .errors import QueueAlreadyExistsError
-from .model import Queue, QueueLock, QueueRegistrationForm, QueueRegistrationFormData
-from .schema import QueueRegistrationFormSchema
+from .errors import QueueAlreadyExistsError, QueueDoesNotExistError, QueueLockedError
+from .model import Queue, QueueLock
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class QueueService(object):
+    """The service methods for registering and managing queues by their unique id."""
+
     @inject
     def __init__(
         self,
-        queue_registration_form_schema: QueueRegistrationFormSchema,
+        name_service: QueueNameService,
     ) -> None:
-        self._queue_registration_form_schema = queue_registration_form_schema
+        """Initialize the queue service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            name_service: The queue name service.
+        """
+        self._name_service = name_service
 
     def create(
         self,
-        queue_registration_form_data: QueueRegistrationFormData,
+        name: str,
         **kwargs,
     ) -> Queue:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        queue_name: str = queue_registration_form_data["name"]
+        """Create a new queue.
 
-        if self.get_by_name(queue_name, log=log) is not None:
+        Args:
+            name: The name of the queue.
+
+        Returns:
+            The newly created queue object.
+
+        Raises:
+            QueueAlreadyExistsError: If a queue with the given name already exists.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        if self._name_service.get(name, log=log) is not None:
             raise QueueAlreadyExistsError
 
         timestamp = datetime.datetime.now()
         new_queue: Queue = Queue(
             queue_id=Queue.next_id(),
-            name=queue_name,
+            name=name,
             created_on=timestamp,
             last_modified=timestamp,
         )
         db.session.add(new_queue)
         db.session.commit()
-
         log.info(
             "Queue registration successful",
             queue_id=new_queue.queue_id,
             name=new_queue.name,
         )
-
         return new_queue
 
-    @staticmethod
-    def lock_queue(queue: Queue, **kwargs) -> List[int]:
+    def get(
+        self,
+        queue_id: int,
+        unlocked_only: bool = False,
+        error_if_not_found: bool = False,
+        **kwargs,
+    ) -> Queue | None:
+        """Fetch a queue by its unique id.
+
+        Args:
+            queue_id: The unique id of the queue.
+            unlocked_only: If True, raise an error if the queue is locked. Defaults to
+                False.
+            error_if_not_found: If True, raise an error if the queue is not found.
+                Defaults to False.
+
+        Returns:
+            The queue object if found, otherwise None.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found and `error_if_not_found`
+                is True.
+            QueueLockedError: If the queue is locked and `unlocked_only` is True.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        if queue.lock:
-            return []
-
-        queue.lock.append(QueueLock())
-        db.session.commit()
-
-        log.info("Queue locked", queue_id=queue.queue_id)
-
-        return [queue.queue_id]
-
-    @staticmethod
-    def unlock_queue(queue: Queue, **kwargs) -> List[int]:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        if not queue.lock:
-            return []
-
-        db.session.delete(queue.lock[0])
-        db.session.commit()
-
-        log.info("Queue unlocked", queue_id=queue.queue_id)
-
-        return [queue.queue_id]
-
-    def delete_queue(self, queue_id: int, **kwargs) -> List[int]:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        queue: Optional[Queue] = self.get_by_id(queue_id=queue_id)
+        log.info("Get queue by id", queue_id=queue_id)
+        queue = Queue.query.filter_by(queue_id=queue_id, is_deleted=False).first()
 
         if queue is None:
-            return []
+            if error_if_not_found:
+                log.error("Queue not found", queue_id=queue_id)
+                raise QueueDoesNotExistError
+
+            return None
+
+        if queue.lock and unlocked_only:
+            log.error("Queue is locked", queue_id=queue_id)
+            raise QueueLockedError
+
+        return cast(Queue, queue)
+
+    def get_all(self, **kwargs) -> list[Queue]:
+        """Fetch the list of all queues.
+
+        Returns:
+            A list of queues.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.info("Get full list of queues")
+        return Queue.query.filter_by(is_deleted=False).all()  # type: ignore
+
+    def get_all_unlocked(self, **kwargs) -> list[Queue]:
+        """Fetch the list of all unlocked queues.
+
+        Returns:
+            A list of queues.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.info("Get full list of unlocked queues")
+        return (  # type: ignore
+            Queue.query.outerjoin(QueueLock, Queue.queue_id == QueueLock.queue_id)
+            .filter(
+                QueueLock.queue_id == None,  # noqa: E711
+                Queue.is_deleted == False,  # noqa: E712
+            )
+            .all()
+        )
+
+    def rename(self, queue_id: int, new_name: str, **kwargs) -> Queue:
+        """Rename a queue.
+
+        Args:
+            queue_id: The unique id of the queue.
+            new_name: The new name of the queue.
+
+        Returns:
+            The updated queue object.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        queue = cast(Queue, self.get(queue_id, error_if_not_found=True, log=log))
+        queue.update(changes={"name": new_name})
+        db.session.commit()
+        log.info("Queue renamed", queue_id=queue.queue_id, new_name=new_name)
+        return queue
+
+    def delete(self, queue_id: int, **kwargs) -> dict[str, Any]:
+        """Delete a queue.
+
+        Args:
+            queue_id: The unique id of the queue.
+
+        Returns:
+            A dictionary reporting the status of the request.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        if (queue := self.get(queue_id, log=log)) is None:
+            return {"status": "Success", "id": []}
 
         queue.update(changes={"is_deleted": True})
         db.session.commit()
-
         log.info("Queue deleted", queue_id=queue_id)
+        return {"status": "Success", "id": [queue_id]}
 
-        return [queue_id]
+    def lock(self, queue_id: int, **kwargs) -> dict[str, Any]:
+        """Lock a queue.
 
-    def rename_queue(self, queue: Queue, new_name: str, **kwargs) -> Queue:
+        Args:
+            queue_id: The unique id of the queue.
+
+        Returns:
+            A dictionary reporting the status of the request.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        queue.update(changes={"name": new_name})
+        if (queue := self.get(queue_id, error_if_not_found=True, log=log)) is None:
+            return {"status": "Success", "id": []}
+
+        queue.lock.append(QueueLock())
         db.session.commit()
+        log.info("Queue locked", queue_id=queue.queue_id)
+        return {"status": "Success", "id": [queue.queue_id]}
 
-        log.info("Queue renamed", queue_id=queue.queue_id, new_name=new_name)
+    def unlock(self, queue_id: int, **kwargs) -> dict[str, Any]:
+        """Unlock a queue.
 
-        return queue
+        Args:
+            queue_id: The unique id of the queue.
 
-    @staticmethod
-    def get_all(**kwargs) -> List[Queue]:
+        Returns:
+            A dictionary reporting the status of the request.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        log.info("Get full list of queues")
+        if (queue := self.get(queue_id, error_if_not_found=True, log=log)) is None:
+            return {"status": "Success", "id": []}
 
-        return Queue.query.filter_by(is_deleted=False).all()  # type: ignore
+        db.session.delete(queue.lock[0])
+        db.session.commit()
+        log.info("Queue unlocked", queue_id=queue.queue_id)
+        return {"status": "Success", "id": [queue.queue_id]}
 
-    @staticmethod
-    def get_all_unlocked(**kwargs) -> List[Queue]:
+
+class QueueNameService(object):
+    """The service methods for managing queues by their name."""
+
+    def get(
+        self,
+        queue_name: str,
+        unlocked_only: bool = False,
+        error_if_not_found: bool = False,
+        **kwargs,
+    ) -> Queue | None:
+        """Fetch a queue by its name.
+
+        Args:
+            queue_name: The name of the queue.
+            unlocked_only: If True, raise an error if the queue is locked. Defaults to
+                False.
+            error_if_not_found: If True, raise an error if the queue is not found.
+                Defaults to False.
+
+        Returns:
+            The queue object if found, otherwise None.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found and `error_if_not_found`
+                is True.
+            QueueLockedError: If the queue is locked and `unlocked_only` is True.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        log.info("Get full list of unlocked queues")
-
-        return (  # type: ignore
-            Queue.query.outerjoin(QueueLock, Queue.queue_id == QueueLock.queue_id)
-            .filter(
-                QueueLock.queue_id == None,  # noqa: E711
-                Queue.is_deleted == False,  # noqa: E712
-            )
-            .all()
-        )
-
-    @staticmethod
-    def get_all_locked(**kwargs) -> List[Queue]:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        log.info("Get full list of locked queues")
-
-        return (  # type: ignore
-            Queue.query.join(QueueLock)
-            .filter(Queue.is_deleted == False)  # noqa: E712
-            .all()
-        )
-
-    @staticmethod
-    def get_by_id(queue_id: int, **kwargs) -> Optional[Queue]:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        log.info("Get queue by id", queue_id=queue_id)
-
-        return Queue.query.filter_by(  # type: ignore
-            queue_id=queue_id, is_deleted=False
-        ).first()
-
-    @staticmethod
-    def get_by_name(queue_name: str, **kwargs) -> Optional[Queue]:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
         log.info("Get queue by name", queue_name=queue_name)
+        queue = Queue.query.filter_by(name=queue_name, is_deleted=False).first()
 
-        return Queue.query.filter_by(  # type: ignore
-            name=queue_name, is_deleted=False
-        ).first()
+        if queue is None:
+            if error_if_not_found:
+                log.error("Queue not found", name=queue_name)
+                raise QueueDoesNotExistError
 
-    @staticmethod
-    def get_unlocked_by_id(queue_id: int, **kwargs) -> Optional[Queue]:
+            return None
+
+        if queue.lock and unlocked_only:
+            log.error("Queue is locked", name=queue_name)
+            raise QueueLockedError
+
+        return cast(Queue, queue)
+
+    def delete(self, name: str, **kwargs) -> dict[str, Any]:
+        """Delete a queue.
+
+        Args:
+            name: The name of the queue.
+
+        Returns:
+            A dictionary reporting the status of the request.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        log.info("Get unlocked queue by id", queue_id=queue_id)
+        if (queue := self.get(name, log=log)) is None:
+            return {"status": "Success", "name": []}
 
-        return (  # type: ignore
-            Queue.query.outerjoin(QueueLock, Queue.queue_id == QueueLock.queue_id)
-            .filter(
-                Queue.queue_id == queue_id,
-                QueueLock.queue_id == None,  # noqa: E711
-                Queue.is_deleted == False,  # noqa: E712
-            )
-            .first()
-        )
+        queue.update(changes={"is_deleted": True})
+        db.session.commit()
+        log.info("Queue deleted", name=name)
+        return {"status": "Success", "name": [name]}
 
-    @staticmethod
-    def get_unlocked_by_name(queue_name: str, **kwargs) -> Optional[Queue]:
+    def lock(self, name: str, **kwargs) -> dict[str, Any]:
+        """Lock a queue.
+
+        Args:
+            name: The name of the queue.
+
+        Returns:
+            A dictionary reporting the status of the request.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        log.info("Get unlocked queue by name", queue_name=queue_name)
+        if (queue := self.get(name, error_if_not_found=True, log=log)) is None:
+            return {"status": "Success", "name": []}
 
-        return (  # type: ignore
-            Queue.query.outerjoin(QueueLock, Queue.queue_id == QueueLock.queue_id)
-            .filter(
-                Queue.name == queue_name,
-                QueueLock.queue_id == None,  # noqa: E711
-                Queue.is_deleted == False,  # noqa: E712
-            )
-            .first()
-        )
+        queue.lock.append(QueueLock())
+        db.session.commit()
+        log.info("Queue locked", name=queue.name)
+        return {"status": "Success", "name": [queue.name]}
 
-    def extract_data_from_form(
-        self, queue_registration_form: QueueRegistrationForm, **kwargs
-    ) -> QueueRegistrationFormData:
+    def unlock(self, name: str, **kwargs) -> dict[str, Any]:
+        """Unlock a queue.
+
+        Args:
+            name: The name of the queue.
+
+        Returns:
+            A dictionary reporting the status of the request.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        log.info("Extract data from queue registration form")
-        data: QueueRegistrationFormData = self._queue_registration_form_schema.dump(
-            queue_registration_form
-        )
+        if (queue := self.get(name, error_if_not_found=True, log=log)) is None:
+            return {"status": "Success", "name": []}
 
-        return data
+        db.session.delete(queue.lock[0])
+        db.session.commit()
+        log.info("Queue unlocked", name=name)
+        return {"status": "Success", "name": [queue.name]}
