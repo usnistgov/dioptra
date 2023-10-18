@@ -109,7 +109,7 @@ def dependency_modules() -> List[Any]:
         configuration: RQServiceConfiguration = RQServiceConfiguration(
             redis=Redis.from_url("redis://"),
             run_mlflow="dioptra.rq.tasks.run_mlflow_task",
-            run_task_engine="dioptra.rq.tasks.run_task_engine",
+            run_task_engine="dioptra.rq.tasks.run_task_engine_task",
         )
 
         binder.bind(
