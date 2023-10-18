@@ -61,7 +61,7 @@ class RQServiceModule(Module):
 def _bind_rq_service_configuration(binder: Binder):
     redis_conn: Redis = Redis.from_url(os.getenv("RQ_REDIS_URI", "redis://"))
     run_mlflow: str = "dioptra.rq.tasks.run_mlflow_task"
-    run_task_engine: str = "dioptra.rq.tasks.run_task_engine"
+    run_task_engine: str = "dioptra.rq.tasks.run_task_engine_task"
 
     configuration: RQServiceConfiguration = RQServiceConfiguration(
         redis=redis_conn, run_mlflow=run_mlflow, run_task_engine=run_task_engine

@@ -244,7 +244,7 @@ def test_run_task_engine(monkeypatch, tmp_path):
             {"Bucket": "plugins", "Key": "dioptra_custom/file4.dat"},
         )
 
-        dioptra.rq.tasks.run_task_engine.run_task_engine(
+        dioptra.rq.tasks.run_task_engine.run_task_engine_task(
             1, silly_experiment, global_experiment_params, s3
         )
 
