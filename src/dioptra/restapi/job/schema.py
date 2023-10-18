@@ -227,6 +227,47 @@ class JobFormSchema(Schema):
         return self.__model__(**data)
 
 
+class TaskEngineSubmission(Schema):
+    queue = fields.String(
+        required=True,
+        metadata={"description": "The name of an active queue"},
+    )
+
+    experimentName = fields.String(
+        required=True,
+        metadata={"description": "The name of a registered experiment."},
+    )
+
+    experimentDescription = fields.Dict(
+        keys=fields.String(),
+        required=True,
+        metadata={"description": "A declarative experiment description."},
+    )
+
+    globalParameters = fields.Dict(
+        keys=fields.String(),
+        metadata={"description": "Global parameters for this task engine job."},
+    )
+
+    timeout = fields.String(
+        metadata={
+            "description": "The maximum alloted time for a job before it times"
+            " out and is stopped. If omitted, the job timeout"
+            " will default to 24 hours.",
+        },
+    )
+
+    dependsOn = fields.String(
+        metadata={
+            "description": "A job UUID to set as a dependency for this new job."
+            " The new job will not run until this job completes"
+            " successfully. If omitted, then the new job will"
+            " start as soon as computing resources are"
+            " available.",
+        },
+    )
+
+
 job_submit_form_schema: list[ParametersSchema] = [
     dict(
         name="experiment_name",
