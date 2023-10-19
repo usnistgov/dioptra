@@ -180,9 +180,11 @@ class JobService(object):
         if not is_valid(experiment_description):
             raise InvalidExperimentDescriptionError
 
+        job_id = str(uuid.uuid4())
         timestamp = datetime.datetime.now()
 
         new_job = Job(
+            job_id=job_id,
             experiment_id=experiment.experiment_id,
             queue_id=queue.queue_id,
             created_on=timestamp,
@@ -194,7 +196,11 @@ class JobService(object):
         if global_parameters is not None:
             new_job.entry_point_kwargs = json.dumps(global_parameters)
 
-        rq_job: RQJob = self._rq_service.submit_task_engine_job(
+        db.session.add(new_job)
+        db.session.commit()
+
+        self._rq_service.submit_task_engine_job(
+            job_id=job_id,
             queue=queue_name,
             experiment_id=experiment.experiment_id,
             experiment_description=experiment_description,
@@ -203,12 +209,7 @@ class JobService(object):
             timeout=timeout,
         )
 
-        new_job.job_id = rq_job.get_id()
-
-        db.session.add(new_job)
-        db.session.commit()
-
-        log.info("Job submission successful", job_id=new_job.job_id)
+        log.info("Job submission successful", job_id=job_id)
 
         return new_job
 
