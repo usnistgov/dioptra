@@ -69,7 +69,7 @@ dependencies = [
     "structlog>=20.2.0",
     "SQLAlchemy>=1.4.0,<2",
     "typing-extensions>=3.7.4.3",
-    "werkzeug>=1.0.0,<=2.1.2",
+    "werkzeug>=1.0.0,<=3.0.1",
     "wtforms[email]>=3.0.0",
 ]
 classifiers = [
