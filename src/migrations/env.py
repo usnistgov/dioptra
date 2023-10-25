@@ -4,10 +4,10 @@ import logging
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, create_engine
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import create_engine, engine_from_config, pool
+
+from dioptra.restapi.custom_types import GUID
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -46,6 +46,20 @@ def get_url():
     return env_urls[app_env]
 
 
+def render_item(type_, obj, autogen_context):
+    """Apply custom rendering for selected items."""
+
+    if type_ == "type" and isinstance(obj, GUID):
+        # add import for this type
+        autogen_context.imports.add(
+            "from dioptra.restapi.custom_types import GUID"
+        )
+        return "%r" % obj
+
+    # default rendering for other objects
+    return False
+
+
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
 
@@ -59,7 +73,12 @@ def run_migrations_offline():
 
     """
     url = get_url()
-    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        render_item=render_item,
+    )
 
     with context.begin_transaction():
         context.run_migrations()
@@ -90,6 +109,7 @@ def run_migrations_online():
             connection=connection,
             target_metadata=target_metadata,
             process_revision_directives=process_revision_directives,
+            render_item=render_item,
             **current_app.extensions["migrate"].configure_args,
         )
 

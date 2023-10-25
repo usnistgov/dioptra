@@ -25,8 +25,6 @@ from passlib.context import CryptContext
 
 from dioptra.restapi.shared.password.service import PasswordService
 
-from .schema import UserRegistrationFormSchema
-
 
 @dataclass
 class PasswordServiceConfiguration(object):
@@ -39,14 +37,6 @@ class PasswordServiceModule(Module):
         self, configuration: PasswordServiceConfiguration
     ) -> PasswordService:
         return PasswordService(crypt_context=configuration.crypt_context)
-
-
-class UserRegistrationFormSchemaModule(Module):
-    @provider
-    def provide_user_registration_form_schema_module(
-        self,
-    ) -> UserRegistrationFormSchema:
-        return UserRegistrationFormSchema()
 
 
 def _bind_password_service_configuration(binder: Binder):
@@ -77,4 +67,3 @@ def register_providers(modules: list[Callable[..., Any]]) -> None:
             environment.
     """
     modules.append(PasswordServiceModule)
-    modules.append(UserRegistrationFormSchemaModule)

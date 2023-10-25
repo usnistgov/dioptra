@@ -18,19 +18,11 @@
 from __future__ import annotations
 
 import datetime
+import uuid
 from typing import Any
 
-from flask_wtf import FlaskForm
-from wtforms.fields import EmailField, PasswordField, StringField
-from wtforms.validators import Email, EqualTo, InputRequired
-
 from dioptra.restapi.app import db
-
-try:
-    from typing import TypedDict
-
-except ImportError:
-    from typing_extensions import TypedDict
+from dioptra.restapi.custom_types import GUID
 
 
 class User(db.Model):
@@ -38,13 +30,16 @@ class User(db.Model):
 
     Attributes:
         user_id: An integer identifying a registered user account.
+        alternative_id: A UUID as a 32-character lowercase hexadecimal string that
+            serves as the user's alternative identifier. The alternative_id is
+            changed when the user's password is changed or the user revokes all
+            active sessions via a full logout.
         username: The username for logging into the user account.
         password: The hashed password used for authenticating the user account.
         email_address: The email address associated with the user account.
         created_on: The date and time the user account was created.
         last_modified_on: The date and time the user account was last modified.
         last_login_on: The date and time the user last logged into their account.
-        user_expire_on: The date and time the user account is set to expire.
         password_expire_on: The date and time the user's password is set to expire.
         is_deleted: A boolean that indicates if the user account is deleted.
     """
@@ -54,15 +49,40 @@ class User(db.Model):
     user_id: int = db.Column(
         db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True
     )
+    alternative_id: uuid.UUID = db.Column(
+        GUID(), nullable=False, unique=True, default=uuid.uuid4
+    )
     username: str = db.Column(db.Text(), nullable=False)
     password: str = db.Column(db.Text(), nullable=False)
     email_address: str = db.Column(db.Text(), nullable=False)
     created_on: datetime.datetime = db.Column(db.DateTime(), nullable=False)
     last_modified_on: datetime.datetime = db.Column(db.DateTime(), nullable=False)
     last_login_on: datetime.datetime = db.Column(db.DateTime(), nullable=False)
-    user_expire_on: datetime.datetime = db.Column(db.DateTime(), nullable=False)
     password_expire_on: datetime.datetime = db.Column(db.DateTime(), nullable=False)
     is_deleted: bool = db.Column(db.Boolean(), nullable=False, default=False)
+
+    @property
+    def is_authenticated(self) -> bool:
+        """Return True if the user is authenticated, False otherwise."""
+        return self.is_active
+
+    @property
+    def is_active(self) -> bool:
+        """Return True if the user account is active, False otherwise."""
+        return not self.is_deleted
+
+    @property
+    def is_anonymous(self) -> bool:
+        """Return True if the user is registered, False otherwise."""
+        return False
+
+    def get_id(self) -> str:
+        """Get the user's session identifier.
+
+        Returns:
+            The user's identifier as a string.
+        """
+        return str(self.alternative_id)
 
     def update(self, changes: dict[str, Any]):
         """Updates the record.
@@ -77,37 +97,3 @@ class User(db.Model):
             setattr(self, key, val)
 
         return self
-
-
-class UserRegistrationForm(FlaskForm):
-    """The user registration form.
-
-    Attributes:
-        username: The username for the user account.
-        password: The password to use for for authenticating the new account.
-        password_confirm: The password confirmation field, this should exactly
-            match the value in `password`.
-        email_address: The email address to associate with the user account.
-    """
-
-    username = StringField("Username", validators=[InputRequired()])
-    password = PasswordField(
-        "Password",
-        [InputRequired(), EqualTo("password_confirm", message="Passwords must match")],
-    )
-    password_confirm = PasswordField("Repeat Password", validators=[InputRequired()])
-    email_address = EmailField("Email Address", validators=[InputRequired(), Email()])
-
-
-class UserRegistrationFormData(TypedDict, total=False):
-    """The data extracted from the user registration form.
-
-    Attributes:
-        username: The username for logging into the user account.
-        password: The hashed password used for authenticating the user account.
-        email_address: The email address associated with the user account.
-    """
-
-    username: str
-    password: str
-    email_address: str

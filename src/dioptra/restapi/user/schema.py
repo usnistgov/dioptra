@@ -17,42 +17,23 @@
 """The schemas for serializing/deserializing the user endpoint objects.
 
 .. |User| replace:: :py:class:`~.model.User`
-.. |UserRegistrationForm| replace:: :py:class:`~.model.UserRegistrationForm`
 """
 from __future__ import annotations
 
-from typing import Any
-
-from marshmallow import Schema, fields, pre_dump
-
-from dioptra.restapi.utils import ParametersSchema
-
-from .model import User, UserRegistrationForm
+from marshmallow import Schema, fields
 
 
 class UserSchema(Schema):
-    """The schema for the data stored in an |User| object.
-
-    Attributes:
-        userId: An integer identifying a registered user account.
-        username: The username for logging into the user account.
-        emailAddress: The email address associated with the user account.
-        createdOn: The date and time the user account was created.
-        lastModifiedOn: The date and time the user account was last modified.
-        lastLoginOn: The date and time the user last logged into their account.
-        userExpireOn: The date and time the user account is set to expire.
-        passwordExpireOn: The date and time the user's password is set to expire.
-    """
-
-    __model__ = User
+    """The schema for the data stored in an |User| object."""
 
     userId = fields.Integer(
         attribute="user_id",
         metadata=dict(description="An integer identifying a registered user account."),
+        dump_only=True,
     )
     username = fields.String(
         attribute="username",
-        metadata=dict(description="The username for logging into the user account."),
+        metadata=dict(description="The username of the user account."),
     )
     emailAddress = fields.Email(
         attribute="email_address",
@@ -60,112 +41,96 @@ class UserSchema(Schema):
             description="The email address associated with the user account."
         ),
     )
+    password = fields.String(
+        attribute="password",
+        metadata=dict(description="The password for the user account."),
+        load_only=True,
+    )
+    confirmPassword = fields.String(
+        attribute="confirm_password",
+        metadata=dict(
+            description="The password confirmation when creating a new user account."
+        ),
+        load_only=True,
+    )
     createdOn = fields.DateTime(
         attribute="created_on",
         metadata=dict(description="The date and time the user account was created."),
+        dump_only=True,
     )
     lastModifiedOn = fields.DateTime(
         attribute="last_modified_on",
         metadata=dict(
             description="The date and time the user account was last modified."
         ),
+        dump_only=True,
     )
     lastLoginOn = fields.DateTime(
         attribute="last_login_on",
         metadata=dict(
             description="The date and time the user last logged into their account."
         ),
-    )
-    userExpireOn = fields.DateTime(
-        attribute="user_expire_on",
-        metadata=dict(
-            description="The date and time the user account is set to expire."
-        ),
+        dump_only=True,
     )
     passwordExpireOn = fields.DateTime(
         attribute="password_expire_on",
         metadata=dict(
             description="The date and time the user's password is set to expire."
         ),
+        dump_only=True,
     )
 
 
-class UserRegistrationFormSchema(Schema):
-    """The schema for the information stored in an user registration form.
+class ChangePasswordUserSchema(Schema):
+    """The required fields for changing the password of a user account."""
 
-    Attributes:
-        username: The username for logging into the user account. Must be unique.
-        password: The password used for authenticating the user account.
-        email_address: The email address associated with the user account.
-    """
-
-    username = fields.String(
-        attribute="username",
-        required=True,
-        metadata=dict(
-            description=(
-                "The username for logging into the user account. Must be unique."
-            ),
-        ),
+    userId = fields.Integer(
+        attribute="user_id",
+        metadata=dict(description="The account's unique id."),
     )
+    currentPassword = fields.String(
+        attribute="current_password",
+        metadata=dict(description="The account's current password."),
+    )
+    newPassword = fields.String(
+        attribute="new_password",
+        metadata=dict(description="The new password to replace the current one."),
+    )
+
+
+class ChangePasswordCurrentUserSchema(Schema):
+    """The required fields for changing the password of the current user account."""
+
+    currentPassword = fields.String(
+        attribute="current_password",
+        metadata=dict(description="The account's current password."),
+    )
+    newPassword = fields.String(
+        attribute="new_password",
+        metadata=dict(description="The new password to replace the current one."),
+    )
+
+
+class DeleteCurrentUserSchema(Schema):
+    """The required fields for deleting a user account."""
+
     password = fields.String(
         attribute="password",
-        required=True,
-        metadata=dict(
-            description="The password used for authenticating the user account."
-        ),
-    )
-    email_address = fields.Email(
-        attribute="email_address",
-        required=True,
-        metadata=dict(
-            description="The email address associated with the user account."
-        ),
+        metadata=dict(description="The user's current password."),
     )
 
-    @pre_dump
-    def extract_data_from_form(
-        self, data: UserRegistrationForm, many: bool, **kwargs
-    ) -> dict[str, Any]:
-        """Extracts data from the |UserRegistrationForm| for validation."""
 
-        return {
-            "username": data.username.data,
-            "password": data.password.data,
-            "email_address": data.email_address.data,
-        }
+class UsernameStatusResponseSchema(Schema):
+    """A simple response for reporting a status for one or more objects."""
 
-
-UserRegistrationSchema: list[ParametersSchema] = [
-    dict(
-        name="username",
-        type=str,
-        location="form",
-        required=True,
-        help="The username for logging into the user account. Must be unique.",
-    ),
-    dict(
-        name="password",
-        type=str,
-        location="form",
-        required=True,
-        help="The password used for authenticating the user account.",
-    ),
-    dict(
-        name="password_confirm",
-        type=str,
-        location="form",
-        required=True,
-        help=(
-            "The password confirmation field, this should exactly match the value in "
-            "password."
+    status = fields.String(
+        attribute="status",
+        metadata=dict(description="The status of the request."),
+    )
+    username = fields.List(
+        fields.String(),
+        attribute="username",
+        metadata=dict(
+            description="A list of usernames identifying the affected object(s)."
         ),
-    ),
-    dict(
-        name="email_address",
-        type=str,
-        location="form",
-        required=True,
-        help="The email address associated with the user account.",
-    ),
-]
+    )

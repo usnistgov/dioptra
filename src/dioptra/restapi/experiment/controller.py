@@ -24,6 +24,7 @@ import structlog
 from flask import jsonify, request
 from flask.wrappers import Response
 from flask_accepts import accepts, responds
+from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
@@ -61,6 +62,7 @@ class ExperimentResource(Resource):
         self._experiment_service = experiment_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=ExperimentSchema(many=True), api=api)
     def get(self) -> List[Experiment]:
         """Gets a list of all registered experiments."""
@@ -70,6 +72,7 @@ class ExperimentResource(Resource):
         log.info("Request received")
         return self._experiment_service.get_all(log=log)
 
+    @login_required
     @api.expect(as_api_parser(api, ExperimentRegistrationSchema))
     @accepts(ExperimentRegistrationSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
@@ -109,6 +112,7 @@ class ExperimentIdResource(Resource):
         self._experiment_service = experiment_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=ExperimentSchema, api=api)
     def get(self, experimentId: int) -> Experiment:
         """Gets an experiment by its unique identifier."""
@@ -126,6 +130,7 @@ class ExperimentIdResource(Resource):
 
         return experiment
 
+    @login_required
     def delete(self, experimentId: int) -> Response:
         """Deletes an experiment by its unique identifier."""
         log: BoundLogger = LOGGER.new(
@@ -138,6 +143,7 @@ class ExperimentIdResource(Resource):
 
         return jsonify(dict(status="Success", id=id))
 
+    @login_required
     @accepts(schema=ExperimentUpdateSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
     def put(self, experimentId: int) -> Experiment:
@@ -171,6 +177,7 @@ class ExperimentNameResource(Resource):
         self._experiment_service = experiment_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=ExperimentSchema, api=api)
     def get(self, experimentName: str) -> Experiment:
         """Gets an experiment by its unique name."""
@@ -188,6 +195,7 @@ class ExperimentNameResource(Resource):
 
         return experiment
 
+    @login_required
     def delete(self, experimentName: str) -> Response:
         """Deletes an experiment by its unique name."""
         log: BoundLogger = LOGGER.new(
@@ -210,6 +218,7 @@ class ExperimentNameResource(Resource):
 
         return jsonify(dict(status="Success", id=id))
 
+    @login_required
     @accepts(schema=ExperimentUpdateSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
     def put(self, experimentName: str) -> Experiment:
