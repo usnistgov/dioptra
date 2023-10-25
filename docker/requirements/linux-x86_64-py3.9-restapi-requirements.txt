@@ -227,7 +227,7 @@ urllib3==1.26.16
     #   requests
 websocket-client==1.5.2
     # via docker
-werkzeug==2.1.2
+werkzeug==3.0.1
     # via
     #   dioptra (pyproject.toml)
     #   flask
