@@ -39,9 +39,9 @@ attrs==23.1.0
     #   referencing
 black==21.4b2
     # via detectron2
-boto3==1.28.57
+boto3==1.28.61
     # via dioptra (pyproject.toml)
-botocore==1.31.57
+botocore==1.31.61
     # via
     #   boto3
     #   s3transfer
@@ -53,7 +53,7 @@ certifi==2023.7.22
     # via requests
 cffi==1.16.0
     # via cryptography
-charset-normalizer==3.2.0
+charset-normalizer==3.3.0
     # via
     #   aiohttp
     #   requests
@@ -84,19 +84,19 @@ croniter==1.4.1
     # via prefect
 cryptography==3.4.8
     # via dioptra (pyproject.toml)
-cycler==0.11.0
+cycler==0.12.0
     # via matplotlib
-dask==2023.9.2
+dask==2023.9.3
     # via
     #   distributed
     #   prefect
-databricks-cli==0.17.8
+databricks-cli==0.18.0
     # via mlflow
 decorator==4.4.2
     # via moviepy
 detectron2==0.6+cu113 ; sys_platform == "linux" and python_version == "3.9" and (platform_machine == "x86_64" or platform_machine == "amd64" or platform_machine == "AMD64")
     # via -r requirements-dev-pytorch-gpu.in
-distributed==2023.9.2
+distributed==2023.9.3
     # via prefect
 dnspython==2.4.2
     # via email-validator
@@ -114,6 +114,7 @@ flask==2.1.3
     # via
     #   dioptra (pyproject.toml)
     #   flask-cors
+    #   flask-login
     #   flask-migrate
     #   flask-restx
     #   flask-sqlalchemy
@@ -123,6 +124,8 @@ flask==2.1.3
 flask-accepts==0.18.4
     # via dioptra (pyproject.toml)
 flask-cors==4.0.0
+    # via dioptra (pyproject.toml)
+flask-login==0.6.2
     # via dioptra (pyproject.toml)
 flask-migrate==4.0.5
     # via dioptra (pyproject.toml)
@@ -134,9 +137,9 @@ flask-sqlalchemy==2.5.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
-flask-wtf==1.1.1
+flask-wtf==1.2.1
     # via dioptra (pyproject.toml)
-fonttools==4.42.1
+fonttools==4.43.1
     # via matplotlib
 frozenlist==1.4.0
     # via
@@ -160,9 +163,9 @@ google-auth==2.23.2
     #   tensorboard
 google-auth-oauthlib==1.0.0
     # via tensorboard
-greenlet==2.0.2
+greenlet==3.0.0
     # via sqlalchemy
-grpcio==1.58.0
+grpcio==1.59.0
     # via tensorboard
 gunicorn==20.1.0
     # via mlflow
@@ -177,7 +180,7 @@ idna==3.4
     #   email-validator
     #   requests
     #   yarl
-imageio==2.31.4
+imageio==2.31.5
     # via
     #   imgaug
     #   moviepy
@@ -239,7 +242,7 @@ lz4==4.3.2
     # via gym
 mako==1.2.4
     # via alembic
-markdown==3.4.4
+markdown==3.5
     # via tensorboard
 markdown-it-py==3.0.0
     # via rich
@@ -303,7 +306,6 @@ numpy==1.26.0
     #   pyarrow
     #   pycocotools
     #   pytorch-lightning
-    #   pywavelets
     #   scikit-image
     #   scikit-learn
     #   scipy
@@ -370,13 +372,13 @@ prometheus-client==0.17.1
     # via prometheus-flask-exporter
 prometheus-flask-exporter==0.22.4
     # via mlflow
-protobuf==4.24.3
+protobuf==4.24.4
     # via
     #   mlflow
     #   tensorboard
 psutil==5.9.5
     # via distributed
-psycopg2-binary==2.9.8
+psycopg2-binary==2.9.9
     # via -r docker/pip-tools/worker-requirements.in
 pyarrow==13.0.0
     # via dioptra (pyproject.toml)
@@ -430,8 +432,6 @@ pytz==2022.7.1
     #   prefect
 pytzdata==2020.1
     # via pendulum
-pywavelets==1.4.1
-    # via scikit-image
 pyyaml==6.0.1
     # via
     #   dask
@@ -453,7 +453,7 @@ referencing==0.30.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-regex==2023.8.8
+regex==2023.10.3
     # via black
 requests==2.31.0
     # via
@@ -468,9 +468,9 @@ requests==2.31.0
     #   tensorboard
 requests-oauthlib==1.3.1
     # via google-auth-oauthlib
-rich==13.5.3
+rich==13.6.0
     # via -r docker/pip-tools/worker-requirements.in
-rpds-py==0.10.3
+rpds-py==0.10.4
     # via
     #   jsonschema
     #   referencing
@@ -480,7 +480,7 @@ rsa==4.9
     # via google-auth
 s3transfer==0.7.0
     # via boto3
-scikit-image==0.21.0
+scikit-image==0.22.0
     # via imgaug
 scikit-learn==1.0.2
     # via
@@ -496,7 +496,7 @@ scipy==1.11.3
     #   scikit-learn
 shapely==2.0.1
     # via imgaug
-simplejson==3.19.1
+simplejson==3.19.2
     # via -r docker/pip-tools/worker-requirements.in
 six==1.16.0
     # via
@@ -586,7 +586,7 @@ typing-extensions==4.8.0
     #   lightning-utilities
     #   pytorch-lightning
     #   torch
-urllib3==1.26.16
+urllib3==1.26.17
     # via
     #   botocore
     #   databricks-cli
@@ -601,6 +601,7 @@ werkzeug==2.1.2
     #   dioptra (pyproject.toml)
     #   flask
     #   flask-accepts
+    #   flask-login
     #   flask-restx
     #   tensorboard
 wtforms[email]==3.0.1

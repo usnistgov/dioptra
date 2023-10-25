@@ -22,6 +22,7 @@ from typing import List, Optional
 
 import structlog
 from flask_accepts import accepts, responds
+from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
@@ -55,6 +56,7 @@ class JobResource(Resource):
         self._job_service = job_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=JobSchema(many=True), api=api)
     def get(self) -> List[Job]:
         """Gets a list of all submitted jobs."""
@@ -64,6 +66,7 @@ class JobResource(Resource):
         log.info("Request received")
         return self._job_service.get_all(log=log)
 
+    @login_required
     @api.expect(as_api_parser(api, job_submit_form_schema))
     @accepts(job_submit_form_schema, api=api)
     @responds(schema=JobSchema, api=api)
@@ -98,6 +101,7 @@ class JobIdResource(Resource):
         self._job_service = job_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=JobSchema, api=api)
     def get(self, jobId: str) -> Job:
         """Gets a job by its unique identifier."""

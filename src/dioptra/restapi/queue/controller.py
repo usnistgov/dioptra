@@ -23,6 +23,7 @@ from typing import Any, cast
 import structlog
 from flask import request
 from flask_accepts import accepts, responds
+from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
@@ -50,6 +51,7 @@ class QueueResource(Resource):
         self._queue_service = queue_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=QueueSchema(many=True), api=api)
     def get(self) -> list[Queue]:
         """Gets a list of all active queues."""
@@ -59,6 +61,7 @@ class QueueResource(Resource):
         log.info("Request received")
         return self._queue_service.get_all_unlocked(log=log)
 
+    @login_required
     @accepts(schema=QueueSchema, api=api)
     @responds(schema=QueueSchema, api=api)
     def post(self) -> Queue:
@@ -82,6 +85,7 @@ class QueueIdResource(Resource):
         self._queue_service = queue_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=QueueSchema, api=api)
     def get(self, queueId: int) -> Queue:
         """Gets a queue by its unique identifier."""
@@ -93,6 +97,7 @@ class QueueIdResource(Resource):
             Queue, self._queue_service.get(queueId, error_if_not_found=True, log=log)
         )
 
+    @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self, queueId: int) -> dict[str, Any]:
         """Deletes a queue by its unique identifier."""
@@ -102,6 +107,7 @@ class QueueIdResource(Resource):
         log.info("Request received", queue_id=queueId)
         return self._queue_service.delete(queueId, log=log)
 
+    @login_required
     @accepts(schema=QueueSchema, api=api)
     @responds(schema=QueueSchema, api=api)
     def put(self, queueId: int) -> Queue:
@@ -124,6 +130,7 @@ class QueueIdLockResource(Resource):
         self._queue_service = queue_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self, queueId: int) -> dict[str, Any]:
         """Removes the lock from the queue (id reference) if it exists."""
@@ -133,6 +140,7 @@ class QueueIdLockResource(Resource):
         log.info("Request received", queue_id=queueId)
         return self._queue_service.unlock(queueId, log=log)
 
+    @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
     def put(self, queueId: int) -> dict[str, Any]:
         """Locks the queue (id reference) if it is unlocked."""
@@ -153,6 +161,7 @@ class QueueNameResource(Resource):
         self._queue_name_service = queue_name_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=QueueSchema, api=api)
     def get(self, queueName: str) -> Queue:
         """Gets a queue by its unique name."""
@@ -167,6 +176,7 @@ class QueueNameResource(Resource):
             ),
         )
 
+    @login_required
     @responds(schema=NameStatusResponseSchema, api=api)
     def delete(self, queueName: str) -> dict[str, Any]:
         """Deletes a queue by its unique name."""
@@ -190,6 +200,7 @@ class QueueNameLockResource(Resource):
         self._queue_name_service = queue_name_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=NameStatusResponseSchema, api=api)
     def delete(self, queueName: str) -> dict[str, Any]:
         """Removes the lock from the queue (name reference) if it exists."""
@@ -201,6 +212,7 @@ class QueueNameLockResource(Resource):
         log.info("Request received", queue_name=queueName)
         return self._queue_name_service.unlock(queueName, log=log)
 
+    @login_required
     @responds(schema=NameStatusResponseSchema, api=api)
     def put(self, queueName: str) -> dict[str, Any]:
         """Locks the queue (name reference) if it is unlocked."""
