@@ -1,0 +1,130 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+"""The module defining the job endpoints."""
+from __future__ import annotations
+
+import uuid
+from typing import List, Optional
+
+import structlog
+from flask_accepts import accepts, responds
+from flask_restx import Namespace, Resource
+from injector import inject
+from structlog.stdlib import BoundLogger
+
+from dioptra.restapi.utils import as_api_parser
+
+from .errors import GroupMembershipDoesNotExistError, GroupMembershipSubmissionError
+from .model import GroupMembership, GroupMembershipForm, GroupMembershipFormData
+from .schema import GroupMembershipSchema, GroupMembershipFormSchema, group_membership_form_schema
+from .service import GroupMembershipService
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+api: Namespace = Namespace(
+    "GroupMembership",
+    description="Add users to groups",
+)
+
+
+@api.route("/")
+class GroupMembershipResource(Resource):
+    """Manage group memberships."""
+
+    @inject
+    def __init__(
+        self,
+        *args,
+        group_membership_service: GroupMembershipService,
+        **kwargs,
+    ) -> None:
+        self._group_membership_service = group_membership_service
+        super().__init__(*args, **kwargs)
+
+    @responds(schema=GroupMembershipSchema(many=True), api=api)
+    def get(self) -> List[GroupMembership]:
+        """Get a list of all group memberships."""
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="group_membership",
+            request_type="GET",
+        )
+        log.info("Request received")
+        return self._group_membership_service.get_all(log=log)
+
+    @api.expect(as_api_parser(api, group_membership_form_schema))
+    @accepts(group_membership_form_schema, api=api)
+    @responds(schema=GroupMembershipSchema, api=api)
+    def post(self) -> GroupMembership:
+        """Create a new group membership using a group membership submission form."""
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid.uuid4()),
+            resource="group_membership",
+            request_type="POST",
+        )
+        #group_membership_form: GroupMembershipForm = GroupMembershipForm()
+
+        log.info("Request received")
+
+        # if not group_membership_form.validate_on_submit():
+        #     log.error("Form validation failed")
+        #     raise GroupMembershipSubmissionError
+
+        # log.info("Form validation successful")
+        # group_membership_form_data: GroupMembershipFormData = self._group_membership_service.extract_data_from_form(
+        #     group_membership_form=group_membership_form,
+        #     log=log,
+        # )
+        parsed_obj = request.parsed_obj  # type: ignore
+        group_id= int(parsed_obj["group_id"])
+        user_id= int(parsed_obj["user_id"])
+        read= bool(parsed_obj["read"])
+        write= bool(parsed_obj["write"])
+        share_read= bool(parsed_obj["share_read"])
+        share_write= bool(parsed_obj["share_write"])
+
+
+        return self._group_membership_service.submit(group_id,user_id, read,write,share_read,share_write, log=log)
+
+    @api.expect(as_api_parser(api, group_membership_form_schema))
+    @accepts(group_membership_form_schema, api=api)
+    def delete(self) -> bool:
+        """Delete a group membership."""
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid.uuid4()),
+            resource="group_membership",
+            request_type="DELETE",
+        )
+
+        group_membership_form: GroupMembershipForm = GroupMembershipForm()
+
+        log.info("Request received")
+
+        # if not group_membership_form.validate_on_submit():
+        #     log.error("Form validation failed")
+        #     raise GroupMembershipSubmissionError
+
+        # log.info("Form validation successful")
+        # group_membership_form_data: GroupMembershipFormData = self._group_membership_service.extract_data_from_form(
+        #     group_membership_form=group_membership_form,
+        #     log=log,
+        # )
+
+        parsed_obj = request.parsed_obj  # type: ignore
+        group_id= int(parsed_obj["group_id"])
+        user_id= int(parsed_obj["user_id"])
+        return self._group_membership_service.delete(group_id, user_id, log=log)
