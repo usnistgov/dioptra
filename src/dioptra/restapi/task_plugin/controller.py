@@ -24,6 +24,7 @@ import structlog
 from flask import current_app, jsonify
 from flask.wrappers import Response
 from flask_accepts import accepts, responds
+from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
@@ -52,6 +53,7 @@ class TaskPluginResource(Resource):
         self._task_plugin_service = task_plugin_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=TaskPluginSchema(many=True), api=api)
     def get(self) -> List[TaskPlugin]:
         """Gets a list of all registered task plugins."""
@@ -65,6 +67,7 @@ class TaskPluginResource(Resource):
             log=log,
         )
 
+    @login_required
     @api.expect(as_api_parser(api, TaskPluginUploadSchema))
     @accepts(TaskPluginUploadSchema, api=api)
     @responds(schema=TaskPluginSchema, api=api)
@@ -103,6 +106,7 @@ class TaskPluginBuiltinsCollectionResource(Resource):
         self._task_plugin_service = task_plugin_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=TaskPluginSchema(many=True), api=api)
     def get(self) -> List[TaskPlugin]:
         """Gets a list of all available builtin task plugins."""
@@ -133,6 +137,7 @@ class TaskPluginBuiltinCollectionNameResource(Resource):
         self._task_plugin_service = task_plugin_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=TaskPluginSchema, api=api)
     def get(self, taskPluginName: str) -> TaskPlugin:
         """Gets a builtin task plugin by its unique name."""
@@ -172,6 +177,7 @@ class TaskPluginCustomCollectionResource(Resource):
         self._task_plugin_service = task_plugin_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=TaskPluginSchema(many=True), api=api)
     def get(self) -> List[TaskPlugin]:
         """Gets a list of all registered custom task plugins."""
@@ -202,6 +208,7 @@ class TaskPluginCustomCollectionNameResource(Resource):
         self._task_plugin_service = task_plugin_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @responds(schema=TaskPluginSchema, api=api)
     def get(self, taskPluginName: str) -> TaskPlugin:
         """Gets a custom task plugin by its unique name."""
@@ -231,6 +238,7 @@ class TaskPluginCustomCollectionNameResource(Resource):
 
         return task_plugin
 
+    @login_required
     def delete(self, taskPluginName: str) -> Response:
         """Deletes a custom task plugin by its unique name."""
         log: BoundLogger = LOGGER.new(

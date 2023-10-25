@@ -20,6 +20,22 @@ from __future__ import annotations
 from flask_restx import Api
 
 
+class NoCurrentUserError(Exception):
+    """There is no currently logged-in user."""
+
+
+class UserPasswordChangeError(Exception):
+    """Password change failed."""
+
+
+class UserPasswordExpiredError(Exception):
+    """Password expired."""
+
+
+class UserPasswordVerificationError(Exception):
+    """Password verification failed."""
+
+
 class UsernameNotAvailableError(Exception):
     """The username is not available."""
 
@@ -33,6 +49,22 @@ class UserRegistrationError(Exception):
 
 
 def register_error_handlers(api: Api) -> None:
+    @api.errorhandler(NoCurrentUserError)
+    def handle_no_current_user_error(error):
+        return {"message": "There is no currently logged-in user"}, 401
+
+    @api.errorhandler(UserPasswordChangeError)
+    def handle_user_password_change_error_error(error):
+        return {"message": "Password Change Failed"}, 403
+
+    @api.errorhandler(UserPasswordExpiredError)
+    def handle_user_password_expired_error(error):
+        return {"message": "Password expired."}, 401
+
+    @api.errorhandler(UserPasswordVerificationError)
+    def handle_user_password_verification_error_error(error):
+        return {"message": "Password Verification Failed"}, 403
+
     @api.errorhandler(UserDoesNotExistError)
     def handle_user_does_not_exist_error(error):
         return {"message": "Not Found - The requested user does not exist"}, 404

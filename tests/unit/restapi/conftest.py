@@ -18,21 +18,26 @@ from __future__ import annotations
 
 import io
 import tarfile
+import time
+from pathlib import Path
 from typing import Any, BinaryIO, Iterable, List
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+import requests
 from boto3.session import Session
 from botocore.client import BaseClient
 from flask import Flask
 from flask.testing import FlaskClient
-from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from injector import Binder, Injector
 from redis import Redis
+from requests import ConnectionError
+from requests import Session as RequestsSession
 
 from dioptra.restapi.shared.request_scope import request
 from dioptra.restapi.utils import setup_injection
+
+from .lib.server import FlaskTestServer
 
 
 @pytest.fixture(scope="session")
@@ -103,7 +108,6 @@ def dependency_modules() -> List[Any]:
     )
     from dioptra.restapi.user.dependencies import (
         PasswordServiceModule,
-        UserRegistrationFormSchemaModule,
         _bind_password_service_configuration,
     )
 
@@ -138,7 +142,6 @@ def dependency_modules() -> List[Any]:
         PasswordServiceModule(),
         RQServiceModule(),
         TaskPluginUploadFormSchemaModule(),
-        UserRegistrationFormSchemaModule(),
     ]
 
 
@@ -148,34 +151,11 @@ def dependency_injector(dependency_modules: List[Any]) -> Injector:
 
 
 @pytest.fixture
-def app(
-    dependency_modules: List[Any], monkeypatch: MonkeyPatch
-) -> Iterable[Flask]:
-    import dioptra.restapi.routes
+def app(dependency_modules: List[Any]) -> Flask:
     from dioptra.restapi import create_app
 
-    # Override register_routes in dioptra.restapi.routes to enable testing of endpoints
-    # that are under development.
-    def register_test_routes(api: Api, app: Flask) -> None:
-        from dioptra.restapi.experiment import register_routes as attach_experiment
-        from dioptra.restapi.job import register_routes as attach_job
-        from dioptra.restapi.queue import register_routes as attach_job_queue
-        from dioptra.restapi.task_plugin import register_routes as attach_task_plugin
-        from dioptra.restapi.user import register_routes as attach_user
-
-        # Add routes
-        attach_experiment(api, app)
-        attach_job(api, app)
-        attach_job_queue(api, app)
-        attach_task_plugin(api, app)
-        attach_user(api, app)
-
-    monkeypatch.setattr(
-        dioptra.restapi.routes, "register_routes", register_test_routes
-    )
-
     injector = Injector(dependency_modules)
-    app = create_app(env="test", injector=injector)
+    app = create_app(env="test_no_login", injector=injector)
 
     yield app
 
@@ -212,3 +192,77 @@ def seed_database(db):
 @pytest.fixture
 def client(app: Flask) -> FlaskClient:
     return app.test_client()
+
+
+@pytest.fixture
+def flask_test_server(tmp_path: Path, http_client: RequestsSession):
+    """Start a Flask test server.
+
+    Args:
+        tmp_path: The path to the temporary directory.
+        http_client: A Requests session client.
+    """
+    sqlite_path = tmp_path / "dioptra-test.db"
+    migrations_dir = Path("src", "migrations")
+    server = FlaskTestServer(sqlite_path=sqlite_path)
+    server.upgrade_db("-d", str(migrations_dir))
+    with server:
+        wait_for_healthcheck_success(http_client)
+        yield
+
+
+@pytest.fixture
+def http_client() -> Iterable[RequestsSession]:
+    """A Requests session for accessing the API.
+
+    Yields:
+        A Requests session.
+    """
+    with requests.Session() as s:
+        yield s
+
+
+def wait_for_healthcheck_success(client: RequestsSession, timeout: int = 10) -> None:
+    """Wait for the healthcheck endpoint to return a successful response.
+
+    Args:
+        client: A Requests session client.
+        timeout: The maximum number of seconds to wait for the healthcheck endpoint to
+            return a successful response.
+
+    Raises:
+        TimeoutError: If the healthcheck endpoint does not return a successful response
+            within the specified timeout.
+    """
+
+    class StubResponse(object):
+        """Stubbed response to use when the client experiences a connection error."""
+
+        def json(self) -> str:
+            """Return an empty string."""
+            return ""
+
+    healthcheck_url = "http://localhost:5000/health"
+    time_elapsed = 0
+
+    try:
+        healthcheck = client.get(healthcheck_url)
+
+    except ConnectionError:
+        healthcheck = StubResponse()
+
+    time_start = time.time()
+
+    while healthcheck.json() != "healthy":
+        if time_elapsed > timeout:
+            raise TimeoutError("Healthcheck failed to return healthy status")
+
+        time.sleep(0.1)
+
+        try:
+            healthcheck = client.get(healthcheck_url)
+
+        except ConnectionError:
+            healthcheck = StubResponse()
+
+        time_elapsed = time.time() - time_start

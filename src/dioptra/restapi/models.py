@@ -31,7 +31,7 @@ from .task_plugin.model import (
     TaskPluginUploadForm,
     TaskPluginUploadFormData,
 )
-from .user.model import User, UserRegistrationForm, UserRegistrationFormData
+from .user.model import User
 
 __all__ = [
     "Experiment",
