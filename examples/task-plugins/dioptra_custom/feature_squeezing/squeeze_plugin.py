@@ -26,7 +26,7 @@ import mlflow.tensorflow
 import numpy as np
 import structlog
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator, save_img
+from tensorflow.keras.preprocessing.image import DirectoryIterator, ImageDataGenerator, save_img
 
 from dioptra import pyplugs
 from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
@@ -51,19 +51,19 @@ except ImportError:
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def feature_squeeze(
-    data_dir,
-    run_id,
-    model,
-    model_architecture,
-    batch_size,
-    seed,
-    bit_depth,
-    model_version,
-    adv_tar_name,
-    image_size,
-    adv_data_dir,
-    data_flow,
-):
+    data_dir: str,
+    run_id: str,
+    model: str,
+    model_architecture: str,
+    adv_tar_name: str,
+    image_size: Tuple[int,int,int],
+    adv_data_dir: str,
+    data_flow: DirectoryIterator,
+    batch_size: int = 32,
+    seed: int = -1,
+    bit_depth: int = 8,
+    model_version: str = 1,
+) -> None:
     rng = np.random.default_rng(seed if seed >= 0 else None)
 
     if seed < 0:
