@@ -73,7 +73,7 @@ def evaluate_classification_metrics(classifier, adv_ds):
 def create_adversarial_deepfool_dataset(
     data_dir: str,
     model_name: str,
-    model_version: str,
+    model_version: int,
     epsilon: float,
     nb_grads: int,
     max_iter: int,
@@ -86,7 +86,7 @@ def create_adversarial_deepfool_dataset(
     color_mode: str = "rgb",
     **kwargs,
 ):
-    model_name = model_name + "/" + model_version
+    model_name = model_name + "/" + str(model_version)
     attack = DeepFool(
         classifier=keras_classifier,
         batch_size=batch_size,
