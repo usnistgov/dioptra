@@ -30,6 +30,8 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
 
+# -- Actions ---------------------------------------------------------------------------
+
 
 def register_queue(client: FlaskClient, name: str) -> TestResponse:
     """Register a queue using the API.
@@ -70,7 +72,7 @@ def rename_queue(
     )
 
 
-def delete_queue(
+def delete_queue_with_id(
     client: FlaskClient,
     queue_id: int,
 ) -> TestResponse:
@@ -89,7 +91,26 @@ def delete_queue(
     )
 
 
-def lock_queue(
+def delete_queue_with_name(
+    client: FlaskClient,
+    name: str,
+) -> TestResponse:
+    """Delete a queue using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name of the queue to delete.
+
+    Returns:
+        The response from the API.
+    """
+    return client.delete(
+        f"/api/{QUEUE_BASE_ROUTE}/name/{name}",
+        follow_redirects=True,
+    )
+
+
+def lock_queue_with_id(
     client: FlaskClient,
     queue_id: int,
 ) -> TestResponse:
@@ -108,7 +129,26 @@ def lock_queue(
     )
 
 
-def unlock_queue(
+def lock_queue_with_name(
+    client: FlaskClient,
+    name: str,
+) -> TestResponse:
+    """Lock a queue using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name of the queue to lock.
+
+    Returns:
+        The response from the API.
+    """
+    return client.put(
+        f"/api/{QUEUE_BASE_ROUTE}/name/{name}/lock",
+        follow_redirects=True,
+    )
+
+
+def unlock_queue_with_id(
     client: FlaskClient,
     queue_id: int,
 ) -> TestResponse:
@@ -125,6 +165,28 @@ def unlock_queue(
         f"/api/{QUEUE_BASE_ROUTE}/{queue_id}/lock",
         follow_redirects=True,
     )
+
+
+def unlock_queue_with_name(
+    client: FlaskClient,
+    name: str,
+) -> TestResponse:
+    """Unlock a queue using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name of the queue to unlock.
+
+    Returns:
+        The response from the API.
+    """
+    return client.delete(
+        f"/api/{QUEUE_BASE_ROUTE}/name/{name}/lock",
+        follow_redirects=True,
+    )
+
+
+# -- Assertions ------------------------------------------------------------------------
 
 
 def assert_retrieving_queue_by_id_works(
@@ -265,12 +327,15 @@ def assert_queue_count_matches_expected_count(
     assert len(response.get_json()) == expected
 
 
+# -- Tests -----------------------------------------------------------------------------
+
+
 def test_queue_registration(client: FlaskClient, db: SQLAlchemy) -> None:
     """Test that queues can be registered and retrieved using the API.
 
     This test validates the following sequence of actions:
 
-    - A user registers two queues, "tensorflow_cpu" and "tensorflow_gpu"
+    - A user registers two queues, "tensorflow_cpu" and "tensorflow_gpu".
     - The user is able to retrieve information about each queue using either the
       queue id or the unique queue name.
     - The user is able to retrieve a list of all registered queues.
@@ -304,7 +369,7 @@ def test_cannot_register_existing_queue_name(
 
     This test validates the following sequence of actions:
 
-    - A user registers a queue named "tensorflow_cpu"
+    - A user registers a queue named "tensorflow_cpu".
     - The user attempts to register a second queue with the same name, which fails.
     """
     queue_name = "tensorflow_cpu"
@@ -312,15 +377,15 @@ def test_cannot_register_existing_queue_name(
     assert_registering_existing_queue_name_fails(client, name=queue_name)
 
 
-def test_queue_renaming(client: FlaskClient, db: SQLAlchemy) -> None:
+def test_rename_queue(client: FlaskClient, db: SQLAlchemy) -> None:
     """Test that a queue can be renamed.
 
     This test validates the following sequence of actions:
 
-    - A user registers a queue named "tensorflow_cpu"
+    - A user registers a queue named "tensorflow_cpu".
     - The user is able to retrieve information about the "tensorflow_cpu" queue that
       matches the information that was provided during registration.
-    - The user renames this same queue to "tensorflow_gpu"
+    - The user renames this same queue to "tensorflow_gpu".
     - The user retrieves information about the same queue and it reflects the name
       change.
     """
@@ -337,15 +402,15 @@ def test_queue_renaming(client: FlaskClient, db: SQLAlchemy) -> None:
     )
 
 
-def test_queue_deleting(client: FlaskClient, db: SQLAlchemy) -> None:
-    """Test that a queue can be deleted.
+def test_delete_queue_by_id(client: FlaskClient, db: SQLAlchemy) -> None:
+    """Test that a queue can be deleted by referencing its id.
 
     This test validates the following sequence of actions:
 
-    - A user registers a queue named "tensorflow_cpu"
+    - A user registers a queue named "tensorflow_cpu".
     - The user is able to retrieve information about the "tensorflow_cpu" queue that
       matches the information that was provided during registration.
-    - The user deletes the "tensorflow_cpu" queue
+    - The user deletes the "tensorflow_cpu" queue by referencing its id.
     - The user attempts to retrieve information about the "tensorflow_cpu" queue, which
       is no longer found.
     """
@@ -355,27 +420,73 @@ def test_queue_deleting(client: FlaskClient, db: SQLAlchemy) -> None:
     assert_retrieving_queue_by_id_works(
         client, queue_id=queue_json["queueId"], expected=queue_json
     )
-    delete_queue(client, queue_id=queue_json["queueId"])
+    delete_queue_with_id(client, queue_id=queue_json["queueId"])
     assert_queue_is_not_found(client, queue_id=queue_json["queueId"])
 
 
-def test_queue_locking(client: FlaskClient, db: SQLAlchemy) -> None:
-    """Test that a queue can be locked.
+def test_delete_queue_by_name(client: FlaskClient, db: SQLAlchemy) -> None:
+    """Test that a queue can be deleted by referencing its name.
+
+    This test validates the following sequence of actions:
+
+    - A user registers a queue named "tensorflow_cpu".
+    - The user is able to retrieve information about the "tensorflow_cpu" queue that
+      matches the information that was provided during registration.
+    - The user deletes the "tensorflow_cpu" queue by referencing its name.
+    - The user attempts to retrieve information about the "tensorflow_cpu" queue, which
+      is no longer found.
+    """
+    queue_name = "tensorflow_cpu"
+    registration_response = register_queue(client, name=queue_name)
+    queue_json = registration_response.get_json()
+    assert_retrieving_queue_by_id_works(
+        client, queue_id=queue_json["queueId"], expected=queue_json
+    )
+    delete_queue_with_name(client, name=queue_json["name"])
+    assert_queue_is_not_found(client, queue_id=queue_json["queueId"])
+
+
+def test_lock_queue_by_id(client: FlaskClient, db: SQLAlchemy) -> None:
+    """Test that a queue can be locked by referencing its id.
 
     This test validates the following sequence of actions:
 
     - A user registers two queues, "tensorflow_cpu" and "tensorflow_gpu".
     - The user requests a list of all queues, which returns a list of length 2.
-    - The user locks the "tensorflow_gpu" queue.
+    - The user locks the "tensorflow_gpu" queue by referencing its id.
     - The user requests a list of all queues, which returns a list of length 1.
-    - The user unlocks the "tensorflow_gpu" queue.
+    - The user unlocks the "tensorflow_gpu" queue by referencing its id.
     - The user requests a list of all queues, which returns a list of length 2.
     """
     register_queue(client, name="tensorflow_cpu")
     response = register_queue(client, name="tensorflow_gpu")
-    tensorflow_gpu_queue_id = response.get_json()["queueId"]
+    queue_json = response.get_json()
+    tensorflow_gpu_queue_id = queue_json["queueId"]
     assert_queue_count_matches_expected_count(client, expected=2)
-    lock_queue(client, queue_id=tensorflow_gpu_queue_id)
+    lock_queue_with_id(client, queue_id=tensorflow_gpu_queue_id)
     assert_queue_count_matches_expected_count(client, expected=1)
-    unlock_queue(client, queue_id=tensorflow_gpu_queue_id)
+    unlock_queue_with_id(client, queue_id=tensorflow_gpu_queue_id)
+    assert_queue_count_matches_expected_count(client, expected=2)
+
+
+def test_lock_queue_by_name(client: FlaskClient, db: SQLAlchemy) -> None:
+    """Test that a queue can be locked by referencing its name.
+
+    This test validates the following sequence of actions:
+
+    - A user registers two queues, "tensorflow_cpu" and "tensorflow_gpu".
+    - The user requests a list of all queues, which returns a list of length 2.
+    - The user locks the "tensorflow_gpu" queue by referencing its name.
+    - The user requests a list of all queues, which returns a list of length 1.
+    - The user unlocks the "tensorflow_gpu" queue by referencing its name.
+    - The user requests a list of all queues, which returns a list of length 2.
+    """
+    register_queue(client, name="tensorflow_cpu")
+    response = register_queue(client, name="tensorflow_gpu")
+    queue_json = response.get_json()
+    tensorflow_gpu_name = queue_json["name"]
+    assert_queue_count_matches_expected_count(client, expected=2)
+    lock_queue_with_name(client, name=tensorflow_gpu_name)
+    assert_queue_count_matches_expected_count(client, expected=1)
+    unlock_queue_with_name(client, name=tensorflow_gpu_name)
     assert_queue_count_matches_expected_count(client, expected=2)
