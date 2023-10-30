@@ -17,6 +17,26 @@ from .models import User, db
 from .services import SERVICES
 
 
+def _validate_session_protection(value: str) -> None:
+    """Validate the session protection level.
+
+    Args:
+        value: The session protection level to be validated. Must be one of "none",
+            "basic", or "strong".
+
+    Raises:
+        ValueError: If the session protection level is not one of "none", "basic", or
+            "strong".
+    """
+    allowed = {"none", "basic", "strong"}
+
+    if value not in allowed:
+        raise ValueError(
+            f"Invalid SESSION_PROTECTION value: {value}. "
+            f"Allowed values are {allowed}."
+        )
+
+
 @dataclass
 class Config(object):
     """The application's configuration parameters.
@@ -30,6 +50,24 @@ class Config(object):
     SECRET_KEY: str = field(default_factory=lambda: os.getenv("SECRET_KEY", "dev"))
     SWAGGER_PATH: str = field(default_factory=lambda: os.getenv("SWAGGER_PATH", "/api"))
     BASE_URL: str | None = field(default_factory=lambda: os.getenv("BASE_URL"))
+    REMEMBER_COOKIE_NAME: str = field(
+        default_factory=lambda: os.getenv(
+            "REMEMBER_COOKIE_NAME", "proto_remember_token"
+        )
+    )
+    REMEMBER_COOKIE_DURATION: str | int = field(
+        default_factory=lambda: os.getenv("REMEMBER_COOKIE_DURATION", f"{14 * 86400}")
+    )
+    REMEMBER_COOKIE_SECURE: bool = field(
+        default_factory=lambda: os.getenv("REMEMBER_COOKIE_SECURE") is not None
+    )
+    SESSION_PROTECTION: str = field(
+        default_factory=lambda: os.getenv("SESSION_PROTECTION", "strong").lower()
+    )
+
+    def __post_init__(self) -> None:
+        self.REMEMBER_COOKIE_DURATION = int(self.REMEMBER_COOKIE_DURATION)
+        _validate_session_protection(self.SESSION_PROTECTION)
 
 
 login_manager = LoginManager()
