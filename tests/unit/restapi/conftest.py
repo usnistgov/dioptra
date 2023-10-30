@@ -18,13 +18,14 @@ from __future__ import annotations
 
 import io
 import tarfile
-from typing import Any, BinaryIO, List
+from typing import Any, BinaryIO, Iterable, List
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from boto3.session import Session
 from botocore.client import BaseClient
 from flask import Flask
+from flask.testing import FlaskClient
 from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from injector import Binder, Injector
@@ -97,7 +98,6 @@ def dependency_modules() -> List[Any]:
         RQServiceConfiguration,
         RQServiceModule,
     )
-    from dioptra.restapi.queue.dependencies import QueueRegistrationFormSchemaModule
     from dioptra.restapi.task_plugin.dependencies import (
         TaskPluginUploadFormSchemaModule,
     )
@@ -136,7 +136,6 @@ def dependency_modules() -> List[Any]:
         ExperimentRegistrationFormSchemaModule(),
         JobFormSchemaModule(),
         PasswordServiceModule(),
-        QueueRegistrationFormSchemaModule(),
         RQServiceModule(),
         TaskPluginUploadFormSchemaModule(),
         UserRegistrationFormSchemaModule(),
@@ -149,7 +148,9 @@ def dependency_injector(dependency_modules: List[Any]) -> Injector:
 
 
 @pytest.fixture
-def app(dependency_modules: List[Any], monkeypatch: MonkeyPatch) -> Flask:
+def app(
+    dependency_modules: List[Any], monkeypatch: MonkeyPatch
+) -> Iterable[Flask]:
     import dioptra.restapi.routes
     from dioptra.restapi import create_app
 
@@ -169,12 +170,14 @@ def app(dependency_modules: List[Any], monkeypatch: MonkeyPatch) -> Flask:
         attach_task_plugin(api, app)
         attach_user(api, app)
 
-    monkeypatch.setattr(dioptra.restapi.routes, "register_routes", register_test_routes)
+    monkeypatch.setattr(
+        dioptra.restapi.routes, "register_routes", register_test_routes
+    )
 
     injector = Injector(dependency_modules)
     app = create_app(env="test", injector=injector)
 
-    return app
+    yield app
 
 
 @pytest.fixture
@@ -204,3 +207,8 @@ def seed_database(db):
         ],
     )
     db.session.commit()
+
+
+@pytest.fixture
+def client(app: Flask) -> FlaskClient:
+    return app.test_client()

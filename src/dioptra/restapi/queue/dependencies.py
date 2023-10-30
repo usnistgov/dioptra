@@ -17,19 +17,19 @@
 """Binding configurations to shared services using dependency injection."""
 from __future__ import annotations
 
-from typing import Any, Callable, List
+from typing import Any, Callable
 
 from injector import Binder, Module, provider
 
-from .schema import QueueRegistrationFormSchema
+from .service import QueueNameService
 
 
-class QueueRegistrationFormSchemaModule(Module):
+class QueueNameServiceModule(Module):
     @provider
-    def provide_queue_registration_form_schema_module(
+    def provide_queue_name_service_module(
         self,
-    ) -> QueueRegistrationFormSchema:
-        return QueueRegistrationFormSchema()
+    ) -> QueueNameService:
+        return QueueNameService()
 
 
 def bind_dependencies(binder: Binder) -> None:
@@ -41,11 +41,11 @@ def bind_dependencies(binder: Binder) -> None:
     pass
 
 
-def register_providers(modules: List[Callable[..., Any]]) -> None:
+def register_providers(modules: list[Callable[..., Any]]) -> None:
     """Registers type providers within the main application.
 
     Args:
         modules: A list of callables used for configuring the dependency injection
             environment.
     """
-    modules.append(QueueRegistrationFormSchemaModule)
+    modules.append(QueueNameServiceModule)
