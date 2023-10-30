@@ -17,122 +17,62 @@
 """The schemas for serializing/deserializing the queue endpoint objects.
 
 .. |Queue| replace:: :py:class:`~.model.Queue`
-.. |QueueLock| replace:: :py:class:`~.model.QueueLock`
-.. |QueueRegistrationForm| replace:: :py:class:`~.model.QueueRegistrationForm`
-.. |QueueRegistrationFormData| replace:: :py:class:`~.model.QueueRegistrationFormData`
 """
 from __future__ import annotations
 
-from typing import Any, Dict
-
-from marshmallow import Schema, fields, post_dump, pre_dump
-
-from dioptra.restapi.utils import ParametersSchema, slugify
-
-from .model import Queue, QueueLock, QueueRegistrationForm, QueueRegistrationFormData
-
-
-class QueueLockSchema(Schema):
-    """The schema for the data stored in a |QueueLock| object.
-
-    Attributes:
-        queueId: An integer identifying a registered queue.
-        createdOn: The date and time the queue lock was created.
-    """
-
-    __model__ = QueueLock
-
-    queueId = fields.Integer(
-        attribute="queue_id",
-        metadata=dict(description="An integer identifying a registered queue."),
-    )
-    createdOn = fields.DateTime(
-        attribute="created_on",
-        metadata=dict(description="The date and time the queue lock was created."),
-    )
+from marshmallow import Schema, fields
 
 
 class QueueSchema(Schema):
-    """The schema for the data stored in a |Queue| object.
-
-    Attributes:
-        queueId: An integer identifying a registered queue.
-        createdOn: The date and time the queue was created.
-        lastModified: The date and time the queue was last modified.
-        name: The name of the queue.
-    """
-
-    __model__ = Queue
+    """The schema for the data stored in a |Queue| object."""
 
     queueId = fields.Integer(
         attribute="queue_id",
         metadata=dict(description="An integer identifying a registered queue."),
+        dump_only=True,
     )
     createdOn = fields.DateTime(
         attribute="created_on",
         metadata=dict(description="The date and time the queue was created."),
+        dump_only=True,
     )
     lastModified = fields.DateTime(
         attribute="last_modified",
         metadata=dict(description="The date and time the queue was last modified."),
+        dump_only=True,
     )
     name = fields.String(
         attribute="name", metadata=dict(description="The name of the queue.")
     )
 
 
-class QueueNameUpdateSchema(Schema):
-    """The schema for the data used to update a |Queue| object.
+class IdStatusResponseSchema(Schema):
+    """A simple response for reporting a status for one or more objects."""
 
-    Attributes:
-        name: The new name for the queue. Must be unique.
-    """
+    status = fields.String(
+        attribute="status",
+        metadata=dict(description="The status of the request."),
+    )
+    id = fields.List(
+        fields.Integer(),
+        attribute="id",
+        metadata=dict(
+            description="A list of integers identifying the affected object(s)."
+        ),
+    )
 
-    __model__ = Queue
 
-    name = fields.String(
+class NameStatusResponseSchema(Schema):
+    """A simple response for reporting a status for one or more objects."""
+
+    status = fields.String(
+        attribute="status",
+        metadata=dict(description="The status of the request."),
+    )
+    name = fields.List(
+        fields.String(),
         attribute="name",
-        metadata=dict(description="The new name for the queue. Must be unique."),
+        metadata=dict(
+            description="A list of names identifying the affected object(s)."
+        ),
     )
-
-
-class QueueRegistrationFormSchema(Schema):
-    """The schema for the information stored in a queue registration form.
-
-    Attributes:
-        name: The name of the queue. Must be unique.
-    """
-
-    __model__ = QueueRegistrationFormData
-
-    name = fields.String(
-        attribute="name",
-        required=True,
-        metadata=dict(description="The name of the queue. Must be unique."),
-    )
-
-    @pre_dump
-    def extract_data_from_form(
-        self, data: QueueRegistrationForm, many: bool, **kwargs
-    ) -> Dict[str, Any]:
-        """Extracts data from the |QueueRegistrationForm| for validation."""
-
-        return {"name": slugify(data.name.data)}
-
-    @post_dump
-    def serialize_object(
-        self, data: Dict[str, Any], many: bool, **kwargs
-    ) -> QueueRegistrationFormData:
-        """Creates a |QueueRegistrationFormData| object from the validated data."""
-        return self.__model__(**data)
-
-
-QueueRegistrationSchema: list[ParametersSchema] = [
-    dict(
-        name="name",
-        type=str,
-        location="form",
-        required=True,
-        help="The name of the queue. Must be unique.",
-    )
-]

@@ -18,17 +18,9 @@
 from __future__ import annotations
 
 import datetime
-from typing import Optional
-
-from flask_wtf import FlaskForm
-from typing_extensions import TypedDict
-from wtforms.fields import StringField
-from wtforms.validators import InputRequired, ValidationError
+from typing import Any
 
 from dioptra.restapi.app import db
-from dioptra.restapi.utils import slugify
-
-from .interface import QueueUpdateInterface
 
 
 class QueueLock(db.Model):
@@ -78,19 +70,18 @@ class Queue(db.Model):
     @classmethod
     def next_id(cls) -> int:
         """Generates the next id in the sequence."""
-        queue: Optional[Queue] = cls.query.order_by(cls.queue_id.desc()).first()
+        queue: Queue | None = cls.query.order_by(cls.queue_id.desc()).first()
 
         if queue is None:
             return 1
 
         return int(queue.queue_id) + 1
 
-    def update(self, changes: QueueUpdateInterface):
+    def update(self, changes: dict[str, Any]) -> Queue:
         """Updates the record.
 
         Args:
-            changes: A :py:class:`~.interface.QueueUpdateInterface` dictionary
-                containing record updates.
+            changes: A dictionary containing record updates.
         """
         self.last_modified = datetime.datetime.now()
 
@@ -98,45 +89,3 @@ class Queue(db.Model):
             setattr(self, key, val)
 
         return self
-
-
-class QueueRegistrationForm(FlaskForm):
-    """The queue registration form.
-
-    Attributes:
-        name: The name to register as a new queue.
-    """
-
-    name = StringField(
-        "Name of Queue",
-        validators=[InputRequired()],
-        description="The name to register as a new queue.",
-    )
-
-    def validate_name(self, field: StringField) -> None:
-        """Validates that the queue does not exist in the registry.
-
-        Args:
-            field: The form field for `name`.
-        """
-
-        standardized_name: str = slugify(field.data)
-
-        if (
-            Queue.query.filter_by(name=standardized_name, is_deleted=False).first()
-            is not None
-        ):
-            raise ValidationError(
-                "Bad Request - A queue is already registered under the name "
-                f"{standardized_name}. Please select another and resubmit."
-            )
-
-
-class QueueRegistrationFormData(TypedDict, total=False):
-    """The data extracted from the queue registration form.
-
-    Attributes:
-        name: The name of the queue.
-    """
-
-    name: str
