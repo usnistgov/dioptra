@@ -102,14 +102,19 @@
       <q-card class="q-pa-lg" style="min-width: 600px;" v-if="state === 'loggedIn'">
         <q-card-section class="text-center">
             <div class="text-h5 text-weight-bold">Logged In</div>
-            <div>You are currently logged in as: <span class="text-weight-bold">{{ loggedInUser }}</span></div>
+            <div>You are currently logged in as <span class="text-weight-bold text-primary">{{ loggedInUser }}</span></div>
         </q-card-section>
-        <q-form @submit="submit(endpoint, method)">
+        <q-form @submit="submit(endpoint, method)" class="row flex-center">
+          <q-checkbox
+            label="Log out from all devices"
+            v-model="allDevices"
+            class="q-mt-md"
+          />
           <q-btn
             color="orange"
-            class="full-width q-mt-md"
+            class="full-width "
             type="submit"
-            @click="endpoint = 'api/auth/logout'; method = 'POST'"
+            @click="endpoint = `api/auth/logout?eveyrwhere=${allDevices}`; method = 'POST'"
           >
             Log Out
           </q-btn>
@@ -190,24 +195,60 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { ref, watch } from 'vue';
   import { useQuasar } from 'quasar'
+  import { useLoginStore } from '@/stores/LoginStore.js'
+  import { storeToRefs } from 'pinia'
 
   const $q = useQuasar();
+
+  $q.loading.show();
 
   const requiredRule = (val: string) => (val && val.length > 0) || "This field is required";
   const matchRule = (val: string) => (val && val === password.value) || 'Password mismatch';
 
-  const state = ref('login');
+  const store = useLoginStore();
+  const { loggedInUser } = storeToRefs(store);
+
+  // if logging out from dropdown
+  watch(loggedInUser, async(newVal) => {
+    if(!newVal) {
+      state.value = 'login';
+    }
+  })
+
+  // get login state
+  fetch('api/world/', {method: 'GET'})
+    .then(res => {
+      console.log('res = ', res);
+      if (res.status === 401) {
+        state.value = 'login';
+        loggedInUser.value = '';
+      }
+      if (res.status === 200) {
+        state.value = 'loggedIn';
+      }
+      $q.loading.hide();
+      return res.json();
+    })
+    .then(data => {
+      console.log('data = ', data);
+      loggedInUser.value = data.name;
+    })
+    .catch(err => {
+      console.warn(err)
+    })
+
+  const state = ref('');
   const endpoint = ref('');
   const method = ref('');
-  const loggedInUser = ref('');
 
   const username = ref('');
   const password = ref('');
   const newPassword = ref('');
   const confirmPassword = ref('');
   const deleteRequestPassword = ref('');
+  const allDevices = ref(false);
 
   function submit(endpoint: string, method: string) {
     console.log('endpoint = ', endpoint);
@@ -260,7 +301,8 @@
         if (endpoint === 'api/auth/login') {
           message = `Successfully logged in as ${username.value}`;
           loggedInUser.value = JSON.parse(JSON.stringify(username.value));
-          reset();
+          username.value = '';
+          password.value = '';
           state.value = 'loggedIn';
         }
         if (endpoint === 'api/user/' && method === 'POST') {
@@ -270,13 +312,11 @@
         }
         if (endpoint === 'api/user/' && method === 'DELETE') {
           message = `Successfully deleted user: ${loggedInUser.value}`;
-          loggedInUser.value = '';
           reset();
           state.value = 'login';
         }
-        if (endpoint === 'api/auth/logout') {
+        if (endpoint.includes('api/auth/logout')) {
           message = `Successfully logged out from ${loggedInUser.value}`;
-          loggedInUser.value = '';
           reset();
           state.value = 'login';
         }
@@ -308,6 +348,8 @@
     password.value = '';
     newPassword.value = '';
     confirmPassword.value = '';
+    loggedInUser.value = '';
+    allDevices.value = false;
   }
 </script>
 
