@@ -29,8 +29,9 @@ from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from injector import Binder, Injector
 from redis import Redis
-from dioptra.restapi.utils import setup_injection
+
 from dioptra.restapi.shared.request_scope import request
+from dioptra.restapi.utils import setup_injection
 
 
 @pytest.fixture(scope="session")

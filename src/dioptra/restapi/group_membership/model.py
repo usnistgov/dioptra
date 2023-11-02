@@ -24,7 +24,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField, FileRequired
 from typing_extensions import TypedDict
 from werkzeug.datastructures import FileStorage
-from wtforms.fields import StringField, BooleanField, IntegerField
+from wtforms.fields import BooleanField, IntegerField, StringField
 from wtforms.validators import UUID, InputRequired
 from wtforms.validators import Optional as OptionalField
 from wtforms.validators import Regexp, ValidationError

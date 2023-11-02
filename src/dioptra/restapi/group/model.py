@@ -30,11 +30,9 @@ from wtforms.validators import Optional as OptionalField
 from wtforms.validators import Regexp, ValidationError
 
 from dioptra.restapi.app import db
-from dioptra.restapi.utils import slugify
-
 from dioptra.restapi.group_membership.model import GroupMembership
-
 from dioptra.restapi.user.model import User
+from dioptra.restapi.utils import slugify
 
 
 class Group(db.Model):

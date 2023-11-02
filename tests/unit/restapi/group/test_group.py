@@ -22,30 +22,21 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 from __future__ import annotations
 
+import datetime
 from typing import Any
 
+import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
-
-from dioptra.restapi.group.service import GroupService
-
-from dioptra.restapi.group_membership.service import GroupMembershipService
-
-from dioptra.restapi.user.model import User
-
 from dioptra.restapi.group.model import Group
-
-
-import datetime
-
-import pytest
+from dioptra.restapi.group.service import GroupService
+from dioptra.restapi.group_membership.service import GroupMembershipService
+from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
+from dioptra.restapi.user.model import User
 
 
 @pytest.fixture

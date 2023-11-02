@@ -24,13 +24,13 @@ from typing import List, Optional
 
 import structlog
 from injector import inject
+from sqlalchemy.exc import IntegrityError
 from structlog.stdlib import BoundLogger
 from werkzeug.utils import secure_filename
 
 from dioptra.restapi.app import db
 
 from .model import Group
-from sqlalchemy.exc import IntegrityError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

@@ -32,9 +32,8 @@ from wtforms.validators import Regexp, ValidationError
 from dioptra.restapi.app import db
 from dioptra.restapi.utils import slugify
 
-from .interface import JobUpdateInterface
-
 from ..SharedResource import SharedResource
+from .interface import JobUpdateInterface
 
 job_statuses = db.Table(
     "job_statuses", db.Column("status", db.String(255), primary_key=True)

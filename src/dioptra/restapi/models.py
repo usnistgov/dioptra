@@ -22,6 +22,8 @@ from .experiment.model import (
     ExperimentRegistrationForm,
     ExperimentRegistrationFormData,
 )
+from .group.model import Group
+from .group_membership.model import GroupMembership
 from .job.model import Job, JobForm, JobFormData
 from .queue.model import (
     Queue,
@@ -35,8 +37,6 @@ from .task_plugin.model import (
     TaskPluginUploadFormData,
 )
 from .user.model import User, UserRegistrationForm, UserRegistrationFormData
-from .group.model import Group
-from .group_membership.model import GroupMembership
 
 __all__ = [
     "Experiment",
