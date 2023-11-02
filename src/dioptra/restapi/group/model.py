@@ -32,10 +32,6 @@ from wtforms.validators import Regexp, ValidationError
 from dioptra.restapi.app import db
 from dioptra.restapi.utils import slugify
 
-from .interface import JobUpdateInterface
-
-#from ..SharedResource import SharedResource
-
 from dioptra.restapi.group_membership.model import GroupMembership
 
 from dioptra.restapi.user.model import User
@@ -81,8 +77,6 @@ class Group(db.Model):
     @property
     def users(self):
         """The users that are members of the group."""
-        # Define a relationship with SharedPrototypeResource, if needed
-        #return GroupMembership.query.filter_by(group_id=self.group_id).all().user
         return User.query.join(GroupMembership).filter(GroupMembership.group_id==self.group_id).all()
     
     def check_membership(self, user: User) -> bool:
@@ -97,7 +91,6 @@ class Group(db.Model):
         """
         membership = GroupMembership.query.filter_by(GroupMembership.user_id == user.user_id, 
                                                     GroupMembership.group_id == self.group_id )
-        #next((x for x in self.owner.users if x.user_id == user.id), None)
 
         if membership is None:
             return False
@@ -115,26 +108,3 @@ class Group(db.Model):
             setattr(self, key, val)
 
         return self
-
-
-# class GroupForm(FlaskForm):
-#     """The Group submission form.
-
-#     Attributes:
-#         group_name: Human-readable name for the group.
-#     """
-
-#     group_name = StringField(
-#         "Name of Group",
-#         validators=[InputRequired()],
-#         description="The human readable name of a registered group.",
-#     )
-
-# class GroupFormData(TypedDict, total=False):
-#     """The data extracted from the group submission form.
-
-#     Attributes:
-#         group_name: Human-readable name for the group.
-#     """
-
-#     group_name: str

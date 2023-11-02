@@ -40,6 +40,9 @@ from dioptra.restapi.group_membership.service import GroupMembershipService
 
 from dioptra.restapi.user.model import User
 
+from dioptra.restapi.group.model import Group
+
+
 import datetime
 
 import pytest
@@ -51,7 +54,15 @@ def group_service() ->  GroupService:
 def group_membership_service()-> GroupMembershipService:
     yield GroupMembershipService()
 
-def create_user(db):
+def create_user(db: SQLAlchemy) -> User:
+    """Create a user and add them to the database.
+
+    Args:
+        db: The SQLAlchemy database session.
+
+    Returns:
+        The newly created user object.
+    """
     timestamp = datetime.datetime.now()
     user_expire_on = datetime.datetime(9999, 12, 31, 23, 59, 59)
     password_expire_on = timestamp.replace(year=timestamp.year + 1)
@@ -70,23 +81,54 @@ def create_user(db):
     db.session.commit()
     return new_user
 
-def create_group(group_service, name="test"):
+def create_group(group_service: GroupService, name: str = "test") -> Group:
+    """Create a group using the group service.
+
+    Args:
+        group_service: The group service responsible for group creation.
+        name: The name to assign to the new group (default is "test").
+
+    Returns:
+        The response from the group service representing the newly created group.
+    """
     return group_service.submit(name)
 
-def test_create_group(db, group_service):
+def test_create_group(db: SQLAlchemy, group_service: GroupService):
+    """Test the creation of a group using the database and group service.
+
+    Args:
+        db: The SQLAlchemy database session for testing.
+        group_service: The group service responsible for group creation.
+    """
     group = create_group(group_service, name="Test Group")
 
     assert group in group_service.get_all()
 
-def test_delete_group(db, group_service):
+def test_delete_group(db: SQLAlchemy, group_service: GroupService):
+    """Test the deletion of a group using the database and group service.
+
+    Args:
+        db: The SQLAlchemy database session for testing.
+        group_service: The group service responsible for group operations.
+    """
     group = create_group(group_service, name="Test Group")
     group_service.delete(group.group_id)
     retrieved_group= group_service.get_by_id(group.group_id)
 
     assert retrieved_group.deleted == True
 
-def test_create_group_membership(db, group_service, group_membership_service) -> None:
-    # Create a user
+def test_create_group_membership(
+    db: SQLAlchemy,
+    group_service: GroupService,
+    group_membership_service: GroupMembershipService
+) -> None:
+    """Test the creation of a group membership using the database and services.
+
+    Args:
+        db: The SQLAlchemy database session for testing.
+        group_service: The group service responsible for group operations.
+        group_membership_service: The group membership service responsible for group membership operations.
+    """    # Create a user
 
     new_user = create_user(db)
 
@@ -106,7 +148,18 @@ def test_create_group_membership(db, group_service, group_membership_service) ->
 
     assert new_user in group.users
 
-def test_delete_group_membership(db, group_service, group_membership_service) -> None:
+def test_delete_group_membership(
+    db: SQLAlchemy,
+    group_service: GroupService,
+    group_membership_service: GroupMembershipService
+) -> None:
+    """Test the deletion of a group membership using the database and services.
+
+    Args:
+        db: The SQLAlchemy database session for testing.
+        group_service: The group service responsible for group operations.
+        group_membership_service: The group membership service responsible for group membership operations.
+    """
     # Create a user
 
     new_user = create_user(db)
@@ -125,9 +178,18 @@ def test_delete_group_membership(db, group_service, group_membership_service) ->
 
     assert group_membership_service.get_by_id(group.group_id, new_user.user_id) == None
 
-#whats in membership.user/group
+def test_group_relationship(
+    db: SQLAlchemy,
+    group_service: GroupService,
+    group_membership_service: GroupMembershipService
+) -> None:
+    """Test the relationship between groups and group memberships using the database and services.
 
-def test_group_relationship(db, group_service, group_membership_service) -> None:
+    Args:
+        db: The SQLAlchemy database session for testing.
+        group_service: The group service responsible for group operations.
+        group_membership_service: The group membership service responsible for group membership operations.
+    """
     # Create a user
 
     new_user = create_user(db)
@@ -143,7 +205,18 @@ def test_group_relationship(db, group_service, group_membership_service) -> None
 
     assert retrieved_membership.group == group
 
-def test_user_relationship(db, group_service, group_membership_service) -> None:
+def test_user_relationship(
+    db: SQLAlchemy,
+    group_service: GroupService,
+    group_membership_service: GroupMembershipService
+) -> None:
+    """Test the relationship between users and group memberships using the database and services.
+
+    Args:
+        db: The SQLAlchemy database session for testing.
+        group_service: The group service responsible for group operations.
+        group_membership_service: The group membership service responsible for group membership operations.
+    """
     # Create a user
 
     new_user = create_user(db)

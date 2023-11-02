@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The module defining the job endpoints."""
+"""The module defining the group endpoints."""
 from __future__ import annotations
 
 import uuid
@@ -26,11 +26,11 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import as_api_parser
+from dioptra.restapi.utils import as_api_parser, slugify
 
 from .errors import GroupDoesNotExistError, GroupSubmissionError
-from .model import Group, GroupForm, GroupFormData
-from .schema import GroupSchema, group_submit_form_schema
+from .model import Group
+from .schema import GroupSchema
 from .service import GroupService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -43,7 +43,7 @@ api: Namespace = Namespace(
 
 @api.route("/")
 class GroupResource(Resource):
-    """Shows a list of all jobs, and lets you POST to create new jobs."""
+    """Shows a list of all Group, and lets you POST to create new groups."""
 
     @inject
     def __init__(
@@ -64,52 +64,28 @@ class GroupResource(Resource):
         log.info("Request received")
         return self._group_service.get_all(log=log)
 
-    @api.expect(as_api_parser(api, group_submit_form_schema))
-    @accepts(group_submit_form_schema, api=api)
+    @accepts(GroupSchema, api=api)
     @responds(schema=GroupSchema, api=api)
     def post(self) -> Group:
         """Creates a new Group via a group submission form with an attached file."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="group", request_type="POST"
         )  # noqa: F841
-        # group_form: GroupForm = GroupForm()
 
         log.info("Request received")
 
-        # if not group_form.validate_on_submit():
-        #     log.error("Form validation failed")
-        #     raise GroupSubmissionError
-
-        # log.info("Form validation successful")
-        # group_form_data: GroupFormData = self._group_service.extract_data_from_form(
-        #     group_form=group_form,
-        #     log=log,
-        # )
-
         parsed_obj = request.parsed_obj  # type: ignore
         name = slugify(str(parsed_obj["group_name"]))
-        return self._group_service.submit(group_form_data=group_form_data, log=log)
+        return self._group_service.submit(name= name, log=log)
     
-    @accepts(group_submit_form_schema, api=api)
+    @accepts(GroupSchema, api=api)
     def delete(self) -> bool:
-        #need to get id from form, validate it exists, and is not yet deleted then, send to serivce
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="group", request_type="POST"
         )  # noqa: F841
 
-        #group_form: GroupForm = GroupForm()
-
         log.info("Request received")
 
-        # if not group_form.validate_on_submit():
-        #     log.error("Form validation failed")
-        #     raise GroupSubmissionError
-
-        # log.info("Form validation successful")
-        # group_form_data: GroupFormData = self._group_service.extract_data_from_form(
-        #     group_form=group_form,
-        #     log=log,
-        # )
         parsed_obj = request.parsed_obj  # type: ignore
         group_id = (int(parsed_obj["id"]))
         return self._group_service.delete(id=group_id)

@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Error handlers for the job endpoints."""
+"""Error handlers for the group membership endpoints."""
 from __future__ import annotations
 
 from flask_restx import Api

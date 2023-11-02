@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The job endpoint subpackage."""
+"""The group membership endpoint subpackage."""
 
 from .dependencies import bind_dependencies, register_providers
 from .errors import register_error_handlers

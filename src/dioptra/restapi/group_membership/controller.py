@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The module defining the job endpoints."""
+"""The module defining the group membership endpoints."""
 from __future__ import annotations
 
 import uuid
@@ -29,8 +29,8 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.utils import as_api_parser
 
 from .errors import GroupMembershipDoesNotExistError, GroupMembershipSubmissionError
-from .model import GroupMembership, GroupMembershipForm, GroupMembershipFormData
-from .schema import GroupMembershipSchema, GroupMembershipFormSchema, group_membership_form_schema
+from .model import GroupMembership
+from .schema import GroupMembershipSchema
 from .service import GroupMembershipService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -65,8 +65,7 @@ class GroupMembershipResource(Resource):
         log.info("Request received")
         return self._group_membership_service.get_all(log=log)
 
-    @api.expect(as_api_parser(api, group_membership_form_schema))
-    @accepts(group_membership_form_schema, api=api)
+    @accepts(GroupMembershipSchema, api=api)
     @responds(schema=GroupMembershipSchema, api=api)
     def post(self) -> GroupMembership:
         """Create a new group membership using a group membership submission form."""
@@ -89,8 +88,7 @@ class GroupMembershipResource(Resource):
 
         return self._group_membership_service.submit(group_id,user_id, read,write,share_read,share_write, log=log)
 
-    @api.expect(as_api_parser(api, group_membership_form_schema))
-    @accepts(group_membership_form_schema, api=api)
+    @accepts(GroupMembershipSchema, api=api)
     def delete(self) -> bool:
         """Delete a group membership."""
         log: BoundLogger = LOGGER.new(

@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Methods for registering the job endpoint routes with the main application.
+"""Methods for registering the group membership endpoint routes with the main application.
 
 .. |Api| replace:: :py:class:`flask_restx.Api`
 .. |Flask| replace:: :py:class:`flask.Flask`

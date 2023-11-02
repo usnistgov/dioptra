@@ -27,9 +27,9 @@ from typing import Any, Dict
 from marshmallow import Schema, fields, post_dump, post_load, pre_dump, validate
 from werkzeug.datastructures import FileStorage
 
-from dioptra.restapi.utils import ParametersSchema, slugify
+from dioptra.restapi.utils import slugify
 
-from .model import Group, GroupForm, GroupFormData
+from .model import Group
 
 
 class GroupSchema(Schema):
@@ -79,46 +79,3 @@ class GroupSchema(Schema):
     def deserialize_object(self, data: Dict[str, Any], many: bool, **kwargs) -> Group:
         """Creates a |Job| object from the validated data."""
         return self.__model__(**data)
-
-
-# class GroupFormSchema(Schema):
-#     """The schema for the information stored in a submitted group form.
-
-#     Attributes:
-#         group_name: The name of a registered experiment.
-#     """
-
-#     __model__ = GroupFormData
-
-#     group_name = fields.String(
-#         required=True, metadata=dict(description="The name of the group being "
-#                                      "registered.")
-#     )
-    
-#     @pre_dump
-#     def extract_data_from_form(
-#         self, data: GroupForm, many: bool, **kwargs
-#     ) -> Dict[str, Any]:
-#         """Extracts data from the |GroupForm| for validation."""
-
-#         return {
-#             "group_name": slugify(data.group_name.data),
-#         }
-
-#     @post_dump
-#     def serialize_object(
-#         self, data: Dict[str, Any], many: bool, **kwargs
-#     ) -> GroupFormData:
-#         """Creates a |GroupFormData| object from the validated data."""
-#         return self.__model__(**data)
-
-
-# group_submit_form_schema: list[ParametersSchema] = [
-#     dict(
-#         name="group_name",
-#         type=str,
-#         location="form",
-#         required=True,
-#         help="The name of the group being registered.",
-#     ),
-# ]

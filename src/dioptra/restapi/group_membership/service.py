@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The server-side functions that perform job endpoint operations."""
+"""The server-side functions that perform group membership endpoint operations."""
 from __future__ import annotations
 
 import datetime
@@ -24,21 +24,12 @@ from typing import List, Optional
 
 import structlog
 from injector import inject
-#from rq.job import Job as RQJob
 from structlog.stdlib import BoundLogger
 from werkzeug.utils import secure_filename
 
 from dioptra.restapi.app import db
-# from dioptra.restapi.experiment.errors import ExperimentDoesNotExistError
-# from dioptra.restapi.experiment.service import ExperimentService
-# from dioptra.restapi.queue.errors import QueueDoesNotExistError
-# from dioptra.restapi.queue.service import QueueService
-# from dioptra.restapi.shared.rq.service import RQService
-# from dioptra.restapi.shared.s3.service import S3Service
 
-#from .errors import JobWorkflowUploadError
-from .model import GroupMembership #, GroupMembershipForm, GroupMembershipFormData
-#from .schema import GroupMembershipFormSchema
+from .model import GroupMembership
 
 from sqlalchemy.exc import IntegrityError
 

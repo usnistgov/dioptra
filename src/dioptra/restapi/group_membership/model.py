@@ -55,7 +55,6 @@ class GroupMembership(db.Model):
     share_read = db.Column(db.Boolean, default=False)
     share_write = db.Column(db.Boolean, default=False)
 
-    # Define a relationship with User and Group, are these lists or groups?
     #is back populates needed?
     user = db.relationship('User', foreign_keys=[user_id],)
     group = db.relationship('Group', foreign_keys=[group_id])
@@ -71,71 +70,3 @@ class GroupMembership(db.Model):
             setattr(self, key, val)
 
         return self
-
-
-# class GroupMembershipForm(FlaskForm):
-#     """Form for creating new group memberships.
-
-#     Attributes:
-#         group_id: The ID of the group to which the user belongs.
-#         user_id: The ID of the user to add to the group.
-#         read: Checkbox to indicate read permissions.
-#         write: Checkbox to indicate write permissions.
-#         share_read: Checkbox to indicate share read permissions.
-#         share_write: Checkbox to indicate share write permissions.
-#     """
-
-#     group_id = IntegerField(
-#         "Group ID",
-#         validators=[InputRequired()],
-#         description="The ID of the group to which the user belongs."
-#     )
-
-#     user_id = IntegerField(
-#         "User ID",
-#         validators=[InputRequired()],
-#         description="The ID of the user to add to the group."
-#     )
-
-#     read = BooleanField(
-#         "Read Permission",
-#         description="Check to grant read permission for the user in the group.",
-#         default = False
-#     )
-
-#     write = BooleanField(
-#         "Write Permission",
-#         description="Check to grant write permission for the user in the group.",
-#         default = False
-#     )
-
-#     share_read = BooleanField(
-#         "Share Read Permission",
-#         description="Check to allow the user to share read permission with others in the group.",
-#         default = False
-#     )
-
-#     share_write = BooleanField(
-#         "Share Write Permission",
-#         description="Check to allow the user to share write permission with others in the group.",
-#         default=False
-#     )
-
-# class GroupMembershipFormData(TypedDict, total=False):
-#     """The data extracted from the group membership submission form.
-
-#     Attributes:
-#         group_id: The ID of the group to which the user belongs.
-#         user_id: The ID of the user to add to the group.
-#         read: Indicates whether read permission is granted.
-#         write: Indicates whether write permission is granted.
-#         share_read: Indicates whether share read permission is granted.
-#         share_write: Indicates whether share write permission is granted.
-#     """
-
-#     group_id: int
-#     user_id: int
-#     read: bool
-#     write: bool
-#     share_read: bool
-#     share_write: bool
