@@ -39,7 +39,7 @@ def register_error_handlers(api: Api) -> None:
     def handle_job_submission_error(error):
         return (
             {
-                "message": "Bad Request - The group membership submission form contains "
+                "message": "Bad Request - The group membership submission form contains"
                 "invalid parameters. Please verify and resubmit."
             },
             400,

@@ -24,10 +24,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from marshmallow import Schema, fields, post_dump, post_load, pre_dump, validate
-from werkzeug.datastructures import FileStorage
-
-from dioptra.restapi.utils import slugify
+from marshmallow import Schema, fields, post_load
 
 from .model import Group
 

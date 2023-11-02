@@ -18,17 +18,14 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, Optional
 
 import structlog
+from flask import request
 from flask_accepts import accepts, responds
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import as_api_parser
-
-from .errors import GroupMembershipDoesNotExistError, GroupMembershipSubmissionError
 from .model import GroupMembership
 from .schema import GroupMembershipSchema
 from .service import GroupMembershipService
@@ -56,7 +53,7 @@ class GroupMembershipResource(Resource):
         super().__init__(*args, **kwargs)
 
     @responds(schema=GroupMembershipSchema(many=True), api=api)
-    def get(self) -> List[GroupMembership]:
+    def get(self) -> list[GroupMembership]:
         """Get a list of all group memberships."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),
@@ -71,7 +68,7 @@ class GroupMembershipResource(Resource):
     def post(self) -> GroupMembership:
         """Create a new group membership using a group membership submission form."""
         log: BoundLogger = LOGGER.new(
-            request_id=str(uuid.uuid.uuid4()),
+            request_id=str(uuid.uuid4()),
             resource="group_membership",
             request_type="POST",
         )
@@ -94,7 +91,7 @@ class GroupMembershipResource(Resource):
     def delete(self) -> bool:
         """Delete a group membership."""
         log: BoundLogger = LOGGER.new(
-            request_id=str(uuid.uuid.uuid4()),
+            request_id=str(uuid.uuid4()),
             resource="group_membership",
             request_type="DELETE",
         )

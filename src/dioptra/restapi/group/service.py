@@ -18,15 +18,11 @@
 from __future__ import annotations
 
 import datetime
-import uuid
-from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 import structlog
-from injector import inject
 from sqlalchemy.exc import IntegrityError
 from structlog.stdlib import BoundLogger
-from werkzeug.utils import secure_filename
 
 from dioptra.restapi.app import db
 
@@ -85,6 +81,6 @@ class GroupService(object):
             db.session.commit()
 
             return True
-        except IntegrityError as e:
+        except IntegrityError:
             db.session.rollback()
             return False

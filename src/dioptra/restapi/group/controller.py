@@ -21,14 +21,15 @@ import uuid
 from typing import List, Optional
 
 import structlog
+from flask import request
 from flask_accepts import accepts, responds
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import as_api_parser, slugify
+from dioptra.restapi.utils import slugify
 
-from .errors import GroupDoesNotExistError, GroupSubmissionError
+from .errors import GroupDoesNotExistError
 from .model import Group
 from .schema import GroupSchema
 from .service import GroupService

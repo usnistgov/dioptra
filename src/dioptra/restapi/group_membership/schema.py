@@ -24,10 +24,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from marshmallow import Schema, fields, post_dump, post_load, pre_dump, validate
-from werkzeug.datastructures import FileStorage
-
-from dioptra.restapi.utils import ParametersSchema, slugify
+from marshmallow import Schema, fields, post_load
 
 from .model import GroupMembership
 
@@ -40,8 +37,10 @@ class GroupMembershipSchema(Schema):
         group_id: The ID of the group to which the user belongs.
         read: Indicates whether the user has read permissions in the group.
         write: Indicates whether the user has write permissions in the group.
-        share_read: Indicates whether the user can share read permissions with others in the group.
-        share_write: Indicates whether the user can share write permissions with others in the group.
+        share_read: Indicates whether the user can share read permissions with others
+            in the group.
+        share_write: Indicates whether the user can share write permissions with
+            others in the group.
     """
 
     __model__ = GroupMembership
@@ -69,13 +68,15 @@ class GroupMembershipSchema(Schema):
     share_read = fields.Boolean(
         attribute="share_read",
         metadata=dict(
-            description="Indicates whether the user can share read permissions with others in the group."
+            description="Indicates whether the user can share read permissions with \
+                others in the group."
         ),
     )
     share_write = fields.Boolean(
         attribute="share_write",
         metadata=dict(
-            description="Indicates whether the user can share write permissions with others in the group."
+            description="Indicates whether the user can share write permissions with \
+                others in the group."
         ),
     )
 

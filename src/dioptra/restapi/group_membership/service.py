@@ -17,16 +17,11 @@
 """The server-side functions that perform group membership endpoint operations."""
 from __future__ import annotations
 
-import datetime
-import uuid
-from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 import structlog
-from injector import inject
 from sqlalchemy.exc import IntegrityError
 from structlog.stdlib import BoundLogger
-from werkzeug.utils import secure_filename
 
 from dioptra.restapi.app import db
 
@@ -64,12 +59,12 @@ class GroupMembershipService(object):
         return GroupMembership.query.all()  # type: ignore
 
     @staticmethod
-    def get_by_id(group_id: int, user_id: int, **kwargs) -> GroupMembership:
+    def get_by_id(group_id: int, user_id: int, **kwargs) -> GroupMembership | None:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        return GroupMembership.query.filter(
+        return GroupMembership.query.filter( # type: ignore
             GroupMembership.user_id == user_id, GroupMembership.group_id == group_id
-        ).first()  # type: ignore
+        ).first() 
 
     def submit(
         self,
@@ -106,6 +101,6 @@ class GroupMembershipService(object):
             db.session.commit()
 
             return True
-        except IntegrityError as e:
+        except IntegrityError:
             db.session.rollback()
             return False

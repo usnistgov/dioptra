@@ -17,20 +17,7 @@
 """The data models for the job endpoint objects."""
 from __future__ import annotations
 
-import datetime
-from typing import Optional
-
-from flask_wtf import FlaskForm
-from flask_wtf.file import FileAllowed, FileField, FileRequired
-from typing_extensions import TypedDict
-from werkzeug.datastructures import FileStorage
-from wtforms.fields import BooleanField, IntegerField, StringField
-from wtforms.validators import UUID, InputRequired
-from wtforms.validators import Optional as OptionalField
-from wtforms.validators import Regexp, ValidationError
-
 from dioptra.restapi.app import db
-from dioptra.restapi.utils import slugify
 
 
 class GroupMembership(db.Model):
@@ -41,8 +28,10 @@ class GroupMembership(db.Model):
         group_id (str): The ID of the group to which the user belongs.
         read (bool): Indicates whether the user has read permissions in the group.
         write (bool): Indicates whether the user has write permissions in the group.
-        share_read (bool): Indicates whether the user can share read permissions with others in the group.
-        share_write (bool): Indicates whether the user can share write permissions with others in the group.
+        share_read (bool): Indicates whether the user can share read permissions with
+            others in the group.
+        share_write (bool): Indicates whether the user can share write permissions
+            with others in the group.
     """
 
     __tablename__ = "group_memberships"

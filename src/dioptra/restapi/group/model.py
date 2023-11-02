@@ -17,22 +17,9 @@
 """The data models for the job endpoint objects."""
 from __future__ import annotations
 
-import datetime
-from typing import Optional
-
-from flask_wtf import FlaskForm
-from flask_wtf.file import FileAllowed, FileField, FileRequired
-from typing_extensions import TypedDict
-from werkzeug.datastructures import FileStorage
-from wtforms.fields import StringField
-from wtforms.validators import UUID, InputRequired
-from wtforms.validators import Optional as OptionalField
-from wtforms.validators import Regexp, ValidationError
-
 from dioptra.restapi.app import db
 from dioptra.restapi.group_membership.model import GroupMembership
 from dioptra.restapi.user.model import User
-from dioptra.restapi.utils import slugify
 
 
 class Group(db.Model):
