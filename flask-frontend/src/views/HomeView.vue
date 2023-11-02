@@ -114,7 +114,7 @@
             color="orange"
             class="full-width "
             type="submit"
-            @click="endpoint = `api/auth/logout?eveyrwhere=${allDevices}`; method = 'POST'"
+            @click="endpoint = `api/auth/logout?everywhere=${allDevices}`; method = 'POST'"
           >
             Log Out
           </q-btn>
@@ -349,6 +349,7 @@
     newPassword.value = '';
     confirmPassword.value = '';
     loggedInUser.value = '';
+    deleteRequestPassword.value = '';
     allDevices.value = false;
   }
 </script>
