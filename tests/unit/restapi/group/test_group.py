@@ -39,6 +39,7 @@ from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
 from dioptra.restapi.user.model import User
 
 
+
 @pytest.fixture
 def group_service() -> GroupService:
     yield GroupService()

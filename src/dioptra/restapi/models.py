@@ -49,5 +49,5 @@ __all__ = [
     "TaskPluginUploadFormData",
     "User",
     "Group",
-    "GroupMembership"
+    "GroupMembership",
 ]

@@ -40,8 +40,8 @@ class Group(db.Model):
     """A UUID that identifies the Resource."""
     name = db.Column(db.String(36))
 
-    creator_id= db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index= True)
-    owner_id= db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index= True)
+    creator_id = db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index=True)
+    owner_id = db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index=True)
 
     created_on = db.Column(db.DateTime())
     deleted = db.Column(db.Boolean)
