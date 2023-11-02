@@ -37,7 +37,6 @@ api: Namespace = Namespace(
     description="Add users to groups",
 )
 
-
 @api.route("/")
 class GroupMembershipResource(Resource):
     """Manage group memberships."""
