@@ -62,9 +62,9 @@ class GroupMembershipService(object):
     def get_by_id(group_id: int, user_id: int, **kwargs) -> GroupMembership | None:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        return GroupMembership.query.filter( # type: ignore
+        return GroupMembership.query.filter(  # type: ignore
             GroupMembership.user_id == user_id, GroupMembership.group_id == group_id
-        ).first() 
+        ).first()
 
     def submit(
         self,
