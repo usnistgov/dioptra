@@ -32,20 +32,6 @@ from wtforms.validators import Regexp, ValidationError
 from dioptra.restapi.app import db
 from dioptra.restapi.utils import slugify
 
-from .interface import JobUpdateInterface
-
-#from ..SharedResource import SharedResource
-
-from ..group.model import Group
-
-from ..user.model import User
-
-
-
-job_statuses = db.Table(
-    "job_statuses", db.Column("status", db.String(255), primary_key=True)
-)
-
 
 class GroupMembership(db.Model):
     """The group memberships table.
@@ -59,41 +45,27 @@ class GroupMembership(db.Model):
         share_write (bool): Indicates whether the user can share write permissions with others in the group.
     """
 
-    __tablename__ = "GroupMemberships"
+    __tablename__ = "group_memberships"
 
     user_id = db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), primary_key=True)
-    group_id = db.Column(db.BigInteger(), db.ForeignKey("Groups.id"), primary_key=True)
+    group_id = db.Column(db.BigInteger(), db.ForeignKey("groups.group_id"), primary_key=True)
 
     read = db.Column(db.Boolean, default=False)
     write = db.Column(db.Boolean, default=False)
     share_read = db.Column(db.Boolean, default=False)
     share_write = db.Column(db.Boolean, default=False)
 
-    # Define a relationship with User and Group
-    user = db.relationship('User', foreign_keys=[user_id])
+    # Define a relationship with User and Group, are these lists or groups?
+    #is back populates needed?
+    user = db.relationship('User', foreign_keys=[user_id],)
     group = db.relationship('Group', foreign_keys=[group_id])
 
 
-
-    @property
-    def user(self):
-        """The users that are members of the group."""
-        # Define a relationship with SharedPrototypeResource, if needed
-        return User.query.filter_by(user_id=self.user_id).all()
-    
-    @property
-    def group(self):
-        """The users that are members of the group."""
-        # Define a relationship with SharedPrototypeResource, if needed
-        return Group.query.filter_by(id=self.group_id).all()
-
-
-    def update(self, changes: JobUpdateInterface):
+    def update(self, changes: dict):
         """Updates the record.
 
         Args:
-            changes: A :py:class:`~.interface.JobUpdateInterface` dictionary containing
-                record updates.
+            changes: A dictionary containing record updates.
         """
         for key, val in changes.items():
             setattr(self, key, val)
@@ -101,69 +73,69 @@ class GroupMembership(db.Model):
         return self
 
 
-class GroupMembershipForm(FlaskForm):
-    """Form for creating new group memberships.
+# class GroupMembershipForm(FlaskForm):
+#     """Form for creating new group memberships.
 
-    Attributes:
-        group_id: The ID of the group to which the user belongs.
-        user_id: The ID of the user to add to the group.
-        read: Checkbox to indicate read permissions.
-        write: Checkbox to indicate write permissions.
-        share_read: Checkbox to indicate share read permissions.
-        share_write: Checkbox to indicate share write permissions.
-    """
+#     Attributes:
+#         group_id: The ID of the group to which the user belongs.
+#         user_id: The ID of the user to add to the group.
+#         read: Checkbox to indicate read permissions.
+#         write: Checkbox to indicate write permissions.
+#         share_read: Checkbox to indicate share read permissions.
+#         share_write: Checkbox to indicate share write permissions.
+#     """
 
-    group_id = IntegerField(
-        "Group ID",
-        validators=[InputRequired()],
-        description="The ID of the group to which the user belongs."
-    )
+#     group_id = IntegerField(
+#         "Group ID",
+#         validators=[InputRequired()],
+#         description="The ID of the group to which the user belongs."
+#     )
 
-    user_id = IntegerField(
-        "User ID",
-        validators=[InputRequired()],
-        description="The ID of the user to add to the group."
-    )
+#     user_id = IntegerField(
+#         "User ID",
+#         validators=[InputRequired()],
+#         description="The ID of the user to add to the group."
+#     )
 
-    read = BooleanField(
-        "Read Permission",
-        description="Check to grant read permission for the user in the group.",
-        default = False
-    )
+#     read = BooleanField(
+#         "Read Permission",
+#         description="Check to grant read permission for the user in the group.",
+#         default = False
+#     )
 
-    write = BooleanField(
-        "Write Permission",
-        description="Check to grant write permission for the user in the group.",
-        default = False
-    )
+#     write = BooleanField(
+#         "Write Permission",
+#         description="Check to grant write permission for the user in the group.",
+#         default = False
+#     )
 
-    share_read = BooleanField(
-        "Share Read Permission",
-        description="Check to allow the user to share read permission with others in the group.",
-        default = False
-    )
+#     share_read = BooleanField(
+#         "Share Read Permission",
+#         description="Check to allow the user to share read permission with others in the group.",
+#         default = False
+#     )
 
-    share_write = BooleanField(
-        "Share Write Permission",
-        description="Check to allow the user to share write permission with others in the group.",
-        default=False
-    )
+#     share_write = BooleanField(
+#         "Share Write Permission",
+#         description="Check to allow the user to share write permission with others in the group.",
+#         default=False
+#     )
 
-class GroupMembershipFormData(TypedDict, total=False):
-    """The data extracted from the group membership submission form.
+# class GroupMembershipFormData(TypedDict, total=False):
+#     """The data extracted from the group membership submission form.
 
-    Attributes:
-        group_id: The ID of the group to which the user belongs.
-        user_id: The ID of the user to add to the group.
-        read: Indicates whether read permission is granted.
-        write: Indicates whether write permission is granted.
-        share_read: Indicates whether share read permission is granted.
-        share_write: Indicates whether share write permission is granted.
-    """
+#     Attributes:
+#         group_id: The ID of the group to which the user belongs.
+#         user_id: The ID of the user to add to the group.
+#         read: Indicates whether read permission is granted.
+#         write: Indicates whether write permission is granted.
+#         share_read: Indicates whether share read permission is granted.
+#         share_write: Indicates whether share write permission is granted.
+#     """
 
-    group_id: int
-    user_id: int
-    read: bool
-    write: bool
-    share_read: bool
-    share_write: bool
+#     group_id: int
+#     user_id: int
+#     read: bool
+#     write: bool
+#     share_read: bool
+#     share_write: bool

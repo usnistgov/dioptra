@@ -1,0 +1,164 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+"""Test suite for queue operations.
+
+This module contains a set of tests that validate the CRUD operations and additional
+functionalities for the queue entity. The tests ensure that the queues can be
+registered, renamed, deleted, and locked/unlocked as expected through the REST API.
+"""
+from __future__ import annotations
+
+from typing import Any
+
+from flask.testing import FlaskClient
+from flask_sqlalchemy import SQLAlchemy
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from werkzeug.test import TestResponse
+
+from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
+
+from dioptra.restapi.group.service import GroupService
+
+from dioptra.restapi.group_membership.service import GroupMembershipService
+
+from dioptra.restapi.user.model import User
+
+import datetime
+
+import pytest
+
+@pytest.fixture
+def group_service() ->  GroupService:
+    yield GroupService()
+@pytest.fixture
+def group_membership_service()-> GroupMembershipService:
+    yield GroupMembershipService()
+
+def create_user(db):
+    timestamp = datetime.datetime.now()
+    user_expire_on = datetime.datetime(9999, 12, 31, 23, 59, 59)
+    password_expire_on = timestamp.replace(year=timestamp.year + 1)
+
+    new_user: User = User(
+        username="test_admin",
+        password="password",
+        email_address="test@test.com",
+        created_on=timestamp,
+        last_modified_on=timestamp,
+        last_login_on=timestamp,
+        user_expire_on=user_expire_on,
+        password_expire_on=password_expire_on,
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return new_user
+
+def create_group(group_service, name="test"):
+    return group_service.submit(name)
+
+def test_create_group(db, group_service):
+    group = create_group(group_service, name="Test Group")
+
+    assert group in group_service.get_all()
+
+def test_delete_group(db, group_service):
+    group = create_group(group_service, name="Test Group")
+    group_service.delete(group.group_id)
+    retrieved_group= group_service.get_by_id(group.group_id)
+
+    assert retrieved_group.deleted == True
+
+def test_create_group_membership(db, group_service, group_membership_service) -> None:
+    # Create a user
+
+    new_user = create_user(db)
+
+    # Create a group
+    group = create_group(group_service, name="Test Group")
+
+    # Create a group membership
+    membership = group_membership_service.submit(group.group_id, new_user.user_id, read=True, write=True, share_read=True, share_write=True)
+
+    # Assert that the group membership has been created
+    assert membership.group_id == group.group_id
+    assert membership.user_id == new_user.user_id
+    assert membership.read is True
+    assert membership.write is True
+    assert membership.share_read is True
+    assert membership.share_write is True
+
+    assert new_user in group.users
+
+def test_delete_group_membership(db, group_service, group_membership_service) -> None:
+    # Create a user
+
+    new_user = create_user(db)
+
+    # Create a group
+    group = create_group(group_service, name="Test Group")
+
+    # Create a group membership
+    membership = group_membership_service.submit(group.group_id, new_user.user_id, read=True, write=True, share_read=True, share_write=True)
+
+    #get membership from db
+    retrieved_membership = group_membership_service.get_by_id(group.group_id, new_user.user_id)
+
+    #and then delete it
+    group_membership_service.delete(retrieved_membership.group_id, retrieved_membership.user_id)
+
+    assert group_membership_service.get_by_id(group.group_id, new_user.user_id) == None
+
+#whats in membership.user/group
+
+def test_group_relationship(db, group_service, group_membership_service) -> None:
+    # Create a user
+
+    new_user = create_user(db)
+
+    # Create a group
+    group = create_group(group_service, name="Test Group")
+
+    # Create a group membership
+    membership = group_membership_service.submit(group.group_id, new_user.user_id, read=True, write=True, share_read=True, share_write=True)
+
+    #get membership from db
+    retrieved_membership = group_membership_service.get_by_id(group.group_id, new_user.user_id)
+
+    assert retrieved_membership.group == group
+
+def test_user_relationship(db, group_service, group_membership_service) -> None:
+    # Create a user
+
+    new_user = create_user(db)
+
+    # Create a group
+    group = create_group(group_service, name="Test Group")
+
+    # Create a group membership
+    membership = group_membership_service.submit(group.group_id, new_user.user_id, read=True, write=True, share_read=True, share_write=True)
+
+    #get membership from db
+    retrieved_membership = group_membership_service.get_by_id(group.group_id, new_user.user_id)
+
+    assert retrieved_membership.user == new_user
+    
+
+
+

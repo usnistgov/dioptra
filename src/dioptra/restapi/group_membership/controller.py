@@ -40,7 +40,6 @@ api: Namespace = Namespace(
     description="Add users to groups",
 )
 
-
 @api.route("/")
 class GroupMembershipResource(Resource):
     """Manage group memberships."""
@@ -76,19 +75,9 @@ class GroupMembershipResource(Resource):
             resource="group_membership",
             request_type="POST",
         )
-        #group_membership_form: GroupMembershipForm = GroupMembershipForm()
 
         log.info("Request received")
 
-        # if not group_membership_form.validate_on_submit():
-        #     log.error("Form validation failed")
-        #     raise GroupMembershipSubmissionError
-
-        # log.info("Form validation successful")
-        # group_membership_form_data: GroupMembershipFormData = self._group_membership_service.extract_data_from_form(
-        #     group_membership_form=group_membership_form,
-        #     log=log,
-        # )
         parsed_obj = request.parsed_obj  # type: ignore
         group_id= int(parsed_obj["group_id"])
         user_id= int(parsed_obj["user_id"])
@@ -110,19 +99,7 @@ class GroupMembershipResource(Resource):
             request_type="DELETE",
         )
 
-        group_membership_form: GroupMembershipForm = GroupMembershipForm()
-
         log.info("Request received")
-
-        # if not group_membership_form.validate_on_submit():
-        #     log.error("Form validation failed")
-        #     raise GroupMembershipSubmissionError
-
-        # log.info("Form validation successful")
-        # group_membership_form_data: GroupMembershipFormData = self._group_membership_service.extract_data_from_form(
-        #     group_membership_form=group_membership_form,
-        #     log=log,
-        # )
 
         parsed_obj = request.parsed_obj  # type: ignore
         group_id= int(parsed_obj["group_id"])

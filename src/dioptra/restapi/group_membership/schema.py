@@ -29,7 +29,7 @@ from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.utils import ParametersSchema, slugify
 
-from .model import GroupMembership, GroupMembershipForm, GroupMembershipFormData
+from .model import GroupMembership
 
 
 class GroupMembershipSchema(Schema):
@@ -77,105 +77,105 @@ class GroupMembershipSchema(Schema):
         return self.__model__(**data)
 
 
-class GroupMembershipFormSchema(Schema):
-    """The schema for the information stored in a submitted group membership form.
+# class GroupMembershipFormSchema(Schema):
+#     """The schema for the information stored in a submitted group membership form.
 
-    Attributes:
-        group_id: The ID of the group to which the user belongs.
-        user_id: The ID of the user to add to the group.
-        read: Indicates whether read permission is granted.
-        write: Indicates whether write permission is granted.
-        share_read: Indicates whether share read permission is granted.
-        share_write: Indicates whether share write permission is granted.
-    """
+#     Attributes:
+#         group_id: The ID of the group to which the user belongs.
+#         user_id: The ID of the user to add to the group.
+#         read: Indicates whether read permission is granted.
+#         write: Indicates whether write permission is granted.
+#         share_read: Indicates whether share read permission is granted.
+#         share_write: Indicates whether share write permission is granted.
+#     """
 
-    __model__ = GroupMembershipFormData
+#     __model__ = GroupMembershipFormData
 
-    group_id = fields.String(
-        attribute="group_id",
-        metadata=dict(description="The ID of the group to which the user belongs."),
-    )
-    user_id = fields.Integer(
-        required=True,
-        metadata=dict(description="The ID of the user to add to the group.")
-    )
-    read = fields.Boolean(
-        metadata=dict(description="Indicates whether read permission is granted.")
-    )
-    write = fields.Boolean(
-        metadata=dict(description="Indicates whether write permission is granted.")
-    )
-    share_read = fields.Boolean(
-        metadata=dict(description="Indicates whether share read permission is granted.")
-    )
-    share_write = fields.Boolean(
-        metadata=dict(description=
-                      "Indicates whether share write permission is granted.")
-    )
+#     group_id = fields.String(
+#         attribute="group_id",
+#         metadata=dict(description="The ID of the group to which the user belongs."),
+#     )
+#     user_id = fields.Integer(
+#         required=True,
+#         metadata=dict(description="The ID of the user to add to the group.")
+#     )
+#     read = fields.Boolean(
+#         metadata=dict(description="Indicates whether read permission is granted.")
+#     )
+#     write = fields.Boolean(
+#         metadata=dict(description="Indicates whether write permission is granted.")
+#     )
+#     share_read = fields.Boolean(
+#         metadata=dict(description="Indicates whether share read permission is granted.")
+#     )
+#     share_write = fields.Boolean(
+#         metadata=dict(description=
+#                       "Indicates whether share write permission is granted.")
+#     )
 
-    @pre_dump
-    def extract_data_from_form(
-        self, data: GroupMembershipForm, many: bool, **kwargs
-    ) -> Dict[str, Any]:
-        """Extracts data from the GroupMembershipForm for validation."""
-        return {
-            "group_id": data.group_id.data,
-            "user_id": data.user_id.data,
-            "read": data.read.data,
-            "write": data.write.data,
-            "share_read": data.share_read.data,
-            "share_write": data.share_write.data,
-        }
+#     @pre_dump
+#     def extract_data_from_form(
+#         self, data: GroupMembershipForm, many: bool, **kwargs
+#     ) -> Dict[str, Any]:
+#         """Extracts data from the GroupMembershipForm for validation."""
+#         return {
+#             "group_id": data.group_id.data,
+#             "user_id": data.user_id.data,
+#             "read": data.read.data,
+#             "write": data.write.data,
+#             "share_read": data.share_read.data,
+#             "share_write": data.share_write.data,
+#         }
 
-    @post_dump
-    def serialize_object(
-        self, data: Dict[str, Any], many: bool, **kwargs
-    ) -> GroupMembershipFormData:
-        """Creates a GroupMembershipFormData object from the validated data."""
-        return self.__model__(**data)
+#     @post_dump
+#     def serialize_object(
+#         self, data: Dict[str, Any], many: bool, **kwargs
+#     ) -> GroupMembershipFormData:
+#         """Creates a GroupMembershipFormData object from the validated data."""
+#         return self.__model__(**data)
 
 
-group_membership_form_schema: list[ParametersSchema] = [
-    {
-        "name": "group_id",
-        "type": int,
-        "location": "form",
-        "required": True,
-        "help": "The ID of the group to add the user to."
-    },
-    {
-        "name": "user_id",
-        "type": int,
-        "location": "form",
-        "required": True,
-        "help": "The ID of the user to add to the group."
-    },
-    {
-        "name": "read",
-        "type": bool,
-        "location": "form",
-        "required": False,
-        "help": "Indicates whether read permission is granted."
-    },
-    {
-        "name": "write",
-        "type": bool,
-        "location": "form",
-        "required": False,
-        "help": "Indicates whether write permission is granted."
-    },
-    {
-        "name": "share_read",
-        "type": bool,
-        "location": "form",
-        "required": False,
-        "help": "Indicates whether share read permission is granted."
-    },
-    {
-        "name": "share_write",
-        "type": bool,
-        "location": "form",
-        "required": False,
-        "help": "Indicates whether share write permission is granted."
-    }
-]
+# group_membership_form_schema: list[ParametersSchema] = [
+#     {
+#         "name": "group_id",
+#         "type": int,
+#         "location": "form",
+#         "required": True,
+#         "help": "The ID of the group to add the user to."
+#     },
+#     {
+#         "name": "user_id",
+#         "type": int,
+#         "location": "form",
+#         "required": True,
+#         "help": "The ID of the user to add to the group."
+#     },
+#     {
+#         "name": "read",
+#         "type": bool,
+#         "location": "form",
+#         "required": False,
+#         "help": "Indicates whether read permission is granted."
+#     },
+#     {
+#         "name": "write",
+#         "type": bool,
+#         "location": "form",
+#         "required": False,
+#         "help": "Indicates whether write permission is granted."
+#     },
+#     {
+#         "name": "share_read",
+#         "type": bool,
+#         "location": "form",
+#         "required": False,
+#         "help": "Indicates whether share read permission is granted."
+#     },
+#     {
+#         "name": "share_write",
+#         "type": bool,
+#         "location": "form",
+#         "required": False,
+#         "help": "Indicates whether share write permission is granted."
+#     }
+# ]

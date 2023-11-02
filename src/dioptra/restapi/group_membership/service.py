@@ -24,21 +24,21 @@ from typing import List, Optional
 
 import structlog
 from injector import inject
-from rq.job import Job as RQJob
+#from rq.job import Job as RQJob
 from structlog.stdlib import BoundLogger
 from werkzeug.utils import secure_filename
 
 from dioptra.restapi.app import db
-from dioptra.restapi.experiment.errors import ExperimentDoesNotExistError
-from dioptra.restapi.experiment.service import ExperimentService
-from dioptra.restapi.queue.errors import QueueDoesNotExistError
-from dioptra.restapi.queue.service import QueueService
-from dioptra.restapi.shared.rq.service import RQService
-from dioptra.restapi.shared.s3.service import S3Service
+# from dioptra.restapi.experiment.errors import ExperimentDoesNotExistError
+# from dioptra.restapi.experiment.service import ExperimentService
+# from dioptra.restapi.queue.errors import QueueDoesNotExistError
+# from dioptra.restapi.queue.service import QueueService
+# from dioptra.restapi.shared.rq.service import RQService
+# from dioptra.restapi.shared.s3.service import S3Service
 
-from .errors import JobWorkflowUploadError
-from .model import GroupMembership, GroupMembershipForm, GroupMembershipFormData
-from .schema import GroupMembershipFormSchema
+#from .errors import JobWorkflowUploadError
+from .model import GroupMembership #, GroupMembershipForm, GroupMembershipFormData
+#from .schema import GroupMembershipFormSchema
 
 from sqlalchemy.exc import IntegrityError
 
@@ -46,12 +46,6 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class GroupMembershipService(object):
-    @inject
-    def __init__(
-        self,
-        group_membership_form_schema: GroupMembershipFormSchema,
-    ) -> None:
-        self._group_membership_form_schema = group_membership_form_schema
         
     @staticmethod
     def create(group_id: int, user_id: int, read: bool, write:bool, share_read:bool,share_write:bool , **kwargs) -> GroupMembership:
@@ -73,19 +67,11 @@ class GroupMembershipService(object):
         return GroupMembership.query.all()  # type: ignore
 
     @staticmethod
-    def get_by_id(group_id: int,user_id:int, **kwargs) -> GroupMembership:
+    def get_by_id(group_id: int, user_id: int, **kwargs) -> GroupMembership:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
         return GroupMembership.query.filter( GroupMembership.user_id == user_id,
-            GroupMembership.group_id == group_id)  # type: ignore
-
-    # def extract_data_from_form(self, group_membership_form: GroupMembershipForm, **kwargs) -> GroupMembershipFormData:
-
-    #     log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-    #     group_membership_form_data: GroupMembershipFormData = self._group_membership_form_schema.dump(group_membership_form)
-
-    #     return group_membership_form_data
+            GroupMembership.group_id == group_id).first()  # type: ignore
 
     def submit(self,group_id: int, user_id: int, read: bool, write:bool, share_read:bool,share_write:bool , **kwargs) -> GroupMembership:
         log: BoundLogger = kwargs.get("log", LOGGER.new())

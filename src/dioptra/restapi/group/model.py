@@ -36,15 +36,15 @@ from .interface import JobUpdateInterface
 
 #from ..SharedResource import SharedResource
 
-from ..group_membership.model import GroupMembership
+from dioptra.restapi.group_membership.model import GroupMembership
 
-from ..user.model import User
+from dioptra.restapi.user.model import User
 
 class Group(db.Model):
     """The Groups table.
 
     Attributes:
-        id: The unique identifier of the group.
+        group_id: The unique identifier of the group.
         name: Human-readable name for the group.
         creator_id: The id for the user that created the group.
         owner_id: The id for the user that owns the group.
@@ -52,14 +52,14 @@ class Group(db.Model):
         deleted: Whether the group has been deleted.
     """
 
-    __tablename__ = "Groups"
+    __tablename__ = "groups"
 
-    id = db.Column(db.BigInteger(), primary_key=True)
+    group_id = db.Column(db.BigInteger(), primary_key=True)
     """A UUID that identifies the Resource."""
     name = db.Column(db.String(36))
 
-    creator_id= db.Column(db.BigInteger(), db.ForeignKey("User.user_id"), index= True)
-    owner_id= db.Column(db.BigInteger(), db.ForeignKey("User.user_id"), index= True)
+    creator_id= db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index= True)
+    owner_id= db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index= True)
 
     created_on = db.Column(db.DateTime())
     deleted = db.Column(db.Boolean)
@@ -67,14 +67,23 @@ class Group(db.Model):
     creator = db.relationship('User', foreign_keys=[creator_id])
     owner = db.relationship('User', foreign_keys=[owner_id])
 
-    #users rel 
+    @classmethod
+    def next_id(cls) -> int:
+        """Generates the next id in the sequence."""
+        group: Group | None = cls.query.order_by(cls.group_id.desc()).first()
+
+        if group is None:
+            return 1
+
+        return int(group.id) + 1
 
 
     @property
     def users(self):
         """The users that are members of the group."""
         # Define a relationship with SharedPrototypeResource, if needed
-        return GroupMembership.query.filter_by(group_id=self.id).all()
+        #return GroupMembership.query.filter_by(group_id=self.group_id).all().user
+        return User.query.join(GroupMembership).filter(GroupMembership.group_id==self.group_id).all()
     
     def check_membership(self, user: User) -> bool:
         """Check if the user has permission to perform the specified action.
@@ -86,7 +95,6 @@ class Group(db.Model):
         Returns:
             True if the user has permission to perform the action, False otherwise.
         """
-        #should be and_()?
         membership = GroupMembership.query.filter_by(GroupMembership.user_id == user.user_id, 
                                                     GroupMembership.group_id == self.group_id )
         #next((x for x in self.owner.users if x.user_id == user.id), None)
@@ -97,12 +105,11 @@ class Group(db.Model):
             return True
 
     #TODO
-    def update(self, changes: JobUpdateInterface):
+    def update(self, changes: dict):
         """Updates the record.
 
         Args:
-            changes: A :py:class:`~.interface.JobUpdateInterface` dictionary containing
-                record updates.
+            changes: A dictionary containing record updates.
         """
         for key, val in changes.items():
             setattr(self, key, val)
