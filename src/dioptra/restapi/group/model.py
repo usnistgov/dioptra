@@ -20,6 +20,7 @@ from __future__ import annotations
 from dioptra.restapi.app import db
 from dioptra.restapi.group_membership.model import GroupMembership
 from dioptra.restapi.user.model import User
+from dioptra.restapi.utils import slugify
 
 
 class Group(db.Model):
