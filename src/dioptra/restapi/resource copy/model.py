@@ -57,23 +57,21 @@ class Resource(db.Model):
     resource_id = db.Column(db.String(36), primary_key=True)
     """A UUID that identifies the Resource."""
 
-    creator_id= db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index= True)
-    owner_id= db.Column(db.BigInteger(), db.ForeignKey("groups.group_id"), index= True)
+    creator_id = db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index=True)
+    owner_id = db.Column(db.BigInteger(), db.ForeignKey("groups.group_id"), index=True)
     created_on = db.Column(db.DateTime())
     last_modified = db.Column(db.DateTime())
     deleted = db.Column(db.Boolean)
 
-
-    creator = db.relationship('User', foreign_keys=[creator_id])
-    owner = db.relationship('Group', foreign_keys=[owner_id])
-
+    creator = db.relationship("User", foreign_keys=[creator_id])
+    owner = db.relationship("Group", foreign_keys=[owner_id])
 
     @property
     def shares(self):
         """List of groups that the resource is shared with."""
         # Define a relationship with SharedPrototypeResource, if needed
         return SharedResource.query.filter_by(resource_id=self.resource_id).all()
-    
+
     def check_permission(self, user: User, action: str) -> bool:
         """Check if the user has permission to perform the specified action.
 
@@ -85,15 +83,13 @@ class Resource(db.Model):
             True if the user has permission to perform the action, False otherwise.
         """
 
-        membership = GroupMemberships.query.filter_by(user_id = user.user_id)
-        #next((x for x in self.owner.users if x.user_id == user.id), None)
+        membership = GroupMemberships.query.filter_by(user_id=user.user_id)
+        # next((x for x in self.owner.users if x.user_id == user.id), None)
 
         if membership is None:
             return False
 
         return cast(bool, getattr(membership, action))
-
-
 
     def update(self, changes: JobUpdateInterface):
         """Updates the record.

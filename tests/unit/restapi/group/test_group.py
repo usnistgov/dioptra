@@ -47,12 +47,16 @@ import datetime
 
 import pytest
 
+
 @pytest.fixture
-def group_service() ->  GroupService:
+def group_service() -> GroupService:
     yield GroupService()
+
+
 @pytest.fixture
-def group_membership_service()-> GroupMembershipService:
+def group_membership_service() -> GroupMembershipService:
     yield GroupMembershipService()
+
 
 def create_user(db: SQLAlchemy) -> User:
     """Create a user and add them to the database.
@@ -81,6 +85,7 @@ def create_user(db: SQLAlchemy) -> User:
     db.session.commit()
     return new_user
 
+
 def create_group(group_service: GroupService, name: str = "test") -> Group:
     """Create a group using the group service.
 
@@ -93,6 +98,7 @@ def create_group(group_service: GroupService, name: str = "test") -> Group:
     """
     return group_service.submit(name)
 
+
 def test_create_group(db: SQLAlchemy, group_service: GroupService):
     """Test the creation of a group using the database and group service.
 
@@ -104,6 +110,7 @@ def test_create_group(db: SQLAlchemy, group_service: GroupService):
 
     assert group in group_service.get_all()
 
+
 def test_delete_group(db: SQLAlchemy, group_service: GroupService):
     """Test the deletion of a group using the database and group service.
 
@@ -113,14 +120,15 @@ def test_delete_group(db: SQLAlchemy, group_service: GroupService):
     """
     group = create_group(group_service, name="Test Group")
     group_service.delete(group.group_id)
-    retrieved_group= group_service.get_by_id(group.group_id)
+    retrieved_group = group_service.get_by_id(group.group_id)
 
     assert retrieved_group.deleted == True
+
 
 def test_create_group_membership(
     db: SQLAlchemy,
     group_service: GroupService,
-    group_membership_service: GroupMembershipService
+    group_membership_service: GroupMembershipService,
 ) -> None:
     """Test the creation of a group membership using the database and services.
 
@@ -128,7 +136,7 @@ def test_create_group_membership(
         db: The SQLAlchemy database session for testing.
         group_service: The group service responsible for group operations.
         group_membership_service: The group membership service responsible for group membership operations.
-    """    # Create a user
+    """  # Create a user
 
     new_user = create_user(db)
 
@@ -136,7 +144,14 @@ def test_create_group_membership(
     group = create_group(group_service, name="Test Group")
 
     # Create a group membership
-    membership = group_membership_service.submit(group.group_id, new_user.user_id, read=True, write=True, share_read=True, share_write=True)
+    membership = group_membership_service.submit(
+        group.group_id,
+        new_user.user_id,
+        read=True,
+        write=True,
+        share_read=True,
+        share_write=True,
+    )
 
     # Assert that the group membership has been created
     assert membership.group_id == group.group_id
@@ -148,10 +163,11 @@ def test_create_group_membership(
 
     assert new_user in group.users
 
+
 def test_delete_group_membership(
     db: SQLAlchemy,
     group_service: GroupService,
-    group_membership_service: GroupMembershipService
+    group_membership_service: GroupMembershipService,
 ) -> None:
     """Test the deletion of a group membership using the database and services.
 
@@ -168,20 +184,32 @@ def test_delete_group_membership(
     group = create_group(group_service, name="Test Group")
 
     # Create a group membership
-    membership = group_membership_service.submit(group.group_id, new_user.user_id, read=True, write=True, share_read=True, share_write=True)
+    membership = group_membership_service.submit(
+        group.group_id,
+        new_user.user_id,
+        read=True,
+        write=True,
+        share_read=True,
+        share_write=True,
+    )
 
-    #get membership from db
-    retrieved_membership = group_membership_service.get_by_id(group.group_id, new_user.user_id)
+    # get membership from db
+    retrieved_membership = group_membership_service.get_by_id(
+        group.group_id, new_user.user_id
+    )
 
-    #and then delete it
-    group_membership_service.delete(retrieved_membership.group_id, retrieved_membership.user_id)
+    # and then delete it
+    group_membership_service.delete(
+        retrieved_membership.group_id, retrieved_membership.user_id
+    )
 
     assert group_membership_service.get_by_id(group.group_id, new_user.user_id) == None
+
 
 def test_group_relationship(
     db: SQLAlchemy,
     group_service: GroupService,
-    group_membership_service: GroupMembershipService
+    group_membership_service: GroupMembershipService,
 ) -> None:
     """Test the relationship between groups and group memberships using the database and services.
 
@@ -198,17 +226,27 @@ def test_group_relationship(
     group = create_group(group_service, name="Test Group")
 
     # Create a group membership
-    membership = group_membership_service.submit(group.group_id, new_user.user_id, read=True, write=True, share_read=True, share_write=True)
+    membership = group_membership_service.submit(
+        group.group_id,
+        new_user.user_id,
+        read=True,
+        write=True,
+        share_read=True,
+        share_write=True,
+    )
 
-    #get membership from db
-    retrieved_membership = group_membership_service.get_by_id(group.group_id, new_user.user_id)
+    # get membership from db
+    retrieved_membership = group_membership_service.get_by_id(
+        group.group_id, new_user.user_id
+    )
 
     assert retrieved_membership.group == group
+
 
 def test_user_relationship(
     db: SQLAlchemy,
     group_service: GroupService,
-    group_membership_service: GroupMembershipService
+    group_membership_service: GroupMembershipService,
 ) -> None:
     """Test the relationship between users and group memberships using the database and services.
 
@@ -225,13 +263,18 @@ def test_user_relationship(
     group = create_group(group_service, name="Test Group")
 
     # Create a group membership
-    membership = group_membership_service.submit(group.group_id, new_user.user_id, read=True, write=True, share_read=True, share_write=True)
+    membership = group_membership_service.submit(
+        group.group_id,
+        new_user.user_id,
+        read=True,
+        write=True,
+        share_read=True,
+        share_write=True,
+    )
 
-    #get membership from db
-    retrieved_membership = group_membership_service.get_by_id(group.group_id, new_user.user_id)
+    # get membership from db
+    retrieved_membership = group_membership_service.get_by_id(
+        group.group_id, new_user.user_id
+    )
 
     assert retrieved_membership.user == new_user
-    
-
-
-

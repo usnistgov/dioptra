@@ -76,8 +76,8 @@ class GroupResource(Resource):
 
         parsed_obj = request.parsed_obj  # type: ignore
         name = slugify(str(parsed_obj["group_name"]))
-        return self._group_service.submit(name= name, log=log)
-    
+        return self._group_service.submit(name=name, log=log)
+
     @accepts(GroupSchema, api=api)
     def delete(self) -> bool:
         log: BoundLogger = LOGGER.new(
@@ -87,12 +87,8 @@ class GroupResource(Resource):
         log.info("Request received")
 
         parsed_obj = request.parsed_obj  # type: ignore
-        group_id = (int(parsed_obj["id"]))
+        group_id = int(parsed_obj["id"])
         return self._group_service.delete(id=group_id)
-
-
-
-        
 
 
 @api.route("/<int:groupId>")

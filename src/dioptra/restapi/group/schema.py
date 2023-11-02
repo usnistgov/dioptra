@@ -51,20 +51,22 @@ class GroupSchema(Schema):
     )
     name = fields.String(
         attribute="name",
-        allow_none=True, #should we force the user to pick a name?
+        allow_none=True,  # should we force the user to pick a name?
         metadata=dict(
             description="Human-readable name for the group.",
         ),
     )
     creator_id = fields.Integer(
         attribute="creator_id",
-        metadata=dict(description="An integer identifying"
-                      "the user that created the group."),
+        metadata=dict(
+            description="An integer identifying" "the user that created the group."
+        ),
     )
     owner_id = fields.Integer(
         attribute="owner_id",
-        metadata=dict(description="An integer identifying the user that owns"
-                       "the group."),
+        metadata=dict(
+            description="An integer identifying the user that owns" "the group."
+        ),
     )
     createdOn = fields.DateTime(
         attribute="created_on",
@@ -72,7 +74,7 @@ class GroupSchema(Schema):
     )
     deleted = fields.Boolean(
         attribute="deleted",
-        metadata=dict(description="Whether the group has been deleted.")
+        metadata=dict(description="Whether the group has been deleted."),
     )
 
     @post_load

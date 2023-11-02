@@ -31,7 +31,9 @@ class GroupMembershipSubmissionError(Exception):
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(GroupMembershipDoesNotExistError)
     def handle_job_does_not_exist_error(error):
-        return {"message": "Not Found - The requested group membership does not exist"}, 404
+        return {
+            "message": "Not Found - The requested group membership does not exist"
+        }, 404
 
     @api.errorhandler(GroupMembershipSubmissionError)
     def handle_job_submission_error(error):

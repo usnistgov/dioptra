@@ -56,5 +56,5 @@ __all__ = [
     "UserRegistrationForm",
     "UserRegistrationFormData",
     "Group",
-    "GroupMembership"
+    "GroupMembership",
 ]

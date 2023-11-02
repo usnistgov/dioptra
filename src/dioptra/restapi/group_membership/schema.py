@@ -56,22 +56,32 @@ class GroupMembershipSchema(Schema):
     )
     read = fields.Boolean(
         attribute="read",
-        metadata=dict(description="Indicates whether the user has read permissions in the group."),
+        metadata=dict(
+            description="Indicates whether the user has read permissions in the group."
+        ),
     )
     write = fields.Boolean(
         attribute="write",
-        metadata=dict(description="Indicates whether the user has write permissions in the group."),
+        metadata=dict(
+            description="Indicates whether the user has write permissions in the group."
+        ),
     )
     share_read = fields.Boolean(
         attribute="share_read",
-        metadata=dict(description="Indicates whether the user can share read permissions with others in the group."),
+        metadata=dict(
+            description="Indicates whether the user can share read permissions with others in the group."
+        ),
     )
     share_write = fields.Boolean(
         attribute="share_write",
-        metadata=dict(description="Indicates whether the user can share write permissions with others in the group."),
+        metadata=dict(
+            description="Indicates whether the user can share write permissions with others in the group."
+        ),
     )
 
     @post_load
-    def deserialize_object(self, data: Dict[str, Any], many: bool, **kwargs) -> GroupMembership:
+    def deserialize_object(
+        self, data: Dict[str, Any], many: bool, **kwargs
+    ) -> GroupMembership:
         """Creates a GroupMembership object from the validated data."""
         return self.__model__(**data)

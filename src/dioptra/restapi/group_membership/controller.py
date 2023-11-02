@@ -40,6 +40,7 @@ api: Namespace = Namespace(
     description="Add users to groups",
 )
 
+
 @api.route("/")
 class GroupMembershipResource(Resource):
     """Manage group memberships."""
@@ -78,15 +79,16 @@ class GroupMembershipResource(Resource):
         log.info("Request received")
 
         parsed_obj = request.parsed_obj  # type: ignore
-        group_id= int(parsed_obj["group_id"])
-        user_id= int(parsed_obj["user_id"])
-        read= bool(parsed_obj["read"])
-        write= bool(parsed_obj["write"])
-        share_read= bool(parsed_obj["share_read"])
-        share_write= bool(parsed_obj["share_write"])
+        group_id = int(parsed_obj["group_id"])
+        user_id = int(parsed_obj["user_id"])
+        read = bool(parsed_obj["read"])
+        write = bool(parsed_obj["write"])
+        share_read = bool(parsed_obj["share_read"])
+        share_write = bool(parsed_obj["share_write"])
 
-
-        return self._group_membership_service.submit(group_id,user_id, read,write,share_read,share_write, log=log)
+        return self._group_membership_service.submit(
+            group_id, user_id, read, write, share_read, share_write, log=log
+        )
 
     @accepts(GroupMembershipSchema, api=api)
     def delete(self) -> bool:
@@ -100,6 +102,6 @@ class GroupMembershipResource(Resource):
         log.info("Request received")
 
         parsed_obj = request.parsed_obj  # type: ignore
-        group_id= int(parsed_obj["group_id"])
-        user_id= int(parsed_obj["user_id"])
+        group_id = int(parsed_obj["group_id"])
+        user_id = int(parsed_obj["user_id"])
         return self._group_membership_service.delete(group_id, user_id, log=log)

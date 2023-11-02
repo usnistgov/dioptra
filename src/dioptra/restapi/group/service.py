@@ -36,23 +36,22 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class GroupService(object):
-
     @staticmethod
-    def create(name: str,user_id= None, **kwargs) -> Group:
+    def create(name: str, user_id=None, **kwargs) -> Group:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
         timestamp = datetime.datetime.now()
-        
-        # #to be used when user is fully implemented 
+
+        # #to be used when user is fully implemented
         # if user_id is None:
         #     user_id= current_user.id
 
         return Group(
-            group_id = Group.next_id(),
+            group_id=Group.next_id(),
             name=name,
-            creator_id= user_id, 
-            owner_id= user_id,
+            creator_id=user_id,
+            owner_id=user_id,
             created_on=timestamp,
-            deleted= False
+            deleted=False,
         )
 
     @staticmethod
@@ -67,10 +66,10 @@ class GroupService(object):
 
         return Group.query.get(group_id)  # type: ignore
 
-    def submit(self,name: str, user_id=None,**kwargs) -> Group:
+    def submit(self, name: str, user_id=None, **kwargs) -> Group:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        new_group: Group = self.create(name,user_id, log=log)
+        new_group: Group = self.create(name, user_id, log=log)
 
         db.session.add(new_group)
         db.session.commit()
@@ -78,9 +77,8 @@ class GroupService(object):
         log.info("Group submission successful", group_id=new_group.group_id)
 
         return new_group
-    
-    def delete(self, id: int, **kwargs) -> bool:
 
+    def delete(self, id: int, **kwargs) -> bool:
         group = self.get_by_id(id)
         group.deleted = True
         try:

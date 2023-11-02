@@ -36,6 +36,7 @@ from dioptra.restapi.group_membership.model import GroupMembership
 
 from dioptra.restapi.user.model import User
 
+
 class Group(db.Model):
     """The Groups table.
 
@@ -54,14 +55,14 @@ class Group(db.Model):
     """A UUID that identifies the Resource."""
     name = db.Column(db.String(36))
 
-    creator_id= db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index= True)
-    owner_id= db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index= True)
+    creator_id = db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index=True)
+    owner_id = db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index=True)
 
     created_on = db.Column(db.DateTime())
     deleted = db.Column(db.Boolean)
 
-    creator = db.relationship('User', foreign_keys=[creator_id])
-    owner = db.relationship('User', foreign_keys=[owner_id])
+    creator = db.relationship("User", foreign_keys=[creator_id])
+    owner = db.relationship("User", foreign_keys=[owner_id])
 
     @classmethod
     def next_id(cls) -> int:
@@ -73,12 +74,15 @@ class Group(db.Model):
 
         return int(group.id) + 1
 
-
     @property
     def users(self):
         """The users that are members of the group."""
-        return User.query.join(GroupMembership).filter(GroupMembership.group_id==self.group_id).all()
-    
+        return (
+            User.query.join(GroupMembership)
+            .filter(GroupMembership.group_id == self.group_id)
+            .all()
+        )
+
     def check_membership(self, user: User) -> bool:
         """Check if the user has permission to perform the specified action.
 
@@ -89,15 +93,17 @@ class Group(db.Model):
         Returns:
             True if the user has permission to perform the action, False otherwise.
         """
-        membership = GroupMembership.query.filter_by(GroupMembership.user_id == user.user_id, 
-                                                    GroupMembership.group_id == self.group_id )
+        membership = GroupMembership.query.filter_by(
+            GroupMembership.user_id == user.user_id,
+            GroupMembership.group_id == self.group_id,
+        )
 
         if membership is None:
             return False
         else:
             return True
 
-    #TODO
+    # TODO
     def update(self, changes: dict):
         """Updates the record.
 

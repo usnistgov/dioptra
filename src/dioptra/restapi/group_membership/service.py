@@ -37,18 +37,25 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class GroupMembershipService(object):
-        
     @staticmethod
-    def create(group_id: int, user_id: int, read: bool, write:bool, share_read:bool,share_write:bool , **kwargs) -> GroupMembership:
+    def create(
+        group_id: int,
+        user_id: int,
+        read: bool,
+        write: bool,
+        share_read: bool,
+        share_write: bool,
+        **kwargs,
+    ) -> GroupMembership:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841\
 
         return GroupMembership(
             group_id=group_id,
-            user_id= user_id,
-            read= read,
-            write= write,
-            share_read= share_read,
-            share_write= share_write,
+            user_id=user_id,
+            read=read,
+            write=write,
+            share_read=share_read,
+            share_write=share_write,
         )
 
     @staticmethod
@@ -61,28 +68,40 @@ class GroupMembershipService(object):
     def get_by_id(group_id: int, user_id: int, **kwargs) -> GroupMembership:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        return GroupMembership.query.filter( GroupMembership.user_id == user_id,
-            GroupMembership.group_id == group_id).first()  # type: ignore
+        return GroupMembership.query.filter(
+            GroupMembership.user_id == user_id, GroupMembership.group_id == group_id
+        ).first()  # type: ignore
 
-    def submit(self,group_id: int, user_id: int, read: bool, write:bool, share_read:bool,share_write:bool , **kwargs) -> GroupMembership:
+    def submit(
+        self,
+        group_id: int,
+        user_id: int,
+        read: bool,
+        write: bool,
+        share_read: bool,
+        share_write: bool,
+        **kwargs,
+    ) -> GroupMembership:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        new_group_membership: GroupMembership = self.create(group_id,user_id, read,write,share_read,share_write, log=log)
+        new_group_membership: GroupMembership = self.create(
+            group_id, user_id, read, write, share_read, share_write, log=log
+        )
 
         db.session.add(new_group_membership)
         db.session.commit()
 
-        log.info("Group Membership submission successful", 
-                group_id=new_group_membership.group_id,
-                user_id= new_group_membership.user_id)
+        log.info(
+            "Group Membership submission successful",
+            group_id=new_group_membership.group_id,
+            user_id=new_group_membership.user_id,
+        )
 
         return new_group_membership
-    
-    def delete(self,  group_id, user_id, **kwargs) -> bool:
 
-        membership = self.get_by_id(group_id=group_id,
-                               user_id=user_id)
-        
+    def delete(self, group_id, user_id, **kwargs) -> bool:
+        membership = self.get_by_id(group_id=group_id, user_id=user_id)
+
         try:
             db.session.delete(membership)
             db.session.commit()

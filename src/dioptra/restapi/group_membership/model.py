@@ -47,18 +47,24 @@ class GroupMembership(db.Model):
 
     __tablename__ = "group_memberships"
 
-    user_id = db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), primary_key=True)
-    group_id = db.Column(db.BigInteger(), db.ForeignKey("groups.group_id"), primary_key=True)
+    user_id = db.Column(
+        db.BigInteger(), db.ForeignKey("users.user_id"), primary_key=True
+    )
+    group_id = db.Column(
+        db.BigInteger(), db.ForeignKey("groups.group_id"), primary_key=True
+    )
 
     read = db.Column(db.Boolean, default=False)
     write = db.Column(db.Boolean, default=False)
     share_read = db.Column(db.Boolean, default=False)
     share_write = db.Column(db.Boolean, default=False)
 
-    #is back populates needed?
-    user = db.relationship('User', foreign_keys=[user_id],)
-    group = db.relationship('Group', foreign_keys=[group_id])
-
+    # is back populates needed?
+    user = db.relationship(
+        "User",
+        foreign_keys=[user_id],
+    )
+    group = db.relationship("Group", foreign_keys=[group_id])
 
     def update(self, changes: dict):
         """Updates the record.
