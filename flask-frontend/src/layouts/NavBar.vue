@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
   import { useQuasar } from 'quasar'
-  import { useLoginStore } from '@/stores/LoginStore.js'
+  import { useLoginStore } from '@/stores/LoginStore'
   import { storeToRefs } from 'pinia'
   import { START_LOCATION } from 'vue-router';
   import { useRouter } from 'vue-router';
