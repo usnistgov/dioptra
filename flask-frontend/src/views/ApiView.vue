@@ -7,7 +7,7 @@
     </p>
     <q-list>
       <q-expansion-item
-      v-for="category in endpointCategories"
+        v-for="category in endpointCategories"
         :key="category"
         :label="`${category} Endpoints`"
         header-class="text-bold shadow-2 text-h6"
