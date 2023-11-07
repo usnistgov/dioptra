@@ -1,0 +1,304 @@
+types:
+  callback:
+  dataloader:
+  directoryiterator:
+  functiontype:
+  kerasclassifier:
+  metric:
+  mlflowrun:
+  tuple:
+  model:
+  modelversion:
+  np.ndarray:
+  optimizer:
+  path:
+  dataframe:
+  rngenerator:
+  sequential:
+  tarfile:
+  list_tuple_string_any:
+    list: tuple_string_any
+  list_union_metric_functiontype:
+    list: union_metric_functiontype
+  list_union_string_path:
+    list: union_string_path
+  list_mapping_string_string:
+    list: mapping_string_string
+  mapping_string_any:
+    mapping: [string, any]
+  mapping_string_number:
+    mapping: [string, number]
+  mapping_string_string:
+    mapping: [string, string]
+  tuple_integer_integer:
+    tuple: [integer, integer]
+  tuple_integer_integer_integer:
+    tuple: [integer, integer, integer]
+  tuple_string_any:
+    tuple: [string, any]
+  union_integer_number_string:
+    union: [integer, number, string]
+  union_integer_any:
+    union: [integer, any]
+  union_metric_functiontype:
+    union: [metric, functiontype]
+  union_null_list_tuple_string_any:
+    union: [list_tuple_string_any , "null"]
+  union_null_mapping_string_any:
+    union: [mapping_string_any, "null"]
+  union_null_modelversion:
+    union: [modelversion, "null"]
+  union_null_number:
+    union: [number, "null"]
+  union_null_string:
+    union: [string, "null"]
+  union_null_union_integer_any:
+    union: [union_integer_any, "null"]
+  union_string_path:
+    union: [string, path]
+  union_null_union_string_path:
+    union: [union_string_path, "null"]
+parameters:
+  seed: -1
+  optimizer_name: Adam
+  learning_rate: 0.001
+  training_dir: /dioptra/data/Mnist/training
+  testing_dir: /dioptra/data/Mnist/testing
+  image_size: [28, 28, 1]
+  validation_split: 0.2
+  batch_size: 32
+  model_architecture: le_net
+  register_model_name: ""
+
+tasks:
+  init_rng:
+    plugin: dioptra_builtins.random.rng.init_rng
+    inputs:
+      - name: seed
+        type: integer
+        required: false
+    outputs:
+      - seed: integer
+      - rng: rngenerator
+
+  draw_random_integer:
+    plugin: dioptra_builtins.random.sample.draw_random_integer
+    inputs:
+      - rng: rngenerator
+      - name: low
+        type: integer
+        required: false
+      - name: high
+        type: integer
+        required: false
+    outputs:
+      value: integer
+
+  log_parameters:
+    plugin: dioptra_builtins.tracking.mlflow.log_parameters
+    inputs:
+      - parameters: mapping_string_number
+
+  create_image_dataset: 
+    plugin: dioptra_custom.pytorch_mi.data_pytorch.create_image_dataset
+    inputs: 
+      - data_dir: string
+      - image_size: tuple_integer_integer_integer
+      - seed: integer
+      - name: validation_split
+        type: union_null_number
+        required: false
+      - name: batch_size
+        type: integer
+        required: false
+      - name: label_mode
+        type: string
+        required: false
+    outputs:
+      - dataset_a: dataloader
+      - dataset_b: dataloader
+
+  get_optimizer:
+    plugin: dioptra_custom.pytorch_mi.tasks.get_optimizer
+    inputs:
+      - model: sequential
+      - optimizer: string
+      - learning_rate: number
+    outputs:
+      optimizer: optimizer
+
+  get_performance_metric_list:
+    plugin: dioptra_builtins.metrics.performance.get_performance_metric_list
+    inputs:
+      - metrics_list: list_mapping_string_string
+    outputs:
+      performance_metrics: list_tuple_string_any
+
+  get_n_classes_from_directory_iterator:
+    plugin: dioptra_custom.pytorch_mi.data_pytorch.get_n_classes_from_directory_iterator
+    inputs:
+      - ds: dataloader
+    outputs:
+      num_classes: integer
+
+  init_classifier:
+    inputs:
+    - model_architecture: string
+    - input_shape: tuple_integer_integer_integer
+    - n_classes: integer
+    outputs:
+      ret: sequential
+    plugin: dioptra_custom.pytorch_mi.estimators_pytorch_classifiers.init_classifier
+
+  fit:
+    plugin: dioptra_custom.pytorch_mi.estimators_pytorch_methods.fit
+    inputs:
+      - estimator: any
+      - optimizer: any
+      - training_ds: any
+      - name: fit_kwargs
+        type: mapping_string_any
+        required: false
+    outputs:
+      ret: any
+
+  predict:
+    plugin: dioptra_custom.pytorch_mi.estimators_pytorch_methods.predict
+    inputs:
+      - estimator: any
+      - testing_ds: any
+      - name: predict_kwargs
+        type: mapping_string_any
+        required: false
+    outputs:
+      - ytrue: np.ndarray
+      - ypred: np.ndarray
+
+  evaluate_metrics_generic:
+    plugin: dioptra_custom.pytorch_mi.tasks.evaluate_metrics_generic
+    inputs: 
+      - y_true: any
+      - y_pred: any
+      - metrics: any
+      - name: func_kwargs
+        type: mapping_string_any
+        required: false
+    outputs:
+      ret: mapping_string_number
+
+  log_metrics:
+    plugin: dioptra_builtins.tracking.mlflow.log_metrics
+    inputs:
+      - metrics: mapping_string_number
+
+  add_model_to_registry:
+    inputs:
+    - name: name 
+      type: string
+    - model_dir: string
+    outputs:
+      ret: union_null_modelversion
+    plugin: dioptra_custom.pytorch_mi.registry_mlflow_pytorch.add_model_to_registry
+
+  prepend_cwd:
+    plugin:
+      dioptra_custom.evaluation.mlflow.prepend_cwd
+    inputs:
+      - path: string
+    outputs: 
+      ret: string
+
+graph:
+  init_rng:
+    init_rng: $seed
+
+  dataset_seed:
+    draw_random_integer: $init_rng.rng
+
+  log_mlflow_params_result:
+    log_parameters:
+      - entry_point_seed: $seed
+        dataset_seed: $dataset_seed
+
+  create_image_dataset_train:
+    create_image_dataset:
+      data_dir: $training_dir
+      validation_split: $validation_split
+      batch_size: $batch_size
+      seed: $dataset_seed
+      image_size: $image_size
+  
+  create_image_dataset_test:
+    create_image_dataset:
+      data_dir: $testing_dir
+      batch_size: $batch_size
+      seed: $dataset_seed
+      image_size: $image_size
+
+  n_classes:
+    get_n_classes_from_directory_iterator:
+      ds: $create_image_dataset_train.dataset_a
+
+  classifier:
+    init_classifier:
+      model_architecture: $model_architecture
+      input_shape: $image_size
+      n_classes: $n_classes
+  
+  optimizer:
+    get_optimizer: [$classifier, $optimizer_name, $learning_rate]
+
+  history:
+    fit:
+      estimator: $classifier
+      optimizer: $optimizer
+      training_ds: $create_image_dataset_train.dataset_a
+    dependencies: [create_image_dataset_train, create_image_dataset_test]
+
+  predict:
+    predict:
+      estimator: $classifier
+      testing_ds: $create_image_dataset_test.dataset_a
+    dependencies: 
+      - history
+
+  classifier_performance_metrics:
+    get_performance_metric_list:
+      - - name: categorical_accuracy
+          func: categorical_accuracy
+        - name: accuracy
+          func: accuracy
+        - name: precision
+          func: precision
+        - name: recall
+          func: recall
+        - name: auc
+          func: auc
+    dependencies:
+      - predict
+
+  performance_metrics:
+    evaluate_metrics_generic:
+      y_true: $predict.ytrue
+      y_pred: $predict.ypred
+      metrics: $classifier_performance_metrics
+      func_kwargs:
+        accuracy: {}
+        categorical_accuracy: {}
+        f1:
+          average: weighted
+        precision:
+          average: weighted
+        recall:
+          average: weighted
+    dependencies:
+      - classifier_performance_metrics
+
+  log_classifier_performance_metrics_result:
+    log_metrics:
+      metrics: $performance_metrics
+  
+  register_model:
+    add_model_to_registry: [$register_model_name, model]
+    dependencies:
+      - history

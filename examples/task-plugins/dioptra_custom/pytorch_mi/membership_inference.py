@@ -49,7 +49,7 @@ def wrap_torch_classifier(torch_model, loss_fn, input_shape, classes):
 def init_mi(model, loss_fn, input_shape, classes, attack_type, **kwargs):
     classifier = wrap_torch_classifier(model, loss_fn, input_shape, classes, **kwargs)
     attack = MembershipInferenceBlackBox(
-        classifier=classifier,
+        estimator=classifier,
         input_type="loss",
         attack_model_type=attack_type,
         **kwargs,
@@ -89,12 +89,16 @@ def infer_membership(
     attack_train_size = int(len(x_train) * split)
     attack_test_size = int(len(x_test) * split)
 
+    LOGGER.info("ATTACK_TRAIN_SIZE:"+ str(attack_train_size))
+    LOGGER.info("ATTACK_TEST_SIZE:"+ str(attack_test_size))
+
     # Take the lesser of the two sizes if we want to keep it balanced
     if balance_sets:
         if attack_train_size < attack_test_size:
             attack_test_size = attack_train_size
         else:
             attack_train_size = attack_test_size
+        LOGGER.info("BALANCED_SIZE:"+ str(attack_train_size))
 
     attack.fit(
         x_train[:attack_train_size],
@@ -103,11 +107,18 @@ def infer_membership(
         y_test[:attack_test_size],
     )
 
+    LOGGER.info("INFER_SIZE_TRAIN:"+ str(len(x_train[attack_train_size:])))
+    LOGGER.info("INFER_SIZE_TEST:"+ str(len(x_test[attack_train_size:])))
+
+
     # infer attacked feature on remainder of data
     inferred_train = attack.infer(
         x_train[attack_train_size:], y_train[attack_train_size:]
     )
     inferred_test = attack.infer(x_test[attack_test_size:], y_test[attack_test_size:])
+    
+    LOGGER.info("OUT_SIZE_TRAIN:"+ str(len(inferred_train)))
+    LOGGER.info("OUT_SIZE_TEST:"+ str(len(inferred_test)))
 
     log_mi_metrics(inferred_train, inferred_test)
 
@@ -116,11 +127,14 @@ def infer_membership(
 
 def log_mi_metrics(inferred_train, inferred_test):
     trainacc = (sum(inferred_train)) / len(inferred_train)
-    testacc = (sum(inferred_test)) / len(inferred_test)
+    testacc = 1. - (sum(inferred_test)) / len(inferred_test)
 
-    accuracy = (sum(inferred_train) + sum(inferred_test)) / (
-        len(inferred_train) + len(inferred_test)
-    )
+    correct_train = sum([1 if m == n else 0 for m,n in zip(inferred_train,[1]*len(inferred_train))])
+    correct_test = sum([1 if m == n else 0 for m,n in zip(inferred_test,[0] * len(inferred_test))])
+    correct = correct_test + correct_train
+    total = len(inferred_test) + len(inferred_train)
+    
+    accuracy = correct / float(total)
     mlflow.log_metric(key="acc", value=accuracy)
     mlflow.log_metric(key="acc_train", value=trainacc)
     mlflow.log_metric(key="acc_test", value=testacc)

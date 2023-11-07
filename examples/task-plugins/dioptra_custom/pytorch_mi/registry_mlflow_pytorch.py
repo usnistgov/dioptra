@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+import mlflow
 import structlog
 from mlflow.entities import Run as MlflowRun
 from mlflow.entities.model_registry import ModelVersion
@@ -44,11 +45,11 @@ except ImportError:  # pragma: nocover
 
 @pyplugs.register
 def add_model_to_registry(
-    active_run: MlflowRun, name: str, model_dir: str
+    name: str, model_dir: str
 ) -> Optional[ModelVersion]:
     if not name.strip():
         return None
-
+    active_run = mlflow.active_run()
     run_id: str = active_run.info.run_id
     artifact_uri: str = active_run.info.artifact_uri
     source: str = f"{artifact_uri}/{model_dir}"
