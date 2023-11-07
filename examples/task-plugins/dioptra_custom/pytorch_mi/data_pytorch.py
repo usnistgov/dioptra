@@ -54,7 +54,7 @@ def create_image_dataset(
     validation_split: Optional[float] = 0.2,
     batch_size: int = 32,
     label_mode: str = "categorical",
-) -> Tuple[Any, Any]:
+) -> Tuple[DataLoader, DataLoader]:
     """Creates an image dataset from a directory, assuming the
     subdirectories of the directory correspond to the classes of
     the data.
