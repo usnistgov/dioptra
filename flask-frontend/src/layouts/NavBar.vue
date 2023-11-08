@@ -12,7 +12,7 @@
       >
       <q-menu>
           <q-list style="min-width: 100px">
-            <q-item clickable v-close-popup @click="logout()" v-if="loggedInUser">
+            <q-item clickable v-close-popup @click="callLogout()" v-if="loggedInUser">
               <q-item-section>Logout</q-item-section>
             </q-item>
             <!-- <q-item clickable v-close-popup v-if="loggedInUser">
@@ -46,6 +46,8 @@
   import { storeToRefs } from 'pinia'
   import { START_LOCATION } from 'vue-router';
   import { useRouter } from 'vue-router';
+  import * as api from '../api'
+  import { Notify } from 'quasar'
 
   const router = useRouter();
 
@@ -58,52 +60,43 @@
       // only check if reloading on page other than home
       // since home login page has its own check
       if (to.name !== 'home') {
-        getLoginState();
+        callGetLoginStatus();
       }
     }
   })
 
-  function getLoginState() {
-    fetch('api/world/', {method: 'GET'})
-    .then(res => {
-      console.log('res = ', res);
-      if (res.status !== 200) {
-        loggedInUser.value = '';
-      }
-      return res.json();
-    })
-    .then(data => {
-      console.log('data = ', data);
-      loggedInUser.value = data.name;
-    })
-    .catch(err => {
-      console.warn(err)
-    })
-  }
-
-  function logout() {
-    fetch('api/auth/logout', {method: 'POST'})
-    .then(res => {
-      console.log('res = ', res);
-      return res.json();
-    })
-    .then(data => {
-      console.log('data = ', data);
-      router.push('/');
-      $q.notify({
-              color: 'green-7',
-              textColor: 'white',
-              icon: 'done',
-              message: `Successfully logged out from ${loggedInUser.value}`
-            })
+  async function callGetLoginStatus() {
+    try {
+      const res = await api.getLoginStatus();
+      loggedInUser.value = res.data.name;
+    } catch(err) {
       loggedInUser.value = '';
-    })
-    .catch(err => {
-      console.warn(err)
-    })
+    }
   }
 
-  const $q = useQuasar()
-  const darkMode = JSON.parse(JSON.stringify($q.dark.isActive))
+  async function callLogout() {
+    const previousUser = JSON.parse(JSON.stringify(loggedInUser.value));
+    try {
+      api.logout();
+      loggedInUser.value = '';
+      router.push('/');
+      Notify.create({
+        color: 'green-7',
+        textColor: 'white',
+        icon: 'done',
+        message: `Successfully logged out from ${previousUser}`
+      });
+    } catch (err) {
+      Notify.create({
+        color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: `Error logging out from user: ${previousUser}`
+      });
+    }
+  }
+
+  const $q = useQuasar();
+  const darkMode = JSON.parse(JSON.stringify($q.dark.isActive));
 
 </script>

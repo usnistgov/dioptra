@@ -44,7 +44,7 @@ test('change password', async ({ page, browserName }) => {
   await page.getByLabel('New Password').click();
   await page.getByLabel('New Password').fill('test1');
   await page.getByRole('button', { name: 'Change Password', exact: true }).click();
-  await expect(page.getByText(`Successfully changed password for user: ${browserName}`)).toBeVisible()
+  await expect(page.getByText(`Password change successful for user: ${browserName}`)).toBeVisible()
   await expect(page.getByText('Login').nth(2)).toHaveText('Login');
 
   // change password back to test

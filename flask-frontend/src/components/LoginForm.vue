@@ -4,14 +4,13 @@
         <div class="text-h5 text-weight-bold">Login</div>
         <div>Login below to access all API endpoints</div>
     </q-card-section>
-    <q-form @submit="$emit('submit', 'api/auth/login', 'POST')">
+    <q-form @submit="submit()">
       <q-input
         class="q-py-md"
         outlined
         label="Username"
         :rules="[requiredRule]"
-        :model-value="username"
-        @update:model-value="newValue => $emit('update:username', newValue)"
+        v-model="username"
       >
       </q-input>
       <q-input
@@ -19,8 +18,7 @@
         outlined
         label="Password"
         :rules="[requiredRule]"
-        :model-value="password"
-        @update:model-value="newValue => $emit('update:password', newValue)"
+        v-model="password"
       >
       </q-input>
       <q-btn
@@ -36,7 +34,7 @@
             role="button" 
             class="text-weight-bold text-primary" 
             style="text-decoration: none; cursor: pointer" 
-            @click="$emit('update:state', 'register')"
+            @click="formState = 'register'"
           >
             Signup.
           </a>
@@ -47,9 +45,38 @@
 </template>
 
 <script setup lang="ts">
-  defineProps(['username', 'password', 'state'])
-  defineEmits(['update:username', 'update:password', 'update:state', 'submit'])
+  import { ref } from 'vue';
+  import * as api from '../api'
+  import { Notify } from 'quasar'
+  import { useLoginStore } from '@/stores/LoginStore.js'
+  import { storeToRefs } from 'pinia'
+
+  const store = useLoginStore();
+  const { loggedInUser, formState } = storeToRefs(store);
 
   const requiredRule = (val: string) => (val && val.length > 0) || "This field is required";
+
+  const username = ref('');
+  const password = ref('');
+
+  async function submit() {
+    try {
+      const res = await api.login(username.value, password.value);
+      loggedInUser.value = JSON.parse(JSON.stringify(username.value));
+      Notify.create({
+        color: 'green-7',
+        textColor: 'white',
+        icon: 'done',
+        message: `${res.data.message} for ${username.value}`
+      });
+    } catch(err: any) {
+      Notify.create({
+        color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: err.response.data.message
+      });
+    }
+  }
 
 </script>

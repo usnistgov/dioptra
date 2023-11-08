@@ -4,14 +4,13 @@
         <div class="text-h5 text-weight-bold">Register</div>
         <div>Register a new user account</div>
     </q-card-section>
-    <q-form @submit="$emit('submit', 'api/user/', 'POST')">
+    <q-form @submit="submit()">
       <q-input
         class="q-py-sm"
         outlined
         label="Username"
         :rules="[requiredRule]"
-        :model-value="username"
-        @update:model-value="newValue => $emit('update:username', newValue)"
+        v-model="username"
       >
       </q-input>
       <q-input
@@ -19,8 +18,7 @@
         outlined
         label="Password"
         :rules="[requiredRule]"
-        :model-value="password"
-        @update:model-value="newValue => $emit('update:password', newValue)"
+        v-model="password"
       >
       </q-input>
       <q-input
@@ -28,8 +26,7 @@
         outlined
         label="Confirm Password"
         :rules="[requiredRule, matchRule]"
-        :model-value="confirmPassword"
-        @update:model-value="newValue => $emit('update:confirmPassword', newValue)"
+        v-model="confirmPassword"
       >
       </q-input>
       <q-btn
@@ -45,7 +42,7 @@
             role="button" 
             class="text-weight-bold text-primary" 
             style="text-decoration: none; cursor: pointer" 
-            @click="$emit('update:state', 'login')"
+            @click="formState = 'login'"
           >
             Login Menu.
           </a>
@@ -56,11 +53,40 @@
 </template>
 
 <script setup lang="ts">
+  import { ref } from 'vue';
+  import { Notify } from 'quasar'
+  import * as api from '../api'
+  import { useLoginStore } from '@/stores/LoginStore.js'
+  import { storeToRefs } from 'pinia'
 
-  const props = defineProps(['username', 'password', 'confirmPassword', 'state'])
-  defineEmits(['update:username', 'update:password', 'update:confirmPassword', 'update:state', 'submit'])
+  const store = useLoginStore();
+  const { formState } = storeToRefs(store);
 
   const requiredRule = (val: string) => (val && val.length > 0) || "This field is required";
-  const matchRule = (val: string) => (val && val === props.password) || 'Password mismatch';
+  const matchRule = (val: string) => (val && val === password.value) || 'Password mismatch';
+
+  const username = ref('');
+  const password = ref('');
+  const confirmPassword = ref('');
+
+  async function submit() {
+    try {
+      const res = await api.registerUser(username.value, password.value, confirmPassword.value);
+      formState.value = 'login'
+      Notify.create({
+        color: 'green-7',
+        textColor: 'white',
+        icon: 'done',
+        message: res.data.message
+      });
+    } catch (err: any) {
+      Notify.create({
+        color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: err.response.data.message
+      });
+    }
+  }
 
 </script>

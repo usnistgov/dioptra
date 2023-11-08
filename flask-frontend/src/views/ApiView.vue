@@ -67,6 +67,7 @@
 
 <script setup lang="ts">
   import { ref, computed } from 'vue';
+  import * as api from '../api'
 
   const endpointCategories = computed(() => {
     let categories: string[] = [];
@@ -109,20 +110,15 @@
     POST: 'green'
   }
 
-  function call(endpoint: Endpoint) {
-    fetch(endpoint.url, {method: endpoint.method})
-    .then(res => {
-      console.log('res = ', res);
+  async function call(endpoint: Endpoint) {
+    try {
+      const res = await api.genericCall(endpoint.method, endpoint.url);
       endpoint.responseStatus = res.status;
-      return res.json()
-    })
-    .then(data => {
-      console.log('data = ', data);
-      endpoint.responseBody = JSON.stringify(data, null, 2);
-    })
-    .catch(err => {
-      console.warn(err)
-    })
+      endpoint.responseBody = JSON.stringify(res.data, null, 2);
+    } catch(err: any) {
+      endpoint.responseStatus = err.response.status;
+      endpoint.responseBody = JSON.stringify(err.response.data, null, 2);
+    }
   }
 
 </script>
