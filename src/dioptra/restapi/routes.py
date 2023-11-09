@@ -34,12 +34,12 @@ def register_routes(api: Api, app: Flask) -> None:
     """
     from .auth import register_routes as attach_auth
     from .experiment import register_routes as attach_experiment
+    from .group import register_routes as attach_group
+    from .group_membership import register_routes as attach_group_membership
     from .job import register_routes as attach_job
     from .queue import register_routes as attach_job_queue
     from .task_plugin import register_routes as attach_task_plugin
     from .user import register_routes as attach_user
-    from .group import register_routes as attach_group
-    from .group_membership import register_routes as attach_group_membership
 
     attach_auth(api, app)
     attach_experiment(api, app)
