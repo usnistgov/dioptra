@@ -63,7 +63,7 @@
         callGetLoginStatus();
       }
     }
-  })
+  });
 
   async function callGetLoginStatus() {
     try {

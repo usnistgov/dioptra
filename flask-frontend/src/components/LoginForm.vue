@@ -49,7 +49,7 @@
   import * as api from '../api';
   import { useLoginStore } from '@/stores/LoginStore.js';
   import { storeToRefs } from 'pinia';
-  import * as notify from '../notify'
+  import * as notify from '../notify';
 
   const store = useLoginStore();
   const { loggedInUser, formState } = storeToRefs(store);

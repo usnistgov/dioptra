@@ -12,13 +12,13 @@
 
 <script setup lang="ts">
   import { watch, onMounted  } from 'vue';
-  import { useQuasar } from 'quasar'
-  import { useLoginStore } from '@/stores/LoginStore.js'
-  import { storeToRefs } from 'pinia'
-  import LoginForm from '../components/LoginForm.vue'
-  import RegisterForm from '../components/RegisterForm.vue'
-  import LoggedInForm from '../components/LoggedInForm.vue'
-  import * as api from '../api'
+  import { useQuasar } from 'quasar';
+  import { useLoginStore } from '@/stores/LoginStore.js';
+  import { storeToRefs } from 'pinia';
+  import LoginForm from '../components/LoginForm.vue';
+  import RegisterForm from '../components/RegisterForm.vue';
+  import LoggedInForm from '../components/LoggedInForm.vue';
+  import * as api from '../api';
 
   const $q = useQuasar();
 
@@ -29,7 +29,7 @@
 
   watch(loggedInUser, async(newVal) => {
     formState.value = newVal ? 'loggedIn' : 'login';
-  })
+  });
 
   onMounted(async () => {
     // login status should be checked every time page loads, but when checking immediately
@@ -40,7 +40,7 @@
       return;
     };
     try {
-      const res = await api.getLoginStatus()
+      const res = await api.getLoginStatus();
       loggedInUser.value = res.data.name;
       formState.value = 'loggedIn';
     } catch(err) {
@@ -49,7 +49,7 @@
     } finally {
       $q.loading.hide();
     }
-  })
+  });
 
 </script>
 

@@ -72,7 +72,7 @@
   async function submit() {
     try {
       const res = await api.registerUser(username.value, password.value, confirmPassword.value);
-      formState.value = 'login'
+      formState.value = 'login';
       notify.success(res.data.message);
     } catch (err: any) {
       notify.error(err.response.data.message);

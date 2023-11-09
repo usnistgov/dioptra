@@ -45,6 +45,6 @@ export async function deleteUser(password: string) {
 // this is for endpoints that don't have any parameters
 // simply pass the method (get, put, post) and the endpoint url
 export async function genericCall(method: string, url: string) {
-  const res = await axios({ method, url })
+  const res = await axios({ method, url });
   return res;
 }

@@ -67,17 +67,17 @@
 
 <script setup lang="ts">
   import { ref, computed } from 'vue';
-  import * as api from '../api'
+  import * as api from '../api';
 
   const endpointCategories = computed(() => {
     let categories: string[] = [];
     endpoints.forEach((endpoint) => {
       if (!categories.includes(endpoint.category)) {
-        categories.push(endpoint.category)
+        categories.push(endpoint.category);
       }
-    })
+    });
     return categories;
-  })
+  });
 
   type Endpoint = {
     method: string;
@@ -108,7 +108,7 @@
     PUT: 'orange',
     GET: 'primary',
     POST: 'green'
-  }
+  };
 
   async function call(endpoint: Endpoint) {
     try {
