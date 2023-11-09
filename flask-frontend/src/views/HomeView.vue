@@ -32,24 +32,22 @@
   })
 
   onMounted(async () => {
-    if (!pauseLoginCheck.value) {
-      // login status should be checked every time page loads, but when checking immediately
-      // after logging out via other page, endpoint can be wrong, so in those cases dont check
-      try {
-        const res = await api.getLoginStatus()
-        loggedInUser.value = res.data.name;
-        formState.value = 'loggedIn';
-      } catch(err) {
-        loggedInUser.value = '';
-        formState.value = 'login';
-      } finally {
-        $q.loading.hide();
-        console.log('loggedInUser = ', loggedInUser.value)
-        console.log('formState = ', formState.value)
-      }
-    } else {
-      $q.loading.hide();
+    // login status should be checked every time page loads, but when checking immediately
+    // after logging out via other page, endpoint can be wrong, so in those cases dont check
+    if (pauseLoginCheck.value) {
       pauseLoginCheck.value = false;
+      $q.loading.hide();
+      return;
+    };
+    try {
+      const res = await api.getLoginStatus()
+      loggedInUser.value = res.data.name;
+      formState.value = 'loggedIn';
+    } catch(err) {
+      loggedInUser.value = '';
+      formState.value = 'login';
+    } finally {
+      $q.loading.hide();
     }
   })
 

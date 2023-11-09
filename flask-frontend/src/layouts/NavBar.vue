@@ -82,7 +82,6 @@
       formState.value = 'login';
       pauseLoginCheck.value = true;
       router.push('/');
-      console.log('loggedInUser.value from navBar = ', loggedInUser.value);
       Notify.create({
         color: 'green-7',
         textColor: 'white',
