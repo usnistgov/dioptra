@@ -52,7 +52,7 @@
   const router = useRouter();
 
   const store = useLoginStore();
-  const { loggedInUser } = storeToRefs(store);
+  const { loggedInUser, formState, pauseLoginCheck } = storeToRefs(store);
 
   // check login status if page reloads
   router.beforeEach((to, from) => {
@@ -79,7 +79,10 @@
     try {
       api.logout();
       loggedInUser.value = '';
+      formState.value = 'login';
+      pauseLoginCheck.value = true;
       router.push('/');
+      console.log('loggedInUser.value from navBar = ', loggedInUser.value);
       Notify.create({
         color: 'green-7',
         textColor: 'white',
