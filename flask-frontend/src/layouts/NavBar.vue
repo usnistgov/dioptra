@@ -41,13 +41,13 @@
 </template>
 
 <script setup lang="ts">
-  import { useQuasar } from 'quasar'
-  import { useLoginStore } from '@/stores/LoginStore'
-  import { storeToRefs } from 'pinia'
+  import { useQuasar } from 'quasar';
+  import { useLoginStore } from '@/stores/LoginStore';
+  import { storeToRefs } from 'pinia';
   import { START_LOCATION } from 'vue-router';
   import { useRouter } from 'vue-router';
-  import * as api from '../api'
-  import { Notify } from 'quasar'
+  import * as api from '../api';
+  import * as notify from '../notify';
 
   const router = useRouter();
 
@@ -82,19 +82,9 @@
       formState.value = 'login';
       pauseLoginCheck.value = true;
       router.push('/');
-      Notify.create({
-        color: 'green-7',
-        textColor: 'white',
-        icon: 'done',
-        message: `Successfully logged out from ${previousUser}`
-      });
+      notify.success(`Successfully logged out from ${previousUser}`);
     } catch (err) {
-      Notify.create({
-        color: 'red-5',
-          textColor: 'white',
-          icon: 'warning',
-          message: `Error logging out from user: ${previousUser}`
-      });
+      notify.error(`Error logging out from user: ${previousUser}`);
     }
   }
 

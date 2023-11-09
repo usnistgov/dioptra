@@ -54,10 +54,10 @@
 
 <script setup lang="ts">
   import { ref } from 'vue';
-  import { Notify } from 'quasar'
-  import * as api from '../api'
-  import { useLoginStore } from '@/stores/LoginStore.js'
-  import { storeToRefs } from 'pinia'
+  import * as notify from '../notify';
+  import * as api from '../api';
+  import { useLoginStore } from '@/stores/LoginStore.js';
+  import { storeToRefs } from 'pinia';
 
   const store = useLoginStore();
   const { formState } = storeToRefs(store);
@@ -73,19 +73,9 @@
     try {
       const res = await api.registerUser(username.value, password.value, confirmPassword.value);
       formState.value = 'login'
-      Notify.create({
-        color: 'green-7',
-        textColor: 'white',
-        icon: 'done',
-        message: res.data.message
-      });
+      notify.success(res.data.message);
     } catch (err: any) {
-      Notify.create({
-        color: 'red-5',
-          textColor: 'white',
-          icon: 'warning',
-          message: err.response.data.message
-      });
+      notify.error(err.response.data.message);
     }
   }
 

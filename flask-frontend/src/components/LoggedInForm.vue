@@ -91,10 +91,10 @@
 
 <script setup lang="ts">
   import { ref } from 'vue';
-  import { useLoginStore } from '@/stores/LoginStore'
-  import { storeToRefs } from 'pinia'
-  import * as api from '../api'
-  import { Notify } from 'quasar'
+  import { useLoginStore } from '@/stores/LoginStore';
+  import { storeToRefs } from 'pinia';
+  import * as api from '../api';
+  import * as notify from '../notify';
 
   const store = useLoginStore();
   const { loggedInUser } = storeToRefs(store);
@@ -112,19 +112,9 @@
     try {
       api.logout(allDevices.value);
       loggedInUser.value = '';
-      Notify.create({
-        color: 'green-7',
-        textColor: 'white',
-        icon: 'done',
-        message: `Successfully logged out from ${previousUser}`
-      });
+      notify.success(`Successfully logged out from ${previousUser}`);
     } catch (err) {
-      Notify.create({
-        color: 'red-5',
-          textColor: 'white',
-          icon: 'warning',
-          message: `Error logging out from user: ${previousUser}`
-      });
+      notify.error(`Error logging out from user: ${previousUser}`);
     }
   }
 
@@ -133,19 +123,9 @@
     try {
       const res = await api.changePassword(password.value, newPassword.value);
       loggedInUser.value = '';
-      Notify.create({
-        color: 'green-7',
-        textColor: 'white',
-        icon: 'done',
-        message: `${res.data.message} for user: ${previousUser}`
-      });
+      notify.success(`${res.data.message} for user: ${previousUser}`);
     } catch(err: any) {
-      Notify.create({
-      color: 'red-5',
-        textColor: 'white',
-        icon: 'warning',
-        message: err.response.data.message
-      });
+      notify.error(err.response.data.message);
     }
   }
 
@@ -153,19 +133,9 @@
     try {
       const res = await api.deleteUser(deleteRequestPassword.value);
       loggedInUser.value = '';
-      Notify.create({
-        color: 'green-7',
-        textColor: 'white',
-        icon: 'done',
-        message: res.data.message
-      });
+      notify.success(res.data.message);
     } catch(err: any) {
-      Notify.create({
-        color: 'red-5',
-        textColor: 'white',
-        icon: 'warning',
-        message: err.response.data.message
-      });
+      notify.error(err.response.data.message);
     }
   }
 
