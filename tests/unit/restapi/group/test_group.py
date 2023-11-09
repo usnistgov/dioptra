@@ -70,7 +70,6 @@ def create_user(db: SQLAlchemy) -> User:
         created_on=timestamp,
         last_modified_on=timestamp,
         last_login_on=timestamp,
-        user_expire_on=user_expire_on,
         password_expire_on=password_expire_on,
     )
     db.session.add(new_user)

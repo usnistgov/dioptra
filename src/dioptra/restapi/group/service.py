@@ -58,7 +58,6 @@ class GroupService(object):
 
     @staticmethod
     def get_by_id(group_id: int, **kwargs) -> Group:
-    def get_by_id(group_id: int, **kwargs) -> Group:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
         return Group.query.get(group_id)  # type: ignore

@@ -38,6 +38,8 @@ def register_routes(api: Api, app: Flask) -> None:
     from .queue import register_routes as attach_job_queue
     from .task_plugin import register_routes as attach_task_plugin
     from .user import register_routes as attach_user
+    from .group import register_routes as attach_group
+    from .group_membership import register_routes as attach_group_membership
 
     attach_auth(api, app)
     attach_experiment(api, app)
@@ -45,3 +47,5 @@ def register_routes(api: Api, app: Flask) -> None:
     attach_job_queue(api, app)
     attach_task_plugin(api, app)
     attach_user(api, app)
+    attach_group(api, app)
+    attach_group_membership(api, app)
