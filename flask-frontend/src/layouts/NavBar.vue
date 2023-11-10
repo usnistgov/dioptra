@@ -32,7 +32,7 @@
     <q-toggle
       v-model="darkMode"
       class="absolute-right q-mr-sm" 
-      :label="`${$q.dark.isActive ? 'Dark' : 'Light'} Mode `"
+      :label="`${darkMode ? 'Dark' : 'Light'} Mode `"
       @click="$q.dark.toggle()"
     >
       <q-icon :name="darkMode ? 'bedtime' : 'light_mode'" size="sm"/>
@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+  import { ref } from 'vue';
   import { useQuasar } from 'quasar';
   import { useLoginStore } from '@/stores/LoginStore';
   import { storeToRefs } from 'pinia';
@@ -48,6 +49,9 @@
   import { useRouter } from 'vue-router';
   import * as api from '../api';
   import * as notify from '../notify';
+
+  const $q = useQuasar();
+  const darkMode = ref($q.dark.isActive);
 
   const router = useRouter();
 
@@ -87,8 +91,5 @@
       notify.error(`Error logging out from user: ${previousUser}`);
     }
   }
-
-  const $q = useQuasar();
-  const darkMode = JSON.parse(JSON.stringify($q.dark.isActive));
 
 </script>
