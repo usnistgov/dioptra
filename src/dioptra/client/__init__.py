@@ -16,6 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-from ._client import DioptraClient
+from ._client import DioptraClient, get_dioptra_client
 
-__all__ = ["DioptraClient"]
+__all__ = ["DioptraClient", "get_dioptra_client"]
