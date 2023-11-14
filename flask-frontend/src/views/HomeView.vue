@@ -25,20 +25,13 @@
   $q.loading.show();
 
   const store = useLoginStore();
-  const { loggedInUser, formState, pauseLoginCheck } = storeToRefs(store);
+  const { loggedInUser, formState } = storeToRefs(store);
 
   watch(loggedInUser, async(newVal) => {
     formState.value = newVal ? 'loggedIn' : 'login';
   });
 
   onMounted(async () => {
-    // login status should be checked every time page loads, but when checking immediately
-    // after logging out via other page, endpoint can be wrong, so in those cases dont check
-    if (pauseLoginCheck.value) {
-      pauseLoginCheck.value = false;
-      $q.loading.hide();
-      return;
-    };
     try {
       const res = await api.getLoginStatus();
       loggedInUser.value = res.data.name;

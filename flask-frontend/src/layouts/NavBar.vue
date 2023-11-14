@@ -56,7 +56,7 @@
   const router = useRouter();
 
   const store = useLoginStore();
-  const { loggedInUser, formState, pauseLoginCheck } = storeToRefs(store);
+  const { loggedInUser, formState } = storeToRefs(store);
 
   // check login status if page reloads
   router.beforeEach((to, from) => {
@@ -81,10 +81,9 @@
   async function callLogout() {
     const previousUser = JSON.parse(JSON.stringify(loggedInUser.value));
     try {
-      api.logout();
+      await api.logout();
       loggedInUser.value = '';
       formState.value = 'login';
-      pauseLoginCheck.value = true;
       router.push('/');
       notify.success(`Successfully logged out from ${previousUser}`);
     } catch (err) {
