@@ -110,7 +110,7 @@
   async function callLogout() {
     const previousUser = JSON.parse(JSON.stringify(loggedInUser.value));
     try {
-      api.logout(allDevices.value);
+      await api.logout(allDevices.value);
       loggedInUser.value = '';
       notify.success(`Successfully logged out from ${previousUser}`);
     } catch (err) {
