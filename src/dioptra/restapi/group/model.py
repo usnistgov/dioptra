@@ -37,7 +37,6 @@ class Group(db.Model):
     __tablename__ = "groups"
 
     group_id = db.Column(db.BigInteger(), primary_key=True)
-    """A UUID that identifies the Resource."""
     name = db.Column(db.String(36))
 
     creator_id = db.Column(db.BigInteger(), db.ForeignKey("users.user_id"), index=True)
@@ -88,7 +87,6 @@ class Group(db.Model):
         else:
             return True
 
-    # TODO
     def update(self, changes: dict):
         """Updates the record.
 

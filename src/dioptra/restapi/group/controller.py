@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import structlog
 from flask import request
@@ -80,7 +80,7 @@ class GroupResource(Resource):
         return self._group_service.submit(name=name, log=log)
 
     @accepts(GroupSchema, api=api)
-    def delete(self) -> bool:
+    def delete(self) -> dict[str, Any]:
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="group", request_type="POST"
         )  # noqa: F841

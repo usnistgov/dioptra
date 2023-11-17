@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import List
+from typing import Any, List, cast
 
 import structlog
 from sqlalchemy.exc import IntegrityError
@@ -26,14 +26,26 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.app import db
 
+from .errors import GroupDoesNotExistError
 from .model import Group
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class GroupService(object):
+    """The service methods for registering and managing groups by their unique id."""
+
     @staticmethod
     def create(name: str, user_id=None, **kwargs) -> Group:
+        """Create a new group.
+
+        Args:
+            name: The name of the group.
+            user_id: The id of the user creating the group.
+
+        Returns:
+            The newly created group object.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
         timestamp = datetime.datetime.now()
 
@@ -52,15 +64,41 @@ class GroupService(object):
 
     @staticmethod
     def get_all(**kwargs) -> List[Group]:
+        """Fetch the list of all groups.
+
+        Returns:
+            A list of groups.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+
+        log.info("Get full list of groups.")
 
         return Group.query.all()  # type: ignore
 
     @staticmethod
-    def get_by_id(group_id: int, **kwargs) -> Group:
+    def get_by_id(
+        group_id: int, error_if_not_found: bool = False, **kwargs
+    ) -> Group | None:
+        """Fetch a group by its unique id.
+
+        Args:
+            group_id: The unique id of the group.
+
+        Returns:
+            The group object if found, otherwise None.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        return Group.query.get(group_id)  # type: ignore
+        log.info("Get group by id", group_id=group_id)
+        group = Group.query.filter_by(group_id=group_id, deleted=False).first()
+
+        if group is None:
+            if error_if_not_found:
+                log.error("Group not found", group_id=group_id)
+                raise GroupDoesNotExistError
+            return None
+
+        return cast(Group, group)
 
     def submit(self, name: str, user_id=None, **kwargs) -> Group:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -74,13 +112,25 @@ class GroupService(object):
 
         return new_group
 
-    def delete(self, id: int, **kwargs) -> bool:
-        group = self.get_by_id(id)
-        group.deleted = True
+    def delete(self, id: int, **kwargs) -> dict[str, Any]:
+        """Delete a group.
+
+        Args:
+            group_id: The unique id of the group.
+
+        Returns:
+            A dictionary reporting the status of the request.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        if (group := self.get_by_id(id, log=log)) is None:
+            return {"status": "Success", "id": []}
+        group.update(changes={"deleted": True})
         try:
             db.session.commit()
 
-            return True
+            log.info("Group deleted", group_id=id)
+            return {"status": "Success", "id": [id]}
         except IntegrityError:
             db.session.rollback()
-            return False
+            return {"status": "Failure", "id": [id]}
