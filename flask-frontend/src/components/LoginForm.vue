@@ -11,15 +11,22 @@
         label="Username"
         :rules="[requiredRule]"
         v-model="username"
-      >
-      </q-input>
+      />
       <q-input
         class="q-py-sm"
         outlined
         label="Password"
+        :type="showPassword ? 'text' : 'password'"
         :rules="[requiredRule]"
         v-model="password"
       >
+        <template v-slot:append>
+          <q-icon
+            :name="showPassword ? 'visibility' : 'visibility_off'"
+            class="cursor-pointer"
+            @click="showPassword = !showPassword"
+          />
+        </template>
       </q-input>
       <q-btn
         color="primary"
@@ -58,6 +65,7 @@
 
   const username = ref('');
   const password = ref('');
+  const showPassword = ref(false);
 
   async function submit() {
     try {

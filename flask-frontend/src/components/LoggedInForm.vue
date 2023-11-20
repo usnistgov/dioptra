@@ -36,17 +36,33 @@
             class="q-py-sm"
             outlined
             label="Current Password"
+            :type="showPassword ? 'text' : 'password'"
             :rules="[requiredRule]"
             v-model="password"
           >
+            <template v-slot:append>
+              <q-icon
+                :name="showPassword ? 'visibility' : 'visibility_off'"
+                class="cursor-pointer"
+                @click="showPassword = !showPassword"
+              />
+            </template>
           </q-input>
           <q-input
             class="q-py-lg"
             outlined
             label="New Password"
+            :type="showPassword ? 'text' : 'password'"
             :rules="[requiredRule]"
             v-model="newPassword"
           >
+            <template v-slot:append>
+              <q-icon
+                :name="showPassword ? 'visibility' : 'visibility_off'"
+                class="cursor-pointer"
+                @click="showPassword = !showPassword"
+              />
+            </template>
           </q-input>
           <q-btn
             color="primary"
@@ -72,9 +88,17 @@
             class="q-py-lg"
             outlined
             label="Password"
+            :type="showDeletePassword ? 'text' : 'password'"
             :rules="[requiredRule]"
             v-model="deleteRequestPassword"
           >
+            <template v-slot:append>
+              <q-icon
+                :name="showDeletePassword ? 'visibility' : 'visibility_off'"
+                class="cursor-pointer"
+                @click="showDeletePassword = !showDeletePassword"
+              />
+            </template>
           </q-input>
           <q-btn
             color="red"
@@ -104,6 +128,8 @@
   const password = ref('');
   const newPassword = ref('');
   const deleteRequestPassword = ref('');
+  const showPassword = ref(false);
+  const showDeletePassword = ref(false);
 
   const allDevices = ref(false);
 
