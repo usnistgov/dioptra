@@ -52,7 +52,7 @@ class MLFlowTrackingService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         try:
-            self._client.delete_experiment(experiment_id=experiment_id)
+            self._client.delete_experiment(experiment_id=str(experiment_id))
 
         except RestException as e:
             if e.error_code == "RESOURCE_DOES_NOT_EXIST":
@@ -72,7 +72,7 @@ class MLFlowTrackingService(object):
 
         try:
             self._client.rename_experiment(
-                experiment_id=experiment_id, new_name=new_name
+                experiment_id=str(experiment_id), new_name=new_name
             )
 
         except RestException as e:
