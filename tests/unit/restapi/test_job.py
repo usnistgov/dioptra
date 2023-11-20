@@ -22,49 +22,62 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Dict
 
+import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.job.routes import BASE_ROUTE as JOB_BASE_ROUTE
 
+
+# -- Fixtures --------------------------------------------------------------------------
+
+@pytest.fixture
+def job_form_request(workflow_tar_gz: BinaryIO) -> Dict[str, Any]:
+    return {
+        "experiment_name": "mnist",
+        "queue": "tensorflow_cpu",
+        "timeout": "12h",
+        "entry_point": "main",
+        "entry_point_kwargs": "-P var1=testing",
+        "workflow": (workflow_tar_gz, "workflows.tar.gz"),
+    }
+
 # -- Actions ---------------------------------------------------------------------------
 
 def submit_job(
-    client: FlaskClient, 
-    experiment_name: str, 
-    entry_point: str,
-    queue: str
-) -> TestResponse:
+        client: FlaskClient, 
+        job_form_request: Dict[str, Any],
+    ) -> TestResponse:
     """Submit a job using the API.
 
     Args:
         client: The Flask test client.
         experiment_name: The name of a registered experiment.
         queue: The name of an active queue.
-        entry_point: The name of the entry point in the MLproject file to run.
+        timeout: The maximum alloted time for a job before it times out and is stopped. 
+            If omitted, the job timeout will default to 24 hours.
+        entry_point: The name of the entry point to run.
+        entry_point_kwargs: A list of entry point parameter values to use for the job. 
+            The list is a string with the following format: 
+            -P param1=value1
+            -P param2=value2
+        depends_on: A job UUID to set as a dependency for this new job. The new job will not 
+            run until this job completes successfully. If omitted, then the new job will start as 
+            soon as computing resources are available.
+        workflow: A tarball archive or zip file containing the entry point scripts.
+
 
     Returns:
         The response from the API.
     """
-    job_form = {
-        "experiment_name": experiment_name,
-        "queue": queue,
-        "entry_point": entry_point,
-        }
-    
-    #workflows_file = Path(workflows_file)
-    
-    with workflows_file.open("rb") as f:
-        job_files = {"workflow": (workflows_file.name, f)}
     return client.post(
         f"/api/{JOB_BASE_ROUTE}/",
-        data=job_form,
-        files=job_files,
+        json=job_form_request,
         follow_redirects=True,
-        )
+    )
 
 # -- Assertions ------------------------------------------------------------------------
 
