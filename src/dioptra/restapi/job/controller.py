@@ -20,6 +20,7 @@ from __future__ import annotations
 import uuid
 from typing import List, Optional
 
+import flask
 import structlog
 from flask_accepts import accepts, responds
 from flask_login import login_required
@@ -31,7 +32,7 @@ from dioptra.restapi.utils import as_api_parser
 
 from .errors import JobDoesNotExistError, JobSubmissionError
 from .model import Job, JobForm, JobFormData
-from .schema import JobSchema, job_submit_form_schema
+from .schema import JobSchema, TaskEngineSubmission, job_submit_form_schema
 from .service import JobService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -116,3 +117,27 @@ class JobIdResource(Resource):
             raise JobDoesNotExistError
 
         return job
+
+
+@api.route("/newTaskEngine")
+class TaskEngineResource(Resource):
+    @inject
+    def __init__(self, job_service: JobService, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._job_service = job_service
+
+    @accepts(schema=TaskEngineSubmission, api=api)
+    @responds(schema=JobSchema, api=api)
+    def post(self) -> Job:
+        post_obj = flask.request.parsed_obj  # type: ignore
+
+        new_job = self._job_service.submit_task_engine(
+            queue_name=post_obj["queue"],
+            experiment_name=post_obj["experimentName"],
+            experiment_description=post_obj["experimentDescription"],
+            global_parameters=post_obj.get("globalParameters"),
+            timeout=post_obj.get("timeout"),
+            depends_on=post_obj.get("dependsOn"),
+        )
+
+        return new_job

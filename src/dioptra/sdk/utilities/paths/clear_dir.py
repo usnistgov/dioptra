@@ -14,7 +14,29 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from ._set_path_ext import set_path_ext
-from .clear_dir import clear_directory
+import shutil
+from pathlib import Path
+from typing import Union
 
-__all__ = ["set_path_ext", "clear_directory"]
+
+def clear_directory(dir_: Union[str, Path]):
+    """
+    Remove all subdirectories and files from the given directory.
+
+    Args:
+        dir_: A string or Path object referring to a directory
+    """
+
+    if isinstance(dir_, str):
+        dir_ = Path(dir_)
+
+    if dir_.is_dir():
+        # Perhaps better to not modify the directory while you are iterating
+        # over its entries?
+        entries = list(dir_.iterdir())
+
+        for entry in entries:
+            if entry.is_dir():
+                shutil.rmtree(entry)
+            else:
+                entry.unlink()

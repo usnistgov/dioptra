@@ -18,9 +18,10 @@
 from __future__ import annotations
 
 import datetime
+import json
 import uuid
 from pathlib import Path
-from typing import List, Optional, cast
+from typing import Any, List, Mapping, Optional, cast
 
 import structlog
 from injector import inject
@@ -34,8 +35,9 @@ from dioptra.restapi.experiment.service import ExperimentService
 from dioptra.restapi.queue.service import QueueNameService
 from dioptra.restapi.shared.rq.service import RQService
 from dioptra.restapi.shared.s3.service import S3Service
+from dioptra.task_engine.validation import is_valid
 
-from .errors import JobWorkflowUploadError
+from .errors import InvalidExperimentDescriptionError, JobWorkflowUploadError
 from .model import Job, JobForm, JobFormData
 from .schema import JobFormSchema
 
@@ -149,6 +151,69 @@ class JobService(object):
         db.session.commit()
 
         log.info("Job submission successful", job_id=new_job.job_id)
+
+        return new_job
+
+    def submit_task_engine(
+        self,
+        queue_name: str,
+        experiment_name: str,
+        experiment_description: Mapping[str, Any],
+        global_parameters: Optional[Mapping[str, Any]] = None,
+        timeout: Optional[str] = None,
+        depends_on: Optional[str] = None,
+    ) -> Job:
+        from dioptra.restapi.models import Experiment, Queue
+
+        log: BoundLogger = LOGGER.new()
+
+        experiment: Optional[Experiment] = self._experiment_service.get_by_name(
+            experiment_name=experiment_name, log=log
+        )
+
+        if experiment is None:
+            raise ExperimentDoesNotExistError
+
+        queue = cast(
+            Queue,
+            self._queue_name_service.get(
+                queue_name, unlocked_only=True, error_if_not_found=True, log=log
+            ),
+        )
+
+        if not is_valid(experiment_description):
+            raise InvalidExperimentDescriptionError
+
+        job_id = str(uuid.uuid4())
+        timestamp = datetime.datetime.now()
+
+        new_job = Job(
+            job_id=job_id,
+            experiment_id=experiment.experiment_id,
+            queue_id=queue.queue_id,
+            created_on=timestamp,
+            last_modified=timestamp,
+            timeout=timeout,
+            depends_on=depends_on,
+        )
+
+        if global_parameters is not None:
+            new_job.entry_point_kwargs = json.dumps(global_parameters)
+
+        db.session.add(new_job)
+        db.session.commit()
+
+        self._rq_service.submit_task_engine_job(
+            job_id=job_id,
+            queue=queue_name,
+            experiment_id=experiment.experiment_id,
+            experiment_description=experiment_description,
+            global_parameters=global_parameters,
+            depends_on=depends_on,
+            timeout=timeout,
+        )
+
+        log.info("Job submission successful", job_id=job_id)
 
         return new_job
 
