@@ -155,7 +155,7 @@ class DioptraClient(object):
 
         response = requests.post(
             self.queue_endpoint,
-            data=queue_registration_form,
+            json=queue_registration_form,
         )
 
         return response.json()
