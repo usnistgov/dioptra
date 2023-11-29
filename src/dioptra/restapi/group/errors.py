@@ -14,38 +14,31 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module for registering the endpoint routes with the main application.
-
-.. |Api| replace:: :py:class:`flask_restx.Api`
-.. |Flask| replace:: :py:class:`flask.Flask`
-"""
+"""Error handlers for the group endpoints."""
 from __future__ import annotations
 
-from flask import Flask
 from flask_restx import Api
 
 
-def register_routes(api: Api, app: Flask) -> None:
-    """Registers the endpoint routes with the main application.
+class GroupDoesNotExistError(Exception):
+    """The requested group does not exist."""
 
-    Args:
-        api: The main REST |Api| object.
-        app: The main |Flask| application.
-    """
-    from .auth import register_routes as attach_auth
-    from .experiment import register_routes as attach_experiment
-    from .group import register_routes as attach_group
-    from .group_membership import register_routes as attach_group_membership
-    from .job import register_routes as attach_job
-    from .queue import register_routes as attach_job_queue
-    from .task_plugin import register_routes as attach_task_plugin
-    from .user import register_routes as attach_user
 
-    attach_auth(api, app)
-    attach_experiment(api, app)
-    attach_job(api, app)
-    attach_job_queue(api, app)
-    attach_task_plugin(api, app)
-    attach_user(api, app)
-    attach_group(api, app)
-    attach_group_membership(api, app)
+class GroupSubmissionError(Exception):
+    """The Group submission form contains invalid parameters."""
+
+
+def register_error_handlers(api: Api) -> None:
+    @api.errorhandler(GroupDoesNotExistError)
+    def handle_job_does_not_exist_error(error):
+        return {"message": "Not Found - The requested group does not exist"}, 404
+
+    @api.errorhandler(GroupSubmissionError)
+    def handle_job_submission_error(error):
+        return (
+            {
+                "message": "Bad Request - The group submission form contains "
+                "invalid parameters. Please verify and resubmit."
+            },
+            400,
+        )
