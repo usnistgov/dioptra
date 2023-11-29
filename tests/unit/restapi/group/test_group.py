@@ -34,11 +34,10 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.group.model import Group
 from dioptra.restapi.group.service import GroupService
+from dioptra.restapi.group_membership.model import GroupMembership
 from dioptra.restapi.group_membership.service import GroupMembershipService
 from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
 from dioptra.restapi.user.model import User
-from dioptra.restapi.group.model import Group
-from dioptra.restapi.group_membership.model import GroupMembership
 
 
 @pytest.fixture

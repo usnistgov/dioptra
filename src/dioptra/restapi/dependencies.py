@@ -56,12 +56,14 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
             environment.
     """
     from .experiment import register_providers as attach_experiment_providers
+    from .group import register_providers as attach_group_providers
+    from .group_membership import (
+        register_providers as attach_group_membership_providers,
+    )
     from .job import register_providers as attach_job_providers
     from .queue import register_providers as attach_job_queue_providers
     from .task_plugin import register_providers as attach_task_plugin_providers
     from .user import register_providers as attach_user_providers
-    from .group import register_routes as attach_group_providers
-    from .group_membership import register_routes as attach_group_membership_providers
 
     # Append modules to list
     attach_experiment_providers(modules)
