@@ -1,16 +1,18 @@
 """The application's REST controllers for the API."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Optional, Union, cast
+from urllib.parse import quote_plus
 
-from flask import request
+from flask import Response, g, redirect, request, session, url_for
 from flask_accepts import accepts
-from flask_login import login_required
+from flask_login import current_user, login_required, login_user
 from flask_restx import Namespace, Resource
 
 from .schemas import (
     ChangePasswordSchema,
     DeleteUserSchema,
+    LoginReactiveSchema,
     LoginSchema,
     LogoutSchema,
     RegisterUserSchema,
@@ -48,7 +50,7 @@ foo_api: Namespace = Namespace(
 # -- Authentication Resources ---------------------------------------------------------
 
 
-@auth_api.route("/login")
+@auth_api.route("/login", endpoint="login")
 class LoginResource(Resource):
     @accepts(schema=LoginSchema, api=auth_api)
     def post(self) -> dict[str, Any] | tuple[dict[str, Any], int]:
@@ -60,21 +62,66 @@ class LoginResource(Resource):
         password = str(parsed_obj["password"])
         return SERVICES.auth.login(username=username, password=password)
 
+    @accepts(query_params_schema=LoginReactiveSchema, api=auth_api)
+    def get(self):
+        """
+        Act as a flask-login view function.  This will forward to an OIDC
+        Provider for authentication, and ensure that if OIDC authentication is
+        successful, flask-login also sees an authenticated user.
+        """
+
+        next_ = request.parsed_query_params.get("next")
+
+        if current_user.is_authenticated:
+            # User already logged in!
+            # Need to validate the redirect URL here?
+            resp = redirect(next_ or request.root_url)
+
+        elif g.oidc.user_loggedin:
+            # This request is a redirect back from the OIDC authorize
+            # endpoint, after successful authentication.  So we logged in
+            # via flask-oidc, but don't have an authenticated current_user yet.
+            user = SERVICES.user.create_user_from_id_token(session["oidc_auth_token"])
+
+            login_user(user)
+
+            original_next = session.pop(
+                "_dioptra_reactive_login_next", request.root_url
+            )
+
+            resp = redirect(original_next)
+
+        else:
+            # This request is reactive after the user-agent attempted to
+            # access a protected endpoint without having authenticated.
+            # Forward to the OIDC authentication endpoint.
+            if next_:
+                # The original "next" URL: set in the session so we don't lose
+                # it.
+                session["_dioptra_reactive_login_next"] = next_
+
+            redirect_uri = "{login}?next={here}".format(
+                login=url_for("oidc_auth.login"),
+                here=quote_plus(request.url),
+            )
+            resp = redirect(redirect_uri)
+
+        return resp
+
 
 @auth_api.route("/logout")
 class LogoutResource(Resource):
-    @login_required
     @accepts(query_params_schema=LogoutSchema, api=auth_api)
-    def post(self) -> dict[str, Any]:
-        """Logout the current user.
-
-        Must be logged in.
-        """
+    def get(self) -> Optional[Union[dict[str, Any], Response]]:
+        """Logout the current user.  No-op if not logged in."""
         parsed_query_params = cast(
             dict[str, Any], request.parsed_query_params  # type: ignore[attr-defined]
         )
         everywhere = bool(parsed_query_params["everywhere"])
-        return SERVICES.auth.logout(everywhere=everywhere)
+        resp = SERVICES.auth.logout(everywhere=everywhere)
+
+        # If there is no authenticated user, what is the right thing to return?
+        return resp
 
 
 # -- User Resource -------------------------------------------------------------------

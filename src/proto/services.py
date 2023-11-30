@@ -27,9 +27,10 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, Mapping, Optional, Union, cast
 
-from flask import Request, current_app
+import flask
+from flask import Request, current_app, has_request_context, session
 from flask_login import current_user, login_user, logout_user
 from passlib.context import CryptContext
 
@@ -162,6 +163,11 @@ class UserService(object):
         for user in (
             x for x in db["users"].values() if x.name == name and not x.deleted
         ):
+            # All users in the local user database have passwords, but the
+            # "password" attribute is optional to support user objects
+            # corresponding to OIDC users, for which we have no password.
+            assert user.password
+
             if self._password_service.verify(
                 password=password, hashed_password=user.password
             ):
@@ -224,15 +230,60 @@ class UserService(object):
         """Load the user associated with a provided id.
 
         Args:
-            user_id: A string identifying the the user to be loaded.
+            user_id: A string identifying the user to be loaded.
 
         Returns:
             A user object if the user is found, otherwise None.
         """
-        for user in (x for x in db["users"].values() if x.alternative_id == user_id):
-            return user
+        user = None
 
-        return None
+        if has_request_context():
+            # Check for an OIDC user; make up a corresponding User object if
+            # possible.  We use the ID token; in this case we have no need of
+            # the user_id parameter to this method.  We can't "look up" a user
+            # by ID; we have no database of OIDC users to consult.  (That means
+            # the "remember me" functionality can't work with OIDC users.)
+            if flask.g.oidc.user_loggedin:
+                user = self.create_user_from_id_token(session["oidc_auth_token"])
+
+        if not user:
+            # Not an OIDC user; try to locate a local user
+            for db_user in db["users"].values():
+                if db_user.is_active and db_user.get_id() == user_id:
+                    user = db_user
+                    break
+
+        return user
+
+    def create_user_from_id_token(self, id_token: Mapping[str, Any]) -> User:
+        """
+        Create a User object corresponding to an OIDC ID token.
+
+        Args:
+            id_token: An OIDC ID token, as created by flask-oidc.  (A dict)
+
+        Returns:
+            A User object
+        """
+        # The token structure assumed here is derived from an Okta ID
+        # token.
+
+        user = User(
+            # id is not applicable; presumably would be a db primary key if
+            # these users were stored in a db somewhere.  But OIDC users won't
+            # be.
+            id=0,
+            # OP (OIDC Provider, e.g. Okta) identifies a user via a "sub"
+            # (subject) claim.
+            alternative_id=id_token["userinfo"]["sub"],
+            name=id_token["userinfo"]["name"],
+            deleted=False,
+            # password is not applicable since we don't authenticate OIDC
+            # users.  That is OP's job.
+            password=None,
+        )
+
+        return user
 
     def register_new_user(
         self, name: str, password: str, confirm_password: str
@@ -296,7 +347,8 @@ class AuthService(object):
     def login(
         self, username: str, password: str
     ) -> dict[str, Any] | tuple[dict[str, Any], int]:
-        """Login the user with the given username and password.
+        """Login the user with the given username and password.  Used only for
+        "proactive" login of a local user.  Not used for OIDC logins.
 
         Args:
             username: The username for logging into the user account.
@@ -318,21 +370,44 @@ class AuthService(object):
         login_user(user)
         return {"status": 200, "message": "login success"}
 
-    def logout(self, everywhere: bool) -> dict[str, Any]:
-        """Log the current user out.
+    def logout(
+        self, everywhere: bool
+    ) -> Optional[Union[dict[str, Any], flask.Response]]:
+        """Log the current user out.  Applicable to both local and OIDC users.
 
         Args:
             everywhere: If True, log out from all devices by regenerating the current
-                user's alternative id.
+                user's alternative id.  Not applicable to OIDC users.  This is
+                a no-op if there is no authenticated user.
 
         Returns:
-            A response object containing the logout success message.
+            A response (dict or flask response), or None if not called in the
+                context of a flask http request, or if there is no
+                authenticated user to log out.
         """
-        if everywhere:
-            current_user.alternative_id = uuid.uuid4().hex
 
-        logout_user()
-        return {"status": 200, "message": "logout success"}
+        resp: Optional[Union[dict[str, Any], flask.Response]] = None
+        if has_request_context() and current_user.is_authenticated:
+            if everywhere:
+                # If current_user is an OIDC user, it is a temporary object, so
+                # changing anything is pointless.  But it doesn't hurt.
+                current_user.alternative_id = uuid.uuid4().hex
+
+            # does stuff with the session, so requires request context.
+            logout_user()
+
+            if flask.g.oidc.user_loggedin:
+                # If an OIDC-authenticated user, invoke the OIDC logout
+                # endpoint.  This will do things like clear OIDC session keys.
+                #
+                # Any particular place we should return (redirect) to here,
+                # after logout?
+                resp = flask.g.oidc.logout()
+
+            else:
+                resp = {"status": 200, "message": "logout success"}
+
+        return resp
 
 
 @dataclass

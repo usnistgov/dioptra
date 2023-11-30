@@ -5,12 +5,14 @@ configuration parameters.
 """
 from __future__ import annotations
 
+import json
 import os
 import uuid
 from dataclasses import dataclass, field
 
-from flask import Flask
-from flask_login import LoginManager
+from flask import Flask, g, session
+from flask_login import LoginManager, current_user, login_required
+from flask_oidc import OpenIDConnect
 from flask_restx import Api
 
 from .models import User, db
@@ -65,6 +67,14 @@ class Config(object):
         default_factory=lambda: os.getenv("SESSION_PROTECTION", "strong").lower()
     )
 
+    # Has info related to OIDC authentication
+    OIDC_CLIENT_SECRETS = "oidc_client_secrets.json"
+
+    # "openid" is required; additional values request additional claims.  E.g.
+    # "profile" for user profile information.  Default is "openid email".
+    # https://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims
+    OIDC_SCOPES = "openid profile"
+
     def __post_init__(self) -> None:
         self.REMEMBER_COOKIE_DURATION = int(self.REMEMBER_COOKIE_DURATION)
         _validate_session_protection(self.SESSION_PROTECTION)
@@ -88,13 +98,36 @@ def create_app(include_test_users: bool = True) -> Flask:
         title="Prototype Flask Application",
         version="0.0.0",
         doc=app.config["SWAGGER_PATH"],
+        prefix="/api",
         url_scheme=app.config["BASE_URL"],
     )
 
     _register_routes(api)
 
+    # Add a rule for a simple demo webpage intended for browsers.  We can
+    # exercise OIDC authentication through this endpoint.
+    app.add_url_rule("/ui", view_func=welcome_page_protected, methods=["GET"])
+
+    # Demo a webpage which does not require authentication.  Registering it
+    # with the "/" path causes it to be the redirect destination after OIDC
+    # user logout, so there is someplace to go.
+    app.add_url_rule("/", view_func=welcome_page_unprotected, methods=["GET"])
+
     login_manager.user_loader(SERVICES.user.load_user)
     login_manager.init_app(app)
+    login_manager.login_view = "login"
+
+    oidc = OpenIDConnect()
+    # Mount /login, /logout, /authorize endpoints under this prefix.
+    oidc.init_app(app, prefix="/oidc")
+
+    @app.before_request
+    def set_g_oidc():
+        """
+        For easy access to flask-oidc from other modules, so they don't have to
+        import this module and risk import cycles.
+        """
+        g.oidc = oidc
 
     if include_test_users:
         _register_test_users_in_db()
@@ -102,7 +135,7 @@ def create_app(include_test_users: bool = True) -> Flask:
     return app
 
 
-def _register_routes(api: Api, root: str = "api") -> None:
+def _register_routes(api: Api) -> None:
     """Register the application's routes.
 
     Args:
@@ -115,12 +148,12 @@ def _register_routes(api: Api, root: str = "api") -> None:
     """
     from .controllers import auth_api, foo_api, hello_api, test_api, user_api, world_api
 
-    api.add_namespace(auth_api, path=f"/{root}/auth")
-    api.add_namespace(user_api, path=f"/{root}/user")
-    api.add_namespace(hello_api, path=f"/{root}/hello")
-    api.add_namespace(test_api, path=f"/{root}/test")
-    api.add_namespace(world_api, path=f"/{root}/world")
-    api.add_namespace(foo_api, path=f"/{root}/foo")
+    api.add_namespace(auth_api, path="/auth")
+    api.add_namespace(user_api, path="/user")
+    api.add_namespace(hello_api, path="/hello")
+    api.add_namespace(test_api, path="/test")
+    api.add_namespace(world_api, path="/world")
+    api.add_namespace(foo_api, path="/foo")
 
 
 def _register_test_users_in_db() -> None:
@@ -145,3 +178,86 @@ def _register_test_users_in_db() -> None:
         password=SERVICES.password.hash("hashed"),
         deleted=False,
     )
+
+
+@login_required
+def welcome_page_protected():
+    """
+    Create a simple demo welcome web page for a logged in user.  For OIDC
+    users, show some of the OIDC authentication info.
+    """
+
+    if g.oidc.user_loggedin:
+        oidc_auth_token_json = json.dumps(session["oidc_auth_token"], indent=4)
+        oidc_auth_profile = session.get("oidc_auth_profile")
+        if oidc_auth_profile:
+            oidc_auth_profile_json = json.dumps(oidc_auth_profile, indent=4)
+        else:
+            oidc_auth_profile_json = None
+
+        oidc_info = f"""oidc_auth_token:
+        <pre>
+{oidc_auth_token_json}
+        </pre>
+"""
+
+        if oidc_auth_profile_json:
+            oidc_info += f"""
+        oidc_auth_profile:
+        <pre>
+{oidc_auth_profile_json}
+        </pre>
+"""
+    else:
+        oidc_info = ""
+
+    resp_html = f"""\
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Welcome to Dioptra!</title>
+    </head>
+
+    <body>
+        <h2>Welcome to Dioptra, {current_user.name}!</h2>
+
+        {oidc_info}
+
+        <h2><a href="/api/auth/logout">Click to Logout</a></h2>
+    </body>
+</html>
+"""
+
+    return resp_html
+
+
+def welcome_page_unprotected():
+    """
+    Create a simple web page which does not require login to access.  If you
+    are logged in though, it will show your username.
+    """
+
+    if current_user.is_authenticated:
+        login_info = "You are logged in as: " + current_user.name
+        logout_link = '<h2><a href="/api/auth/logout">Click to Logout</a></h2>'
+    else:
+        login_info = "You are not logged in."
+        logout_link = ""
+
+    resp_html = f"""\
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Welcome to Dioptra!</title>
+    </head>
+
+    <body>
+        <h2>Welcome to Dioptra!</h2>
+
+        {login_info}
+        {logout_link}
+    </body>
+</html>
+"""
+
+    return resp_html

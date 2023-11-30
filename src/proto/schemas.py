@@ -45,6 +45,18 @@ class LoginSchema(Schema):
     )
 
 
+class LoginReactiveSchema(Schema):
+    """
+    Schema used for flask-login views, which can be triggered in a "reactive"
+    style where a user-agent tries to access a protected endpoint, and
+    flask-login automatically redirects to a login view.  When
+    auto-redirecting, flask-login adds a "next" query param to allow the view
+    to redirect the user-agent back to the endpoint they came from.
+    """
+
+    next = fields.Url(relative=True, require_tld=False)
+
+
 class LogoutSchema(Schema):
     everywhere = fields.Bool(
         attribute="everywhere",

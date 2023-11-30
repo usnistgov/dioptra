@@ -32,7 +32,7 @@ Examples:
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Any, TypedDict
+from typing import Any, Optional, TypedDict
 
 
 class PrototypeDb(TypedDict):
@@ -69,7 +69,7 @@ class User(object):
     id: int
     alternative_id: str
     name: str
-    password: str
+    password: Optional[str]
     deleted: bool
 
     @property
