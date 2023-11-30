@@ -35,12 +35,7 @@ from .errors import (
     ExperimentMLFlowTrackingDoesNotExistError,
     ExperimentMLFlowTrackingRegistrationError,
 )
-from .model import (
-    Experiment,
-    ExperimentRegistrationForm,
-    ExperimentRegistrationFormData,
-)
-from .schema import ExperimentRegistrationFormSchema
+from .model import Experiment
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -49,19 +44,16 @@ class ExperimentService(object):
     @inject
     def __init__(
         self,
-        experiment_registration_form_schema: ExperimentRegistrationFormSchema,
         mlflow_tracking_service: MLFlowTrackingService,
     ) -> None:
-        self._experiment_registration_form_schema = experiment_registration_form_schema
         self._mlflow_tracking_service = mlflow_tracking_service
 
     def create(
         self,
-        experiment_registration_form_data: ExperimentRegistrationFormData,
+        experiment_name: str,
         **kwargs,
     ) -> Experiment:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        experiment_name: str = experiment_registration_form_data["name"]
 
         if self.get_by_name(experiment_name, log=log) is not None:
             raise ExperimentAlreadyExistsError
@@ -158,14 +150,3 @@ class ExperimentService(object):
         return Experiment.query.filter_by(  # type: ignore
             name=experiment_name, is_deleted=False
         ).first()
-
-    def extract_data_from_form(
-        self, experiment_registration_form: ExperimentRegistrationForm, **kwargs
-    ) -> ExperimentRegistrationFormData:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
-
-        data: ExperimentRegistrationFormData = (
-            self._experiment_registration_form_schema.dump(experiment_registration_form)
-        )
-
-        return data

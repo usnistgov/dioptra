@@ -24,16 +24,6 @@ from mlflow.tracking import MlflowClient
 
 from dioptra.restapi.shared.request_scope import request
 
-from .schema import ExperimentRegistrationFormSchema
-
-
-class ExperimentRegistrationFormSchemaModule(Module):
-    @provider
-    def provide_experiment_registration_form_schema_module(
-        self,
-    ) -> ExperimentRegistrationFormSchema:
-        return ExperimentRegistrationFormSchema()
-
 
 class MLFlowClientModule(Module):
     @request
@@ -60,5 +50,4 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
         modules: A list of callables used for configuring the dependency injection
             environment.
     """
-    modules.append(ExperimentRegistrationFormSchemaModule)
     modules.append(MLFlowClientModule)

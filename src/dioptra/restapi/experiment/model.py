@@ -18,16 +18,9 @@
 from __future__ import annotations
 
 import datetime
-
-from flask_wtf import FlaskForm
-from typing_extensions import TypedDict
-from wtforms.fields import StringField
-from wtforms.validators import InputRequired, ValidationError
+from typing import Any, Dict
 
 from dioptra.restapi.app import db
-from dioptra.restapi.utils import slugify
-
-from .interface import ExperimentUpdateInterface
 
 
 class Experiment(db.Model):
@@ -53,7 +46,7 @@ class Experiment(db.Model):
 
     jobs = db.relationship("Job", back_populates="experiment")
 
-    def update(self, changes: ExperimentUpdateInterface):
+    def update(self, changes: Dict[str, Any]):
         """Updates the record.
 
         Args:
@@ -66,41 +59,3 @@ class Experiment(db.Model):
             setattr(self, key, val)
 
         return self
-
-
-class ExperimentRegistrationForm(FlaskForm):
-    """The experiment registration form.
-
-    Attributes:
-        name: The name to register as a new experiment.
-    """
-
-    name = StringField("Name of Experiment", validators=[InputRequired()])
-
-    def validate_name(self, field: StringField) -> None:
-        """Validates that the experiment does not exist in the registry.
-
-        Args:
-            field: The form field for `name`.
-        """
-
-        standardized_name: str = slugify(field.data)
-
-        if (
-            Experiment.query.filter_by(name=standardized_name, is_deleted=False).first()
-            is not None
-        ):
-            raise ValidationError(
-                "Bad Request - An experiment is already registered under "
-                f"the name {standardized_name}. Please select another and resubmit."
-            )
-
-
-class ExperimentRegistrationFormData(TypedDict, total=False):
-    """The data extracted from the experiment registration form.
-
-    Attributes:
-        name: The name of the experiment.
-    """
-
-    name: str

@@ -94,9 +94,6 @@ def task_plugin_archive():
 
 @pytest.fixture
 def dependency_modules() -> List[Any]:
-    from dioptra.restapi.experiment.dependencies import (
-        ExperimentRegistrationFormSchemaModule,
-    )
     from dioptra.restapi.job.dependencies import (
         JobFormSchemaModule,
         RQServiceConfiguration,
@@ -137,7 +134,6 @@ def dependency_modules() -> List[Any]:
 
     return [
         configure,
-        ExperimentRegistrationFormSchemaModule(),
         JobFormSchemaModule(),
         PasswordServiceModule(),
         RQServiceModule(),

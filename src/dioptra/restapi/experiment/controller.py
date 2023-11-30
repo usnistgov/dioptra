@@ -29,20 +29,11 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import as_api_parser
+from dioptra.restapi.utils import slugify
 
-from .errors import ExperimentDoesNotExistError, ExperimentRegistrationError
-from .interface import ExperimentUpdateInterface
-from .model import (
-    Experiment,
-    ExperimentRegistrationForm,
-    ExperimentRegistrationFormData,
-)
-from .schema import (
-    ExperimentRegistrationSchema,
-    ExperimentSchema,
-    ExperimentUpdateSchema,
-)
+from .errors import ExperimentDoesNotExistError
+from .model import Experiment
+from .schema import ExperimentSchema
 from .service import ExperimentService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -73,33 +64,21 @@ class ExperimentResource(Resource):
         return self._experiment_service.get_all(log=log)
 
     @login_required
-    @api.expect(as_api_parser(api, ExperimentRegistrationSchema))
-    @accepts(ExperimentRegistrationSchema, api=api)
+    @accepts(schema=ExperimentSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
     def post(self) -> Experiment:
         """Creates a new experiment via an experiment registration form."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="POST"
         )  # noqa: F841
-        experiment_registration_form: ExperimentRegistrationForm = (
-            ExperimentRegistrationForm()
-        )
 
         log.info("Request received")
 
-        if not experiment_registration_form.validate_on_submit():
-            log.error("Form validation failed")
-            raise ExperimentRegistrationError
+        parsed_obj = request.parsed_obj  # type: ignore
 
-        log.info("Form validation successful")
-        experiment_registration_form_data: ExperimentRegistrationFormData = (
-            self._experiment_service.extract_data_from_form(
-                experiment_registration_form=experiment_registration_form, log=log
-            )
-        )
-        return self._experiment_service.create(
-            experiment_registration_form_data=experiment_registration_form_data, log=log
-        )
+        name = slugify(str(parsed_obj["name"]))
+
+        return self._experiment_service.create(experiment_name=name, log=log)
 
 
 @api.route("/<int:experimentId>")
@@ -144,14 +123,14 @@ class ExperimentIdResource(Resource):
         return jsonify(dict(status="Success", id=id))
 
     @login_required
-    @accepts(schema=ExperimentUpdateSchema, api=api)
+    @accepts(schema=ExperimentSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
     def put(self, experimentId: int) -> Experiment:
         """Modifies an experiment by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentId", request_type="PUT"
         )  # noqa: F841
-        changes: ExperimentUpdateInterface = request.parsed_obj  # type: ignore
+        changes: dict = request.parsed_obj  # type: ignore
         experiment: Optional[Experiment] = self._experiment_service.get_by_id(
             experimentId, log=log
         )
@@ -219,14 +198,14 @@ class ExperimentNameResource(Resource):
         return jsonify(dict(status="Success", id=id))
 
     @login_required
-    @accepts(schema=ExperimentUpdateSchema, api=api)
+    @accepts(schema=ExperimentSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
     def put(self, experimentName: str) -> Experiment:
         """Modifies an experiment by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentName", request_type="PUT"
         )  # noqa: F841
-        changes: ExperimentUpdateInterface = request.parsed_obj  # type: ignore
+        changes: dict = request.parsed_obj  # type: ignore
         experiment: Optional[Experiment] = self._experiment_service.get_by_name(
             experiment_name=experimentName, log=log
         )
