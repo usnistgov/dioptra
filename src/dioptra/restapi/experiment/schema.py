@@ -17,9 +17,6 @@
 """The schemas for serializing/deserializing the experiment endpoint objects.
 
 .. |Experiment| replace:: :py:class:`~.model.Experiment`
-.. |ExperimentRegistrationForm| replace:: :py:class:`~.model.ExperimentRegistrationForm`
-.. |ExperimentRegistrationFormData| replace:: \
-   :py:class:`~.model.ExperimentRegistrationFormData`
 """
 from __future__ import annotations
 
@@ -27,14 +24,7 @@ from marshmallow import Schema, fields
 
 
 class ExperimentSchema(Schema):
-    """The schema for the data stored in an |Experiment| object.
-
-    Attributes:
-        experimentId: An integer identifying a registered experiment.
-        createdOn: The date and time the experiment was created.
-        lastModified: The date and time the experiment was last modified.
-        name: The name of the experiment.
-    """
+    """The schema for the data stored in an |Experiment| object."""
 
     experimentId = fields.Integer(
         attribute="experiment_id",
@@ -55,4 +45,36 @@ class ExperimentSchema(Schema):
     )
     name = fields.String(
         attribute="name", metadata=dict(description="The name of the experiment.")
+    )
+
+
+class IdStatusResponseSchema(Schema):
+    """A simple response for reporting a status for one or more objects."""
+
+    status = fields.String(
+        attribute="status",
+        metadata=dict(description="The status of the request."),
+    )
+    id = fields.List(
+        fields.Integer(),
+        attribute="id",
+        metadata=dict(
+            description="A list of integers identifying the affected object(s)."
+        ),
+    )
+
+
+class NameStatusResponseSchema(Schema):
+    """A simple response for reporting a status for one or more objects."""
+
+    status = fields.String(
+        attribute="status",
+        metadata=dict(description="The status of the request."),
+    )
+    name = fields.List(
+        fields.String(),
+        attribute="name",
+        metadata=dict(
+            description="A list of names identifying the affected object(s)."
+        ),
     )
