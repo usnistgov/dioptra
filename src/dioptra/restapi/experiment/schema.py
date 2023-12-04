@@ -25,9 +25,7 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
-from .model import (  # ExperimentRegistrationForm,; ExperimentRegistrationFormData,
-    Experiment,
-)
+from .model import Experiment
 
 
 class ExperimentSchema(Schema):
@@ -40,21 +38,22 @@ class ExperimentSchema(Schema):
         name: The name of the experiment.
     """
 
-    __model__ = Experiment
-
     experimentId = fields.Integer(
         attribute="experiment_id",
         metadata=dict(description="An integer identifying a registered experiment."),
+        dump_only=True,
     )
     createdOn = fields.DateTime(
         attribute="created_on",
         metadata=dict(description="The date and time the experiment was created."),
+        dump_only=True,
     )
     lastModified = fields.DateTime(
         attribute="last_modified",
         metadata=dict(
             description="The date and time the experiment was last modified."
         ),
+        dump_only=True,
     )
     name = fields.String(
         attribute="name", metadata=dict(description="The name of the experiment.")
