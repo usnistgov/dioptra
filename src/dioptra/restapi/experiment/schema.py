@@ -25,8 +25,6 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
-from .model import Experiment
-
 
 class ExperimentSchema(Schema):
     """The schema for the data stored in an |Experiment| object.

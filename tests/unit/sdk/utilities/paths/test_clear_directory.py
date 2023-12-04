@@ -2,11 +2,7 @@ from dioptra.sdk.utilities.paths import clear_directory
 
 
 def test_clear_directory(tmp_path):
-    files = [
-        "file1",
-        "dir1/file2",
-        "dir1/dir2/file3"
-    ]
+    files = ["file1", "dir1/file2", "dir1/dir2/file3"]
 
     # Make some files
     for f in files:

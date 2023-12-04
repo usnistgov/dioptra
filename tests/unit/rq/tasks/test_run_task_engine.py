@@ -99,20 +99,11 @@ def test_run_task_engine(monkeypatch, tmp_path):
     # silly experiment which calls a function which does nothing
     silly_experiment = {
         # Match these up with global_experiment_params above
-        "parameters": {
-            "param1": {"type": "integer"},
-            "param2": {"type": "string"}
-        },
+        "parameters": {"param1": {"type": "integer"}, "param2": {"type": "string"}},
         "tasks": {
-            "silly": {
-                "plugin": "tests.unit.rq.tasks.test_run_task_engine.silly_plugin"
-            }
+            "silly": {"plugin": "tests.unit.rq.tasks.test_run_task_engine.silly_plugin"}
         },
-        "graph": {
-            "step1": {
-                "silly": []
-            }
-        }
+        "graph": {"step1": {"silly": []}},
     }
 
     # Split the builtins plugins listing into two pages, to test paging.
