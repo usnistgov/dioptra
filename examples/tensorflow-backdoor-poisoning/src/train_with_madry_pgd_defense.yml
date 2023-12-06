@@ -1,0 +1,399 @@
+types:
+  callback:
+  dataloader:
+  directoryiterator:
+  functiontype:
+  kerasclassifier:
+  metric:
+  mlflowrun:
+  tuple:
+  model:
+  modelversion:
+  np.ndarray:
+  optimizer:
+  path:
+  dataframe:
+  rngenerator:
+  sequential:
+  tarfile:
+  list_callback:
+    list: callback
+  list_tuple_string_any:
+    list: tuple_string_any
+  list_union_metric_functiontype:
+    list: union_metric_functiontype
+  list_union_string_path:
+    list: union_string_path
+  list_mapping_string_string:
+    list: mapping_string_string
+  list_mapping_string_any:
+    list: mapping_string_any
+  mapping_string_any:
+    mapping: [string, any]
+  mapping_string_mapping_string_any:
+    mapping: [string, mapping_string_any]
+  list_mapping_string_mapping_string_any:
+    list: mapping_string_mapping_string_any
+  mapping_string_number:
+    mapping: [string, number]
+  mapping_string_string:
+    mapping: [string, string]
+  tuple_integer_integer:
+    tuple: [integer, integer]
+  tuple_integer_integer_integer:
+    tuple: [integer, integer, integer]
+  tuple_string_any:
+    tuple: [string, any]
+  union_integer_number_string:
+    union: [integer, number, string]
+  union_integer_any:
+    union: [integer, any]
+  union_metric_functiontype:
+    union: [metric, functiontype]
+  union_null_list_tuple_string_any:
+    union: [list_tuple_string_any , "null"]
+  union_null_mapping_string_any:
+    union: [mapping_string_any, "null"]
+  union_null_modelversion:
+    union: [modelversion, "null"]
+  union_null_number:
+    union: [number, "null"]
+  union_null_string:
+    union: [string, "null"]
+  union_null_union_integer_any:
+    union: [union_integer_any, "null"]
+  union_string_path:
+    union: [string, path]
+  union_null_union_string_path:
+    union: [union_string_path, "null"]
+parameters:
+  seed: -1
+  optimizer_name: Adam
+  learning_rate: 0.001
+  training_dir: /dioptra/data/Mnist/training
+  testing_dir: /dioptra/data/Mnist/testing
+  image_size: [28, 28, 1]
+  epochs: 30
+  validation_split: 0.2
+  batch_size: 32
+  model_architecture: le_net
+  register_model_name: ""
+  eps: 0.15
+  eps_step: 0.001
+  imagenet_preprocessing: false
+
+tasks:
+  init_rng:
+    plugin: dioptra_builtins.random.rng.init_rng
+    inputs:
+      - name: seed
+        type: integer
+        required: false
+    outputs:
+      - seed: integer
+      - rng: rngenerator
+
+  select_rescale_value:
+    inputs:
+    - imagenet_preprocessing: boolean
+    outputs:
+      ret: number
+    plugin: dioptra_custom.custom_poisoning_plugins.datasetup.select_rescale_value
+
+  draw_random_integer:
+    plugin: dioptra_builtins.random.sample.draw_random_integer
+    inputs:
+      - rng: rngenerator
+      - name: low
+        type: integer
+        required: false
+      - name: high
+        type: integer
+        required: false
+    outputs:
+      value: integer
+
+  init_tensorflow:
+    inputs:
+    - seed: integer
+    plugin: dioptra_builtins.backend_configs.tensorflow.init_tensorflow
+
+  log_parameters:
+    plugin: dioptra_builtins.tracking.mlflow.log_parameters
+    inputs:
+      - parameters: mapping_string_number
+
+  create_image_dataset:
+    inputs:
+    - data_dir: string
+    - subset: union_null_string
+    - image_size: tuple_integer_integer_integer
+    - seed: integer
+    - name: rescale
+      required: false
+      type: number
+    - name: validation_split
+      required: false
+      type: union_null_number
+    - name: batch_size
+      required: false
+      type: integer
+    - name: label_mode
+      required: false
+      type: string
+    - name: imagenet_preprocessing
+      required: false
+      type: boolean
+    - name: set_to_max_size
+      required: false
+      type: boolean
+    outputs:
+      ret: directoryiterator
+    plugin: dioptra_custom.custom_poisoning_plugins.data_tensorflow.create_image_dataset
+
+  get_optimizer:
+    plugin: dioptra_custom.evaluation.tensorflow.get_optimizer
+    inputs:
+      - name: name
+        type: string
+      - learning_rate: number
+    outputs:
+      optimizer: optimizer
+
+  get_performance_metrics:
+    plugin: dioptra_custom.evaluation.tensorflow.get_performance_metrics
+    inputs:
+      - metrics_list: list_mapping_string_any
+    outputs:
+      performance_metrics: list_union_metric_functiontype
+
+  get_model_callbacks:
+    plugin: dioptra_custom.evaluation.tensorflow.get_model_callbacks
+    inputs:
+      - callbacks_list: list_mapping_string_any
+    outputs:
+      callbacks: list_callback
+
+  get_n_classes_from_directory_iterator:
+    plugin: dioptra_builtins.data.tensorflow.get_n_classes_from_directory_iterator
+    inputs:
+      - ds: directoryiterator
+    outputs:
+      num_classes: integer
+  
+  register_init_model:
+    inputs:
+      - model: model
+      - name: name
+        type: string
+      - model_dir: string
+    outputs:
+      ret: model
+    plugin: dioptra_custom.custom_poisoning_plugins.tensorflow.register_init_model
+
+  init_classifier:
+    plugin: dioptra_custom.custom_poisoning_plugins.estimators_keras_classifiers.init_classifier
+    inputs:
+      - model_architecture: string
+      - optimizer: optimizer
+      - metrics: list_union_metric_functiontype
+      - input_shape: tuple_integer_integer_integer
+      - n_classes: integer
+      - name: loss
+        type: string
+        required: false
+    outputs:
+      classifier: model
+  create_Madry_PGD_model:
+    inputs:
+    - model: model
+    - training_ds: directoryiterator
+    - eps: number
+    - eps_step: number
+    - learning_rate: number
+    - batch_size: integer
+    - epochs: integer
+    - optimizer: optimizer
+    - metrics: list_union_metric_functiontype
+    outputs:
+      ret: model
+    plugin: dioptra_custom.custom_poisoning_plugins.defenses_training.create_Madry_PGD_model
+
+  fit:
+    plugin: dioptra_builtins.estimators.methods.fit
+    inputs:
+      - estimator: any
+      - x: any
+      - name: y
+        type: any
+        required: false
+      - name: fit_kwargs
+        type: union_null_mapping_string_any
+        required: false
+
+  evaluate_metrics_tensorflow:
+    plugin: dioptra_custom.evaluation.tensorflow.evaluate_metrics_tensorflow
+    inputs:
+      - classifier: model
+      - dataset: directoryiterator
+    outputs:
+      metrics: mapping_string_number
+
+  log_metrics:
+    plugin: dioptra_builtins.tracking.mlflow.log_metrics
+    inputs:
+      - metrics: mapping_string_number
+
+  log_tensorflow_keras_estimator:
+    plugin: dioptra_builtins.tracking.mlflow.log_tensorflow_keras_estimator
+    inputs:
+      - estimator: model
+      - model_dir: string
+
+  add_model_to_registry:
+    plugin: dioptra_custom.evaluation.mlflow.add_model_to_registry
+    inputs:
+      - name: name
+        type: string
+      - model_dir: string
+
+  prepend_cwd:
+    plugin:
+     dioptra_custom.evaluation.mlflow.prepend_cwd
+    inputs:
+      - path: string
+    outputs: 
+      ret: string
+
+graph:
+  init_rng:
+    init_rng: $seed
+
+  tensorflow_global_seed:
+    draw_random_integer: $init_rng.rng
+    
+  dataset_seed:
+    draw_random_integer: $init_rng.rng
+
+  init_tensorflow_results:
+    init_tensorflow: $tensorflow_global_seed
+
+  rescale:
+    select_rescale_value: $imagenet_preprocessing
+
+  log_mlflow_params_result:
+    log_parameters:
+      - entry_point_seed: $seed
+        tensorflow_global_seed: $tensorflow_global_seed
+        dataset_seed: $dataset_seed
+
+  optimizer:
+    get_optimizer: [$optimizer_name, $learning_rate]
+    dependencies: init_tensorflow_results
+
+  metrics:
+    get_performance_metrics:
+      - - name: CategoricalAccuracy
+          parameters: { name: accuracy }
+        - name: Precision
+          parameters: { name: precision }
+        - name: Recall
+          parameters: { name: recall }
+        - name: AUC
+          parameters: { name: auc }
+    dependencies:
+      - init_tensorflow_results
+
+  callbacks_list:
+    get_model_callbacks:
+      - - name: EarlyStopping
+          parameters:
+            monitor: val_loss
+            min_delta: .01
+            patience: 5
+            restore_best_weights: true
+    dependencies:
+      - init_tensorflow_results
+
+  training_ds:
+    create_image_dataset:
+      data_dir: $training_dir
+      subset: training
+      validation_split: $validation_split
+      batch_size: $batch_size
+      seed: $dataset_seed
+      image_size: $image_size
+      rescale: $rescale
+      imagenet_preprocessing: $imagenet_preprocessing
+    dependencies: init_tensorflow_results
+  
+  validation_ds:
+    create_image_dataset:
+      data_dir: $training_dir
+      subset: validation
+      validation_split: $validation_split
+      batch_size: $batch_size
+      seed: $dataset_seed
+      image_size: $image_size
+      rescale: $rescale
+      imagenet_preprocessing: $imagenet_preprocessing
+      set_to_max_size: true
+    dependencies: init_tensorflow_results
+
+  testing_ds:
+    create_image_dataset:
+      data_dir: $testing_dir
+      subset:
+      validation_split: $validation_split
+      batch_size: $batch_size
+      seed: $dataset_seed
+      image_size: $image_size
+      rescale: $rescale
+      imagenet_preprocessing: $imagenet_preprocessing
+    dependencies: init_tensorflow_results  
+
+  n_classes:
+    get_n_classes_from_directory_iterator:
+      ds: $training_ds
+
+  classifier:
+    init_classifier:
+      model_architecture: $model_architecture
+      optimizer: $optimizer
+      metrics: $metrics
+      input_shape: $image_size
+      n_classes: $n_classes
+
+  madry_classifier:
+    create_Madry_PGD_model:
+      model: $classifier
+      training_ds: $training_ds
+      learning_rate: $learning_rate
+      batch_size: $batch_size
+      epochs: $epochs
+      optimizer: $optimizer
+      metrics: $metrics
+      eps: $eps
+      eps_step: $eps_step
+
+
+  classifier_performance_metrics:
+    evaluate_metrics_tensorflow:
+      classifier: $madry_classifier
+      dataset: $testing_ds
+
+  log_classifier_performance_metrics_result:
+    log_metrics:
+      metrics: $classifier_performance_metrics
+  
+  logged_tensorflow_keras_estimator:
+    log_tensorflow_keras_estimator:
+      estimator: $madry_classifier
+      model_dir: model
+    dependencies: log_classifier_performance_metrics_result
+    
+  model_storage:
+    register_init_model:
+      model: $madry_classifier
+      name: $register_model_name
+      model_dir: model

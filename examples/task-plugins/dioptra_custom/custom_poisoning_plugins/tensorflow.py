@@ -44,13 +44,7 @@ except ImportError:  # pragma: nocover
 
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def register_init_model(active_run, name, model_dir, model) -> Model:
-    LOGGER.info(
-        "registering model",
-        active_run=active_run,
-        name=name,
-        model_dir=model_dir,
-    )
+def register_init_model(name: str, model_dir: str, model: Sequential) -> Model:
     mlflow.keras.log_model(
         keras_model=model, artifact_path=model_dir, registered_model_name=name
     )
