@@ -1,4 +1,6 @@
 import io
+import os
+import pathlib
 
 import boto3
 import mlflow
@@ -18,10 +20,20 @@ from dioptra.mlflow_plugins.dioptra_tags import (
 
 @dioptra.pyplugs.register
 def silly_plugin():
-    pass
+    # Our current directory ought to be a subdirectory of $DIOPTRA_WORKDIR.
+    cwd = pathlib.Path.cwd()
+    dioptra_work_dir = pathlib.Path(os.getenv("DIOPTRA_WORKDIR"))
+    assert cwd.is_relative_to(dioptra_work_dir)
+
+    # Writing a file to the current directory enables a "work directory"
+    # test: ensure we can write, and that the work directory gets cleaned up
+    # again.
+    pathlib.Path("test.txt").write_text("hello")
 
 
 def test_run_task_engine(monkeypatch, tmp_path):
+    saved_cwd = pathlib.Path.cwd()
+
     mlflow_tags = {}
     mlflow_params = {}
     mlflow_artifacts = {}
@@ -156,10 +168,15 @@ def test_run_task_engine(monkeypatch, tmp_path):
 
     file4_get_object_response = {"Body": file4_content_stream}
 
-    monkeypatch.setenv("DIOPTRA_PLUGIN_DIR", str(tmp_path))
+    tmp_plugins_dir = tmp_path / "plugins"
+    tmp_work_dir = tmp_path / "work"
+    tmp_work_dir.mkdir()
+
+    monkeypatch.setenv("DIOPTRA_PLUGIN_DIR", str(tmp_plugins_dir))
     monkeypatch.setenv("DIOPTRA_PLUGINS_S3_URI", "s3://plugins/dioptra_builtins")
     monkeypatch.setenv("DIOPTRA_CUSTOM_PLUGINS_S3_URI", "s3://plugins/dioptra_custom")
     monkeypatch.setenv("MLFLOW_S3_ENDPOINT_URL", "http://example.org/")
+    monkeypatch.setenv("DIOPTRA_WORKDIR", str(tmp_work_dir))
 
     s3 = boto3.client("s3", endpoint_url="http://example.org/")
     with Stubber(s3) as stubber:
@@ -248,10 +265,10 @@ def test_run_task_engine(monkeypatch, tmp_path):
             1, silly_experiment, global_experiment_params, s3
         )
 
-    file1 = tmp_path / "dioptra_builtins/file1.dat"
-    file2 = tmp_path / "dioptra_builtins/file2.dat"
-    file3 = tmp_path / "dioptra_custom/file3.dat"
-    file4 = tmp_path / "dioptra_custom/file4.dat"
+    file1 = tmp_plugins_dir / "dioptra_builtins/file1.dat"
+    file2 = tmp_plugins_dir / "dioptra_builtins/file2.dat"
+    file3 = tmp_plugins_dir / "dioptra_custom/file3.dat"
+    file4 = tmp_plugins_dir / "dioptra_custom/file4.dat"
 
     assert file1.exists()
     assert file2.exists()
@@ -274,3 +291,7 @@ def test_run_task_engine(monkeypatch, tmp_path):
     }
     assert mlflow_artifacts == {"experiment.yaml": silly_experiment}
     assert mlflow_params == global_experiment_params
+    # Ensure the work dir was cleaned up
+    assert next(tmp_work_dir.iterdir(), None) is None
+    # Ensure cwd has been properly restored
+    assert pathlib.Path.cwd() == saved_cwd

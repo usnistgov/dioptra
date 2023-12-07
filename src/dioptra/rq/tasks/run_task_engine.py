@@ -15,6 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
+import pathlib
+import tempfile
 from typing import Any, Mapping, MutableMapping, Optional
 
 import boto3
@@ -73,6 +75,7 @@ def run_task_engine_task(
         dioptra_plugins_s3_uri = os.getenv("DIOPTRA_PLUGINS_S3_URI")
         dioptra_custom_plugins_s3_uri = os.getenv("DIOPTRA_CUSTOM_PLUGINS_S3_URI")
         dioptra_plugin_dir = os.getenv("DIOPTRA_PLUGIN_DIR")
+        dioptra_work_dir = os.getenv("DIOPTRA_WORKDIR")
 
         # For mypy; assume correct environment variables
         assert mlflow_s3_endpoint_url
@@ -91,9 +94,16 @@ def run_task_engine_task(
                 dioptra_custom_plugins_s3_uri,
             )
 
-            _run_experiment(
-                rq_job_id, experiment_id, experiment_desc, global_parameters
-            )
+            saved_cwd = pathlib.Path.cwd()
+            with tempfile.TemporaryDirectory(dir=dioptra_work_dir) as tempdir:
+                os.chdir(tempdir)
+                try:
+                    _run_experiment(
+                        rq_job_id, experiment_id, experiment_desc, global_parameters
+                    )
+                finally:
+                    os.chdir(saved_cwd)
+
         else:
             log.error("Experiment description was invalid!")
 
