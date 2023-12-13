@@ -17,11 +17,7 @@
 """A module of reexports of the application's data models and forms."""
 from __future__ import annotations
 
-from .experiment.model import (
-    Experiment,
-    ExperimentRegistrationForm,
-    ExperimentRegistrationFormData,
-)
+from .experiment.model import Experiment
 from .job.model import Job, JobForm, JobFormData
 from .queue.model import Queue, QueueLock
 from .task_plugin.model import (
@@ -33,8 +29,6 @@ from .user.model import User
 
 __all__ = [
     "Experiment",
-    "ExperimentRegistrationForm",
-    "ExperimentRegistrationFormData",
     "Job",
     "JobForm",
     "JobFormData",

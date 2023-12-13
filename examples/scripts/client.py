@@ -145,7 +145,7 @@ class DioptraClient(object):
 
         response = requests.post(
             self.experiment_endpoint,
-            data=experiment_registration_form,
+            json=experiment_registration_form,
         )
 
         return response.json()

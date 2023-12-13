@@ -117,7 +117,7 @@ def context():
                 "image": "node",
                 "namespace": "",
                 "tag": "latest",
-                "registry": ""
+                "registry": "",
             },
             "redis": {
                 "image": "redis",

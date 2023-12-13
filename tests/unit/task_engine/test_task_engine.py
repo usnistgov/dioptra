@@ -258,9 +258,7 @@ def test_globals_dict_nodefault() -> None:
         "graph": {"step1": {"add": [1, "$global_in"]}},
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {"global_in": 2}
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {"global_in": 2})
 
     assert _output == 3
 
@@ -278,9 +276,7 @@ def test_globals_dict_default() -> None:
         "graph": {"step1": {"add": [1, "$global_in"]}},
     }
 
-    dioptra.task_engine.task_engine.run_experiment(
-        desc, {"global_in": 2}
-    )
+    dioptra.task_engine.task_engine.run_experiment(desc, {"global_in": 2})
 
     assert _output == 3
 

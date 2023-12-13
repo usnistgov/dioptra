@@ -23,17 +23,7 @@
 """
 from __future__ import annotations
 
-from typing import Any, Dict
-
-from marshmallow import Schema, fields, post_dump, pre_dump
-
-from dioptra.restapi.utils import ParametersSchema, slugify
-
-from .model import (
-    Experiment,
-    ExperimentRegistrationForm,
-    ExperimentRegistrationFormData,
-)
+from marshmallow import Schema, fields
 
 
 class ExperimentSchema(Schema):
@@ -46,79 +36,23 @@ class ExperimentSchema(Schema):
         name: The name of the experiment.
     """
 
-    __model__ = Experiment
-
     experimentId = fields.Integer(
         attribute="experiment_id",
         metadata=dict(description="An integer identifying a registered experiment."),
+        dump_only=True,
     )
     createdOn = fields.DateTime(
         attribute="created_on",
         metadata=dict(description="The date and time the experiment was created."),
+        dump_only=True,
     )
     lastModified = fields.DateTime(
         attribute="last_modified",
         metadata=dict(
             description="The date and time the experiment was last modified."
         ),
+        dump_only=True,
     )
     name = fields.String(
         attribute="name", metadata=dict(description="The name of the experiment.")
     )
-
-
-class ExperimentUpdateSchema(Schema):
-    """The schema for the data used to update an |Experiment| object.
-
-    Attributes:
-        name: The new name of the experiment. Must be unique.
-    """
-
-    __model__ = Experiment
-
-    name = fields.String(
-        attribute="name",
-        metadata=dict(description="The new name of the experiment. Must be unique."),
-    )
-
-
-class ExperimentRegistrationFormSchema(Schema):
-    """The schema for the information stored in an experiment registration form.
-
-    Attributes:
-        name: The name of the experiment. Must be unique.
-    """
-
-    __model__ = ExperimentRegistrationFormData
-
-    name = fields.String(
-        attribute="name",
-        required=True,
-        metadata=dict(description="The name of the experiment. Must be unique."),
-    )
-
-    @pre_dump
-    def extract_data_from_form(
-        self, data: ExperimentRegistrationForm, many: bool, **kwargs
-    ) -> Dict[str, Any]:
-        """Extracts data from the |ExperimentRegistrationForm| for validation."""
-
-        return {"name": slugify(data.name.data)}
-
-    @post_dump
-    def serialize_object(
-        self, data: Dict[str, Any], many: bool, **kwargs
-    ) -> ExperimentRegistrationFormData:
-        """Makes an |ExperimentRegistrationFormData| object from the validated data."""
-        return self.__model__(**data)
-
-
-ExperimentRegistrationSchema: list[ParametersSchema] = [
-    dict(
-        name="name",
-        type=str,
-        location="form",
-        required=True,
-        help="The name of the experiment. Must be unique.",
-    )
-]
