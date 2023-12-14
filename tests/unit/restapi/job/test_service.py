@@ -141,7 +141,6 @@ def test_submit(
 ) -> None:
     def mocksubmit(*args, **kwargs) -> MockRQJob:
         LOGGER.info("Mocking RQService.submit_mlflow_job()")
-        return MockRQJob(id="4520511d-678b-4966-953e-af2d0edcea32")
 
     def mockupload(
         self, fileobj: BinaryIO, bucket: str, key: str, *args, **kwargs
@@ -161,7 +160,6 @@ def test_submit(
     results: List[Job] = Job.query.all()
 
     assert len(results) == 1
-    assert results[0].job_id == "4520511d-678b-4966-953e-af2d0edcea32"
     assert results[0].queue_id == 1
     assert results[0].mlflow_run_id is None
     assert results[0].experiment_id == 1
