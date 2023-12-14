@@ -170,18 +170,18 @@ class DioptraClient(object):
         queue: str = "tensorflow_cpu",
         timeout: str = "24h",
     ) -> dict[str, Any]:
-        job_form = {
-            "experiment_name": experiment_name,
+        job_form: dict[str, Any] = {
+            "experimentName": experiment_name,
             "queue": queue,
             "timeout": timeout,
-            "entry_point": entry_point,
+            "entryPoint": entry_point,
         }
 
         if entry_point_kwargs is not None:
-            job_form["entry_point_kwargs"] = entry_point_kwargs
+            job_form["entryPointKwargs"] = entry_point_kwargs
 
         if depends_on is not None:
-            job_form["depends_on"] = depends_on
+            job_form["dependsOn"] = depends_on
 
         workflows_file = Path(workflows_file)
 
