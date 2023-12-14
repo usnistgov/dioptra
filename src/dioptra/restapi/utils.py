@@ -23,16 +23,23 @@
 """
 from __future__ import annotations
 
+import datetime
 import functools
-from typing import Any, Callable, List, Protocol, Type
+from typing import Any, Callable, List, Protocol, Type, cast
 
 from flask.views import View
-from flask_restx import Api, Namespace, Resource
+from flask_restx import Api, Namespace, Resource, inputs
 from flask_restx.reqparse import RequestParser
 from injector import Injector
+from marshmallow import Schema
+from marshmallow import fields as ma
+from marshmallow.schema import SchemaMeta
 from typing_extensions import TypedDict
+from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.shared.request_scope import set_request_scope_callbacks
+
+from .custom_schema_fields import FileUpload
 
 
 class ParametersSchema(TypedDict, total=False):
@@ -68,6 +75,79 @@ def as_api_parser(
         parser.add_argument(**form_kwargs)
 
     return parser
+
+
+def as_parameters_schema_list(
+    schema: Schema | SchemaMeta, operation: str, location: str
+) -> list[ParametersSchema]:
+    """Converts a Marshmallow Schema into a list of ParametersSchema dictionaries.
+
+    This primary use case for this function is for converting a Marshmallow Schema into
+    a format that can passed to the `as_api_parser` utility function so that the Swagger
+    documentation is correct.
+
+    Args:
+        schema: A Marshmallow Schema or SchemaMeta object.
+        operation: The Schema operation the REST API is going to perform. Use "load"
+            for a request and "dump" for a response.
+        location: The location where the request or response parameters are stored.
+            Must be either "args", "form", or "json".
+
+    Returns:
+        A list of ParametersSchema dictionaries.
+
+    Raises:
+        ValueError: If `operation` is not "dump" or "load".
+
+    Note:
+        This is a necessary workaround because the @accepts decorator ignores the
+        load_only and dump_only settings on a Marshmallow Schema that's passed to the
+        form_schema= argument when generating the Swagger documentation.
+    """
+    if operation not in {"dump", "load"}:
+        raise ValueError(f"Invalid operation: {operation}. Must be 'dump' or 'load'")
+
+    if isinstance(schema, SchemaMeta):
+        schema = cast(Schema, schema())
+
+    parameters_schema_list: list[ParametersSchema] = []
+    for field in schema.fields.values():
+        if operation == "dump" and not field.load_only:
+            parameters_schema_list.append(create_parameters_schema(field, location))
+
+        if operation == "load" and not field.dump_only:
+            parameters_schema_list.append(create_parameters_schema(field, location))
+
+    return parameters_schema_list
+
+
+def create_parameters_schema(field: ma.Field, location: str) -> ParametersSchema:
+    """Converts a Marshmallow Field into a ParametersSchema dictionary.
+
+    Args:
+        field: A Marshmallow Field object.
+        location: The location where the request or response parameters are stored.
+            Must be either "args", "form", or "json".
+
+    Returns:
+        A ParametersSchema dictionary.
+    """
+    parameter_type = TYPE_MAP_MA_TO_REQPARSE[type(field)]
+
+    if parameter_type is FileStorage:
+        location = "files"
+
+    parameters_schema = ParametersSchema(
+        name=cast(str, field.name),
+        type=parameter_type,
+        location=location,
+        required=field.required,
+    )
+
+    if field.metadata.get("description") is not None:
+        parameters_schema["help"] = field.metadata["description"]
+
+    return parameters_schema
 
 
 def slugify(text: str) -> str:
@@ -179,3 +259,35 @@ def setup_injection(api: Api, injector: Injector) -> None:
     # if api.app.debug:
     #     injector_logger = logging.getLogger("injector")
     #     injector_logger.setLevel(logging.DEBUG)
+
+
+TYPE_MAP_MA_TO_REQPARSE = {
+    ma.AwareDateTime: str,
+    ma.Bool: inputs.boolean,
+    ma.Boolean: inputs.boolean,
+    ma.Constant: str,
+    ma.Date: inputs.date_from_iso8601,
+    ma.DateTime: inputs.datetime_from_iso8601,
+    ma.Decimal: float,
+    ma.Dict: dict,
+    ma.Email: str,
+    FileUpload: FileStorage,
+    ma.Float: float,
+    ma.Function: str,
+    ma.Int: int,
+    ma.Integer: int,
+    ma.Length: float,
+    ma.List: list,
+    ma.Mapping: dict,
+    ma.Method: str,
+    ma.NaiveDateTime: inputs.datetime_from_iso8601,
+    ma.Number: float,
+    ma.Pluck: str,
+    ma.Raw: str,
+    ma.Str: str,
+    ma.String: str,
+    ma.Time: datetime.time.fromisoformat,
+    ma.Url: str,
+    ma.URL: str,
+    ma.UUID: str,
+}
