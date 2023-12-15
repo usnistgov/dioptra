@@ -7,6 +7,8 @@ import router from './router';
 import { createPinia } from 'pinia';
 const pinia = createPinia();
 
+import VueCodemirror from 'vue-codemirror';
+
 import { Quasar, Notify, Loading } from 'quasar';
 
 // Import icon libraries
@@ -19,6 +21,7 @@ const app = createApp(App);
 
 app.use(router);
 app.use(pinia);
+app.use(VueCodemirror);
 
 app.use(Quasar, {
   plugins: {

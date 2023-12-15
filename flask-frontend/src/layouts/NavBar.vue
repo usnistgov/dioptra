@@ -28,6 +28,8 @@
 
     <q-route-tab label="Login" icon="login" to="/" />
     <q-route-tab label="API" icon="language" to="/api" />
+    <q-route-tab label="CodeMirror" :no-caps="true" icon="edit_document" to="/codemirror" />
+    <q-route-tab label="Ace" icon="edit_document" to="/ace" />
 
     <q-toggle
       v-model="darkMode"
