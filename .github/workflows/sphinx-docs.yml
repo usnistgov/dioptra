@@ -58,7 +58,7 @@ jobs:
         run: python3 -m tox run -e docs
 
       - name: archive the documentation
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docs-build
           path: docs/build
