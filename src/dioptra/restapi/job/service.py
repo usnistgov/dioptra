@@ -25,7 +25,6 @@ from typing import Any, List, Mapping, Optional, cast
 
 import structlog
 from injector import inject
-from rq.job import Job as RQJob
 from structlog.stdlib import BoundLogger
 from werkzeug.utils import secure_filename
 
@@ -63,9 +62,11 @@ class JobService(object):
     @staticmethod
     def create(job_form_data: JobFormData, **kwargs) -> Job:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+        job_id = str(uuid.uuid4())
         timestamp = datetime.datetime.now()
 
         return Job(
+            job_id=job_id,
             experiment_id=job_form_data["experiment_id"],
             queue_id=job_form_data["queue_id"],
             created_on=timestamp,
@@ -134,7 +135,11 @@ class JobService(object):
         new_job: Job = self.create(job_form_data, log=log)
         new_job.workflow_uri = workflow_uri
 
-        rq_job: RQJob = self._rq_service.submit_mlflow_job(
+        db.session.add(new_job)
+        db.session.commit()
+
+        self._rq_service.submit_mlflow_job(
+            job_id=new_job.job_id,
             queue=job_form_data["queue"],
             workflow_uri=new_job.workflow_uri,
             experiment_id=new_job.experiment_id,
@@ -144,11 +149,6 @@ class JobService(object):
             timeout=new_job.timeout,
             log=log,
         )
-
-        new_job.job_id = rq_job.get_id()
-
-        db.session.add(new_job)
-        db.session.commit()
 
         log.info("Job submission successful", job_id=new_job.job_id)
 
