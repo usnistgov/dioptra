@@ -33,6 +33,7 @@ from flask_restx.reqparse import RequestParser
 from injector import Injector
 from marshmallow import Schema
 from marshmallow import fields as ma
+from marshmallow import missing
 from marshmallow.schema import SchemaMeta
 from typing_extensions import TypedDict
 from werkzeug.datastructures import FileStorage
@@ -49,6 +50,7 @@ class ParametersSchema(TypedDict, total=False):
     type: object
     location: str
     required: bool
+    default: Any | None
     help: str
 
 
@@ -113,19 +115,27 @@ def as_parameters_schema_list(
     parameters_schema_list: list[ParametersSchema] = []
     for field in schema.fields.values():
         if operation == "dump" and not field.load_only:
-            parameters_schema_list.append(create_parameters_schema(field, location))
+            parameters_schema_list.append(
+                create_parameters_schema(field, operation, location)
+            )
 
         if operation == "load" and not field.dump_only:
-            parameters_schema_list.append(create_parameters_schema(field, location))
+            parameters_schema_list.append(
+                create_parameters_schema(field, operation, location)
+            )
 
     return parameters_schema_list
 
 
-def create_parameters_schema(field: ma.Field, location: str) -> ParametersSchema:
+def create_parameters_schema(
+    field: ma.Field, operation: str, location: str
+) -> ParametersSchema:
     """Converts a Marshmallow Field into a ParametersSchema dictionary.
 
     Args:
         field: A Marshmallow Field object.
+        operation: The Schema operation the REST API is going to perform. Use "load"
+            for a request and "dump" for a response.
         location: The location where the request or response parameters are stored.
             Must be either "args", "form", or "json".
 
@@ -143,6 +153,12 @@ def create_parameters_schema(field: ma.Field, location: str) -> ParametersSchema
         location=location,
         required=field.required,
     )
+
+    if operation == "load" and field.load_default is not missing:
+        parameters_schema["default"] = field.load_default
+
+    if operation == "dump" and field.dump_default is not missing:
+        parameters_schema["default"] = field.dump_default
 
     if field.metadata.get("description") is not None:
         parameters_schema["help"] = field.metadata["description"]

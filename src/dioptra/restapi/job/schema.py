@@ -73,10 +73,10 @@ class JobSchema(Schema):
     )
     timeout = fields.String(
         attribute="timeout",
-        allow_none=True,
+        load_default="24h",
         metadata=dict(
             description="The maximum alloted time for a job before it times out and "
-            "is stopped.",
+            "is stopped. If omitted, the job timeout will default to 24 hours.",
         ),
     )
     workflow = FileUpload(
@@ -103,6 +103,7 @@ class JobSchema(Schema):
     entryPointKwargs = fields.String(
         attribute="entry_point_kwargs",
         allow_none=True,
+        load_default=None,
         metadata=dict(
             description="A string listing parameter values to pass to the entry point "
             "for the job. The list of parameters is specified using the following "
@@ -112,9 +113,11 @@ class JobSchema(Schema):
     dependsOn = fields.String(
         attribute="depends_on",
         allow_none=True,
+        load_default=None,
         metadata=dict(
-            description="A UUID for a previously submitted job to set as a dependency "
-            "for the current job.",
+            description="A job UUID to set as a dependency for this new job. The new "
+            "job will not run until this job completes successfully. If omitted, then "
+            "the new job will start as soon as computing resources are available.",
         ),
     )
     status = fields.String(
