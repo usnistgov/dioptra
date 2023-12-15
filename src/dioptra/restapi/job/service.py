@@ -29,7 +29,7 @@ from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-from dioptra.restapi.app import db
+from dioptra.restapi.db import db
 from dioptra.restapi.experiment.errors import ExperimentDoesNotExistError
 from dioptra.restapi.experiment.service import ExperimentNameService
 from dioptra.restapi.models import Experiment, Queue

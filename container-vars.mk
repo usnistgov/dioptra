@@ -94,7 +94,6 @@ CONTAINER_RESTAPI_INCLUDE_FILES =\
     docker/shellscripts/unpack-archive.m4\
     docker/shellscripts/wait-for-it.sh\
     wsgi.py\
-    $(CODE_DB_MIGRATIONS_FILES)\
     $(CODE_PACKAGING_FILES)\
     $(CODE_SRC_FILES)
 

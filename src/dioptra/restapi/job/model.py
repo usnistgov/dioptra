@@ -20,7 +20,7 @@ from __future__ import annotations
 import datetime
 from typing import Any
 
-from dioptra.restapi.app import db
+from dioptra.restapi.db import db
 
 job_statuses = db.Table(
     "job_statuses", db.Column("status", db.String(255), primary_key=True)

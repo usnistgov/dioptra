@@ -32,31 +32,19 @@ from flask_cors import CORS
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_restx import Api
-from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from injector import Injector
-from sqlalchemy import MetaData
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.utils import setup_injection
 
 from .__version__ import __version__ as API_VERSION
+from .db import db
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 cors: CORS = CORS()
 csrf: CSRFProtect = CSRFProtect()
-db: SQLAlchemy = SQLAlchemy(
-    metadata=MetaData(
-        naming_convention={
-            "ix": "ix_%(column_0_label)s",
-            "uq": "uq_%(table_name)s_%(column_0_name)s",
-            "ck": "ck_%(table_name)s_%(column_0_name)s",
-            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-            "pk": "pk_%(table_name)s",
-        }
-    )
-)
 login_manager = LoginManager()
 migrate: Migrate = Migrate()
 

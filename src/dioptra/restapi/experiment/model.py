@@ -20,7 +20,7 @@ from __future__ import annotations
 import datetime
 from typing import Any, Dict
 
-from dioptra.restapi.app import db
+from dioptra.restapi.db import db
 
 
 class Experiment(db.Model):

@@ -24,7 +24,7 @@ from sqlalchemy.exc import IntegrityError
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi import create_app
-from dioptra.restapi.app import db
+from dioptra.restapi.db import db
 from dioptra.restapi.models import Experiment, Job
 
 ENVVAR_RESTAPI_ENV = "DIOPTRA_RESTAPI_ENV"
