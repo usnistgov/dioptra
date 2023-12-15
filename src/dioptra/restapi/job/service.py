@@ -31,7 +31,7 @@ from werkzeug.utils import secure_filename
 
 from dioptra.restapi.app import db
 from dioptra.restapi.experiment.errors import ExperimentDoesNotExistError
-from dioptra.restapi.experiment.service import ExperimentService
+from dioptra.restapi.experiment.service import ExperimentNameService
 from dioptra.restapi.models import Experiment, Queue
 from dioptra.restapi.queue.service import QueueNameService
 from dioptra.restapi.shared.rq.service import RQService
@@ -50,12 +50,12 @@ class JobService(object):
         self,
         rq_service: RQService,
         s3_service: S3Service,
-        experiment_service: ExperimentService,
+        experiment_name_service: ExperimentNameService,
         queue_name_service: QueueNameService,
     ) -> None:
         self._rq_service = rq_service
         self._s3_service = s3_service
-        self._experiment_service = experiment_service
+        self._experiment_name_service = experiment_name_service
         self._queue_name_service = queue_name_service
 
     @staticmethod
@@ -109,7 +109,7 @@ class JobService(object):
     ) -> Job:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        experiment: Optional[Experiment] = self._experiment_service.get_by_name(
+        experiment: Optional[Experiment] = self._experiment_name_service.get(
             experiment_name=experiment_name, log=log
         )
 
@@ -179,7 +179,7 @@ class JobService(object):
 
         log: BoundLogger = LOGGER.new()
 
-        experiment: Optional[Experiment] = self._experiment_service.get_by_name(
+        experiment: Optional[Experiment] = self._experiment_name_service.get(
             experiment_name=experiment_name, log=log
         )
 
