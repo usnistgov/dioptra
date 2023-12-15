@@ -105,7 +105,7 @@ jobs:
           docker save ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev | gzip > /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
 
       - name: archive the testing images
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
           path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
