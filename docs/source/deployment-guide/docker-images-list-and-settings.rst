@@ -82,7 +82,6 @@ Command
 --host                    The network address to listen on. Use 0.0.0.0 to bind to all addresses if you want to access the tracking server from other machines. (default: ``'0.0.0.0'``)
 --port                    The port to listen on. (default: ``'5000'``)
 --workers                 Number of gunicorn worker processes to handle requests. (default: ``'4'``)
---upgrade-db              Upgrade the database schema
 
 REST API
 --------
@@ -144,7 +143,6 @@ Command
 --backend          Server backend (default: ``'gunicorn'``)
 --conda-env        Conda environment (default: ``'dioptra'``)
 --gunicorn-module  Python module used to start Gunicorn WSGI server (default: ``'dioptra.restapi.cli.gunicorn'``)
---upgrade-db       Upgrade the database schema
 
 Workers (PyTorch/Tensorflow)
 ----------------------------

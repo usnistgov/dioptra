@@ -5,9 +5,8 @@ Revises:
 Create Date: 2020-09-11 17:22:38.129031
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "6a343ff9bc2f"
@@ -57,7 +56,10 @@ def upgrade():
             ),
             nullable=True,
         ),
-        sa.ForeignKeyConstraint(["experiment_id"], ["experiments.experiment_id"],),
+        sa.ForeignKeyConstraint(
+            ["experiment_id"],
+            ["experiments.experiment_id"],
+        ),
         sa.PrimaryKeyConstraint("job_id"),
     )
     with op.batch_alter_table("jobs", schema=None) as batch_op:
