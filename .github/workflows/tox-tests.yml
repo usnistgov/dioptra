@@ -125,5 +125,5 @@ jobs:
         if: ${{ contains(matrix.tox-testenv, 'pytest-cov') }}
         uses: actions/upload-artifact@v4
         with:
-          name: code-coverage-report-${{ matrix.python-version }}
+          name: code-coverage-report-${{ matrix.os }}-${{ matrix.python-version }}
           path: coverage
