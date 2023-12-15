@@ -26,19 +26,20 @@ from typing import Any, List, Mapping, Optional, cast
 import structlog
 from injector import inject
 from structlog.stdlib import BoundLogger
+from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 from dioptra.restapi.app import db
 from dioptra.restapi.experiment.errors import ExperimentDoesNotExistError
 from dioptra.restapi.experiment.service import ExperimentService
+from dioptra.restapi.models import Experiment, Queue
 from dioptra.restapi.queue.service import QueueNameService
 from dioptra.restapi.shared.rq.service import RQService
 from dioptra.restapi.shared.s3.service import S3Service
 from dioptra.task_engine.validation import is_valid
 
 from .errors import InvalidExperimentDescriptionError, JobWorkflowUploadError
-from .model import Job, JobForm, JobFormData
-from .schema import JobFormSchema
+from .model import Job
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -47,34 +48,40 @@ class JobService(object):
     @inject
     def __init__(
         self,
-        job_form_schema: JobFormSchema,
         rq_service: RQService,
         s3_service: S3Service,
         experiment_service: ExperimentService,
         queue_name_service: QueueNameService,
     ) -> None:
-        self._job_form_schema = job_form_schema
         self._rq_service = rq_service
         self._s3_service = s3_service
         self._experiment_service = experiment_service
         self._queue_name_service = queue_name_service
 
     @staticmethod
-    def create(job_form_data: JobFormData, **kwargs) -> Job:
+    def create(
+        experiment_id: int,
+        queue_id: int,
+        timeout: str,
+        entry_point: str,
+        entry_point_kwargs: str,
+        depends_on: str,
+        **kwargs,
+    ) -> Job:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
         job_id = str(uuid.uuid4())
         timestamp = datetime.datetime.now()
 
         return Job(
             job_id=job_id,
-            experiment_id=job_form_data["experiment_id"],
-            queue_id=job_form_data["queue_id"],
+            experiment_id=experiment_id,
+            queue_id=queue_id,
             created_on=timestamp,
             last_modified=timestamp,
-            timeout=job_form_data.get("timeout"),
-            entry_point=job_form_data["entry_point"],
-            entry_point_kwargs=job_form_data.get("entry_point_kwargs"),
-            depends_on=job_form_data.get("depends_on"),
+            timeout=timeout,
+            entry_point=entry_point,
+            entry_point_kwargs=entry_point_kwargs,
+            depends_on=depends_on,
         )
 
     @staticmethod
@@ -89,15 +96,21 @@ class JobService(object):
 
         return Job.query.get(job_id)  # type: ignore
 
-    def extract_data_from_form(self, job_form: JobForm, **kwargs) -> JobFormData:
-        from dioptra.restapi.models import Experiment, Queue
-
+    def submit(
+        self,
+        queue_name: str,
+        experiment_name: str,
+        timeout: str,
+        entry_point: str,
+        entry_point_kwargs: str,
+        depends_on: str,
+        workflow: FileStorage,
+        **kwargs,
+    ) -> Job:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        job_form_data: JobFormData = self._job_form_schema.dump(job_form)
-
         experiment: Optional[Experiment] = self._experiment_service.get_by_name(
-            job_form_data["experiment_name"], log=log
+            experiment_name=experiment_name, log=log
         )
 
         if experiment is None:
@@ -106,33 +119,32 @@ class JobService(object):
         queue = cast(
             Queue,
             self._queue_name_service.get(
-                job_form_data["queue"],
+                queue_name=queue_name,
                 unlocked_only=True,
                 error_if_not_found=True,
                 log=log,
             ),
         )
 
-        job_form_data["experiment_id"] = experiment.experiment_id
-        job_form_data["queue_id"] = queue.queue_id
-
-        return job_form_data
-
-    def submit(self, job_form_data: JobFormData, **kwargs) -> Job:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        workflow_uri: Optional[str] = self._upload_workflow(job_form_data, log=log)
+        workflow_uri: Optional[str] = self._upload_workflow(workflow=workflow, log=log)
 
         if workflow_uri is None:
             log.error(
                 "Failed to upload workflow to backend storage",
-                workflow_filename=secure_filename(
-                    job_form_data["workflow"].filename or ""
-                ),
+                workflow_filename=secure_filename(workflow.filename or ""),
             )
             raise JobWorkflowUploadError
 
-        new_job: Job = self.create(job_form_data, log=log)
+        new_job: Job = self.create(
+            queue_id=queue.queue_id,
+            experiment_id=experiment.experiment_id,
+            timeout=timeout,
+            entry_point=entry_point,
+            entry_point_kwargs=entry_point_kwargs,
+            depends_on=depends_on,
+            log=log,
+        )
+
         new_job.workflow_uri = workflow_uri
 
         db.session.add(new_job)
@@ -140,7 +152,7 @@ class JobService(object):
 
         self._rq_service.submit_mlflow_job(
             job_id=new_job.job_id,
-            queue=job_form_data["queue"],
+            queue=queue_name,
             workflow_uri=new_job.workflow_uri,
             experiment_id=new_job.experiment_id,
             entry_point=new_job.entry_point,
@@ -217,16 +229,14 @@ class JobService(object):
 
         return new_job
 
-    def _upload_workflow(self, job_form_data: JobFormData, **kwargs) -> Optional[str]:
+    def _upload_workflow(self, workflow: FileStorage, **kwargs) -> Optional[str]:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         upload_dir = Path(uuid.uuid4().hex)
-        workflow_filename = upload_dir / secure_filename(
-            job_form_data["workflow"].filename or ""
-        )
+        workflow_filename = upload_dir / secure_filename(workflow.filename or "")
 
         workflow_uri: Optional[str] = self._s3_service.upload(
-            fileobj=job_form_data["workflow"],
+            fileobj=workflow,
             bucket="workflow",
             key=str(workflow_filename),
             log=log,

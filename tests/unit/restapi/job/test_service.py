@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import datetime
 from dataclasses import dataclass
-from typing import BinaryIO, List, Optional
+from typing import Any, BinaryIO, List, Optional
 
 import pytest
 import structlog
@@ -30,7 +30,7 @@ from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.job.service import JobService
-from dioptra.restapi.models import Job, JobFormData
+from dioptra.restapi.models import Experiment, Job
 from dioptra.restapi.shared.rq.service import RQService
 from dioptra.restapi.shared.s3.service import S3Service
 
@@ -43,6 +43,21 @@ class MockRQJob(object):
 
     def get_id(self) -> str:
         return self.id
+
+
+@pytest.fixture
+@freeze_time("2020-08-17T18:46:28.717559")
+def new_experiment(db: SQLAlchemy) -> Experiment:
+    timestamp: datetime.datetime = datetime.datetime.now()
+    new_experiment: Experiment = Experiment(
+        experiment_id=1,
+        name="mnist",
+        created_on=timestamp,
+        last_modified=timestamp,
+    )
+    db.session.add(new_experiment)
+    db.session.commit()
+    return new_experiment
 
 
 @pytest.fixture
@@ -59,20 +74,30 @@ def new_job() -> Job:
 
 
 @pytest.fixture
-def job_form_data(app: Flask, workflow_tar_gz: BinaryIO) -> JobFormData:
-    return JobFormData(
-        experiment_name="mnist",
-        experiment_id=1,
-        queue_id=1,
-        queue="tensorflow_cpu",
-        timeout="12h",
-        entry_point="main",
-        entry_point_kwargs="-P var1=testing",
-        depends_on=None,
-        workflow=FileStorage(
+def job_submission_data(app: Flask, workflow_tar_gz: BinaryIO) -> dict[str, Any]:
+    return {
+        "experiment_name": "mnist",
+        "queue_name": "tensorflow_cpu",
+        "timeout": "12h",
+        "entry_point": "main",
+        "entry_point_kwargs": "-P var1=testing",
+        "depends_on": None,
+        "workflow": FileStorage(
             stream=workflow_tar_gz, filename="workflows.tar.gz", name="workflow"
         ),
-    )
+    }
+
+
+@pytest.fixture
+def job_create_data(app: Flask) -> dict[str, Any]:
+    return {
+        "experiment_id": 1,
+        "queue_id": 1,
+        "timeout": "12h",
+        "entry_point": "main",
+        "entry_point_kwargs": "-P var1=testing",
+        "depends_on": None,
+    }
 
 
 @pytest.fixture
@@ -80,8 +105,8 @@ def job_service(dependency_injector) -> JobService:
     return dependency_injector.get(JobService)
 
 
-def test_create(job_service: JobService, job_form_data: JobFormData):
-    job: Job = job_service.create(job_form_data=job_form_data)
+def test_create(job_service: JobService, job_create_data: dict[str, Any]):
+    job: Job = job_service.create(**job_create_data)
 
     assert job.experiment_id == 1
     assert job.queue_id == 1
@@ -135,8 +160,9 @@ def test_get_all(db: SQLAlchemy, job_service: JobService):
 @freeze_time("2020-08-17T18:46:28.717559")
 def test_submit(
     db: SQLAlchemy,
+    new_experiment: Experiment,
     job_service: JobService,
-    job_form_data: JobFormData,
+    job_submission_data: dict[str, Any],
     monkeypatch: MonkeyPatch,
 ) -> None:
     def mocksubmit(*args, **kwargs) -> MockRQJob:
@@ -156,7 +182,7 @@ def test_submit(
     monkeypatch.setattr(RQService, "submit_mlflow_job", mocksubmit)
     monkeypatch.setattr(S3Service, "upload", mockupload)
 
-    job_service.submit(job_form_data=job_form_data)
+    job_service.submit(**job_submission_data)
     results: List[Job] = Job.query.all()
 
     assert len(results) == 1
