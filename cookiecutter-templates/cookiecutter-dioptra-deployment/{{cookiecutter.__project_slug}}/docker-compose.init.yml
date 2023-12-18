@@ -36,8 +36,10 @@ services:
       - /data
       - --console-address
       - ":9001"
-    env_file:
-      - ./secrets/{{ cookiecutter.__project_slug }}-minio.env
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+      MINIO_KMS_SECRET_KEY: "${MINIO_KMS_SECRET_KEY}"
     networks:
       - dioptra
     volumes:
@@ -49,9 +51,10 @@ services:
     restart: always
     hostname: {{ cookiecutter.__project_slug }}-db
     shm_size: 256MB
+    environment:
+      POSTGRES_USER_DIOPTRA_PASSWORD: "${POSTGRES_USER_DIOPTRA_PASSWORD}"
     env_file:
       - ./envs/{{ cookiecutter.__project_slug }}-db.env
-      - ./secrets/{{ cookiecutter.__project_slug }}-db.env
     networks:
       - dioptra
     volumes:
@@ -70,8 +73,10 @@ services:
       - {{ cookiecutter.__project_slug }}-db:5432
     env_file:
       - ./envs/{{ cookiecutter.__project_slug }}-restapi.env
-      - ./secrets/{{ cookiecutter.__project_slug }}-restapi.env
-      - ./secrets/{{ cookiecutter.__project_slug }}-restapi-database-uri.env
+    environment:
+      AWS_ACCESS_KEY_ID: "${RESTAPI_AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${RESTAPI_AWS_SECRET_ACCESS_KEY}"
+      DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
     networks:
       - dioptra
     volumes:

@@ -23,7 +23,7 @@ Open a terminal and run the following to start Dioptra.
 
 ```sh
 # Move into the new folder created by the cookiecutter template.
-cd $((BASEDIR))/{{ cookiecutter.__project_slug }}
+cd {{ cookiecutter.__project_slug }}
 
 # Initialize Dioptra using the init-deployment.sh script.
 ./init-deployment.sh
@@ -32,7 +32,7 @@ cd $((BASEDIR))/{{ cookiecutter.__project_slug }}
 docker compose up -d
 ```
 
-To stop Dioptra, navigate back to the configuration folder `$((BASEDIR))/{{ cookiecutter.__project_slug }}` in the terminal and run,
+To stop Dioptra, navigate back to the configuration folder `{{ cookiecutter.__project_slug }}` in the terminal and run,
 
 ```sh
 # Stop Dioptra
