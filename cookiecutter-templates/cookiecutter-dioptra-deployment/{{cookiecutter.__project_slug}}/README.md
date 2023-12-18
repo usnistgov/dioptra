@@ -3,6 +3,7 @@
 A collection of scripts, configuration files, and Docker Compose files for initializing and deploying Dioptra on a single host machine.
 
 - [Quickstart](#quickstart)
+- [Updating the template](#updating-the-template)
 - [Additional configuration](#additional-configuration)
   - [Adding extra CA certificates](#adding-extra-ca-certificates)
   - [Enabling SSL/TLS in NGINX and Postgres](#enabling-ssltls-in-nginx-and-postgres)
@@ -25,18 +26,38 @@ Open a terminal and run the following to start Dioptra.
 # Move into the new folder created by the cookiecutter template.
 cd {{ cookiecutter.__project_slug }}
 
+# Create a Python virtual environment and install the cruft and Jinja2 packages.
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip cruft jinja2
+
+# Use cruft to fetch updates to the cookiecutter template.
+cruft update
+
 # Initialize Dioptra using the init-deployment.sh script.
 ./init-deployment.sh
 
 # Start Dioptra
-docker compose up -d
+{{ cookiecutter.docker_compose_path }} up -d
 ```
 
 To stop Dioptra, navigate back to the configuration folder `{{ cookiecutter.__project_slug }}` in the terminal and run,
 
 ```sh
 # Stop Dioptra
-docker compose down
+{{ cookiecutter.docker_compose_path }} down
+```
+
+## Updating the template
+
+The cruft tool makes it easy to fetch the latest updates to the template:
+
+```sh
+# Activate the virtual environment (if not active)
+source .venv/bin/activate
+
+# Fetch the updates
+cruft update
 ```
 
 ## Additional configuration
@@ -151,6 +172,7 @@ To allow a worker to use all available GPUs, set `NVIDIA_VISIBLE_DEVICES` to `al
 
 The `init-deployment.sh` script is the main tool for initializing the deployment and automates the following steps:
 
+-   Generates the random passwords used to secure access to Dioptra's services.
 -   Copies and bundles the extra CA certificates for the containers
 -   Copies the configuration files in `config/` folder and the server certificates and private keys into named volumes
 -   Sets the appropriate file and folder access permissions in the named volumes
@@ -171,6 +193,9 @@ If you run `./init-deployment.sh --help`, you will print the script's help messa
                                    image
             --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
                       and the frontend files (default: 'main')
+            --python: Command for invoking the Python interpreter. Must be Python 3.9 or
+                      greater, and the jinja2 package must be installed.
+                      (default: 'python')
             --worker-ssl-service: Image to use when bootstrapping the SSL named volumes for
                                   the worker containers, must be 'tfcpu' or 'pytorchcpu'
                                   (default: 'tfcpu')
@@ -202,11 +227,7 @@ There are two options for starting the Dioptra deployment, using Docker Compose 
 Run the following in the generated folder to start the deployment using Docker Compose.
 
 ```sh
-# Using Docker Compose v1
-docker-compose up -d
-
-# Using Docker Compose v2
-docker compose up -d
+{{ cookiecutter.docker_compose_path }} up -d
 ```
 
 ### Using systemd
@@ -236,21 +257,13 @@ sudo systemctl enable dioptra
 Run the following in the generated folder to check the status of the deployment.
 
 ```sh
-# Using Docker Compose v1
-docker-compose ps
-
-# Using Docker Compose v2
-docker compose ps
+{{ cookiecutter.docker_compose_path }} ps
 ```
 
 Run the following in the generated folder to check the status of the application logs.
 
 ```sh
-# Using Docker Compose v1
-docker-compose logs -f
-
-# Using Docker Compose v2
-docker compose logs -f
+{{ cookiecutter.docker_compose_path }} logs -f
 ```
 
 Use <kbd>Ctrl + C</kbd> to stop following the logs.
@@ -258,11 +271,8 @@ Use <kbd>Ctrl + C</kbd> to stop following the logs.
 Run the following in the generated folder to restart the deployment.
 
 ```sh
-# Using Docker Compose v1
-docker-compose restart
-
-# Using Docker Compose v2
-docker compose restart
+# Using Docker Compose
+{{ cookiecutter.docker_compose_path }} restart
 
 # Using systemd
 systemctl restart dioptra
@@ -271,11 +281,8 @@ systemctl restart dioptra
 Run the following in the generated folder to stop the deployment.
 
 ```sh
-# Using Docker Compose v1
-docker-compose down
-
-# Using Docker Compose v2
-docker compose down
+# Using Docker Compose
+{{ cookiecutter.docker_compose_path }} down
 
 # Using systemd
 systemctl stop dioptra
@@ -330,9 +337,15 @@ Note that this diagram includes server certificates and private keys for the NGI
     │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-worker-cpu.env") }} <- Sets environment variables that customize the CPU-based Dioptra workers. Safe to commit to a git repo.
     │   └── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-worker.env") }} <- Sets environment variables that customize the Dioptra workers. Safe to commit to a git repo.
     ├── scripts
+    │   ├── templates
+    │   │   ├── dioptra.service.j2                               <- A Jinja2 template used to generate the systemd/dioptra.service file.
+    │   │   ├── dot-env.j2                                       <- A Jinja2 template used to generate a .env file containing a list of environment variables and associated passwords.
+    │   │   ├── minio-accounts.env.j2                            <- A Jinja2 template used to generate the secrets/{{ cookiecutter.__project_slug ~ "-minio-accounts.env" }} file.
+    │   │   └── postgres-passwd.env.j2                           <- A Jinja2 template used to generate the secrets/postgres-passwd.env file.
     │   ├── copy-extra-ca-certificates.m4                        <- Used in the init-deployment.sh and init-named-volumes.m4 scripts to inject the extra CA certificates in the ssl/ca-certificates folder into the services.
     │   ├── file-copy.m4                                         <- Used in the init-named-volumes.m4 script to handle file copying. Emits logging information and sets appropriate access and ownership permissions.
     │   ├── git-clone.m4                                         <- Used in the init-named-volumes.m4 script to handle cloning git repositories. Emits logging information and sets appropriate access and ownership permissions.
+    │   ├── generate_templates.py                                <- Used in the init-named-volumes.m4 script to generate random passwords to secure Dioptra's services.
     │   ├── globbed-copy.m4                                      <- Used in the init-named-volumes.m4 script to handle globbed file copying. Emits logging information and sets appropriate access and ownership permissions.
     │   ├── init-minio.sh                                        <- Used in the init-deployment.sh script to set the Minio policies in config/minio.
     │   ├── init-named-volumes.m4                                <- Used in the init-deployment.sh script to prepare the named storage volumes used by each container. Actions include copying in configuration files and setting file access and ownership permissions.
@@ -340,16 +353,8 @@ Note that this diagram includes server certificates and private keys for the NGI
     │   ├── manage-postgres-ssl.m4                               <- Used in the init-deployment.sh script to enable and disable SSL in Postgres.
     │   └── set-permissions.m4                                   <- Used in the init-named-volumes.m4 script to set appropriate access and ownership permissions.
     ├── secrets
-    │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-db.env") }} <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-    │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-dbadmin.env") }} <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-    │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-minio-accounts.env") }} <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-    │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-minio.env") }} <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-    │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-mlflow-tracking-database-uri.env") }} <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-    │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-mlflow-tracking.env") }} <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-    │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-restapi-database-uri.env") }} <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-    │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-restapi.env") }} <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-    │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-worker.env") }} <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-    │   └── postgres-passwd.env                                  <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+    │   ├── {{ "{:<52}".format(cookiecutter.__project_slug ~ "-minio-accounts.env") }} <- Secrets file containing sensitive passwords generated by the scripts/generate_templates.py script. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+    │   └── postgres-passwd.env                                  <- Secrets file containing sensitive passwords generated by the scripts/generate_templates.py script. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
     ├── ssl
     │   ├── ca-certificates
     │   │   └── README.md            <- README file explaining the folder's purpose and which files need to be copied here.
@@ -362,9 +367,10 @@ Note that this diagram includes server certificates and private keys for the NGI
     │       ├── server.key           <- MUST BE COPIED HERE MANUALLY. The private key for enabling HTTPS in the Nginx webserver. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
     │       └── README.md            <- README file explaining the folder's purpose and which files need to be copied here.
     ├── systemd
-    │   └── dioptra.service          <- A systemd service that can be used to manage the full Dioptra application.
+    │   └── dioptra.service          <- A systemd service that can be used to manage the full Dioptra application generated by the scripts/generate_templates.py script.
+    ├── .env                         <- A list of secrets (passwords) mapped to environment variables generated by the scripts/generate_templates.py script. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
     ├── .gitignore                   <- A list of patterns that configures the files and directories that git should ignore. Used if the deployment configuration is placed under version control with git.
     ├── docker-compose.init.yml      <- Used in the init-deployment.sh script to initialize the deployment.
     ├── docker-compose.yml           <- Orchestrates how to start the containers, configure the network, set the environment variables, attach the storage volumes, and publish the NGINX web server ports.
-    ├── init-deployment.sh           <- The deployment initialization script. Used to copy configuration files into named volumes, configure Minio policies, and enable/disable SSL in the NGINX and Postgres services.
+    ├── init-deployment.sh           <- The deployment initialization script. Used to generate random passwords, copy configuration files into named volumes, configure Minio policies, and enable/disable SSL in the NGINX and Postgres services.
     └── README.md                    <- README file that explains how to initialize and run Dioptra using the provided scripts and configuration files.

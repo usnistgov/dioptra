@@ -6,7 +6,7 @@ A Cookiecutter template that generates the scripts, configuration files, and Doc
 
 -   [Bash v5 or higher](https://tiswww.case.edu/php/chet/bash/bashtop.html)
 -   [Python 3.9 or higher](https://www.python.org/)
--   [Cookiecutter v2 or higher](https://cookiecutter.readthedocs.io/en/latest/)
+-   [Cruft 2.15.0 or higher](https://cruft.github.io/cruft/)
 -   [Docker Engine 20.10.13 or higher](https://docs.docker.com/engine/install/)
 -   [Docker Compose](https://docs.docker.com/compose/install/)
 -   Dictionary of words at `/usr/share/dict/words` (`apt-get install wamerican`)
@@ -22,9 +22,17 @@ Open a terminal and run the following to generate a setup that is appropriate fo
 mkdir -p /path/to/deployments/folder  # Create it if it doesn't exist
 cd /path/to/deployments/folder
 
-# Run cookiecutter and set the template's variables
-cookiecutter gh:usnistgov/dioptra --checkout main \
-    --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+# Create a virtual environment and install cruft
+python -m venv venv-cruft
+source venv-cruft/bin/activate
+python -m pip install --upgrade pip cruft
+
+# Run cruft and set the template's variables
+cruft create https://github.com/usnistgov/dioptra --checkout main \
+  --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+
+# Deactivate the virtual environment
+deactivate
 ```
 
 This will create a Dioptra configuration folder at the path `/path/to/deployments/folder/dioptra-deployment` (`dioptra-deployment` is the default name).

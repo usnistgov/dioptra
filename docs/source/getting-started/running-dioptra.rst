@@ -30,7 +30,7 @@ Prerequisites
 
 - `Bash v5 or higher <https://tiswww.case.edu/php/chet/bash/bashtop.html>`__
 - `Python 3.9 or higher <https://www.python.org/>`__
-- `Cookiecutter v2 or higher <https://cookiecutter.readthedocs.io/en/latest/>`__
+- `Cruft 2.15.0 or higher <https://cruft.github.io/cruft/>`__
 - `Docker Engine 20.10.13 or higher <https://docs.docker.com/engine/install/>`__
 - `Docker Compose <https://docs.docker.com/compose/install/>`__
 - Dictionary of words at ``/usr/share/dict/words`` (``apt-get install wamerican``)
@@ -49,14 +49,27 @@ This will generate a setup that is appropriate for testing Dioptra on your perso
    mkdir -p /path/to/deployments/folder  # Create it if it doesn't exist
    cd /path/to/deployments/folder
 
-   # Run cookiecutter and set the template's variables
-   cookiecutter gh:usnistgov/dioptra --checkout main \
+   # Create a virtual environment and install cruft
+   python -m venv venv-cruft
+   source venv-cruft/bin/activate
+   python -m pip install --upgrade pip cruft
+
+   # Run cruft and set the template's variables
+   cruft create https://github.com/usnistgov/dioptra --checkout main \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+
+   # Deactivate the virtual environment
+   deactivate
 
    # Move into the new folder created by the template. The new folder's name
    # is based on the deployment_name variable. The default name for the folder
    # is dioptra-deployment.
    cd dioptra-deployment
+
+   # Create a Python virtual environment and install the cruft and Jinja2 packages.
+   python -m venv .venv
+   source .venv/bin/activate
+   python -m pip install --upgrade pip cruft jinja2
 
    # Initialize Dioptra using the init-deployment.sh script
    ./init-deployment.sh
@@ -79,21 +92,21 @@ Applying the template
 ---------------------
 
 Create the folder where you plan to keep the deployment folder and change into it so that it becomes your working directory.
-Next, run cookiecutter and apply the Dioptra Deployment template.
+Next, run cruft and apply the Dioptra Deployment template.
 
 .. code:: sh
 
    # To use the template published on the dev branch, use '--checkout dev' instead
-   cookiecutter gh:usnistgov/dioptra --checkout main --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+   cruft create https://github.com/usnistgov/dioptra --checkout main --directory cookiecutter-templates/cookiecutter-dioptra-deployment
 
 .. margin::
 
    .. note::
 
-      If you make a mistake, such as accidentally accepting a default or making a typo, it is recommended that you interrupt cookiecutter and start over.
-      To interrupt the cookiecutter prompts at any time, press :kbd:`Ctrl + C`, then check if cookiecutter has created a new folder in your working directory (if present, the folder's name will be a `"slugified" <https://www.stackbit.com/blog/what-is-a-content-slug>`__ version of the **deployment_name** variable).
+      If you make a mistake, such as accidentally accepting a default or making a typo, it is recommended that you interrupt cruft and start over.
+      To interrupt the cruft prompts at any time, press :kbd:`Ctrl + C`, then check if cruft has created a new folder in your working directory (if present, the folder's name will be a `"slugified" <https://www.stackbit.com/blog/what-is-a-content-slug>`__ version of the **deployment_name** variable).
       If it has, remove it.
-      To start over, re-run the ``cookiecutter`` command.
+      To start over, re-run the ``cruft`` command.
 
 You will now be asked to set the variables needed to customize the generated configuration files.
 In most cases you can just use the default value, but there are a few that you may need to customize.
@@ -153,7 +166,7 @@ Below is a full list of the variables, their default values, and explanations of
 Example
 ~~~~~~~
 
-Below is an example of what it looks like to customize some of the template variables after invoking the template using ``cookiecutter``.
+Below is an example of what it looks like to customize some of the template variables after invoking the template using ``cruft``.
 
 .. margin::
 
@@ -180,6 +193,19 @@ Below is an example of what it looks like to customize some of the template vari
    num_pytorch_cpu_workers [1]: 1
    num_pytorch_gpu_workers [0]: 0
 
+Updating the template
+---------------------
+
+The cruft tool makes it easy to fetch the latest updates to the template:
+
+.. code:: sh
+
+   # Activate the virtual environment (if not active)
+   source .venv/bin/activate
+
+   # Fetch the updates
+   cruft update
+
 Folder organization
 -------------------
 
@@ -190,7 +216,7 @@ Folder organization
       The *dioptra-deployment* prefix prepended to the files in the ``envs/`` and ``secrets/`` folders assumes the default value for the **deployment_name** variable.
       Setting this variable to a different value would alter the filename prefixes.
 
-The following tree-like diagram shows the files created by the cookiecutter template.
+The following tree-like diagram shows the files created by the template.
 The annotations explain the purpose of the configuration files.
 Note that this diagram includes server certificates and private keys for the NGINX and Postgres services, which may or may not apply to your use case.
 
@@ -233,9 +259,15 @@ Note that this diagram includes server certificates and private keys for the NGI
    │   ├── dioptra-deployment-worker-cpu.env                    <- Sets environment variables that customize the CPU-based Dioptra workers. Safe to commit to a git repo.
    │   └── dioptra-deployment-worker.env                        <- Sets environment variables that customize the Dioptra workers. Safe to commit to a git repo.
    ├── scripts
+   │   ├── templates
+   │   │   ├── dioptra.service.j2                               <- A Jinja2 template used to generate the systemd/dioptra.service file.
+   │   │   ├── dot-env.j2                                       <- A Jinja2 template used to generate a .env file containing a list of environment variables and associated passwords.
+   │   │   ├── minio-accounts.env.j2                            <- A Jinja2 template used to generate the secrets/dioptra-deployment-minio-accounts.env file.
+   │   │   └── postgres-passwd.env.j2                           <- A Jinja2 template used to generate the secrets/postgres-passwd.env file.
    │   ├── copy-extra-ca-certificates.m4                        <- Used in the init-deployment.sh and init-named-volumes.m4 scripts to inject the extra CA certificates in the ssl/ca-certificates folder into the services.
    │   ├── file-copy.m4                                         <- Used in the init-named-volumes.m4 script to handle file copying. Emits logging information and sets appropriate access and ownership permissions.
    │   ├── git-clone.m4                                         <- Used in the init-named-volumes.m4 script to handle cloning git repositories. Emits logging information and sets appropriate access and ownership permissions.
+   │   ├── generate_templates.py                                <- Used in the init-named-volumes.m4 script to generate random passwords to secure Dioptra's services.
    │   ├── globbed-copy.m4                                      <- Used in the init-named-volumes.m4 script to handle globbed file copying. Emits logging information and sets appropriate access and ownership permissions.
    │   ├── init-minio.sh                                        <- Used in the init-deployment.sh script to set the Minio policies in config/minio.
    │   ├── init-named-volumes.m4                                <- Used in the init-deployment.sh script to prepare the named storage volumes used by each container. Actions include copying in configuration files and setting file access and ownership permissions.
@@ -243,16 +275,8 @@ Note that this diagram includes server certificates and private keys for the NGI
    │   ├── manage-postgres-ssl.m4                               <- Used in the init-deployment.sh script to enable and disable SSL in Postgres.
    │   └── set-permissions.m4                                   <- Used in the init-named-volumes.m4 script to set appropriate access and ownership permissions.
    ├── secrets
-   │   ├── dioptra-deployment-db.env                            <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-dbadmin.env                       <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-minio-accounts.env                <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-minio.env                         <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-mlflow-tracking-database-uri.env  <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-mlflow-tracking.env               <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-restapi-database-uri.env          <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-restapi.env                       <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-worker.env                        <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   └── postgres-passwd.env                                  <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+   │   ├── dioptra-deployment-minio-accounts.env                <- Secrets file containing sensitive passwords generated by the scripts/generate_templates.py script. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+   │   └── postgres-passwd.env                                  <- Secrets file containing sensitive passwords generated by the scripts/generate_templates.py script. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
    ├── ssl
    │   ├── ca-certificates
    │   │   └── README.md            <- README file explaining the folder's purpose and which files need to be copied here.
@@ -265,11 +289,12 @@ Note that this diagram includes server certificates and private keys for the NGI
    │       ├── server.key           <- MUST BE COPIED HERE MANUALLY. The private key for enabling HTTPS in the Nginx webserver. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
    │       └── README.md            <- README file explaining the folder's purpose and which files need to be copied here.
    ├── systemd
-   │   └── dioptra.service          <- A systemd service that can be used to manage the full Dioptra application.
+   │   └── dioptra.service          <- A systemd service that can be used to manage the full Dioptra application generated by the scripts/generate_templates.py script.
+   ├── .env                         <- A list of secrets (passwords) mapped to environment variables generated by the scripts/generate_templates.py script. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
    ├── .gitignore                   <- A list of patterns that configures the files and directories that git should ignore. Used if the deployment configuration is placed under version control with git.
    ├── docker-compose.init.yml      <- Used in the init-deployment.sh script to initialize the deployment.
    ├── docker-compose.yml           <- Orchestrates how to start the containers, configure the network, set the environment variables, attach the storage volumes, and publish the NGINX web server ports.
-   ├── init-deployment.sh           <- The deployment initialization script. Used to copy configuration files into named volumes, configure Minio policies, and enable/disable SSL in the NGINX and Postgres services.
+   ├── init-deployment.sh           <- The deployment initialization script. Used to generate random passwords, copy configuration files into named volumes, configure Minio policies, and enable/disable SSL in the NGINX and Postgres services.
    └── README.md                    <- README file that explains how to initialize and run Dioptra using the provided scripts and configuration files.
 
 Additional configuration
@@ -507,6 +532,7 @@ Initializing the deployment
 
 The ``init-deployment.sh`` script is the main tool for initializing the deployment and automates the following steps:
 
+- Generates the random passwords used to secure access to Dioptra's services.
 - Copies and bundles the extra CA certificates for the containers
 - Copies the configuration files in ``config/`` folder and the server certificates and private keys into named volumes
 - Sets the appropriate file and folder access permissions in the named volumes
@@ -529,6 +555,9 @@ If you run ``./init-deployment.sh --help``, you will print the script's help mes
                                   image
            --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
                      and the frontend files (default: 'main')
+           --python: Command for invoking the Python interpreter. Must be Python 3.9 or
+                     greater, and the jinja2 package must be installed.
+                     (default: 'python')
            --worker-ssl-service: Image to use when bootstrapping the SSL named volumes for
                                  the worker containers, must be 'tfcpu' or 'pytorchcpu'
                                  (default: 'tfcpu')
