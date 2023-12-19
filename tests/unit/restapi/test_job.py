@@ -22,7 +22,7 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, BinaryIO, Dict
 
 import pytest
 from flask.testing import FlaskClient
@@ -75,7 +75,7 @@ def submit_job(
     """
     return client.post(
         f"/api/{JOB_BASE_ROUTE}/",
-        json=job_form_request,
+        data=job_form_request,
         follow_redirects=True,
     )
 
@@ -117,7 +117,7 @@ def assert_retrieving_all_jobs_works(
 # -- Tests -----------------------------------------------------------------------------
     
 def test_retrieve_job(
-    client: FlaskClient, db: SQLAlchemy
+    client: FlaskClient, db: SQLAlchemy, job_form_request: Dict[str, Any]
 ) -> None:
     """Test that a job can be retrieved through the api following the 
        scenario below.
@@ -134,13 +134,14 @@ def test_retrieve_job(
     - The returned information matches the information that was provided during 
       registration.
     """
-    job_expected = submit_job(client).get_json()
+    job_expected = submit_job(client, job_form_request).get_json()
+    import pdb; pdb.set_trace()
     assert_retrieving_job_by_id_works(
         client, id=job_expected["jobId"], expected=job_expected
     )
     
 def test_list_jobs(
-    client: FlaskClient, db: SQLAlchemy
+    client: FlaskClient, db: SQLAlchemy, job_form_request: Dict[str, Any]
 ) -> None:
     """Test that the list of jobs can be retrieved through the api following the 
        scenario below.
@@ -158,9 +159,9 @@ def test_list_jobs(
     - The returned list of jobs matches the information that was provided
       during registration.
     """
-    job1_expected = submit_job(client).get_json()
-    job2_expected = submit_job(client).get_json()
-    job3_expected = submit_job(client).get_json()
+    job1_expected = submit_job(client, job_form_request).get_json()
+    job2_expected = submit_job(client, job_form_request).get_json()
+    job3_expected = submit_job(client, job_form_request).get_json()
     job_expected_list = [
         job1_expected, job2_expected, job3_expected
     ]
