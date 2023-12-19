@@ -18,9 +18,8 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, Optional
+from typing import List, cast
 
-import flask
 import structlog
 from flask import request
 from flask_accepts import accepts, responds
@@ -31,7 +30,6 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 
-from .errors import JobDoesNotExistError
 from .model import Job
 from .schema import JobSchema, TaskEngineSubmission
 from .service import JobService
@@ -116,7 +114,7 @@ class JobIdResource(Resource):
         log.info("Request received", job_id=jobId)
         job = self._job_service.get(jobId, error_if_not_found=True, log=log)
 
-        return job
+        return cast(Job,job)
 
     @login_required
     @accepts(schema=JobSchema, api=api)
@@ -133,7 +131,7 @@ class JobIdResource(Resource):
             jobId, status=parsed_obj["status"], error_if_not_found=True, log=log
         )
 
-        return job
+        return cast(Job,job)
 
 
 @api.route("/newTaskEngine")

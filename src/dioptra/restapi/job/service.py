@@ -40,9 +40,9 @@ from dioptra.task_engine.validation import is_valid
 
 from .errors import (
     InvalidExperimentDescriptionError,
-    JobWorkflowUploadError,
     JobDoesNotExistError,
     JobStatusIncorrectError,
+    JobWorkflowUploadError,
 )
 from .model import Job
 
@@ -97,7 +97,8 @@ class JobService(object):
             The job object if found, otherwise None.
 
         Raises:
-            JobDoesNotExistError: If the job is not found and `error_if_not_found` is True.
+            JobDoesNotExistError: If the job is not found and `error_if_not_found`
+                is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
@@ -139,7 +140,8 @@ class JobService(object):
         Raises:
             ExperimentDoesNotExistError: If experiment is not found.
             QueueDoesNotExistError: If the queue is not found.
-            JobWorkflowUploadError: If there is an error uploading the workflow to the backend storage.
+            JobWorkflowUploadError: If there is an error uploading the workflow to
+                the backend storage.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -160,7 +162,7 @@ class JobService(object):
             ),
         )
 
-        workflow_uri: Optional[str] = self._upload_workflow(workflow=workflow, log=log)
+        workflow_uri= self._upload_workflow(workflow=workflow, log=log)
 
         if workflow_uri is None:
             log.error(
@@ -205,12 +207,13 @@ class JobService(object):
 
         return new_job
 
-    def change_status(self, job_id: str, status: str, **kwargs) -> Job:
+    def change_status(self, job_id: str, status: str, **kwargs) -> Job | None:
         """Change the status of a job.
 
         Args:
             job_id: The unique identifier of the job.
-            status: The new status for the job. Must be one of ["queued", "started", "deferred", "finished", "failed"].
+            status: The new status for the job. Must be one of ["queued",
+                "started", "deferred", "finished", "failed"].
 
         Returns:
             The updated job object.
@@ -220,7 +223,7 @@ class JobService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        job = self.get(job_id=job_id, error_if_not_found=True)
+        job = cast (Job, self.get(job_id=job_id, error_if_not_found=True, log=log) )
 
         if status not in ["queued", "started", "deferred", "finished", "failed"]:
             raise JobStatusIncorrectError
@@ -248,7 +251,8 @@ class JobService(object):
             queue_name: The name of the queue to which the job belongs.
             experiment_name: The name of the experiment associated with the job.
             experiment_description: A mapping representing the experiment description.
-            global_parameters: A mapping of global parameters for the job. Defaults to None.
+            global_parameters: A mapping of global parameters for the job. Defaults to
+                None.
             timeout: The maximum execution time for the job. Defaults to None.
             depends_on: A comma-separated string of job dependencies. Defaults to None.
 
@@ -260,7 +264,7 @@ class JobService(object):
             QueueDoesNotExistError: If queue is not found.
             InvalidExperimentDescriptionError: If the experiment description is invalid.
         """
-        from dioptra.restapi.models import Experiment, Queue
+        from dioptra.restapi.models import Queue
 
         log: BoundLogger = LOGGER.new()
 

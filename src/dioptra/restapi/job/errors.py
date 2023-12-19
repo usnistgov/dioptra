@@ -73,5 +73,6 @@ def register_error_handlers(api: Api) -> None:
     @api.errorhandler(JobStatusIncorrectError)
     def handle_job_status_incorrect_error(error):
         return {
-            "message": "The job status is invalid! Must be one of ['queued', 'started', 'deferred', 'finished', 'failed']"
+            "message": "The job status is invalid! Must be one of"
+            "['queued', 'started', 'deferred', 'finished', 'failed']"
         }, 400
