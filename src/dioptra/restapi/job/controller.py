@@ -84,7 +84,7 @@ class JobResource(Resource):
         )  # noqa: F841
         parsed_obj = request.parsed_form  # type: ignore
         log.info("Request received")
-        return self._job_service.submit(
+        return self._job_service.create(
             queue_name=parsed_obj["queue"],
             experiment_name=parsed_obj["experiment_name"],
             timeout=parsed_obj["timeout"],
@@ -99,7 +99,7 @@ class JobResource(Resource):
 @api.route("/<string:jobId>")
 @api.param("jobId", "A string specifying a job's UUID.")
 class JobIdResource(Resource):
-    """Shows a single job."""
+    """Show a single job (id reference) and lets you modify it."""
 
     @inject
     def __init__(self, *args, job_service: JobService, **kwargs) -> None:
@@ -114,11 +114,24 @@ class JobIdResource(Resource):
             request_id=str(uuid.uuid4()), resource="jobId", request_type="GET"
         )  # noqa: F841
         log.info("Request received", job_id=jobId)
-        job: Optional[Job] = self._job_service.get_by_id(jobId, log=log)
+        job = self._job_service.get(jobId, error_if_not_found=True, log=log)
 
-        if job is None:
-            log.error("Job not found", job_id=jobId)
-            raise JobDoesNotExistError
+        return job
+
+    @login_required
+    @accepts(schema=JobSchema, api=api)
+    @responds(schema=JobSchema, api=api)
+    def put(self, jobId: str) -> Job:
+        """Updates a job's status by its unique identifier."""
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="jobId", request_type="PUT"
+        )  # noqa: F841
+
+        parsed_obj = request.parsed_obj  # type: ignore
+
+        job = self._job_service.change_status(
+            jobId, status=parsed_obj["status"], error_if_not_found=True, log=log
+        )
 
         return job
 
@@ -133,15 +146,15 @@ class TaskEngineResource(Resource):
     @accepts(schema=TaskEngineSubmission, api=api)
     @responds(schema=JobSchema, api=api)
     def post(self) -> Job:
-        post_obj = flask.request.parsed_obj  # type: ignore
+        parsed_obj = request.parsed_obj  # type: ignore
 
         new_job = self._job_service.submit_task_engine(
-            queue_name=post_obj["queue"],
-            experiment_name=post_obj["experimentName"],
-            experiment_description=post_obj["experimentDescription"],
-            global_parameters=post_obj.get("globalParameters"),
-            timeout=post_obj.get("timeout"),
-            depends_on=post_obj.get("dependsOn"),
+            queue_name=parsed_obj["queue"],
+            experiment_name=parsed_obj["experimentName"],
+            experiment_description=parsed_obj["experimentDescription"],
+            global_parameters=parsed_obj.get("globalParameters"),
+            timeout=parsed_obj.get("timeout"),
+            depends_on=parsed_obj.get("dependsOn"),
         )
 
         return new_job
