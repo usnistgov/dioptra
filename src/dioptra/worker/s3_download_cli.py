@@ -25,13 +25,13 @@ from dioptra.sdk.utilities.logging import (
     attach_stdout_stream_handler,
     configure_structlog,
 )
-from dioptra.worker.setup_task_plugins import setup_task_plugins
+from dioptra.worker.s3_download import s3_download
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="""
-        Setup a task plugins directory, with content downloaded from S3.
+        Download file(s) from S3 to a directory.
         """
     )
 
@@ -48,9 +48,31 @@ def parse_args() -> argparse.Namespace:
         "-d",
         "--dest-dir",
         help="""
-        The directory to download to
+        The directory to download to.  Default: "%(default)s"
         """,
-        required=True,
+        default=".",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--clear",
+        help="""
+        Clear the destination directory
+        """,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--preserve-paths",
+        help="""
+        Treat keys as paths and create that directory structure in the
+        filesystem.  If not given, any key structure is flattened: directory
+        structure is ignored, and filename path components (the last path
+        component) are used to name the files created in the destination
+        directory.
+        """,
+        action="store_true",
     )
 
     parser.add_argument(
@@ -107,7 +129,7 @@ def main() -> None:
 
     s3 = boto3.client("s3", endpoint_url=args.endpoint_url)
 
-    setup_task_plugins(s3, args.dest_dir, *args.s3_uri)
+    s3_download(s3, args.dest_dir, args.clear, args.preserve_paths, *args.s3_uri)
 
 
 if __name__ == "__main__":

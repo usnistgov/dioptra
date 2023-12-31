@@ -96,6 +96,7 @@ Changelog = "https://github.com/usnistgov/dioptra/blob/main/CHANGELOG.md"
 dioptra-db = "dioptra.restapi.db.alembic.run:cli"
 run-experiment = "dioptra.task_engine.run_experiment:main"
 validate-experiment = "dioptra.task_engine.validate:main"
+s3-download = "dioptra.worker.s3_download_cli:main"
 
 [project.entry-points."dioptra.generics.estimator_predict"]
 tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"

@@ -28,9 +28,6 @@ CONTAINER_MLFLOW_TRACKING_INCLUDE_FILES =\
     docker/shellscripts/entrypoint-mlflow-tracking.m4\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
-    docker/shellscripts/s3-cp.m4\
-    docker/shellscripts/s3-mb.m4\
-    docker/shellscripts/s3-sync.m4\
     docker/shellscripts/unpack-archive.m4\
     docker/shellscripts/wait-for-it.sh
 
@@ -52,9 +49,6 @@ CONTAINER_PYTORCH_CPU_INCLUDE_FILES =\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
     docker/shellscripts/run-mlflow-job.m4\
-    docker/shellscripts/s3-cp.m4\
-    docker/shellscripts/s3-mb.m4\
-    docker/shellscripts/s3-sync.m4\
     docker/shellscripts/unpack-archive.m4\
     docker/shellscripts/wait-for-it.sh\
     $(CODE_PACKAGING_FILES)\
@@ -70,9 +64,6 @@ CONTAINER_PYTORCH_GPU_INCLUDE_FILES =\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
     docker/shellscripts/run-mlflow-job.m4\
-    docker/shellscripts/s3-cp.m4\
-    docker/shellscripts/s3-mb.m4\
-    docker/shellscripts/s3-sync.m4\
     docker/shellscripts/unpack-archive.m4\
     docker/shellscripts/wait-for-it.sh\
     $(CODE_PACKAGING_FILES)\
@@ -88,9 +79,6 @@ CONTAINER_RESTAPI_INCLUDE_FILES =\
     docker/shellscripts/entrypoint-restapi.m4\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
-    docker/shellscripts/s3-cp.m4\
-    docker/shellscripts/s3-mb.m4\
-    docker/shellscripts/s3-sync.m4\
     docker/shellscripts/unpack-archive.m4\
     docker/shellscripts/wait-for-it.sh\
     wsgi.py\
@@ -107,9 +95,6 @@ CONTAINER_TENSORFLOW2_CPU_INCLUDE_FILES =\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
     docker/shellscripts/run-mlflow-job.m4\
-    docker/shellscripts/s3-cp.m4\
-    docker/shellscripts/s3-mb.m4\
-    docker/shellscripts/s3-sync.m4\
     docker/shellscripts/unpack-archive.m4\
     docker/shellscripts/wait-for-it.sh\
     $(CODE_PACKAGING_FILES)\
@@ -125,9 +110,6 @@ CONTAINER_TENSORFLOW2_GPU_INCLUDE_FILES =\
     docker/shellscripts/fix-permissions.m4\
     docker/shellscripts/parse-uri.m4\
     docker/shellscripts/run-mlflow-job.m4\
-    docker/shellscripts/s3-cp.m4\
-    docker/shellscripts/s3-mb.m4\
-    docker/shellscripts/s3-sync.m4\
     docker/shellscripts/unpack-archive.m4\
     docker/shellscripts/wait-for-it.sh\
     $(CODE_PACKAGING_FILES)\

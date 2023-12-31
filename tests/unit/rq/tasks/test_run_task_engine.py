@@ -1,12 +1,9 @@
-import io
 import os
 import pathlib
 
-import boto3
 import mlflow
 import mlflow.entities
 import rq.job
-from botocore.stub import Stubber
 
 import dioptra.pyplugs
 import dioptra.rq.tasks.run_task_engine
@@ -31,8 +28,10 @@ def silly_plugin():
     pathlib.Path("test.txt").write_text("hello")
 
 
-def test_run_task_engine(monkeypatch, tmp_path):
+def test_run_task_engine(monkeypatch, tmp_path, s3_stubbed_plugins):
     saved_cwd = pathlib.Path.cwd()
+
+    s3, bucket_info = s3_stubbed_plugins
 
     mlflow_tags = {}
     mlflow_params = {}
@@ -118,47 +117,6 @@ def test_run_task_engine(monkeypatch, tmp_path):
         "graph": {"step1": {"silly": []}},
     }
 
-    # Split the builtins plugins listing into two pages, to test paging.
-    builtins_keys_response_trunc = {
-        "IsTruncated": True,
-        "Contents": [{"Key": "dioptra_builtins/file1.dat"}],
-        "NextContinuationToken": "next",
-    }
-
-    builtins_keys_response_cont = {
-        "IsTruncated": False,
-        "Contents": [{"Key": "dioptra_builtins/file2.dat"}],
-    }
-
-    custom_keys_response = {
-        "IsTruncated": False,
-        "Contents": [
-            {"Key": "dioptra_custom/file3.dat"},
-            {"Key": "dioptra_custom/file4.dat"},
-        ],
-    }
-
-    file1_content = b"\x00\x01\x02"
-    file2_content = b"\x03\x04\x05"
-    file3_content = b"\x06\x07\x08"
-    file4_content = b"\x09\x0a\x0b"
-
-    file1_content_stream = io.BytesIO(file1_content)
-    file2_content_stream = io.BytesIO(file2_content)
-    file3_content_stream = io.BytesIO(file3_content)
-    file4_content_stream = io.BytesIO(file4_content)
-
-    # This ought to work for all files, since all are the same size.
-    head_object_response = {"ContentType": "binary/octet-stream", "ContentLength": 3}
-
-    file1_get_object_response = {"Body": file1_content_stream}
-
-    file2_get_object_response = {"Body": file2_content_stream}
-
-    file3_get_object_response = {"Body": file3_content_stream}
-
-    file4_get_object_response = {"Body": file4_content_stream}
-
     tmp_plugins_dir = tmp_path / "plugins"
     tmp_work_dir = tmp_path / "work"
     tmp_work_dir.mkdir()
@@ -169,107 +127,15 @@ def test_run_task_engine(monkeypatch, tmp_path):
     monkeypatch.setenv("MLFLOW_S3_ENDPOINT_URL", "http://example.org/")
     monkeypatch.setenv("DIOPTRA_WORKDIR", str(tmp_work_dir))
 
-    s3 = boto3.client("s3", endpoint_url="http://example.org/")
-    with Stubber(s3) as stubber:
-        # The run_task_engine() function we're testing uses a boto3 convenience
-        # API function, download_file(), to download files.  But we can only
-        # mock up actual AWS responses.  The actual sequence of requests that
-        # download_file() makes to download its files, is not documented
-        # anywhere.  So we have no good way of knowing which responses we need
-        # to mock up!  It's a lot of trial and error...
+    dioptra.rq.tasks.run_task_engine.run_task_engine_task(
+        1, silly_experiment, global_experiment_params, s3
+    )
 
-        # Page 1 of dioptra_builtins keys:
-        stubber.add_response(
-            "list_objects_v2",
-            builtins_keys_response_trunc,
-            {"Bucket": "plugins", "Prefix": "dioptra_builtins/"},
-        )
+    for key, value in bucket_info["plugins"].items():
+        local_file = tmp_plugins_dir / key
 
-        # I think the downloader does this because it wants the file size.
-        stubber.add_response(
-            "head_object",
-            head_object_response,
-            {"Bucket": "plugins", "Key": "dioptra_builtins/file1.dat"},
-        )
-
-        stubber.add_response(
-            "get_object",
-            file1_get_object_response,
-            {"Bucket": "plugins", "Key": "dioptra_builtins/file1.dat"},
-        )
-
-        # Page 2 of dioptra_builtins keys:
-        stubber.add_response(
-            "list_objects_v2",
-            builtins_keys_response_cont,
-            {
-                "Bucket": "plugins",
-                "Prefix": "dioptra_builtins/",
-                "ContinuationToken": "next",
-            },
-        )
-
-        stubber.add_response(
-            "head_object",
-            head_object_response,
-            {"Bucket": "plugins", "Key": "dioptra_builtins/file2.dat"},
-        )
-
-        stubber.add_response(
-            "get_object",
-            file2_get_object_response,
-            {"Bucket": "plugins", "Key": "dioptra_builtins/file2.dat"},
-        )
-
-        # dioptra_custom keys (1 page, 2 files):
-        stubber.add_response(
-            "list_objects_v2",
-            custom_keys_response,
-            {"Bucket": "plugins", "Prefix": "dioptra_custom/"},
-        )
-
-        stubber.add_response(
-            "head_object",
-            head_object_response,
-            {"Bucket": "plugins", "Key": "dioptra_custom/file3.dat"},
-        )
-
-        stubber.add_response(
-            "get_object",
-            file3_get_object_response,
-            {"Bucket": "plugins", "Key": "dioptra_custom/file3.dat"},
-        )
-
-        stubber.add_response(
-            "head_object",
-            head_object_response,
-            {"Bucket": "plugins", "Key": "dioptra_custom/file4.dat"},
-        )
-
-        stubber.add_response(
-            "get_object",
-            file4_get_object_response,
-            {"Bucket": "plugins", "Key": "dioptra_custom/file4.dat"},
-        )
-
-        dioptra.rq.tasks.run_task_engine.run_task_engine_task(
-            1, silly_experiment, global_experiment_params, s3
-        )
-
-    file1 = tmp_plugins_dir / "dioptra_builtins/file1.dat"
-    file2 = tmp_plugins_dir / "dioptra_builtins/file2.dat"
-    file3 = tmp_plugins_dir / "dioptra_custom/file3.dat"
-    file4 = tmp_plugins_dir / "dioptra_custom/file4.dat"
-
-    assert file1.exists()
-    assert file2.exists()
-    assert file3.exists()
-    assert file4.exists()
-
-    assert file1.read_bytes() == file1_content
-    assert file2.read_bytes() == file2_content
-    assert file3.read_bytes() == file3_content
-    assert file4.read_bytes() == file4_content
+        assert local_file.exists()
+        assert local_file.read_bytes() == value
 
     assert dioptra_job["status"] == "finished"
     assert dioptra_job["mlflow_run_id"] == mlflow_run.info.run_id
