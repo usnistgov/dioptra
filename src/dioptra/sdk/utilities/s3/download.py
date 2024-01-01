@@ -65,7 +65,7 @@ def get_s3_keys(
 
 
 def download_files_uri(
-    s3: BaseClient, dest_dir: Path, s3_uri: str, preserve_key_paths: bool = True
+    s3: BaseClient, dest_dir: Path, s3_uri: str, preserve_key_paths: bool = False
 ):
     """
     Download all files from the given S3 URI to the given directory.
