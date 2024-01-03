@@ -62,8 +62,8 @@ class ExperimentResource(Resource):
         )  # noqa: F841
         log.info("Request received")
 
-        index = request.args.get("index", None, type=int)
-        page_length = request.args.get("page_length", None, type=int)
+        index = request.args.get("index", None, type=Optional[int])
+        page_length = request.args.get("page_length", None, type=Optional[int])
         data = self._experiment_service.get_all(
             index=index, page_length=page_length, log=log
         )
