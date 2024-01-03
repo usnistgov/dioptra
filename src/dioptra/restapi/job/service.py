@@ -32,7 +32,7 @@ from werkzeug.utils import secure_filename
 from dioptra.restapi.db import db
 from dioptra.restapi.experiment.errors import ExperimentDoesNotExistError
 from dioptra.restapi.experiment.service import ExperimentNameService
-from dioptra.restapi.models import Experiment, Queue
+from dioptra.restapi.models import Queue
 from dioptra.restapi.queue.service import QueueNameService
 from dioptra.restapi.shared.rq.service import RQService
 from dioptra.restapi.shared.s3.service import S3Service
