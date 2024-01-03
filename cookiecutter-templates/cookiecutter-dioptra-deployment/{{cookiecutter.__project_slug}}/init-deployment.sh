@@ -28,7 +28,8 @@ SCRIPT_DIRPATH="$(realpath ${0%%/*})"
 LOGNAME="Init Deployment"
 
 DOCKER_COMPOSE_INIT_YML="${SCRIPT_DIRPATH}/docker-compose.init.yml"
-GENERATE_TEMPLATES_SCRIPT="${SCRIPT_DIRPATH}/scripts/generate_templates.py"
+GENERATE_DOCKER_TEMPLATES_SCRIPT="${SCRIPT_DIRPATH}/scripts/generate_docker_templates.py"
+GENERATE_PASSWORD_TEMPLATES_SCRIPT="${SCRIPT_DIRPATH}/scripts/generate_password_templates.py"
 
 CONTAINER_DB_PORT="5432"
 CONTAINER_SSL_DIR="/ssl"
@@ -558,10 +559,12 @@ init_minio() {
 }
 
 ###########################################################################################
-# Wrapper for the generate_templates.py utility script
+# Wrapper for the generate_docker_templates.py and generate_password_templates.py utility
+# scripts
 #
 # Globals:
-#   GENERATE_PASSWORDS_SCRIPT
+#   GENERATE_DOCKER_TEMPLATES_SCRIPT
+#   GENERATE_PASSWORD_TEMPLATES_SCRIPT
 # Arguments:
 #   None
 # Returns:
@@ -569,7 +572,8 @@ init_minio() {
 ###########################################################################################
 
 init_templates() {
-  python_cmd "${GENERATE_TEMPLATES_SCRIPT}"
+  python_cmd "${GENERATE_DOCKER_TEMPLATES_SCRIPT}"
+  python_cmd "${GENERATE_PASSWORD_TEMPLATES_SCRIPT}"
 }
 
 ###########################################################################################

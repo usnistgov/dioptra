@@ -33,7 +33,7 @@ PASSWORD_FILES: list[tuple[Path, Path]] = [
 JINJA_ENV = Environment(loader=FileSystemLoader([str(BASE_DIRECTORY)]))
 
 
-logger = logging.getLogger("generate_templates.py")
+logger = logging.getLogger("generate_password_templates.py")
 
 
 def generate_random_passwords(words_file: str | Path) -> dict[str, Any]:

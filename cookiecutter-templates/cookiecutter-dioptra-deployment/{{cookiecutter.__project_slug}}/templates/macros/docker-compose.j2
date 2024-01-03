@@ -286,6 +286,10 @@ volumes:
     timeout: 60s
     retries: 5
     start_period: 80s
+  {{ "{% if datasets_directory is not none %}" }}
+  volumes:
+    - {{ "{{ datasets_directory }}" }}:/datasets:ro
+  {{ "{% endif %}" }}
   environment:
     AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
     AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
@@ -323,6 +327,10 @@ volumes:
     timeout: 60s
     retries: 5
     start_period: 80s
+  {{ "{% if datasets_directory is not none %}" }}
+  volumes:
+    - {{ "{{ datasets_directory }}" }}:/datasets:ro
+  {{ "{% endif %}" }}
   environment:
     AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
     AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
@@ -360,6 +368,10 @@ volumes:
     timeout: 60s
     retries: 5
     start_period: 80s
+  {{ "{% if datasets_directory is not none %}" }}
+  volumes:
+    - {{ "{{ datasets_directory }}" }}:/datasets:ro
+  {{ "{% endif %}" }}
   environment:
     AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
     AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
@@ -397,6 +409,10 @@ volumes:
     timeout: 60s
     retries: 5
     start_period: 80s
+  {{ "{% if datasets_directory is not none %}" }}
+  volumes:
+    - {{ "{{ datasets_directory }}" }}:/datasets:ro
+  {{ "{% endif %}" }}
   environment:
     AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
     AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
