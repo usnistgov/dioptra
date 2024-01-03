@@ -179,3 +179,17 @@ def setup_injection(api: Api, injector: Injector) -> None:
     # if api.app.debug:
     #     injector_logger = logging.getLogger("injector")
     #     injector_logger.setLevel(logging.DEBUG)
+    
+
+def pageUrl(endpoint: str, index: int, page_length: int):
+    """
+    Return a url for a given page.
+
+    Args:
+        endpoint: endpoint url for generating pages.
+        index: Index of page.
+        page_length: Length of page.
+    """
+    if index < 0: index = 0 
+    result = f"/api/{endpoint}?index={index}&page_length={page_length}"
+    return result

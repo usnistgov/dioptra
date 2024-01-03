@@ -128,10 +128,14 @@ class ExperimentService(object):
         return experiment
 
     @staticmethod
-    def get_all(**kwargs) -> List[Experiment]:
+    def get_all(index: int, page_length: int, **kwargs) -> List[Experiment]:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
-
-        return Experiment.query.filter_by(is_deleted=False).all()  # type: ignore
+        
+        if None in (index, page_length):
+            return  Experiment.query.filter_by(is_deleted=False).all()
+        
+        return Experiment.query.filter_by(
+            is_deleted=False).offset(index).limit(page_length).all()  # type: ignore
 
     @staticmethod
     def get_by_id(experiment_id: int, **kwargs) -> Optional[Experiment]:

@@ -253,13 +253,39 @@ def assert_experiment_count_matches_expected_count(
         follow_redirects=True,
     )
     assert len(response.get_json()) == expected
+    
+    
+def assert_page_data_matches(
+    client: FlaskClient, index: int, page_length: int, expected: list[dict[str, Any]]
+) -> None:
+    """Assert that the returned page matches the expected page.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected page.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the number of
+            experiments does not match the expected number.
+    """
+    
+    response = client.get(
+        f"/api/{EXPERIMENT_BASE_ROUTE}?index={index}&page_length={page_length}",
+        follow_redirects=True,
+    )
+
+    page = response.get_json()
+    assert response.status_code == 200 and page == expected
+
+
+
 
 
 # -- Tests -----------------------------------------------------------------------------
 
 
 def test_register_experiment(client: FlaskClient, db: SQLAlchemy) -> None:
-    """Tests that experiments can be registered following the scenario below::
+    """Tests that experiments can be registered following the scenario below:
 
         Scenario: Registering an Experiment
             Given I am an authorized user,
@@ -305,7 +331,7 @@ def test_cannot_register_existing_experiment_name(
 
 
 def test_retrieve_experiment(client: FlaskClient, db: SQLAlchemy) -> None:
-    """Test that an experiment can be retrieved following the scenario below::
+    """Test that an experiment can be retrieved following the scenario below:
 
         Scenario: Get an Experiment
             Given I am an authorized user and an experiment exists,
@@ -331,7 +357,7 @@ def test_retrieve_experiment(client: FlaskClient, db: SQLAlchemy) -> None:
 
 
 def test_list_experiments(client: FlaskClient, db: SQLAlchemy) -> None:
-    """Test that the list of experiments can be renamed following the scenario below::
+    """Test that the list of experiments can be renamed following the scenario below:
 
         Scenario: Get the List of Registered Experiments
             Given I am an authorized user and a set of experiments exist,
@@ -359,7 +385,7 @@ def test_list_experiments(client: FlaskClient, db: SQLAlchemy) -> None:
 
 
 def test_rename_experiment(client: FlaskClient, db: SQLAlchemy) -> None:
-    """Test that an experiment can be renamed following the scenario below::
+    """Test that an experiment can be renamed following the scenario below:
 
         Scenario: Rename an Experiment
             Given I am an authorized user and an experiment exists,
@@ -400,7 +426,7 @@ def test_rename_experiment(client: FlaskClient, db: SQLAlchemy) -> None:
 
 
 def test_delete_experiment(client: FlaskClient, db: SQLAlchemy) -> None:
-    """Test that an experiment can be deleted following the scenario below::
+    """Test that an experiment can be deleted following the scenario below:
 
         Scenario: Delete an Experiment
             Given I am an authorized user and an experiment exists,
@@ -440,3 +466,44 @@ def test_delete_experiment(client: FlaskClient, db: SQLAlchemy) -> None:
     )
     delete_experiment_with_id(client, id=experiment2_json["experimentId"])
     assert_experiment_is_not_found(client, id=experiment2_json["experimentId"])
+    
+
+def test_experiment_paging(client: FlaskClient, db: SQLAlchemy) -> None:
+    """Tests that experiments can be retrieved according to paging information:
+
+        Scenario: Experiment Paging
+            Given I am an authorized user,
+            I need to be able to select an index and page length,
+            in order to display a page of experiments.
+
+    This test validates by following these actions:
+
+    - A user registers a set of experiments named "mnist1", "mnist2" and "mnist3".
+    - The user is able to retrieve information about the experiments that
+      matches the information that was provided during registration.
+    - The user is able to retrieve a list of all registered experiments.
+    - The returned list of experiments matches the information that was provided
+      during registration.
+    """
+    
+    experiment1_expected = register_experiment(client, name="mnist4").get_json()
+    experiment2_expected = register_experiment(client, name="mnist5").get_json()
+    register_experiment(client, name="mnist6").get_json()
+    data = [
+        experiment1_expected,
+        experiment2_expected,
+    ]
+    index = 0
+    page_length = 2
+    is_complete = False
+    page_expected = {
+        "page": data,
+        "index": index,
+        "is_complete": is_complete,
+        "first": f"/api/experiment?index=0&page_length={page_length}",
+        "next": f"/api/experiment?index={index+page_length}&page_length={page_length}",
+        "prev": f"/api/experiment?index=0&page_length={page_length}",
+    }
+    assert_page_data_matches(
+        client, index=0, page_length=2, expected=page_expected
+    )
