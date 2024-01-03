@@ -114,7 +114,7 @@ class JobIdResource(Resource):
         log.info("Request received", job_id=jobId)
         job = self._job_service.get(jobId, error_if_not_found=True, log=log)
 
-        return cast(Job,job)
+        return cast(Job, job)
 
     @login_required
     @accepts(schema=JobSchema, api=api)
@@ -131,7 +131,7 @@ class JobIdResource(Resource):
             jobId, status=parsed_obj["status"], error_if_not_found=True, log=log
         )
 
-        return cast(Job,job)
+        return cast(Job, job)
 
 
 @api.route("/newTaskEngine")

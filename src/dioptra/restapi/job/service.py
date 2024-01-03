@@ -21,7 +21,7 @@ import datetime
 import json
 import uuid
 from pathlib import Path
-from typing import Any, List, Mapping, Optional, cast
+from typing import Any, List, Mapping, cast
 
 import structlog
 from injector import inject
@@ -162,7 +162,7 @@ class JobService(object):
             ),
         )
 
-        workflow_uri= self._upload_workflow(workflow=workflow, log=log)
+        workflow_uri = self._upload_workflow(workflow=workflow, log=log)
 
         if workflow_uri is None:
             log.error(
@@ -223,7 +223,7 @@ class JobService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        job = cast (Job, self.get(job_id=job_id, error_if_not_found=True, log=log) )
+        job = cast(Job, self.get(job_id=job_id, error_if_not_found=True, log=log))
 
         if status not in ["queued", "started", "deferred", "finished", "failed"]:
             raise JobStatusIncorrectError
