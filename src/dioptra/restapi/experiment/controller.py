@@ -55,21 +55,18 @@ class ExperimentResource(Resource):
 
     @login_required
     @responds(schema=ExperimentSchema(many=True), api=api)
-    def get(self) -> List[Experiment]:
+    def get(self) -> Response:
         """Gets a list of all registered experiments."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="GET"
         )  # noqa: F841
         log.info("Request received")
 
-        index = request.args.get("index", None, type=Optional[int])
-        page_length = request.args.get("page_length", None, type=Optional[int])
+        index = request.args.get("index", 0, type=int)
+        page_length = request.args.get("page_length", 20, type=int)
         data = self._experiment_service.get_all(
             index=index, page_length=page_length, log=log
         )
-
-        if None in (index, page_length):
-            return data
 
         is_complete = True if Experiment.query.count() <= index + page_length else False
 

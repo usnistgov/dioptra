@@ -178,7 +178,7 @@ def assert_retrieving_all_experiments_works(
             does not match the expected response.
     """
     response = client.get(f"/api/{EXPERIMENT_BASE_ROUTE}", follow_redirects=True)
-    assert response.status_code == 200 and response.get_json() == expected
+    assert response.status_code == 200 and response.get_json()["page"] == expected
 
 
 def assert_experiment_name_matches_expected_name(
@@ -252,7 +252,7 @@ def assert_experiment_count_matches_expected_count(
         f"/api/{EXPERIMENT_BASE_ROUTE}",
         follow_redirects=True,
     )
-    assert len(response.get_json()) == expected
+    assert len(response.get_json()["page"]) == expected
     
     
 def assert_page_data_matches(

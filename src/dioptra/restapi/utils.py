@@ -24,7 +24,7 @@
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable, List, Protocol, Type
+from typing import Any, Callable, List, Optional, Protocol, Type
 
 from flask.views import View
 from flask_restx import Api, Namespace, Resource
