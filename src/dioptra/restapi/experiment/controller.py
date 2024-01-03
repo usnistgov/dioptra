@@ -29,7 +29,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import slugify, pageUrl
+from dioptra.restapi.utils import pageUrl, slugify
 
 from .errors import ExperimentDoesNotExistError
 from .model import Experiment
@@ -61,26 +61,28 @@ class ExperimentResource(Resource):
             request_id=str(uuid.uuid4()), resource="experiment", request_type="GET"
         )  # noqa: F841
         log.info("Request received")
-        
-        index  = request.args.get('index', None, type = int)
-        page_length = request.args.get('page_length', None, type = int)
+
+        index = request.args.get("index", None, type=int)
+        page_length = request.args.get("page_length", None, type=int)
         data = self._experiment_service.get_all(
-            index=index, page_length=page_length, log=log 
+            index=index, page_length=page_length, log=log
         )
-        
+
         if None in (index, page_length):
             return data
 
-        is_complete = True if Experiment.query.count() <= index+page_length else False
-        
-        return jsonify({
-            "page": ExperimentSchema(many=True).dump(data),
-            "index": index,
-            "is_complete": is_complete,
-            "first": pageUrl("experiment", 0, page_length),
-            "next": pageUrl("experiment", index+page_length, page_length),
-            "prev": pageUrl("experiment", index-page_length, page_length),
-        })
+        is_complete = True if Experiment.query.count() <= index + page_length else False
+
+        return jsonify(
+            {
+                "page": ExperimentSchema(many=True).dump(data),
+                "index": index,
+                "is_complete": is_complete,
+                "first": pageUrl("experiment", 0, page_length),
+                "next": pageUrl("experiment", index + page_length, page_length),
+                "prev": pageUrl("experiment", index - page_length, page_length),
+            }
+        )
 
     @login_required
     @accepts(schema=ExperimentSchema, api=api)
