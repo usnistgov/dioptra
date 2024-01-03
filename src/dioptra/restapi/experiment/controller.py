@@ -18,11 +18,10 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, Optional
+from typing import Any, cast
 
 import structlog
-from flask import jsonify, request
-from flask.wrappers import Response
+from flask import request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -33,8 +32,8 @@ from dioptra.restapi.utils import pageUrl, slugify
 
 from .errors import ExperimentDoesNotExistError
 from .model import Experiment
-from .schema import ExperimentSchema
-from .service import ExperimentService
+from .schema import ExperimentSchema, IdStatusResponseSchema, NameStatusResponseSchema
+from .service import ExperimentNameService, ExperimentService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -56,7 +55,7 @@ class ExperimentResource(Resource):
     @login_required
     @responds(schema=ExperimentSchema(many=True), api=api)
     def get(self) -> Response:
-        """Gets a list of all registered experiments."""
+        """Gets a page of registered experiments."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="GET"
         )  # noqa: F841
@@ -89,14 +88,9 @@ class ExperimentResource(Resource):
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="POST"
         )  # noqa: F841
-
         log.info("Request received")
-
         parsed_obj = request.parsed_obj  # type: ignore
-
-        name = slugify(str(parsed_obj["name"]))
-
-        return self._experiment_service.create(experiment_name=name, log=log)
+        return self._experiment_service.create(parsed_obj["name"], log=log)
 
 
 @api.route("/<int:experimentId>")
@@ -117,28 +111,22 @@ class ExperimentIdResource(Resource):
             request_id=str(uuid.uuid4()), resource="experimentId", request_type="GET"
         )  # noqa: F841
         log.info("Request received", experiment_id=experimentId)
-        experiment: Optional[Experiment] = self._experiment_service.get_by_id(
-            experiment_id=experimentId, log=log
+        return cast(
+            Experiment,
+            self._experiment_service.get(
+                experimentId, error_if_not_found=True, log=log
+            ),
         )
 
-        if experiment is None:
-            log.error("Experiment not found", experiment_id=experimentId)
-            raise ExperimentDoesNotExistError
-
-        return experiment
-
     @login_required
-    def delete(self, experimentId: int) -> Response:
+    @responds(schema=IdStatusResponseSchema)
+    def delete(self, experimentId: int) -> dict[str, Any]:
         """Deletes an experiment by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentId", request_type="DELETE"
         )  # noqa: F841
         log.info("Request received", experiment_id=experimentId)
-        id: List[int] = self._experiment_service.delete_experiment(
-            experiment_id=experimentId
-        )
-
-        return jsonify(dict(status="Success", id=id))
+        return self._experiment_service.delete(experimentId)
 
     @login_required
     @accepts(schema=ExperimentSchema, api=api)
@@ -148,30 +136,22 @@ class ExperimentIdResource(Resource):
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentId", request_type="PUT"
         )  # noqa: F841
-        changes: dict = request.parsed_obj  # type: ignore
-        experiment: Optional[Experiment] = self._experiment_service.get_by_id(
-            experimentId, log=log
+        parsed_obj = request.parsed_obj  # type: ignore
+        return self._experiment_service.rename(
+            experimentId, new_name=parsed_obj["name"], log=log
         )
-
-        if experiment is None:
-            log.error("Experiment not found", experiment_id=experimentId)
-            raise ExperimentDoesNotExistError
-
-        experiment = self._experiment_service.rename_experiment(
-            experiment=experiment, new_name=changes["name"], log=log
-        )
-
-        return experiment
 
 
 @api.route("/name/<string:experimentName>")
 @api.param("experimentName", "The name of the experiment.")
 class ExperimentNameResource(Resource):
-    """Shows a single experiment (name reference) and lets you modify and delete it."""
+    """Shows a single experiment (name reference) and delete it."""
 
     @inject
-    def __init__(self, *args, experiment_service: ExperimentService, **kwargs) -> None:
-        self._experiment_service = experiment_service
+    def __init__(
+        self, *args, experiment_name_service: ExperimentNameService, **kwargs
+    ) -> None:
+        self._experiment_name_service = experiment_name_service
         super().__init__(*args, **kwargs)
 
     @login_required
@@ -182,18 +162,16 @@ class ExperimentNameResource(Resource):
             request_id=str(uuid.uuid4()), resource="experimentName", request_type="GET"
         )  # noqa: F841
         log.info("Request received", experiment_name=experimentName)
-        experiment: Optional[Experiment] = self._experiment_service.get_by_name(
-            experiment_name=experimentName, log=log
+        return cast(
+            Experiment,
+            self._experiment_name_service.get(
+                experimentName, error_if_not_found=True, log=log
+            ),
         )
 
-        if experiment is None:
-            log.error("Experiment not found", experiment_name=experimentName)
-            raise ExperimentDoesNotExistError
-
-        return experiment
-
     @login_required
-    def delete(self, experimentName: str) -> Response:
+    @responds(schema=NameStatusResponseSchema)
+    def delete(self, experimentName: str) -> dict[str, Any]:
         """Deletes an experiment by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),
@@ -202,38 +180,4 @@ class ExperimentNameResource(Resource):
             request_type="DELETE",
         )  # noqa: F841
         log.info("Request received")
-        experiment: Optional[Experiment] = self._experiment_service.get_by_name(
-            experiment_name=experimentName, log=log
-        )
-
-        if experiment is None:
-            return jsonify(dict(status="Success", id=[]))
-
-        id: List[int] = self._experiment_service.delete_experiment(
-            experiment_id=experiment.experiment_id
-        )
-
-        return jsonify(dict(status="Success", id=id))
-
-    @login_required
-    @accepts(schema=ExperimentSchema, api=api)
-    @responds(schema=ExperimentSchema, api=api)
-    def put(self, experimentName: str) -> Experiment:
-        """Modifies an experiment by its unique name."""
-        log: BoundLogger = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="experimentName", request_type="PUT"
-        )  # noqa: F841
-        changes: dict = request.parsed_obj  # type: ignore
-        experiment: Optional[Experiment] = self._experiment_service.get_by_name(
-            experiment_name=experimentName, log=log
-        )
-
-        if experiment is None:
-            log.error("Experiment not found", experiment_name=experimentName)
-            raise ExperimentDoesNotExistError
-
-        experiment = self._experiment_service.rename_experiment(
-            experiment=experiment, new_name=changes["name"], log=log
-        )
-
-        return experiment
+        return self._experiment_name_service.delete(experimentName, log=log)

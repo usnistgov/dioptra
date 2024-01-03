@@ -43,6 +43,7 @@ from structlog.stdlib import BoundLogger
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.auth.routes import BASE_ROUTE as AUTH_BASE_ROUTE
+from dioptra.restapi.db import db as restapi_db
 from dioptra.restapi.user.routes import BASE_ROUTE as USER_BASE_ROUTE
 
 from .conftest import wait_for_healthcheck_success
@@ -70,11 +71,10 @@ def flask_test_server_short_memory(
         http_client: A Requests session client.
     """
     sqlite_path = tmp_path / "dioptra-test.db"
-    migrations_dir = Path("src", "migrations")
     server = FlaskTestServer(
         sqlite_path=sqlite_path, extra_env={"DIOPTRA_REMEMBER_COOKIE_DURATION": "1"}
     )
-    server.upgrade_db("-d", str(migrations_dir))
+    server.upgrade_db()
     with server:
         wait_for_healthcheck_success(http_client)
         yield
@@ -110,14 +110,12 @@ def app(dependency_modules: list[Any]) -> Flask:
 
 @pytest.fixture
 def db(app: Flask) -> SQLAlchemy:
-    from dioptra.restapi.app import db
-
     with app.app_context():
-        db.drop_all()
-        db.create_all()
-        yield db
-        db.drop_all()
-        db.session.commit()
+        restapi_db.drop_all()
+        restapi_db.create_all()
+        yield restapi_db
+        restapi_db.drop_all()
+        restapi_db.session.commit()
 
 
 @pytest.fixture(autouse=True)

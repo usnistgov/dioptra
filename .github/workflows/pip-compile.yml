@@ -108,7 +108,7 @@ jobs:
           python3 -m tox run -e py310-win-${{ matrix.architecture }}-${{ matrix.requirements }}
 
       - name: archive the requirements file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: py${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.requirements }}
           path: venvs
@@ -161,7 +161,7 @@ jobs:
           python3 -m tox run -e py39-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
 
       - name: archive the requirements file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: py${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.requirements }}
           path: venvs
@@ -212,7 +212,7 @@ jobs:
           pull: true
 
       - name: archive the requirements file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: requirements-${{ matrix.tox-testenv }}
           path: /image/app/venvs
@@ -229,7 +229,7 @@ jobs:
         run: sudo apt install -y dos2unix
 
       - name: download all the compiled requirements files
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
 
@@ -241,7 +241,7 @@ jobs:
           mv artifacts/**/*.txt venvs
 
       - name: archive the consolidated requirements files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: requirements-files
           path: venvs

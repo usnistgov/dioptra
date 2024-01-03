@@ -1,12 +1,12 @@
 include CHANGELOG.md tox.ini
 recursive-include src/dioptra *.json
+recursive-include src/dioptra/restapi/db/alembic README *.mako *.ini
 
 graft docs
 graft tests
-graft src/migrations
 
 prune docker
 prune docs/build
 prune examples
 
-global-exclude .* *.py[co] 
+global-exclude .* *.py[cod]

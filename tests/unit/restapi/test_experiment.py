@@ -51,34 +51,14 @@ def register_experiment(client: FlaskClient, name: str) -> TestResponse:
     )
 
 
-def rename_experiment_with_name(
-    client: FlaskClient, name: str, new_name: str
-) -> TestResponse:
-    """Rename an experiment using the API.
-
-    Args:
-        client: The Flask test client.
-        name: The old name of the experimet to rename.
-        new_name: The new name to assign to the experiment.
-
-    Returns:
-        The response from the API.
-    """
-    return client.put(
-        f"/api/{EXPERIMENT_BASE_ROUTE}/name/{name}",
-        json={"name": new_name},
-        follow_redirects=True,
-    )
-
-
-def rename_experiment_with_id(
+def rename_experiment(
     client: FlaskClient, id: int, new_name: str
 ) -> TestResponse:
     """Rename an experiment using the API.
 
     Args:
         client: The Flask test client.
-        id: The id of the experimet to rename.
+        id: The id of the experiment to rename.
         new_name: The new name to assign to the experiment.
 
     Returns:
@@ -390,38 +370,28 @@ def test_rename_experiment(client: FlaskClient, db: SQLAlchemy) -> None:
         Scenario: Rename an Experiment
             Given I am an authorized user and an experiment exists,
             I need to be able to submit a rename request
-            in order to rename an experiment using its old name and id as identifiers.
+            in order to rename an experiment using its id as an identifier.
 
     This test validates by following these actions:
 
     - A user registers an experiment named "mnist".
     - The user is able to retrieve information about the "mnist" experiment that
       matches the information that was provided during registration.
-    - The user renames this same experiment to "imagenet" using the experiment's name as
-      an identifier.
+    - The user renames this same experiment to "imagenet".
     - The user retrieves information about the same experiment and it reflects the name
       change.
-    - The user renames this same experiment again to "fruits360" using the experiment's
-      id as an identifier.
-    - The user again retrieves information about the same experiment and it reflects
-      the name change.
     """
     start_name = "mnist"
-    update1_name = "imagenet"
-    update2_name = "fruits360"
+    update_name = "imagenet"
     experiment_json = register_experiment(client, name=start_name).get_json()
     assert_experiment_name_matches_expected_name(
         client, id=experiment_json["experimentId"], expected_name=start_name
     )
-    rename_experiment_with_name(client, name="mnist", new_name=update1_name)
-    assert_experiment_name_matches_expected_name(
-        client, id=experiment_json["experimentId"], expected_name=update1_name
-    )
-    rename_experiment_with_id(
-        client, id=experiment_json["experimentId"], new_name=update2_name
+    rename_experiment(
+        client, id=experiment_json["experimentId"], new_name=update_name
     )
     assert_experiment_name_matches_expected_name(
-        client, id=experiment_json["experimentId"], expected_name=update2_name
+        client, id=experiment_json["experimentId"], expected_name=update_name
     )
 
 

@@ -22,17 +22,18 @@ from typing import List, Optional
 
 import flask
 import structlog
+from flask import request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import as_api_parser
+from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 
-from .errors import JobDoesNotExistError, JobSubmissionError
-from .model import Job, JobForm, JobFormData
-from .schema import JobSchema, TaskEngineSubmission, job_submit_form_schema
+from .errors import JobDoesNotExistError
+from .model import Job
+from .schema import JobSchema, TaskEngineSubmission
 from .service import JobService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -68,28 +69,31 @@ class JobResource(Resource):
         return self._job_service.get_all(log=log)
 
     @login_required
-    @api.expect(as_api_parser(api, job_submit_form_schema))
-    @accepts(job_submit_form_schema, api=api)
+    @api.expect(
+        as_api_parser(
+            api,
+            as_parameters_schema_list(JobSchema, operation="load", location="form"),
+        )
+    )
+    @accepts(form_schema=JobSchema, api=api)
     @responds(schema=JobSchema, api=api)
     def post(self) -> Job:
         """Creates a new job via a job submission form with an attached file."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="job", request_type="POST"
         )  # noqa: F841
-        job_form: JobForm = JobForm()
-
+        parsed_obj = request.parsed_form  # type: ignore
         log.info("Request received")
-
-        if not job_form.validate_on_submit():
-            log.error("Form validation failed")
-            raise JobSubmissionError
-
-        log.info("Form validation successful")
-        job_form_data: JobFormData = self._job_service.extract_data_from_form(
-            job_form=job_form,
+        return self._job_service.submit(
+            queue_name=parsed_obj["queue"],
+            experiment_name=parsed_obj["experiment_name"],
+            timeout=parsed_obj["timeout"],
+            entry_point=parsed_obj["entry_point"],
+            entry_point_kwargs=parsed_obj["entry_point_kwargs"],
+            depends_on=parsed_obj["depends_on"],
+            workflow=request.files["workflow"],
             log=log,
         )
-        return self._job_service.submit(job_form_data=job_form_data, log=log)
 
 
 @api.route("/<string:jobId>")

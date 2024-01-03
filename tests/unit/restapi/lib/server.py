@@ -89,18 +89,32 @@ class FlaskTestServer(object):
         )
 
     @property
+    def dioptra_db_cmd(self) -> str:
+        """The path to the dioptra-db command.
+
+        Raises:
+            RuntimeError: If the dioptra-db command is not found.
+        """
+        cmd = shutil.which("dioptra-db")
+
+        if cmd is None:
+            raise RuntimeError("dioptra-db command not found.")
+
+        return cmd
+
+    @property
     def flask_cmd(self) -> str:
         """The path to the Flask command.
 
         Raises:
             RuntimeError: If the Flask command is not found.
         """
-        flask_cmd = shutil.which("flask")
+        cmd = shutil.which("flask")
 
-        if flask_cmd is None:
+        if cmd is None:
             raise RuntimeError("Flask command not found.")
 
-        return flask_cmd
+        return cmd
 
     def start(self) -> Popen:
         """Start the Flask server process.
@@ -153,7 +167,7 @@ class FlaskTestServer(object):
             The result of the database upgrade command.
         """
         return subprocess.run(
-            args=[self.flask_cmd, "db", "upgrade", *args],
+            args=[self.dioptra_db_cmd, "autoupgrade", *args],
             env=self.env,
             capture_output=True,
             text=True,

@@ -34,6 +34,7 @@ from redis import Redis
 from requests import ConnectionError
 from requests import Session as RequestsSession
 
+from dioptra.restapi.db import db as restapi_db
 from dioptra.restapi.shared.request_scope import request
 
 from .lib.server import FlaskTestServer
@@ -94,11 +95,7 @@ def task_plugin_archive():
 
 @pytest.fixture
 def dependency_modules() -> List[Any]:
-    from dioptra.restapi.job.dependencies import (
-        JobFormSchemaModule,
-        RQServiceConfiguration,
-        RQServiceModule,
-    )
+    from dioptra.restapi.job.dependencies import RQServiceConfiguration, RQServiceModule
     from dioptra.restapi.task_plugin.dependencies import (
         TaskPluginUploadFormSchemaModule,
     )
@@ -134,7 +131,6 @@ def dependency_modules() -> List[Any]:
 
     return [
         configure,
-        JobFormSchemaModule(),
         PasswordServiceModule(),
         RQServiceModule(),
         TaskPluginUploadFormSchemaModule(),
@@ -158,14 +154,12 @@ def app(dependency_modules: List[Any]) -> Flask:
 
 @pytest.fixture
 def db(app: Flask) -> SQLAlchemy:
-    from dioptra.restapi.app import db
-
     with app.app_context():
-        db.drop_all()
-        db.create_all()
-        yield db
-        db.drop_all()
-        db.session.commit()
+        restapi_db.drop_all()
+        restapi_db.create_all()
+        yield restapi_db
+        restapi_db.drop_all()
+        restapi_db.session.commit()
 
 
 @pytest.fixture(autouse=True)
@@ -199,9 +193,8 @@ def flask_test_server(tmp_path: Path, http_client: RequestsSession):
         http_client: A Requests session client.
     """
     sqlite_path = tmp_path / "dioptra-test.db"
-    migrations_dir = Path("src", "migrations")
     server = FlaskTestServer(sqlite_path=sqlite_path)
-    server.upgrade_db("-d", str(migrations_dir))
+    server.upgrade_db()
     with server:
         wait_for_healthcheck_success(http_client)
         yield

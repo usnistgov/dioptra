@@ -93,6 +93,7 @@ Changelog = "https://github.com/usnistgov/dioptra/blob/main/CHANGELOG.md"
 "Issue Tracker" = "https://github.com/usnistgov/dioptra/issues"
 
 [project.scripts]
+dioptra-db = "dioptra.restapi.db.alembic.run:cli"
 run-experiment = "dioptra.task_engine.run_experiment:main"
 validate-experiment = "dioptra.task_engine.validate:main"
 
@@ -243,6 +244,9 @@ omit = [
     # omit config and models files in restapi module since these are just configurations and imports
     "restapi/config.py",
     "restapi/models.py",
+    # omit alembic directory since these files are just for migrating the database
+    "*/alembic/*.py",
+    "*/alembic/versions/*.py",
 ]
 
 [tool.doc8]
@@ -269,6 +273,9 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 show_error_codes = true
 cache_dir = "/dev/null"
+exclude = [
+    'alembic/.*$',  # exclude all files, folders under alembic directory
+]
 plugins = "numpy.typing.mypy_plugin,sqlalchemy.ext.mypy.plugin"
 
 [tool.pyright]

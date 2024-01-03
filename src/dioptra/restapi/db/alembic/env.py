@@ -5,9 +5,9 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import create_engine, engine_from_config, pool
+from sqlalchemy import create_engine
 
-from dioptra.restapi.custom_types import GUID
+from dioptra.restapi.db.custom_types import GUID
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -37,7 +37,7 @@ target_metadata = current_app.extensions["migrate"].db.metadata
 
 
 def get_url():
-    app_env = os.getenv("DIOPTRA_RESTAPI_ENV", "prod")
+    app_env = os.getenv("DIOPTRA_RESTAPI_ENV", "dev")
     env_urls = {
         "dev": os.getenv("DIOPTRA_RESTAPI_DEV_DATABASE_URI"),
         "prod": os.getenv("DIOPTRA_RESTAPI_DATABASE_URI"),
@@ -51,9 +51,7 @@ def render_item(type_, obj, autogen_context):
 
     if type_ == "type" and isinstance(obj, GUID):
         # add import for this type
-        autogen_context.imports.add(
-            "from dioptra.restapi.custom_types import GUID"
-        )
+        autogen_context.imports.add("from dioptra.restapi.db.custom_types import GUID")
         return "%r" % obj
 
     # default rendering for other objects

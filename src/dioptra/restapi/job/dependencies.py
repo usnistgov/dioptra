@@ -29,14 +29,6 @@ from redis import Redis
 from dioptra.restapi.shared.request_scope import request
 from dioptra.restapi.shared.rq.service import RQService
 
-from .schema import JobFormSchema
-
-
-class JobFormSchemaModule(Module):
-    @provider
-    def provide_job_form_schema_module(self) -> JobFormSchema:
-        return JobFormSchema()
-
 
 @dataclass
 class RQServiceConfiguration(object):
@@ -97,5 +89,4 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
         modules: A list of callables used for configuring the dependency injection
             environment.
     """
-    modules.append(JobFormSchemaModule)
     modules.append(RQServiceModule)

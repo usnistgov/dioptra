@@ -66,6 +66,7 @@ class RQService(object):
 
     def submit_mlflow_job(
         self,
+        job_id: str,
         queue: str,
         workflow_uri: str,
         experiment_id: int,
@@ -74,7 +75,7 @@ class RQService(object):
         depends_on: Optional[str] = None,
         timeout: Optional[str] = None,
         **kwargs,
-    ) -> RQJob:
+    ):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         q: RQQueue = RQQueue(queue, default_timeout=24 * 3600, connection=self._redis)
@@ -94,18 +95,18 @@ class RQService(object):
         log.info(
             "Enqueuing job",
             function=self._run_mlflow,
+            job_id=job_id,
             cmd_kwargs=cmd_kwargs,
             timeout=timeout,
             depends_on=job_dependency,
         )
-        result: RQJob = q.enqueue(
+        q.enqueue(
             self._run_mlflow,
+            job_id=job_id,
             kwargs=cmd_kwargs,
             timeout=timeout,
             depends_on=job_dependency,
         )
-
-        return result
 
     def submit_task_engine_job(
         self,

@@ -25,7 +25,7 @@ The following steps will be necessary:
     ```sh
     export DIOPTRA_RESTAPI_DEV_DATABASE_URI=sqlite:///$(pwd)/dioptra-dev.db
     export DIOPTRA_RESTAPI_ENV=dev
-    flask db upgrade -d src/migrations
+    dioptra-db autoupgrade
     ```
 
 -   Several modifications to the files produced from the cookiecutter template will be necessary
@@ -41,12 +41,9 @@ The following steps will be necessary:
           init_minio
           # start_db_service
           # manage_postgres_ssl
-          # migrate_restapi_db
           stop_services
         }
         ```
-
-    -   Modify the `docker-compose.init.yml` to update the `minio/mc` tag from `latest` to `RELEASE.2022-01-25T21-02-01Z`
 
     -   Modify the `docker-compose.yml`
 
