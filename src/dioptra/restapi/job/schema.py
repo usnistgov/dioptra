@@ -128,7 +128,6 @@ class JobSchema(Schema):
             description="The current status of the job. The allowed values are: "
             "queued, started, deferred, finished, failed.",
         ),
-        # dump_only=True,
     )
 
 
