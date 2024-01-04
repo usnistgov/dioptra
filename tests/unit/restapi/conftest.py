@@ -255,3 +255,12 @@ def wait_for_healthcheck_success(client: RequestsSession, timeout: int = 10) -> 
             healthcheck = StubResponse()
 
         time_elapsed = time.time() - time_start
+
+
+@pytest.fixture(autouse=True)
+def create_mlruns(tmp_path):
+    from mlflow.tracking import set_tracking_uri
+    path = Path(tmp_path / "mlruns")
+    path.mkdir()
+    set_tracking_uri(path)
+    
