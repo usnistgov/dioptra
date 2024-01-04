@@ -7,7 +7,7 @@ Wants=syslog.service
 [Service]
 Type=oneshot
 User=root
-WorkingDirectory=$((BASEDIR))
+WorkingDirectory={{ cookiecutter.__base_directory }}
 ExecStart={{ cookiecutter.docker_compose_path }} up -d --remove-orphans --force-recreate
 ExecReload={{ cookiecutter.docker_compose_path }} restart
 ExecStop={{ cookiecutter.docker_compose_path }} down --remove-orphans

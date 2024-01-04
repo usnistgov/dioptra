@@ -18,6 +18,15 @@
     "num_tensorflow_gpu_workers": "0",
     "num_pytorch_cpu_workers": "1",
     "num_pytorch_gpu_workers": "0",
+    "__base_directory": "",
+    "__pgadmin_default_password": "",
+    "__postgres_user_dioptra_password": "",
+    "__postgres_admin_password": "",
+    "__minio_root_password": "",
+    "__minio_mlflow_tracking_password": "",
+    "__minio_restapi_password": "",
+    "__minio_worker_password": "",
+    "__minio_kms_secret_key": "",
     "__containers": {
         "networks": ["dioptra"],
         "nginx": {

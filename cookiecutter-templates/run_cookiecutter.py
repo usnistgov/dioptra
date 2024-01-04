@@ -4,82 +4,53 @@ import binascii
 import logging
 import os
 import random
-import shutil
 import string
+import sys
 import unicodedata
+from cookiecutter.main import cookiecutter
 from pathlib import Path
-
-from jinja2 import Environment, FileSystemLoader
 
 WORDS_FILE = Path("/usr/share/dict/words")
 TEMP_DIRS = ["templates"]
-TEMP_FILES = []
 BASE_DIRECTORY = Path.cwd()
-BASE_DIRECTORY_SYMBOL = "$((BASEDIR))"
-PASSWORD_FILES = [
-    Path("secrets") / "postgres-passwd.env",
-    Path("secrets") / "{{ cookiecutter.__project_slug }}-db.env",
-    Path("secrets") / "{{ cookiecutter.__project_slug }}-dbadmin.env",
-    Path("secrets") / "{{ cookiecutter.__project_slug }}-minio-accounts.env",
-    Path("secrets") / "{{ cookiecutter.__project_slug }}-minio.env",
-    Path("secrets") / "{{ cookiecutter.__project_slug }}-mlflow-tracking-database-uri.env",
-    Path("secrets") / "{{ cookiecutter.__project_slug }}-mlflow-tracking.env",
-    Path("secrets") / "{{ cookiecutter.__project_slug }}-restapi-database-uri.env",
-    Path("secrets") / "{{ cookiecutter.__project_slug }}-restapi.env",
-    Path("secrets") / "{{ cookiecutter.__project_slug }}-worker.env",
-]
-JINJA_ENV = Environment(loader=FileSystemLoader([str(BASE_DIRECTORY)]))
-
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("post_gen_project")
+logger = logging.getLogger("dioptra-deploy")
 
 
-def remove_temp_dirs(temp_dirs):
-    for temp_dir_name in temp_dirs:
-        logger.info("Removing temporary directory: %s", temp_dir_name)
-        shutil.rmtree(temp_dir_name)
-
-
-def remove_temp_files(temp_files):
-    for temp_file_name in temp_files:
-        logger.info("Removing temporary file: %s", str(temp_file_name))
-        temp_file_name.unlink()
-
-
-def insert_random_passwords(password_files, words_file, env):
+def get_random_passwords(words_file):
     logger.info("Generating \"Correct Horse Battery Staple\" passwords")
 
     words = _populate_words(words_file)
     variables = dict(
-        minio_mlflow_tracking_password=_generate_random_password(
+        __minio_mlflow_tracking_password=_generate_random_password(
             words,
             capitalize=False,
             delimiter="_",
         ),
-        minio_kms_secret_key=_generate_random_kms_secret_key(size=32),
-        minio_root_password=_generate_random_password(words),
-        minio_restapi_password=_generate_random_password(
+        __minio_kms_secret_key=_generate_random_kms_secret_key(size=32),
+        __minio_root_password=_generate_random_password(words),
+        __minio_restapi_password=_generate_random_password(
             words,
             capitalize=False,
             delimiter="_",
         ),
-        minio_worker_password=_generate_random_password(
+        __minio_worker_password=_generate_random_password(
             words,
             capitalize=False,
             delimiter="_",
         ),
-        pgadmin_default_password=_generate_random_password(
+        __pgadmin_default_password=_generate_random_password(
             words,
             capitalize=False,
             delimiter="_",
         ),
-        postgres_admin_password=_generate_random_password(
+        __postgres_admin_password=_generate_random_password(
             words,
             min_words=3,
             min_length=20,
         ),
-        postgres_user_dioptra_password=_generate_random_password(
+        __postgres_user_dioptra_password=_generate_random_password(
             words,
             min_words=3,
             min_length=20,
@@ -88,38 +59,7 @@ def insert_random_passwords(password_files, words_file, env):
         ),
     )
 
-    for filepath in password_files:
-        logger.info("Inserting generated passwords in file: %s", str(filepath))
-
-        content = _render_template(
-            env=env,
-            # Jinja2 requires forward slashes in the template name.
-            template_name=str(filepath.as_posix()),
-            variables=variables,
-        )
-
-        with (BASE_DIRECTORY / filepath).open("wt") as f:
-            f.write(content)
-
-
-def render_absolute_path_to_base_directory():
-    logger.info(
-        "Scanning files and replacing the \"%s\" symbol with %s",
-        BASE_DIRECTORY_SYMBOL,
-        str(BASE_DIRECTORY),
-    )
-
-    for dirpath, dirnames, filenames in os.walk(BASE_DIRECTORY):
-        for filename in filenames:
-            filepath = Path(dirpath) / filename
-
-            with filepath.open("rt", encoding="utf-8") as f:
-                data = f.read()
-
-            data = data.replace(BASE_DIRECTORY_SYMBOL, str(BASE_DIRECTORY))
-
-            with filepath.open("wt", encoding="utf-8") as f:
-                f.write(data)
+    return variables
 
 
 def _render_template(env, template_name, variables):
@@ -198,9 +138,16 @@ def _populate_words(words_file, source_encoding="utf-8", unicode_normalize_form=
 
 
 if __name__ == "__main__":
-    logger.debug("Current working directory: %s", str(BASE_DIRECTORY))
+    script_path = Path(sys.argv[0])
+    template_path = script_path.with_name("cookiecutter-dioptra-deployment")
 
-    render_absolute_path_to_base_directory()
-    insert_random_passwords(PASSWORD_FILES, WORDS_FILE, JINJA_ENV)
-    remove_temp_dirs(TEMP_DIRS)
-    remove_temp_files(TEMP_FILES)
+    logger.debug("Current working directory: %s", str(BASE_DIRECTORY))
+    logger.debug("Template directory: %s", str(template_path))
+
+    extra_context = {
+        "__base_directory": str(BASE_DIRECTORY)
+    }
+    passwords = get_random_passwords(WORDS_FILE)
+    extra_context.update(passwords)
+
+    cookiecutter(str(template_path), extra_context=extra_context)
