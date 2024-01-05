@@ -1,3 +1,0 @@
-{
-	"datasets_directory": "{{ cookiecutter.datasets_directory }}"
-}

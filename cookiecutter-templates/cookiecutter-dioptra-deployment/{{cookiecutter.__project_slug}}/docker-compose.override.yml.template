@@ -23,28 +23,53 @@ version: "2.4"
 # on how Docker Compose merges multiple Compose files together.
 #
 # A common use case is to add custom mounts to Dioptra worker containers. An
-# example configuration is provided below to use as a starting point. Copy this
-# .template file to docker-compose.override.yml and make configuration changes.
+# example configuration is provided below commented out to use as a starting
+# point. Copy this .template file to docker-compose.override.yml and make
+# configuration changes.
+#
+# A datasets directory is configured in the main docker-compose.yml file in the
+# cookicutter deployment generation. It is recommended that datasets_directory
+# be left blank if mounts are being configured here.
 # ------------------------------------------------------------------------------
 
-services:
+#services:
   {% for tfcpu_worker_id in range(cookiecutter.num_tensorflow_cpu_workers|int) if cookiecutter.num_tensorflow_cpu_workers|int > 0 -%}
-  {{ cookiecutter.__project_slug }}-tfcpu-{{ "%02d" | format(tfcpu_worker_id+1|int) }}:
-	volumes:
-	  - /home/datasets:/datasets:ro
+  #{{ cookiecutter.__project_slug }}-tfcpu-{{ "%02d" | format(tfcpu_worker_id+1|int) }}:
+	#volumes:
+	  #- /mnt/datasets:/dioptra/data:ro
+	  #- dioptra-datasets:/dioptra/data:ro
+    #environment:
+	  #NVIDIA_VISIBLE_DEVICES: all
   {% endfor %}
   {% for tfgpu_worker_id in range(cookiecutter.num_tensorflow_gpu_workers|int) if cookiecutter.num_tensorflow_gpu_workers|int > 0 -%}
-  {{ cookiecutter.__project_slug }}-tfgpu-{{ "%02d" | format(tfgpu_worker_id+1|int) }}:
-	volumes:
-	  - /home/datasets:/datasets:ro
+  #{{ cookiecutter.__project_slug }}-tfgpu-{{ "%02d" | format(tfgpu_worker_id+1|int) }}:
+	#volumes:
+	  #- /mnt/datasets:/dioptra/data:ro
+	  #- dioptra-datasets:/dioptra/data:ro
+    #environment:
+	  #NVIDIA_VISIBLE_DEVICES: all
   {% endfor %}
   {% for pytorchcpu_worker_id in range(cookiecutter.num_pytorch_cpu_workers|int) if cookiecutter.num_pytorch_cpu_workers|int > 0 -%}
-  {{ cookiecutter.__project_slug }}-pytorchcpu-{{ "%02d" | format(pytorchcpu_worker_id+1|int) }}:
-	volumes:
-	  - /home/datasets:/datasets:ro
+  #{{ cookiecutter.__project_slug }}-pytorchcpu-{{ "%02d" | format(pytorchcpu_worker_id+1|int) }}:
+	#volumes:
+	  #- /mnt/datasets:/dioptra/data:ro
+	  #- dioptra-datasets:/dioptra/data:ro
+    #environment:
+	  #NVIDIA_VISIBLE_DEVICES: all
   {% endfor %}
   {% for pytorchgpu_worker_id in range(cookiecutter.num_pytorch_gpu_workers|int) if cookiecutter.num_pytorch_gpu_workers|int > 0 -%}
-  {{ cookiecutter.__project_slug }}-pytorchgpu-{{ "%02d" | format(pytorchgpu_worker_id+1|int) }}:
-	volumes:
-	  - /home/datasets:/datasets:ro
+  #{{ cookiecutter.__project_slug }}-pytorchgpu-{{ "%02d" | format(pytorchgpu_worker_id+1|int) }}:
+	#volumes:
+	  #- /mnt/datasets:/dioptra/data:ro
+	  #- dioptra-datasets:/dioptra/data:ro
+    #environment:
+	  #NVIDIA_VISIBLE_DEVICES: all
   {% endfor %}
+
+#volumes:
+  #dioptra-datasets:
+    #driver: local
+    #driver_opts:
+      #type: nfs
+      #o: "addr=10.0.0.10,auto,rw,bg,nfsvers=4,intr,actimeo=1800"
+      #device: ":/dioptra/data"

@@ -9,59 +9,43 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 
-CONFIG_FILE = Path("./config/docker/docker.json")
+DATASETS_DIRECTORY = "{{ cookiecutter.datasets_directory }}"
 BASE_DIRECTORY = Path.cwd()
-DOCKER_FILES: list[tuple[Path, Path]] = [
-    (
-        Path("scripts", "templates", "docker-compose.yml.j2"),
-        Path("docker-compose.yml"),
-    ),
-    (
-        Path("scripts", "templates", "docker-compose.override.yml.template.j2"),
-        Path("docker-compose.override.yml.template"),
-    ),
-]
+DOCKER_FILE = Path("scripts", "templates", "docker-compose.yml.j2")
 JINJA_ENV = Environment(loader=FileSystemLoader([str(BASE_DIRECTORY)]))
 
 
 logger = logging.getLogger("generate_docker_templates.py")
 
 
-def load_docker_configuration(config_file: Path) -> Dict[str, Any]:
-    """Loads and validates the docker configuration file.
+def validate_datasets_directory(datasets_directory: str) -> Path | None:
+    """Validates the datasets directory"""
 
-    Args:
-        config_file: The path to the config file.
-    """
-    with open(config_file, "rb") as f:
-        config = json.load(f)
+    if datasets_directory == "":
+        logger.info("A datasets directory was not set.")
+        return None
 
-    # handle the datasets_directory setting
-    # if the path is not set, does not exist, or is not a directory,
-    # then the setting is set to None, which will ensure the volumes
-    # block is not added to the worker containers in docker-compose.yml
-    if "datasets_directory" in config and config["datasets_directory"] != "":
-        datasets_directory = Path(config["datasets_directory"])
-        if datasets_directory.exists():
-            if datasets_directory.is_dir:
-                logger.info(f"Using '{datasets_directory}' .")
-            else:
-                logger.warn(f"The {datasets_directory} is not a directory.")
-                config["datasets_directory"] = None
-        else:
-            logger.warn(f"The {datasets_directory} does not exist.")
-            config["datasets_directory"] = None
-    else:
-        logger.warn("The datasets_directory setting was not found.")
-        config["datasets_directory"] = None
+    datasets_directory = Path(datasets_directory)
 
-    return config
+    if not datasets_directory.exists():
+        message = f"The provided datasets directory ({datasets_directory}) does not exist."
+        logger.info(message)
+        raise FileNotFoundError(message)
+
+    if not datasets_directory.is_dir:
+        message = f"The provided datasets directory ({datasets_directory}) is not a directory."
+        logger.info(message)
+        raise NotADirectoryError(message)
+
+    logger.info(f"Using the provided datasets directory ({datasets_directory}) as a mount in all worker containers.")
+
+    return datasets_directory
 
 
 def render_template_files(
     env: Environment,
     template_files: list[tuple[Path, Path]],
-    docker_config: dict[str, Any],
+    datasets_directory: Path,
 ) -> None:
     """Render the Jinja template files.
 
@@ -70,23 +54,18 @@ def render_template_files(
         template_files: A list of tuples containing the template name and output
             filepath.
     """
-    variables = docker_config | dict(working_directory=str(BASE_DIRECTORY))
-    logger.info(variables)
-    for template_name, output_filepath in template_files:
-        # if (BASE_DIRECTORY / output_filepath).exists():
-            # logger.info(f"The file {str(output_filepath)} already exists, skipping")
-            # continue
+    variables = dict(datasets_directory=str(datasets_directory))
 
-        logger.info(f"Generating {output_filepath}")
-        content = _render_template(
-            env=env,
-            # Jinja2 requires forward slashes in the template name.
-            template_name=str(template_name.as_posix()),
-            variables=variables,
-        )
+    logger.info(f"Generating docker-compose.yml")
+    content = _render_template(
+        env=env,
+        # Jinja2 requires forward slashes in the template name.
+        template_name=str(DOCKER_FILE.as_posix()),
+        variables=variables,
+    )
 
-        with (BASE_DIRECTORY / output_filepath).open("wt") as f:
-            f.write(content)
+    with (BASE_DIRECTORY / "docker-compose.yml").open("wt") as f:
+        f.write(content)
 
 
 def _render_template(
@@ -106,5 +85,5 @@ def _render_template(
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     logger.info("Current working directory: %s", str(BASE_DIRECTORY))
-    docker_config = load_docker_configuration(CONFIG_FILE)
-    render_template_files(JINJA_ENV, DOCKER_FILES, docker_config)
+    datasets_directory = validate_datasets_directory(DATASETS_DIRECTORY)
+    render_template_files(JINJA_ENV, DOCKER_FILE, datasets_directory)
