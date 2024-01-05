@@ -21,14 +21,14 @@ import uuid
 from typing import Any, cast
 
 import structlog
-from flask import request
+from flask import jsonify, request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import slugify
+from dioptra.restapi.utils import pageUrl, slugify
 
 from .model import Queue
 from .schema import IdStatusResponseSchema, NameStatusResponseSchema, QueueSchema
@@ -54,11 +54,31 @@ class QueueResource(Resource):
     @login_required
     @responds(schema=QueueSchema(many=True), api=api)
     def get(self) -> list[Queue]:
-        """Gets a list of all active queues."""
+        """Gets a page of active queues."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queue", request_type="GET"
         )  # noqa: F841
         log.info("Request received")
+        
+        index = request.args.get("index", 0, type=int)
+        page_length = request.args.get("page_length", 20, type=int)
+        data = self._queue_service.get_all(
+            index=index, page_length=page_length, log=log
+        )
+
+        is_complete = True if Queue.query.count() <= index + page_length else False
+
+        return jsonify(
+            {
+                "page": QueueSchema(many=True).dump(data),
+                "index": index,
+                "is_complete": is_complete,
+                "first": pageUrl("experiment", 0, page_length),
+                "next": pageUrl("experiment", index + page_length, page_length),
+                "prev": pageUrl("experiment", index - page_length, page_length),
+            }
+        )
+        
         return self._queue_service.get_all_unlocked(log=log)
 
     @login_required
