@@ -128,7 +128,21 @@ class ExperimentService(object):
         return experiment
 
     @staticmethod
-    def get_all(index: int, page_length: int, **kwargs) -> List[Experiment]:
+    def get_all(**kwargs) -> List[Experiment]:
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+        return Experiment.query.filter_by(is_deleted=False).all()  # type: ignore
+
+    @staticmethod
+    def get_page(index: int, page_length: int, **kwargs) -> List[Experiment]:
+        """Fetch a page of experiments.
+
+        Args:
+            index: Database index of first entry in page.
+            page_length: Length of page.
+
+        Returns:
+            A list of experiment objects.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
         return (  # type: ignore

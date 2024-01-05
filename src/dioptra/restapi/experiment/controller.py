@@ -56,15 +56,19 @@ class ExperimentResource(Resource):
     @login_required
     @responds(schema=ExperimentSchema(many=True), api=api)
     def get(self) -> Response:
-        """Gets a list of all registered experiments."""
+        """Gets a page or list of all registered experiments."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="GET"
         )  # noqa: F841
         log.info("Request received")
 
-        index = request.args.get("index", 0, type=int)
-        page_length = request.args.get("page_length", 20, type=int)
-        data = self._experiment_service.get_all(
+        index = request.args.get("index", -1, type=int)
+        page_length = request.args.get("page_length", -1, type=int)
+
+        if -1 in (index, page_length):
+            return self._experiment_service.get_all(log=log)  # type: ignore
+
+        data = self._experiment_service.get_page(
             index=index, page_length=page_length, log=log
         )
 
