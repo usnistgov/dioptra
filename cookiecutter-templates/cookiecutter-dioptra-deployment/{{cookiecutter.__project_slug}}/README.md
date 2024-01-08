@@ -157,7 +157,6 @@ The `init-deployment.sh` script is the main tool for initializing the deployment
 -   Creates the Minio S3 accounts and configures their access permissions
 -   Syncs the built-in task plugins from the Dioptra GitHub repository with the appropriate Minio S3 bucket
 -   Enables SSL/TLS in the Postgres service (if applicable)
--   Upgrades the schema for the Dioptra REST API database (if applicable)
 
 This script should be executed if this is the first time you are starting the deployment **or** if you have changed at least one of the files in the `config/` or `ssl/` directory.
 If you run `./init-deployment.sh --help`, you will print the script's help message:

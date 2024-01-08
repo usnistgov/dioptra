@@ -29,19 +29,12 @@ from redis import Redis
 from dioptra.restapi.shared.request_scope import request
 from dioptra.restapi.shared.rq.service import RQService
 
-from .schema import JobFormSchema
-
-
-class JobFormSchemaModule(Module):
-    @provider
-    def provide_job_form_schema_module(self) -> JobFormSchema:
-        return JobFormSchema()
-
 
 @dataclass
 class RQServiceConfiguration(object):
     redis: Redis
     run_mlflow: str
+    run_task_engine: str
 
 
 class RQServiceModule(Module):
@@ -50,16 +43,20 @@ class RQServiceModule(Module):
     def provide_rq_service_module(
         self, configuration: RQServiceConfiguration
     ) -> RQService:
-        return RQService(redis=configuration.redis, run_mlflow=configuration.run_mlflow)
+        return RQService(
+            redis=configuration.redis,
+            run_mlflow=configuration.run_mlflow,
+            run_task_engine=configuration.run_task_engine,
+        )
 
 
 def _bind_rq_service_configuration(binder: Binder):
     redis_conn: Redis = Redis.from_url(os.getenv("RQ_REDIS_URI", "redis://"))
     run_mlflow: str = "dioptra.rq.tasks.run_mlflow_task"
+    run_task_engine: str = "dioptra.rq.tasks.run_task_engine_task"
 
     configuration: RQServiceConfiguration = RQServiceConfiguration(
-        redis=redis_conn,
-        run_mlflow=run_mlflow,
+        redis=redis_conn, run_mlflow=run_mlflow, run_task_engine=run_task_engine
     )
 
     binder.bind(RQServiceConfiguration, to=configuration, scope=request)
@@ -92,5 +89,4 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
         modules: A list of callables used for configuring the dependency injection
             environment.
     """
-    modules.append(JobFormSchemaModule)
     modules.append(RQServiceModule)

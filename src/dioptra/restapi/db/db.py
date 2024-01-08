@@ -14,39 +14,27 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+"""The SQLAlchemy Metadata and Flask integration for the Dioptra database.
+
+For further information about the SQLAlchemy MetaData class, see:
+https://docs.sqlalchemy.org/en/20/core/metadata.html
+
+For further information about configuring the SQLAlchemy constraint naming conventions,
+see:
+https://docs.sqlalchemy.org/en/20/core/constraints.html#constraint-naming-conventions
+"""
 from __future__ import annotations
 
-import datetime
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData
 
-import pytest
-import structlog
-from structlog.stdlib import BoundLogger
+_naming_convention = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
 
-from dioptra.restapi.models import Experiment, ExperimentRegistrationFormData
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
-
-@pytest.fixture
-def experiment() -> Experiment:
-    return Experiment(
-        experiment_id=1,
-        created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
-        last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
-        name="mnist",
-    )
-
-
-@pytest.fixture
-def experiment_registration_form_data() -> ExperimentRegistrationFormData:
-    return ExperimentRegistrationFormData(name="mnist")
-
-
-def test_Experiment_create(experiment: Experiment) -> None:
-    assert isinstance(experiment, Experiment)
-
-
-def test_ExperimentRegistrationFormData_create(
-    experiment_registration_form_data: ExperimentRegistrationFormData,
-) -> None:
-    assert isinstance(experiment_registration_form_data, dict)
+metadata_obj = MetaData(naming_convention=_naming_convention)
+db = SQLAlchemy(metadata=metadata_obj)

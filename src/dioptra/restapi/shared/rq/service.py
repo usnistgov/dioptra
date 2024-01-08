@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-from typing import Optional, Union
+from typing import Any, Mapping, Optional, Union
 
 import structlog
 from redis import Redis
@@ -32,9 +32,10 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class RQService(object):
-    def __init__(self, redis: Redis, run_mlflow: str) -> None:
+    def __init__(self, redis: Redis, run_mlflow: str, run_task_engine: str) -> None:
         self._redis = redis
         self._run_mlflow = run_mlflow
+        self._run_task_engine = run_task_engine
 
     def get_job_status(self, job: Job, **kwargs) -> str:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -65,6 +66,7 @@ class RQService(object):
 
     def submit_mlflow_job(
         self,
+        job_id: str,
         queue: str,
         workflow_uri: str,
         experiment_id: int,
@@ -73,7 +75,7 @@ class RQService(object):
         depends_on: Optional[str] = None,
         timeout: Optional[str] = None,
         **kwargs,
-    ) -> RQJob:
+    ):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         q: RQQueue = RQQueue(queue, default_timeout=24 * 3600, connection=self._redis)
@@ -93,15 +95,58 @@ class RQService(object):
         log.info(
             "Enqueuing job",
             function=self._run_mlflow,
+            job_id=job_id,
             cmd_kwargs=cmd_kwargs,
             timeout=timeout,
             depends_on=job_dependency,
         )
-        result: RQJob = q.enqueue(
+        q.enqueue(
             self._run_mlflow,
+            job_id=job_id,
             kwargs=cmd_kwargs,
             timeout=timeout,
             depends_on=job_dependency,
         )
 
-        return result
+    def submit_task_engine_job(
+        self,
+        job_id: str,
+        queue: str,
+        experiment_id: int,
+        experiment_description: Mapping[str, Any],
+        global_parameters: Optional[Mapping[str, Any]] = None,
+        depends_on: Optional[str] = None,
+        timeout: Optional[str] = None,
+    ):
+        log: BoundLogger = LOGGER.new()
+
+        job_dependency: Optional[RQJob] = None
+        if depends_on is not None:
+            job_dependency = self.get_rq_job(depends_on)
+
+        if global_parameters is None:
+            global_parameters = {}
+
+        cmd_kwargs = {
+            "experiment_id": experiment_id,
+            "experiment_desc": experiment_description,
+            "global_parameters": global_parameters,
+        }
+
+        log.info(
+            "Enqueuing job",
+            function=self._run_task_engine,
+            job_id=job_id,
+            cmd_kwargs=cmd_kwargs,
+            timeout=timeout,
+            depends_on=job_dependency,
+        )
+
+        q: RQQueue = RQQueue(queue, default_timeout=24 * 3600, connection=self._redis)
+        q.enqueue(
+            self._run_task_engine,
+            job_id=job_id,
+            kwargs=cmd_kwargs,
+            timeout=timeout,
+            depends_on=job_dependency,
+        )

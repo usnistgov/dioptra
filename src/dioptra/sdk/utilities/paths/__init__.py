@@ -15,5 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from ._set_path_ext import set_path_ext
+from .clear_dir import clear_directory
 
-__all__ = ["set_path_ext"]
+__all__ = ["set_path_ext", "clear_directory"]

@@ -14,40 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The interfaces for creating and updating |Experiment| objects.
-
-.. |Experiment| replace:: :py:class:`~.model.Experiment`
-"""
 from __future__ import annotations
 
-import datetime
+from .db import db
 
-from typing_extensions import TypedDict
-
-
-class ExperimentInterface(TypedDict, total=False):
-    """The interface for constructing a new |Experiment| object.
-
-    Attributes:
-        experiment_id: An integer identifying a registered experiment.
-        created_on: The date and time the experiment was created.
-        last_modified: The date and time the experiment was last modified.
-        name: The name of the experiment.
-    """
-
-    experiment_id: int
-    created_on: datetime.datetime
-    last_modified: datetime.datetime
-    name: str
-
-
-class ExperimentUpdateInterface(TypedDict, total=False):
-    """The interface for updating an |Experiment| object.
-
-    Attributes:
-        name: The name of the experiment.
-        is_deleted: A boolean that indicates if the experiment record is deleted.
-    """
-
-    name: str
-    is_deleted: bool
+__all__ = ["db"]

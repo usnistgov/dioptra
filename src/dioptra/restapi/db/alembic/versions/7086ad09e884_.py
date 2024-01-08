@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.orm import sessionmaker
 
-from dioptra.restapi.custom_types import GUID
+from dioptra.restapi.db.custom_types import GUID
 
 try:
     from sqlalchemy.orm import declarative_base

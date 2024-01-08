@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -96,7 +96,7 @@ jobs:
         run: sudo apt install -y wamerican
 
       - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -141,7 +141,7 @@ jobs:
 
       - name: archive the code coverage results
         if: ${{ contains(matrix.tox-testenv, 'pytest-cov') }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: code-coverage-report-${{ matrix.python-version }}
+          name: code-coverage-report-${{ matrix.os }}-${{ matrix.python-version }}
           path: coverage

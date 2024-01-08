@@ -25,16 +25,11 @@ FROM ubuntu:focal AS copy-files
 
 ARG TARGETARCH
 
-COPY --chown=root:root src/migrations /files/migrations
 COPY --chown=root:root --chmod=0644 docker/configs/aws-config /files/aws-config
 COPY --chown=root:root --chmod=0644 docker/configs/build.pip.conf /files/build.pip.conf
 COPY --chown=root:root --chmod=0644 docker/configs/gunicorn.restapi.conf.py /files/gunicorn.restapi.conf.py
 COPY --chown=root:root --chmod=0644 docker/requirements/linux-${TARGETARCH}-py3.9-restapi-requirements.txt /files/restapi-requirements.txt
 COPY --chown=root:root --chmod=0755 wsgi.py /files/wsgi.py
-
-RUN chmod 0755 /files/migrations && \
-    find /files/migrations -type d -exec chmod 0755 "{}" "+" && \
-    find /files/migrations -type f -exec chmod 0644 "{}" "+"
 
 ######################################################################################################
 # Base images
@@ -278,7 +273,6 @@ COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/wait-for-i
 COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/gunicorn.restapi.conf.py /etc/gunicorn/gunicorn.conf.py
 COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/aws-config /home/${DIOPTRA_USER}/.aws/config/aws-config
 COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0755 /files/wsgi.py ${DIOPTRA_WORKDIR}/wsgi.py
-COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} /files/migrations ${DIOPTRA_WORKDIR}/migrations
 
 COPY --from=build-venv --chown=${DIOPTRA_UID}:${DIOPTRA_GID} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 

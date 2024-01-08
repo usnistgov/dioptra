@@ -24,7 +24,7 @@ from sqlalchemy.exc import IntegrityError
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi import create_app
-from dioptra.restapi.app import db
+from dioptra.restapi.db import db
 from dioptra.restapi.models import Experiment, Job
 
 ENVVAR_RESTAPI_ENV = "DIOPTRA_RESTAPI_ENV"
@@ -51,8 +51,11 @@ class DioptraDatabaseClient(object):
         if self.job_id is None:
             return None
 
+        return self.get_job(self.job_id)
+
+    def get_job(self, job_id) -> Dict[str, Any]:
         with self.app.app_context():
-            job: Job = Job.query.get(self.job_id)
+            job: Job = Job.query.get(job_id)
             return {
                 "job_id": job.job_id,
                 "queue": job.queue.name,
@@ -68,8 +71,7 @@ class DioptraDatabaseClient(object):
 
     def update_job_status(self, job_id: str, status: str) -> None:
         LOGGER.info(
-            f"=== Updating job status for job with ID '{self.job_id}' to "
-            f"{status} ==="
+            f"=== Updating job status for job with ID '{job_id}' to {status} ==="
         )
 
         with self.app.app_context():
@@ -90,9 +92,11 @@ class DioptraDatabaseClient(object):
             return None
 
         LOGGER.info("=== Setting MLFlow run ID in the Dioptra database ===")
+        self.set_mlflow_run_id_for_job(run_id, self.job_id)
 
+    def set_mlflow_run_id_for_job(self, run_id: str, job_id: str) -> None:
         with self.app.app_context():
-            job = Job.query.get(self.job_id)
+            job = Job.query.get(job_id)
             job.update(changes={"mlflow_run_id": run_id})
 
             try:
