@@ -79,3 +79,7 @@ If you’re working locally, it often can be useful to `--amend` a commit, or ut
 ### Code Reviewing Guide
 
 See the [CODEREVIEWERS file](./CODEREVIEWERS.md).
+
+### Testing & User Stories
+
+All new features and submissions require testing to be written and implemented. See the [Testing Guide file](./TESTING_GUIDE.md).
