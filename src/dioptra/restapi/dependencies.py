@@ -62,6 +62,7 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
     )
     from .job import register_providers as attach_job_providers
     from .queue import register_providers as attach_job_queue_providers
+    from .resource import register_providers as attach_dioptra_resource_providers
     from .task_plugin import register_providers as attach_task_plugin_providers
     from .user import register_providers as attach_user_providers
 
@@ -73,3 +74,4 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
     attach_user_providers(modules)
     attach_group_providers(modules)
     attach_group_membership_providers(modules)
+    attach_dioptra_resource_providers(modules)

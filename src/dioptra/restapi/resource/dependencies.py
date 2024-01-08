@@ -14,40 +14,38 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module of reexports of the application's data models and forms."""
+"""Binding configurations to shared services using dependency injection."""
 from __future__ import annotations
 
-from .experiment.model import (
-    Experiment,
-    ExperimentRegistrationForm,
-    ExperimentRegistrationFormData,
-)
-from .group.model import Group
-from .group_membership.model import GroupMembership
-from .job.model import Job, JobForm, JobFormData
-from .queue.model import Queue, QueueLock
-from .resource.model import DioptraResource
-from .task_plugin.model import (
-    TaskPlugin,
-    TaskPluginUploadForm,
-    TaskPluginUploadFormData,
-)
-from .user.model import User
+from typing import Any, Callable
 
-__all__ = [
-    "Experiment",
-    "ExperimentRegistrationForm",
-    "ExperimentRegistrationFormData",
-    "Job",
-    "JobForm",
-    "JobFormData",
-    "Queue",
-    "QueueLock",
-    "TaskPlugin",
-    "TaskPluginUploadForm",
-    "TaskPluginUploadFormData",
-    "User",
-    "Group",
-    "GroupMembership",
-    "DioptraResource",
-]
+from injector import Binder, Module, provider
+
+from .service import DioptraResourceService
+
+
+class DioptraResourceModule(Module):
+    @provider
+    def provide_queue_name_service_module(
+        self,
+    ) -> DioptraResourceService:
+        return DioptraResourceService()
+
+
+def bind_dependencies(binder: Binder) -> None:
+    """Binds interfaces to implementations within the main application.
+
+    Args:
+        binder: A :py:class:`~injector.Binder` object.
+    """
+    pass
+
+
+def register_providers(modules: list[Callable[..., Any]]) -> None:
+    """Registers type providers within the main application.
+
+    Args:
+        modules: A list of callables used for configuring the dependency injection
+            environment.
+    """
+    modules.append(DioptraResourceModule)
