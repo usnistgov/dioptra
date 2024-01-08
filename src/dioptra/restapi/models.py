@@ -20,7 +20,7 @@ from __future__ import annotations
 from .experiment.model import Experiment
 from .group.model import Group
 from .group_membership.model import GroupMembership
-from .job.model import Job, JobForm, JobFormData
+from .job.model import Job
 from .queue.model import Queue, QueueLock
 from .resource.model import DioptraResource
 from .task_plugin.model import (

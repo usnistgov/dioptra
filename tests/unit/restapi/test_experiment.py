@@ -51,9 +51,7 @@ def register_experiment(client: FlaskClient, name: str) -> TestResponse:
     )
 
 
-def rename_experiment(
-    client: FlaskClient, id: int, new_name: str
-) -> TestResponse:
+def rename_experiment(client: FlaskClient, id: int, new_name: str) -> TestResponse:
     """Rename an experiment using the API.
 
     Args:
@@ -361,9 +359,7 @@ def test_rename_experiment(client: FlaskClient, db: SQLAlchemy) -> None:
     assert_experiment_name_matches_expected_name(
         client, id=experiment_json["experimentId"], expected_name=start_name
     )
-    rename_experiment(
-        client, id=experiment_json["experimentId"], new_name=update_name
-    )
+    rename_experiment(client, id=experiment_json["experimentId"], new_name=update_name)
     assert_experiment_name_matches_expected_name(
         client, id=experiment_json["experimentId"], expected_name=update_name
     )
