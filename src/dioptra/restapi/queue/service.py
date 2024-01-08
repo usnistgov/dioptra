@@ -154,6 +154,26 @@ class QueueService(object):
             .all()
         )
 
+    @staticmethod
+    def get_page(index: int, page_length: int, **kwargs) -> list[Queue]:
+        """Fetch a page of queues.
+
+        Args:
+            index: Database index of first entry in page.
+            page_length: Length of page.
+
+        Returns:
+            A list of experiment objects.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+
+        return (  # type: ignore
+            Queue.query.filter_by(is_deleted=False)
+            .offset(index)
+            .limit(page_length)
+            .all()
+        )
+
     def rename(self, queue_id: int, new_name: str, **kwargs) -> Queue:
         """Rename a queue.
 

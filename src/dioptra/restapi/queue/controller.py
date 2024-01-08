@@ -22,6 +22,7 @@ from typing import Any, cast
 
 import structlog
 from flask import jsonify, request
+from flask.wrappers import Response
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -53,16 +54,20 @@ class QueueResource(Resource):
 
     @login_required
     @responds(schema=QueueSchema(many=True), api=api)
-    def get(self) -> list[Queue]:
-        """Gets a page of active queues."""
+    def get(self) -> Response:
+        """Gets a page or list of all active queues."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queue", request_type="GET"
         )  # noqa: F841
         log.info("Request received")
-        
-        index = request.args.get("index", 0, type=int)
-        page_length = request.args.get("page_length", 20, type=int)
-        data = self._queue_service.get_all(
+
+        index = request.args.get("index", -1, type=int)
+        page_length = request.args.get("page_length", -1, type=int)
+
+        if -1 in (index, page_length):
+            return self._queue_service.get_all_unlocked(log=log)  # type: ignore
+
+        data = self._queue_service.get_page(
             index=index, page_length=page_length, log=log
         )
 
@@ -73,12 +78,12 @@ class QueueResource(Resource):
                 "page": QueueSchema(many=True).dump(data),
                 "index": index,
                 "is_complete": is_complete,
-                "first": pageUrl("experiment", 0, page_length),
-                "next": pageUrl("experiment", index + page_length, page_length),
-                "prev": pageUrl("experiment", index - page_length, page_length),
+                "first": pageUrl("queue", 0, page_length),
+                "next": pageUrl("queue", index + page_length, page_length),
+                "prev": pageUrl("queue", index - page_length, page_length),
             }
         )
-        
+
         return self._queue_service.get_all_unlocked(log=log)
 
     @login_required
