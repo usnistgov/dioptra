@@ -90,3 +90,7 @@ def get_n_classes_from_directory_iterator(ds: DirectoryIterator) -> int:
 @pyplugs.register
 def rescale(imagenet_preprocessing: bool) -> float:
     return 1.0 if imagenet_preprocessing else 1.0 / 255
+
+@pyplugs.register
+def is_targeted(target_index: int) -> bool:
+    return target_index >= 0
