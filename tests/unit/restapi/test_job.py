@@ -31,6 +31,7 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.experiment.routes import BASE_ROUTE as EXPERIMENT_BASE_ROUTE
 from dioptra.restapi.job.routes import BASE_ROUTE as JOB_BASE_ROUTE
+from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
 
 
 # -- Fixtures --------------------------------------------------------------------------
