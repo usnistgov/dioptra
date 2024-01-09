@@ -4,6 +4,7 @@ import binascii
 import logging
 import os
 import random
+import shutil
 import string
 import sys
 import unicodedata
@@ -16,6 +17,13 @@ BASE_DIRECTORY = Path.cwd()
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("dioptra-deploy")
+
+
+def remove_temp_dirs(deployment_dir, temp_dirs):
+    deployment_dir = Path(deployment_dir)
+    for temp_dir_name in temp_dirs:
+        logger.info("Removing temporary directory: %s", temp_dir_name)
+        shutil.rmtree(deployment_dir / temp_dir_name)
 
 
 def get_random_passwords(words_file):
@@ -145,4 +153,5 @@ if __name__ == "__main__":
     passwords = get_random_passwords(WORDS_FILE)
     extra_context.update(passwords)
 
-    cookiecutter(str(template_path), extra_context=extra_context)
+    deployment_dir = cookiecutter(str(template_path), extra_context=extra_context)
+    remove_temp_dirs(deployment_dir, TEMP_DIRS)
