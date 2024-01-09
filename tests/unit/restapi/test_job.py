@@ -47,8 +47,24 @@ def job_form_request(workflow_tar_gz: BinaryIO) -> Dict[str, Any]:
 
 # -- Actions ---------------------------------------------------------------------------
 
+def register_mnist_experiment(client: FlaskClient) -> TestResponse:
+    """Register the mnist experiment using the API.
+
+    Args:
+        client: The Flask test client.
+
+    Returns:
+        The response from the API.
+    """
+    return client.post(
+        f"/api/{EXPERIMENT_BASE_ROUTE}/",
+        json={"name": "mnist"},
+        follow_redirects=True,
+    )
+
 def submit_job(
-        client: FlaskClient, 
+        client: FlaskClient,
+        experiment: Experiment,
         job_form_request: Dict[str, Any],
     ) -> TestResponse:
     """Submit a job using the API.
@@ -80,6 +96,25 @@ def submit_job(
     )
 
 # -- Assertions ------------------------------------------------------------------------
+
+def assert_retrieving_mnist_experiment_by_name_works(
+    client: FlaskClient, expected: dict[str, Any]
+) -> None:
+    """Assert that retrieving a experiment by name works.
+
+    Args:
+        client: The Flask test client.
+        name: The name of the experiment to retrieve.
+        expected: The expected response from the API.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+    response = client.get(
+        f"/api/{EXPERIMENT_BASE_ROUTE}/name/mnist", follow_redirects=True
+    )
+    assert response.status_code == 200 and response.get_json() == expected
 
 def assert_retrieving_job_by_id_works(
     client: FlaskClient, id: int, expected: dict[str, Any]
@@ -146,7 +181,10 @@ def test_list_jobs(
     """Test that the list of jobs can be retrieved through the api following the 
        scenario below.
 
-     Scenario: Get the List of Submitted Jobs
+    Setup: A experiment 'mnist' is registered. Required for job submissions.
+        Confirm the experiment was created.
+
+    Scenario: Get the List of Submitted Jobs
         Given I am an authorized user and a set of jobs exist, 
         I need to be able to submit a get request 
         in order to retrieve the list of submitted jobs.
@@ -159,6 +197,9 @@ def test_list_jobs(
     - The returned list of jobs matches the information that was provided
       during registration.
     """
+    experiment_expected = register_mnist_experiment(client).get_json()
+    assert_retrieving_mnist_experiment_by_name_works(client, expected=experiment_expected)
+
     job1_expected = submit_job(client, job_form_request).get_json()
     job2_expected = submit_job(client, job_form_request).get_json()
     job3_expected = submit_job(client, job_form_request).get_json()
