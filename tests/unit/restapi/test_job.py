@@ -38,13 +38,12 @@ from dioptra.restapi.job.routes import BASE_ROUTE as JOB_BASE_ROUTE
 @pytest.fixture
 def job_form_request(workflow_tar_gz: BinaryIO) -> Dict[str, Any]:
     return {
-        "experimentName": "mnist",
+        "experiment_name": "mnist",
         "queue": "tensorflow_cpu",
         "timeout": "12h",
-        "entryPoint": "main",
-        "entryPointKwargs": "-P var1=testing",
+        "entry_point": "main",
+        "entry_point_kwargs": "-P var1=testing",
         "workflow": (workflow_tar_gz, "workflows.tar.gz"),
-        "dependsOn": None,
     }
 
 # -- Actions ---------------------------------------------------------------------------
