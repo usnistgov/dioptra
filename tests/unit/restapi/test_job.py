@@ -178,7 +178,6 @@ def test_retrieve_job(
     assert_retrieving_mnist_experiment_by_name_works(client, expected=experiment_expected)
 
     job_expected = submit_job(client, form_request=job_form_request).get_json()
-    import pdb; pdb.set_trace()
     assert_retrieving_job_by_id_works(
         client, id=job_expected["jobId"], expected=job_expected
     )
