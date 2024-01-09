@@ -62,11 +62,6 @@ def get_random_passwords(words_file):
     return variables
 
 
-def _render_template(env, template_name, variables):
-    template = env.get_template(template_name)
-    return template.render(**variables)
-
-
 def _generate_random_kms_secret_key(size: int = 32):
     return binascii.b2a_base64(os.urandom(size)).decode()
 
