@@ -114,12 +114,11 @@ def task_plugin_archive():
 
 @pytest.fixture
 def dependency_modules() -> List[Any]:
-    from dioptra.restapi.job.dependencies import RQServiceConfiguration, RQServiceModule
-    from dioptra.restapi.task_plugin.dependencies import (
-        TaskPluginUploadFormSchemaModule,
-    )
-    from dioptra.restapi.user.dependencies import (
+    from dioptra.restapi.bootstrap import (
         PasswordServiceModule,
+        RQServiceConfiguration,
+        RQServiceModule,
+        TaskPluginUploadFormSchemaModule,
         _bind_password_service_configuration,
     )
 

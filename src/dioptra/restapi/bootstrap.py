@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Binding configurations to shared services using dependency injection."""
+"""A module for binding configurations to shared services using dependency injection."""
 from __future__ import annotations
 
 import os
@@ -24,10 +24,24 @@ from typing import Any, Callable, List, Optional
 from boto3.session import Session
 from botocore.client import BaseClient
 from injector import Binder, Module, provider
+from mlflow.tracking import MlflowClient
+from passlib.context import CryptContext
 from redis import Redis
 
+from dioptra.restapi.queue.service import QueueNameService
+from dioptra.restapi.shared.password.service import PasswordService
 from dioptra.restapi.shared.request_scope import request
 from dioptra.restapi.shared.rq.service import RQService
+from dioptra.restapi.task_plugin.schema import TaskPluginUploadFormSchema
+
+
+class MLFlowClientModule(Module):
+    @request
+    @provider
+    def provide_mlflow_client_module(
+        self,
+    ) -> MlflowClient:
+        return MlflowClient()
 
 
 @dataclass
@@ -48,6 +62,35 @@ class RQServiceModule(Module):
             run_mlflow=configuration.run_mlflow,
             run_task_engine=configuration.run_task_engine,
         )
+
+
+class QueueNameServiceModule(Module):
+    @provider
+    def provide_queue_name_service_module(
+        self,
+    ) -> QueueNameService:
+        return QueueNameService()
+
+
+class TaskPluginUploadFormSchemaModule(Module):
+    @provider
+    def provide_task_plugin_upload_form_schema_module(
+        self,
+    ) -> TaskPluginUploadFormSchema:
+        return TaskPluginUploadFormSchema()
+
+
+@dataclass
+class PasswordServiceConfiguration(object):
+    crypt_context: CryptContext
+
+
+class PasswordServiceModule(Module):
+    @provider
+    def provide_password_service_module(
+        self, configuration: PasswordServiceConfiguration
+    ) -> PasswordService:
+        return PasswordService(crypt_context=configuration.crypt_context)
 
 
 def _bind_rq_service_configuration(binder: Binder):
@@ -72,14 +115,27 @@ def _bind_s3_service_configuration(binder: Binder) -> None:
     binder.bind(BaseClient, to=s3_client, scope=request)
 
 
+def _bind_password_service_configuration(binder: Binder):
+    configuration: PasswordServiceConfiguration = PasswordServiceConfiguration(
+        crypt_context=CryptContext(
+            schemes=["pbkdf2_sha256"],
+            pbkdf2_sha256__default_rounds=30000,
+        ),
+    )
+
+    binder.bind(PasswordServiceConfiguration, to=configuration)
+
+
 def bind_dependencies(binder: Binder) -> None:
     """Binds interfaces to implementations within the main application.
 
     Args:
         binder: A :py:class:`~injector.Binder` object.
     """
+
     _bind_rq_service_configuration(binder)
     _bind_s3_service_configuration(binder)
+    _bind_password_service_configuration(binder)
 
 
 def register_providers(modules: List[Callable[..., Any]]) -> None:
@@ -89,4 +145,9 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
         modules: A list of callables used for configuring the dependency injection
             environment.
     """
+
+    modules.append(MLFlowClientModule)
     modules.append(RQServiceModule)
+    modules.append(QueueNameServiceModule)
+    modules.append(TaskPluginUploadFormSchemaModule)
+    modules.append(PasswordServiceModule)
