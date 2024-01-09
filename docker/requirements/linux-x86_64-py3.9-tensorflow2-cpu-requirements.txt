@@ -119,7 +119,7 @@ flask-wtf==1.1.1
     # via dioptra (pyproject.toml)
 flatbuffers==1.12
     # via tensorflow-cpu
-fonttools==4.39.4
+fonttools==4.43.0
     # via matplotlib
 fsspec==2023.5.0
     # via dask
