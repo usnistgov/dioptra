@@ -63,6 +63,21 @@ def register_mnist_experiment(client: FlaskClient) -> TestResponse:
         follow_redirects=True,
     )
 
+def register_tensorflow_cpu_queue(client: FlaskClient) -> TestResponse:
+    """Register the tensorflow cpu queue using the API.
+
+    Args:
+        client: The Flask test client.
+
+    Returns:
+        The response from the API.
+    """
+    return client.post(
+        f"/api/{QUEUE_BASE_ROUTE}/",
+        json={"name": "tensorflow_cpu"},
+        follow_redirects=True,
+    )
+
 def submit_job(
         client: FlaskClient,
         form_request: Dict[str, Any],
@@ -117,6 +132,25 @@ def assert_retrieving_mnist_experiment_by_name_works(
     )
     assert response.status_code == 200 and response.get_json() == expected
 
+def assert_retrieving_tensorflow_cpu_queue_by_name_works(
+    client: FlaskClient,
+    expected: dict[str, Any],
+) -> None:
+    """Assert that retrieving a queue by name works.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected response from the API.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+    response = client.get(
+        f"/api/{QUEUE_BASE_ROUTE}/name/tensorflow_cpu", follow_redirects=True
+    )
+    assert response.status_code == 200 and response.get_json() == expected
+
 def assert_retrieving_job_by_id_works(
     client: FlaskClient, id: int, expected: dict[str, Any]
 ) -> None:
@@ -151,22 +185,15 @@ def assert_retrieving_all_jobs_works(
     assert response.status_code == 200 and response.get_json() == expected
     
 # -- Tests -----------------------------------------------------------------------------
-
-def test_retrieve_mnist_experiment(
-    client: FlaskClient, db: SQLAlchemy
-) -> None:
-    """
-    Setup: A experiment 'mnist' is registered. Required for job submissions.
-        Confirm the experiment was created.
-    """
-    experiment_expected = register_mnist_experiment(client).get_json()
-    assert_retrieving_mnist_experiment_by_name_works(client, expected=experiment_expected)
     
 def test_retrieve_job(
     client: FlaskClient, db: SQLAlchemy, job_form_request: Dict[str, Any]
 ) -> None:
     """Test that a job can be retrieved through the api following the 
        scenario below.
+
+    Setup: A experiment 'mnist' is registered. Required for job submissions.
+        Confirm the experiment was created.
 
     Scenario: Get a Job
         Given I am an authorized user and a job exists, 
@@ -180,6 +207,11 @@ def test_retrieve_job(
     - The returned information matches the information that was provided during 
       registration.
     """
+    experiment_expected = register_mnist_experiment(client).get_json()
+    assert_retrieving_mnist_experiment_by_name_works(client, expected=experiment_expected)
+    queue_expected = register_tensorflow_cpu_queue(client).get_json()
+    assert_retrieving_tensorflow_cpu_queue_by_name_works(client, expected=queue_expected)
+
     job_expected = submit_job(client, form_request=job_form_request).get_json()
     assert_retrieving_job_by_id_works(
         client, id=job_expected["jobId"], expected=job_expected
@@ -204,6 +236,11 @@ def test_list_jobs(
     - The returned list of jobs matches the information that was provided
       during registration.
     """
+    experiment_expected = register_mnist_experiment(client).get_json()
+    assert_retrieving_mnist_experiment_by_name_works(client, expected=experiment_expected)
+    queue_expected = register_tensorflow_cpu_queue(client).get_json()
+    assert_retrieving_tensorflow_cpu_queue_by_name_works(client, expected=queue_expected)
+
     job1_expected = submit_job(client, form_request=job_form_request).get_json()
     job2_expected = submit_job(client, form_request=job_form_request).get_json()
     job3_expected = submit_job(client, form_request=job_form_request).get_json()
