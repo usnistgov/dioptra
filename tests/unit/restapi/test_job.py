@@ -65,7 +65,6 @@ def register_mnist_experiment(client: FlaskClient) -> TestResponse:
 
 def submit_job(
         client: FlaskClient,
-        experiment: Experiment,
         form_request: Dict[str, Any],
     ) -> TestResponse:
     """Submit a job using the API.
