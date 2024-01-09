@@ -92,6 +92,7 @@ def submit_job(
     """
     return client.post(
         f"/api/{JOB_BASE_ROUTE}/",
+        content_type="multipart/form-data",
         data=job_form_request,
         follow_redirects=True,
     )
