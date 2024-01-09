@@ -65,7 +65,7 @@ def register_mnist_experiment(client: FlaskClient) -> TestResponse:
 def submit_job(
         client: FlaskClient,
         experiment: Experiment,
-        job_form_request: Dict[str, Any],
+        form_request: Dict[str, Any],
     ) -> TestResponse:
     """Submit a job using the API.
 
@@ -157,6 +157,9 @@ def test_retrieve_job(
     """Test that a job can be retrieved through the api following the 
        scenario below.
 
+    Setup: A experiment 'mnist' is registered. Required for job submissions.
+        Confirm the experiment was created.
+
     Scenario: Get a Job
         Given I am an authorized user and a job exists, 
         I need to be able to submit a get request 
@@ -169,7 +172,10 @@ def test_retrieve_job(
     - The returned information matches the information that was provided during 
       registration.
     """
-    job_expected = submit_job(client, job_form_request).get_json()
+    experiment_expected = register_mnist_experiment(client).get_json()
+    assert_retrieving_mnist_experiment_by_name_works(client, expected=experiment_expected)
+
+    job_expected = submit_job(client, form_request=job_form_request).get_json()
     import pdb; pdb.set_trace()
     assert_retrieving_job_by_id_works(
         client, id=job_expected["jobId"], expected=job_expected
@@ -200,9 +206,9 @@ def test_list_jobs(
     experiment_expected = register_mnist_experiment(client).get_json()
     assert_retrieving_mnist_experiment_by_name_works(client, expected=experiment_expected)
 
-    job1_expected = submit_job(client, job_form_request).get_json()
-    job2_expected = submit_job(client, job_form_request).get_json()
-    job3_expected = submit_job(client, job_form_request).get_json()
+    job1_expected = submit_job(client, form_request=job_form_request).get_json()
+    job2_expected = submit_job(client, form_request=job_form_request).get_json()
+    job3_expected = submit_job(client, form_request=job_form_request).get_json()
     job_expected_list = [
         job1_expected, job2_expected, job3_expected
     ]
