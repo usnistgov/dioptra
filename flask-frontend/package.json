@@ -13,6 +13,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@okta/okta-vue": "^5.7.0",
     "@quasar/extras": "^1.16.7",
     "axios": "^1.6.0",
     "pinia": "^2.1.7",

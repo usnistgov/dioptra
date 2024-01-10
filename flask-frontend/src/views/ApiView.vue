@@ -68,6 +68,9 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue';
   import * as api from '../api';
+  import { useAuth } from '@okta/okta-vue';
+  const $auth = useAuth();
+  const token = $auth.getAccessToken();
 
   const endpointCategories = computed(() => {
     let categories: string[] = [];

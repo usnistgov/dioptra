@@ -28,6 +28,7 @@
 
     <q-route-tab label="Login" icon="login" to="/" />
     <q-route-tab label="API" icon="language" to="/api" />
+    <q-route-tab label="Okta" icon="key" to="/okta" />
 
     <q-toggle
       v-model="darkMode"
@@ -41,7 +42,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue';
   import { useQuasar } from 'quasar';
   import { useLoginStore } from '@/stores/LoginStore';
   import { storeToRefs } from 'pinia';
@@ -49,6 +49,13 @@
   import { useRouter } from 'vue-router';
   import * as api from '../api';
   import * as notify from '../notify';
+  import { ShallowRef, inject, ref, computed, watch } from 'vue';
+  import { AuthState } from '@okta/okta-auth-js';
+
+  const authState = inject<ShallowRef<AuthState>>('okta.authState')
+  const isOktaLoggedIn = computed(() => {
+    return authState?.value?.isAuthenticated || false;
+  })
 
   const $q = useQuasar();
   const darkMode = ref($q.dark.isActive);
@@ -56,7 +63,15 @@
   const router = useRouter();
 
   const store = useLoginStore();
-  const { loggedInUser, formState } = storeToRefs(store);
+  const { loggedInUser, formState, oktaToken } = storeToRefs(store);
+  
+  import { useAuth } from '@okta/okta-vue';
+  const $auth = useAuth();
+
+  // update oktaToken in pinia at every login or logout
+  watch(isOktaLoggedIn, async() => {
+    oktaToken.value = $auth.getAccessToken()
+  });
 
   // check login status if page reloads
   router.beforeEach((to, from) => {
