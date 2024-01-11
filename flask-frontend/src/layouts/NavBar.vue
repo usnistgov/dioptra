@@ -70,7 +70,7 @@
 
   // update oktaToken in pinia at every login or logout
   watch(isOktaLoggedIn, async() => {
-    oktaToken.value = $auth.getAccessToken()
+    oktaToken.value = authState.value.idToken.idToken
   });
 
   // check login status if page reloads

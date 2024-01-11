@@ -46,8 +46,10 @@
 
   const $auth = useAuth();
 
-  // console.log('authState = ', authState)
-  // console.log('$auth = ', $auth)
+  console.log('authState = ', authState)
+  console.log('$auth = ', $auth)
+
+  console.log('ID Token = ', authState.value.idToken.idToken)
 
   const login = async () => {
     await $auth.signInWithRedirect({ originalUri: '/okta' });
