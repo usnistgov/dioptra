@@ -25,6 +25,7 @@ from sqlalchemy.exc import IntegrityError
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.app import db
+from dioptra.restapi.utils import slugify
 
 from .errors import GroupDoesNotExistError
 from .model import Group
@@ -35,35 +36,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 class GroupService(object):
     """The service methods for registering and managing groups by their unique id."""
 
-    @staticmethod
-    def create(name: str, user_id=None, **kwargs) -> Group:
-        """Create a new group.
-
-        Args:
-            name: The name of the group.
-            user_id: The id of the user creating the group.
-
-        Returns:
-            The newly created group object.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
-        timestamp = datetime.datetime.now()
-
-        # #to be used when user is fully implemented
-        # if user_id is None:
-        #     user_id= current_user.id
-
-        return Group(
-            group_id=Group.next_id(),
-            name=name,
-            creator_id=user_id,
-            owner_id=user_id,
-            created_on=timestamp,
-            deleted=False,
-        )
-
-    @staticmethod
-    def get_all(**kwargs) -> List[Group]:
+    def get_all(self, **kwargs) -> List[Group]:
         """Fetch the list of all groups.
 
         Returns:
@@ -75,17 +48,19 @@ class GroupService(object):
 
         return Group.query.all()  # type: ignore
 
-    @staticmethod
-    def get_by_id(
-        group_id: int, error_if_not_found: bool = False, **kwargs
+    def get(
+        self, group_id: int, error_if_not_found: bool = False, **kwargs
     ) -> Group | None:
         """Fetch a group by its unique id.
 
         Args:
             group_id: The unique id of the group.
-
+            error_if_not_found: Raise an error if the group cannot be found.
         Returns:
             The group object if found, otherwise None.
+
+        Raises:
+            GroupDoesNotExistError: If the group with group_id cannot be found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
@@ -100,10 +75,32 @@ class GroupService(object):
 
         return cast(Group, group)
 
-    def submit(self, name: str, user_id=None, **kwargs) -> Group:
+    def create(self, name: str, user_id=None, **kwargs) -> Group:
+        """Create a new group.
+
+        Args:
+            name: The name of the group.
+            user_id: The id of the user creating the group.
+
+        Returns:
+            The newly created group object.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        new_group: Group = self.create(name, user_id, log=log)
+        timestamp = datetime.datetime.now()
+
+        # #to be used when user is fully implemented
+        # if user_id is None:
+        #     user_id= current_user.id
+
+        new_group = Group(
+            group_id=Group.next_id(),
+            name=slugify(name),
+            creator_id=user_id,
+            owner_id=user_id,
+            created_on=timestamp,
+            deleted=False,
+        )
 
         db.session.add(new_group)
         db.session.commit()
@@ -123,7 +120,7 @@ class GroupService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        if (group := self.get_by_id(id, log=log)) is None:
+        if (group := self.get(id, log=log)) is None:
             return {"status": "Success", "id": []}
         group.update(changes={"deleted": True})
         try:

@@ -22,28 +22,11 @@
 """
 from __future__ import annotations
 
-from typing import Any, Dict
-
-from marshmallow import Schema, fields, post_load
-
-from .model import GroupMembership
+from marshmallow import Schema, fields
 
 
 class GroupMembershipSchema(Schema):
-    """The schema for the data stored in a GroupMembership object.
-
-    Attributes:
-        user_id: The ID of the user who is a member of the group.
-        group_id: The ID of the group to which the user belongs.
-        read: Indicates whether the user has read permissions in the group.
-        write: Indicates whether the user has write permissions in the group.
-        share_read: Indicates whether the user can share read permissions with others
-            in the group.
-        share_write: Indicates whether the user can share write permissions with
-            others in the group.
-    """
-
-    __model__ = GroupMembership
+    """The schema for the data stored in a |GroupMembership| object."""
 
     user_id = fields.Integer(
         attribute="user_id",
@@ -80,9 +63,18 @@ class GroupMembershipSchema(Schema):
         ),
     )
 
-    @post_load
-    def deserialize_object(
-        self, data: Dict[str, Any], many: bool, **kwargs
-    ) -> GroupMembership:
-        """Creates a GroupMembership object from the validated data."""
-        return self.__model__(**data)
+
+class IdStatusResponseSchema(Schema):
+    """A simple response for reporting a status for one or more objects."""
+
+    status = fields.String(
+        attribute="status",
+        metadata=dict(description="The status of the request."),
+    )
+    id = fields.List(
+        fields.Integer(),
+        attribute="id",
+        metadata=dict(
+            description="A list of integers identifying the affected object(s)."
+        ),
+    )

@@ -90,7 +90,7 @@ def create_group(group_service: GroupService, name: str = "test") -> Group:
     Returns:
         The response from the group service representing the newly created group.
     """
-    return group_service.submit(name)
+    return group_service.create(name)
 
 
 def get_group(id: int, group_service: GroupService) -> Group | None:
@@ -106,7 +106,7 @@ def get_group(id: int, group_service: GroupService) -> Group | None:
     Raises:
         GroupDoesNotExistError: If no group with the specified ID is found.
     """
-    return group_service.get_by_id(id)
+    return group_service.get(id)
 
 
 def delete_group(id: int, group_service: GroupService) -> dict[str, Any]:
@@ -151,7 +151,7 @@ def create_group_membership(
     Raises:
         GroupMembershipSubmissionError: If there is an issue with the submission.
     """
-    return group_membership_service.submit(
+    return group_membership_service.create(
         group_id,
         user_id,
         read=read,
@@ -177,7 +177,7 @@ def get_group_membership(
     Raises:
         GroupMembershipDoesNotExistError: If no group membership with the specified user and group IDs is found.
     """
-    return group_membership_service.get_by_id(group_id, user_id)
+    return group_membership_service.get(group_id, user_id)
 
 
 def delete_group_membership(

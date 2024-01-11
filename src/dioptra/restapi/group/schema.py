@@ -22,26 +22,11 @@
 """
 from __future__ import annotations
 
-from typing import Any, Dict
-
-from marshmallow import Schema, fields, post_load
-
-from .model import Group
+from marshmallow import Schema, fields
 
 
 class GroupSchema(Schema):
-    """The schema for the data stored in a |Group| object.
-
-    Attributes:
-        group_id: The unique identifier of the group.
-        name: Human-readable name for the group.
-        creator_id: The id for the user that created the group.
-        owner_id: The id for the user that owns the group.
-        created_on: The time at which the group was created.
-        deleted: Whether the group has been deleted.
-    """
-
-    __model__ = Group
+    """The schema for the data stored in a |Group| object."""
 
     group_id = fields.Integer(
         attribute="id", metadata=dict(description="A UUID that identifies the group.")
@@ -74,7 +59,18 @@ class GroupSchema(Schema):
         metadata=dict(description="Whether the group has been deleted."),
     )
 
-    @post_load
-    def deserialize_object(self, data: Dict[str, Any], many: bool, **kwargs) -> Group:
-        """Creates a |Job| object from the validated data."""
-        return self.__model__(**data)
+
+class IdStatusResponseSchema(Schema):
+    """A simple response for reporting a status for one or more objects."""
+
+    status = fields.String(
+        attribute="status",
+        metadata=dict(description="The status of the request."),
+    )
+    id = fields.List(
+        fields.Integer(),
+        attribute="id",
+        metadata=dict(
+            description="A list of integers identifying the affected object(s)."
+        ),
+    )

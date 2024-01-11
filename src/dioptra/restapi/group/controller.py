@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, List, Optional
+from typing import Any, cast
 
 import structlog
 from flask import request
@@ -27,11 +27,8 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import slugify
-
-from .errors import GroupDoesNotExistError
 from .model import Group
-from .schema import GroupSchema
+from .schema import GroupSchema, IdStatusResponseSchema
 from .service import GroupService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -57,7 +54,7 @@ class GroupResource(Resource):
         super().__init__(*args, **kwargs)
 
     @responds(schema=GroupSchema(many=True), api=api)
-    def get(self) -> List[Group]:
+    def get(self) -> list[Group]:
         """Gets a list of all groups."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="group", request_type="GET"
@@ -65,7 +62,7 @@ class GroupResource(Resource):
         log.info("Request received")
         return self._group_service.get_all(log=log)
 
-    @accepts(GroupSchema, api=api)
+    @accepts(schema=GroupSchema, api=api)
     @responds(schema=GroupSchema, api=api)
     def post(self) -> Group:
         """Creates a new Group via a group submission form with an attached file."""
@@ -76,10 +73,11 @@ class GroupResource(Resource):
         log.info("Request received")
 
         parsed_obj = request.parsed_obj  # type: ignore
-        name = slugify(str(parsed_obj["group_name"]))
-        return self._group_service.submit(name=name, log=log)
+        name = str(parsed_obj["group_name"])
+        return self._group_service.create(name=name, log=log)
 
-    @accepts(GroupSchema, api=api)
+    @accepts(schema=GroupSchema, api=api)
+    @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self) -> dict[str, Any]:
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="group", request_type="POST"
@@ -109,10 +107,6 @@ class GroupIdResource(Resource):
             request_id=str(uuid.uuid4()), resource="groupId", request_type="GET"
         )  # noqa: F841
         log.info("Request received", group_id=groupId)
-        group: Optional[Group] = self._group_service.get_by_id(groupId, log=log)
+        group = self._group_service.get(groupId, error_if_not_found=True, log=log)
 
-        if group is None:
-            log.error("Group not found", group_id=groupId)
-            raise GroupDoesNotExistError
-
-        return group
+        return cast(Group, group)

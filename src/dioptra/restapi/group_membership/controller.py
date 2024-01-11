@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 import structlog
 from flask import request
@@ -27,7 +28,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from .model import GroupMembership
-from .schema import GroupMembershipSchema
+from .schema import GroupMembershipSchema, IdStatusResponseSchema
 from .service import GroupMembershipService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -63,7 +64,7 @@ class GroupMembershipResource(Resource):
         log.info("Request received")
         return self._group_membership_service.get_all(log=log)
 
-    @accepts(GroupMembershipSchema, api=api)
+    @accepts(schema=GroupMembershipSchema, api=api)
     @responds(schema=GroupMembershipSchema, api=api)
     def post(self) -> GroupMembership:
         """Create a new group membership using a group membership submission form."""
@@ -83,12 +84,13 @@ class GroupMembershipResource(Resource):
         share_read = bool(parsed_obj["share_read"])
         share_write = bool(parsed_obj["share_write"])
 
-        return self._group_membership_service.submit(
+        return self._group_membership_service.create(
             group_id, user_id, read, write, share_read, share_write, log=log
         )
 
-    @accepts(GroupMembershipSchema, api=api)
-    def delete(self) -> bool:
+    @accepts(schema=GroupMembershipSchema, api=api)
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self) -> dict[str, Any]:
         """Delete a group membership."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),

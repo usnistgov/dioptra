@@ -28,15 +28,23 @@ class GroupMembershipSubmissionError(Exception):
     """The group membership submission form contains invalid parameters."""
 
 
+class GroupMembershipAlreadyExistsError(Exception):
+    """The group membership submission form contains invalid parameters."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(GroupMembershipDoesNotExistError)
-    def handle_job_does_not_exist_error(error):
+    def handle_group_membership_does_not_exist_error(error):
         return {
             "message": "Not Found - The requested group membership does not exist"
         }, 404
 
+    @api.errorhandler(GroupMembershipAlreadyExistsError)
+    def handle_group_membership_already_exists_error(error):
+        return {"message": "Bad Request - The group membership already exists"}, 400
+
     @api.errorhandler(GroupMembershipSubmissionError)
-    def handle_job_submission_error(error):
+    def handle_group_membership_submission_error(error):
         return (
             {
                 "message": "Bad Request - The group membership submission form contains"
