@@ -48,8 +48,8 @@
 
   console.log('authState = ', authState)
 
-  console.log('ID Token = ', authState.value.idToken.idToken)
-  console.log('Access Token = ', authState.value.accessToken.accessToken)
+  console.log('ID Token = ', authState?.value.isAuthenticated ? authState.value.idToken?.idToken : 'Not logged in')
+  console.log('Access Token = ', authState?.value.isAuthenticated ?  authState.value.accessToken?.accessToken : 'Not logged in')
 
   const login = async () => {
     await $auth.signInWithRedirect({ originalUri: '/okta' });
