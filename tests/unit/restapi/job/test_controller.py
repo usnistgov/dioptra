@@ -22,10 +22,10 @@ from typing import Any, BinaryIO, Dict, List
 
 import pytest
 import structlog
-from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from freezegun import freeze_time
+from pytest import MonkeyPatch
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.job.routes import BASE_ROUTE as JOB_BASE_ROUTE
@@ -49,12 +49,13 @@ def experiment() -> Experiment:
 @pytest.fixture
 def job_form_request(workflow_tar_gz: BinaryIO) -> Dict[str, Any]:
     return {
-        "experiment_name": "mnist",
+        "experimentName": "mnist",
         "queue": "tensorflow_cpu",
         "timeout": "12h",
-        "entry_point": "main",
-        "entry_point_kwargs": "-P var1=testing",
+        "entryPoint": "main",
+        "entryPointKwargs": "-P var1=testing",
         "workflow": (workflow_tar_gz, "workflows.tar.gz"),
+        "dependsOn": None,
     }
 
 

@@ -105,7 +105,7 @@ jobs:
           docker save ${{ env.PROJECT_PREFIX }}/${{ matrix.dioptra-app }}:dev | gzip > /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
 
       - name: archive the testing images
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
           path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
@@ -123,7 +123,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: setup python 3.9
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: "3.9"
 
@@ -148,7 +148,7 @@ jobs:
         run: python3 -m pip install tox
 
       - name: download the container image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.PROJECT_PREFIX }}-${{ matrix.dioptra-app }}-dev-image
           path: /tmp
@@ -183,7 +183,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: setup python 3.9
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: "3.9"
 
@@ -214,7 +214,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: download the nginx testing image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.PROJECT_PREFIX }}-nginx-dev-image
           path: /tmp
@@ -225,7 +225,7 @@ jobs:
           rm /tmp/${{ env.PROJECT_PREFIX }}_nginx_dev.tar.gz
 
       - name: download the mlflow-tracking testing image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.PROJECT_PREFIX }}-mlflow-tracking-dev-image
           path: /tmp
@@ -236,7 +236,7 @@ jobs:
           rm /tmp/${{ env.PROJECT_PREFIX }}_mlflow-tracking_dev.tar.gz
 
       - name: download the restapi testing image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.PROJECT_PREFIX }}-restapi-dev-image
           path: /tmp
@@ -247,7 +247,7 @@ jobs:
           rm /tmp/${{ env.PROJECT_PREFIX }}_restapi_dev.tar.gz
 
       - name: download the tensorflow2-cpu testing image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.PROJECT_PREFIX }}-tensorflow2-cpu-dev-image
           path: /tmp

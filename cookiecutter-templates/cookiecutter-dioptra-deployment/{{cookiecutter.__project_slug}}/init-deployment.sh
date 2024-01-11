@@ -351,33 +351,6 @@ manage_postgres_ssl() {
 }
 
 ###########################################################################################
-# Runs the database migration for the restapi service
-#
-# Globals:
-#   CONTAINER_DB_PORT
-#   DOCKER_COMPOSE_INIT_YML
-#   INIT_DB_SERVICE
-#   INIT_RESTAPI_SERVICE
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-migrate_restapi_db() {
-  local args=(
-    "--wait-for"
-    "${INIT_DB_SERVICE}:${CONTAINER_DB_PORT}"
-    "--upgrade-db"
-  )
-
-  docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" run \
-    --rm \
-    "${INIT_RESTAPI_SERVICE}" \
-    "${args[@]}"
-}
-
-###########################################################################################
 # Stops and removes all running containers for services defined in docker-compose.yml
 #
 # Globals:
@@ -571,7 +544,6 @@ main() {
   init_frontend
   start_db_service
   manage_postgres_ssl
-  migrate_restapi_db
   stop_services
 }
 

@@ -23,7 +23,6 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([backend],[],[Server backend],[gunicorn])
 # ARG_OPTIONAL_SINGLE([gunicorn-module],[],[Python module used to start Gunicorn WSGI server],[dioptra.restapi.cli.gunicorn])
 # ARG_OPTIONAL_REPEATED([wait-for],[],[Wait on the availability of a host and TCP port before proceeding],[])
-# ARG_OPTIONAL_ACTION([upgrade-db],[],[Upgrade the database schema],[upgrade_database])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
 # ARG_HELP([Dioptra REST API Entry Point\n])"
@@ -70,7 +69,6 @@ wait_for_services() {
 # Upgrade the Dioptra database
 #
 # Globals:
-#   dioptra_workdir
 #   logname
 # Arguments:
 #   None
@@ -80,12 +78,7 @@ wait_for_services() {
 
 upgrade_database() {
   echo "${logname}: INFO - Upgrading the Dioptra database"
-
-  set_parsed_globals
-  wait_for_services
-
-  cd ${dioptra_workdir}
-  flask db upgrade -d ${dioptra_workdir}/migrations
+  dioptra-db autoupgrade
 }
 
 ###########################################################################################
@@ -140,5 +133,6 @@ start_restapi() {
 parse_commandline "$@"
 set_parsed_globals
 wait_for_services
+upgrade_database
 start_restapi
 # ] <-- needed because of Argbash

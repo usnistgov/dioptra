@@ -83,7 +83,7 @@
         "mc": {
             "image": "mc",
             "namespace": "minio",
-            "tag": "latest",
+            "tag": "RELEASE.2023-10-14T01-57-03Z",
             "registry": ""
         },
         "minio": {

@@ -32,6 +32,10 @@ class JobWorkflowUploadError(Exception):
     """The service for storing the uploaded workfile file is unavailable."""
 
 
+class InvalidExperimentDescriptionError(Exception):
+    """The experiment description failed validation."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(JobDoesNotExistError)
     def handle_job_does_not_exist_error(error):
@@ -57,3 +61,7 @@ def register_error_handlers(api: Api) -> None:
             },
             503,
         )
+
+    @api.errorhandler(InvalidExperimentDescriptionError)
+    def handle_invalid_experiment_description_error(error):
+        return {"message": "The experiment description is invalid!"}, 400

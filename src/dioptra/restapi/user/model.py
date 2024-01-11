@@ -21,8 +21,8 @@ import datetime
 import uuid
 from typing import Any
 
-from dioptra.restapi.app import db
-from dioptra.restapi.custom_types import GUID
+from dioptra.restapi.db import db
+from dioptra.restapi.db.custom_types import GUID
 
 
 class User(db.Model):

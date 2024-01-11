@@ -27,10 +27,7 @@ import structlog
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -41,7 +38,6 @@ try:
         JpegCompression,
         SpatialSmoothing,
     )
-    from art.estimators.classification import KerasClassifier
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -66,85 +62,6 @@ DEFENSE_LIST = {
 }
 
 
-def get_optimizer(optimizer, learning_rate):
-    optimizer_collection = {
-        "rmsprop": RMSprop(learning_rate),
-        "adam": Adam(learning_rate),
-        "adagrad": Adagrad(learning_rate),
-        "sgd": SGD(learning_rate),
-    }
-
-    return optimizer_collection.get(optimizer)
-
-
-# Load model from registry and apply imagenet_preprocessing if needed.
-def wrap_keras_classifier(model, clip_values, imagenet_preprocessing):
-    keras_model = load_model_in_registry(model=model)
-    if imagenet_preprocessing:
-        mean_b = 103.939
-        mean_g = 116.779
-        mean_r = 123.680
-        return KerasClassifier(
-            model=keras_model,
-            clip_values=clip_values,
-            preprocessing=(np.array([mean_b, mean_g, mean_r]), np.array([1.0, 1.0, 1.0])),
-        )
-    else:
-        return KerasClassifier(model=keras_model, clip_values=clip_values)
-
-
-def init_defense(clip_values, def_type, **kwargs):
-
-    defense = DEFENSE_LIST[def_type](
-        clip_values=clip_values,
-        **kwargs,
-    )
-
-    return defense
-
-
-def save_def_batch(def_batch, def_data_dir, y, clean_filenames, class_names_list):
-    for batch_image_num, def_image in enumerate(def_batch):
-        out_label = class_names_list[y[batch_image_num]]
-        def_image_path = (
-            def_data_dir
-            / f"{out_label}"
-            / f"def_{clean_filenames[batch_image_num].name}"
-        )
-
-        if not def_image_path.parent.exists():
-            def_image_path.parent.mkdir(parents=True)
-
-        save_img(path=str(def_image_path), x=def_image)
-
-
-def evaluate_distance_metrics(
-    clean_filenames, distance_metrics_, clean_batch, def_batch
-):
-    LOGGER.debug("evaluate image perturbations using distance metrics")
-    distance_metrics_["image"].extend([x.name for x in clean_filenames])
-    distance_metrics_["label"].extend([x.parent for x in clean_filenames])
-    for metric_name, metric in DISTANCE_METRICS:
-        distance_metrics_[metric_name].extend(metric(clean_batch, def_batch))
-
-
-def log_distance_metrics(distance_metrics_):
-    distance_metrics_ = distance_metrics_.copy()
-    del distance_metrics_["image"]
-    del distance_metrics_["label"]
-    for metric_name, metric_values_list in distance_metrics_.items():
-        metric_values = np.array(metric_values_list)
-        mlflow.log_metric(key=f"{metric_name}_mean", value=metric_values.mean())
-        mlflow.log_metric(key=f"{metric_name}_median", value=np.median(metric_values))
-        mlflow.log_metric(key=f"{metric_name}_stdev", value=metric_values.std())
-        mlflow.log_metric(
-            key=f"{metric_name}_iqr", value=scipy.stats.iqr(metric_values)
-        )
-        mlflow.log_metric(key=f"{metric_name}_min", value=metric_values.min())
-        mlflow.log_metric(key=f"{metric_name}_max", value=metric_values.max())
-        LOGGER.info("logged distance-based metric", metric_name=metric_name)
-
-
 @pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
@@ -156,7 +73,7 @@ def create_defended_dataset(
     batch_size: int = 32,
     label_mode: str = "categorical",
     def_type: str = "spatial_smoothing",
-    **kwargs,
+    defense_kwargs: Optional[Dict[str, Any]] = None,
 ) -> pd.DataFrame:
     distance_metrics_list = distance_metrics_list or []
     color_mode: str = "rgb" if image_size[2] == 3 else "grayscale"
@@ -165,10 +82,10 @@ def create_defended_dataset(
     target_size: Tuple[int, int] = image_size[:2]
     def_data_dir = Path(def_data_dir)
 
-    defense = init_defense(
+    defense = _init_defense(
         clip_values=clip_values,
         def_type=def_type,
-        **kwargs,
+        defense_kwargs=defense_kwargs,
     )
 
     data_generator: ImageDataGenerator = ImageDataGenerator(rescale=rescale)
@@ -181,7 +98,6 @@ def create_defended_dataset(
         batch_size=batch_size,
         shuffle=False,
     )
-    n_classes = len(data_flow.class_indices)
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]
     class_names_list = sorted(data_flow.class_indices, key=data_flow.class_indices.get)
@@ -231,10 +147,10 @@ def create_defended_dataset(
     return pd.DataFrame(distance_metrics_)
 
 
-def init_defense(clip_values, def_type, **kwargs):
+def _init_defense(clip_values, def_type, defense_kwargs):
     defense = DEFENSE_LIST[def_type](
         clip_values=clip_values,
-        **kwargs,
+        **defense_kwargs,
     )
     return defense
 

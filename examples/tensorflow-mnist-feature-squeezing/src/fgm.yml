@@ -43,7 +43,7 @@ parameters:
   eps: 0.3
   eps_step: 0.1
   minimal: false
-  norm: np.inf
+  norm: "inf"
   seed: -1
 
 tasks:
