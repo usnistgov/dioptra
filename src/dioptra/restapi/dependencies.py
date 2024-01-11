@@ -77,4 +77,3 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
     attach_group_providers(modules)
     attach_group_membership_providers(modules)
     attach_dioptra_resource_providers(modules)
-
