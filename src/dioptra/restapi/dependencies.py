@@ -35,9 +35,9 @@ def bind_dependencies(binder: Binder) -> None:
     )
     from .job import bind_dependencies as attach_job_dependencies
     from .queue import bind_dependencies as attach_job_queue_dependencies
+    from .resource import bind_dependencies as attach_resource_dependencies
     from .task_plugin import bind_dependencies as attach_task_plugin_dependencies
     from .user import bind_dependencies as attach_user_dependencies
-    from .resource import bind_dependencies as attach_resource_dependencies
 
     # Bind configurations
     attach_experiment_dependencies(binder)
