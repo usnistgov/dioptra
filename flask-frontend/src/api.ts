@@ -3,7 +3,6 @@ import { useLoginStore } from './stores/LoginStore';
 
 axios.interceptors.request.use(config => {
   const authStore = useLoginStore();
-  console.log('oktaToken = ', authStore.oktaToken)
   if(authStore.oktaToken) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${authStore.oktaToken}`
   }
