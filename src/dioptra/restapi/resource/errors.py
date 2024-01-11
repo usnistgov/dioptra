@@ -14,40 +14,33 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module of reexports of the application's data models and forms."""
+"""Error handlers for the dioptra resource endpoints."""
 from __future__ import annotations
 
-from .experiment.model import (
-    Experiment,
-    ExperimentRegistrationForm,
-    ExperimentRegistrationFormData,
-)
-from .group.model import Group
-from .group_membership.model import GroupMembership
-from .job.model import Job, JobForm, JobFormData
-from .queue.model import Queue, QueueLock
-from .resource.model import DioptraResource
-from .task_plugin.model import (
-    TaskPlugin,
-    TaskPluginUploadForm,
-    TaskPluginUploadFormData,
-)
-from .user.model import User
+from flask_restx import Api
 
-__all__ = [
-    "Experiment",
-    "ExperimentRegistrationForm",
-    "ExperimentRegistrationFormData",
-    "Job",
-    "JobForm",
-    "JobFormData",
-    "Queue",
-    "QueueLock",
-    "TaskPlugin",
-    "TaskPluginUploadForm",
-    "TaskPluginUploadFormData",
-    "User",
-    "Group",
-    "GroupMembership",
-    "DioptraResource",
-]
+
+class DioptraResourceDoesNotExistError(Exception):
+    """The requested Dioptra resource does not exist."""
+
+
+class DioptraResourceSubmissionError(Exception):
+    """The Dioptra resource submission form contains invalid parameters."""
+
+
+def register_error_handlers(api: Api) -> None:
+    @api.errorhandler(DioptraResourceDoesNotExistError)
+    def handle_resource_does_not_exist_error(error):
+        return {
+            "message": "Not Found - The requested Dioptra resource does not exist"
+        }, 404
+
+    @api.errorhandler(DioptraResourceSubmissionError)
+    def handle_resource_submission_error(error):
+        return (
+            {
+                "message": "Bad Request - The Dioptra resource submission form contains"
+                "invalid parameters. Please verify and resubmit."
+            },
+            400,
+        )
