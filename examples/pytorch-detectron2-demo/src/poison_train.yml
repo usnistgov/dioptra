@@ -1,0 +1,276 @@
+types:
+  callback:
+  dataloader:
+  directoryiterator:
+  functiontype:
+  kerasclassifier:
+  metric:
+  mlflowrun:
+  tuple:
+  model:
+  model_results:
+  model_config:
+  metadatacatalog:
+  modelversion:
+  np.ndarray:
+  optimizer:
+  path:
+  dataframe:
+  rngenerator:
+  sequential:
+  tarfile:
+  list_string:
+    list: string
+  list_tuple_string_any:
+    list: tuple_string_any
+  list_union_metric_functiontype:
+    list: union_metric_functiontype
+  list_union_string_path:
+    list: union_string_path
+  list_mapping_string_string:
+    list: mapping_string_string
+  mapping_string_any:
+    mapping: [string, any]
+  mapping_string_number:
+    mapping: [string, number]
+  mapping_string_string:
+    mapping: [string, string]
+  tuple_integer_integer:
+    tuple: [integer, integer]
+  tuple_integer_integer_integer:
+    tuple: [integer, integer, integer]
+  tuple_string_any:
+    tuple: [string, any]
+  union_integer_number_string:
+    union: [integer, number, string]
+  union_integer_any:
+    union: [integer, any]
+  union_metric_functiontype:
+    union: [metric, functiontype]
+  union_null_list_tuple_string_any:
+    union: [list_tuple_string_any , "null"]
+  union_null_mapping_string_any:
+    union: [mapping_string_any, "null"]
+  union_null_modelversion:
+    union: [modelversion, "null"]
+  union_null_number:
+    union: [number, "null"]
+  union_null_string:
+    union: [string, "null"]
+  union_null_union_integer_any:
+    union: [union_integer_any, "null"]
+  union_string_path:
+    union: [string, path]
+  union_null_union_string_path:
+    union: [union_string_path, "null"]
+parameters:
+  data_dir_train: /dioptra/data/Road-Sign-Detection-v2/training
+  data_dir_test: /dioptra/data/Road-Sign-Detection-v2/testing
+  model_architecture: COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml
+  class_names: [stop, crosswalk, speedlimit, trafficlight]
+  bbox_conf_threshold: 0.7
+  dataset_type: detectron2_balloon_json
+  batch_size: 32
+  register_model_name: ""
+  learning_rate: 0.001
+  dataloader_num_workers: 4
+  max_iter: 300
+  gpu: false
+  poison_class_label: 1
+  poison_class_target: 0
+  poison_scale: 0.2
+  poison_color: [144, 144, 144]
+  poison_rel_x_location: 0.5
+  poison_rel_y_location: 0.5
+  seed: -1
+  poison: true
+
+tasks:
+  init_rng:
+    plugin: dioptra_builtins.random.rng.init_rng
+    inputs:
+      - name: seed
+        type: integer
+        required: false
+    outputs:
+      - seed: integer
+      - rng: rngenerator
+
+  draw_random_integer:
+    plugin: dioptra_builtins.random.sample.draw_random_integer
+    inputs:
+      - rng: rngenerator
+      - name: low
+        type: integer
+        required: false
+      - name: high
+        type: integer
+        required: false
+    outputs:
+      value: integer
+
+  log_parameters:
+    plugin: dioptra_builtins.tracking.mlflow.log_parameters
+    inputs:
+      - parameters: mapping_string_number
+
+  register_dataset:
+    plugin: dioptra_custom.pytorch_d2.data_detectron2.register_dataset
+    inputs:
+      - dataset_name: string
+      - dataset_path: string
+      - dataset_type: string
+      - class_names: list_string
+      - poison: boolean
+      - testing: boolean
+      - name: poison_class_label
+        type: integer
+        required: false
+      - name: poison_class_target
+        type: integer
+        required: false
+      - name: poison_scale
+        type: number
+        required: false
+      - name: poison_color
+        type: tuple_integer_integer_integer
+        required: false
+      - name: poison_rel_x_location
+        type: number
+        required: false
+      - name: poison_rel_y_location
+        type: number
+        required: false
+    outputs: 
+      ret: metadatacatalog
+  train_model:
+    plugin: dioptra_custom.pytorch_d2.train_detectron2.train_model
+    inputs:
+      - class_names: list_string
+      - model_architecture: string
+      - batch_size: integer
+      - learning_rate: number
+      - max_iter: integer
+      - dataloader_num_workers: integer
+      - gpu: boolean
+    outputs:
+      - model: model
+      - config: model_config
+  eval_dataset:
+    plugin: dioptra_custom.pytorch_d2.eval_detectron2.eval_dataset
+    inputs:
+      - dataset_name: string
+      - classifier: model
+      - confidence: number
+      - cfg: model_config
+      - name: poison
+        type: boolean
+        required: false
+    outputs:
+      ret: mapping_string_number
+  log_metrics:
+    plugin: dioptra_builtins.tracking.mlflow.log_metrics
+    inputs:
+      - metrics: mapping_string_number
+  add_model_to_registry:
+    inputs:
+    - name: name 
+      type: string
+    - model_dir: string
+    outputs:
+      ret: union_null_modelversion
+    plugin: dioptra_custom.pytorch_d2.registry_mlflow_detectron2.add_model_to_registry
+
+    
+graph:
+  init_rng:
+    init_rng: $seed
+
+  dataset_seed:
+    draw_random_integer: $init_rng.rng
+
+  log_mlflow_params_result:
+    log_parameters:
+      - entry_point_seed: $seed
+        dataset_seed: $dataset_seed
+
+  train_ds_meta:
+    register_dataset:
+      dataset_name: data_train
+      dataset_path: $data_dir_train
+      dataset_type: $dataset_type
+      class_names: $class_names
+      poison: $poison
+      poison_class_label: $poison_class_label
+      poison_class_target: $poison_class_target
+      poison_scale: $poison_scale
+      poison_color: $poison_color
+      poison_rel_x_location: $poison_rel_x_location
+      poison_rel_y_location: $poison_rel_y_location
+    dependencies: log_mlflow_params_result
+    
+  test_ds_meta_poison:
+    register_dataset:
+      dataset_name: dataset_test_poison
+      dataset_path: $data_dir_test
+      dataset_type: $dataset_type
+      class_names: $class_names
+      poison: $poison
+      testing: $poison
+      poison_class_label: $poison_class_label
+      poison_class_target: $poison_class_target
+      poison_scale: $poison_scale
+      poison_color: $poison_color
+      poison_rel_x_location: $poison_rel_x_location
+      poison_rel_y_location: $poison_rel_y_location
+      
+  test_ds_meta:
+    register_dataset:
+      dataset_name: data_test
+      dataset_path: $data_dir_test
+      dataset_type: $dataset_type
+      class_names: $class_names
+    dependencies: log_mlflow_params_result
+
+
+  train_model_results:
+    train_model:
+      dataset_name: data_train
+      class_names: $class_names
+      model_architecture: $model_architecture
+      batch_size: $batch_size
+      learning_rate: $learning_rate
+      max_iter: $max_iter
+      dataloader_num_workers: $dataloader_num_workers
+      gpu: $gpu
+    dependencies: [train_ds_meta, test_ds_meta]
+
+  eval_results:
+    eval_dataset:
+      dataset_name: data_test
+      classifier: $train_model_results.model
+      confidence: $bbox_conf_threshold
+      cfg: $train_model_results.config
+
+  eval_results_poison:
+    eval_dataset:
+      dataset_name: data_test_poison
+      classifier: $train_model_results.model
+      confidence: $bbox_conf_threshold
+      cfg: $train_model_results.config
+      poison: $poison
+
+  log_classifier_performance_metrics_result:
+    log_metrics:
+      metrics: $eval_results
+
+  log_classifier_performance_metrics_poison_result:
+    log_metrics:
+      metrics: $eval_results_poison
+
+  add_model_to_registry_result:
+    add_model_to_registry:
+      name: $register_model_name
+      model_dir: output
+    dependencies: train_model_results
+
