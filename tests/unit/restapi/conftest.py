@@ -30,6 +30,7 @@ from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from injector import Binder, Injector
+from mlflow.tracking import set_tracking_uri
 from redis import Redis
 from requests import ConnectionError
 from requests import Session as RequestsSession
@@ -211,6 +212,13 @@ def http_client() -> Iterable[RequestsSession]:
         yield s
 
 
+@pytest.fixture(autouse=True)
+def create_mlruns(tmp_path):
+    path = Path(tmp_path / "mlruns")
+    path.mkdir()
+    set_tracking_uri(path)
+
+
 def wait_for_healthcheck_success(client: RequestsSession, timeout: int = 10) -> None:
     """Wait for the healthcheck endpoint to return a successful response.
 
@@ -255,12 +263,3 @@ def wait_for_healthcheck_success(client: RequestsSession, timeout: int = 10) -> 
             healthcheck = StubResponse()
 
         time_elapsed = time.time() - time_start
-
-
-@pytest.fixture(autouse=True)
-def create_mlruns(tmp_path):
-    from mlflow.tracking import set_tracking_uri
-    path = Path(tmp_path / "mlruns")
-    path.mkdir()
-    set_tracking_uri(path)
-    
