@@ -117,9 +117,10 @@ class JobIdResource(Resource):
             request_id=str(uuid.uuid4()), resource="jobId", request_type="GET"
         )  # noqa: F841
         log.info("Request received", job_id=jobId)
-        job = self._job_service.get(jobId, error_if_not_found=True, log=log)
-
-        return cast(Job, job)
+        return cast(
+            Job,
+            self._job_service.get(jobId, error_if_not_found=True, log=log),
+        )
 
     @login_required
     @accepts(schema=JobMutableFieldsSchema, api=api)
@@ -132,11 +133,13 @@ class JobIdResource(Resource):
 
         parsed_obj = request.parsed_obj  # type: ignore
 
-        job = self._job_service.change_status(
-            jobId, status=parsed_obj["status"], error_if_not_found=True, log=log
+        return cast(
+            Job,
+            self._job_service.change_status(
+                jobId, status=parsed_obj["status"], error_if_not_found=True, log=log
+            ),
         )
 
-        return cast(Job, job)
 
 
 @api.route("/newTaskEngine")
