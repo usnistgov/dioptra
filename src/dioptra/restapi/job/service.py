@@ -41,7 +41,6 @@ from dioptra.task_engine.validation import is_valid
 from .errors import (
     InvalidExperimentDescriptionError,
     JobDoesNotExistError,
-    JobStatusIncorrectError,
     JobWorkflowUploadError,
 )
 from .model import Job
@@ -222,18 +221,10 @@ class JobService(object):
             JobStatusIncorrectError: If the provided status is not valid.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-
         job = cast(Job, self.get(job_id=job_id, error_if_not_found=True, log=log))
-
-        if status not in ["queued", "started", "deferred", "finished", "failed"]:
-            raise JobStatusIncorrectError
-
         job.update({"status": status})
-
         db.session.commit()
-
         log.info("Job update successful", job_id=job.job_id, status=status)
-
         return job
 
     def submit_task_engine(

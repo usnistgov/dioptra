@@ -32,10 +32,6 @@ class JobWorkflowUploadError(Exception):
     """The service for storing the uploaded workfile file is unavailable."""
 
 
-class JobStatusIncorrectError(Exception):
-    """The job status failed validation."""
-
-
 class InvalidExperimentDescriptionError(Exception):
     """The experiment description failed validation."""
 
@@ -69,10 +65,3 @@ def register_error_handlers(api: Api) -> None:
     @api.errorhandler(InvalidExperimentDescriptionError)
     def handle_invalid_experiment_description_error(error):
         return {"message": "The experiment description is invalid!"}, 400
-
-    @api.errorhandler(JobStatusIncorrectError)
-    def handle_job_status_incorrect_error(error):
-        return {
-            "message": "The job status is invalid! Must be one of"
-            "['queued', 'started', 'deferred', 'finished', 'failed']"
-        }, 400
