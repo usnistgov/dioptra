@@ -153,6 +153,7 @@ class TaskEngineResource(Resource):
         super().__init__(*args, **kwargs)
         self._job_new_task_engine_service = job_new_task_engine_service
 
+    @login_required
     @accepts(schema=JobNewTaskEngineSchema, api=api)
     @responds(schema=JobSchema, api=api)
     def post(self) -> Job:
