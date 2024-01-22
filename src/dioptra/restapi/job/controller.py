@@ -145,6 +145,7 @@ class JobIdResource(Resource):
 
 @api.route("/newTaskEngine")
 class TaskEngineResource(Resource):
+    """Lets you POST to create new jobs using the new declarative task engine."""
     @inject
     def __init__(
         self, job_new_task_engine_service: JobNewTaskEngineService, *args, **kwargs
@@ -155,6 +156,7 @@ class TaskEngineResource(Resource):
     @accepts(schema=JobNewTaskEngineSchema, api=api)
     @responds(schema=JobSchema, api=api)
     def post(self) -> Job:
+        """Creates a new job using the new declarative task engine."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="job/newTaskEngine",
