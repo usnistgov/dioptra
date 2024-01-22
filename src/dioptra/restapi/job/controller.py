@@ -133,6 +133,7 @@ class JobIdResource(Resource):
 
         parsed_obj = request.parsed_obj  # type: ignore
 
+        log.info("Request received", job_id=jobId, status=parsed_obj["status"])
         return cast(
             Job,
             self._job_service.change_status(
@@ -154,6 +155,12 @@ class TaskEngineResource(Resource):
     @accepts(schema=JobNewTaskEngineSchema, api=api)
     @responds(schema=JobSchema, api=api)
     def post(self) -> Job:
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="job/newTaskEngine",
+            request_type="POST",
+        )  # noqa: F841
+        log.info("Request received")
         parsed_obj = request.parsed_obj  # type: ignore
 
         return self._job_new_task_engine_service.create(
