@@ -144,8 +144,11 @@ class JobService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        experiment = self._experiment_name_service.get(
-            experiment_name=experiment_name, error_if_not_found=True, log=log
+        experiment = cast(
+            Experiment,
+            self._experiment_name_service.get(
+                experiment_name=experiment_name, error_if_not_found=True, log=log
+            )
         )
 
         if experiment is None:

@@ -37,7 +37,7 @@ from .schema import (
     JobNewTaskEngineSchema,
     JobSchema,
 )
-from .service import JobService
+from .service import JobNewTaskEngineService, JobService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -130,9 +130,7 @@ class JobIdResource(Resource):
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="jobId", request_type="PUT"
         )  # noqa: F841
-
         parsed_obj = request.parsed_obj  # type: ignore
-
         log.info("Request received", job_id=jobId, status=parsed_obj["status"])
         return cast(
             Job,
@@ -142,10 +140,10 @@ class JobIdResource(Resource):
         )
 
 
-
 @api.route("/newTaskEngine")
 class TaskEngineResource(Resource):
     """Lets you POST to create new jobs using the new declarative task engine."""
+
     @inject
     def __init__(
         self, job_new_task_engine_service: JobNewTaskEngineService, *args, **kwargs
@@ -165,7 +163,6 @@ class TaskEngineResource(Resource):
         )  # noqa: F841
         log.info("Request received")
         parsed_obj = request.parsed_obj  # type: ignore
-
         return self._job_new_task_engine_service.create(
             queue_name=parsed_obj["queue"],
             experiment_name=parsed_obj["experimentName"],
@@ -173,4 +170,5 @@ class TaskEngineResource(Resource):
             global_parameters=parsed_obj.get("globalParameters"),
             timeout=parsed_obj.get("timeout"),
             depends_on=parsed_obj.get("dependsOn"),
+            log=log,
         )
