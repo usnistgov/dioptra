@@ -25,9 +25,8 @@ from marshmallow import Schema, fields, validate
 from dioptra.restapi.custom_schema_fields import FileUpload
 
 
-class JobSchema(Schema):
-    """The schema for the data stored in a |Job| object."""
-
+class JobBaseSchema(Schema):
+    """The base schema for the data stored in a |Job| object."""
     jobId = fields.String(
         attribute="job_id",
         metadata=dict(description="A UUID that identifies the job."),
@@ -120,6 +119,11 @@ class JobSchema(Schema):
             "the new job will start as soon as computing resources are available.",
         ),
     )
+
+
+class JobMutableFieldsSchema(Schema):
+    """The fields schema for the mutable data in a |Job| object."""
+
     status = fields.String(
         validate=validate.OneOf(
             ["queued", "started", "deferred", "finished", "failed"],
@@ -129,6 +133,10 @@ class JobSchema(Schema):
             "queued, started, deferred, finished, failed.",
         ),
     )
+
+
+class JobSchema(JobMutableFieldsSchema, JobBaseSchema):
+    """The schema for the data stored in a |Job| object."""
 
 
 class TaskEngineSubmission(Schema):

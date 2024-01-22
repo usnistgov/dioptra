@@ -31,7 +31,12 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 
 from .model import Job
-from .schema import JobSchema, TaskEngineSubmission
+from .schema import (
+    JobBaseSchema,
+    JobMutableFieldsSchema,
+    JobSchema,
+    TaskEngineSubmission,
+)
 from .service import JobService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -70,10 +75,10 @@ class JobResource(Resource):
     @api.expect(
         as_api_parser(
             api,
-            as_parameters_schema_list(JobSchema, operation="load", location="form"),
+            as_parameters_schema_list(JobBaseSchema, operation="load", location="form"),
         )
     )
-    @accepts(form_schema=JobSchema, api=api)
+    @accepts(form_schema=JobBaseSchema, api=api)
     @responds(schema=JobSchema, api=api)
     def post(self) -> Job:
         """Creates a new job via a job submission form with an attached file."""
@@ -117,7 +122,7 @@ class JobIdResource(Resource):
         return cast(Job, job)
 
     @login_required
-    @accepts(schema=JobSchema, api=api)
+    @accepts(schema=JobMutableFieldsSchema, api=api)
     @responds(schema=JobSchema, api=api)
     def put(self, jobId: str) -> Job:
         """Updates a job's status by its unique identifier."""
