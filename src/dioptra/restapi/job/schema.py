@@ -27,6 +27,7 @@ from dioptra.restapi.custom_schema_fields import FileUpload
 
 class JobBaseSchema(Schema):
     """The base schema for the data stored in a |Job| object."""
+
     jobId = fields.String(
         attribute="job_id",
         metadata=dict(description="A UUID that identifies the job."),
