@@ -141,7 +141,7 @@ class JobIdResource(Resource):
 
 
 @api.route("/newTaskEngine")
-class TaskEngineResource(Resource):
+class JobNewTaskEngineResource(Resource):
     """Lets you POST to create new jobs using the new declarative task engine."""
 
     @inject
