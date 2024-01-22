@@ -161,8 +161,8 @@ class TaskEngineResource(Resource):
             resource="job/newTaskEngine",
             request_type="POST",
         )  # noqa: F841
-        log.info("Request received")
         parsed_obj = request.parsed_obj  # type: ignore
+        log.info("Request received")
         return self._job_new_task_engine_service.create(
             queue_name=parsed_obj["queue"],
             experiment_name=parsed_obj["experimentName"],
