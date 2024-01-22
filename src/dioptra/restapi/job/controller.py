@@ -34,8 +34,8 @@ from .model import Job
 from .schema import (
     JobBaseSchema,
     JobMutableFieldsSchema,
+    JobNewTaskEngineSchema,
     JobSchema,
-    TaskEngineSubmission,
 )
 from .service import JobService
 
@@ -142,16 +142,18 @@ class JobIdResource(Resource):
 @api.route("/newTaskEngine")
 class TaskEngineResource(Resource):
     @inject
-    def __init__(self, job_service: JobService, *args, **kwargs):
+    def __init__(
+        self, job_new_task_engine_service: JobNewTaskEngineService, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
-        self._job_service = job_service
+        self._job_new_task_engine_service = job_new_task_engine_service
 
-    @accepts(schema=TaskEngineSubmission, api=api)
+    @accepts(schema=JobNewTaskEngineSchema, api=api)
     @responds(schema=JobSchema, api=api)
     def post(self) -> Job:
         parsed_obj = request.parsed_obj  # type: ignore
 
-        new_job = self._job_service.submit_task_engine(
+        return self._job_new_task_engine_service.create(
             queue_name=parsed_obj["queue"],
             experiment_name=parsed_obj["experimentName"],
             experiment_description=parsed_obj["experimentDescription"],
@@ -159,5 +161,3 @@ class TaskEngineResource(Resource):
             timeout=parsed_obj.get("timeout"),
             depends_on=parsed_obj.get("dependsOn"),
         )
-
-        return new_job

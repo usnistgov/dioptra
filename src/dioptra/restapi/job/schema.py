@@ -139,28 +139,24 @@ class JobSchema(JobMutableFieldsSchema, JobBaseSchema):
     """The schema for the data stored in a |Job| object."""
 
 
-class TaskEngineSubmission(Schema):
+class JobNewTaskEngineSchema(Schema):
     queue = fields.String(
         required=True,
         metadata={"description": "The name of an active queue"},
     )
-
     experimentName = fields.String(
         required=True,
         metadata={"description": "The name of a registered experiment."},
     )
-
     experimentDescription = fields.Dict(
         keys=fields.String(),
         required=True,
         metadata={"description": "A declarative experiment description."},
     )
-
     globalParameters = fields.Dict(
         keys=fields.String(),
         metadata={"description": "Global parameters for this task engine job."},
     )
-
     timeout = fields.String(
         metadata={
             "description": "The maximum alloted time for a job before it times"
@@ -168,7 +164,6 @@ class TaskEngineSubmission(Schema):
             " will default to 24 hours.",
         },
     )
-
     dependsOn = fields.String(
         metadata={
             "description": "A job UUID to set as a dependency for this new job."
