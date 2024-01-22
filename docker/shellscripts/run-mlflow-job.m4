@@ -25,10 +25,6 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([entry-point],[],[MLproject entry point to invoke],[main])
 # ARG_OPTIONAL_SINGLE([mlflow-run-module],[],[Python module used to invoke 'mlflow run'],[dioptra.rq.cli.mlflow])
 # ARG_OPTIONAL_SINGLE([s3-workflow],[],[S3 URI to a tarball or zip archive containing scripts and a MLproject file defining a workflow],[])
-# ARG_USE_ENV([DIOPTRA_PLUGIN_DIR],[],[Directory in worker container for syncing the builtin plugins])
-# ARG_USE_ENV([DIOPTRA_PLUGINS_S3_URI],[],[S3 URI to the directory containing the builtin plugins])
-# ARG_USE_ENV([DIOPTRA_CUSTOM_PLUGINS_S3_URI],[],[S3 URI to the directory containing the custom plugins])
-# ARG_USE_ENV([MLFLOW_S3_ENDPOINT_URL],[],[The S3 endpoint URL])
 # ARG_LEFTOVERS([Entry point keyword arguments (optional)])
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
@@ -43,16 +39,12 @@ set -euo pipefail
 # Global parameters
 ###########################################################################################
 
-readonly dioptra_plugin_dir="${DIOPTRA_PLUGIN_DIR-}"
-readonly dioptra_plugins_s3_uri="${DIOPTRA_PLUGINS_S3_URI-}"
-readonly dioptra_custom_plugins_s3_uri="${DIOPTRA_CUSTOM_PLUGINS_S3_URI-}"
 readonly entry_point_kwargs="${_arg_leftovers[*]}"
 readonly entry_point="${_arg_entry_point}"
 readonly logname="Run MLFlow Job"
 readonly mlflow_backend="${_arg_backend}"
 readonly mlflow_experiment_id="${_arg_experiment_id}"
 readonly mlflow_run_module="${_arg_mlflow_run_module}"
-readonly mlflow_s3_endpoint_url="${MLFLOW_S3_ENDPOINT_URL-}"
 readonly s3_workflow_uri="${_arg_s3_workflow}"
 
 readonly workflow_filename="$(basename ${s3_workflow_uri} 2>/dev/null)"
@@ -64,7 +56,6 @@ readonly workflow_filename="$(basename ${s3_workflow_uri} 2>/dev/null)"
 #   logname
 #   mlflow_backend
 #   mlflow_experiment_id
-#   mlflow_s3_endpoint_url
 # Arguments:
 #   None
 # Returns:
@@ -74,11 +65,6 @@ readonly workflow_filename="$(basename ${s3_workflow_uri} 2>/dev/null)"
 validate_mlflow_inputs() {
   if [[ -z ${mlflow_experiment_id} ]]; then
     echo "${logname}: ERROR - --experiment-id option not set" 1>&2
-    exit 1
-  fi
-
-  if [[ -z ${mlflow_s3_endpoint_url} ]]; then
-    echo "${logname}: ERROR - MLFLOW_S3_ENDPOINT_URL environment variable not set" 1>&2
     exit 1
   fi
 
@@ -112,114 +98,6 @@ unpack_workflow_archive() {
     exit 1
   elif [[ ! -f ${filepath} ]]; then
     echo "${logname}: ERROR - workflow archive file missing" 1>&2
-    exit 1
-  fi
-}
-
-###########################################################################################
-# Download workflow from S3 storage
-#
-# Globals:
-#   mlflow_s3_endpoint_url
-#   s3_workflow_uri
-#   workflow_filename
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-download_workflow() {
-  local src="${s3_workflow_uri}"
-  local dest="$(pwd)/${workflow_filename}"
-
-  if [[ ! -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-cp.sh ]]; then
-    /usr/local/bin/s3-cp.sh --endpoint-url ${mlflow_s3_endpoint_url} ${src} ${dest}
-  elif [[ -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-cp.sh ]]; then
-    /usr/local/bin/s3-cp.sh ${src} ${dest}
-  elif [[ ! -f /usr/local/bin/s3-cp.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/s3-cp.sh script missing" 1>&2
-    exit 1
-  fi
-}
-
-###########################################################################################
-# Clear plugins directories
-#
-# Globals:
-#   dioptra_plugin_dir
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-clear_plugins_dirs() {
-  local plugin_dirs=(
-    "${dioptra_plugin_dir}/dioptra_builtins"
-    "${dioptra_plugin_dir}/dioptra_custom"
-  )
-
-  for dir in "${plugin_dirs[@]}"; do
-    if [[ -d "${dir}" ]]; then
-      if ! rm -rf "${dir}"; then
-        echo "${logname}: ERROR - Unexpected error while clearing the plugin directories." 1>&2
-        exit 1
-      fi
-    fi
-  done
-}
-
-###########################################################################################
-# Synchronize builtin plugins from S3 storage
-#
-# Globals:
-#   dioptra_plugin_dir
-#   dioptra_plugins_s3_uri
-#   mlflow_s3_endpoint_url
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-sync_builtin_plugins() {
-  local src="${dioptra_plugins_s3_uri}"
-  local dest="${dioptra_plugin_dir}/dioptra_builtins"
-
-  if [[ ! -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-sync.sh ]]; then
-    /usr/local/bin/s3-sync.sh --endpoint-url ${mlflow_s3_endpoint_url} --delete ${src} ${dest}
-  elif [[ -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-sync.sh ]]; then
-    /usr/local/bin/s3-sync.sh --delete ${src} ${dest}
-  elif [[ ! -f /usr/local/bin/s3-sync.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/s3-sync.sh script missing" 1>&2
-    exit 1
-  fi
-}
-
-###########################################################################################
-# Synchronize custom plugins from S3 storage
-#
-# Globals:
-#   dioptra_plugin_dir
-#   dioptra_custom_plugins_s3_uri
-#   mlflow_s3_endpoint_url
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-sync_custom_plugins() {
-  local src="${dioptra_custom_plugins_s3_uri}"
-  local dest="${dioptra_plugin_dir}/dioptra_custom"
-
-  if [[ ! -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-sync.sh ]]; then
-    /usr/local/bin/s3-sync.sh --endpoint-url ${mlflow_s3_endpoint_url} --delete ${src} ${dest}
-  elif [[ -z ${mlflow_s3_endpoint_url} && -f /usr/local/bin/s3-sync.sh ]]; then
-    /usr/local/bin/s3-sync.sh --delete ${src} ${dest}
-  elif [[ ! -f /usr/local/bin/s3-sync.sh ]]; then
-    echo "${logname}: ERROR - /usr/local/bin/s3-sync.sh script missing" 1>&2
     exit 1
   fi
 }
@@ -270,10 +148,6 @@ start_mlflow() {
 ###########################################################################################
 
 validate_mlflow_inputs
-clear_plugins_dirs
-sync_builtin_plugins
-sync_custom_plugins
-download_workflow
 unpack_workflow_archive
 start_mlflow
 # ] <-- needed because of Argbash

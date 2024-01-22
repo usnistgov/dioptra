@@ -33,7 +33,7 @@ from dioptra.mlflow_plugins.dioptra_tags import (
 )
 from dioptra.task_engine.task_engine import run_experiment
 from dioptra.task_engine.validation import is_valid
-from dioptra.worker.setup_task_plugins import setup_task_plugins
+from dioptra.worker.s3_download import s3_download
 
 
 def _get_logger() -> Any:
@@ -87,9 +87,11 @@ def run_task_engine_task(
             s3 = boto3.client("s3", endpoint_url=mlflow_s3_endpoint_url)
 
         if is_valid(experiment_desc):
-            setup_task_plugins(
+            s3_download(
                 s3,
                 dioptra_plugin_dir,
+                True,
+                True,
                 dioptra_plugins_s3_uri,
                 dioptra_custom_plugins_s3_uri,
             )
