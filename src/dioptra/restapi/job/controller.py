@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, cast
+from typing import cast
 
 import structlog
 from flask import request
@@ -63,7 +63,7 @@ class JobResource(Resource):
 
     @login_required
     @responds(schema=JobSchema(many=True), api=api)
-    def get(self) -> List[Job]:
+    def get(self) -> list[Job]:
         """Gets a list of all submitted jobs."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="job", request_type="GET"

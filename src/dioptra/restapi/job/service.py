@@ -21,7 +21,7 @@ import datetime
 import json
 import uuid
 from pathlib import Path
-from typing import Any, List, Mapping, cast
+from typing import Any, Mapping, cast
 
 import structlog
 from injector import inject
@@ -72,7 +72,7 @@ class JobService(object):
         self._experiment_name_service = experiment_name_service
         self._queue_name_service = queue_name_service
 
-    def get_all(self, **kwargs) -> List[Job]:
+    def get_all(self, **kwargs) -> list[Job]:
         """Fetch the list of all jobs.
 
         Returns:
