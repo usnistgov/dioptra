@@ -18,9 +18,8 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, Optional
+from typing import cast
 
-import flask
 import structlog
 from flask import request
 from flask_accepts import accepts, responds
@@ -31,10 +30,14 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 
-from .errors import JobDoesNotExistError
 from .model import Job
-from .schema import JobSchema, TaskEngineSubmission
-from .service import JobService
+from .schema import (
+    JobBaseSchema,
+    JobMutableFieldsSchema,
+    JobNewTaskEngineSchema,
+    JobSchema,
+)
+from .service import JobNewTaskEngineService, JobService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -60,7 +63,7 @@ class JobResource(Resource):
 
     @login_required
     @responds(schema=JobSchema(many=True), api=api)
-    def get(self) -> List[Job]:
+    def get(self) -> list[Job]:
         """Gets a list of all submitted jobs."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="job", request_type="GET"
@@ -72,10 +75,10 @@ class JobResource(Resource):
     @api.expect(
         as_api_parser(
             api,
-            as_parameters_schema_list(JobSchema, operation="load", location="form"),
+            as_parameters_schema_list(JobBaseSchema, operation="load", location="form"),
         )
     )
-    @accepts(form_schema=JobSchema, api=api)
+    @accepts(form_schema=JobBaseSchema, api=api)
     @responds(schema=JobSchema, api=api)
     def post(self) -> Job:
         """Creates a new job via a job submission form with an attached file."""
@@ -84,7 +87,7 @@ class JobResource(Resource):
         )  # noqa: F841
         parsed_obj = request.parsed_form  # type: ignore
         log.info("Request received")
-        return self._job_service.submit(
+        return self._job_service.create(
             queue_name=parsed_obj["queue"],
             experiment_name=parsed_obj["experiment_name"],
             timeout=parsed_obj["timeout"],
@@ -99,7 +102,7 @@ class JobResource(Resource):
 @api.route("/<string:jobId>")
 @api.param("jobId", "A string specifying a job's UUID.")
 class JobIdResource(Resource):
-    """Shows a single job."""
+    """Show a single job (id reference) and lets you modify it."""
 
     @inject
     def __init__(self, *args, job_service: JobService, **kwargs) -> None:
@@ -114,34 +117,58 @@ class JobIdResource(Resource):
             request_id=str(uuid.uuid4()), resource="jobId", request_type="GET"
         )  # noqa: F841
         log.info("Request received", job_id=jobId)
-        job: Optional[Job] = self._job_service.get_by_id(jobId, log=log)
+        return cast(
+            Job,
+            self._job_service.get(jobId, error_if_not_found=True, log=log),
+        )
 
-        if job is None:
-            log.error("Job not found", job_id=jobId)
-            raise JobDoesNotExistError
-
-        return job
+    @login_required
+    @accepts(schema=JobMutableFieldsSchema, api=api)
+    @responds(schema=JobSchema, api=api)
+    def put(self, jobId: str) -> Job:
+        """Updates a job's status by its unique identifier."""
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="jobId", request_type="PUT"
+        )  # noqa: F841
+        parsed_obj = request.parsed_obj  # type: ignore
+        log.info("Request received", job_id=jobId, status=parsed_obj["status"])
+        return cast(
+            Job,
+            self._job_service.change_status(
+                jobId, status=parsed_obj["status"], error_if_not_found=True, log=log
+            ),
+        )
 
 
 @api.route("/newTaskEngine")
-class TaskEngineResource(Resource):
-    @inject
-    def __init__(self, job_service: JobService, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._job_service = job_service
+class JobNewTaskEngineResource(Resource):
+    """Lets you POST to create new jobs using the new declarative task engine."""
 
-    @accepts(schema=TaskEngineSubmission, api=api)
+    @inject
+    def __init__(
+        self, job_new_task_engine_service: JobNewTaskEngineService, *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self._job_new_task_engine_service = job_new_task_engine_service
+
+    @login_required
+    @accepts(schema=JobNewTaskEngineSchema, api=api)
     @responds(schema=JobSchema, api=api)
     def post(self) -> Job:
-        post_obj = flask.request.parsed_obj  # type: ignore
-
-        new_job = self._job_service.submit_task_engine(
-            queue_name=post_obj["queue"],
-            experiment_name=post_obj["experimentName"],
-            experiment_description=post_obj["experimentDescription"],
-            global_parameters=post_obj.get("globalParameters"),
-            timeout=post_obj.get("timeout"),
-            depends_on=post_obj.get("dependsOn"),
+        """Creates a new job using the new declarative task engine."""
+        log: BoundLogger = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="job/newTaskEngine",
+            request_type="POST",
+        )  # noqa: F841
+        parsed_obj = request.parsed_obj  # type: ignore
+        log.info("Request received")
+        return self._job_new_task_engine_service.create(
+            queue_name=parsed_obj["queue"],
+            experiment_name=parsed_obj["experimentName"],
+            experiment_description=parsed_obj["experimentDescription"],
+            global_parameters=parsed_obj.get("globalParameters"),
+            timeout=parsed_obj.get("timeout"),
+            depends_on=parsed_obj.get("dependsOn"),
+            log=log,
         )
-
-        return new_job

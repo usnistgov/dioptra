@@ -21,7 +21,7 @@ import datetime
 import json
 import uuid
 from pathlib import Path
-from typing import Any, List, Mapping, Optional, cast
+from typing import Any, Mapping, cast
 
 import structlog
 from injector import inject
@@ -30,7 +30,6 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 from dioptra.restapi.db import db
-from dioptra.restapi.experiment.errors import ExperimentDoesNotExistError
 from dioptra.restapi.experiment.service import ExperimentNameService
 from dioptra.restapi.models import Experiment, Queue
 from dioptra.restapi.queue.service import QueueNameService
@@ -38,7 +37,11 @@ from dioptra.restapi.shared.rq.service import RQService
 from dioptra.restapi.shared.s3.service import S3Service
 from dioptra.task_engine.validation import is_valid
 
-from .errors import InvalidExperimentDescriptionError, JobWorkflowUploadError
+from .errors import (
+    InvalidExperimentDescriptionError,
+    JobDoesNotExistError,
+    JobWorkflowUploadError,
+)
 from .model import Job
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -53,50 +56,60 @@ class JobService(object):
         experiment_name_service: ExperimentNameService,
         queue_name_service: QueueNameService,
     ) -> None:
+        """Initialize the job service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            rq_service: The RQ service.
+            s3_service: The S3 service.
+            experiment_name_service: The experiment name service.
+            queue_name_service: The queue name service.
+        """
         self._rq_service = rq_service
         self._s3_service = s3_service
         self._experiment_name_service = experiment_name_service
         self._queue_name_service = queue_name_service
 
-    @staticmethod
-    def create(
-        experiment_id: int,
-        queue_id: int,
-        timeout: str,
-        entry_point: str,
-        entry_point_kwargs: str,
-        depends_on: str,
-        **kwargs,
-    ) -> Job:
+    def get_all(self, **kwargs) -> list[Job]:
+        """Fetch the list of all jobs.
+
+        Returns:
+            A list of job objects.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
-        job_id = str(uuid.uuid4())
-        timestamp = datetime.datetime.now()
-
-        return Job(
-            job_id=job_id,
-            experiment_id=experiment_id,
-            queue_id=queue_id,
-            created_on=timestamp,
-            last_modified=timestamp,
-            timeout=timeout,
-            entry_point=entry_point,
-            entry_point_kwargs=entry_point_kwargs,
-            depends_on=depends_on,
-        )
-
-    @staticmethod
-    def get_all(**kwargs) -> List[Job]:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
-
         return Job.query.all()  # type: ignore
 
-    @staticmethod
-    def get_by_id(job_id: str, **kwargs) -> Job:
+    def get(
+        self, job_id: str, error_if_not_found: bool = False, **kwargs
+    ) -> Job | None:
+        """Fetch a job by its unique identifier.
+
+        Args:
+            job_id: The unique identifier of the job.
+            error_if_not_found: If True, raise an error if the job is not found.
+                Defaults to False.
+
+        Returns:
+            The job object if found, otherwise None.
+
+        Raises:
+            JobDoesNotExistError: If the job is not found and `error_if_not_found`
+                is True.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+        job = Job.query.filter_by(job_id=job_id).first()
 
-        return Job.query.get(job_id)  # type: ignore
+        if job is None:
+            if error_if_not_found:
+                log.error("Job not found", job_id=job_id)
+                raise JobDoesNotExistError
 
-    def submit(
+            return None
+
+        return cast(Job, job)
+
+    def create(
         self,
         queue_name: str,
         experiment_name: str,
@@ -107,15 +120,31 @@ class JobService(object):
         workflow: FileStorage,
         **kwargs,
     ) -> Job:
+        """Create a new job.
+
+        Args:
+            queue_name: The name of the queue to which the job belongs.
+            experiment_name: The name of the experiment associated with the job.
+            timeout: The maximum execution time for the job.
+            entry_point: The entry point for the job.
+            entry_point_kwargs: The keyword arguments for the entry point.
+            depends_on: A comma-separated string of job dependencies.
+            workflow: The workflow file to be associated with the job.
+
+        Returns:
+            The newly created job object.
+
+        Raises:
+            JobWorkflowUploadError: If there is an error uploading the workflow to
+                the backend storage.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        experiment: Optional[Experiment] = self._experiment_name_service.get(
-            experiment_name=experiment_name, log=log
+        experiment = cast(
+            Experiment,
+            self._experiment_name_service.get(
+                experiment_name=experiment_name, error_if_not_found=True, log=log
+            ),
         )
-
-        if experiment is None:
-            raise ExperimentDoesNotExistError
-
         queue = cast(
             Queue,
             self._queue_name_service.get(
@@ -126,30 +155,29 @@ class JobService(object):
             ),
         )
 
-        workflow_uri: Optional[str] = self._upload_workflow(workflow=workflow, log=log)
-
-        if workflow_uri is None:
+        if (workflow_uri := self._upload_workflow(workflow=workflow, log=log)) is None:
             log.error(
                 "Failed to upload workflow to backend storage",
                 workflow_filename=secure_filename(workflow.filename or ""),
             )
             raise JobWorkflowUploadError
 
-        new_job: Job = self.create(
-            queue_id=queue.queue_id,
+        job_id = str(uuid.uuid4())
+        timestamp = datetime.datetime.now()
+        new_job = Job(
+            job_id=job_id,
             experiment_id=experiment.experiment_id,
+            queue_id=queue.queue_id,
+            created_on=timestamp,
+            last_modified=timestamp,
             timeout=timeout,
+            workflow_uri=workflow_uri,
             entry_point=entry_point,
             entry_point_kwargs=entry_point_kwargs,
             depends_on=depends_on,
-            log=log,
         )
-
-        new_job.workflow_uri = workflow_uri
-
         db.session.add(new_job)
         db.session.commit()
-
         self._rq_service.submit_mlflow_job(
             job_id=new_job.job_id,
             queue=queue_name,
@@ -161,31 +189,98 @@ class JobService(object):
             timeout=new_job.timeout,
             log=log,
         )
-
         log.info("Job submission successful", job_id=new_job.job_id)
-
         return new_job
 
-    def submit_task_engine(
+    def change_status(self, job_id: str, status: str, **kwargs) -> Job | None:
+        """Change the status of a job.
+
+        Args:
+            job_id: The unique identifier of the job.
+            status: The new status for the job. Must be one of ["queued",
+                "started", "deferred", "finished", "failed"].
+
+        Returns:
+            The updated job object.
+
+        Raises:
+            JobStatusIncorrectError: If the provided status is not valid.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        job = cast(Job, self.get(job_id=job_id, error_if_not_found=True, log=log))
+        job.update({"status": status})
+        db.session.commit()
+        log.info("Job update successful", job_id=job.job_id, status=status)
+        return job
+
+    def _upload_workflow(self, workflow: FileStorage, **kwargs) -> str | None:
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        upload_dir = Path(uuid.uuid4().hex)
+        workflow_filename = upload_dir / secure_filename(workflow.filename or "")
+        workflow_uri = self._s3_service.upload(
+            fileobj=workflow,
+            bucket="workflow",
+            key=str(workflow_filename),
+            log=log,
+        )
+        return workflow_uri
+
+
+class JobNewTaskEngineService(object):
+    @inject
+    def __init__(
+        self,
+        rq_service: RQService,
+        experiment_name_service: ExperimentNameService,
+        queue_name_service: QueueNameService,
+    ) -> None:
+        """Initialize the job new task engine service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            rq_service: The RQ service.
+            experiment_name_service: The experiment name service.
+            queue_name_service: The queue name service.
+        """
+        self._rq_service = rq_service
+        self._experiment_name_service = experiment_name_service
+        self._queue_name_service = queue_name_service
+
+    def create(
         self,
         queue_name: str,
         experiment_name: str,
         experiment_description: Mapping[str, Any],
-        global_parameters: Optional[Mapping[str, Any]] = None,
-        timeout: Optional[str] = None,
-        depends_on: Optional[str] = None,
+        global_parameters: Mapping[str, Any] | None = None,
+        timeout: str | None = None,
+        depends_on: str | None = None,
+        **kwargs,
     ) -> Job:
-        from dioptra.restapi.models import Experiment, Queue
+        """Submit a task engine job.
 
-        log: BoundLogger = LOGGER.new()
+        Args:
+            queue_name: The name of the queue to which the job belongs.
+            experiment_name: The name of the experiment associated with the job.
+            experiment_description: A mapping representing the experiment description.
+            global_parameters: A mapping of global parameters for the job. Defaults to
+                None.
+            timeout: The maximum execution time for the job. Defaults to None.
+            depends_on: A comma-separated string of job dependencies. Defaults to None.
 
-        experiment: Optional[Experiment] = self._experiment_name_service.get(
-            experiment_name=experiment_name, log=log
+        Returns:
+            The newly created job object.
+
+        Raises:
+            InvalidExperimentDescriptionError: If the experiment description is invalid.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        experiment = cast(
+            Experiment,
+            self._experiment_name_service.get(
+                experiment_name=experiment_name, error_if_not_found=True, log=log
+            ),
         )
-
-        if experiment is None:
-            raise ExperimentDoesNotExistError
-
         queue = cast(
             Queue,
             self._queue_name_service.get(
@@ -198,7 +293,6 @@ class JobService(object):
 
         job_id = str(uuid.uuid4())
         timestamp = datetime.datetime.now()
-
         new_job = Job(
             job_id=job_id,
             experiment_id=experiment.experiment_id,
@@ -214,7 +308,6 @@ class JobService(object):
 
         db.session.add(new_job)
         db.session.commit()
-
         self._rq_service.submit_task_engine_job(
             job_id=job_id,
             queue=queue_name,
@@ -224,22 +317,5 @@ class JobService(object):
             depends_on=depends_on,
             timeout=timeout,
         )
-
         log.info("Job submission successful", job_id=job_id)
-
         return new_job
-
-    def _upload_workflow(self, workflow: FileStorage, **kwargs) -> Optional[str]:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        upload_dir = Path(uuid.uuid4().hex)
-        workflow_filename = upload_dir / secure_filename(workflow.filename or "")
-
-        workflow_uri: Optional[str] = self._s3_service.upload(
-            fileobj=workflow,
-            bucket="workflow",
-            key=str(workflow_filename),
-            log=log,
-        )
-
-        return workflow_uri

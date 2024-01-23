@@ -25,8 +25,8 @@ from marshmallow import Schema, fields, validate
 from dioptra.restapi.custom_schema_fields import FileUpload
 
 
-class JobSchema(Schema):
-    """The schema for the data stored in a |Job| object."""
+class JobBaseSchema(Schema):
+    """The base schema for the data stored in a |Job| object."""
 
     jobId = fields.String(
         attribute="job_id",
@@ -120,6 +120,11 @@ class JobSchema(Schema):
             "the new job will start as soon as computing resources are available.",
         ),
     )
+
+
+class JobMutableFieldsSchema(Schema):
+    """The fields schema for the mutable data in a |Job| object."""
+
     status = fields.String(
         validate=validate.OneOf(
             ["queued", "started", "deferred", "finished", "failed"],
@@ -128,32 +133,31 @@ class JobSchema(Schema):
             description="The current status of the job. The allowed values are: "
             "queued, started, deferred, finished, failed.",
         ),
-        dump_only=True,
     )
 
 
-class TaskEngineSubmission(Schema):
+class JobSchema(JobMutableFieldsSchema, JobBaseSchema):
+    """The schema for the data stored in a |Job| object."""
+
+
+class JobNewTaskEngineSchema(Schema):
     queue = fields.String(
         required=True,
         metadata={"description": "The name of an active queue"},
     )
-
     experimentName = fields.String(
         required=True,
         metadata={"description": "The name of a registered experiment."},
     )
-
     experimentDescription = fields.Dict(
         keys=fields.String(),
         required=True,
         metadata={"description": "A declarative experiment description."},
     )
-
     globalParameters = fields.Dict(
         keys=fields.String(),
         metadata={"description": "Global parameters for this task engine job."},
     )
-
     timeout = fields.String(
         metadata={
             "description": "The maximum alloted time for a job before it times"
@@ -161,7 +165,6 @@ class TaskEngineSubmission(Schema):
             " will default to 24 hours.",
         },
     )
-
     dependsOn = fields.String(
         metadata={
             "description": "A job UUID to set as a dependency for this new job."

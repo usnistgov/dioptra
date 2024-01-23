@@ -115,7 +115,7 @@ def test_job_resource_post(
     def mockuuid4() -> uuid.UUID:
         return uuid.UUID("3db40500-01b1-45a4-ae18-64e7d1bc7e9a")
 
-    def mocksubmit(*args, **kwargs) -> Job:
+    def mockcreate(*args, **kwargs) -> Job:
         LOGGER.info("Mocking JobService.submit()")
         timestamp = datetime.datetime.now()
         return Job(
@@ -141,7 +141,7 @@ def test_job_resource_post(
         )
         return S3Service.as_uri(bucket=bucket, key=key)
 
-    monkeypatch.setattr(JobService, "submit", mocksubmit)
+    monkeypatch.setattr(JobService, "create", mockcreate)
     monkeypatch.setattr(uuid, "uuid4", mockuuid4)
     monkeypatch.setattr(S3Service, "upload", mockupload)
 
@@ -181,7 +181,7 @@ def test_job_id_resource_get(
     app: Flask,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def mockgetbyid(self, job_id: str, *args, **kwargs) -> Job:
+    def mockget(self, job_id: str, *args, **kwargs) -> Job:
         LOGGER.info("Mocking JobService.get_by_id()")
         job: Job = Job(
             job_id=job_id,
@@ -198,7 +198,7 @@ def test_job_id_resource_get(
         )
         return job
 
-    monkeypatch.setattr(JobService, "get_by_id", mockgetbyid)
+    monkeypatch.setattr(JobService, "get", mockget)
     job_id: str = "4520511d-678b-4966-953e-af2d0edcea32"
 
     with app.test_client() as client:

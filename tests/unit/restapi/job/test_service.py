@@ -89,31 +89,8 @@ def job_submission_data(app: Flask, workflow_tar_gz: BinaryIO) -> dict[str, Any]
 
 
 @pytest.fixture
-def job_create_data(app: Flask) -> dict[str, Any]:
-    return {
-        "experiment_id": 1,
-        "queue_id": 1,
-        "timeout": "12h",
-        "entry_point": "main",
-        "entry_point_kwargs": "-P var1=testing",
-        "depends_on": None,
-    }
-
-
-@pytest.fixture
 def job_service(dependency_injector) -> JobService:
     return dependency_injector.get(JobService)
-
-
-def test_create(job_service: JobService, job_create_data: dict[str, Any]):
-    job: Job = job_service.create(**job_create_data)
-
-    assert job.experiment_id == 1
-    assert job.queue_id == 1
-    assert job.timeout == "12h"
-    assert job.entry_point == "main"
-    assert job.entry_point_kwargs == "-P var1=testing"
-    assert job.depends_on is None
 
 
 @freeze_time("2020-08-17T18:46:28.717559")
@@ -182,7 +159,7 @@ def test_submit(
     monkeypatch.setattr(RQService, "submit_mlflow_job", mocksubmit)
     monkeypatch.setattr(S3Service, "upload", mockupload)
 
-    job_service.submit(**job_submission_data)
+    job_service.create(**job_submission_data)
     results: List[Job] = Job.query.all()
 
     assert len(results) == 1
