@@ -267,6 +267,7 @@ class QueueNameService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Get queue by name", queue_name=queue_name)
+
         queue = Queue.query.filter_by(name=queue_name, is_deleted=False).first()
 
         if queue is None:
@@ -292,7 +293,6 @@ class QueueNameService(object):
             A dictionary reporting the status of the request.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-
         if (queue := self.get(name, log=log)) is None:
             return {"status": "Success", "name": []}
 

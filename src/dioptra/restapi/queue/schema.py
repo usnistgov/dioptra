@@ -20,7 +20,11 @@
 """
 from __future__ import annotations
 
-from marshmallow import Schema, fields
+from typing import Any
+
+from marshmallow import Schema, fields, post_load
+
+from dioptra.restapi.utils import slugify
 
 
 class QueueSchema(Schema):
@@ -44,6 +48,11 @@ class QueueSchema(Schema):
     name = fields.String(
         attribute="name", metadata=dict(description="The name of the queue.")
     )
+
+    @post_load
+    def slugify_name(self, data: dict[str, Any], **kwargs) -> dict[str, Any]:
+        data["name"] = slugify(data["name"])
+        return data
 
 
 class IdStatusResponseSchema(Schema):

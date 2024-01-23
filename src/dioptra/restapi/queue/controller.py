@@ -28,8 +28,6 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import slugify
-
 from .model import Queue
 from .schema import IdStatusResponseSchema, NameStatusResponseSchema, QueueSchema
 from .service import QueueNameService, QueueService
@@ -65,14 +63,18 @@ class QueueResource(Resource):
     @accepts(schema=QueueSchema, api=api)
     @responds(schema=QueueSchema, api=api)
     def post(self) -> Queue:
-        """Registers a new queue."""
+        """Registers a new queue.
+
+        Note that the name of the queue will be slugified and must remain unique after \
+        slugification. For example, the name "My Queue" would be slugified to \
+        "my-queue".
+        """
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queue", request_type="POST"
         )  # noqa: F841
         log.info("Request received")
         parsed_obj = request.parsed_obj  # type: ignore
-        name = slugify(str(parsed_obj["name"]))
-        return self._queue_service.create(name=name, log=log)
+        return self._queue_service.create(name=parsed_obj["name"], log=log)
 
 
 @api.route("/<int:queueId>")
@@ -116,8 +118,7 @@ class QueueIdResource(Resource):
             request_id=str(uuid.uuid4()), resource="queueId", request_type="PUT"
         )  # noqa: F841
         parsed_obj = request.parsed_obj  # type: ignore
-        new_name = slugify(str(parsed_obj["name"]))
-        return self._queue_service.rename(queueId, new_name=new_name, log=log)
+        return self._queue_service.rename(queueId, new_name=parsed_obj["name"], log=log)
 
 
 @api.route("/<int:queueId>/lock")
@@ -168,12 +169,10 @@ class QueueNameResource(Resource):
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueName", request_type="GET"
         )  # noqa: F841
-        log.info("Request received", queue_name=slugify(queueName))
+        log.info("Request received", queue_name=queueName)
         return cast(
             Queue,
-            self._queue_name_service.get(
-                slugify(queueName), error_if_not_found=True, log=log
-            ),
+            self._queue_name_service.get(queueName, error_if_not_found=True, log=log),
         )
 
     @login_required
@@ -186,8 +185,8 @@ class QueueNameResource(Resource):
             queue_name=queueName,
             request_type="DELETE",
         )  # noqa: F841
-        log.info("Request received", queue_name=slugify(queueName))
-        return self._queue_name_service.delete(slugify(queueName), log=log)
+        log.info("Request received", queue_name=queueName)
+        return self._queue_name_service.delete(queueName, log=log)
 
 
 @api.route("/name/<string:queueName>/lock")
