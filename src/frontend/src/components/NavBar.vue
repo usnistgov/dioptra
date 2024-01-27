@@ -38,7 +38,7 @@
 
 <script setup>
   import { useQuasar } from 'quasar'
-  import { computed, onMounted } from 'vue'
+  import { computed } from 'vue'
   import { useRouter, START_LOCATION } from 'vue-router'
   import { useLoginStore } from '@/stores/LoginStore'
   import { storeToRefs } from 'pinia'
@@ -47,7 +47,7 @@
   const router = useRouter()
 
   const store = useLoginStore()
-  const { loggedInUser, formState } = storeToRefs(store);
+  const { loggedInUser } = storeToRefs(store);
 
   const $q = useQuasar()
 
@@ -68,24 +68,15 @@
   }
 
   // check login status on mounted and reloads
-  // onMounted(() => {
-  //   console.log('mounted!!!!!!!!!!')
-  //   callGetLoginStatus()
-  // })
   router.beforeEach((to, from) => {
     if (from === START_LOCATION) {
-      // only check if reloading on page other than login
-      // since home login page has its own check
-      if (to.name !== 'login') {
-        callGetLoginStatus()
-      }
+      callGetLoginStatus()
     }
   })
 
   async function callGetLoginStatus() {
     try {
       const res = await api.getLoginStatus()
-      console.log('login status res = ', res)
       loggedInUser.value = res.data.username
     } catch(err) {
       loggedInUser.value = ''

@@ -37,14 +37,14 @@
       </q-btn>
       <q-card-section class="text-center q-pt-md">
         <div>Don't have an account yet?
-          <a 
+          <router-link 
             role="button" 
             class="text-weight-bold text-primary" 
             style="text-decoration: none; cursor: pointer" 
-            @click="formState = 'register'"
+            to="/register"
           >
             Signup.
-          </a>
+          </router-link >
         </div>
       </q-card-section>
     </q-form>
@@ -59,7 +59,7 @@
   import * as notify from '../notify';
 
   const store = useLoginStore();
-  const { loggedInUser, formState } = storeToRefs(store);
+  const { loggedInUser } = storeToRefs(store);
 
   const requiredRule = (val) => (val && val.length > 0) || "This field is required";
 
