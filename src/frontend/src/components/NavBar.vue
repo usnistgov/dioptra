@@ -1,0 +1,96 @@
+<template>
+  <q-toolbar class="bg-primary text-white">
+    <q-tabs shrink no-caps class="header">
+      <q-route-tab label="Home" to="/" />
+      <q-route-tab label="Entry-Points" to="/entrypoints" />
+      <q-route-tab label="Task-Plugins" to="/" />
+      <q-route-tab label="Queues" to="/queues" />
+      <q-route-tab label="Experiments" to="/" />
+      <q-route-tab label="Jobs" to="/" />
+    </q-tabs>
+    <q-space />
+    <a href="https://github.com/usnistgov/dioptra" target="_blank" class="q-mr-md text-white">
+      <q-icon name="fa-brands fa-github" size="sm" />
+      <q-tooltip>
+        Source Repository
+      </q-tooltip>
+    </a>
+    <q-icon name="sym_o_fullscreen" size="sm" @click="$q.fullscreen.toggle()" class="q-mr-md" style="cursor: pointer">
+      <q-tooltip>
+        Toggle Fullscreen Mode
+      </q-tooltip>
+    </q-icon>
+    <q-icon :name="getIcon()" size="sm" @click="$q.dark.toggle()" class="q-mr-lg" style="cursor: pointer">
+      <q-tooltip>
+        Toggle Light/Dark Mode
+      </q-tooltip>
+    </q-icon> 
+    <q-separator vertical inset color="white" />
+    <q-tabs shrink no-caps indicator-color="transparent" class="header q-ml-sm">
+      <q-route-tab 
+        v-if="!store.loggedInUser"
+        :label="getLabel()" to="/login"
+      />
+      <q-btn v-else color="primary" icon-right="person" :label="store.loggedInUser" to="/login" dense />
+    </q-tabs>
+  </q-toolbar>
+</template>
+
+<script setup>
+  import { useQuasar } from 'quasar'
+  import { computed, onMounted } from 'vue'
+  import { useRouter, START_LOCATION } from 'vue-router'
+  import { useLoginStore } from '@/stores/LoginStore'
+  import { storeToRefs } from 'pinia'
+  import * as api from '@/services/loginApi'
+
+  const router = useRouter()
+
+  const store = useLoginStore()
+  const { loggedInUser, formState } = storeToRefs(store);
+
+  const $q = useQuasar()
+
+  const darkMode = computed(() => {
+    return $q.dark.mode
+  })
+
+
+  function getIcon() {
+    if(darkMode.value === 'auto') return 'sym_o_routine'
+    if(darkMode.value) return 'sym_o_dark_mode'
+    else return 'sym_o_sunny'
+  }
+
+  function getLabel() {
+    if(!store.loggedInUser) return 'Sign In'
+    else return `${store.loggedInUser}`
+  }
+
+  // check login status on mounted and reloads
+  // onMounted(() => {
+  //   console.log('mounted!!!!!!!!!!')
+  //   callGetLoginStatus()
+  // })
+  router.beforeEach((to, from) => {
+    if (from === START_LOCATION) {
+      // only check if reloading on page other than login
+      // since home login page has its own check
+      if (to.name !== 'login') {
+        callGetLoginStatus()
+      }
+    }
+  })
+
+  async function callGetLoginStatus() {
+    try {
+      const res = await api.getLoginStatus()
+      console.log('login status res = ', res)
+      loggedInUser.value = res.data.username
+    } catch(err) {
+      loggedInUser.value = ''
+    }
+  }
+
+
+</script>
