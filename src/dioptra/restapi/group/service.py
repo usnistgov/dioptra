@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any, List, cast
+from typing import Any, cast
 
 import structlog
 from sqlalchemy.exc import IntegrityError
@@ -36,7 +36,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 class GroupService(object):
     """The service methods for registering and managing groups by their unique id."""
 
-    def get_all(self, **kwargs) -> List[Group]:
+    def get_all(self, **kwargs) -> list[Group]:
         """Fetch the list of all groups.
 
         Returns:

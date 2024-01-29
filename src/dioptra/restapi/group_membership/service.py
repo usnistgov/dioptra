@@ -36,7 +36,7 @@ class GroupMembershipService(object):
         """Retrieve a list of all group memberships.
 
         Returns:
-            List[GroupMembership]: List of group memberships.
+            List of group memberships.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
@@ -48,13 +48,13 @@ class GroupMembershipService(object):
         """Retrieve a group membership.
 
         Args:
-            group_id (int): The unique ID of the group.
-            user_id (int): The unique ID of the user.
-            error_if_not_found (bool): Flag to raise an error if the membership is
+            group_id: The unique ID of the group.
+            user_id: The unique ID of the user.
+            error_if_not_found: Flag to raise an error if the membership is
                 not found.
 
         Returns:
-            GroupMembership | None: The group membership if found, else None.
+            The group membership if found, else None.
 
         Raises:
             GroupMembershipNotFoundError: If the membership is not found and
@@ -87,12 +87,12 @@ class GroupMembershipService(object):
         """Create a new group membership.
 
         Args:
-            group_id (int): The unique ID of the group.
-            user_id (int): The unique ID of the user.
-            read (bool): Permission flag for read access.
-            write (bool): Permission flag for write access.
-            share_read (bool): Permission flag for sharing with read access.
-            share_write (bool): Permission flag for sharing with write access.
+            group_id: The unique ID of the group.
+            user_id: The unique ID of the user.
+            read: Permission flag for read access.
+            write: Permission flag for write access.
+            share_read: Permission flag for sharing with read access.
+            share_write: Permission flag for sharing with write access.
 
         Returns:
             GroupMembership: The newly created group membership.
