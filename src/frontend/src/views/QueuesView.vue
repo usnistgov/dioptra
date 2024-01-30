@@ -18,29 +18,11 @@
       Register a new Queue
     </q-tooltip>
   </q-btn>
-
-  <q-dialog v-model="showAddDialog">
-    <q-card style="width: 95%" flat >
-      <q-form @submit="submit">
-        <q-card-section class="bg-primary text-white q-mb-md">
-          <div class="text-h6">Register Queue</div>
-        </q-card-section>
-        <q-card-section class="">
-          <div class="row items-center">
-            <div class="col-3 q-mb-lg">
-              Queue Name:
-            </div>
-            <q-input class="col" outlined dense v-model="name" autofocus :rules="[rules.requiredRule]" >
-            </q-input>
-          </div>
-        </q-card-section>
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancel" @click="showAddDialog = false" outline />
-          <q-btn flat label="Confirm" type="submit" />
-        </q-card-actions>
-      </q-form>
-    </q-card>
-  </q-dialog>
+  <AddQueueDialog 
+    :showAddDialog="showAddDialog"
+    @submit="registerQueue"
+    @update:modelValue="(val) => showAddDialog = val"
+  />
 
   <q-dialog v-model="showDeleteDialog">
     <q-card style="width: 95%">
@@ -62,18 +44,15 @@
 <script setup>
   import PageTitle from '@/components/PageTitle.vue'
   import * as api from '@/services/queuesApi'
-  import * as rules from '@/services/validationRules'
-  import { onMounted, ref, reactive } from 'vue'
+  import { ref } from 'vue'
   import * as notify from '../notify';
   import TableComponent from '@/components/TableComponent.vue'
+  import AddQueueDialog from '@/dialogs/AddQueueDialog.vue'
 
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)
 
-  const name = ref('')
-
   const queues = ref([])
-
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
@@ -81,18 +60,6 @@
     { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', format: val => `${formatDate(val)}`, sortable: true },
     { name: 'lastModified', label: 'Last Modified', align: 'left', field: 'lastModified', format: val => `${formatDate(val)}`, sortable: true },
   ]
-
-  // onMounted(async () => {
-  //   try {
-  //     const res = await api.getQueues();
-  //     console.log('queues res = ', res)
-  //     queues.value = res.data
-  //   } catch(err) {
-  //     console.log('queues err = ', err)
-  //   } finally {
-  //     // $q.loading.hide();
-  //   }
-  // })
 
   getQueues()
   async function getQueues() {
@@ -105,11 +72,11 @@
     } 
   }
 
-  async function submit() {
+  async function registerQueue(name) {
     try {
       console.log('submitted!!!!!!!!!!!')
-      await api.registerQueue(name.value)
-      notify.success(`Sucessfully created '${name.value}'`)
+      await api.registerQueue(name)
+      notify.success(`Sucessfully created '${name}'`)
       showAddDialog.value = false
       getQueues()
     } catch(err) {
