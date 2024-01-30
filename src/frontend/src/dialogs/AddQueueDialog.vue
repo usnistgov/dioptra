@@ -1,11 +1,11 @@
 <template>
-  <q-dialog v-model="show">
+  <q-dialog v-model="showDialog">
     <q-card style="width: 95%" flat >
       <q-form @submit="$emit('submit', name)">
         <q-card-section class="bg-primary text-white q-mb-md">
           <div class="text-h6">Register Queue</div>
         </q-card-section>
-        <q-card-section class="">
+        <q-card-section>
           <div class="row items-center">
             <div class="col-3 q-mb-lg">
               Queue Name:
@@ -13,10 +13,18 @@
             <q-input class="col" outlined dense v-model="name" autofocus :rules="[rules.requiredRule]" >
             </q-input>
           </div>
+          <div class="row items-center">
+            <div class="col-3">
+              Locked:
+            </div>
+            <q-toggle v-model="locked" />
+            <q-icon :name="locked ? 'sym_o_lock' : 'lock_open'" size="sm" />
+          </div>
         </q-card-section>
+        <q-separator />
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancel" v-close-popup outline />
-          <q-btn flat label="Confirm" type="submit" />
+          <q-btn color="blue-grey-4" class="text-white" label="Cancel" v-close-popup />
+          <q-btn color="secondary" label="Confirm" type="submit" />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -24,17 +32,13 @@
 </template>
 
 <script setup>
-  import { computed, ref } from 'vue'
+  import { ref } from 'vue'
   import * as rules from '@/services/validationRules'
 
-  const props = defineProps(['showAddDialog'])
-  const emit = defineEmits(['submit', 'update:modelValue' ])
+  const showDialog = defineModel()
 
   const name = ref('')
+  const locked = ref(true)
 
-  const show = computed({
-    get() { return props.showAddDialog },
-    set(newValue) { emit('update:modelValue', newValue) }
-  })
 
 </script>

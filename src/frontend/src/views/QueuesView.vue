@@ -19,9 +19,8 @@
     </q-tooltip>
   </q-btn>
   <AddQueueDialog 
-    :showAddDialog="showAddDialog"
+    v-model="showAddDialog"
     @submit="registerQueue"
-    @update:modelValue="(val) => showAddDialog = val"
   />
 
   <q-dialog v-model="showDeleteDialog">
@@ -106,7 +105,6 @@
     } catch(err) {
       notify.error(err.response.data.message);
     }
-
   }
 
 </script>

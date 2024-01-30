@@ -12,9 +12,9 @@
     bordered
   >
     <template #top-right>
-      <q-btn color="secondary" icon="edit" label="Edit" class="q-mr-lg" outline :disabled="!selected.length" />
-      <q-btn color="red" icon="sym_o_delete" label="Delete" class="q-mr-lg" outline @click="$emit('delete', selected[0])" :disabled="!selected.length" />
-      <q-input v-model="filter" dense placeholder="Search">
+      <q-btn color="secondary" icon="edit" label="Edit" class="q-mr-lg"  :disabled="!selected.length" />
+      <q-btn color="red" icon="sym_o_delete" label="Delete" class="q-mr-lg"  @click="$emit('delete', selected[0])" :disabled="!selected.length" />
+      <q-input v-model="filter" dense placeholder="Search" outlined>
           <template #append>
             <q-icon name="search" />
           </template>
