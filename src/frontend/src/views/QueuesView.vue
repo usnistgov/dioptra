@@ -5,6 +5,7 @@
     :columns="columns"
     title="Queues"
     @delete="deletePrompt"
+    :deleteCount="deleteCount"
   />
   <q-btn 
     class="fixedButton"
@@ -22,22 +23,11 @@
     v-model="showAddDialog"
     @submit="registerQueue"
   />
-
-  <q-dialog v-model="showDeleteDialog">
-    <q-card style="width: 95%">
-      <q-card-section>
-        <div class="text-h6">Confirm Delete</div>
-      </q-card-section>
-      <q-card-section class="q-pt-none">
-        Are you sure you want to delete this Queue? <br>
-        Name: <span class="text-bold">{{ selected.name }}</span>
-      </q-card-section>
-      <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancel" @click="showDeleteDialog = false" outline />
-          <q-btn flat label="Confirm" type="submit" @click="deleteQueue" />
-        </q-card-actions>
-    </q-card>
-  </q-dialog>
+  <DeleteQueueDialog 
+    v-model="showDeleteDialog"
+    @submit="deleteQueue"
+    :name="selected.name"
+  />
 </template>
 
 <script setup>
@@ -47,6 +37,7 @@
   import * as notify from '../notify';
   import TableComponent from '@/components/TableComponent.vue'
   import AddQueueDialog from '@/dialogs/AddQueueDialog.vue'
+  import DeleteQueueDialog from '@/dialogs/DeleteQueueDialog.vue'
 
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)
@@ -67,19 +58,18 @@
       console.log('queues res = ', res)
       queues.value = res.data
     } catch(err) {
-      console.log('queues err = ', err)
+      notify.error(err.response.data.message)
     } 
   }
 
   async function registerQueue(name) {
     try {
-      console.log('submitted!!!!!!!!!!!')
       await api.registerQueue(name)
       notify.success(`Sucessfully created '${name}'`)
       showAddDialog.value = false
       getQueues()
     } catch(err) {
-      notify.error(err.response.data.message);
+      notify.error(err.response.data.message)
     }
   }
 
@@ -89,18 +79,20 @@
   }
 
   const selected = ref({})
+
   function deletePrompt(queue) {
-    console.log('delete queue? ', queue)
     selected.value = queue
     showDeleteDialog.value = true
   }
 
+  const deleteCount = ref(0)
+
   async function deleteQueue() {
     try {
-      const res = await api.deleteQueue(selected.value.name)
-      console.log('delete res = ', res)
+      await api.deleteQueue(selected.value.name)
       notify.success(`Sucessfully deleted '${selected.value.name}'`)
       showDeleteDialog.value = false
+      deleteCount.value ++
       getQueues()
     } catch(err) {
       notify.error(err.response.data.message);

@@ -27,12 +27,15 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue'
-  const props = defineProps(['columns', 'rows', 'title'])
+  import { ref, watch } from 'vue'
+  const props = defineProps(['columns', 'rows', 'title', 'deleteCount'])
   defineEmits(['edit', 'delete'])
-
 
   const filter = ref('')
   const selected = ref([])
+
+  watch(() => props.deleteCount, () => {
+    selected.value = []
+  })
 
 </script>

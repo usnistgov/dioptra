@@ -101,7 +101,6 @@
       router.push('/login')
       notify.success(`Successfully created user '${res.data.username}'`);
     } catch (err) {
-      console.log('err = ', err)
       notify.error(err.response.data.message);
     }
   }
