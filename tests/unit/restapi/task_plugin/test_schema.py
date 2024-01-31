@@ -111,9 +111,9 @@ def test_TaskPluginUploadFormSchema_dump_works(
     task_plugin_upload_form_schema: TaskPluginUploadFormSchema,
     task_plugin_archive: BinaryIO,
 ) -> None:
-    task_plugin_upload_form_serialized: Dict[
-        str, Any
-    ] = task_plugin_upload_form_schema.dump(task_plugin_upload_form)
+    task_plugin_upload_form_serialized: Dict[str, Any] = (
+        task_plugin_upload_form_schema.dump(task_plugin_upload_form)
+    )
 
     assert task_plugin_upload_form_serialized["task_plugin_name"] == "new_plugin_one"
     assert task_plugin_upload_form_serialized["collection"] == "dioptra_custom"

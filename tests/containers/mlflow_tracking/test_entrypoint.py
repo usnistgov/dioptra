@@ -54,7 +54,9 @@ def host(container: Container) -> Host:
 
 @pytest.fixture(scope="function")
 def print_db_tables_pyscript(container: Container, tmp_path: Path) -> str:
-    pyscript: str | bytes = """
+    pyscript: (
+        str | bytes
+    ) = """
     import sqlite3\n
 
     con = sqlite3.connect("/work/mlruns/mlflow-tracking.db")

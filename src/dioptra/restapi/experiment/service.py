@@ -86,9 +86,9 @@ class ExperimentService(object):
 
     def create_mlflow_experiment(self, experiment_name: str) -> int:
         try:
-            experiment_id: Optional[
-                str
-            ] = self._mlflow_tracking_service.create_experiment(experiment_name)
+            experiment_id: Optional[str] = (
+                self._mlflow_tracking_service.create_experiment(experiment_name)
+            )
 
         except RestException as exc:
             raise ExperimentMLFlowTrackingRegistrationError from exc
