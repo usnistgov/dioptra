@@ -16,34 +16,27 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-import datetime
+from typing import Optional, cast
 
-import pytest
 import structlog
 from structlog.stdlib import BoundLogger
-
-from dioptra.restapi.models import Job
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
-@pytest.fixture
-def job() -> Job:
-    return Job(
-        job_id="4520511d-678b-4966-953e-af2d0edcea32",
-        mlflow_run_id=None,
-        experiment_id=1,
-        queue_id=1,
-        created_on=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
-        last_modified=datetime.datetime(2020, 8, 17, 18, 46, 28, 717559),
-        timeout="12h",
-        workflow_uri="s3://workflow/workflows.tar.gz",
-        entry_point="main",
-        entry_point_kwargs="-P var1=testing",
-        depends_on=None,
-        status="queued",
+def mock_s3_upload(self, *args, **kwargs) -> str | None:
+    LOGGER.info(
+        "Mocking S3Service.upload() function",
+        args=args,
+        kwargs=kwargs,
     )
+    fileobj = kwargs.get("fileobj")
+    bucket = kwargs.get("bucket")
+    key = kwargs.get("key")
 
+    log: BoundLogger = kwargs.get("log", LOGGER.new())
+    log.info("Uploading data to S3", fileobj=fileobj, bucket=bucket, key=key)
+    uri = cast(Optional[str], self.as_uri(bucket=bucket, key=key))
+    log.info("S3 upload successful", uri=uri)
 
-def test_Job_create(job: Job) -> None:
-    assert isinstance(job, Job)
+    return uri

@@ -73,6 +73,24 @@ def workflow_tar_gz():
 
 
 @pytest.fixture
+def workflow_tar_gz_factory():
+    def wrapped():
+        workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
+
+        with tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f, io.BytesIO(
+            initial_bytes=b"data"
+        ) as data:
+            tarinfo = tarfile.TarInfo(name="MLproject")
+            tarinfo.size = len(data.getbuffer())
+            f.addfile(tarinfo=tarinfo, fileobj=data)
+
+        workflow_tar_gz_fileobj.seek(0)
+        return workflow_tar_gz_fileobj
+
+    return wrapped
+
+
+@pytest.fixture
 def task_plugin_archive():
     archive_fileobj: BinaryIO = io.BytesIO()
 
