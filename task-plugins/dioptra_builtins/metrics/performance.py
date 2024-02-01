@@ -69,9 +69,9 @@ def get_performance_metric_list(
     performance_metrics_list: List[Tuple[str, Callable[..., float]]] = []
 
     for metric in request:
-        metric_callable: Optional[
-            Callable[..., float]
-        ] = PERFORMANCE_METRICS_REGISTRY.get(metric["func"])
+        metric_callable: Optional[Callable[..., float]] = (
+            PERFORMANCE_METRICS_REGISTRY.get(metric["func"])
+        )
 
         if metric_callable is not None:
             performance_metrics_list.append((metric["name"], metric_callable))

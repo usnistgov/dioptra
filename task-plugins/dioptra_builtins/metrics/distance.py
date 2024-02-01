@@ -68,9 +68,9 @@ def get_distance_metric_list(
     distance_metrics_list: List[Tuple[str, Callable[..., np.ndarray]]] = []
 
     for metric in request:
-        metric_callable: Optional[
-            Callable[..., np.ndarray]
-        ] = DISTANCE_METRICS_REGISTRY.get(metric["func"])
+        metric_callable: Optional[Callable[..., np.ndarray]] = (
+            DISTANCE_METRICS_REGISTRY.get(metric["func"])
+        )
 
         if metric_callable is not None:
             distance_metrics_list.append((metric["name"], metric_callable))
@@ -106,9 +106,9 @@ def get_distance_metric(func: str) -> Callable[..., np.ndarray]:
     Returns:
         A callable distance metric function.
     """
-    metric_callable: Optional[
-        Callable[..., np.ndarray]
-    ] = DISTANCE_METRICS_REGISTRY.get(func)
+    metric_callable: Optional[Callable[..., np.ndarray]] = (
+        DISTANCE_METRICS_REGISTRY.get(func)
+    )
 
     if metric_callable is None:
         LOGGER.error(
