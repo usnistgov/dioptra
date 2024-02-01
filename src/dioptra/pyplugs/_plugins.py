@@ -104,7 +104,7 @@ if TYPE_CHECKING:
 class NoutPlugin(Protocol):
     _task_nout: int
 
-    def __call__(self, *args, **kwargs) -> Any: ...  # pragma: nocover
+    def __call__(self, *args, **kwargs) -> Any: ...  # noqa: E704; pragma: nocover
 
 
 # Type aliases
