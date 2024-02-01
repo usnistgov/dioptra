@@ -21,8 +21,8 @@
       <div class="col-3">
         Locked:
       </div>
-      <q-toggle v-model="locked" />
-      <q-icon :name="locked ? 'sym_o_lock' : 'lock_open'" size="sm" />
+      <q-toggle v-model="locked" class="q-mr-sm" />
+      <q-icon :name="locked ? 'lock' : 'lock_open'" size="sm" />
     </div>
   </DialogComponent>
 </template>

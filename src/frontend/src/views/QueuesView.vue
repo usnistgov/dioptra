@@ -4,8 +4,9 @@
     :rows="queues"
     :columns="columns"
     title="Queues"
-    @delete="deletePrompt"
+    @delete="(queue) => {selected = queue; showDeleteDialog = true}"
     :deleteCount="deleteCount"
+    @edit="(queue) => {console.log('editing queue = ', queue)}"
   />
   <q-btn 
     class="fixedButton"
@@ -79,11 +80,6 @@
   }
 
   const selected = ref({})
-
-  function deletePrompt(queue) {
-    selected.value = queue
-    showDeleteDialog.value = true
-  }
 
   const deleteCount = ref(0)
 
