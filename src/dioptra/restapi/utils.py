@@ -190,8 +190,7 @@ class _ClassBasedViewFunction(Protocol):
 
     view_class: Type[View]
 
-    def __call__(self, *args, **kwargs) -> Any:
-        ...
+    def __call__(self, *args, **kwargs) -> Any: ...
 
 
 def _new_class_view_function(

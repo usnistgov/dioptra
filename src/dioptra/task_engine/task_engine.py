@@ -466,9 +466,9 @@ def run_experiment(
         )
         log.debug("Global parameters:\n  %s", props_values)
 
-    step_outputs: MutableMapping[
-        str, MutableMapping[str, Any]
-    ] = collections.defaultdict(dict)
+    step_outputs: MutableMapping[str, MutableMapping[str, Any]] = (
+        collections.defaultdict(dict)
+    )
 
     step_order = util.get_sorted_steps(graph)
 

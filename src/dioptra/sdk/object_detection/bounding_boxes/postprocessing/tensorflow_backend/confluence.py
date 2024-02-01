@@ -259,9 +259,9 @@ class TensorflowBoundingBoxesYOLOV1Confluence(BoundingBoxesYOLOV1PostProcessing)
                         all_proximities = np.ones_like(proximity)
                         cconf_scores = np.zeros_like(cconf)
 
-                        all_proximities[
-                            proximity <= self._confluence_threshold
-                        ] = proximity[proximity <= self._confluence_threshold]
+                        all_proximities[proximity <= self._confluence_threshold] = (
+                            proximity[proximity <= self._confluence_threshold]
+                        )
                         cconf_scores[proximity <= self._confluence_threshold] = cconf[
                             proximity <= self._confluence_threshold
                         ]
@@ -334,18 +334,18 @@ class TensorflowBoundingBoxesYOLOV1Confluence(BoundingBoxesYOLOV1PostProcessing)
                             -((1 - manhattan_distance) * (1 - manhattan_distance))
                             / self._sigma
                         )
-                        weights[
-                            manhattan_distance <= self._confluence_threshold
-                        ] = gaussian_weights[
-                            manhattan_distance <= self._confluence_threshold
-                        ]
+                        weights[manhattan_distance <= self._confluence_threshold] = (
+                            gaussian_weights[
+                                manhattan_distance <= self._confluence_threshold
+                            ]
+                        )
 
                     else:
-                        weights[
-                            manhattan_distance <= self._confluence_threshold
-                        ] = manhattan_distance[
-                            manhattan_distance <= self._confluence_threshold
-                        ]
+                        weights[manhattan_distance <= self._confluence_threshold] = (
+                            manhattan_distance[
+                                manhattan_distance <= self._confluence_threshold
+                            ]
+                        )
 
                     dets[1:, 4] *= weights
                     to_reprocess = np.where(dets[1:, 4] >= self._score_threshold)[0]
@@ -506,14 +506,14 @@ class TensorflowBoundingBoxesYOLOV1Confluence(BoundingBoxesYOLOV1PostProcessing)
                 )
 
             if len(batch_scores) > 0:
-                padded_scores[
-                    batch_idx, 0 : batch_scores.shape[0]
-                ] = batch_scores.astype("float32")
+                padded_scores[batch_idx, 0 : batch_scores.shape[0]] = (
+                    batch_scores.astype("float32")
+                )
 
             if len(batch_labels) > 0:
-                padded_labels[
-                    batch_idx, 0 : batch_labels.shape[0]
-                ] = batch_labels.astype("int32")
+                padded_labels[batch_idx, 0 : batch_labels.shape[0]] = (
+                    batch_labels.astype("int32")
+                )
 
             padded_detections[batch_idx] = len(batch_scores)
 
