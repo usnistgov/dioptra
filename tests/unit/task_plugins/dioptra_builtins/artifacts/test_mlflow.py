@@ -32,8 +32,13 @@ from mlflow.utils.mlflow_tags import (
     MLFLOW_RUN_NAME,
     MLFLOW_RUN_NOTE,
     MLFLOW_USER,
-    _get_run_name_from_tags,
 )
+
+
+def _get_run_name_from_tags(tags):
+    for tag in tags:
+        if tag.key == MLFLOW_RUN_NAME:
+            return tag.value
 
 
 class MockMLFlowClient(object):
