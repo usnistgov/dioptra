@@ -192,18 +192,14 @@ def test_download_all_artifacts_in_run(
         ("pddf.pkl", "pickle", "pkl"),
     ],
 )
-@pytest.mark.parametrize(
-    "working_dir",
-    [None],
-)
 def test_upload_data_frame_artifact(
-    mlflow_client, data_frame, file_name, file_format, output, working_dir
+    mlflow_client, data_frame, file_name, file_format, output, tmp_path
 ) -> None:
     from dioptra_builtins.artifacts.mlflow import upload_data_frame_artifact
 
-    upload_data_frame_artifact(data_frame, file_name, file_format, None, working_dir)
+    upload_data_frame_artifact(data_frame, file_name, file_format, None, tmp_path)
 
-    pwd = Path("." if working_dir is None else working_dir).absolute()
+    pwd = Path("." if tmp_path is None else tmp_path).absolute()
     assert (pwd / Path(file_name).with_suffix(f".{output}")).is_file()
 
 
