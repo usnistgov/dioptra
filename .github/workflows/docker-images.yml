@@ -43,9 +43,9 @@ jobs:
           - mlflow-tracking
           - restapi
           - pytorch-cpu
-          - pytorch-gpu
+#         - pytorch-gpu
           - tensorflow2-cpu
-          - tensorflow2-gpu
+#         - tensorflow2-gpu
 
     steps:
       - uses: actions/checkout@v4
