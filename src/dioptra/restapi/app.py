@@ -62,8 +62,8 @@ def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -
     Returns:
         An initialized and configured :py:class:`~flask.Flask` object.
     """
+    from .bootstrap import bind_dependencies, register_providers
     from .config import config_by_name
-    from .dependencies import bind_dependencies, register_providers
     from .errors import register_error_handlers
     from .routes import register_routes
     from .user.service import load_user
