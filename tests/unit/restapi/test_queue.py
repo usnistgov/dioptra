@@ -29,6 +29,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
+from dioptra.restapi.utils import slugify
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -360,6 +361,25 @@ def test_queue_registration(client: FlaskClient, db: SQLAlchemy) -> None:
         client, queue_name=queue2_expected["name"], expected=queue2_expected
     )
     assert_retrieving_all_queues_works(client, expected=queue_expected_list)
+
+
+def test_queue_name_is_slugified(
+    client: FlaskClient, db: SQLAlchemy
+) -> None:
+    """Test that registering a queue name with spaces/uppercase letters is slugified.
+
+    This test validates the following sequence of actions:
+
+    - A user registers a queue named "TensorFlow CPU".
+    - The user is able to retrieve information about the queue and confirms it now has
+      a slugified name.
+    """
+    queue_name = "TensorFlow CPU"
+    response = register_queue(client, name=queue_name)
+    queue_id = response.get_json()["queueId"]
+    assert_queue_name_matches_expected_name(
+        client, queue_id=queue_id, expected_name=slugify(queue_name)
+    )
 
 
 def test_cannot_register_existing_queue_name(
