@@ -32,7 +32,6 @@ from flask_cors import CORS
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_restx import Api
-from flask_wtf import CSRFProtect
 from injector import Injector
 from structlog.stdlib import BoundLogger
 
@@ -44,7 +43,6 @@ from .db import db
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 cors: CORS = CORS()
-csrf: CSRFProtect = CSRFProtect()
 login_manager = LoginManager()
 migrate: Migrate = Migrate()
 
@@ -87,7 +85,6 @@ def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -
 
     login_manager.user_loader(load_user)
 
-    csrf.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
 
