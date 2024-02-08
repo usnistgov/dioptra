@@ -9,17 +9,17 @@
 
 -e file:.#egg=dioptra
     # via -r requirements-dev.in
-adversarial-robustness-toolbox==1.16.0
+adversarial-robustness-toolbox==1.17.0
     # via dioptra (pyproject.toml)
-aiohttp==3.8.5
+aiohttp==3.9.3
     # via
     #   dioptra (pyproject.toml)
     #   fsspec
 aiosignal==1.3.1
     # via aiohttp
-alabaster==0.7.13
+alabaster==0.7.16
     # via sphinx
-alembic==1.12.0
+alembic==1.13.1
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -27,10 +27,10 @@ alembic==1.12.0
     #   mlflow
 aniso8601==9.0.1
     # via flask-restx
-anyio==4.0.0
-    # via jupyter-server
-appdirs==1.4.4
-    # via esbonio
+anyio==4.2.0
+    # via
+    #   httpx
+    #   jupyter-server
 argon2-cffi==23.1.0
     # via jupyter-server
 argon2-cffi-bindings==21.2.0
@@ -39,7 +39,7 @@ arrow==1.3.0
     # via
     #   isoduration
     #   jinja2-time
-asttokens==2.4.0
+asttokens==2.4.1
     # via stack-data
 async-lru==2.0.4
     # via jupyterlab
@@ -47,7 +47,7 @@ async-timeout==4.0.3
     # via
     #   aiohttp
     #   redis
-attrs==23.1.0
+attrs==23.2.0
     # via
     #   aiohttp
     #   cattrs
@@ -57,25 +57,25 @@ attrs==23.1.0
     #   referencing
 autopep8==2.0.4
     # via dioptra (pyproject.toml)
-babel==2.13.0
+babel==2.14.0
     # via
     #   jupyterlab-server
     #   sphinx
-backcall==0.2.0
-    # via ipython
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
     # via nbconvert
 binaryornot==0.4.4
-    # via cookiecutter
-bleach==6.0.0
+    # via
+    #   cookiecutter
+    #   dioptra (pyproject.toml)
+bleach==6.1.0
     # via
     #   kaggle
     #   nbconvert
-boto3==1.28.61
+boto3==1.34.38
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-botocore==1.31.61
+botocore==1.34.38
     # via
     #   boto3
     #   s3transfer
@@ -83,12 +83,16 @@ build==1.0.3
     # via
     #   dioptra (pyproject.toml)
     #   pip-tools
-cachetools==5.3.1
+cachetools==5.3.2
     # via tox
-cattrs==23.1.2
-    # via lsprotocol
-certifi==2023.7.22
+cattrs==23.2.3
     # via
+    #   lsprotocol
+    #   pygls
+certifi==2024.2.2
+    # via
+    #   httpcore
+    #   httpx
     #   kaggle
     #   requests
 cffi==1.16.0
@@ -99,10 +103,8 @@ chardet==5.2.0
     # via
     #   binaryornot
     #   tox
-charset-normalizer==3.3.0
-    # via
-    #   aiohttp
-    #   requests
+charset-normalizer==3.3.2
+    # via requests
 click==8.1.7
     # via
     #   cookiecutter
@@ -116,7 +118,7 @@ click==8.1.7
     #   pip-tools
     #   prefect
     #   rq
-cloudpickle==2.2.1
+cloudpickle==3.0.0
     # via
     #   dask
     #   distributed
@@ -127,74 +129,74 @@ colorama==0.4.6
     #   build
     #   click
     #   ipython
+    #   pytest
     #   sphinx
     #   tox
     #   tqdm
-comm==0.1.4
+comm==0.2.1
     # via
     #   ipykernel
     #   ipywidgets
-contourpy==1.1.1
+contourpy==1.2.0
     # via matplotlib
 cookiecutter==2.1.1
-    # via dioptra (pyproject.toml)
-croniter==1.4.1
+    # via
+    #   dioptra (pyproject.toml)
+    #   pytest-cookies
+croniter==2.0.1
     # via prefect
 cryptography==3.4.8
     # via dioptra (pyproject.toml)
-cycler==0.12.0
+cycler==0.12.1
     # via matplotlib
-dask==2023.9.3
+dask==2024.1.1
     # via
     #   distributed
     #   prefect
 databricks-cli==0.18.0
     # via mlflow
-debugpy==1.8.0
+debugpy==1.8.1
     # via ipykernel
 decorator==5.1.1
     # via ipython
 defusedxml==0.7.1
     # via nbconvert
-distlib==0.3.7
+distlib==0.3.8
     # via virtualenv
-distributed==2023.9.3
+distributed==2024.1.1
     # via prefect
-dnspython==2.4.2
-    # via email-validator
-docker==6.1.3
+docker==7.0.0
     # via
     #   mlflow
     #   prefect
 docutils==0.17.1
     # via sphinx
-email-validator==2.0.0.post2
-    # via wtforms
 entrypoints==0.4
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
     #   mlflow
-esbonio==0.16.1
+esbonio==0.16.4
     # via dioptra (pyproject.toml)
-exceptiongroup==1.1.3
+exceptiongroup==1.2.0
     # via
     #   anyio
     #   cattrs
     #   ipython
-executing==2.0.0
+    #   pytest
+executing==2.0.1
     # via stack-data
-fastjsonschema==2.18.1
+fastjsonschema==2.19.1
     # via nbformat
-filelock==3.12.4
+filelock==3.13.1
     # via
     #   tox
     #   virtualenv
-flake8==6.1.0
+flake8==7.0.0
     # via
     #   dioptra (pyproject.toml)
     #   flake8-bugbear
-flake8-bugbear==23.9.16
+flake8-bugbear==24.2.6
     # via dioptra (pyproject.toml)
 flask==2.1.3
     # via
@@ -205,7 +207,6 @@ flask==2.1.3
     #   flask-migrate
     #   flask-restx
     #   flask-sqlalchemy
-    #   flask-wtf
     #   mlflow
     #   prometheus-flask-exporter
 flask-accepts==0.18.4
@@ -216,7 +217,7 @@ flask-cors==4.0.0
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-flask-login==0.6.2
+flask-login==0.6.3
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -224,7 +225,7 @@ flask-migrate==4.0.5
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-flask-restx==1.1.0
+flask-restx==1.3.0
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -234,37 +235,41 @@ flask-sqlalchemy==2.5.1
     #   dioptra
     #   dioptra (pyproject.toml)
     #   flask-migrate
-flask-wtf==1.2.1
-    # via
-    #   dioptra
-    #   dioptra (pyproject.toml)
-fonttools==4.43.1
+fonttools==4.48.1
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
-frozenlist==1.4.0
+freezegun==1.4.0
+    # via dioptra (pyproject.toml)
+frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2023.9.2
+fsspec[http]==2024.2.0
     # via
     #   dask
     #   pytorch-lightning
     #   universal-pathlib
-gitdb==4.0.10
+gitdb==4.0.11
     # via gitpython
-gitpython==3.1.37
+gitpython==3.1.41
     # via mlflow
-greenlet==3.0.0
+greenlet==3.0.3
     # via sqlalchemy
-idna==3.4
+h11==0.14.0
+    # via httpcore
+httpcore==1.0.2
+    # via httpx
+httpx==0.26.0
+    # via jupyterlab
+idna==3.6
     # via
     #   anyio
-    #   email-validator
+    #   httpx
     #   jsonschema
     #   requests
     #   yarl
-imageio==2.31.5
+imageio==2.33.1
     # via
     #   imgaug
     #   scikit-image
@@ -272,7 +277,7 @@ imagesize==1.4.1
     # via sphinx
 imgaug==0.4.0
     # via dioptra (pyproject.toml)
-importlib-metadata==6.8.0
+importlib-metadata==7.0.1
     # via
     #   build
     #   dask
@@ -284,41 +289,39 @@ importlib-metadata==6.8.0
     #   mlflow
     #   nbconvert
     #   sphinx
-    #   typeguard
-importlib-resources==6.1.0
+importlib-resources==6.1.1
     # via
+    #   flask-restx
     #   matplotlib
     #   prefect
+iniconfig==2.0.0
+    # via pytest
 injector==0.21.0
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-ipykernel==6.25.2
+ipykernel==6.29.2
     # via
     #   dioptra (pyproject.toml)
     #   jupyter
     #   jupyter-console
     #   jupyterlab
     #   qtconsole
-ipython==8.16.1
+ipython==8.18.1
     # via
     #   dioptra (pyproject.toml)
     #   ipykernel
     #   ipywidgets
     #   jupyter-console
-ipython-genutils==0.2.0
-    # via qtconsole
-ipywidgets==8.1.1
+ipywidgets==8.1.2
     # via jupyter
 isoduration==20.11.0
     # via jsonschema
 itsdangerous==2.1.2
-    # via
-    #   flask
-    #   flask-wtf
+    # via flask
 jedi==0.19.1
     # via ipython
-jinja2==3.1.2
+jinja2==3.1.3
     # via
     #   cookiecutter
     #   distributed
@@ -341,7 +344,7 @@ json5==0.9.14
     # via jupyterlab-server
 jsonpointer==2.4
     # via jsonschema
-jsonschema[format-nongpl]==4.19.1
+jsonschema[format-nongpl]==4.21.1
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -349,11 +352,11 @@ jsonschema[format-nongpl]==4.19.1
     #   jupyter-events
     #   jupyterlab-server
     #   nbformat
-jsonschema-specifications==2023.7.1
+jsonschema-specifications==2023.12.1
     # via jsonschema
 jupyter==1.0.0
     # via dioptra (pyproject.toml)
-jupyter-client==8.3.1
+jupyter-client==8.6.0
     # via
     #   ipykernel
     #   jupyter-console
@@ -362,7 +365,7 @@ jupyter-client==8.3.1
     #   qtconsole
 jupyter-console==6.6.3
     # via jupyter
-jupyter-core==5.3.2
+jupyter-core==5.7.1
     # via
     #   ipykernel
     #   jupyter-client
@@ -373,38 +376,38 @@ jupyter-core==5.3.2
     #   nbconvert
     #   nbformat
     #   qtconsole
-jupyter-events==0.7.0
+jupyter-events==0.9.0
     # via jupyter-server
-jupyter-lsp==2.2.0
+jupyter-lsp==2.2.2
     # via jupyterlab
-jupyter-server==2.7.3
+jupyter-server==2.12.5
     # via
     #   jupyter-lsp
     #   jupyterlab
     #   jupyterlab-server
     #   notebook
     #   notebook-shim
-jupyter-server-terminals==0.4.4
+jupyter-server-terminals==0.5.2
     # via jupyter-server
-jupyterlab==4.0.6
+jupyterlab==4.1.0
     # via
     #   dioptra (pyproject.toml)
     #   notebook
-jupyterlab-pygments==0.2.2
+jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.25.0
+jupyterlab-server==2.25.2
     # via
     #   jupyterlab
     #   notebook
-jupyterlab-widgets==3.0.9
+jupyterlab-widgets==3.0.10
     # via ipywidgets
-kaggle==1.5.16
+kaggle==1.6.5
     # via dioptra (pyproject.toml)
 kiwisolver==1.4.5
     # via matplotlib
 lazy-loader==0.3
     # via scikit-image
-lightning-utilities==0.9.0
+lightning-utilities==0.10.1
     # via
     #   pytorch-lightning
     #   torchmetrics
@@ -412,28 +415,27 @@ locket==1.0.0
     # via
     #   distributed
     #   partd
-lsprotocol==2023.0.0b1
+lsprotocol==2023.0.1
     # via pygls
-mako==1.2.4
+mako==1.3.2
     # via alembic
 markdown-it-py==3.0.0
     # via rich
-markupsafe==2.1.3
+markupsafe==2.1.5
     # via
     #   jinja2
     #   mako
     #   nbconvert
-    #   wtforms
-marshmallow==3.20.1
+marshmallow==3.20.2
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
     #   flask-accepts
     #   marshmallow-oneofschema
     #   prefect
-marshmallow-oneofschema==3.0.1
+marshmallow-oneofschema==3.1.0
     # via prefect
-matplotlib==3.8.0
+matplotlib==3.8.2
     # via imgaug
 matplotlib-inline==0.1.6
     # via
@@ -453,19 +455,19 @@ msgpack==1.0.7
     # via
     #   distributed
     #   prefect
-multidict==6.0.4
+multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-multimethod==1.10
+multimethod==1.11
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
 mypy-extensions==1.0.0
     # via prefect
-nbclient==0.8.0
+nbclient==0.9.0
     # via nbconvert
-nbconvert==7.9.2
+nbconvert==7.16.0
     # via
     #   dioptra (pyproject.toml)
     #   jupyter
@@ -475,17 +477,17 @@ nbformat==5.9.2
     #   jupyter-server
     #   nbclient
     #   nbconvert
-nest-asyncio==1.5.8
+nest-asyncio==1.6.0
     # via ipykernel
-networkx==3.1
+networkx==3.2.1
     # via scikit-image
-notebook==7.0.4
+notebook==7.0.7
     # via jupyter
 notebook-shim==0.2.3
     # via
     #   jupyterlab
     #   notebook
-numpy==1.26.0
+numpy==1.26.4
     # via
     #   adversarial-robustness-toolbox
     #   contourpy
@@ -508,9 +510,9 @@ numpy==1.26.0
     #   torchvision
 oauthlib==3.2.2
     # via databricks-cli
-opencv-python==4.8.1.78
+opencv-python==4.9.0.80
     # via imgaug
-overrides==7.4.0
+overrides==7.7.0
     # via jupyter-server
 packaging==23.2
     # via
@@ -529,18 +531,20 @@ packaging==23.2
     #   nbconvert
     #   prefect
     #   pyproject-api
+    #   pytest
     #   pytorch-lightning
     #   qtconsole
     #   qtpy
     #   scikit-image
     #   sphinx
+    #   torchmetrics
     #   tox
-pandas==2.1.1
+pandas==2.2.0
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
     #   mlflow
-pandocfilters==1.5.0
+pandocfilters==1.5.1
     # via nbconvert
 parso==0.8.3
     # via jedi
@@ -550,11 +554,9 @@ passlib==1.7.4
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-pendulum==2.1.2
+pendulum==3.0.0
     # via prefect
-pickleshare==0.7.5
-    # via ipython
-pillow==10.0.1
+pillow==10.2.0
     # via
     #   dioptra (pyproject.toml)
     #   imageio
@@ -564,36 +566,39 @@ pillow==10.0.1
     #   torchvision
 pip-tools==7.3.0
     # via dioptra (pyproject.toml)
-platformdirs==3.11.0
+platformdirs==4.2.0
     # via
+    #   esbonio
     #   jupyter-core
     #   tox
     #   virtualenv
-pluggy==1.3.0
-    # via tox
+pluggy==1.4.0
+    # via
+    #   pytest
+    #   tox
 prefect==1.4.1
     # via dioptra (pyproject.toml)
-prometheus-client==0.17.1
+prometheus-client==0.19.0
     # via
     #   jupyter-server
     #   prometheus-flask-exporter
-prometheus-flask-exporter==0.22.4
+prometheus-flask-exporter==0.23.0
     # via mlflow
-prompt-toolkit==3.0.39
+prompt-toolkit==3.0.43
     # via
     #   ipython
     #   jupyter-console
-protobuf==4.24.4
+protobuf==4.25.2
     # via mlflow
-psutil==5.9.5
+psutil==5.9.8
     # via
     #   distributed
     #   ipykernel
 pure-eval==0.2.2
     # via stack-data
-pyarrow==13.0.0
+pyarrow==15.0.0
     # via dioptra (pyproject.toml)
-pycodestyle==2.11.0
+pycodestyle==2.11.1
     # via
     #   autopep8
     #   dioptra (pyproject.toml)
@@ -602,11 +607,11 @@ pycparser==2.21
     # via cffi
 pydocstyle==6.3.0
     # via dioptra (pyproject.toml)
-pyflakes==3.1.0
+pyflakes==3.2.0
     # via flake8
-pygls==1.1.0
+pygls==1.3.0
     # via esbonio
-pygments==2.16.1
+pygments==2.17.2
     # via
     #   ipython
     #   jupyter-console
@@ -622,8 +627,14 @@ pyproject-api==1.6.1
     # via tox
 pyproject-hooks==1.0.0
     # via build
-pyspellchecker==0.7.2
+pyspellchecker==0.8.1
     # via esbonio
+pytest==8.0.0
+    # via
+    #   dioptra (pyproject.toml)
+    #   pytest-cookies
+pytest-cookies==0.7.0
+    # via dioptra (pyproject.toml)
 python-box==7.1.1
     # via prefect
 python-dateutil==2.8.2
@@ -633,15 +644,17 @@ python-dateutil==2.8.2
     #   croniter
     #   dioptra
     #   dioptra (pyproject.toml)
+    #   freezegun
     #   jupyter-client
     #   kaggle
     #   matplotlib
     #   pandas
     #   pendulum
     #   prefect
+    #   time-machine
 python-json-logger==2.0.7
     # via jupyter-events
-python-slugify==8.0.1
+python-slugify==8.0.4
     # via
     #   cookiecutter
     #   kaggle
@@ -650,19 +663,18 @@ pytoml==0.1.21
     # via dioptra (pyproject.toml)
 pytorch-lightning==1.9.5 ; python_version == "3.9"
     # via -r requirements-dev-pytorch.in
-pytz==2023.3.post1
+pytz==2024.1
     # via
+    #   croniter
     #   flask-restx
     #   mlflow
     #   pandas
     #   prefect
-pytzdata==2020.1
-    # via pendulum
 pywin32==306
     # via
     #   docker
     #   jupyter-core
-pywinpty==2.0.11
+pywinpty==2.0.12
     # via
     #   jupyter-server
     #   jupyter-server-terminals
@@ -678,16 +690,16 @@ pyyaml==6.0.1
     #   mlflow
     #   prefect
     #   pytorch-lightning
-pyzmq==25.1.1
+pyzmq==25.1.2
     # via
     #   ipykernel
     #   jupyter-client
     #   jupyter-console
     #   jupyter-server
     #   qtconsole
-qtconsole==5.4.4
+qtconsole==5.5.1
     # via jupyter
-qtpy==2.4.0
+qtpy==2.4.1
     # via qtconsole
 querystring-parser==1.2.4
     # via mlflow
@@ -696,7 +708,7 @@ redis==5.0.1
     #   dioptra
     #   dioptra (pyproject.toml)
     #   rq
-referencing==0.30.2
+referencing==0.33.0
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -708,7 +720,6 @@ requests==2.31.0
     #   dioptra
     #   dioptra (pyproject.toml)
     #   docker
-    #   fsspec
     #   jupyterlab-server
     #   kaggle
     #   mlflow
@@ -722,9 +733,9 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
-rich==13.6.0
+rich==13.7.0
     # via dioptra (pyproject.toml)
-rpds-py==0.10.4
+rpds-py==0.17.1
     # via
     #   jsonschema
     #   referencing
@@ -732,7 +743,7 @@ rq==1.15.1
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-s3transfer==0.7.0
+s3transfer==0.10.0
     # via boto3
 scikit-image==0.22.0
     # via imgaug
@@ -740,7 +751,7 @@ scikit-learn==1.0.2
     # via
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
-scipy==1.11.3
+scipy==1.12.0
     # via
     #   adversarial-robustness-toolbox
     #   dioptra
@@ -751,7 +762,7 @@ scipy==1.11.3
     #   scikit-learn
 send2trash==1.8.2
     # via jupyter-server
-shapely==2.0.1
+shapely==2.0.2
     # via imgaug
 six==1.16.0
     # via
@@ -767,7 +778,9 @@ six==1.16.0
 smmap==5.0.1
     # via gitdb
 sniffio==1.3.0
-    # via anyio
+    # via
+    #   anyio
+    #   httpx
 snowballstemmer==2.2.0
     # via
     #   pydocstyle
@@ -780,19 +793,19 @@ sphinx==4.5.0
     # via
     #   dioptra (pyproject.toml)
     #   esbonio
-sphinxcontrib-applehelp==1.0.4
+sphinxcontrib-applehelp==1.0.8
     # via sphinx
-sphinxcontrib-devhelp==1.0.2
+sphinxcontrib-devhelp==1.0.6
     # via sphinx
-sphinxcontrib-htmlhelp==2.0.1
+sphinxcontrib-htmlhelp==2.0.5
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
-sphinxcontrib-qthelp==1.0.3
+sphinxcontrib-qthelp==1.0.7
     # via sphinx
-sphinxcontrib-serializinghtml==1.1.5
+sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
-sqlalchemy==1.4.49
+sqlalchemy==1.4.51
     # via
     #   alembic
     #   dioptra
@@ -803,7 +816,7 @@ sqlparse==0.4.4
     # via mlflow
 stack-data==0.6.3
     # via ipython
-structlog==23.1.0
+structlog==24.1.0
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -811,9 +824,9 @@ tabulate==0.9.0
     # via
     #   databricks-cli
     #   prefect
-tblib==2.0.0
+tblib==3.0.0
     # via distributed
-terminado==0.17.1
+terminado==0.18.0
     # via
     #   jupyter-server
     #   jupyter-server-terminals
@@ -821,8 +834,10 @@ text-unidecode==1.3
     # via python-slugify
 threadpoolctl==3.2.0
     # via scikit-learn
-tifffile==2023.9.26
+tifffile==2024.1.30
     # via scikit-image
+time-machine==2.13.0
+    # via pendulum
 tinycss2==1.2.1
     # via nbconvert
 toml==0.10.2
@@ -838,8 +853,9 @@ tomli==2.0.1
     #   pip-tools
     #   pyproject-api
     #   pyproject-hooks
+    #   pytest
     #   tox
-toolz==0.12.0
+toolz==0.12.1
     # via
     #   dask
     #   distributed
@@ -853,11 +869,11 @@ torch==1.10.2+cpu ; (sys_platform == "win32" or sys_platform == "linux") and pyt
     #   torchvision
 torchaudio==0.10.2+cpu ; (sys_platform == "win32" or sys_platform == "linux") and python_version == "3.9" and (platform_machine == "x86_64" or platform_machine == "amd64" or platform_machine == "AMD64")
     # via -r requirements-dev-pytorch.in
-torchmetrics==1.2.0
+torchmetrics==1.3.0.post0
     # via pytorch-lightning
 torchvision==0.11.3+cpu ; (sys_platform == "win32" or sys_platform == "linux") and python_version == "3.9" and (platform_machine == "x86_64" or platform_machine == "amd64" or platform_machine == "AMD64")
     # via -r requirements-dev-pytorch.in
-tornado==6.3.3
+tornado==6.4
     # via
     #   distributed
     #   ipykernel
@@ -866,14 +882,14 @@ tornado==6.3.3
     #   jupyterlab
     #   notebook
     #   terminado
-tox==4.11.3
+tox==4.12.1
     # via dioptra (pyproject.toml)
 tqdm==4.66.1
     # via
     #   adversarial-robustness-toolbox
     #   kaggle
     #   pytorch-lightning
-traitlets==5.11.2
+traitlets==5.14.1
     # via
     #   comm
     #   ipykernel
@@ -890,13 +906,12 @@ traitlets==5.11.2
     #   nbconvert
     #   nbformat
     #   qtconsole
-typeguard==3.0.2
-    # via pygls
-types-python-dateutil==2.8.19.14
+types-python-dateutil==2.8.19.20240106
     # via arrow
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   alembic
+    #   anyio
     #   async-lru
     #   cattrs
     #   dioptra
@@ -905,14 +920,15 @@ typing-extensions==4.8.0
     #   lightning-utilities
     #   pytorch-lightning
     #   torch
-    #   typeguard
-tzdata==2023.3
-    # via pandas
-universal-pathlib==0.1.3
+tzdata==2023.4
+    # via
+    #   pandas
+    #   pendulum
+universal-pathlib==0.1.4
     # via dioptra (pyproject.toml)
 uri-template==1.3.0
     # via jsonschema
-urllib3==1.26.17
+urllib3==1.26.18
     # via
     #   botocore
     #   databricks-cli
@@ -921,11 +937,11 @@ urllib3==1.26.17
     #   kaggle
     #   prefect
     #   requests
-virtualenv==20.24.5
+virtualenv==20.25.0
     # via tox
-waitress==2.1.2
+waitress==3.0.0
     # via mlflow
-wcwidth==0.2.8
+wcwidth==0.2.13
     # via prompt-toolkit
 webcolors==1.13
     # via jsonschema
@@ -933,10 +949,8 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-websocket-client==1.6.3
-    # via
-    #   docker
-    #   jupyter-server
+websocket-client==1.7.0
+    # via jupyter-server
 werkzeug==2.1.2
     # via
     #   dioptra
@@ -945,18 +959,13 @@ werkzeug==2.1.2
     #   flask-accepts
     #   flask-login
     #   flask-restx
-wheel==0.41.2
+wheel==0.42.0
     # via
     #   dioptra (pyproject.toml)
     #   pip-tools
-widgetsnbextension==4.0.9
+widgetsnbextension==4.0.10
     # via ipywidgets
-wtforms[email]==3.0.1
-    # via
-    #   dioptra
-    #   dioptra (pyproject.toml)
-    #   flask-wtf
-yarl==1.9.2
+yarl==1.9.4
     # via aiohttp
 zict==3.0.0
     # via distributed
