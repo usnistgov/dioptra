@@ -28,7 +28,8 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from .model import Experiment
+from dioptra.restapi.db import Experiment
+
 from .schema import ExperimentSchema, IdStatusResponseSchema, NameStatusResponseSchema
 from .service import ExperimentNameService, ExperimentService
 

@@ -17,5 +17,6 @@
 from __future__ import annotations
 
 from .db import db
+from .models import Experiment, Job, Queue, QueueLock, User, job_statuses
 
-__all__ = ["db"]
+__all__ = ["db", "Experiment", "Job", "job_statuses", "Queue", "QueueLock", "User"]

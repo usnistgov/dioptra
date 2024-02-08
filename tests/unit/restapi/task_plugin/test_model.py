@@ -19,7 +19,7 @@ from __future__ import annotations
 import structlog
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.models import TaskPlugin
+from dioptra.restapi.task_plugin.model import TaskPlugin
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

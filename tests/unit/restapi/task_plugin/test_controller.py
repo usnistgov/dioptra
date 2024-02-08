@@ -24,8 +24,8 @@ from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.models import TaskPlugin
 from dioptra.restapi.shared.s3.service import S3Service
+from dioptra.restapi.task_plugin.model import TaskPlugin
 from dioptra.restapi.task_plugin.routes import BASE_ROUTE as TASK_PLUGIN_BASE_ROUTE
 from dioptra.restapi.task_plugin.service import TaskPluginService
 

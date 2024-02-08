@@ -25,7 +25,7 @@ from injector import inject
 from mlflow.exceptions import RestException
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db
+from dioptra.restapi.db import Experiment, db
 from dioptra.restapi.shared.mlflow_tracking.service import MLFlowTrackingService
 from dioptra.restapi.utils import slugify
 
@@ -36,7 +36,6 @@ from .errors import (
     ExperimentMLFlowTrackingDoesNotExistError,
     ExperimentMLFlowTrackingRegistrationError,
 )
-from .model import Experiment
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

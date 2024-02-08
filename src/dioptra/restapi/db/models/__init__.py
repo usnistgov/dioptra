@@ -14,20 +14,9 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module of reexports of the application's data models and forms."""
-from __future__ import annotations
+from .experiment import Experiment
+from .job import Job, job_statuses
+from .queues import Queue, QueueLock
+from .users import User
 
-from .experiment.model import Experiment
-from .job.model import Job
-from .queue.model import Queue, QueueLock
-from .task_plugin.model import TaskPlugin
-from .user.model import User
-
-__all__ = [
-    "Experiment",
-    "Job",
-    "Queue",
-    "QueueLock",
-    "TaskPlugin",
-    "User",
-]
+__all__ = ["Experiment", "Job", "job_statuses", "Queue", "QueueLock", "User"]

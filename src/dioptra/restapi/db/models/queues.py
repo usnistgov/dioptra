@@ -14,29 +14,49 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The data models for the experiment endpoint objects."""
+"""The data models for the queue endpoint objects."""
 from __future__ import annotations
 
 import datetime
-from typing import Any, Dict
+from typing import Any
 
-from dioptra.restapi.db import db
+from dioptra.restapi.db.db import db
 
 
-class Experiment(db.Model):
-    """The experiments table.
+class QueueLock(db.Model):
+    """The queue_locks table.
 
     Attributes:
-        experiment_id: An integer identifying a registered experiment.
-        created_on: The date and time the experiment was created.
-        last_modified: The date and time the experiment was last modified.
-        name: The name of the experiment.
-        is_deleted: A boolean that indicates if the experiment record is deleted.
+        queue_id: An integer identifying a registered queue.
+        created_on: The date and time the queue lock was created.
     """
 
-    __tablename__ = "experiments"
+    __tablename__ = "queue_locks"
 
-    experiment_id = db.Column(
+    queue_id = db.Column(
+        db.BigInteger().with_variant(db.Integer, "sqlite"),
+        db.ForeignKey("queues.queue_id"),
+        primary_key=True,
+    )
+    created_on = db.Column(db.DateTime(), default=datetime.datetime.now)
+
+    queue = db.relationship("Queue", back_populates="lock")
+
+
+class Queue(db.Model):
+    """The queues table.
+
+    Attributes:
+        queue_id: An integer identifying a registered queue.
+        created_on: The date and time the queue was created.
+        last_modified: The date and time the queue was last modified.
+        name: The name of the queue.
+        is_deleted: A boolean that indicates if the queue record is deleted.
+    """
+
+    __tablename__ = "queues"
+
+    queue_id = db.Column(
         db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True
     )
     created_on = db.Column(db.DateTime())
@@ -44,14 +64,24 @@ class Experiment(db.Model):
     name = db.Column(db.Text(), index=True, nullable=False, unique=True)
     is_deleted = db.Column(db.Boolean(), default=False)
 
-    jobs = db.relationship("Job", back_populates="experiment")
+    jobs = db.relationship("Job", back_populates="queue", lazy="dynamic")
+    lock = db.relationship("QueueLock", back_populates="queue")
 
-    def update(self, changes: Dict[str, Any]):
+    @classmethod
+    def next_id(cls) -> int:
+        """Generates the next id in the sequence."""
+        queue: Queue | None = cls.query.order_by(cls.queue_id.desc()).first()
+
+        if queue is None:
+            return 1
+
+        return int(queue.queue_id) + 1
+
+    def update(self, changes: dict[str, Any]) -> Queue:
         """Updates the record.
 
         Args:
-            changes: A :py:class:`~.interface.ExperimentUpdateInterface` dictionary
-                containing record updates.
+            changes: A dictionary containing record updates.
         """
         self.last_modified = datetime.datetime.now()
 
