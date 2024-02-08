@@ -18,23 +18,21 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, Optional
+from typing import Any, cast
 
 import structlog
-from flask import current_app, jsonify
-from flask.wrappers import Response
+from flask import current_app, request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import as_api_parser
+from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 
-from .errors import TaskPluginDoesNotExistError, TaskPluginUploadError
-from .model import TaskPlugin, TaskPluginUploadForm, TaskPluginUploadFormData
-from .schema import TaskPluginSchema, TaskPluginUploadSchema
-from .service import TaskPluginService
+from .model import TaskPlugin
+from .schema import NameStatusResponseSchema, TaskPluginSchema
+from .service import TaskPluginCollectionService, TaskPluginService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -55,7 +53,7 @@ class TaskPluginResource(Resource):
 
     @login_required
     @responds(schema=TaskPluginSchema(many=True), api=api)
-    def get(self) -> List[TaskPlugin]:
+    def get(self) -> list[TaskPlugin]:
         """Gets a list of all registered task plugins."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="taskPlugin", request_type="GET"
@@ -68,30 +66,27 @@ class TaskPluginResource(Resource):
         )
 
     @login_required
-    @api.expect(as_api_parser(api, TaskPluginUploadSchema))
-    @accepts(TaskPluginUploadSchema, api=api)
+    @api.expect(
+        as_api_parser(
+            api,
+            as_parameters_schema_list(
+                TaskPluginSchema, operation="load", location="form"
+            ),
+        )
+    )
+    @accepts(form_schema=TaskPluginSchema, api=api)
     @responds(schema=TaskPluginSchema, api=api)
     def post(self) -> TaskPlugin:
         """Registers a new task plugin uploaded via the task plugin upload form."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="taskPlugin", request_type="POST"
         )
-        task_plugin_upload_form: TaskPluginUploadForm = TaskPluginUploadForm()
-
+        parsed_obj = request.parsed_form  # type: ignore
         log.info("Request received")
-
-        if not task_plugin_upload_form.validate_on_submit():
-            log.error("Form validation failed")
-            raise TaskPluginUploadError
-
-        log.info("Form validation successful")
-        task_plugin_upload_form_data: TaskPluginUploadFormData = (
-            self._task_plugin_service.extract_data_from_form(
-                task_plugin_upload_form=task_plugin_upload_form, log=log
-            )
-        )
         return self._task_plugin_service.create(
-            task_plugin_upload_form_data=task_plugin_upload_form_data,
+            task_plugin_name=parsed_obj["task_plugin_name"],
+            task_plugin_file=request.files["taskPluginFile"],
+            collection=parsed_obj["collection"],
             bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
             log=log,
         )
@@ -102,13 +97,18 @@ class TaskPluginBuiltinsCollectionResource(Resource):
     """Shows a list of all builtin task plugins."""
 
     @inject
-    def __init__(self, *args, task_plugin_service: TaskPluginService, **kwargs) -> None:
-        self._task_plugin_service = task_plugin_service
+    def __init__(
+        self,
+        *args,
+        task_plugin_collection_service: TaskPluginCollectionService,
+        **kwargs,
+    ) -> None:
+        self._task_plugin_collection_service = task_plugin_collection_service
         super().__init__(*args, **kwargs)
 
     @login_required
     @responds(schema=TaskPluginSchema(many=True), api=api)
-    def get(self) -> List[TaskPlugin]:
+    def get(self) -> list[TaskPlugin]:
         """Gets a list of all available builtin task plugins."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),
@@ -116,7 +116,7 @@ class TaskPluginBuiltinsCollectionResource(Resource):
             request_type="GET",
         )
         log.info("Request received")
-        return self._task_plugin_service.get_all_in_collection(
+        return self._task_plugin_collection_service.get_all(
             collection="dioptra_builtins",
             bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
             log=log,
@@ -133,8 +133,13 @@ class TaskPluginBuiltinCollectionNameResource(Resource):
     """Shows a single builtin task plugin package."""
 
     @inject
-    def __init__(self, *args, task_plugin_service: TaskPluginService, **kwargs) -> None:
-        self._task_plugin_service = task_plugin_service
+    def __init__(
+        self,
+        *args,
+        task_plugin_collection_service: TaskPluginCollectionService,
+        **kwargs,
+    ) -> None:
+        self._task_plugin_collection_service = task_plugin_collection_service
         super().__init__(*args, **kwargs)
 
     @login_required
@@ -148,24 +153,15 @@ class TaskPluginBuiltinCollectionNameResource(Resource):
         )
         log.info("Request received")
 
-        task_plugin: Optional[TaskPlugin] = (
-            self._task_plugin_service.get_by_name_in_collection(
-                collection="dioptra_builtins",
-                task_plugin_name=taskPluginName,
-                bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
-                log=log,
-            )
+        task_plugin = self._task_plugin_collection_service.get(
+            collection="dioptra_builtins",
+            task_plugin_name=taskPluginName,
+            raise_error_if_not_found=True,
+            bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
+            log=log,
         )
 
-        if task_plugin is None:
-            log.error(
-                "TaskPlugin not found",
-                task_plugin_name=taskPluginName,
-                collection="dioptra_builtins",
-            )
-            raise TaskPluginDoesNotExistError
-
-        return task_plugin
+        return cast(TaskPlugin, task_plugin)
 
 
 @api.route("/dioptra_custom")
@@ -173,13 +169,18 @@ class TaskPluginCustomCollectionResource(Resource):
     """Shows a list of all custom task plugins."""
 
     @inject
-    def __init__(self, *args, task_plugin_service: TaskPluginService, **kwargs) -> None:
-        self._task_plugin_service = task_plugin_service
+    def __init__(
+        self,
+        *args,
+        task_plugin_collection_service: TaskPluginCollectionService,
+        **kwargs,
+    ) -> None:
+        self._task_plugin_collection_service = task_plugin_collection_service
         super().__init__(*args, **kwargs)
 
     @login_required
     @responds(schema=TaskPluginSchema(many=True), api=api)
-    def get(self) -> List[TaskPlugin]:
+    def get(self) -> list[TaskPlugin]:
         """Gets a list of all registered custom task plugins."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),
@@ -187,9 +188,10 @@ class TaskPluginCustomCollectionResource(Resource):
             request_type="GET",
         )
         log.info("Request received")
-        return self._task_plugin_service.get_all_in_collection(
+        return self._task_plugin_collection_service.get_all(
             collection="dioptra_custom",
             bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
+            raise_error_if_not_found=True,
             log=log,
         )
 
@@ -204,8 +206,13 @@ class TaskPluginCustomCollectionNameResource(Resource):
     """Shows a single custom task plugin package and lets you delete it."""
 
     @inject
-    def __init__(self, *args, task_plugin_service: TaskPluginService, **kwargs) -> None:
-        self._task_plugin_service = task_plugin_service
+    def __init__(
+        self,
+        *args,
+        task_plugin_collection_service: TaskPluginCollectionService,
+        **kwargs,
+    ) -> None:
+        self._task_plugin_collection_service = task_plugin_collection_service
         super().__init__(*args, **kwargs)
 
     @login_required
@@ -218,28 +225,18 @@ class TaskPluginCustomCollectionNameResource(Resource):
             request_type="GET",
         )
         log.info("Request received")
-
-        task_plugin: Optional[TaskPlugin] = (
-            self._task_plugin_service.get_by_name_in_collection(
-                collection="dioptra_custom",
-                task_plugin_name=taskPluginName,
-                bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
-                log=log,
-            )
+        task_plugin = self._task_plugin_collection_service.get(
+            collection="dioptra_custom",
+            task_plugin_name=taskPluginName,
+            bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
+            raise_error_if_not_found=True,
+            log=log,
         )
-
-        if task_plugin is None:
-            log.error(
-                "TaskPlugin not found",
-                task_plugin_name=taskPluginName,
-                collection="dioptra_custom",
-            )
-            raise TaskPluginDoesNotExistError
-
-        return task_plugin
+        return cast(TaskPlugin, task_plugin)
 
     @login_required
-    def delete(self, taskPluginName: str) -> Response:
+    @responds(schema=NameStatusResponseSchema)
+    def delete(self, taskPluginName: str) -> dict[str, Any]:
         """Deletes a custom task plugin by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),
@@ -248,15 +245,9 @@ class TaskPluginCustomCollectionNameResource(Resource):
             request_type="DELETE",
         )
         log.info("Request received")
-
-        task_plugins: List[TaskPlugin] = self._task_plugin_service.delete(
+        return self._task_plugin_collection_service.delete(
             collection="dioptra_custom",
             task_plugin_name=taskPluginName,
             bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
             log=log,
-        )
-        name: List[str] = [x.task_plugin_name for x in task_plugins]
-
-        return jsonify(
-            dict(status="Success", collection="dioptra_custom", taskPluginName=name)
         )

@@ -17,33 +17,16 @@
 """The schemas for serializing/deserializing the task plugin endpoint objects.
 
 .. |TaskPlugin| replace:: :py:class:`~.model.TaskPlugin`
-.. |TaskPluginUploadForm| replace:: :py:class:`~.model.TaskPluginUploadForm`
-.. |TaskPluginUploadFormData| replace:: :py:class:`~.model.TaskPluginUploadFormData`
 """
 from __future__ import annotations
 
-from typing import Any, Dict
+from marshmallow import Schema, fields
 
-from marshmallow import Schema, fields, post_dump, post_load, pre_dump
-from werkzeug.datastructures import FileStorage
-
-from dioptra.restapi.utils import ParametersSchema
-
-from .model import TaskPlugin, TaskPluginUploadForm, TaskPluginUploadFormData
+from dioptra.restapi.utils import FileUpload
 
 
 class TaskPluginSchema(Schema):
-    """The schema for the data stored in a |TaskPlugin| object.
-
-    Attributes:
-        taskPluginName: A unique string identifying a task plugin package within a
-            collection.
-        collection: The collection that contains the task plugin module, for example,
-            the "dioptra_builtins" collection.
-        modules: The available modules (Python files) in the task plugin package.
-    """
-
-    __model__ = TaskPlugin
+    """The schema for the data stored in a |TaskPlugin| object."""
 
     taskPluginName = fields.String(
         attribute="task_plugin_name",
@@ -66,88 +49,32 @@ class TaskPluginSchema(Schema):
             description="The available modules (Python files) in the task plugin "
             "package."
         ),
+        dump_only=True,
     )
-
-    @post_load
-    def deserialize_object(
-        self, data: Dict[str, Any], many: bool, **kwargs
-    ) -> TaskPlugin:
-        """Creates a |TaskPlugin| object from the validated data."""
-        return self.__model__(**data)
-
-
-class TaskPluginUploadFormSchema(Schema):
-    """The schema for the task plugin uploading form.
-
-    Attributes:
-        task_plugin_name: A unique string identifying a task plugin package within a
-            collection.
-        task_plugin_file: A tarball archive or zip file containing a single task plugin
-            package.
-        collection: The collection where the task plugin package should be stored.
-    """
-
-    task_plugin_name = fields.String(
-        attribute="task_plugin_name",
-        metadata=dict(
-            description="A unique string identifying a task plugin package within a "
-            "collection."
-        ),
-    )
-    task_plugin_file = fields.Raw(
+    taskPluginFile = FileUpload(
         metadata=dict(
             description="A tarball archive or zip file containing a single task plugin "
             "package.",
         ),
+        load_only=True,
+    )
+
+
+class NameStatusResponseSchema(Schema):
+    """A simple response for reporting a status for one or more objects."""
+
+    status = fields.String(
+        attribute="status",
+        metadata=dict(description="The status of the request."),
     )
     collection = fields.String(
         attribute="collection",
+        metadata=dict(description="The collection where the task plugin was deleted."),
+    )
+    taskPluginName = fields.List(
+        fields.String(),
+        attribute="task_plugin_name",
         metadata=dict(
-            description="The collection where the task plugin should be stored."
+            description="A list of names identifying the affected object(s)."
         ),
     )
-
-    @pre_dump
-    def extract_data_from_form(
-        self, data: TaskPluginUploadForm, many: bool, **kwargs
-    ) -> Dict[str, Any]:
-        """Extracts data from the |TaskPluginUploadForm| for validation."""
-
-        return {
-            "task_plugin_name": data.task_plugin_name.data,
-            "task_plugin_file": data.task_plugin_file.data,
-            "collection": data.collection.data,
-        }
-
-    @post_dump
-    def serialize_object(
-        self, data: Dict[str, Any], many: bool, **kwargs
-    ) -> TaskPluginUploadFormData:
-        """Creates a |TaskPluginUploadFormData| object from the validated data."""
-        return TaskPluginUploadFormData(**data)  # type: ignore
-
-
-TaskPluginUploadSchema: list[ParametersSchema] = [
-    dict(
-        name="task_plugin_name",
-        type=str,
-        location="form",
-        required=True,
-        help="A unique string identifying a task plugin package within a collection.",
-    ),
-    dict(
-        name="task_plugin_file",
-        type=FileStorage,
-        location="files",
-        required=True,
-        help="A tarball archive or zip file containing a single task plugin "
-        "package.",
-    ),
-    dict(
-        name="collection",
-        type=str,
-        location="form",
-        required=True,
-        help="The collection where the task plugin should be stored.",
-    ),
-]
