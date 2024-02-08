@@ -35,9 +35,9 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 @pytest.fixture
 def task_plugin_upload_form_request(task_plugin_archive: BinaryIO) -> Dict[str, Any]:
     return {
-        "task_plugin_name": "new_plugin_one",
+        "taskPluginName": "new_plugin_one",
         "collection": "dioptra_custom",
-        "task_plugin_file": (task_plugin_archive, "task_plugin_new_package.tar.gz"),
+        "taskPluginFile": (task_plugin_archive, "task_plugin_new_package.tar.gz"),
     }
 
 

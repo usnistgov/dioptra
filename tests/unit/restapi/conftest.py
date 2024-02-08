@@ -118,7 +118,6 @@ def dependency_modules() -> List[Any]:
         PasswordServiceModule,
         RQServiceConfiguration,
         RQServiceModule,
-        TaskPluginUploadFormSchemaModule,
         _bind_password_service_configuration,
     )
 
@@ -151,7 +150,6 @@ def dependency_modules() -> List[Any]:
         configure,
         PasswordServiceModule(),
         RQServiceModule(),
-        TaskPluginUploadFormSchemaModule(),
     ]
 
 

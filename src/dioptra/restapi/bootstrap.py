@@ -32,7 +32,6 @@ from dioptra.restapi.queue.service import QueueNameService
 from dioptra.restapi.shared.password.service import PasswordService
 from dioptra.restapi.shared.request_scope import request
 from dioptra.restapi.shared.rq.service import RQService
-from dioptra.restapi.task_plugin.schema import TaskPluginUploadFormSchema
 
 
 class MLFlowClientModule(Module):
@@ -70,14 +69,6 @@ class QueueNameServiceModule(Module):
         self,
     ) -> QueueNameService:
         return QueueNameService()
-
-
-class TaskPluginUploadFormSchemaModule(Module):
-    @provider
-    def provide_task_plugin_upload_form_schema_module(
-        self,
-    ) -> TaskPluginUploadFormSchema:
-        return TaskPluginUploadFormSchema()
 
 
 @dataclass
@@ -149,5 +140,4 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
     modules.append(MLFlowClientModule)
     modules.append(RQServiceModule)
     modules.append(QueueNameServiceModule)
-    modules.append(TaskPluginUploadFormSchemaModule)
     modules.append(PasswordServiceModule)
