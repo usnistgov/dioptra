@@ -34,7 +34,7 @@ class Experiment(db.Model):
         is_deleted: A boolean that indicates if the experiment record is deleted.
     """
 
-    __tablename__ = "experiments"
+    __tablename__ = "legacy_experiments"
 
     experiment_id = db.Column(
         db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True

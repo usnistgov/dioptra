@@ -23,7 +23,7 @@ from typing import Any
 from dioptra.restapi.db.db import db
 
 job_statuses = db.Table(
-    "job_statuses", db.Column("status", db.String(255), primary_key=True)
+    "legacy_job_statuses", db.Column("status", db.String(255), primary_key=True)
 )
 
 
@@ -50,16 +50,18 @@ class Job(db.Model):
             current job.
     """
 
-    __tablename__ = "jobs"
+    __tablename__ = "legacy_jobs"
 
     job_id = db.Column(db.String(36), primary_key=True)
     """A UUID that identifies the job."""
 
     mlflow_run_id = db.Column(db.String(36), index=True)
     experiment_id = db.Column(
-        db.BigInteger(), db.ForeignKey("experiments.experiment_id"), index=True
+        db.BigInteger(), db.ForeignKey("legacy_experiments.experiment_id"), index=True
     )
-    queue_id = db.Column(db.BigInteger(), db.ForeignKey("queues.queue_id"), index=True)
+    queue_id = db.Column(
+        db.BigInteger(), db.ForeignKey("legacy_queues.queue_id"), index=True
+    )
     created_on = db.Column(db.DateTime())
     last_modified = db.Column(db.DateTime())
     timeout = db.Column(db.Text())
@@ -68,7 +70,7 @@ class Job(db.Model):
     entry_point_kwargs = db.Column(db.Text())
     status = db.Column(
         db.String(255),
-        db.ForeignKey("job_statuses.status"),
+        db.ForeignKey("legacy_job_statuses.status"),
         default="queued",
         index=True,
     )

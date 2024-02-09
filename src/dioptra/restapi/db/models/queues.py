@@ -31,11 +31,11 @@ class QueueLock(db.Model):
         created_on: The date and time the queue lock was created.
     """
 
-    __tablename__ = "queue_locks"
+    __tablename__ = "legacy_queue_locks"
 
     queue_id = db.Column(
         db.BigInteger().with_variant(db.Integer, "sqlite"),
-        db.ForeignKey("queues.queue_id"),
+        db.ForeignKey("legacy_queues.queue_id"),
         primary_key=True,
     )
     created_on = db.Column(db.DateTime(), default=datetime.datetime.now)
@@ -54,7 +54,7 @@ class Queue(db.Model):
         is_deleted: A boolean that indicates if the queue record is deleted.
     """
 
-    __tablename__ = "queues"
+    __tablename__ = "legacy_queues"
 
     queue_id = db.Column(
         db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True

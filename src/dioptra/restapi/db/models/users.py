@@ -44,7 +44,7 @@ class User(db.Model):
         is_deleted: A boolean that indicates if the user account is deleted.
     """
 
-    __tablename__ = "users"
+    __tablename__ = "legacy_users"
 
     user_id: int = db.Column(
         db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True
