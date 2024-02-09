@@ -29,7 +29,7 @@ from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import User, db
-from dioptra.restapi.shared.password.service import PasswordService
+from dioptra.restapi.v0.shared.password.service import PasswordService
 
 from .errors import (
     NoCurrentUserError,

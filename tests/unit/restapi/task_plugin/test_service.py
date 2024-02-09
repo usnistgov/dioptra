@@ -26,9 +26,9 @@ from _pytest.monkeypatch import MonkeyPatch
 from botocore.stub import Stubber
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.shared.s3.service import S3Service
-from dioptra.restapi.task_plugin.model import TaskPlugin
-from dioptra.restapi.task_plugin.service import (
+from dioptra.restapi.v0.shared.s3.service import S3Service
+from dioptra.restapi.v0.task_plugin.model import TaskPlugin
+from dioptra.restapi.v0.task_plugin.service import (
     TaskPluginCollectionService,
     TaskPluginService,
 )

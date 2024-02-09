@@ -64,7 +64,7 @@ def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -
     from .config import config_by_name
     from .errors import register_error_handlers
     from .routes import register_routes
-    from .user.service import load_user
+    from .v0.user.service import load_user
 
     if env is None:
         env = os.getenv("DIOPTRA_RESTAPI_ENV", "test")

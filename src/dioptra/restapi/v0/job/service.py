@@ -30,10 +30,10 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 from dioptra.restapi.db import Experiment, Job, Queue, db
-from dioptra.restapi.experiment.service import ExperimentNameService
-from dioptra.restapi.queue.service import QueueNameService
-from dioptra.restapi.shared.rq.service import RQService
-from dioptra.restapi.shared.s3.service import S3Service
+from dioptra.restapi.v0.experiment.service import ExperimentNameService
+from dioptra.restapi.v0.queue.service import QueueNameService
+from dioptra.restapi.v0.shared.rq.service import RQService
+from dioptra.restapi.v0.shared.s3.service import S3Service
 from dioptra.task_engine.validation import is_valid
 
 from .errors import (

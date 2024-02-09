@@ -29,7 +29,7 @@ from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import EXPERIMENT_ROUTE
+from dioptra.restapi.routes import EXPERIMENT_ROUTE, V0_ROOT
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ def register_experiment(client: FlaskClient, name: str) -> TestResponse:
         The response from the API.
     """
     return client.post(
-        f"/api/{EXPERIMENT_ROUTE}/",
+        f"/{V0_ROOT}/{EXPERIMENT_ROUTE}/",
         json={"name": name},
         follow_redirects=True,
     )
@@ -63,7 +63,7 @@ def rename_experiment(client: FlaskClient, id: int, new_name: str) -> TestRespon
         The response from the API.
     """
     return client.put(
-        f"/api/{EXPERIMENT_ROUTE}/{id}",
+        f"/{V0_ROOT}/{EXPERIMENT_ROUTE}/{id}",
         json={"name": new_name},
         follow_redirects=True,
     )
@@ -80,7 +80,7 @@ def delete_experiment_with_name(client: FlaskClient, name: str) -> TestResponse:
         The response from the API.
     """
     return client.delete(
-        f"/api/{EXPERIMENT_ROUTE}/name/{name}",
+        f"/{V0_ROOT}/{EXPERIMENT_ROUTE}/name/{name}",
         follow_redirects=True,
     )
 
@@ -96,7 +96,7 @@ def delete_experiment_with_id(client: FlaskClient, id: int) -> TestResponse:
         The response from the API.
     """
     return client.delete(
-        f"/api/{EXPERIMENT_ROUTE}/{id}",
+        f"/{V0_ROOT}/{EXPERIMENT_ROUTE}/{id}",
         follow_redirects=True,
     )
 
@@ -119,7 +119,7 @@ def assert_retrieving_experiment_by_name_works(
             does not match the expected response.
     """
     response = client.get(
-        f"/api/{EXPERIMENT_ROUTE}/name/{name}", follow_redirects=True
+        f"/{V0_ROOT}/{EXPERIMENT_ROUTE}/name/{name}", follow_redirects=True
     )
     assert response.status_code == 200 and response.get_json() == expected
 
@@ -138,7 +138,7 @@ def assert_retrieving_experiment_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/api/{EXPERIMENT_ROUTE}/{id}", follow_redirects=True)
+    response = client.get(f"/{V0_ROOT}/{EXPERIMENT_ROUTE}/{id}", follow_redirects=True)
     assert response.status_code == 200 and response.get_json() == expected
 
 
@@ -155,7 +155,7 @@ def assert_retrieving_all_experiments_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/api/{EXPERIMENT_ROUTE}", follow_redirects=True)
+    response = client.get(f"/{V0_ROOT}/{EXPERIMENT_ROUTE}", follow_redirects=True)
     assert response.status_code == 200 and response.get_json() == expected
 
 
@@ -174,7 +174,7 @@ def assert_experiment_name_matches_expected_name(
             experiment does not match the expected name.
     """
     response = client.get(
-        f"/api/{EXPERIMENT_ROUTE}/{id}",
+        f"/{V0_ROOT}/{EXPERIMENT_ROUTE}/{id}",
         follow_redirects=True,
     )
     assert response.status_code == 200 and response.get_json()["name"] == expected_name
@@ -207,7 +207,7 @@ def assert_experiment_is_not_found(client: FlaskClient, id: int) -> None:
         AssertionError: If the response status code is not 404.
     """
     response = client.get(
-        f"/api/{EXPERIMENT_ROUTE}/{id}",
+        f"/{V0_ROOT}/{EXPERIMENT_ROUTE}/{id}",
         follow_redirects=True,
     )
     assert response.status_code == 404
@@ -227,7 +227,7 @@ def assert_experiment_count_matches_expected_count(
             experiments does not match the expected number.
     """
     response = client.get(
-        f"/api/{EXPERIMENT_ROUTE}",
+        f"/{V0_ROOT}/{EXPERIMENT_ROUTE}",
         follow_redirects=True,
     )
     assert len(response.get_json()) == expected

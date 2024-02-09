@@ -16,16 +16,16 @@
 // https://creativecommons.org/licenses/by/4.0/legalcode
 
 export async function getAllTaskPlugins() {
-    const response = await fetch('/api/taskPlugin/');
+    const response = await fetch('/api/v0/taskPlugin/');
     return await response.json();
 }
 
 export async function getAllBuiltins() {
-    const response = await fetch('/api/taskPlugin/dioptra_builtins');
+    const response = await fetch('/api/v0/taskPlugin/dioptra_builtins');
     return await response.json();
 }
 
 export async function getAllCustom() {
-    const response = await fetch('/api/taskPlugin/dioptra_custom');
+    const response = await fetch('/api/v0/taskPlugin/dioptra_custom');
     return await response.json();
 }

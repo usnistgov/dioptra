@@ -26,8 +26,8 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
-from dioptra.restapi.shared.io_file.service import IOFileService
-from dioptra.restapi.shared.s3.service import S3Service
+from dioptra.restapi.v0.shared.io_file.service import IOFileService
+from dioptra.restapi.v0.shared.s3.service import S3Service
 
 from .errors import (
     TaskPluginAlreadyExistsError,

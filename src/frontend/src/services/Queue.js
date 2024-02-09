@@ -16,6 +16,6 @@
 // https://creativecommons.org/licenses/by/4.0/legalcode
 
 export async function getAllQueues() {
-    const response = await fetch('/api/queue/');
+    const response = await fetch('/api/v0/queue/');
     return await response.json();
 }
