@@ -202,14 +202,14 @@ class DioptraClient(object):
         collection: str = "dioptra_custom",
     ) -> dict[str, Any]:
         plugin_upload_form = {
-            "task_plugin_name": custom_plugin_name,
+            "taskPluginName": custom_plugin_name,
             "collection": collection,
         }
 
         custom_plugin_file = Path(custom_plugin_file)
 
         with custom_plugin_file.open("rb") as f:
-            custom_plugin_file = {"task_plugin_file": (custom_plugin_file.name, f)}
+            custom_plugin_file = {"taskPluginFile": (custom_plugin_file.name, f)}
             response = requests.post(
                 self.task_plugin_endpoint,
                 data=plugin_upload_form,

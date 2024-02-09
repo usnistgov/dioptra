@@ -726,14 +726,14 @@ class DioptraClient(object):
             for more information on Dioptra's REST api.
         """
         plugin_upload_form = {
-            "task_plugin_name": custom_plugin_name,
+            "taskPluginName": custom_plugin_name,
             "collection": collection,
         }
 
         custom_plugin_file = Path(custom_plugin_file)
 
         with custom_plugin_file.open("rb") as f:
-            custom_plugin_file_dict = {"task_plugin_file": (custom_plugin_file.name, f)}
+            custom_plugin_file_dict = {"taskPluginFile": (custom_plugin_file.name, f)}
             response = requests.post(
                 self.task_plugin_endpoint,
                 data=plugin_upload_form,
