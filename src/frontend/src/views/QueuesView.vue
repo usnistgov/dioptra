@@ -4,9 +4,9 @@
     :rows="queues"
     :columns="columns"
     title="Queues"
-    @delete="(queue) => {selected = queue; showDeleteDialog = true}"
-    :deleteCount="deleteCount"
-    @edit="(queue) => {console.log('editing queue = ', queue)}"
+    @delete="showDeleteDialog = true"
+    @edit="editing = true; showAddDialog = true"
+    v-model="selected"
   />
   <q-btn 
     class="fixedButton"
@@ -22,19 +22,21 @@
   </q-btn>
   <AddQueueDialog 
     v-model="showAddDialog"
-    @submit="registerQueue"
+    @addQueue="registerQueue"
+    @updateQueue="updateQueue"
+    :editQueue="selected.length && editing ? selected[0] : ''"
   />
   <DeleteQueueDialog 
     v-model="showDeleteDialog"
     @submit="deleteQueue"
-    :name="selected.name"
+    :name="selected.length ? selected[0].name : ''"
   />
 </template>
 
 <script setup>
   import PageTitle from '@/components/PageTitle.vue'
   import * as api from '@/services/queuesApi'
-  import { ref } from 'vue'
+  import { ref, watch } from 'vue'
   import * as notify from '../notify';
   import TableComponent from '@/components/TableComponent.vue'
   import AddQueueDialog from '@/dialogs/AddQueueDialog.vue'
@@ -56,7 +58,6 @@
   async function getQueues() {
     try {
       const res = await api.getQueues();
-      console.log('queues res = ', res)
       queues.value = res.data
     } catch(err) {
       notify.error(err.response.data.message)
@@ -74,21 +75,36 @@
     }
   }
 
+  async function updateQueue(name, queueId) {
+    try {
+      await api.upadateQueue(name, queueId)
+      notify.success(`Sucessfully edited '${name}'`)
+      showAddDialog.value = false
+      selected.value = []
+      getQueues()
+    } catch(err) {
+      notify.error(err.response.data.message)
+    }
+  }
+
   function formatDate(dateString) {
     const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
     return new Date(dateString).toLocaleString('en-US', options);
   }
 
-  const selected = ref({})
+  const selected = ref([])
+  const editing = ref(false)
 
-  const deleteCount = ref(0)
+  watch(showAddDialog, (newVal) => {
+    if(!newVal) editing.value = false
+  })
 
   async function deleteQueue() {
     try {
-      await api.deleteQueue(selected.value.name)
-      notify.success(`Sucessfully deleted '${selected.value.name}'`)
+      await api.deleteQueue(selected.value[0].name)
+      notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
       showDeleteDialog.value = false
-      deleteCount.value ++
+      selected.value = []
       getQueues()
     } catch(err) {
       notify.error(err.response.data.message);

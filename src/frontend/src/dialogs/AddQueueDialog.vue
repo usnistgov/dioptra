@@ -1,9 +1,9 @@
 <template>
   <DialogComponent 
     v-model="showDialog"
-    @emitSubmit="$emit('submit', name)"
+    @emitSubmit="emitAddOrEdit"
   >
-    <template #title>Register Queue</template>
+    <template #title>{{editQueue ? 'Edit Queue' : 'Register Queue'}}</template>
     <div class="row items-center">
       <div class="col-3 q-mb-lg">
         Queue Name:
@@ -28,21 +28,35 @@
 </template>
 
 <script setup>
-  import { ref, onUpdated } from 'vue'
+  import { ref, watch } from 'vue'
   import * as rules from '@/services/validationRules'
   import DialogComponent from './DialogComponent.vue'
 
-  defineEmits(['submit'])
+  const props = defineProps(['editQueue'])
+  const emit = defineEmits(['addQueue', 'updateQueue'])
 
   const showDialog = defineModel()
 
   const name = ref('')
   const locked = ref(true)
 
-  onUpdated(() => {
-    name.value = ''
-    locked.value = true
+  watch(showDialog, (newVal) => {
+    if(newVal) {
+      name.value = props.editQueue.name
+    }
+    else {
+      name.value = ''
+      locked.value = true
+    }
   })
+
+  function emitAddOrEdit() {
+    if(props.editQueue) {
+      emit('updateQueue', name.value, props.editQueue.queueId)
+    } else {
+      emit('addQueue', name.value)
+    }
+  }
 
 
 </script>
