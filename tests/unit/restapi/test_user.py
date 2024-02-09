@@ -119,7 +119,7 @@ def db(app: Flask) -> SQLAlchemy:
 
 @pytest.fixture(autouse=True)
 def seed_database(db):
-    from dioptra.restapi.db import job_statuses
+    from dioptra.restapi.db.legacy_models import job_statuses
 
     db.session.execute(
         job_statuses.insert(),

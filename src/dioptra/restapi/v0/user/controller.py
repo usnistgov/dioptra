@@ -28,7 +28,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import User
+from dioptra.restapi.db.legacy_models import User
 
 from .schema import (
     ChangePasswordCurrentUserSchema,

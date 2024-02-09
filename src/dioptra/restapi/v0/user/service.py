@@ -28,7 +28,8 @@ from injector import inject
 from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import User, db
+from dioptra.restapi.db import db
+from dioptra.restapi.db.legacy_models import User
 from dioptra.restapi.v0.shared.password.service import PasswordService
 
 from .errors import (
