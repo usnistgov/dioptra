@@ -24,9 +24,9 @@ from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.routes import TASK_PLUGIN_ROUTE
 from dioptra.restapi.shared.s3.service import S3Service
 from dioptra.restapi.task_plugin.model import TaskPlugin
-from dioptra.restapi.task_plugin.routes import BASE_ROUTE as TASK_PLUGIN_BASE_ROUTE
 from dioptra.restapi.task_plugin.service import TaskPluginService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -59,7 +59,7 @@ def test_task_plugin_resource_get(app: Flask, monkeypatch: MonkeyPatch) -> None:
 
     with app.test_client() as client:
         response: List[Dict[str, Any]] = client.get(
-            f"/api/{TASK_PLUGIN_BASE_ROUTE}/"
+            f"/api/{TASK_PLUGIN_ROUTE}/"
         ).get_json()
 
         expected: List[Dict[str, Any]] = [
@@ -112,7 +112,7 @@ def test_task_plugin_resource_post(
 
     with app.test_client() as client:
         response: Dict[str, Any] = client.post(
-            f"/api/{TASK_PLUGIN_BASE_ROUTE}/",
+            f"/api/{TASK_PLUGIN_ROUTE}/",
             content_type="multipart/form-data",
             data=task_plugin_upload_form_request,
             follow_redirects=True,

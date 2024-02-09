@@ -30,9 +30,7 @@ from flask_sqlalchemy import SQLAlchemy
 from pytest import MonkeyPatch
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.experiment.routes import BASE_ROUTE as EXPERIMENT_BASE_ROUTE
-from dioptra.restapi.job.routes import BASE_ROUTE as JOB_BASE_ROUTE
-from dioptra.restapi.queue.routes import BASE_ROUTE as QUEUE_BASE_ROUTE
+from dioptra.restapi.routes import EXPERIMENT_ROUTE, JOB_ROUTE, QUEUE_ROUTE
 from dioptra.restapi.shared.s3.service import S3Service
 
 from .lib import mock_rq, mock_s3
@@ -78,7 +76,7 @@ def register_mnist_experiment(client: FlaskClient) -> TestResponse:
         The response from the API.
     """
     return client.post(
-        f"/api/{EXPERIMENT_BASE_ROUTE}/",
+        f"/api/{EXPERIMENT_ROUTE}/",
         json={"name": "mnist"},
         follow_redirects=True,
     )
@@ -94,7 +92,7 @@ def register_tensorflow_cpu_queue(client: FlaskClient) -> TestResponse:
         The response from the API.
     """
     return client.post(
-        f"/api/{QUEUE_BASE_ROUTE}/",
+        f"/api/{QUEUE_ROUTE}/",
         json={"name": "tensorflow_cpu"},
         follow_redirects=True,
     )
@@ -114,7 +112,7 @@ def submit_job(
         The response from the API.
     """
     return client.post(
-        f"/api/{JOB_BASE_ROUTE}/",
+        f"/api/{JOB_ROUTE}/",
         content_type="multipart/form-data",
         data=form_request,
         follow_redirects=True,
@@ -138,7 +136,7 @@ def assert_retrieving_job_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/api/{JOB_BASE_ROUTE}/{id}", follow_redirects=True)
+    response = client.get(f"/api/{JOB_ROUTE}/{id}", follow_redirects=True)
     assert response.status_code == 200 and response.get_json() == expected
 
 
@@ -155,7 +153,7 @@ def assert_retrieving_all_jobs_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/api/{JOB_BASE_ROUTE}", follow_redirects=True)
+    response = client.get(f"/api/{JOB_ROUTE}", follow_redirects=True)
     assert response.status_code == 200 and response.get_json() == expected
 
 

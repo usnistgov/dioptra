@@ -60,9 +60,10 @@ def task_plugins_dir(tmp_path_factory):
 def workflow_tar_gz():
     workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
 
-    with tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f, io.BytesIO(
-        initial_bytes=b"data"
-    ) as data:
+    with (
+        tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f,
+        io.BytesIO(initial_bytes=b"data") as data,
+    ):
         tarinfo = tarfile.TarInfo(name="MLproject")
         tarinfo.size = len(data.getbuffer())
         f.addfile(tarinfo=tarinfo, fileobj=data)
@@ -77,9 +78,10 @@ def workflow_tar_gz_factory():
     def wrapped():
         workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
 
-        with tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f, io.BytesIO(
-            initial_bytes=b"data"
-        ) as data:
+        with (
+            tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f,
+            io.BytesIO(initial_bytes=b"data") as data,
+        ):
             tarinfo = tarfile.TarInfo(name="MLproject")
             tarinfo.size = len(data.getbuffer())
             f.addfile(tarinfo=tarinfo, fileobj=data)
@@ -94,9 +96,11 @@ def workflow_tar_gz_factory():
 def task_plugin_archive():
     archive_fileobj: BinaryIO = io.BytesIO()
 
-    with tarfile.open(fileobj=archive_fileobj, mode="w:gz") as f, io.BytesIO(
-        initial_bytes=b"# init file"
-    ) as f_init, io.BytesIO(initial_bytes=b"# plugin module") as f_plugin_module:
+    with (
+        tarfile.open(fileobj=archive_fileobj, mode="w:gz") as f,
+        io.BytesIO(initial_bytes=b"# init file") as f_init,
+        io.BytesIO(initial_bytes=b"# plugin module") as f_plugin_module,
+    ):
         tarinfo_init = tarfile.TarInfo(name="new_plugin_module/__init__.py")
         tarinfo_init.size = len(f_init.getbuffer())
         f.addfile(tarinfo=tarinfo_init, fileobj=f_init)

@@ -17,9 +17,5 @@
 """The job endpoint subpackage."""
 
 from .errors import register_error_handlers
-from .routes import register_routes
 
-__all__ = [
-    "register_error_handlers",
-    "register_routes",
-]
+__all__ = ["register_error_handlers"]

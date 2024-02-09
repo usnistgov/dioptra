@@ -17,31 +17,37 @@
 """A module for registering the endpoint routes with the main application.
 
 .. |Api| replace:: :py:class:`flask_restx.Api`
-.. |Flask| replace:: :py:class:`flask.Flask`
 """
 from __future__ import annotations
 
-from flask import Flask
 from flask_restx import Api
 
+AUTH_ROUTE = "auth"
+EXPERIMENT_ROUTE = "experiment"
+JOB_ROUTE = "job"
+QUEUE_ROUTE = "queue"
+TASK_PLUGIN_ROUTE = "taskPlugin"
+USER_ROUTE = "user"
 
-def register_routes(api: Api, app: Flask) -> None:
+
+def register_routes(api: Api, root: str = "api") -> None:
     """Registers the endpoint routes with the main application.
 
     Args:
         api: The main REST |Api| object.
-        app: The main |Flask| application.
+        root: The root path for the registration prefix of the namespace. The default
+            is `"api"`.
     """
-    from .auth import register_routes as attach_auth
-    from .experiment import register_routes as attach_experiment
-    from .job import register_routes as attach_job
-    from .queue import register_routes as attach_job_queue
-    from .task_plugin import register_routes as attach_task_plugin
-    from .user import register_routes as attach_user
+    from .auth.controller import api as auth_api
+    from .experiment.controller import api as experiment_api
+    from .job.controller import api as job_api
+    from .queue.controller import api as queue_api
+    from .task_plugin.controller import api as task_plugin_api
+    from .user.controller import api as user_api
 
-    attach_auth(api, app)
-    attach_experiment(api, app)
-    attach_job(api, app)
-    attach_job_queue(api, app)
-    attach_task_plugin(api, app)
-    attach_user(api, app)
+    api.add_namespace(auth_api, path=f"/{root}/{AUTH_ROUTE}")
+    api.add_namespace(experiment_api, path=f"/{root}/{EXPERIMENT_ROUTE}")
+    api.add_namespace(job_api, path=f"/{root}/{JOB_ROUTE}")
+    api.add_namespace(queue_api, path=f"/{root}/{QUEUE_ROUTE}")
+    api.add_namespace(task_plugin_api, path=f"/{root}/{TASK_PLUGIN_ROUTE}")
+    api.add_namespace(user_api, path=f"/{root}/{USER_ROUTE}")

@@ -80,7 +80,7 @@ def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -
         url_scheme=app.config["DIOPTRA_BASE_URL"],
     )
 
-    register_routes(api, app)
+    register_routes(api)
     register_error_handlers(api)
 
     login_manager.user_loader(load_user)

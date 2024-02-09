@@ -42,9 +42,8 @@ from requests import Session as RequestsSession
 from structlog.stdlib import BoundLogger
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.auth.routes import BASE_ROUTE as AUTH_BASE_ROUTE
 from dioptra.restapi.db import db as restapi_db
-from dioptra.restapi.user.routes import BASE_ROUTE as USER_BASE_ROUTE
+from dioptra.restapi.routes import AUTH_ROUTE, USER_ROUTE
 
 from .conftest import wait_for_healthcheck_success
 from .lib.server import FlaskTestServer
@@ -161,7 +160,7 @@ def register_fake_user(client) -> dict[str, Any]:
 @register_fake_user.register
 def _(client: FlaskClient) -> dict[str, Any]:
     response = client.post(
-        f"/api/{USER_BASE_ROUTE}",
+        f"/api/{USER_ROUTE}",
         json={
             "username": FAKE_USERNAME,
             "emailAddress": FAKE_EMAIL,
@@ -180,7 +179,7 @@ def _(client: FlaskClient) -> dict[str, Any]:
 @register_fake_user.register
 def _(client: RequestsSession) -> dict[str, Any]:
     response_full = client.post(
-        f"http://localhost:5000/api/{USER_BASE_ROUTE}",
+        f"http://localhost:5000/api/{USER_ROUTE}",
         json={
             "username": FAKE_USERNAME,
             "emailAddress": FAKE_EMAIL,
@@ -228,7 +227,7 @@ def login(client, username, password):
 @login.register
 def _(client: FlaskClient, username: str, password: str) -> TestResponse:
     return client.post(
-        f"/api/{AUTH_BASE_ROUTE}/login",
+        f"/api/{AUTH_ROUTE}/login",
         json={"username": username, "password": password},
     )
 
@@ -236,7 +235,7 @@ def _(client: FlaskClient, username: str, password: str) -> TestResponse:
 @login.register
 def _(client: RequestsSession, username: str, password: str) -> RequestsResponse:
     return client.post(
-        f"http://localhost:5000/api/{AUTH_BASE_ROUTE}/login",
+        f"http://localhost:5000/api/{AUTH_ROUTE}/login",
         json={"username": username, "password": password},
     )
 
@@ -271,14 +270,14 @@ def logout(client, everywhere):
 @logout.register
 def _(client: FlaskClient, everywhere: bool) -> TestResponse:
     return client.post(
-        f"/api/{AUTH_BASE_ROUTE}/logout", params={"everywhere": everywhere}
+        f"/api/{AUTH_ROUTE}/logout", params={"everywhere": everywhere}
     )
 
 
 @logout.register
 def _(client: RequestsSession, everywhere: bool) -> RequestsResponse:
     return client.post(
-        f"http://localhost:5000/api/{AUTH_BASE_ROUTE}/logout",
+        f"http://localhost:5000/api/{AUTH_ROUTE}/logout",
         params={"everywhere": everywhere},
     )
 
@@ -321,7 +320,7 @@ def _(
     client: FlaskClient, user_id: int, current_password: str, new_password: str
 ) -> TestResponse:
     return client.post(
-        f"/api/{USER_BASE_ROUTE}/password",
+        f"/api/{USER_ROUTE}/password",
         json={
             "userId": user_id,
             "currentPassword": current_password,
@@ -336,7 +335,7 @@ def _(
     client: RequestsSession, user_id: int, current_password: str, new_password: str
 ) -> RequestsResponse:
     return client.post(
-        f"http://localhost:5000/api/{USER_BASE_ROUTE}/password",
+        f"http://localhost:5000/api/{USER_ROUTE}/password",
         json={
             "userId": user_id,
             "currentPassword": current_password,
@@ -381,7 +380,7 @@ def change_current_user_password(client, current_password, new_password):
 @change_current_user_password.register
 def _(client: FlaskClient, current_password: str, new_password: str) -> TestResponse:
     return client.post(
-        f"/api/{USER_BASE_ROUTE}/current/password",
+        f"/api/{USER_ROUTE}/current/password",
         json={
             "currentPassword": current_password,
             "newPassword": new_password,
@@ -395,7 +394,7 @@ def _(
     client: RequestsSession, current_password: str, new_password: str
 ) -> RequestsResponse:
     return client.post(
-        f"http://localhost:5000/api/{USER_BASE_ROUTE}/current/password",
+        f"http://localhost:5000/api/{USER_ROUTE}/current/password",
         json={
             "currentPassword": current_password,
             "newPassword": new_password,
@@ -434,7 +433,7 @@ def delete_current_user(client, password):
 @delete_current_user.register
 def _(client: FlaskClient, password: str) -> TestResponse:
     return client.delete(
-        f"/api/{USER_BASE_ROUTE}/current",
+        f"/api/{USER_ROUTE}/current",
         json={"password": password},
         follow_redirects=True,
     )
@@ -443,7 +442,7 @@ def _(client: FlaskClient, password: str) -> TestResponse:
 @delete_current_user.register
 def _(client: RequestsSession, password: str) -> RequestsResponse:
     return client.delete(
-        f"http://localhost:5000/api/{USER_BASE_ROUTE}/current",
+        f"http://localhost:5000/api/{USER_ROUTE}/current",
         json={"password": password},
         allow_redirects=True,
     )
@@ -469,14 +468,14 @@ def assert_current_user_context_inaccessible(client) -> None:
 
 @assert_current_user_context_inaccessible.register
 def _(client: FlaskClient) -> None:
-    response = client.get(f"/api/{USER_BASE_ROUTE}/current", follow_redirects=True)
+    response = client.get(f"/api/{USER_ROUTE}/current", follow_redirects=True)
     assert response.status_code == 401
 
 
 @assert_current_user_context_inaccessible.register
 def _(client: RequestsSession) -> None:
     response = client.get(
-        f"http://localhost:5000/api/{USER_BASE_ROUTE}/current", allow_redirects=True
+        f"http://localhost:5000/api/{USER_ROUTE}/current", allow_redirects=True
     )
     assert response.status_code == 401
 
@@ -501,7 +500,7 @@ def assert_current_user_context_accessible(client, expected: dict[str, Any]) -> 
 @assert_current_user_context_accessible.register
 def _(client: FlaskClient, expected: dict[str, Any]) -> None:
     response = client.get(
-        f"/api/{USER_BASE_ROUTE}/current", follow_redirects=True
+        f"/api/{USER_ROUTE}/current", follow_redirects=True
     ).get_json()
     received = {
         "user_id": response["userId"],
@@ -514,7 +513,7 @@ def _(client: FlaskClient, expected: dict[str, Any]) -> None:
 @assert_current_user_context_accessible.register
 def _(client: RequestsSession, expected: dict[str, Any]) -> None:
     response = client.get(
-        f"http://localhost:5000/api/{USER_BASE_ROUTE}/current", allow_redirects=True
+        f"http://localhost:5000/api/{USER_ROUTE}/current", allow_redirects=True
     ).json()
     received = {
         "user_id": response["userId"],
@@ -545,7 +544,7 @@ def assert_user_info_accessible(client, user_id: int, expected: dict[str, Any]) 
 @assert_user_info_accessible.register
 def _(client: FlaskClient, user_id: int, expected: dict[str, Any]) -> None:
     response = client.get(
-        f"/api/{USER_BASE_ROUTE}/{user_id}", follow_redirects=True
+        f"/api/{USER_ROUTE}/{user_id}", follow_redirects=True
     ).get_json()
     received = {
         "user_id": response["userId"],
@@ -558,7 +557,7 @@ def _(client: FlaskClient, user_id: int, expected: dict[str, Any]) -> None:
 @assert_user_info_accessible.register
 def _(client: RequestsSession, user_id: int, expected: dict[str, Any]) -> None:
     response = client.get(
-        f"http://localhost:5000/api/{USER_BASE_ROUTE}/{user_id}", allow_redirects=True
+        f"http://localhost:5000/api/{USER_ROUTE}/{user_id}", allow_redirects=True
     ).json()
     received = {
         "user_id": response["userId"],
@@ -586,14 +585,14 @@ def assert_user_info_inaccessible(client, user_id: int) -> None:
 
 @assert_user_info_inaccessible.register
 def _(client: FlaskClient, user_id: int) -> None:
-    response = client.get(f"/api/{USER_BASE_ROUTE}/{user_id}", follow_redirects=True)
+    response = client.get(f"/api/{USER_ROUTE}/{user_id}", follow_redirects=True)
     assert response.status_code == 401
 
 
 @assert_user_info_inaccessible.register
 def _(client: RequestsSession, user_id: int) -> None:
     response = client.get(
-        f"http://localhost:5000/api/{USER_BASE_ROUTE}/{user_id}", allow_redirects=True
+        f"http://localhost:5000/api/{USER_ROUTE}/{user_id}", allow_redirects=True
     )
     assert response.status_code == 401
 
