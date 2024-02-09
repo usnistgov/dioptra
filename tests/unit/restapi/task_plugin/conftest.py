@@ -22,7 +22,7 @@ import pytest
 from flask import Flask
 from werkzeug.datastructures import FileStorage
 
-from dioptra.restapi.task_plugin.model import TaskPlugin
+from dioptra.restapi.v0.task_plugin.model import TaskPlugin
 
 
 @pytest.fixture

@@ -36,7 +36,7 @@ from requests import ConnectionError
 from requests import Session as RequestsSession
 
 from dioptra.restapi.db import db as restapi_db
-from dioptra.restapi.shared.request_scope import request
+from dioptra.restapi.v0.shared.request_scope import request
 
 from .lib.server import FlaskTestServer
 

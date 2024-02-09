@@ -26,9 +26,11 @@ import requests
 
 
 class DioptraClient(object):
-    def __init__(self, address: str | None = None) -> None:
+    def __init__(self, address: str | None = None, api_version: str = "v0") -> None:
         address = (
-            f"{address}/api" if address else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api"
+            f"{address}/api/{api_version}"
+            if address
+            else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api/{api_version}"
         )
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
 

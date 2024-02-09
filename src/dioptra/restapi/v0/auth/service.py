@@ -27,7 +27,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import User, db
-from dioptra.restapi.user.service import UserNameService, UserPasswordService
+from dioptra.restapi.v0.user.service import UserNameService, UserPasswordService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

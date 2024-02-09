@@ -30,8 +30,8 @@ from flask_sqlalchemy import SQLAlchemy
 from pytest import MonkeyPatch
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import EXPERIMENT_ROUTE, JOB_ROUTE, QUEUE_ROUTE
-from dioptra.restapi.shared.s3.service import S3Service
+from dioptra.restapi.routes import EXPERIMENT_ROUTE, JOB_ROUTE, QUEUE_ROUTE, V0_ROOT
+from dioptra.restapi.v0.shared.s3.service import S3Service
 
 from .lib import mock_rq, mock_s3
 
@@ -76,7 +76,7 @@ def register_mnist_experiment(client: FlaskClient) -> TestResponse:
         The response from the API.
     """
     return client.post(
-        f"/api/{EXPERIMENT_ROUTE}/",
+        f"/{V0_ROOT}/{EXPERIMENT_ROUTE}/",
         json={"name": "mnist"},
         follow_redirects=True,
     )
@@ -92,7 +92,7 @@ def register_tensorflow_cpu_queue(client: FlaskClient) -> TestResponse:
         The response from the API.
     """
     return client.post(
-        f"/api/{QUEUE_ROUTE}/",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/",
         json={"name": "tensorflow_cpu"},
         follow_redirects=True,
     )
@@ -112,7 +112,7 @@ def submit_job(
         The response from the API.
     """
     return client.post(
-        f"/api/{JOB_ROUTE}/",
+        f"/{V0_ROOT}/{JOB_ROUTE}/",
         content_type="multipart/form-data",
         data=form_request,
         follow_redirects=True,
@@ -136,7 +136,7 @@ def assert_retrieving_job_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/api/{JOB_ROUTE}/{id}", follow_redirects=True)
+    response = client.get(f"/{V0_ROOT}/{JOB_ROUTE}/{id}", follow_redirects=True)
     assert response.status_code == 200 and response.get_json() == expected
 
 
@@ -153,7 +153,7 @@ def assert_retrieving_all_jobs_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/api/{JOB_ROUTE}", follow_redirects=True)
+    response = client.get(f"/{V0_ROOT}/{JOB_ROUTE}", follow_redirects=True)
     assert response.status_code == 200 and response.get_json() == expected
 
 
@@ -183,7 +183,7 @@ def test_submit_job(
     - The returned information matches what was provided during registration.
     """
     # Inline import necessary to prevent circular import
-    import dioptra.restapi.shared.rq.service as rq_service
+    import dioptra.restapi.v0.shared.rq.service as rq_service
 
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
     monkeypatch.setattr(S3Service, "upload", mock_s3.mock_s3_upload)
@@ -216,7 +216,7 @@ def test_list_jobs(
     - The returned list of 3 jobs matches the information provided during submission.
     """
     # Inline import necessary to prevent circular import
-    import dioptra.restapi.shared.rq.service as rq_service
+    import dioptra.restapi.v0.shared.rq.service as rq_service
 
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
     monkeypatch.setattr(S3Service, "upload", mock_s3.mock_s3_upload)

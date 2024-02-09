@@ -26,8 +26,8 @@ from mlflow.exceptions import RestException
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import Experiment, db
-from dioptra.restapi.shared.mlflow_tracking.service import MLFlowTrackingService
 from dioptra.restapi.utils import slugify
+from dioptra.restapi.v0.shared.mlflow_tracking.service import MLFlowTrackingService
 
 from .errors import (
     ExperimentAlreadyExistsError,

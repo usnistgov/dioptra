@@ -31,15 +31,18 @@ class DioptraClient(object):
     Args:
         address: Address of the Dioptra REST api or if no address is given the
             DIOPTRA_RESTAPI_URI environment variable is used.
+        api_version: The version of the Dioptra REST API to use. Defaults to "v0".
 
     Notes:
         See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
         more information on Dioptra's REST api.
     """
 
-    def __init__(self, address: str | None = None) -> None:
+    def __init__(self, address: str | None = None, api_version: str = "v0") -> None:
         address = (
-            f"{address}/api" if address else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api"
+            f"{address}/api/{api_version}"
+            if address
+            else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api/{api_version}"
         )
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
 

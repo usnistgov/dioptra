@@ -28,7 +28,7 @@ from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import QUEUE_ROUTE
+from dioptra.restapi.routes import QUEUE_ROUTE, V0_ROOT
 from dioptra.restapi.utils import slugify
 
 # -- Actions ---------------------------------------------------------------------------
@@ -45,7 +45,7 @@ def register_queue(client: FlaskClient, name: str) -> TestResponse:
         The response from the API.
     """
     return client.post(
-        f"/api/{QUEUE_ROUTE}/",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/",
         json={"name": name},
         follow_redirects=True,
     )
@@ -67,7 +67,7 @@ def rename_queue(
         The response from the API.
     """
     return client.put(
-        f"/api/{QUEUE_ROUTE}/{queue_id}",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/{queue_id}",
         json={"name": new_name},
         follow_redirects=True,
     )
@@ -87,7 +87,7 @@ def delete_queue_with_id(
         The response from the API.
     """
     return client.delete(
-        f"/api/{QUEUE_ROUTE}/{queue_id}",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/{queue_id}",
         follow_redirects=True,
     )
 
@@ -106,7 +106,7 @@ def delete_queue_with_name(
         The response from the API.
     """
     return client.delete(
-        f"/api/{QUEUE_ROUTE}/name/{name}",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/name/{name}",
         follow_redirects=True,
     )
 
@@ -125,7 +125,7 @@ def lock_queue_with_id(
         The response from the API.
     """
     return client.put(
-        f"/api/{QUEUE_ROUTE}/{queue_id}/lock",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/{queue_id}/lock",
         follow_redirects=True,
     )
 
@@ -144,7 +144,7 @@ def lock_queue_with_name(
         The response from the API.
     """
     return client.put(
-        f"/api/{QUEUE_ROUTE}/name/{name}/lock",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/name/{name}/lock",
         follow_redirects=True,
     )
 
@@ -163,7 +163,7 @@ def unlock_queue_with_id(
         The response from the API.
     """
     return client.delete(
-        f"/api/{QUEUE_ROUTE}/{queue_id}/lock",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/{queue_id}/lock",
         follow_redirects=True,
     )
 
@@ -182,7 +182,7 @@ def unlock_queue_with_name(
         The response from the API.
     """
     return client.delete(
-        f"/api/{QUEUE_ROUTE}/name/{name}/lock",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/name/{name}/lock",
         follow_redirects=True,
     )
 
@@ -206,7 +206,7 @@ def assert_retrieving_queue_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/api/{QUEUE_ROUTE}/{queue_id}", follow_redirects=True)
+    response = client.get(f"/{V0_ROOT}/{QUEUE_ROUTE}/{queue_id}", follow_redirects=True)
     assert response.status_code == 200 and response.get_json() == expected
 
 
@@ -227,7 +227,7 @@ def assert_retrieving_queue_by_name_works(
             does not match the expected response.
     """
     response = client.get(
-        f"/api/{QUEUE_ROUTE}/name/{queue_name}", follow_redirects=True
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/name/{queue_name}", follow_redirects=True
     )
     assert response.status_code == 200 and response.get_json() == expected
 
@@ -246,7 +246,7 @@ def assert_retrieving_all_queues_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/api/{QUEUE_ROUTE}", follow_redirects=True)
+    response = client.get(f"/{V0_ROOT}/{QUEUE_ROUTE}", follow_redirects=True)
     assert response.status_code == 200 and response.get_json() == expected
 
 
@@ -281,7 +281,7 @@ def assert_queue_name_matches_expected_name(
             queue does not match the expected name.
     """
     response = client.get(
-        f"/api/{QUEUE_ROUTE}/{queue_id}",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/{queue_id}",
         follow_redirects=True,
     )
     assert response.status_code == 200 and response.get_json()["name"] == expected_name
@@ -301,7 +301,7 @@ def assert_queue_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = client.get(
-        f"/api/{QUEUE_ROUTE}/{queue_id}",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}/{queue_id}",
         follow_redirects=True,
     )
     assert response.status_code == 404
@@ -322,7 +322,7 @@ def assert_queue_count_matches_expected_count(
             queues does not match the expected number.
     """
     response = client.get(
-        f"/api/{QUEUE_ROUTE}",
+        f"/{V0_ROOT}/{QUEUE_ROUTE}",
         follow_redirects=True,
     )
     assert len(response.get_json()) == expected

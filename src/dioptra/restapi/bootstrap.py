@@ -28,10 +28,10 @@ from mlflow.tracking import MlflowClient
 from passlib.context import CryptContext
 from redis import Redis
 
-from dioptra.restapi.queue.service import QueueNameService
-from dioptra.restapi.shared.password.service import PasswordService
-from dioptra.restapi.shared.request_scope import request
-from dioptra.restapi.shared.rq.service import RQService
+from dioptra.restapi.v0.queue.service import QueueNameService
+from dioptra.restapi.v0.shared.password.service import PasswordService
+from dioptra.restapi.v0.shared.request_scope import request
+from dioptra.restapi.v0.shared.rq.service import RQService
 
 
 class MLFlowClientModule(Module):

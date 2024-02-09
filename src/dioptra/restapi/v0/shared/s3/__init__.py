@@ -14,23 +14,3 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
-import pytest
-import structlog
-from structlog.stdlib import BoundLogger
-
-from dioptra.restapi.v0.task_plugin.schema import TaskPluginSchema
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
-
-@pytest.fixture
-def task_plugin_schema() -> TaskPluginSchema:
-    return TaskPluginSchema()
-
-
-def test_TaskPluginSchema_create(
-    task_plugin_schema: TaskPluginSchema,
-) -> None:
-    assert isinstance(task_plugin_schema, TaskPluginSchema)
