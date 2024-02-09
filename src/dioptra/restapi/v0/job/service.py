@@ -29,7 +29,8 @@ from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-from dioptra.restapi.db import Experiment, Job, Queue, db
+from dioptra.restapi.db import db
+from dioptra.restapi.db.legacy_models import Experiment, Job, Queue
 from dioptra.restapi.v0.experiment.service import ExperimentNameService
 from dioptra.restapi.v0.queue.service import QueueNameService
 from dioptra.restapi.v0.shared.rq.service import RQService

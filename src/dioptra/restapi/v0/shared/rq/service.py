@@ -26,7 +26,7 @@ from rq.job import Job as RQJob
 from rq.queue import Queue as RQQueue
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import Job
+from dioptra.restapi.db.legacy_models import Job
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

@@ -25,7 +25,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import Job
+from dioptra.restapi.db.legacy_models import Job
 from dioptra.restapi.v0.shared.rq.service import RQService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()

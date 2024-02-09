@@ -26,7 +26,8 @@ from flask_login import current_user, login_user, logout_user
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import User, db
+from dioptra.restapi.db import db
+from dioptra.restapi.db.legacy_models import User
 from dioptra.restapi.v0.user.service import UserNameService, UserPasswordService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()

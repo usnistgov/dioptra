@@ -24,7 +24,8 @@ import structlog
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import Queue, QueueLock, db
+from dioptra.restapi.db import db
+from dioptra.restapi.db.legacy_models import Queue, QueueLock
 
 from .errors import QueueAlreadyExistsError, QueueDoesNotExistError, QueueLockedError
 

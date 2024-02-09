@@ -28,7 +28,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import Queue
+from dioptra.restapi.db.legacy_models import Queue
 
 from .schema import IdStatusResponseSchema, NameStatusResponseSchema, QueueSchema
 from .service import QueueNameService, QueueService
