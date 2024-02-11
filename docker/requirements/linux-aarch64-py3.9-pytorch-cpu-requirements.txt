@@ -148,7 +148,7 @@ google-auth-oauthlib==1.0.0
     # via tensorboard
 greenlet==2.0.2
     # via sqlalchemy
-grpcio==1.54.2
+grpcio==1.54.3
     # via tensorboard
 gunicorn==20.1.0
     # via mlflow

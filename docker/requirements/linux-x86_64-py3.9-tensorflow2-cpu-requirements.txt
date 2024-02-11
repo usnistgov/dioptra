@@ -139,7 +139,7 @@ google-pasta==0.2.0
     # via tensorflow-cpu
 greenlet==2.0.2
     # via sqlalchemy
-grpcio==1.54.2
+grpcio==1.54.3
     # via
     #   tensorboard
     #   tensorflow-cpu
