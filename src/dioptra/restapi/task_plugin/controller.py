@@ -148,13 +148,13 @@ class TaskPluginBuiltinCollectionNameResource(Resource):
         )
         log.info("Request received")
 
-        task_plugin: Optional[
-            TaskPlugin
-        ] = self._task_plugin_service.get_by_name_in_collection(
-            collection="dioptra_builtins",
-            task_plugin_name=taskPluginName,
-            bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
-            log=log,
+        task_plugin: Optional[TaskPlugin] = (
+            self._task_plugin_service.get_by_name_in_collection(
+                collection="dioptra_builtins",
+                task_plugin_name=taskPluginName,
+                bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
+                log=log,
+            )
         )
 
         if task_plugin is None:
@@ -219,13 +219,13 @@ class TaskPluginCustomCollectionNameResource(Resource):
         )
         log.info("Request received")
 
-        task_plugin: Optional[
-            TaskPlugin
-        ] = self._task_plugin_service.get_by_name_in_collection(
-            collection="dioptra_custom",
-            task_plugin_name=taskPluginName,
-            bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
-            log=log,
+        task_plugin: Optional[TaskPlugin] = (
+            self._task_plugin_service.get_by_name_in_collection(
+                collection="dioptra_custom",
+                task_plugin_name=taskPluginName,
+                bucket=current_app.config["DIOPTRA_PLUGINS_BUCKET"],
+                log=log,
+            )
         )
 
         if task_plugin is None:
