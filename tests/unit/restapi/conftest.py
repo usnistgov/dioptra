@@ -36,7 +36,7 @@ from requests import ConnectionError
 from requests import Session as RequestsSession
 
 from dioptra.restapi.db import db as restapi_db
-from dioptra.restapi.shared.request_scope import request
+from dioptra.restapi.v0.shared.request_scope import request
 
 from .lib.server import FlaskTestServer
 
@@ -60,9 +60,10 @@ def task_plugins_dir(tmp_path_factory):
 def workflow_tar_gz():
     workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
 
-    with tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f, io.BytesIO(
-        initial_bytes=b"data"
-    ) as data:
+    with (
+        tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f,
+        io.BytesIO(initial_bytes=b"data") as data,
+    ):
         tarinfo = tarfile.TarInfo(name="MLproject")
         tarinfo.size = len(data.getbuffer())
         f.addfile(tarinfo=tarinfo, fileobj=data)
@@ -73,12 +74,33 @@ def workflow_tar_gz():
 
 
 @pytest.fixture
+def workflow_tar_gz_factory():
+    def wrapped():
+        workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
+
+        with (
+            tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f,
+            io.BytesIO(initial_bytes=b"data") as data,
+        ):
+            tarinfo = tarfile.TarInfo(name="MLproject")
+            tarinfo.size = len(data.getbuffer())
+            f.addfile(tarinfo=tarinfo, fileobj=data)
+
+        workflow_tar_gz_fileobj.seek(0)
+        return workflow_tar_gz_fileobj
+
+    return wrapped
+
+
+@pytest.fixture
 def task_plugin_archive():
     archive_fileobj: BinaryIO = io.BytesIO()
 
-    with tarfile.open(fileobj=archive_fileobj, mode="w:gz") as f, io.BytesIO(
-        initial_bytes=b"# init file"
-    ) as f_init, io.BytesIO(initial_bytes=b"# plugin module") as f_plugin_module:
+    with (
+        tarfile.open(fileobj=archive_fileobj, mode="w:gz") as f,
+        io.BytesIO(initial_bytes=b"# init file") as f_init,
+        io.BytesIO(initial_bytes=b"# plugin module") as f_plugin_module,
+    ):
         tarinfo_init = tarfile.TarInfo(name="new_plugin_module/__init__.py")
         tarinfo_init.size = len(f_init.getbuffer())
         f.addfile(tarinfo=tarinfo_init, fileobj=f_init)
@@ -96,12 +118,10 @@ def task_plugin_archive():
 
 @pytest.fixture
 def dependency_modules() -> List[Any]:
-    from dioptra.restapi.job.dependencies import RQServiceConfiguration, RQServiceModule
-    from dioptra.restapi.task_plugin.dependencies import (
-        TaskPluginUploadFormSchemaModule,
-    )
-    from dioptra.restapi.user.dependencies import (
+    from dioptra.restapi.bootstrap import (
         PasswordServiceModule,
+        RQServiceConfiguration,
+        RQServiceModule,
         _bind_password_service_configuration,
     )
 
@@ -134,7 +154,6 @@ def dependency_modules() -> List[Any]:
         configure,
         PasswordServiceModule(),
         RQServiceModule(),
-        TaskPluginUploadFormSchemaModule(),
     ]
 
 
@@ -165,7 +184,7 @@ def db(app: Flask) -> SQLAlchemy:
 
 @pytest.fixture(autouse=True)
 def seed_database(db):
-    from dioptra.restapi.job.model import job_statuses
+    from dioptra.restapi.db.legacy_models import job_statuses
 
     db.session.execute(
         job_statuses.insert(),

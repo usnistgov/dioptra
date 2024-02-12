@@ -25,7 +25,7 @@ from botocore.stub import Stubber
 from dateutil.tz.tz import tzlocal, tzutc
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.shared.s3.service import S3Service
+from dioptra.restapi.v0.shared.s3.service import S3Service
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

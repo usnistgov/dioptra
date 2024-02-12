@@ -29,13 +29,15 @@ def register_error_handlers(api: Api) -> None:
     Args:
         api: The main REST |Api| object.
     """
-    from .experiment import register_error_handlers as attach_experiment_error_handlers
-    from .job import register_error_handlers as attach_job_error_handlers
-    from .queue import register_error_handlers as attach_job_queue_error_handlers
-    from .task_plugin import (
+    from .v0.experiment import (
+        register_error_handlers as attach_experiment_error_handlers,
+    )
+    from .v0.job import register_error_handlers as attach_job_error_handlers
+    from .v0.queue import register_error_handlers as attach_job_queue_error_handlers
+    from .v0.task_plugin import (
         register_error_handlers as attach_task_plugin_error_handlers,
     )
-    from .user import register_error_handlers as attach_user_error_handlers
+    from .v0.user import register_error_handlers as attach_user_error_handlers
 
     # Add error handlers
     attach_experiment_error_handlers(api)

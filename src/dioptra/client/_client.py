@@ -31,15 +31,18 @@ class DioptraClient(object):
     Args:
         address: Address of the Dioptra REST api or if no address is given the
             DIOPTRA_RESTAPI_URI environment variable is used.
+        api_version: The version of the Dioptra REST API to use. Defaults to "v0".
 
     Notes:
         See https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html for
         more information on Dioptra's REST api.
     """
 
-    def __init__(self, address: str | None = None) -> None:
+    def __init__(self, address: str | None = None, api_version: str = "v0") -> None:
         address = (
-            f"{address}/api" if address else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api"
+            f"{address}/api/{api_version}"
+            if address
+            else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api/{api_version}"
         )
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
 
@@ -726,14 +729,14 @@ class DioptraClient(object):
             for more information on Dioptra's REST api.
         """
         plugin_upload_form = {
-            "task_plugin_name": custom_plugin_name,
+            "taskPluginName": custom_plugin_name,
             "collection": collection,
         }
 
         custom_plugin_file = Path(custom_plugin_file)
 
         with custom_plugin_file.open("rb") as f:
-            custom_plugin_file_dict = {"task_plugin_file": (custom_plugin_file.name, f)}
+            custom_plugin_file_dict = {"taskPluginFile": (custom_plugin_file.name, f)}
             response = requests.post(
                 self.task_plugin_endpoint,
                 data=plugin_upload_form,

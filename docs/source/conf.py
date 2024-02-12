@@ -142,7 +142,6 @@ autodoc_mock_imports = [
     "sklearn",
     "structlog",
     "tensorflow",
-    "wtforms",
 ]
 autodoc_inherit_docstrings = True
 autodoc_member_order = "bysource"
@@ -162,7 +161,6 @@ intersphinx_mapping = {
     "flask_migrate": ("https://flask-migrate.readthedocs.io/en/latest/", None),
     "flask_restx": ("https://flask-restx.readthedocs.io/en/latest/", None),
     "flask_sqlalchemy": ("https://flask-sqlalchemy.palletsprojects.com/en/2.x/", None),
-    "flask_wtf": ("https://flask-wtf.readthedocs.io/en/1.0.x/", None),
     "injector": ("https://injector.readthedocs.io/en/latest/", None),
     "marshmallow": ("https://marshmallow.readthedocs.io/en/stable/", None),
     "mlflow": ("https://mlflow.org/docs/latest/", None),

@@ -38,7 +38,7 @@ from marshmallow.schema import SchemaMeta
 from typing_extensions import TypedDict
 from werkzeug.datastructures import FileStorage
 
-from dioptra.restapi.shared.request_scope import set_request_scope_callbacks
+from dioptra.restapi.v0.shared.request_scope import set_request_scope_callbacks
 
 from .custom_schema_fields import FileUpload
 
@@ -190,8 +190,7 @@ class _ClassBasedViewFunction(Protocol):
 
     view_class: Type[View]
 
-    def __call__(self, *args, **kwargs) -> Any:
-        ...
+    def __call__(self, *args, **kwargs) -> Any: ...  # noqa: E704
 
 
 def _new_class_view_function(

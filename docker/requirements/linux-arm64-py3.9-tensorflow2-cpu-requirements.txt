@@ -4,13 +4,13 @@
 #
 #    pip-compile --extra=sdk --extra=taskplugins --output-file=venvs/linux-arm64-py3.9-tensorflow2-cpu-requirements.txt docker/pip-tools/worker-requirements.in pyproject.toml requirements-dev-tensorflow.in
 #
-absl-py==2.0.0
+absl-py==2.1.0
     # via
     #   tensorboard
     #   tensorflow-cpu-aws
-adversarial-robustness-toolbox==1.16.0
+adversarial-robustness-toolbox==1.17.0
     # via dioptra (pyproject.toml)
-alembic==1.12.0
+alembic==1.13.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
@@ -21,25 +21,25 @@ astunparse==1.6.3
     # via tensorflow-cpu-aws
 async-timeout==4.0.3
     # via redis
-attrs==23.1.0
+attrs==23.2.0
     # via
     #   jsonschema
     #   referencing
-boto3==1.28.61
+boto3==1.34.38
     # via dioptra (pyproject.toml)
-botocore==1.31.61
+botocore==1.34.38
     # via
     #   boto3
     #   s3transfer
 box2d-py==2.3.5
     # via gym
-cachetools==5.3.1
+cachetools==5.3.2
     # via google-auth
-certifi==2023.7.22
+certifi==2024.2.2
     # via requests
 cffi==1.16.0
     # via cryptography
-charset-normalizer==3.3.0
+charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via
@@ -60,15 +60,15 @@ cloudpickle==2.2.1
     #   prefect
 cma==3.3.0
     # via -r docker/pip-tools/worker-requirements.in
-contourpy==1.1.1
+contourpy==1.2.0
     # via matplotlib
-croniter==1.4.1
+croniter==2.0.1
     # via prefect
 cryptography==3.4.8
     # via dioptra (pyproject.toml)
-cycler==0.12.0
+cycler==0.12.1
     # via matplotlib
-dask==2023.9.3
+dask==2024.1.1
     # via
     #   distributed
     #   prefect
@@ -76,16 +76,12 @@ databricks-cli==0.18.0
     # via mlflow
 decorator==4.4.2
     # via moviepy
-distributed==2023.9.3
+distributed==2024.1.1
     # via prefect
-dnspython==2.4.2
-    # via email-validator
 docker==6.1.3
     # via
     #   mlflow
     #   prefect
-email-validator==2.0.0.post2
-    # via wtforms
 entrypoints==0.4
     # via
     #   dioptra (pyproject.toml)
@@ -98,18 +94,17 @@ flask==2.1.3
     #   flask-migrate
     #   flask-restx
     #   flask-sqlalchemy
-    #   flask-wtf
     #   mlflow
     #   prometheus-flask-exporter
 flask-accepts==0.18.4
     # via dioptra (pyproject.toml)
 flask-cors==4.0.0
     # via dioptra (pyproject.toml)
-flask-login==0.6.2
+flask-login==0.6.3
     # via dioptra (pyproject.toml)
 flask-migrate==4.0.5
     # via dioptra (pyproject.toml)
-flask-restx==1.1.0
+flask-restx==1.3.0
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
@@ -117,21 +112,19 @@ flask-sqlalchemy==2.5.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
-flask-wtf==1.2.1
-    # via dioptra (pyproject.toml)
 flatbuffers==23.5.26
     # via tensorflow-cpu-aws
-fonttools==4.43.1
+fonttools==4.48.1
     # via matplotlib
-fsspec==2023.9.2
+fsspec==2024.2.0
     # via dask
 gast==0.4.0
     # via tensorflow-cpu-aws
-gitdb==4.0.10
+gitdb==4.0.11
     # via gitpython
-gitpython==3.1.37
+gitpython==3.1.41
     # via mlflow
-google-auth==2.23.2
+google-auth==2.27.0
     # via
     #   google-auth-oauthlib
     #   tensorboard
@@ -139,25 +132,23 @@ google-auth-oauthlib==1.0.0
     # via tensorboard
 google-pasta==0.2.0
     # via tensorflow-cpu-aws
-greenlet==3.0.0
+greenlet==3.0.3
     # via sqlalchemy
-grpcio==1.59.0
+grpcio==1.60.1
     # via
     #   tensorboard
     #   tensorflow-cpu-aws
 gunicorn==20.1.0
     # via mlflow
-gym[box2d,classic_control,other,toy_text]==0.26.2
+gym[box2d,classic-control,classic_control,other,toy-text,toy_text]==0.26.2
     # via -r docker/pip-tools/worker-requirements.in
 gym-notices==0.0.8
     # via gym
-h5py==3.9.0
+h5py==3.10.0
     # via tensorflow-cpu-aws
-idna==3.4
-    # via
-    #   email-validator
-    #   requests
-imageio==2.31.5
+idna==3.6
+    # via requests
+imageio==2.33.1
     # via
     #   imgaug
     #   moviepy
@@ -174,19 +165,18 @@ importlib-metadata==5.2.0
     #   jax
     #   markdown
     #   mlflow
-importlib-resources==6.1.0
+importlib-resources==6.1.1
     # via
+    #   flask-restx
     #   matplotlib
     #   prefect
 injector==0.21.0
     # via dioptra (pyproject.toml)
 itsdangerous==2.1.2
-    # via
-    #   flask
-    #   flask-wtf
-jax==0.4.17
+    # via flask
+jax==0.4.24
     # via tensorflow-cpu-aws
-jinja2==3.1.2
+jinja2==3.1.3
     # via
     #   distributed
     #   flask
@@ -196,11 +186,11 @@ jmespath==1.0.1
     #   botocore
 joblib==1.3.2
     # via scikit-learn
-jsonschema==4.19.1
+jsonschema==4.21.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-restx
-jsonschema-specifications==2023.7.1
+jsonschema-specifications==2023.12.1
     # via jsonschema
 keras==2.12.0
     # via tensorflow-cpu-aws
@@ -214,28 +204,27 @@ locket==1.0.0
     # via
     #   distributed
     #   partd
-lz4==4.3.2
+lz4==4.3.3
     # via gym
-mako==1.2.4
+mako==1.3.2
     # via alembic
-markdown==3.5
+markdown==3.5.2
     # via tensorboard
 markdown-it-py==3.0.0
     # via rich
-markupsafe==2.1.3
+markupsafe==2.1.5
     # via
     #   jinja2
     #   mako
-    #   wtforms
-marshmallow==3.20.1
+marshmallow==3.20.2
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
     #   marshmallow-oneofschema
     #   prefect
-marshmallow-oneofschema==3.0.1
+marshmallow-oneofschema==3.1.0
     # via prefect
-matplotlib==3.8.0
+matplotlib==3.8.2
     # via
     #   -r docker/pip-tools/worker-requirements.in
     #   gym
@@ -243,7 +232,7 @@ matplotlib==3.8.0
     #   pycocotools
 mdurl==0.1.2
     # via markdown-it-py
-ml-dtypes==0.3.1
+ml-dtypes==0.3.2
     # via jax
 mlflow==1.30.1
     # via dioptra (pyproject.toml)
@@ -253,11 +242,11 @@ msgpack==1.0.7
     # via
     #   distributed
     #   prefect
-multimethod==1.10
+multimethod==1.11
     # via dioptra (pyproject.toml)
 mypy-extensions==1.0.0
     # via prefect
-networkx==3.1
+networkx==3.2.1
     # via scikit-image
 numpy==1.24.3
     # via
@@ -290,7 +279,7 @@ oauthlib==3.2.2
     # via
     #   databricks-cli
     #   requests-oauthlib
-opencv-python==4.8.1.78
+opencv-python==4.9.0.80
     # via
     #   -r docker/pip-tools/worker-requirements.in
     #   gym
@@ -318,9 +307,9 @@ partd==1.4.1
     # via dask
 passlib==1.7.4
     # via dioptra (pyproject.toml)
-pendulum==2.1.2
+pendulum==3.0.0
     # via prefect
-pillow==10.0.1
+pillow==10.2.0
     # via
     #   -r docker/pip-tools/worker-requirements.in
     #   imageio
@@ -331,22 +320,22 @@ prefect==1.4.1
     # via dioptra (pyproject.toml)
 proglog==0.1.10
     # via moviepy
-prometheus-client==0.17.1
+prometheus-client==0.19.0
     # via prometheus-flask-exporter
-prometheus-flask-exporter==0.22.4
+prometheus-flask-exporter==0.23.0
     # via mlflow
-protobuf==4.24.4
+protobuf==4.25.2
     # via
     #   mlflow
     #   tensorboard
     #   tensorflow-cpu-aws
-psutil==5.9.5
+psutil==5.9.8
     # via distributed
 psycopg2-binary==2.9.9
     # via -r docker/pip-tools/worker-requirements.in
-pyarrow==13.0.0
+pyarrow==15.0.0
     # via dioptra (pyproject.toml)
-pyasn1==0.5.0
+pyasn1==0.5.1
     # via
     #   pyasn1-modules
     #   rsa
@@ -358,7 +347,7 @@ pycparser==2.21
     # via cffi
 pygame==2.1.0
     # via gym
-pygments==2.16.1
+pygments==2.17.2
     # via rich
 pyjwt==2.8.0
     # via databricks-cli
@@ -377,18 +366,18 @@ python-dateutil==2.8.2
     #   pandas
     #   pendulum
     #   prefect
+    #   time-machine
 python-json-logger==2.0.7
     # via -r docker/pip-tools/worker-requirements.in
-python-slugify==8.0.1
+python-slugify==8.0.4
     # via prefect
 pytz==2022.7.1
     # via
+    #   croniter
     #   flask-restx
     #   mlflow
     #   pandas
     #   prefect
-pytzdata==2020.1
-    # via pendulum
 pyyaml==6.0.1
     # via
     #   dask
@@ -402,7 +391,7 @@ redis==5.0.1
     # via
     #   dioptra (pyproject.toml)
     #   rq
-referencing==0.30.2
+referencing==0.33.0
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -418,9 +407,9 @@ requests==2.31.0
     #   tensorboard
 requests-oauthlib==1.3.1
     # via google-auth-oauthlib
-rich==13.6.0
+rich==13.7.0
     # via -r docker/pip-tools/worker-requirements.in
-rpds-py==0.10.4
+rpds-py==0.17.1
     # via
     #   jsonschema
     #   referencing
@@ -428,7 +417,7 @@ rq==1.15.1
     # via dioptra (pyproject.toml)
 rsa==4.9
     # via google-auth
-s3transfer==0.7.0
+s3transfer==0.10.0
     # via boto3
 scikit-image==0.22.0
     # via imgaug
@@ -436,7 +425,7 @@ scikit-learn==1.0.2
     # via
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
-scipy==1.11.3
+scipy==1.12.0
     # via
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
@@ -445,7 +434,7 @@ scipy==1.11.3
     #   mlflow
     #   scikit-image
     #   scikit-learn
-shapely==2.0.1
+shapely==2.0.2
     # via imgaug
 simplejson==3.19.2
     # via -r docker/pip-tools/worker-requirements.in
@@ -463,7 +452,7 @@ smmap==5.0.1
     # via gitdb
 sortedcontainers==2.4.0
     # via distributed
-sqlalchemy==1.4.49
+sqlalchemy==1.4.51
     # via
     #   alembic
     #   dioptra (pyproject.toml)
@@ -471,44 +460,46 @@ sqlalchemy==1.4.49
     #   mlflow
 sqlparse==0.4.4
     # via mlflow
-structlog==23.1.0
+structlog==24.1.0
     # via dioptra (pyproject.toml)
-swig==4.1.1
+swig==4.2.0
     # via gym
 tabulate==0.9.0
     # via
     #   databricks-cli
     #   prefect
-tblib==2.0.0
+tblib==3.0.0
     # via distributed
 tensorboard==2.12.3
     # via
     #   -r docker/pip-tools/worker-requirements.in
     #   tensorflow-cpu-aws
-tensorboard-data-server==0.7.1
+tensorboard-data-server==0.7.2
     # via tensorboard
 tensorflow-cpu-aws==2.12.1 ; sys_platform == "linux" and (platform_machine == "aarch64" or platform_machine == "arm64")
     # via -r requirements-dev-tensorflow.in
 tensorflow-estimator==2.12.0
     # via tensorflow-cpu-aws
-tensorflow-io-gcs-filesystem==0.34.0
+tensorflow-io-gcs-filesystem==0.36.0
     # via tensorflow-cpu-aws
-termcolor==2.3.0
+termcolor==2.4.0
     # via tensorflow-cpu-aws
 text-unidecode==1.3
     # via python-slugify
 threadpoolctl==3.2.0
     # via scikit-learn
-tifffile==2023.9.26
+tifffile==2024.1.30
     # via scikit-image
+time-machine==2.13.0
+    # via pendulum
 toml==0.10.2
     # via prefect
-toolz==0.12.0
+toolz==0.12.1
     # via
     #   dask
     #   distributed
     #   partd
-tornado==6.3.3
+tornado==6.4
     # via distributed
 tqdm==4.66.1
     # via
@@ -520,7 +511,9 @@ typing-extensions==4.5.0
     #   alembic
     #   dioptra (pyproject.toml)
     #   tensorflow-cpu-aws
-urllib3==1.26.17
+tzdata==2023.4
+    # via pendulum
+urllib3==1.26.18
     # via
     #   botocore
     #   databricks-cli
@@ -528,7 +521,7 @@ urllib3==1.26.17
     #   docker
     #   prefect
     #   requests
-websocket-client==1.6.3
+websocket-client==1.7.0
     # via docker
 werkzeug==2.1.2
     # via
@@ -538,16 +531,12 @@ werkzeug==2.1.2
     #   flask-login
     #   flask-restx
     #   tensorboard
-wheel==0.41.2
+wheel==0.42.0
     # via
     #   astunparse
     #   tensorboard
 wrapt==1.14.1
     # via tensorflow-cpu-aws
-wtforms[email]==3.0.1
-    # via
-    #   dioptra (pyproject.toml)
-    #   flask-wtf
 zict==3.0.0
     # via distributed
 zipp==3.17.0

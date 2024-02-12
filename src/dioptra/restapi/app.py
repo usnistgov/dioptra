@@ -32,7 +32,6 @@ from flask_cors import CORS
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_restx import Api
-from flask_wtf import CSRFProtect
 from injector import Injector
 from structlog.stdlib import BoundLogger
 
@@ -44,7 +43,6 @@ from .db import db
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 cors: CORS = CORS()
-csrf: CSRFProtect = CSRFProtect()
 login_manager = LoginManager()
 migrate: Migrate = Migrate()
 
@@ -62,11 +60,11 @@ def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -
     Returns:
         An initialized and configured :py:class:`~flask.Flask` object.
     """
+    from .bootstrap import bind_dependencies, register_providers
     from .config import config_by_name
-    from .dependencies import bind_dependencies, register_providers
     from .errors import register_error_handlers
     from .routes import register_routes
-    from .user.service import load_user
+    from .v0.user.service import load_user
 
     if env is None:
         env = os.getenv("DIOPTRA_RESTAPI_ENV", "test")
@@ -82,12 +80,11 @@ def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -
         url_scheme=app.config["DIOPTRA_BASE_URL"],
     )
 
-    register_routes(api, app)
+    register_routes(api)
     register_error_handlers(api)
 
     login_manager.user_loader(load_user)
 
-    csrf.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
 

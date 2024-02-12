@@ -53,7 +53,6 @@ dependencies = [
     "Flask-Migrate>=2.5.0",
     "flask-restx>=0.5.1",
     "Flask-SQLAlchemy>=2.4.0",
-    "Flask-WTF>=0.14.3",
     "injector>=0.18.0",
     "jsonschema>=4.17.0",
     "marshmallow>=3.9.0,<4",
@@ -72,7 +71,6 @@ dependencies = [
     "SQLAlchemy>=1.4.0,<2",
     "typing-extensions>=3.7.4.3",
     "werkzeug>=1.0.0,<=2.1.2",
-    "wtforms[email]>=3.0.0",
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
