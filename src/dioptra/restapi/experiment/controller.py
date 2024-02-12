@@ -29,11 +29,12 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import pageUrl, slugify
+from dioptra.restapi.utils import slugify
 
+from ..page import Page
 from .errors import ExperimentDoesNotExistError
 from .model import Experiment
-from .schema import ExperimentSchema
+from .schema import ExperimentPageSchema, ExperimentSchema
 from .service import ExperimentService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -54,19 +55,16 @@ class ExperimentResource(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @responds(schema=ExperimentSchema(many=True), api=api)
-    def get(self) -> Response:
-        """Gets a page or list of all registered experiments."""
+    @responds(schema=ExperimentPageSchema, api=api)
+    def get(self) -> Page:
+        """Gets a page of registered experiments."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="GET"
         )  # noqa: F841
         log.info("Request received")
 
-        index = request.args.get("index", -1, type=int)
-        page_length = request.args.get("page_length", -1, type=int)
-
-        if -1 in (index, page_length):
-            return self._experiment_service.get_all(log=log)  # type: ignore
+        index = request.args.get("index", 0, type=int)
+        page_length = request.args.get("page_length", 20, type=int)
 
         data = self._experiment_service.get_page(
             index=index, page_length=page_length, log=log
@@ -74,15 +72,12 @@ class ExperimentResource(Resource):
 
         is_complete = True if Experiment.query.count() <= index + page_length else False
 
-        return jsonify(
-            {
-                "page": ExperimentSchema(many=True).dump(data),
-                "index": index,
-                "is_complete": is_complete,
-                "first": pageUrl("experiment", 0, page_length),
-                "next": pageUrl("experiment", index + page_length, page_length),
-                "prev": pageUrl("experiment", index - page_length, page_length),
-            }
+        return Page(
+            data=data,
+            index=index,
+            is_complete=is_complete,
+            endpoint="experiment",
+            page_length=page_length,
         )
 
     @login_required
@@ -99,7 +94,6 @@ class ExperimentResource(Resource):
         parsed_obj = request.parsed_obj  # type: ignore
 
         name = slugify(str(parsed_obj["name"]))
-
         return self._experiment_service.create(experiment_name=name, log=log)
 
 

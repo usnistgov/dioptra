@@ -132,8 +132,7 @@ class ExperimentService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
         return Experiment.query.filter_by(is_deleted=False).all()  # type: ignore
 
-    @staticmethod
-    def get_page(index: int, page_length: int, **kwargs) -> List[Experiment]:
+    def get_page(self, index: int, page_length: int, **kwargs) -> List[Experiment]:
         """Fetch a page of experiments.
 
         Args:

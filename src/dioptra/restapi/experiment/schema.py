@@ -56,3 +56,38 @@ class ExperimentSchema(Schema):
     name = fields.String(
         attribute="name", metadata=dict(description="The name of the experiment.")
     )
+
+
+class ExperimentPageSchema(Schema):
+    """The schema for the data stored in a |Page| object.
+
+    Attributes:
+        data: List of data matching page parameters.
+        index: Index in results set of the start of page.
+        is_complete: Boolean indicating if more data is available.
+        first: URL to first page in result set.
+        next: URL to next page in result set.
+        last: URL to last page in result set.
+    """
+
+    data = fields.Nested(ExperimentSchema(many=True))
+    index = fields.Integer(
+        attribute="index",
+        metadata=dict(description="SIndex in results set of the start of page."),
+    )
+    isComplete = fields.Boolean(
+        attribute="is_complete",
+        metadata=dict(description="Boolean indicating if more data is available."),
+    )
+    first = fields.String(
+        attribute="first",
+        metadata=dict(description="URL to first page in results set."),
+    )
+    next = fields.String(
+        attribute="next",
+        metadata=dict(description="URL to next page in results set."),
+    )
+    prev = fields.String(
+        attribute="prev",
+        metadata=dict(description="URL to last page in results set."),
+    )

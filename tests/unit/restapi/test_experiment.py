@@ -178,7 +178,7 @@ def assert_retrieving_all_experiments_works(
             does not match the expected response.
     """
     response = client.get(f"/api/{EXPERIMENT_BASE_ROUTE}", follow_redirects=True)
-    assert response.status_code == 200 and response.get_json() == expected
+    assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
 def assert_experiment_name_matches_expected_name(
@@ -273,7 +273,7 @@ def assert_page_data_matches(
         f"/api/{EXPERIMENT_BASE_ROUTE}?index={index}&page_length={page_length}",
         follow_redirects=True,
     )
-
+    
     page = response.get_json()
     assert response.status_code == 200 and page == expected
 
@@ -497,9 +497,9 @@ def test_experiment_paging(client: FlaskClient, db: SQLAlchemy) -> None:
     page_length = 2
     is_complete = False
     page_expected = {
-        "page": data,
+        "data": data,
         "index": index,
-        "is_complete": is_complete,
+        "isComplete": is_complete,
         "first": f"/api/experiment?index=0&page_length={page_length}",
         "next": f"/api/experiment?index={index+page_length}&page_length={page_length}",
         "prev": f"/api/experiment?index=0&page_length={page_length}",
