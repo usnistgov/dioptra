@@ -7,7 +7,13 @@
     @delete="showDeleteDialog = true"
     @edit="editing = true; showAddDialog = true"
     v-model="selected"
-  />
+  >
+    <!-- <template #body-cell-chips="props">
+      <q-chip>
+        {{ props.row.name }}
+      </q-chip>
+    </template> -->
+  </TableComponent>
   <q-btn 
     class="fixedButton"
     round
@@ -52,6 +58,7 @@
     { name: 'id', label: 'Queue ID', align: 'left', field: 'queueId', sortable: true },
     { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', format: val => `${formatDate(val)}`, sortable: true },
     { name: 'lastModified', label: 'Last Modified', align: 'left', field: 'lastModified', format: val => `${formatDate(val)}`, sortable: true },
+    // { name: 'chips', label: 'Custom Column Example',align: 'left', sortable: false },
   ]
 
   getQueues()
