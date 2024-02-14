@@ -20,7 +20,12 @@ from __future__ import annotations
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.groups.schema import GroupRefSchema
-from dioptra.restapi.v1.schemas import BasePageSchema
+from dioptra.restapi.v1.schemas import (
+    BasePageSchema,
+    GroupIdQueryParametersSchema,
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+)
 from dioptra.restapi.v1.tags.schema import TagRefSchema
 from dioptra.restapi.v1.users.schema import UserRefSchema
 
@@ -123,3 +128,11 @@ class QueuePageSchema(BasePageSchema):
         many=True,
         metadata=dict(description="List of Queue resources in the current page."),
     )
+
+
+class QueueGetQueryParameters(
+    PagingQueryParametersSchema,
+    GroupIdQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /queues endpoint."""
