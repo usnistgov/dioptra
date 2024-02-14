@@ -25,7 +25,7 @@ class BasePageSchema(Schema):
 
     index = fields.Integer(
         attribute="index",
-        metadata=dict(description="Index in results set of the start of page."),
+        metadata=dict(description="Index of the current page."),
     )
     isComplete = fields.Boolean(
         attribute="is_complete",
@@ -42,4 +42,66 @@ class BasePageSchema(Schema):
     prev = fields.String(
         attribute="prev",
         metadata=dict(description="URL to last page in results set."),
+    )
+
+
+class PagingQueryParametersSchema(Schema):
+    """A schema for adding paging query parameters to a resource endpoint."""
+
+    index = fields.Integer(
+        attribute="index",
+        metadata=dict(description="Index of the current page."),
+        load_default=0,
+    )
+    pageLength = fields.Integer(
+        attribute="page_length",
+        metadata=dict(description="Number of results to return per page."),
+        load_default=10,
+    )
+
+
+class ResourceTypeQueryParametersSchema(Schema):
+    """A schema for adding resource_type query parameters to a resource endpoint."""
+
+    resourceType = fields.String(
+        attribute="resource_type",
+        metadata=dict(description="Filter results by the type of resource."),
+    )
+
+
+class GroupIdQueryParametersSchema(Schema):
+    """A schema for adding group_id query parameters to a resource endpoint."""
+
+    groupId = fields.String(
+        attribute="group_id",
+        metadata=dict(description="Filter results by the Group ID."),
+    )
+
+
+class SearchQueryParametersSchema(Schema):
+    """A schema for adding search query parameters to a resource endpoint."""
+
+    query = fields.String(
+        attribute="query",
+        metadata=dict(description="Search terms for the query (* and ? wildcards)."),
+    )
+    field = fields.Integer(
+        attribute="field",
+        metadata=dict(description="Name of the resource field to search."),
+    )
+
+
+class IdStatusResponseSchema(Schema):
+    """A simple response for reporting a status for one or more resources."""
+
+    id = fields.List(
+        fields.Integer(),
+        attribute="id",
+        metadata=dict(
+            description="A list of integers identifying the affected resource(s)."
+        ),
+    )
+    status = fields.String(
+        attribute="status",
+        metadata=dict(description="The status of the request."),
     )

@@ -23,6 +23,7 @@ from __future__ import annotations
 from flask_restx import Api
 
 V0_ROOT = "api/v0"
+V1_ROOT = "api/v1"
 
 AUTH_ROUTE = "auth"
 EXPERIMENT_ROUTE = "experiment"
@@ -30,6 +31,8 @@ JOB_ROUTE = "job"
 QUEUE_ROUTE = "queue"
 TASK_PLUGIN_ROUTE = "taskPlugin"
 USER_ROUTE = "user"
+
+V1_QUEUES_ROUTE = "queues"
 
 
 def register_routes(api: Api) -> None:
@@ -39,6 +42,7 @@ def register_routes(api: Api) -> None:
         api: The main REST |Api| object.
     """
     register_v0_routes(api)
+    # register_v1_routes(api)
 
 
 def register_v0_routes(api: Api) -> None:
@@ -60,3 +64,14 @@ def register_v0_routes(api: Api) -> None:
     api.add_namespace(queue_api, path=f"/{V0_ROOT}/{QUEUE_ROUTE}")
     api.add_namespace(task_plugin_api, path=f"/{V0_ROOT}/{TASK_PLUGIN_ROUTE}")
     api.add_namespace(user_api, path=f"/{V0_ROOT}/{USER_ROUTE}")
+
+
+def register_v1_routes(api: Api) -> None:
+    """Registers the endpoint routes with the main application.
+
+    Args:
+        api: The main REST |Api| object.
+    """
+    from .v1.queues.controller import api as queues_api
+
+    api.add_namespace(queues_api, path=f"/{V1_ROOT}/{V1_QUEUES_ROUTE}")
