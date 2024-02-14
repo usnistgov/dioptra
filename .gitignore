@@ -430,3 +430,4 @@ package-lock.json
 !**/ca-certificates/**/README.md
 !docker/**/etc
 !tests/**/lib
+!src/**/tags
