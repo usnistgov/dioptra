@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The schemas for serializing/deserializing Queue resources."""
+"""The schemas for serializing/deserializing Plugin resources."""
 from __future__ import annotations
 
 from marshmallow import Schema, fields
@@ -31,59 +31,85 @@ from dioptra.restapi.v1.tags.schema import TagRefSchema
 from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
-class QueueRefSchema(Schema):
-    """The reference schema for the data stored in a Queue resource."""
+class PluginRefSchema(Schema):
+    """The reference schema for the data stored in a Plugin resource."""
 
     id = fields.Integer(
         attribute="id",
-        metadata=dict(description="ID for the Queue resource."),
+        metadata=dict(description="ID for the Plugin resource."),
     )
     group = fields.Nested(
         GroupRefSchema,
         attribute="group",
-        metadata=dict(description="Group that owns the Queue resource."),
+        metadata=dict(description="Group that owns the Plugin resource."),
     )
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Queue resource."),
+        metadata=dict(description="Name of the Plugin resource."),
     )
     url = fields.Url(
         attribute="url",
-        metadata=dict(description="URL for accessing the full Queue resource."),
+        metadata=dict(description="URL for accessing the full Plugin resource."),
         relative=True,
     )
 
 
-class QueueMutableFieldsSchema(Schema):
-    """The fields schema for the mutable data in a Queue resource."""
+class PluginFileRefSchema(Schema):
+    """The reference schema for the data stored in a PluginFile."""
+
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="ID for the PluginFile resource."),
+    )
+    plugin_id = fields.Int(
+        attribute="plugin_id",
+        metadata=dict(description="ID for the Plugin resource this file belongs to."),
+    )
+    filename = fields.String(
+        attribute="filename",
+        metadata=dict(description="Filename of the PluginFile resource."),
+    )
+    url = fields.Url(
+        attribute="url",
+        metadata=dict(description="URL for accessing the full PluginFile resource."),
+        relative=True,
+    )
+
+
+class PluginMutableFieldsSchema(Schema):
+    """The fields schema for the mutable data in a Plugin resource."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Queue resource.")
-    )
-    description = fields.String(
-        attribute="description",
-        metadata=dict(description="Description of the Queue resource."),
+        attribute="name", metadata=dict(description="Name of the Plugin resource.")
     )
 
 
-QueueBaseSchema = generate_base_resource_schema("Queue")
+PluginBaseSchema = generate_base_resource_schema("Plugin")
 
 
-class QueueSchema(QueueMutableFieldsSchema, QueueBaseSchema):
-    """The schema for the data stored in a Queue resource."""
+class PluginSchema(PluginMutableFieldsSchema, PluginBaseSchema):
+    """The schema for the data stored in a Plugin resource."""
+
+    files = fields.Nested(
+        PluginFileRefSchema,
+        attribute="files",
+        metadata=dict(description="Files associated with the Plugin resource."),
+        many=True,
+        dump_only=True,
+    )
 
 
-class QueuePageSchema(BasePageSchema):
-    """The paged schema for the data stored in a Queue resource."""
+class PluginPageSchema(BasePageSchema):
+    """The paged schema for the data stored in a Plugin resource."""
 
     data = fields.Nested(
-        QueueSchema,
+        PluginSchema,
         many=True,
-        metadata=dict(description="List of Queue resources in the current page."),
+        metadata=dict(description="List of Plugin resources in the current page."),
     )
 
 
-class QueueGetQueryParameters(
+class PluginGetQueryParameters(
     PagingQueryParametersSchema,
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
