@@ -39,7 +39,7 @@ class PluginParameterTypeRefSchema(Schema):
         attribute="name",
         metadata=dict(description="Name of the PluginParameterType resource."),
     )
-    structure = fields.String(
+    structure = fields.Dict(
         attribute="structure",
         metadata=dict(description="Structure of the PluginParameterType resource."),
     )
