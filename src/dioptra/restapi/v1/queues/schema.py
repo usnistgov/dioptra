@@ -25,9 +25,8 @@ from dioptra.restapi.v1.schemas import (
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    generate_base_resource_schema,
 )
-from dioptra.restapi.v1.tags.schema import TagRefSchema
-from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
 class QueueRefSchema(Schema):
@@ -65,58 +64,10 @@ class QueueMutableFieldsSchema(Schema):
     )
 
 
-class QueueBaseSchema(Schema):
-    """The base schema for the data stored in a Queue resource."""
-
-    id = fields.Integer(
-        attribute="id",
-        metadata=dict(description="ID for the Queue resource."),
-        dump_only=True,
-    )
-    snapshotId = fields.Integer(
-        attribute="snapshot_id",
-        metadata=dict(description="ID for the underlying resource snapshot."),
-        dump_only=True,
-    )
-    groupId = fields.Integer(
-        attribute="group_id",
-        metadata=dict(description="ID of the Group that will own the Queue resource."),
-        load_only=True,
-    )
-    group = fields.Nested(
-        GroupRefSchema,
-        attribute="group",
-        metadata=dict(description="Group that owns the Queue resource."),
-        dump_only=True,
-    )
-    user = fields.Nested(
-        UserRefSchema,
-        attribute="user",
-        metadata=dict(description="User that created the Queue resource."),
-        dump_only=True,
-    )
-    createdOn = fields.DateTime(
-        attribute="created_on",
-        metadata=dict(description="Timestamp when the Queue resource was created."),
-        dump_only=True,
-    )
-    lastModifiedOn = fields.DateTime(
-        attribute="last_modified_on",
-        metadata=dict(
-            description="Timestamp when the Queue resource was last modified."
-        ),
-        dump_only=True,
-    )
-    tags = fields.Nested(
-        TagRefSchema,
-        attribute="tags",
-        metadata=dict(description="Tags associated with the Queue resource."),
-        many=True,
-        dump_only=True,
-    )
+QueueBaseSchema = generate_base_resource_schema("Queue")
 
 
-class QueueSchema(QueueMutableFieldsSchema, QueueBaseSchema):
+class QueueSchema(QueueMutableFieldsSchema, QueueBaseSchema):  # type: ignore
     """The schema for the data stored in a Queue resource."""
 
 

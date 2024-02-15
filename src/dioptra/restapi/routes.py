@@ -32,6 +32,8 @@ QUEUE_ROUTE = "queue"
 TASK_PLUGIN_ROUTE = "taskPlugin"
 USER_ROUTE = "user"
 
+V1_PLUGINS_ROUTE = "plugins"
+V1_PLUGIN_PARAMETER_TYPES_ROUTE = "pluginParameterTypes"
 V1_QUEUES_ROUTE = "queues"
 
 
@@ -72,6 +74,8 @@ def register_v1_routes(api: Api) -> None:
     Args:
         api: The main REST |Api| object.
     """
+    from .v1.plugins.controller import api as plugins_api
     from .v1.queues.controller import api as queues_api
 
+    api.add_namespace(plugins_api, path=f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}")
     api.add_namespace(queues_api, path=f"/{V1_ROOT}/{V1_QUEUES_ROUTE}")

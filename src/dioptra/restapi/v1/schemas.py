@@ -19,6 +19,69 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
+from dioptra.restapi.v1.groups.schema import GroupRefSchema
+from dioptra.restapi.v1.tags.schema import TagRefSchema
+from dioptra.restapi.v1.users.schema import UserRefSchema
+
+
+def generate_base_resource_schema(name: str) -> type[Schema]:
+    """Generates the base schema for a Resource."""
+
+    return Schema.from_dict(
+        {
+            "id": fields.Integer(
+                attribute="id",
+                metadata=dict(description=f"ID for the {name} resource."),
+                dump_only=True,
+            ),
+            "snapshotId": fields.Integer(
+                attribute="snapshot_id",
+                metadata=dict(description=f"ID for the underlying {name} snapshot."),
+                dump_only=True,
+            ),
+            "groupId": fields.Integer(
+                attribute="group_id",
+                metadata=dict(
+                    description=f"ID of the Group that will own the {name} resource."
+                ),
+                load_only=True,
+            ),
+            "group": fields.Nested(
+                GroupRefSchema,
+                attribute="group",
+                metadata=dict(description=f"Group that owns the {name} resource."),
+                dump_only=True,
+            ),
+            "user": fields.Nested(
+                UserRefSchema,
+                attribute="user",
+                metadata=dict(description=f"User that created the {name} resource."),
+                dump_only=True,
+            ),
+            "createdOn": fields.DateTime(
+                attribute="created_on",
+                metadata=dict(
+                    description=f"Timestamp when the {name} resource was created."
+                ),
+                dump_only=True,
+            ),
+            "lastModifiedOn": fields.DateTime(
+                attribute="last_modified_on",
+                metadata=dict(
+                    description=f"Timestamp when the {name} resource was last modified."
+                ),
+                dump_only=True,
+            ),
+            "tags": fields.Nested(
+                TagRefSchema,
+                attribute="tags",
+                metadata=dict(description="Tags associated with the {name} resource."),
+                many=True,
+                dump_only=True,
+            ),
+        }
+    )
+
 
 class BasePageSchema(Schema):
     """The base schema for adding paging to a resource endpoint."""
