@@ -21,14 +21,12 @@ from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.groups.schema import GroupRefSchema
 from dioptra.restapi.v1.schemas import (
-    generate_base_resource_schema,
     BasePageSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    generate_base_resource_schema,
 )
-from dioptra.restapi.v1.tags.schema import TagRefSchema
-from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
 class QueueRefSchema(Schema):
@@ -69,7 +67,7 @@ class QueueMutableFieldsSchema(Schema):
 QueueBaseSchema = generate_base_resource_schema("Queue")
 
 
-class QueueSchema(QueueMutableFieldsSchema, QueueBaseSchema):
+class QueueSchema(QueueMutableFieldsSchema, QueueBaseSchema):  # type: ignore
     """The schema for the data stored in a Queue resource."""
 
 

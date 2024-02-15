@@ -20,17 +20,15 @@ from __future__ import annotations
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.groups.schema import GroupRefSchema
+from dioptra.restapi.v1.plugin_parameter_types.schema import (
+    PluginParameterTypeRefSchema,
+)
 from dioptra.restapi.v1.schemas import (
-    generate_base_resource_schema,
     BasePageSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
-)
-from dioptra.restapi.v1.tags.schema import TagRefSchema
-from dioptra.restapi.v1.users.schema import UserRefSchema
-from dioptra.restapi.v1.plugin_parameter_types.schema import (
-    PluginParameterTypeRefSchema,
+    generate_base_resource_schema,
 )
 
 
@@ -64,7 +62,7 @@ class PluginFileRefSchema(Schema):
         attribute="id",
         metadata=dict(description="ID for the PluginFile resource."),
     )
-    plugin_id = fields.Int(
+    pluginId = fields.Int(
         attribute="plugin_id",
         metadata=dict(description="ID for the Plugin resource this file belongs to."),
     )
@@ -92,7 +90,7 @@ class PluginTaskSchema(Schema):
         metadata=dict(description="The positional order of the parameter."),
     )
 
-    input_params = fields.Nested(
+    inputParams = fields.Nested(
         PluginParameterTypeRefSchema,
         many=True,
         metadata=dict(
@@ -100,7 +98,7 @@ class PluginTaskSchema(Schema):
         ),
     )
 
-    output_params = fields.Nested(
+    outputParams = fields.Nested(
         PluginParameterTypeRefSchema,
         many=True,
         metadata=dict(
@@ -120,7 +118,7 @@ class PluginMutableFieldsSchema(Schema):
 PluginBaseSchema = generate_base_resource_schema("Plugin")
 
 
-class PluginSchema(PluginMutableFieldsSchema, PluginBaseSchema):
+class PluginSchema(PluginMutableFieldsSchema, PluginBaseSchema):  # type: ignore
     """The schema for the data stored in a Plugin resource."""
 
     files = fields.Nested(
@@ -165,7 +163,7 @@ class PluginFileMutableFieldsSchema(Schema):
 PluginFileBaseSchema = generate_base_resource_schema("PluginFile")
 
 
-class PluginFileSchema(PluginFileMutableFieldsSchema, PluginFileBaseSchema):
+class PluginFileSchema(PluginFileMutableFieldsSchema, PluginFileBaseSchema):  # type: ignore
     """The schema for the data stored in a PluginFile resource."""
 
     tasks = fields.Nested(

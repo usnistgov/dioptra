@@ -29,14 +29,14 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
 from .schema import (
-    PluginGetQueryParameters,
-    PluginMutableFieldsSchema,
-    PluginPageSchema,
-    PluginSchema,
     PluginFileGetQueryParameters,
     PluginFileMutableFieldsSchema,
     PluginFilePageSchema,
     PluginFileSchema,
+    PluginGetQueryParameters,
+    PluginMutableFieldsSchema,
+    PluginPageSchema,
+    PluginSchema,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -148,7 +148,7 @@ class PluginIdFilesEndpoint(Resource):
 @api.route("/<int:id>/files/<int:file_id>")
 @api.param("id", "ID for the Plugin resource.")
 @api.param("file_id", "ID for the PluginFile resource.")
-class PluginIdFilesEndpoint(Resource):
+class PluginIdFileIdEndpoint(Resource):
     @login_required
     @responds(schema=PluginFileSchema, api=api)
     def get(self, id: int, file_id: int):

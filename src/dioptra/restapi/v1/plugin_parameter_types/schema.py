@@ -20,7 +20,6 @@ from __future__ import annotations
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.groups.schema import GroupRefSchema
-from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
 class PluginParameterTypeRefSchema(Schema):
