@@ -68,11 +68,11 @@ bleach==6.1.0
     # via
     #   kaggle
     #   nbconvert
-boto3==1.34.38
+boto3==1.34.41
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-botocore==1.34.38
+botocore==1.34.41
     # via
     #   boto3
     #   s3transfer
@@ -139,7 +139,7 @@ cryptography==3.4.8
     # via dioptra (pyproject.toml)
 cycler==0.12.1
     # via matplotlib
-dask==2024.1.1
+dask==2024.2.0
     # via
     #   distributed
     #   prefect
@@ -153,7 +153,7 @@ defusedxml==0.7.1
     # via nbconvert
 distlib==0.3.8
     # via virtualenv
-distributed==2024.1.1
+distributed==2024.2.0
     # via prefect
 docker==7.0.0
     # via
@@ -258,7 +258,7 @@ idna==3.6
     #   jsonschema
     #   requests
     #   yarl
-imageio==2.33.1
+imageio==2.34.0
     # via
     #   imgaug
     #   scikit-image
@@ -378,7 +378,7 @@ jupyter-server==2.12.5
     #   notebook-shim
 jupyter-server-terminals==0.5.2
     # via jupyter-server
-jupyterlab==4.1.0
+jupyterlab==4.1.1
     # via
     #   dioptra (pyproject.toml)
     #   notebook
@@ -390,7 +390,7 @@ jupyterlab-server==2.25.2
     #   notebook
 jupyterlab-widgets==3.0.10
     # via ipywidgets
-kaggle==1.6.5
+kaggle==1.6.6
     # via dioptra (pyproject.toml)
 kiwisolver==1.4.5
     # via matplotlib
@@ -418,7 +418,7 @@ marshmallow==3.20.2
     #   flask-accepts
     #   marshmallow-oneofschema
     #   prefect
-marshmallow-oneofschema==3.1.0
+marshmallow-oneofschema==3.1.1
     # via prefect
 matplotlib==3.8.2
     # via imgaug
@@ -466,7 +466,7 @@ nest-asyncio==1.6.0
     # via ipykernel
 networkx==3.2.1
     # via scikit-image
-notebook==7.0.7
+notebook==7.1.0
     # via jupyter
 notebook-shim==0.2.3
     # via
@@ -559,7 +559,7 @@ pluggy==1.4.0
     #   tox
 prefect==1.4.1
     # via dioptra (pyproject.toml)
-prometheus-client==0.19.0
+prometheus-client==0.20.0
     # via
     #   jupyter-server
     #   prometheus-flask-exporter
@@ -708,7 +708,7 @@ rfc3986-validator==0.1.1
     #   jupyter-events
 rich==13.7.0
     # via dioptra (pyproject.toml)
-rpds-py==0.17.1
+rpds-py==0.18.0
     # via
     #   jsonschema
     #   referencing
@@ -807,7 +807,7 @@ text-unidecode==1.3
     # via python-slugify
 threadpoolctl==3.2.0
     # via scikit-learn
-tifffile==2024.1.30
+tifffile==2024.2.12
     # via scikit-image
 time-machine==2.13.0
     # via pendulum
@@ -844,7 +844,7 @@ tornado==6.4
     #   terminado
 tox==4.12.1
     # via dioptra (pyproject.toml)
-tqdm==4.66.1
+tqdm==4.66.2
     # via
     #   adversarial-robustness-toolbox
     #   kaggle
@@ -876,11 +876,11 @@ typing-extensions==4.9.0
     #   dioptra
     #   dioptra (pyproject.toml)
     #   ipython
-tzdata==2023.4
+tzdata==2024.1
     # via
     #   pandas
     #   pendulum
-universal-pathlib==0.1.4
+universal-pathlib==0.2.0
     # via dioptra (pyproject.toml)
 uri-template==1.3.0
     # via jsonschema

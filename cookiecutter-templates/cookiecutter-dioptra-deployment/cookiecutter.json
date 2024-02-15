@@ -77,7 +77,7 @@
         "dbadmin": {
             "image": "pgadmin4",
             "namespace": "dpage",
-            "tag": "latest",
+            "tag": "8.3",
             "registry": ""
         },
         "mc": {
@@ -89,19 +89,19 @@
         "minio": {
             "image": "minio",
             "namespace": "minio",
-            "tag": "latest",
+            "tag": "RELEASE.2024-02-13T15-35-11Z",
             "registry": ""
         },
         "nodejs": {
             "image": "node",
             "namespace": "",
-            "tag": "18",
+            "tag": "21.6.1",
             "registry": ""
         },
         "redis": {
             "image": "redis",
             "namespace": "",
-            "tag": "latest",
+            "tag": "7.2.4",
             "registry": ""
         }
     },
