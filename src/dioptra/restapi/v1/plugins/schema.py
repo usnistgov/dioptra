@@ -29,6 +29,9 @@ from dioptra.restapi.v1.schemas import (
 )
 from dioptra.restapi.v1.tags.schema import TagRefSchema
 from dioptra.restapi.v1.users.schema import UserRefSchema
+from dioptra.restapi.v1.plugin_parameter_types.schema import (
+    PluginParameterTypeRefSchema,
+)
 
 
 class PluginRefSchema(Schema):
@@ -76,8 +79,38 @@ class PluginFileRefSchema(Schema):
     )
 
 
+class PluginTaskSchema(Schema):
+    """The schema for the data stored in a PluginTask."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the PluginTask."),
+    )
+
+    number = fields.Integer(
+        attribute="number",
+        metadata=dict(description="The positional order of the parameter."),
+    )
+
+    input_params = fields.Nested(
+        PluginParameterTypeRefSchema,
+        many=True,
+        metadata=dict(
+            description="List of input PluginTaskParameters in this PluginTask."
+        ),
+    )
+
+    output_params = fields.Nested(
+        PluginParameterTypeRefSchema,
+        many=True,
+        metadata=dict(
+            description="List of output PluginTaskParameters in this PluginTask."
+        ),
+    )
+
+
 class PluginMutableFieldsSchema(Schema):
-    """The fields schema for the mutable data in a Plugin resource."""
+    """The schema for the mutable data fields in a Plugin resource."""
 
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Plugin resource.")
@@ -115,3 +148,46 @@ class PluginGetQueryParameters(
     SearchQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /queues endpoint."""
+
+
+class PluginFileMutableFieldsSchema(Schema):
+    """The schema for the mutable data fields in a PluginFile resource."""
+
+    filename = fields.String(
+        attribute="name", metadata=dict(description="Name of the PluginFile resource.")
+    )
+
+    contents = fields.String(
+        attribute="contents", metadata=dict(description="Contents of the file.")
+    )
+
+
+PluginFileBaseSchema = generate_base_resource_schema("PluginFile")
+
+
+class PluginFileSchema(PluginFileMutableFieldsSchema, PluginFileBaseSchema):
+    """The schema for the data stored in a PluginFile resource."""
+
+    tasks = fields.Nested(
+        PluginTaskSchema,
+        attribute="tasks",
+        metadata=dict(description="Tasks associated with the PluginFile resource."),
+        many=True,
+        dump_only=True,
+    )
+
+
+class PluginFilePageSchema(BasePageSchema):
+    """The paged schema for the data stored in a PluginFile resource."""
+
+    data = fields.Nested(
+        PluginFileSchema,
+        many=True,
+        metadata=dict(description="List of PluginFile resources in the current page."),
+    )
+
+
+class PluginFileGetQueryParameters(
+    PagingQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /queues/{id}/files/ endpoint."""

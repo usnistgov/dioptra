@@ -33,6 +33,10 @@ from .schema import (
     PluginMutableFieldsSchema,
     PluginPageSchema,
     PluginSchema,
+    PluginFileGetQueryParameters,
+    PluginFileMutableFieldsSchema,
+    PluginFilePageSchema,
+    PluginFileSchema,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -96,6 +100,89 @@ class PluginIdEndpoint(Resource):
         """Modifies a Plugin resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Plugin", request_type="PUT", id=id
+        )
+        log.debug("Request received")
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+
+
+@api.route("/<int:id>/files")
+@api.param("id", "ID for the Plugin resource.")
+class PluginIdFilesEndpoint(Resource):
+    @login_required
+    @accepts(PluginFileGetQueryParameters, api=api)
+    @responds(schema=PluginFilePageSchema, api=api)
+    def get(self, id: int):
+        """Gets the PluginFile resources for a Plugin resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="PluginFile",
+            request_type="GET",
+            id=id,
+        )
+        log.debug("Request received")
+
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self, id: int):
+        """Deletes all PluginFile resource associated with a Plugin resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="PluginFile",
+            request_type="DELETE",
+            id=id,
+        )
+        log.debug("Request received")
+
+    @login_required
+    @accepts(schema=PluginFileSchema, api=api)
+    @responds(schema=PluginFileSchema, api=api)
+    def post(self):
+        """Creates a Plugin resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="PluginFile", request_type="POST"
+        )
+        log.debug("Request received")
+        parsed_obj = request.parsed_obj  # noqa: F841
+
+
+@api.route("/<int:id>/files/<int:file_id>")
+@api.param("id", "ID for the Plugin resource.")
+@api.param("file_id", "ID for the PluginFile resource.")
+class PluginIdFilesEndpoint(Resource):
+    @login_required
+    @responds(schema=PluginFileSchema, api=api)
+    def get(self, id: int, file_id: int):
+        """Gets a PluginFile resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="PluginFile",
+            request_type="GET",
+            id=id,
+        )
+        log.debug("Request received")
+
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self, id: int, file_id: int):
+        """Deletes a PluginFile resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="PluginFile",
+            request_type="DELETE",
+            id=id,
+        )
+        log.debug("Request received")
+
+    @login_required
+    @accepts(schema=PluginFileMutableFieldsSchema, api=api)
+    @responds(schema=PluginFileSchema, api=api)
+    def put(self, id: int):
+        """Modifies a PluginFile resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="PluginFile",
+            request_type="PUT",
+            id=id,
         )
         log.debug("Request received")
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
