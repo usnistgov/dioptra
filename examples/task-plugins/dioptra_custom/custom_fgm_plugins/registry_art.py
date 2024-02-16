@@ -48,7 +48,7 @@ def load_wrapped_tensorflow_keras_classifier(
 ) -> KerasClassifier:
     uri = f"models:/{name}/{version}"
     LOGGER.info("Load Keras classifier from model registry", uri=uri)
-    keras_classifier = mlflow.keras.load_model(uri)
+    keras_classifier = mlflow.tensorflow.load_model(uri)
     if imagenet_preprocessing:
         mean_b = 103.939
         mean_g = 116.779

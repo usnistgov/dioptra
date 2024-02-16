@@ -16,9 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-from types import FunctionType
-from typing import Any, Dict, List, Union
-
 import mlflow
 import structlog
 from structlog.stdlib import BoundLogger
@@ -30,10 +27,7 @@ from dioptra.sdk.utilities.decorators import require_package
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from tensorflow.keras.callbacks import Callback
-    from tensorflow.keras.metrics import Metric
     from tensorflow.keras.models import Model
-    from tensorflow.keras.optimizers.legacy import Optimizer
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -45,7 +39,7 @@ except ImportError:  # pragma: nocover
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def register_init_model(name: str, model_dir: str, model: Sequential) -> Model:
-    mlflow.keras.log_model(
-        keras_model=model, artifact_path=model_dir, registered_model_name=name
+    mlflow.tensorflow.log_model(
+        model=model, artifact_path=model_dir, registered_model_name=name
     )
     return model

@@ -16,16 +16,15 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+from typing import Tuple
+
 import mlflow
-import structlog
 import numpy as np
+import structlog
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
-    ARTDependencyError,
-    TensorflowDependencyError,
-)
+from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -61,7 +60,7 @@ def load_wrapped_tensorflow_keras_classifier(
 ) -> KerasClassifier:
     uri = f"models:/{name}/{version}"
     LOGGER.info("Load Keras classifier from model registry", uri=uri)
-    keras_classifier = mlflow.keras.load_model(uri)
+    keras_classifier = mlflow.tensorflow.load_model(uri)
     if imagenet_preprocessing:
         mean_b = 103.939
         mean_g = 116.779
