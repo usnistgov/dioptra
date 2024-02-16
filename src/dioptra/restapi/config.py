@@ -28,12 +28,44 @@ import os
 from typing import List, Type
 
 
+def _set_session_protection(default: str = "strong") -> str:
+    """Set the session protection level.
+
+    The session protection level is set by the environment variable
+    DIOPTRA_SESSION_PROTECTION. If the environment variable is not set, the default
+    value is used.
+
+    Args:
+        default: The default session protection level. Must be one of "none", "basic",
+            or "strong". Defaults to "strong".
+
+    Returns:
+        The session protection level.
+    """
+    allowed = {"none", "basic", "strong"}
+    value = os.getenv("DIOPTRA_SESSION_PROTECTION", default).lower()
+
+    if value not in allowed:
+        raise ValueError(
+            f"Invalid DIOPTRA_SESSION_PROTECTION value: {value}. "
+            f"Allowed values are {allowed}."
+        )
+
+    return value
+
+
 class BaseConfig(object):
     CONFIG_NAME = "base"
     USE_MOCK_EQUIVALENCY = False
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = False
+    REMEMBER_COOKIE_NAME = "dioptra_remember_token"
+    REMEMBER_COOKIE_DURATION = int(
+        os.getenv("DIOPTRA_REMEMBER_COOKIE_DURATION", f"{14 * 86400}")
+    )
+    REMEMBER_COOKIE_SECURE = os.getenv("DIOPTRA_REMEMBER_COOKIE_SECURE") is not None
+    LOGIN_DISABLED = os.getenv("DIOPTRA_LOGIN_DISABLED") is not None
     DIOPTRA_CORS_ORIGIN = os.getenv("DIOPTRA_CORS_ORIGIN", "http://localhost:5173")
     DIOPTRA_PLUGINS_BUCKET = os.getenv("DIOPTRA_PLUGINS_BUCKET", "plugins")
     DIOPTRA_SWAGGER_PATH = os.getenv("DIOPTRA_SWAGGER_PATH", "/")
@@ -46,6 +78,7 @@ class DevelopmentConfig(BaseConfig):
     DEBUG = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TESTING = False
+    SESSION_PROTECTION = _set_session_protection()
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DIOPTRA_RESTAPI_DEV_DATABASE_URI",
         f"sqlite:///{os.path.join(os.getcwd(), 'dioptra-dev.db')}",
@@ -59,6 +92,7 @@ class TestingConfig(BaseConfig):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TESTING = True
     WTF_CSRF_ENABLED = False
+    SESSION_PROTECTION: str | None = None
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DIOPTRA_RESTAPI_TEST_DATABASE_URI", "sqlite://"
     )
@@ -70,15 +104,22 @@ class ProductionConfig(BaseConfig):
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TESTING = False
+    SESSION_PROTECTION = _set_session_protection()
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DIOPTRA_RESTAPI_DATABASE_URI",
         f"sqlite:///{os.path.join(os.getcwd(), 'dioptra.db')}",
     )
 
 
+class TestingLoginDisabledConfig(BaseConfig):
+    CONFIG_NAME = "test_no_login"
+    LOGIN_DISABLED = True
+
+
 EXPORT_CONFIGS: List[Type[BaseConfig]] = [
     DevelopmentConfig,
     TestingConfig,
     ProductionConfig,
+    TestingLoginDisabledConfig,
 ]
 config_by_name = {cfg.CONFIG_NAME: cfg for cfg in EXPORT_CONFIGS}

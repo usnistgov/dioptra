@@ -42,21 +42,21 @@ PYTHON_VERSION_MINOR := $(word 2,$(subst ., ,$(PYTHON_VERSION)))
 ARCH := $(strip $(shell /usr/bin/env $(PY) -c 'import platform; print(platform.machine().lower())'))
 
 ifeq ($(ARCH),x86_64)
-DETECTED_ARCH := x86_64
+DETECTED_ARCH := amd64
 else ifeq ($(ARCH),amd64)
-DETECTED_ARCH := x86_64
+DETECTED_ARCH := amd64
 else ifeq ($(ARCH),aarch64)
-DETECTED_ARCH := aarch64
+DETECTED_ARCH := arm64
 else ifeq ($(ARCH),arm64)
-DETECTED_ARCH := aarch64
+DETECTED_ARCH := arm64
 endif
 
 VENV_EXTRA ?=
 
 ifeq ($(DETECTED_OS),Darwin)
 CORES = $(shell sysctl -n hw.physicalcpu_max)
-PIPTOOLS_SYNC := CFLAGS="-stdlib=libc++" pip-sync
-VENV_REQUIREMENTS = requirements/macos-$(if $(filter aarch64, $(DETECTED_ARCH)),arm64,x86_64)-py$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)-requirements-dev$(VENV_EXTRA).txt
+PIPTOOLS_SYNC := CFLAGS="-stdlib=libc++ -std=c99" pip-sync
+VENV_REQUIREMENTS = requirements/macos-$(DETECTED_ARCH)-py$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)-requirements-dev$(VENV_EXTRA).txt
 else ifeq ($(DETECTED_OS),Linux)
 CORES = $(shell lscpu -p | egrep -v '^\#' | sort -u -t, -k 2,4 | wc -l)
 PIPTOOLS_SYNC := pip-sync
@@ -82,7 +82,6 @@ PROJECT_DOCKER_SRC_DIR = $(PROJECT_DOCKER_DIR)/src
 PROJECT_DOCKER_CONDA_ENV_DIR = $(PROJECT_DOCKER_SRC_DIR)/conda-env
 PROJECT_DOCKER_SHELLSCRIPTS_DIR = $(PROJECT_DOCKER_SRC_DIR)/shellscripts
 PROJECT_SRC_DIR = src
-PROJECT_SRC_MIGRATIONS_DIR = $(PROJECT_SRC_DIR)/migrations
 PROJECT_SRC_DIOPTRA_DIR = $(PROJECT_SRC_DIR)/dioptra
 PROJECT_TASK_PLUGINS_DIR = task-plugins
 PROJECT_TESTS_DIR = tests
@@ -125,12 +124,6 @@ CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/rq/*/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/sdk/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/sdk/*/*.py)
 CODE_SRC_FILES += $(wildcard $(PROJECT_SRC_DIOPTRA_DIR)/sdk/*/*/*.py)
-CODE_DB_MIGRATIONS_FILES :=\
-    $(PROJECT_SRC_MIGRATIONS_DIR)/alembic.ini\
-    $(PROJECT_SRC_MIGRATIONS_DIR)/env.py\
-    $(PROJECT_SRC_MIGRATIONS_DIR)/README\
-    $(PROJECT_SRC_MIGRATIONS_DIR)/script.py.mako
-CODE_DB_MIGRATIONS_FILES += $(wildcard $(PROJECT_SRC_MIGRATIONS_DIR)/versions/*.py)
 CODE_COOKIECUTTER_TESTS_FILES := $(wildcard $(CODE_COOKIECUTTER_TESTS_DIR)/*.py)
 CODE_COOKIECUTTER_TESTS_FILES += $(wildcard $(CODE_COOKIECUTTER_TESTS_DIR)/*/*.py)
 CODE_COOKIECUTTER_TESTS_FILES += $(wildcard $(CODE_COOKIECUTTER_TESTS_DIR)/*/*/*.py)
@@ -181,7 +174,7 @@ DOCS_WEB_COMPILE_FILES := $(wildcard $(DOCS_SCSS_DIR)/*.scss)
 
 PIP :=
 ifeq ($(DETECTED_OS),Darwin)
-PIP += CFLAGS="-stdlib=libc++" $(PY) -m pip
+PIP += CFLAGS="-stdlib=libc++ -std=c99" $(PY) -m pip
 else
 PIP += $(PY) -m pip
 endif

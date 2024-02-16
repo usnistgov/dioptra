@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 import structlog
@@ -26,9 +26,12 @@ from _pytest.monkeypatch import MonkeyPatch
 from botocore.stub import Stubber
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.models import TaskPlugin, TaskPluginUploadFormData
-from dioptra.restapi.shared.s3.service import S3Service
-from dioptra.restapi.task_plugin.service import TaskPluginService
+from dioptra.restapi.v0.shared.s3.service import S3Service
+from dioptra.restapi.v0.task_plugin.model import TaskPlugin
+from dioptra.restapi.v0.task_plugin.service import (
+    TaskPluginCollectionService,
+    TaskPluginService,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -39,6 +42,11 @@ def task_plugin_service(dependency_injector) -> TaskPluginService:
 
 
 @pytest.fixture
+def task_plugin_collection_service(dependency_injector) -> TaskPluginCollectionService:
+    return dependency_injector.get(TaskPluginCollectionService)
+
+
+@pytest.fixture
 def s3_service(dependency_injector) -> S3Service:
     return dependency_injector.get(S3Service)
 
@@ -46,16 +54,16 @@ def s3_service(dependency_injector) -> S3Service:
 def test_create(
     s3_service: S3Service,
     task_plugin_service: TaskPluginService,
-    task_plugin_upload_form_data: TaskPluginUploadFormData,
+    task_plugin_upload_form_data: dict[str, Any],
     new_task_plugin: TaskPlugin,
     monkeypatch: MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    list_objects_v2_expected_params: Dict[str, Any] = {
+    list_objects_v2_expected_params: dict[str, Any] = {
         "Bucket": "plugins",
         "Prefix": "dioptra_custom/new_package/",
     }
-    uri_list: List[str] = []
+    uri_list: list[str] = []
     output_dir: Path = tmp_path / "tmpdir"
     output_dir.mkdir()
 
@@ -82,8 +90,15 @@ def test_create(
             dict(Name="plugins", Prefix="dioptra_custom/new_package"),
             list_objects_v2_expected_params,
         )
+
+        name = task_plugin_upload_form_data["task_plugin_name"]
+        file = task_plugin_upload_form_data["task_plugin_file"]
+        collection = task_plugin_upload_form_data["collection"]
         response_task_plugin: TaskPlugin = task_plugin_service.create(
-            task_plugin_upload_form_data=task_plugin_upload_form_data, bucket="plugins"
+            task_plugin_name=name,
+            task_plugin_file=file,
+            collection=collection,
+            bucket="plugins",
         )
         stubber.assert_no_pending_responses()
 
@@ -93,22 +108,22 @@ def test_create(
 
 def test_delete_prefix(
     s3_service: S3Service,
-    task_plugin_service: TaskPluginService,
-    list_objects_v2_custom_new_plugin_one: Dict[str, Any],
+    task_plugin_collection_service: TaskPluginCollectionService,
+    list_objects_v2_custom_new_plugin_one: dict[str, Any],
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def mockdeleteprefix(*args, **kwargs) -> Dict[str, Any]:
+    def mockdeleteprefix(*args, **kwargs) -> dict[str, Any]:
         LOGGER.info(
             "Mocking client.delete_objects() function", args=args, kwargs=kwargs
         )
         return dict(Deleted=kwargs.get("Delete", {}).get("Objects"))
 
-    list_objects_v2_expected_params1: Dict[str, Any] = {
+    list_objects_v2_expected_params1: dict[str, Any] = {
         "Bucket": "plugins",
         "Prefix": "dioptra_custom/new_plugin_one/",
     }
 
-    list_objects_v2_expected_params2: Dict[str, Any] = {
+    list_objects_v2_expected_params2: dict[str, Any] = {
         "Bucket": "plugins",
         "Prefix": "dioptra_custom/new_plugin_one",
     }
@@ -125,52 +140,54 @@ def test_delete_prefix(
             list_objects_v2_custom_new_plugin_one,
             list_objects_v2_expected_params2,
         )
-        response: List[TaskPlugin] = task_plugin_service.delete(
+        response = task_plugin_collection_service.delete(
             collection="dioptra_custom",
             task_plugin_name="new_plugin_one",
             bucket="plugins",
         )
         stubber.assert_no_pending_responses()
 
-    expected_response: List[TaskPlugin] = [
+    expected_response: list[TaskPlugin] = [
         TaskPlugin("new_plugin_one", "dioptra_custom", ["__init__.py", "plugin_one.py"])
     ]
-    assert response == expected_response
+    assert response["collection"] == expected_response[0].collection
+    assert response["status"] == "Success"
+    assert response["taskPluginName"][0] == expected_response[0].task_plugin_name
 
 
 def test_get_all(
     s3_service: S3Service,
     task_plugin_service: TaskPluginService,
-    list_objects_v2_builtins: Dict[str, Any],
-    list_objects_v2_custom: Dict[str, Any],
-    list_objects_v2_builtins_artifacts: Dict[str, Any],
-    list_objects_v2_builtins_attacks: Dict[str, Any],
-    list_objects_v2_custom_new_plugin_one: Dict[str, Any],
-    list_objects_v2_custom_new_plugin_two: Dict[str, Any],
+    list_objects_v2_builtins: dict[str, Any],
+    list_objects_v2_custom: dict[str, Any],
+    list_objects_v2_builtins_artifacts: dict[str, Any],
+    list_objects_v2_builtins_attacks: dict[str, Any],
+    list_objects_v2_custom_new_plugin_one: dict[str, Any],
+    list_objects_v2_custom_new_plugin_two: dict[str, Any],
 ) -> None:
-    list_objects_v2_expected_params1: Dict[str, Any] = {
+    list_objects_v2_expected_params1: dict[str, Any] = {
         "Bucket": "plugins",
         "Delimiter": "/",
         "Prefix": "dioptra_builtins/",
     }
-    list_objects_v2_expected_params2: Dict[str, Any] = {
+    list_objects_v2_expected_params2: dict[str, Any] = {
         "Bucket": "plugins",
         "Prefix": "dioptra_builtins/artifacts/",
     }
-    list_objects_v2_expected_params3: Dict[str, Any] = {
+    list_objects_v2_expected_params3: dict[str, Any] = {
         "Bucket": "plugins",
         "Prefix": "dioptra_builtins/attacks/",
     }
-    list_objects_v2_expected_params4: Dict[str, Any] = {
+    list_objects_v2_expected_params4: dict[str, Any] = {
         "Bucket": "plugins",
         "Delimiter": "/",
         "Prefix": "dioptra_custom/",
     }
-    list_objects_v2_expected_params5: Dict[str, Any] = {
+    list_objects_v2_expected_params5: dict[str, Any] = {
         "Bucket": "plugins",
         "Prefix": "dioptra_custom/new_plugin_one/",
     }
-    list_objects_v2_expected_params6: Dict[str, Any] = {
+    list_objects_v2_expected_params6: dict[str, Any] = {
         "Bucket": "plugins",
         "Prefix": "dioptra_custom/new_plugin_two/",
     }
@@ -206,12 +223,12 @@ def test_get_all(
             list_objects_v2_custom_new_plugin_two,
             list_objects_v2_expected_params6,
         )
-        response_task_plugin: List[TaskPlugin] = task_plugin_service.get_all(
+        response_task_plugin = task_plugin_service.get_all(
             s3_collections_list=["dioptra_builtins", "dioptra_custom"], bucket="plugins"
         )
         stubber.assert_no_pending_responses()
 
-    expected_response: List[TaskPlugin] = [
+    expected_response: list[TaskPlugin] = [
         TaskPlugin("artifacts", "dioptra_builtins", ["__init__.py", "mlflow.py"]),
         TaskPlugin("attacks", "dioptra_builtins", ["__init__.py", "fgm.py"]),
         TaskPlugin(

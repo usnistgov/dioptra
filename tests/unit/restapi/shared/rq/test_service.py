@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import datetime
-import uuid
 from typing import Any, Dict, Optional, Union
 
 import pytest
@@ -26,8 +25,8 @@ from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.models import Job
-from dioptra.restapi.shared.rq.service import RQService
+from dioptra.restapi.db.legacy_models import Job
+from dioptra.restapi.v0.shared.rq.service import RQService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -115,7 +114,7 @@ class MockRQQueue(object):
 
 @pytest.fixture
 def rq_service(dependency_injector, monkeypatch: MonkeyPatch) -> RQService:
-    import dioptra.restapi.shared.rq.service as rq_service
+    import dioptra.restapi.v0.shared.rq.service as rq_service
 
     monkeypatch.setattr(rq_service, "RQJob", MockRQJob)
     monkeypatch.setattr(rq_service, "RQQueue", MockRQQueue)
@@ -144,72 +143,3 @@ def test_get_rq_job(rq_service: RQService):
 
     assert rq_job.get_id() == "4520511d-678b-4966-953e-af2d0edcea32"
     assert rq_job.get_status() == "started"
-
-
-@freeze_time("2020-08-17T18:46:28.717559")
-def test_submit_mlflow_job(rq_service: RQService):
-    rq_job = rq_service.submit_mlflow_job(
-        queue="tensorflow_cpu",
-        timeout="12h",
-        workflow_uri="s3://workflow/workflows.tar.gz",
-        experiment_id=1,
-        entry_point="main",
-        entry_point_kwargs="-P var1=test",
-        depends_on=None,
-    )
-
-    assert rq_job.queue == "tensorflow_cpu"
-    assert rq_job.timeout == "12h"
-    assert rq_job.cmd_kwargs == {
-        "workflow_uri": "s3://workflow/workflows.tar.gz",
-        "experiment_id": "1",
-        "entry_point": "main",
-        "entry_point_kwargs": "-P var1=test",
-    }
-
-
-@freeze_time("2020-08-17T18:46:28.717559")
-def test_submit_dependent_mlflow_jobs(rq_service: RQService):
-    train_job_id: str = str(uuid.uuid4())
-    fgm_job_id: str = str(uuid.uuid4())
-
-    rq_train_job = rq_service.submit_mlflow_job(
-        queue="tensorflow_cpu",
-        timeout="2d",
-        workflow_uri="s3://workflow/workflows.tar.gz",
-        experiment_id=1,
-        entry_point="train",
-        entry_point_kwargs=None,
-        depends_on=None,
-    )
-    rq_train_job.id = train_job_id
-
-    rq_fgm_job = rq_service.submit_mlflow_job(
-        queue="tensorflow_cpu",
-        timeout="12h",
-        workflow_uri="s3://workflow/workflows.tar.gz",
-        experiment_id=1,
-        entry_point="fgm",
-        entry_point_kwargs=None,
-        depends_on=rq_train_job.get_id(),
-    )
-    rq_fgm_job.id = fgm_job_id
-
-    assert rq_train_job.get_id() == train_job_id
-    assert rq_train_job.timeout == "2d"
-    assert rq_train_job.cmd_kwargs == {
-        "workflow_uri": "s3://workflow/workflows.tar.gz",
-        "experiment_id": "1",
-        "entry_point": "train",
-    }
-    assert rq_train_job.dependency is None
-
-    assert rq_fgm_job.get_id() == fgm_job_id
-    assert rq_fgm_job.timeout == "12h"
-    assert rq_fgm_job.cmd_kwargs == {
-        "workflow_uri": "s3://workflow/workflows.tar.gz",
-        "experiment_id": "1",
-        "entry_point": "fgm",
-    }
-    assert isinstance(rq_fgm_job.dependency, MockRQJob)
-    assert rq_fgm_job.dependency.get_id() == train_job_id

@@ -32,22 +32,23 @@ entry_points:
       learning_rate: {type: float, default: 0.1}
       seed: {type: float, default: -1}
     command: >
-      python mi.py
-      --adv-tar-name {adv_tar_name}
-      --adv-data-dir {adv_data_dir}
-      --model-name {model_name}
-      --model-version {model_version}
-      --batch-size {batch_size}
-      --max-iter {max_iter}
-      --window-length {window_length}
-      --threshold {threshold}
-      --learning-rate {learning_rate}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment mi.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment mi.yml
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P batch_size={batch_size}
+      -P max_iter={max_iter}
+      -P window_length={window_length}
+      -P threshold={threshold}
+      -P learning_rate={learning_rate}
+      -P seed={seed}
 
   train:
     parameters:
-      data_dir: { type: path, default: "/dioptra/data/Mnist" }
-      image_size: { type: string, default: "28,28,1" }
+      training_dir: { type: path, default: "/dioptra/data/Mnist/training" }
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      image_size: { type: string, default: "[28,28,1]" }
       model_architecture: { type: string, default: "le_net" }
       epochs: { type: float, default: 30 }
       batch_size: { type: float, default: 32 }
@@ -57,14 +58,14 @@ entry_points:
       validation_split: { type: float, default: 0.2 }
       seed: { type: float, default: -1 }
     command: >
-      python train.py
-      --data-dir {data_dir}
-      --image-size {image_size}
-      --model-architecture {model_architecture}
-      --epochs {epochs}
-      --batch-size {batch_size}
-      --register-model-name {register_model_name}
-      --learning-rate {learning_rate}
-      --optimizer {optimizer}
-      --validation-split {validation_split}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment train.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment train.yml
+      -P training_dir={training_dir}
+      -P testing_dir={testing_dir}
+      -P image_size={image_size}
+      -P model_architecture={model_architecture}
+      -P epochs={epochs}
+      -P batch_size={batch_size}
+      -P register_model_name={register_model_name}
+      -P learning_rate={learning_rate}
+      -P validation_split={validation_split}
+      -P seed={seed}

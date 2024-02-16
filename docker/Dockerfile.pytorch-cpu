@@ -23,9 +23,11 @@
 
 FROM ubuntu:focal AS copy-files
 
+ARG TARGETARCH
+
 COPY --chown=root:root --chmod=0644 docker/configs/aws-config /files/aws-config
 COPY --chown=root:root --chmod=0644 docker/configs/build.pip.conf /files/build.pip.conf
-COPY --chown=root:root --chmod=0644 docker/requirements/linux-x86_64-py3.9-pytorch-cpu-requirements.txt /files/pytorch-cpu-requirements.txt
+COPY --chown=root:root --chmod=0644 docker/requirements/linux-${TARGETARCH}-py3.9-pytorch-cpu-requirements.txt /files/pytorch-cpu-requirements.txt
 
 ######################################################################################################
 # Base images
@@ -138,9 +140,6 @@ COPY --chown=root:root --chmod=0755 docker/shellscripts/fix-permissions.m4 /temp
 COPY --chown=root:root --chmod=0755 docker/shellscripts/healthcheck-worker.m4 /templates/healthcheck-worker.m4
 COPY --chown=root:root --chmod=0755 docker/shellscripts/parse-uri.m4 /templates/parse-uri.m4
 COPY --chown=root:root --chmod=0755 docker/shellscripts/run-mlflow-job.m4 /templates/run-mlflow-job.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-cp.m4 /templates/s3-cp.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-mb.m4 /templates/s3-mb.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/s3-sync.m4 /templates/s3-sync.m4
 COPY --chown=root:root --chmod=0755 docker/shellscripts/unpack-archive.m4 /templates/unpack-archive.m4
 
 COPY --chown=root:root --chmod=0755 docker/shellscripts/wait-for-it.sh /shellscripts/wait-for-it.sh
@@ -151,25 +150,7 @@ RUN mkdir -p /shellscripts && \
     /usr/local/bin/argbash /templates/healthcheck-worker.m4 -o /shellscripts/healthcheck-worker.sh && \
     /usr/local/bin/argbash /templates/parse-uri.m4 -o /shellscripts/parse-uri.sh && \
     /usr/local/bin/argbash /templates/run-mlflow-job.m4 -o /shellscripts/run-mlflow-job.sh && \
-    /usr/local/bin/argbash /templates/s3-cp.m4 -o /shellscripts/s3-cp.sh && \
-    /usr/local/bin/argbash /templates/s3-mb.m4 -o /shellscripts/s3-mb.sh && \
-    /usr/local/bin/argbash /templates/s3-sync.m4 -o /shellscripts/s3-sync.sh && \
     /usr/local/bin/argbash /templates/unpack-archive.m4 -o /shellscripts/unpack-archive.sh
-
-# -- Build: download and install aws-cli -------------------------------------------------------------
-
-FROM certs-base AS install-awscli
-
-ARG AWSCLI_DOWNLOAD_URL=https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
-ARG AWSCLI_INSTALL_DIR=/opt/aws-cli
-ARG AWSCLI_BIN_DIR=/usr/local/bin
-
-RUN cd /tmp && \
-    wget -qO /tmp/awscliv2.zip ${AWSCLI_DOWNLOAD_URL} && \
-    unzip awscliv2.zip && \
-    rm /tmp/awscliv2.zip && \
-    ./aws/install --install-dir ${AWSCLI_INSTALL_DIR} --bin-dir ${AWSCLI_BIN_DIR} && \
-    rm -rf /tmp/aws
 
 # -- Build: create dioptra wheel ---------------------------------------------------------------------
 
@@ -236,8 +217,6 @@ RUN echo "===> Cleaning/pruning directories...." && \
 
 FROM base AS final
 
-COPY --from=install-awscli --chown=root:root /opt/aws-cli /opt/aws-cli
-COPY --from=install-awscli --chown=root:root /usr/local/bin /usr/local/bin
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/fix-permissions.sh /usr/local/bin/fix-permissions.sh
 
 ARG DIOPTRA_USER=dioptra
@@ -259,9 +238,6 @@ COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/entrypoint
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/healthcheck-worker.sh /usr/local/bin/healthcheck.sh
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/parse-uri.sh /usr/local/bin/parse-uri.sh
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/run-mlflow-job.sh /usr/local/bin/run-mlflow-job.sh
-COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/s3-cp.sh /usr/local/bin/s3-cp.sh
-COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/s3-mb.sh /usr/local/bin/s3-mb.sh
-COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/s3-sync.sh /usr/local/bin/s3-sync.sh
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/unpack-archive.sh /usr/local/bin/unpack-archive.sh
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
 COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/aws-config /home/${DIOPTRA_USER}/.aws/config/aws-config

@@ -17,28 +17,46 @@
 """A module for registering the endpoint routes with the main application.
 
 .. |Api| replace:: :py:class:`flask_restx.Api`
-.. |Flask| replace:: :py:class:`flask.Flask`
 """
 from __future__ import annotations
 
-from flask import Flask
 from flask_restx import Api
 
+V0_ROOT = "api/v0"
 
-def register_routes(api: Api, app: Flask) -> None:
+AUTH_ROUTE = "auth"
+EXPERIMENT_ROUTE = "experiment"
+JOB_ROUTE = "job"
+QUEUE_ROUTE = "queue"
+TASK_PLUGIN_ROUTE = "taskPlugin"
+USER_ROUTE = "user"
+
+
+def register_routes(api: Api) -> None:
     """Registers the endpoint routes with the main application.
 
     Args:
         api: The main REST |Api| object.
-        app: The main |Flask| application.
     """
-    from .experiment import register_routes as attach_experiment
-    from .job import register_routes as attach_job
-    from .queue import register_routes as attach_job_queue
-    from .task_plugin import register_routes as attach_task_plugin
+    register_v0_routes(api)
 
-    # Add routes
-    attach_experiment(api, app)
-    attach_job(api, app)
-    attach_job_queue(api, app)
-    attach_task_plugin(api, app)
+
+def register_v0_routes(api: Api) -> None:
+    """Registers the endpoint routes with the main application.
+
+    Args:
+        api: The main REST |Api| object.
+    """
+    from .v0.auth.controller import api as auth_api
+    from .v0.experiment.controller import api as experiment_api
+    from .v0.job.controller import api as job_api
+    from .v0.queue.controller import api as queue_api
+    from .v0.task_plugin.controller import api as task_plugin_api
+    from .v0.user.controller import api as user_api
+
+    api.add_namespace(auth_api, path=f"/{V0_ROOT}/{AUTH_ROUTE}")
+    api.add_namespace(experiment_api, path=f"/{V0_ROOT}/{EXPERIMENT_ROUTE}")
+    api.add_namespace(job_api, path=f"/{V0_ROOT}/{JOB_ROUTE}")
+    api.add_namespace(queue_api, path=f"/{V0_ROOT}/{QUEUE_ROUTE}")
+    api.add_namespace(task_plugin_api, path=f"/{V0_ROOT}/{TASK_PLUGIN_ROUTE}")
+    api.add_namespace(user_api, path=f"/{V0_ROOT}/{USER_ROUTE}")

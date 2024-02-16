@@ -429,3 +429,4 @@ package-lock.json
 !.travis.yml
 !**/ca-certificates/**/README.md
 !docker/**/etc
+!tests/**/lib

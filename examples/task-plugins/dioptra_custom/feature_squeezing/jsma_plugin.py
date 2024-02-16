@@ -59,7 +59,7 @@ except ImportError:  # pragma: nocover
 def create_adversarial_jsma_dataset(
     data_dir: str,
     model_name: str,
-    model_version: str,
+    model_version: int,
     theta: float,
     gamma: float,
     keras_classifier: KerasClassifier,
@@ -68,11 +68,11 @@ def create_adversarial_jsma_dataset(
     batch_size: int = 32,
     label_mode: str = "categorical",
     color_mode: str = "grayscale",
-    image_size: Tuple[int, int] = (28, 28),
+    image_size: Tuple[int, int] = (28, 28, 1),
     verbose: bool = True,
     **kwargs,
 ):
-    model_name = model_name + "/" + model_version
+    model_name = model_name + "/" + str(model_version)
     LOGGER.info("Model Selected: ", model_name=model_name)
     color_mode: str = "color" if image_size[2] == 3 else "grayscale"
     target_size: Tuple[int, int] = image_size[:2]

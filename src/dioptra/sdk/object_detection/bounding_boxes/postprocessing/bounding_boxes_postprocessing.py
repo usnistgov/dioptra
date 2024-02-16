@@ -17,13 +17,16 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+from typing import Any
 
 
 class BoundingBoxesYOLOV1PostProcessing(metaclass=ABCMeta):
     @abstractmethod
-    def postprocess(self, bboxes_cell_xywh, bboxes_conf, bboxes_labels):
+    def postprocess(
+        self, bboxes_cell_xywh: Any, bboxes_conf: Any, bboxes_labels: Any
+    ) -> Any:
         raise NotImplementedError
 
     @abstractmethod
-    def embed(self, bboxes_corner, bboxes_labels, n_classes):
+    def embed(self, bboxes_corner: Any, bboxes_labels: Any, n_classes: Any) -> Any:
         raise NotImplementedError

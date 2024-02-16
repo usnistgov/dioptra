@@ -22,12 +22,7 @@ import pytest
 from flask import Flask
 from werkzeug.datastructures import FileStorage
 
-from dioptra.restapi.models import (
-    TaskPlugin,
-    TaskPluginUploadForm,
-    TaskPluginUploadFormData,
-)
-from dioptra.restapi.task_plugin.interface import TaskPluginInterface
+from dioptra.restapi.v0.task_plugin.model import TaskPlugin
 
 
 @pytest.fixture
@@ -40,39 +35,10 @@ def new_task_plugin() -> TaskPlugin:
 
 
 @pytest.fixture
-def new_task_plugin_interface() -> TaskPluginInterface:
-    return TaskPluginInterface(
-        collection="dioptra_custom",
-        task_plugin_name="new_package",
-        modules=["__init__.py", "plugin_module.py"],
-    )
-
-
-@pytest.fixture
-def task_plugin_upload_form(
-    app: Flask, task_plugin_archive: BinaryIO
-) -> TaskPluginUploadForm:
-    with app.test_request_context():
-        form = TaskPluginUploadForm(
-            data={
-                "task_plugin_name": "new_plugin_one",
-                "collection": "dioptra_custom",
-                "task_plugin_file": FileStorage(
-                    stream=task_plugin_archive,
-                    filename="task_plugin_new_package.tar.gz",
-                    name="task_plugin_file",
-                ),
-            }
-        )
-
-    return form
-
-
-@pytest.fixture
 def task_plugin_upload_form_data(
     app: Flask, task_plugin_archive: BinaryIO
-) -> TaskPluginUploadFormData:
-    return TaskPluginUploadFormData(
+) -> dict[str, Any]:
+    return dict(
         task_plugin_name="new_package",
         collection="dioptra_custom",
         task_plugin_file=FileStorage(

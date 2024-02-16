@@ -57,6 +57,7 @@ from typing import (
     Optional,
     TypeVar,
     Union,
+    cast,
     overload,
 )
 
@@ -96,32 +97,19 @@ except ImportError:  # pragma: nocover
     from typing_extensions import Protocol  # type: ignore
 
 if TYPE_CHECKING:
-    from prefect.core.task import TaskMetaclass as Task
+    from prefect.tasks.core.function import FunctionTask
 
 
 # Structural subtyping
 class NoutPlugin(Protocol):
     _task_nout: int
 
-    def __call__(self, *args, **kwargs) -> Any:
-        ...  # pragma: nocover
+    def __call__(self, *args, **kwargs) -> Any: ...  # noqa: E704; pragma: nocover
 
 
 # Type aliases
-F = TypeVar("F", bound=NoutPlugin)
 T = TypeVar("T")
 Plugin = Callable[..., Any]
-
-
-# Only expose decorated functions to the outside
-__all__ = []
-
-
-def expose(func: Callable[..., T]) -> Callable[..., T]:
-    """Add function to __all__ so it will be exposed at the top level"""
-    __all__.append(func.__name__)
-
-    return func
 
 
 class PluginInfo(NamedTuple):
@@ -142,7 +130,7 @@ _PLUGINS: Dict[str, Dict[str, Dict[str, PluginInfo]]] = {}
 
 
 @overload
-def register(func: None, *, sort_value: float) -> Callable[[Plugin], Plugin]:
+def register(*, sort_value: float) -> Callable[[Plugin], Plugin]:
     """Signature for using decorator with parameters"""
     ...  # pragma: nocover
 
@@ -153,10 +141,7 @@ def register(func: Plugin) -> Plugin:
     ...  # pragma: nocover
 
 
-@expose
-def register(
-    _func: Optional[Plugin] = None, *, sort_value: float = 0
-) -> Callable[..., Any]:
+def register(_func=None, *, sort_value=0):
     """Decorator for registering a new plug-in"""
 
     def decorator_register(func: Callable[..., T]) -> Callable[..., T]:
@@ -188,17 +173,19 @@ def register(
         return decorator_register(_func)
 
 
-@expose
-def task_nout(nout: int) -> Callable[[F], F]:
-    def decorator(func: F) -> F:
-        func._task_nout = nout
+def task_nout(nout: int) -> Callable[[Plugin], NoutPlugin]:
+    def decorator(func: Plugin) -> NoutPlugin:
+        # We're just assigning an attribute, and we need mypy to let us
+        # do that.  So we just force a type change, to a callable type which
+        # includes an attribute.
+        nout_func = cast(NoutPlugin, func)
+        nout_func._task_nout = nout
 
-        return func
+        return nout_func
 
     return decorator
 
 
-@expose
 def names(package: str) -> List[str]:
     """List all plug-ins in one package"""
     _import_all(package)
@@ -206,7 +193,6 @@ def names(package: str) -> List[str]:
     return sorted(_PLUGINS[package].keys(), key=lambda p: info(package, p).sort_value)
 
 
-@expose
 def funcs(package: str, plugin: str) -> List[str]:
     """List all functions in one plug-in"""
     _import(package, plugin)
@@ -215,7 +201,6 @@ def funcs(package: str, plugin: str) -> List[str]:
     return list(plugin_info.keys())
 
 
-@expose
 def info(package: str, plugin: str, func: Optional[str] = None) -> PluginInfo:
     """Get information about a plug-in"""
     _import(package, plugin)
@@ -241,7 +226,6 @@ def info(package: str, plugin: str, func: Optional[str] = None) -> PluginInfo:
         ) from exc
 
 
-@expose
 def exists(package: str, plugin: str) -> bool:
     """Check if a given plugin exists"""
     if package in _PLUGINS and plugin in _PLUGINS[package]:
@@ -257,13 +241,11 @@ def exists(package: str, plugin: str) -> bool:
         return package in _PLUGINS and plugin in _PLUGINS[package]
 
 
-@expose
 def get(package: str, plugin: str, func: Optional[str] = None) -> Plugin:
     """Get a given plugin"""
     return info(package, plugin, func).func
 
 
-@expose
 def call(
     package: str, plugin: str, func: Optional[str] = None, *args: Any, **kwargs: Any
 ) -> Any:
@@ -273,17 +255,15 @@ def call(
     return plugin_func(*args, **kwargs)
 
 
-@expose
 @require_package("prefect", exc_type=PrefectDependencyError)
-def get_task(package: str, plugin: str, func: Optional[str] = None) -> Task:
+def get_task(package: str, plugin: str, func: Optional[str] = None) -> FunctionTask:
     """Get a given plugin wrapped as a prefect task"""
     plugin_func: Union[Plugin, NoutPlugin] = info(package, plugin, func).func
     nout: Optional[int] = getattr(plugin_func, "_task_nout", None)
 
-    return task(plugin_func, nout=nout)  # type: ignore
+    return task(nout=nout)(plugin_func)
 
 
-@expose
 @require_package("prefect", exc_type=PrefectDependencyError)
 def call_task(
     package: str, plugin: str, func: Optional[str] = None, *args: Any, **kwargs: Any
@@ -299,16 +279,25 @@ def _import(package: str, plugin: str) -> None:
     if package in _PLUGINS and plugin in _PLUGINS[package]:
         return None
 
-    plugin_module = f"{package}.{plugin}"
+    # If the plugin does not have a package, it is registered with package ""
+    # (empty string).  Don't prepend the package in that case.
+    if package:
+        plugin_module = f"{package}.{plugin}"
+    else:
+        plugin_module = plugin
 
     try:
         importlib.import_module(plugin_module)
 
     except ImportError as err:
         if repr(plugin_module) in err.msg:
-            raise UnknownPluginError(
-                f"Plugin {plugin!r} not found in {package!r}"
-            ) from None
+            #   Plugin not found in ''
+            # is a confusing error message... don't mention a package in the
+            # error message if there wasn't one.
+            message = f"Plugin {plugin!r} not found"
+            if package:
+                message += f" in {package!r}"
+            raise UnknownPluginError(message) from None
 
         elif repr(package) in err.msg:
             raise UnknownPackageError(f"Package {package!r} does not exist") from None
@@ -340,51 +329,65 @@ def _import_all(package: str) -> None:
             pass  # Don't let errors in one plugin, affect the others
 
 
-@expose
 def names_factory(package: str) -> Callable[[], List[str]]:
     """Create a names() function for one package"""
     return functools.partial(names, package)
 
 
-@expose
 def funcs_factory(package: str) -> Callable[[str], List[str]]:
     """Create a funcs() function for one package"""
     return functools.partial(funcs, package)
 
 
-@expose
 def info_factory(package: str) -> Callable[[str, Optional[str]], PluginInfo]:
     """Create a info() function for one package"""
     return functools.partial(info, package)
 
 
-@expose
 def exists_factory(package: str) -> Callable[[str], bool]:
     """Create an exists() function for one package"""
     return functools.partial(exists, package)
 
 
-@expose
 def get_factory(package: str) -> Callable[[str, Optional[str]], Plugin]:
     """Create a get() function for one package"""
     return functools.partial(get, package)
 
 
-@expose
 def call_factory(package: str) -> Callable[..., Any]:
     """Create a call() function for one package"""
     return functools.partial(call, package)
 
 
-@expose
 @require_package("prefect", exc_type=PrefectDependencyError)
-def get_task_factory(package: str) -> Callable[[str, Optional[str]], Task]:
+def get_task_factory(package: str) -> Callable[[str, Optional[str]], FunctionTask]:
     """Create a get_task() function for one package"""
     return functools.partial(get_task, package)
 
 
-@expose
 @require_package("prefect", exc_type=PrefectDependencyError)
 def call_task_factory(package: str) -> Callable[..., Any]:
     """Create a call_task() function for one package"""
     return functools.partial(call_task, package)
+
+
+__all__ = [
+    "register",
+    "task_nout",
+    "names",
+    "funcs",
+    "info",
+    "exists",
+    "get",
+    "call",
+    "get_task",
+    "call_task",
+    "names_factory",
+    "funcs_factory",
+    "info_factory",
+    "exists_factory",
+    "get_factory",
+    "call_factory",
+    "get_task_factory",
+    "call_task_factory",
+]

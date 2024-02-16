@@ -59,7 +59,7 @@ except ImportError:  # pragma: nocover
 def create_adversarial_cw_inf_dataset(
     data_dir: str,
     model_name: str,
-    model_version: str,
+    model_version: int,
     learning_rate: float,
     max_iter: int,
     verbose: str,
@@ -74,7 +74,7 @@ def create_adversarial_cw_inf_dataset(
     confidence: float = 0.0,
     **kwargs,
 ):
-    model_name = model_name
+    model_name = model_name + "/" + str(model_version)
     LOGGER.info("Model Selected: ", model_name=model_name)
     color_mode: str = "color" if image_size[2] == 3 else "grayscale"
     target_size: Tuple[int, int] = image_size[:2]

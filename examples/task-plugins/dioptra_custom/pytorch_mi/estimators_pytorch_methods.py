@@ -47,15 +47,15 @@ def fit(
 
     loss_fn = CrossEntropyLoss()
     ave_loss = 0
-    for batch_idx, (x, target) in enumerate(training_ds):
-        # LOGGER.info("data shape:", str(data.shape))
-        optimizer.zero_grad()
-        x, target = Variable(x), Variable(target)
-        out = estimator(x)
-        loss = loss_fn(out, target)
-        ave_loss = ave_loss * 0.9 + loss.data.item() * 0.1
-        loss.backward()
-        optimizer.step()
+    for epoch in range(30):
+        for batch_idx, (x, target) in enumerate(training_ds):
+            optimizer.zero_grad()
+            x, target = Variable(x), Variable(target)
+            out = estimator(x)
+            loss = loss_fn(out, target)
+            ave_loss = ave_loss * 0.9 + loss.data.item() * 0.1
+            loss.backward()
+            optimizer.step()
 
     time_end = datetime.datetime.now()
 
@@ -92,5 +92,7 @@ def predict(
 
         y_pred += list(predicted.numpy())
         y_true += list(t_y.numpy())
+    print(len(y_pred))
+    print(len(y_true))
 
     return np.array(y_true), np.array(y_pred)

@@ -180,7 +180,7 @@ def _log_workflow_artifact(run_id, workflow_filepath):
     client.log_artifact(run_id=run_id, local_path=workflow_filepath)
 
 
-def _set_dioptra_tags(run_id):
+def _set_dioptra_tags(run_id: str) -> None:
     job: Optional[Dict[str, Any]] = DioptraDatabaseClient().get_active_job()
 
     if job is None:

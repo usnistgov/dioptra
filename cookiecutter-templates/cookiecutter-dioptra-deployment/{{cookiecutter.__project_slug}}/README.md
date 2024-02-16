@@ -9,6 +9,7 @@ A collection of scripts, configuration files, and Docker Compose files for initi
   - [Mounting folders in the worker containers](#mounting-folders-in-the-worker-containers)
     - [Mounting a folder on the host machine](#mounting-a-folder-on-the-host-machine)
     - [Mounting a folder on an NFS share](#mounting-a-folder-on-an-nfs-share)
+  - [Assigning multiple GPUs per worker](#assigning-multiple-gpus-per-worker)
 - [Initializing the deployment](#initializing-the-deployment)
 - [Starting the deployment](#starting-the-deployment)
   - [Using Docker Compose](#using-docker-compose)
@@ -130,6 +131,22 @@ The `:ro` at the end will mount the NFS share as read-only within the worker con
     - dioptra-datasets:/datasets:ro
 ```
 
+### Assigning multiple GPUs per worker
+
+To assign multiple GPUs to a worker, modify the `NVIDIA_VISIBLE_DEVICES` environment variable that is set in the **tfgpu** and **pytorch-gpu** container blocks:
+
+```yaml
+  environment:
+    NVIDIA_VISIBLE_DEVICES: 0,1
+```
+
+To allow a worker to use all available GPUs, set `NVIDIA_VISIBLE_DEVICES` to `all`:
+
+```yaml
+  environment:
+    NVIDIA_VISIBLE_DEVICES: all
+```
+
 ## Initializing the deployment
 
 The `init-deployment.sh` script is the main tool for initializing the deployment and automates the following steps:
@@ -140,7 +157,6 @@ The `init-deployment.sh` script is the main tool for initializing the deployment
 -   Creates the Minio S3 accounts and configures their access permissions
 -   Syncs the built-in task plugins from the Dioptra GitHub repository with the appropriate Minio S3 bucket
 -   Enables SSL/TLS in the Postgres service (if applicable)
--   Upgrades the schema for the Dioptra REST API database (if applicable)
 
 This script should be executed if this is the first time you are starting the deployment **or** if you have changed at least one of the files in the `config/` or `ssl/` directory.
 If you run `./init-deployment.sh --help`, you will print the script's help message:

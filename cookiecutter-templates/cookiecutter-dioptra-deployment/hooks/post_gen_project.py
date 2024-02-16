@@ -5,6 +5,7 @@ import logging
 import os
 import random
 import shutil
+import string
 import unicodedata
 from pathlib import Path
 
@@ -92,7 +93,8 @@ def insert_random_passwords(password_files, words_file, env):
 
         content = _render_template(
             env=env,
-            template_name=str(filepath),
+            # Jinja2 requires forward slashes in the template name.
+            template_name=str(filepath.as_posix()),
             variables=variables,
         )
 
@@ -111,12 +113,12 @@ def render_absolute_path_to_base_directory():
         for filename in filenames:
             filepath = Path(dirpath) / filename
 
-            with filepath.open("rt") as f:
+            with filepath.open("rt", encoding="utf-8") as f:
                 data = f.read()
 
             data = data.replace(BASE_DIRECTORY_SYMBOL, str(BASE_DIRECTORY))
 
-            with filepath.open("wt") as f:
+            with filepath.open("wt", encoding="utf-8") as f:
                 f.write(data)
 
 
@@ -165,6 +167,17 @@ def _generate_random_password(
 def _populate_words(words_file, source_encoding="utf-8", unicode_normalize_form="NFKD"):
     words = set()
 
+    # if dictionary file does not exist, fall back to random words
+    if not Path(words_file).exists():
+        chars = list(string.ascii_lowercase)
+        for _ in range(int(10000)):
+            length = random.randint(4, 8)
+            word = "".join(random.choices(chars, k=length))
+
+            words.add(word)
+
+        return list(words)
+
     with open(words_file, "rb") as f:
         for line in f:
             normalized_line: str = unicodedata.normalize(
@@ -172,7 +185,9 @@ def _populate_words(words_file, source_encoding="utf-8", unicode_normalize_form=
                 line.decode(source_encoding).lower().strip(),
             )
 
-            is_ascii: bool = all([0 <= ord(char) <= 127 for char in normalized_line])
+            is_ascii: bool = all(
+                [0 <= ord(char) <= 127 for char in normalized_line]
+            )
             is_not_plural: bool = not normalized_line.endswith("'s")
             is_not_short: bool = len(normalized_line) >= 4
 

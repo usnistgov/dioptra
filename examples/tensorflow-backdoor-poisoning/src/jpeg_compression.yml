@@ -1,0 +1,307 @@
+types:
+  callback:
+  dataloader:
+  directoryiterator:
+  functiontype:
+  kerasclassifier:
+  metric:
+  mlflowrun:
+  tuple:
+  model:
+  modelversion:
+  np.ndarray:
+  optimizer:
+  path:
+  dataframe:
+  rngenerator:
+  sequential:
+  tarfile:
+  list_tuple_string_any:
+    list: tuple_string_any
+  list_union_metric_functiontype:
+    list: union_metric_functiontype
+  list_union_string_path:
+    list: union_string_path
+  list_mapping_string_string:
+    list: mapping_string_string
+  mapping_string_any:
+    mapping: [string, any]
+  mapping_string_number:
+    mapping: [string, number]
+  mapping_string_string:
+    mapping: [string, string]
+  tuple_integer_integer:
+    tuple: [integer, integer]
+  tuple_integer_integer_integer:
+    tuple: [integer, integer, integer]
+  tuple_string_any:
+    tuple: [string, any]
+  union_integer_number_string:
+    union: [integer, number, string]
+  union_integer_any:
+    union: [integer, any]
+  union_metric_functiontype:
+    union: [metric, functiontype]
+  union_null_list_tuple_string_any:
+    union: [list_tuple_string_any , "null"]
+  union_null_mapping_string_any:
+    union: [mapping_string_any, "null"]
+  union_null_modelversion:
+    union: [modelversion, "null"]
+  union_null_number:
+    union: [number, "null"]
+  union_null_string:
+    union: [string, "null"]
+  union_null_union_integer_any:
+    union: [union_integer_any, "null"]
+  union_string_path:
+    union: [string, path]
+  union_null_union_string_path:
+    union: [union_string_path, "null"]
+
+parameters:
+  image_size: [28, 28, 1]
+  def_tar_name: jpeg_compression_dataset.tar.gz
+  def_data_dir: adv_testing
+  jpeg_compression_quality: 50
+  jpeg_compression_channels_first: false
+  jpeg_compression_apply_fit: false
+  jpeg_compression_apply_predict: true
+  dataset_run_id: ""
+  dataset_tar_name: adversarial_poison.tar.gz
+  dataset_name: adv_poison_data
+  batch_size: 32
+  label_mode: categorical
+  def_type: jpeg_compression
+  distance_metrics_filename: distance_metrics.csv
+  file_format: csv.gz
+  seed: -1
+
+tasks:
+  init_rng:
+    plugin: dioptra_builtins.random.rng.init_rng
+    inputs:
+      - name: seed
+        type: integer
+        required: false
+    outputs:
+      - seed: integer
+      - rng: rngenerator
+
+  draw_random:
+    plugin: dioptra_builtins.random.sample.draw_random_integer
+    inputs:
+      - rng: rngenerator
+      - name: low
+        type: integer
+        required: false
+      - name: high
+        type: integer
+        required: false
+    outputs:
+      value: integer
+
+  init_tensorflow:
+    plugin: dioptra_builtins.backend_configs.tensorflow.init_tensorflow
+    inputs:
+      - seed: integer
+
+  log_parameters:
+    plugin: dioptra_builtins.tracking.mlflow.log_parameters
+    inputs:
+      - parameters: mapping_string_number
+
+  download_all_artifacts_in_run:
+    plugin: dioptra_builtins.artifacts.mlflow.download_all_artifacts_in_run
+    inputs:
+      - run_id: string
+      - artifact_path: string
+      - name: destination_path
+        type: union_null_string
+        required: false
+    outputs:
+      ret: string
+
+  make_directories:
+    inputs:
+    - dirs: list_union_string_path
+    plugin: dioptra_builtins.artifacts.utils.make_directories
+
+  extract_tarfile:
+    plugin: dioptra_builtins.artifacts.utils.extract_tarfile
+    inputs:
+      - filepath: union_string_path
+      - name: tarball_read_mode
+        type: string
+        required: false
+      - name: output_dir
+        type: any
+        required: false
+
+  get_distance_metric_list:
+    plugin: dioptra_builtins.metrics.distance.get_distance_metric_list
+    inputs:
+      - request: list_mapping_string_string
+    outputs:
+      distance_metrics_list: list_tuple_string_any
+
+  create_image_dataset:
+    inputs:
+    - data_dir: string
+    - subset: union_null_string
+    - image_size: tuple_integer_integer_integer
+    - seed: integer
+    - name: rescale
+      required: false
+      type: number
+    - name: validation_split
+      required: false
+      type: union_null_number
+    - name: batch_size
+      required: false
+      type: integer
+    - name: label_mode
+      required: false
+      type: string
+    - name: imagenet_preprocessing
+      required: false
+      type: boolean
+    outputs:
+      ret: directoryiterator
+    plugin: dioptra_custom.custom_poisoning_plugins.data_tensorflow.create_image_dataset
+
+  create_defended_dataset:
+    inputs:
+    - data_dir: string
+    - def_data_dir: union_string_path
+    - image_size: tuple_integer_integer_integer
+    - name: distance_metrics_list
+      required: false
+      type: union_null_list_tuple_string_any
+    - name: batch_size
+      required: false
+      type: integer
+    - name: label_mode
+      required: false
+      type: string
+    - name: def_type
+      required: false
+      type: string
+    - name: defense_kwargs
+      required: false
+      type: union_null_mapping_string_any
+    outputs:
+      ret: dataframe
+    plugin: dioptra_custom.custom_poisoning_plugins.defenses_image_preprocessing.create_defended_dataset
+  upload_directory_as_tarball_artifact:
+    plugin: dioptra_builtins.artifacts.mlflow.upload_directory_as_tarball_artifact
+    inputs:
+      - source_dir: union_string_path
+      - tarball_filename: string
+      - name: tarball_write_mode
+        type: string
+        required: false
+      - name: working_dir
+        type: union_null_union_string_path
+        required: false
+  upload_data_frame_artifacts:
+    plugin: dioptra_builtins.artifacts.mlflow.upload_data_frame_artifact
+    inputs:
+      - data_frame: dataframe
+      - file_name: string
+      - file_format: string
+      - name: file_format_kwargs
+        type: union_null_mapping_string_any
+        required: false
+      - name: working_dir
+        type: union_null_union_string_path
+        required: false
+  prepend_cwd:
+    plugin:
+      dioptra_custom.evaluation.mlflow.prepend_cwd
+    inputs:
+      - path: string
+    outputs: 
+      ret: string
+
+graph:
+  init_rng:
+    init_rng: $seed
+
+  tensorflow_global_seed:
+    draw_random: $init_rng.rng
+
+  dataset_seed:
+    draw_random: $init_rng.rng
+
+  init_tensorflow_results:
+    init_tensorflow: $tensorflow_global_seed
+  
+  testing_dir:
+    prepend_cwd: $dataset_name
+  
+  def_data_dir_path:
+    prepend_cwd: def_data_dir
+    
+  make_directories_results:
+    make_directories: [[def_data_dir_path]]
+
+  log_mlflow_params_result:
+    log_parameters:
+      - entry_point_seed: $seed
+        tensorflow_global_seed: $tensorflow_global_seed
+        dataset_seed: $dataset_seed
+
+  adv_tar_path:
+    download_all_artifacts_in_run:
+      run_id: $dataset_run_id
+      artifact_path: $dataset_tar_name
+
+  extract_tarfile_results:
+    extract_tarfile:
+      filepath: $adv_tar_path
+
+  distance_metrics_list:
+    get_distance_metric_list:
+      - - name: l_infinity_norm
+          func: l_inf_norm
+        - name: l_1_norm
+          func: l_1_norm
+        - name: l_2_norm
+          func: l_2_norm
+        - name: cosine_similarity
+          func: paired_cosine_similarities
+        - name: euclidean_distance
+          func: paired_euclidean_distances
+        - name: manhattan_distance
+          func: paired_manhattan_distances
+        - name: wasserstein_distance
+          func: paired_wasserstein_distances
+
+  distance_metrics:
+    create_defended_dataset:
+      def_type: $def_type
+      data_dir: $testing_dir
+      def_data_dir: $def_data_dir
+      image_size: $image_size
+      distance_metrics_list: $distance_metrics_list
+      batch_size: $batch_size
+      defense_kwargs:
+        quality: $jpeg_compression_quality
+        channels_first: $jpeg_compression_channels_first
+        apply_fit: $jpeg_compression_apply_fit
+        apply_predict: $jpeg_compression_apply_predict
+    dependencies: [make_directories_results, extract_tarfile_results]
+
+  log_evasion_dataset_result:
+    upload_directory_as_tarball_artifact:
+      source_dir: $def_data_dir
+      tarball_filename: $def_tar_name
+    dependencies: distance_metrics
+
+  log_distance_metrics_result:
+    upload_data_frame_artifacts:
+      - $distance_metrics
+      - $distance_metrics_filename
+      - $file_format
+      - index: false

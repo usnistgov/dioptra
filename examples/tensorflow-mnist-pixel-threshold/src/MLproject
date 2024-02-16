@@ -19,8 +19,8 @@ name: mnist-pixel-threshold
 entry_points:
   pt:
     parameters:
-      data_dir: { type: path, default: "/dioptra/data/Mnist" }
-      image_size: { type: string, default: "28,28,1" }
+      data_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      image_size: { type: string, default: "[28,28,1]" }
       adv_tar_name: { type: string, default: "testing_adversarial_pt.tar.gz" }
       adv_data_dir: { type: string, default: "adv_testing" }
       model_name: { type: string, default: "mnist_le_net" }
@@ -29,61 +29,42 @@ entry_points:
       th: { type: int, default 1 }
       es: { type: int, default 0 }
       seed: { type: float, default: -1 }
-      clip_values: { type: string, default: "0,1" }
+      clip_values: { type: string, default: "[0,1]" }
     command: >
-      python pt.py
-      --data-dir {data_dir}
-      --image-size {image_size}
-      --adv-tar-name {adv_tar_name}
-      --adv-data-dir {adv_data_dir}
-      --model-name {model_name}
-      --model-version {model_version}
-      --batch-size {batch_size}
-      --th {th}
-      --es {es}
-      --seed {seed}
-      --clip-values {clip_values}
-
-  infer:
-    parameters:
-      run_id: { type: string }
-      image_size: { type: string, default: "28,28,1" }
-      model_name: { type: string, default: "mnist_le_net" }
-      model_version: { type: string, default: "1" }
-      adv_tar_name: { type: string, default: "testing_adversarial_pt.tar.gz" }
-      adv_data_dir: { type: string, default: "adv_testing" }
-      seed: { type: float, default: -1 }
-    command: >
-      python infer.py
-      --run-id {run_id}
-      --image-size {image_size}
-      --model-name {model_name}
-      --model-version {model_version}
-      --adv-tar-name {adv_tar_name}
-      --adv-data-dir {adv_data_dir}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment pt.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment pt.yml
+      -P data_dir={data_dir}
+      -P image_size={image_size}
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P batch_size={batch_size}
+      -P th={th}
+      -P es={es}
+      -P seed={seed}
+      -P clip_values={clip_values}
 
   train:
     parameters:
-      data_dir: { type: path, default: "/dioptra/data/Mnist" }
-      image_size: { type: string, default: "28,28,1" }
+      training_dir: { type: path, default: "/dioptra/data/Mnist/training" }
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      image_size: { type: string, default: "[28,28,1]" }
       model_architecture: { type: string, default: "le_net" }
       epochs: { type: float, default: 30 }
       batch_size: { type: float, default: 32 }
       register_model_name: { type: string, default: "" }
       learning_rate: { type: float, default: 0.001 }
-      optimizer: { type: string, default: "Adam" }
       validation_split: { type: float, default: 0.2 }
       seed: { type: float, default: -1 }
     command: >
-      python train.py
-      --data-dir {data_dir}
-      --image-size {image_size}
-      --model-architecture {model_architecture}
-      --epochs {epochs}
-      --batch-size {batch_size}
-      --register-model-name {register_model_name}
-      --learning-rate {learning_rate}
-      --optimizer {optimizer}
-      --validation-split {validation_split}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment train.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment train.yml
+      -P training_dir={training_dir}
+      -P testing_dir={testing_dir}
+      -P image_size={image_size}
+      -P model_architecture={model_architecture}
+      -P epochs={epochs}
+      -P batch_size={batch_size}
+      -P register_model_name={register_model_name}
+      -P learning_rate={learning_rate}
+      -P validation_split={validation_split}
+      -P seed={seed}

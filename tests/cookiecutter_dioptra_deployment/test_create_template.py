@@ -32,7 +32,7 @@ def check_paths(paths):
         if is_binary(str(path)):
             continue
 
-        for line in path.open("r"):
+        for line in path.open("r", encoding="utf-8"):
             match = RE_OBJ.search(line)
             assert match is None, f"cookiecutter variable not replaced in {path}"
 

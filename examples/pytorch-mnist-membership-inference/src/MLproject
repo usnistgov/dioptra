@@ -19,8 +19,9 @@ name: pytorch-mnist-membership-inference
 entry_points:
   train:
     parameters:
-      data_dir: { type: path, default: "/dioptra/data/Mnist" }
-      image_size: { type: string, default: "28,28,1" }
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      training_dir: { type: path, default: "/dioptra/data/Mnist/training" }
+      image_size: { type: string, default: "[28,28,1]" }
       model_architecture: { type: string, default: "le_net" }
       batch_size: { type: float, default: 32 }
       register_model_name: { type: string, default: "" }
@@ -29,20 +30,22 @@ entry_points:
       validation_split: { type: float, default: 0.2 }
       seed: { type: float, default: -1 }
     command: >
-      python src/train_mi.py
-      --data-dir {data_dir}
-      --image-size {image_size}
-      --model-architecture {model_architecture}
-      --batch-size {batch_size}
-      --register-model-name {register_model_name}
-      --learning-rate {learning_rate}
-      --optimizer {optimizer}
-      --validation-split {validation_split}
-      --seed {seed}  
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment train_mi.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment train_mi.yml
+      -P testing_dir={testing_dir}
+      -P training_dir={training_dir}
+      -P image_size={image_size}
+      -P model_architecture={model_architecture}
+      -P batch_size={batch_size}
+      -P register_model_name={register_model_name}
+      -P learning_rate={learning_rate}
+      -P optimizer={optimizer}
+      -P validation_split={validation_split}
+      -P seed={seed}  
   mi:
     parameters:
-      data_dir: { type: path, default: "/dioptra/data/Mnist" }
-      image_size: { type: string, default: "1,28,28" }
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      training_dir: { type: path, default: "/dioptra/data/Mnist/training" }
+      image_size: { type: string, default: "[1,28,28]" }
       model_name: { type: string, default: "le_net" }
       model_version: { type: int, default: 1}
       batch_size: { type: float, default: 32 }
@@ -51,10 +54,14 @@ entry_points:
       balance_sets: {type: bool, default: True}
       seed: { type: float, default: -1 }
     command: >
-      python src/mi.py
-      --data-dir {data_dir}
-      --image-size {image_size}
-      --model-name {model_name}
-      --model-version {model_version}
-      --batch-size {batch_size}
-      --seed {seed}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment mi.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment mi.yml
+      -P testing_dir={testing_dir}
+      -P training_dir={training_dir}
+      -P image_size={image_size}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P attack_model_type={attack_model_type}
+      -P split={split}
+      -P balance_sets={balance_sets}
+      -P batch_size={batch_size}
+      -P seed={seed}

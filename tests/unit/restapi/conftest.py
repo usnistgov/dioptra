@@ -18,18 +18,27 @@ from __future__ import annotations
 
 import io
 import tarfile
-from typing import Any, BinaryIO, List
+import time
+from pathlib import Path
+from typing import Any, BinaryIO, Iterable, List
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+import requests
 from boto3.session import Session
 from botocore.client import BaseClient
 from flask import Flask
-from flask_injector import FlaskInjector, request
-from flask_restx import Api
+from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from injector import Binder, Injector
+from mlflow.tracking import set_tracking_uri
 from redis import Redis
+from requests import ConnectionError
+from requests import Session as RequestsSession
+
+from dioptra.restapi.db import db as restapi_db
+from dioptra.restapi.v0.shared.request_scope import request
+
+from .lib.server import FlaskTestServer
 
 
 @pytest.fixture(scope="session")
@@ -51,9 +60,10 @@ def task_plugins_dir(tmp_path_factory):
 def workflow_tar_gz():
     workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
 
-    with tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f, io.BytesIO(
-        initial_bytes=b"data"
-    ) as data:
+    with (
+        tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f,
+        io.BytesIO(initial_bytes=b"data") as data,
+    ):
         tarinfo = tarfile.TarInfo(name="MLproject")
         tarinfo.size = len(data.getbuffer())
         f.addfile(tarinfo=tarinfo, fileobj=data)
@@ -64,12 +74,33 @@ def workflow_tar_gz():
 
 
 @pytest.fixture
+def workflow_tar_gz_factory():
+    def wrapped():
+        workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
+
+        with (
+            tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f,
+            io.BytesIO(initial_bytes=b"data") as data,
+        ):
+            tarinfo = tarfile.TarInfo(name="MLproject")
+            tarinfo.size = len(data.getbuffer())
+            f.addfile(tarinfo=tarinfo, fileobj=data)
+
+        workflow_tar_gz_fileobj.seek(0)
+        return workflow_tar_gz_fileobj
+
+    return wrapped
+
+
+@pytest.fixture
 def task_plugin_archive():
     archive_fileobj: BinaryIO = io.BytesIO()
 
-    with tarfile.open(fileobj=archive_fileobj, mode="w:gz") as f, io.BytesIO(
-        initial_bytes=b"# init file"
-    ) as f_init, io.BytesIO(initial_bytes=b"# plugin module") as f_plugin_module:
+    with (
+        tarfile.open(fileobj=archive_fileobj, mode="w:gz") as f,
+        io.BytesIO(initial_bytes=b"# init file") as f_init,
+        io.BytesIO(initial_bytes=b"# plugin module") as f_plugin_module,
+    ):
         tarinfo_init = tarfile.TarInfo(name="new_plugin_module/__init__.py")
         tarinfo_init.size = len(f_init.getbuffer())
         f.addfile(tarinfo=tarinfo_init, fileobj=f_init)
@@ -87,21 +118,10 @@ def task_plugin_archive():
 
 @pytest.fixture
 def dependency_modules() -> List[Any]:
-    from dioptra.restapi.experiment.dependencies import (
-        ExperimentRegistrationFormSchemaModule,
-    )
-    from dioptra.restapi.job.dependencies import (
-        JobFormSchemaModule,
+    from dioptra.restapi.bootstrap import (
+        PasswordServiceModule,
         RQServiceConfiguration,
         RQServiceModule,
-    )
-    from dioptra.restapi.queue.dependencies import QueueRegistrationFormSchemaModule
-    from dioptra.restapi.task_plugin.dependencies import (
-        TaskPluginUploadFormSchemaModule,
-    )
-    from dioptra.restapi.user.dependencies import (
-        PasswordServiceModule,
-        UserRegistrationFormSchemaModule,
         _bind_password_service_configuration,
     )
 
@@ -109,6 +129,7 @@ def dependency_modules() -> List[Any]:
         configuration: RQServiceConfiguration = RQServiceConfiguration(
             redis=Redis.from_url("redis://"),
             run_mlflow="dioptra.rq.tasks.run_mlflow_task",
+            run_task_engine="dioptra.rq.tasks.run_task_engine_task",
         )
 
         binder.bind(
@@ -131,13 +152,8 @@ def dependency_modules() -> List[Any]:
 
     return [
         configure,
-        ExperimentRegistrationFormSchemaModule(),
-        JobFormSchemaModule(),
         PasswordServiceModule(),
-        QueueRegistrationFormSchemaModule(),
         RQServiceModule(),
-        TaskPluginUploadFormSchemaModule(),
-        UserRegistrationFormSchemaModule(),
     ]
 
 
@@ -147,49 +163,28 @@ def dependency_injector(dependency_modules: List[Any]) -> Injector:
 
 
 @pytest.fixture
-def app(dependency_modules: List[Any], monkeypatch: MonkeyPatch) -> Flask:
-    import dioptra.restapi.routes
+def app(dependency_modules: List[Any]) -> Flask:
     from dioptra.restapi import create_app
 
-    # Override register_routes in dioptra.restapi.routes to enable testing of endpoints
-    # that are under development.
-    def register_test_routes(api: Api, app: Flask) -> None:
-        from dioptra.restapi.experiment import register_routes as attach_experiment
-        from dioptra.restapi.job import register_routes as attach_job
-        from dioptra.restapi.queue import register_routes as attach_job_queue
-        from dioptra.restapi.task_plugin import register_routes as attach_task_plugin
-        from dioptra.restapi.user import register_routes as attach_user
+    injector = Injector(dependency_modules)
+    app = create_app(env="test_no_login", injector=injector)
 
-        # Add routes
-        attach_experiment(api, app)
-        attach_job(api, app)
-        attach_job_queue(api, app)
-        attach_task_plugin(api, app)
-        attach_user(api, app)
-
-    monkeypatch.setattr(dioptra.restapi.routes, "register_routes", register_test_routes)
-
-    app: Flask = create_app(env="test", inject_dependencies=False)
-    FlaskInjector(app=app, modules=dependency_modules)
-
-    return app
+    yield app
 
 
 @pytest.fixture
 def db(app: Flask) -> SQLAlchemy:
-    from dioptra.restapi.app import db
-
     with app.app_context():
-        db.drop_all()
-        db.create_all()
-        yield db
-        db.drop_all()
-        db.session.commit()
+        restapi_db.drop_all()
+        restapi_db.create_all()
+        yield restapi_db
+        restapi_db.drop_all()
+        restapi_db.session.commit()
 
 
 @pytest.fixture(autouse=True)
 def seed_database(db):
-    from dioptra.restapi.job.model import job_statuses
+    from dioptra.restapi.db.legacy_models import job_statuses
 
     db.session.execute(
         job_statuses.insert(),
@@ -202,3 +197,88 @@ def seed_database(db):
         ],
     )
     db.session.commit()
+
+
+@pytest.fixture
+def client(app: Flask) -> FlaskClient:
+    return app.test_client()
+
+
+@pytest.fixture
+def flask_test_server(tmp_path: Path, http_client: RequestsSession):
+    """Start a Flask test server.
+
+    Args:
+        tmp_path: The path to the temporary directory.
+        http_client: A Requests session client.
+    """
+    sqlite_path = tmp_path / "dioptra-test.db"
+    server = FlaskTestServer(sqlite_path=sqlite_path)
+    server.upgrade_db()
+    with server:
+        wait_for_healthcheck_success(http_client)
+        yield
+
+
+@pytest.fixture
+def http_client() -> Iterable[RequestsSession]:
+    """A Requests session for accessing the API.
+
+    Yields:
+        A Requests session.
+    """
+    with requests.Session() as s:
+        yield s
+
+
+@pytest.fixture(autouse=True)
+def create_mlruns(tmp_path):
+    path = Path(tmp_path / "mlruns")
+    path.mkdir()
+    set_tracking_uri(path)
+
+
+def wait_for_healthcheck_success(client: RequestsSession, timeout: int = 10) -> None:
+    """Wait for the healthcheck endpoint to return a successful response.
+
+    Args:
+        client: A Requests session client.
+        timeout: The maximum number of seconds to wait for the healthcheck endpoint to
+            return a successful response.
+
+    Raises:
+        TimeoutError: If the healthcheck endpoint does not return a successful response
+            within the specified timeout.
+    """
+
+    class StubResponse(object):
+        """Stubbed response to use when the client experiences a connection error."""
+
+        def json(self) -> str:
+            """Return an empty string."""
+            return ""
+
+    healthcheck_url = "http://localhost:5000/health"
+    time_elapsed = 0
+
+    try:
+        healthcheck = client.get(healthcheck_url)
+
+    except ConnectionError:
+        healthcheck = StubResponse()
+
+    time_start = time.time()
+
+    while healthcheck.json() != "healthy":
+        if time_elapsed > timeout:
+            raise TimeoutError("Healthcheck failed to return healthy status")
+
+        time.sleep(0.1)
+
+        try:
+            healthcheck = client.get(healthcheck_url)
+
+        except ConnectionError:
+            healthcheck = StubResponse()
+
+        time_elapsed = time.time() - time_start

@@ -77,31 +77,31 @@
         "dbadmin": {
             "image": "pgadmin4",
             "namespace": "dpage",
-            "tag": "7.4",
+            "tag": "8.3",
             "registry": ""
         },
         "mc": {
             "image": "mc",
             "namespace": "minio",
-            "tag": "RELEASE.2023-01-28T20-29-38Z",
+            "tag": "RELEASE.2023-10-14T01-57-03Z",
             "registry": ""
         },
         "minio": {
             "image": "minio",
             "namespace": "minio",
-            "tag": "RELEASE.2023-07-07T07-13-57Z",
+            "tag": "RELEASE.2024-02-13T15-35-11Z",
             "registry": ""
         },
         "nodejs": {
             "image": "node",
             "namespace": "",
-            "tag": "18",
+            "tag": "21.6.1",
             "registry": ""
         },
         "redis": {
             "image": "redis",
             "namespace": "",
-            "tag": "7.0.11",
+            "tag": "7.2.4",
             "registry": ""
         }
     },

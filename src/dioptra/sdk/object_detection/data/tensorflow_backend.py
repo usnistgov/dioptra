@@ -115,15 +115,15 @@ class TensorflowObjectDetectionData(ObjectDetectionData):
         augmentations_seed: Optional[int] = None,
         shuffle_seed: Optional[int] = None,
     ) -> TensorflowObjectDetectionData:
-        annotation_data_registry: dict[
-            str, Callable[[], PascalVOCAnnotationData]
-        ] = dict(
-            pascal_voc=lambda: PascalVOCAnnotationData(
-                labels=labels,
-                encoding=NumpyAnnotationEncoding(
-                    boxes_dtype="float32", labels_dtype="int32"
+        annotation_data_registry: dict[str, Callable[[], PascalVOCAnnotationData]] = (
+            dict(
+                pascal_voc=lambda: PascalVOCAnnotationData(
+                    labels=labels,
+                    encoding=NumpyAnnotationEncoding(
+                        boxes_dtype="float32", labels_dtype="int32"
+                    ),
                 ),
-            ),
+            )
         )
         augmentations_registry: dict[
             str, Callable[[], ImgAugObjectDetectionAugmentations]

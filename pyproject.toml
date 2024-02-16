@@ -46,15 +46,15 @@ dependencies = [
     "boto3>=1.16.0",
     "Click>=8.0.0,<9",
     "entrypoints>=0.3",
-    "Flask>=2.0.0,<2.2.0",
+    "Flask>=2.0.0",
     "flask-accepts>=0.17.0",
     "Flask-Cors>=3.0.1",
-    "Flask-Injector>=0.14.0",
+    "Flask-Login>=0.6.0",
     "Flask-Migrate>=2.5.0",
     "flask-restx>=0.5.1",
     "Flask-SQLAlchemy>=2.4.0",
-    "Flask-WTF>=0.14.3",
     "injector>=0.18.0",
+    "jsonschema>=4.17.0",
     "marshmallow>=3.9.0,<4",
     "multimethod>=1.5",
     "mlflow>=1.12.1,<2",
@@ -62,6 +62,7 @@ dependencies = [
     "pandas>=1.5.0",
     "passlib>=1.7.0",
     "python-dateutil>=2.8.0",
+    "PyYAML>=6.0.0",
     "redis>=3.5.0",
     "requests>=2.25,<3",
     "rq>=1.5.0",
@@ -70,7 +71,6 @@ dependencies = [
     "SQLAlchemy>=1.4.0,<2",
     "typing-extensions>=3.7.4.3",
     "werkzeug>=1.0.0,<=2.1.2",
-    "wtforms[email]>=3.0.0",
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -89,6 +89,12 @@ repository = "https://github.com/usnistgov/dioptra"
 documentation = "https://pages.nist.gov/dioptra"
 Changelog = "https://github.com/usnistgov/dioptra/blob/main/CHANGELOG.md"
 "Issue Tracker" = "https://github.com/usnistgov/dioptra/issues"
+
+[project.scripts]
+dioptra-db = "dioptra.restapi.db.alembic.run:cli"
+run-experiment = "dioptra.task_engine.run_experiment:main"
+validate-experiment = "dioptra.task_engine.validate:main"
+s3-download = "dioptra.worker.s3_download_cli:main"
 
 [project.entry-points."dioptra.generics.estimator_predict"]
 tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"
@@ -122,11 +128,13 @@ taskplugins = [
 ]
 dev = [
     "autopep8",
+    "binaryornot>=0.4.0",
     "build",
     "entrypoints",
     "esbonio",
     "flake8-bugbear",
     "flake8>=3.8.0",
+    "freezegun",
     "ipykernel",
     "ipython",
     "jupyter",
@@ -135,6 +143,8 @@ dev = [
     "pip-tools",
     "pycodestyle",
     "pydocstyle",
+    "pytest-cookies",
+    "pytest>=7",
     "pytoml",
     "Sphinx>=4.5.0,<5",
     "tomli",
@@ -233,6 +243,9 @@ omit = [
     # omit config and models files in restapi module since these are just configurations and imports
     "restapi/config.py",
     "restapi/models.py",
+    # omit alembic directory since these files are just for migrating the database
+    "*/alembic/*.py",
+    "*/alembic/versions/*.py",
 ]
 
 [tool.doc8]
@@ -245,6 +258,8 @@ honor_noqa = true
 [tool.mypy]
 python_version = "3.9"
 platform = "linux"
+mypy_path = "src,task-plugins"
+explicit_package_bases = true
 namespace_packages = true
 show_column_numbers = true
 follow_imports = "normal"
@@ -257,6 +272,9 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 show_error_codes = true
 cache_dir = "/dev/null"
+exclude = [
+    'alembic/.*$',  # exclude all files, folders under alembic directory
+]
 plugins = "numpy.typing.mypy_plugin,sqlalchemy.ext.mypy.plugin"
 
 [tool.pyright]

@@ -26,9 +26,11 @@ import requests
 
 
 class DioptraClient(object):
-    def __init__(self, address: str | None = None) -> None:
+    def __init__(self, address: str | None = None, api_version: str = "v0") -> None:
         address = (
-            f"{address}/api" if address else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api"
+            f"{address}/api/{api_version}"
+            if address
+            else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api/{api_version}"
         )
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
 
@@ -145,7 +147,7 @@ class DioptraClient(object):
 
         response = requests.post(
             self.experiment_endpoint,
-            data=experiment_registration_form,
+            json=experiment_registration_form,
         )
 
         return response.json()
@@ -155,7 +157,7 @@ class DioptraClient(object):
 
         response = requests.post(
             self.queue_endpoint,
-            data=queue_registration_form,
+            json=queue_registration_form,
         )
 
         return response.json()
@@ -170,18 +172,18 @@ class DioptraClient(object):
         queue: str = "tensorflow_cpu",
         timeout: str = "24h",
     ) -> dict[str, Any]:
-        job_form = {
-            "experiment_name": experiment_name,
+        job_form: dict[str, Any] = {
+            "experimentName": experiment_name,
             "queue": queue,
             "timeout": timeout,
-            "entry_point": entry_point,
+            "entryPoint": entry_point,
         }
 
         if entry_point_kwargs is not None:
-            job_form["entry_point_kwargs"] = entry_point_kwargs
+            job_form["entryPointKwargs"] = entry_point_kwargs
 
         if depends_on is not None:
-            job_form["depends_on"] = depends_on
+            job_form["dependsOn"] = depends_on
 
         workflows_file = Path(workflows_file)
 
@@ -202,14 +204,14 @@ class DioptraClient(object):
         collection: str = "dioptra_custom",
     ) -> dict[str, Any]:
         plugin_upload_form = {
-            "task_plugin_name": custom_plugin_name,
+            "taskPluginName": custom_plugin_name,
             "collection": collection,
         }
 
         custom_plugin_file = Path(custom_plugin_file)
 
         with custom_plugin_file.open("rb") as f:
-            custom_plugin_file = {"task_plugin_file": (custom_plugin_file.name, f)}
+            custom_plugin_file = {"taskPluginFile": (custom_plugin_file.name, f)}
             response = requests.post(
                 self.task_plugin_endpoint,
                 data=plugin_upload_form,

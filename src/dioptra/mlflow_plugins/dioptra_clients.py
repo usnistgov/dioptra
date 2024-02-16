@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import datetime
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import structlog
 from flask import Flask
@@ -24,8 +24,8 @@ from sqlalchemy.exc import IntegrityError
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi import create_app
-from dioptra.restapi.app import db
-from dioptra.restapi.models import Experiment, Job
+from dioptra.restapi.db import db
+from dioptra.restapi.db.legacy_models import Experiment, Job
 
 ENVVAR_RESTAPI_ENV = "DIOPTRA_RESTAPI_ENV"
 ENVVAR_JOB_ID = "DIOPTRA_RQ_JOB_ID"
@@ -36,7 +36,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 class DioptraDatabaseClient(object):
     @property
     def app(self) -> Flask:
-        app: Flask = create_app(env=self.restapi_env)
+        app = create_app(env=self.restapi_env)
         return app
 
     @property
@@ -51,8 +51,11 @@ class DioptraDatabaseClient(object):
         if self.job_id is None:
             return None
 
+        return self.get_job(self.job_id)
+
+    def get_job(self, job_id) -> Dict[str, Any]:
         with self.app.app_context():
-            job: Job = Job.query.get(self.job_id)
+            job: Job = Job.query.get(job_id)
             return {
                 "job_id": job.job_id,
                 "queue": job.queue.name,
@@ -68,8 +71,7 @@ class DioptraDatabaseClient(object):
 
     def update_job_status(self, job_id: str, status: str) -> None:
         LOGGER.info(
-            f"=== Updating job status for job with ID '{self.job_id}' to "
-            f"{status} ==="
+            f"=== Updating job status for job with ID '{job_id}' to {status} ==="
         )
 
         with self.app.app_context():
@@ -90,9 +92,11 @@ class DioptraDatabaseClient(object):
             return None
 
         LOGGER.info("=== Setting MLFlow run ID in the Dioptra database ===")
+        self.set_mlflow_run_id_for_job(run_id, self.job_id)
 
+    def set_mlflow_run_id_for_job(self, run_id: str, job_id: str) -> None:
         with self.app.app_context():
-            job = Job.query.get(self.job_id)
+            job = Job.query.get(job_id)
             job.update(changes={"mlflow_run_id": run_id})
 
             try:
@@ -152,7 +156,11 @@ class DioptraDatabaseClient(object):
                 raise
 
     def get_experiment_by_id(self, experiment_id: int) -> Optional[Experiment]:
-        return Experiment.query.get(experiment_id)
+        result = Experiment.query.get(experiment_id)
+        # 1.4 SQLAlchemy type stubs don't seem to have a return type annotation for the
+        # get() method, so mypy assumes Any. Latest SQLAlchemy code uses Optional[Any].
+        # https://github.com/sqlalchemy/sqlalchemy/blob/d9d0ffd96c632750be9adcb03a207d75aecaa80f/lib/sqlalchemy/orm/query.py#L1048
+        return cast(Optional[Experiment], result)
 
     def create_experiment(self, experiment_name: str, experiment_id: int) -> None:
         timestamp = datetime.datetime.now()

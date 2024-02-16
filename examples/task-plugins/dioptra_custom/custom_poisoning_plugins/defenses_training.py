@@ -39,7 +39,7 @@ try:
     from art.utils import to_categorical
     from tensorflow.keras.metrics import Metric
     from tensorflow.keras.models import Model
-    from tensorflow.keras.optimizers import Optimizer
+    from tensorflow.keras.optimizers.legacy import Optimizer
 except ImportError:
     LOGGER.warn(
         "Unable to import one or more optional packages, functionality may be reduced",

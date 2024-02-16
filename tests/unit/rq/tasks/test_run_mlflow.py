@@ -20,6 +20,7 @@ from pathlib import Path
 import rq
 import structlog
 from _pytest.monkeypatch import MonkeyPatch
+from botocore.client import BaseClient
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
@@ -49,7 +50,13 @@ class MockCompletedProcess(object):
 
 
 @freeze_time("2020-08-17T19:46:28.717559")
-def test_run_mlflow_task(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+def test_run_mlflow_task(
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,
+    s3_stubbed_workflow_plugins: tuple[BaseClient, dict[str, dict[str, bytes]]],
+) -> None:
+    s3, bucket_info = s3_stubbed_workflow_plugins
+
     def mockgetcurrentjob(*args, **kwargs) -> MockRQJob:
         LOGGER.info("Mocking rq.get_current_job() function", args=args, kwargs=kwargs)
         return MockRQJob()
@@ -61,24 +68,35 @@ def test_run_mlflow_task(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     d: Path = tmp_path / "run_mlflow_task"
     d.mkdir(parents=True)
 
+    # S3 downloader ought to create this directory automatically
+    tmp_plugins_dir = tmp_path / "plugins"
+
     monkeypatch.setenv("DIOPTRA_WORKDIR", str(d))
+    monkeypatch.setenv("DIOPTRA_PLUGIN_DIR", str(tmp_plugins_dir))
+    monkeypatch.setenv("DIOPTRA_PLUGINS_S3_URI", "s3://plugins/dioptra_builtins")
+    monkeypatch.setenv("DIOPTRA_CUSTOM_PLUGINS_S3_URI", "s3://plugins/dioptra_custom")
+    monkeypatch.setenv("MLFLOW_S3_ENDPOINT_URL", "http://example.org/")
     monkeypatch.setattr(rq, "get_current_job", mockgetcurrentjob)
+
+    workflow_key = next(iter(bucket_info["workflow"]))
+    workflow_s3_uri = f"s3://workflow/{workflow_key}"
 
     with monkeypatch.context() as m:
         m.setattr(subprocess, "run", mockrun)
         p = run_mlflow_task(
-            workflow_uri="s3://workflow/workflows.tar.gz",
+            workflow_uri=workflow_s3_uri,
             entry_point="main",
             experiment_id="0",
             conda_env="base",
             entry_point_kwargs="-P var1=testing",
+            s3=s3,
         )
 
     assert p.returncode == 0
     assert p.args == [
         "/usr/local/bin/run-mlflow-job.sh",
         "--s3-workflow",
-        "s3://workflow/workflows.tar.gz",
+        workflow_s3_uri,
         "--entry-point",
         "main",
         "--conda-env",
@@ -89,3 +107,12 @@ def test_run_mlflow_task(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         "var1=testing",
     ]
     assert Path(p.cwd).parent == d
+
+    # Can't test the downloaded workflow tarball... it is downloaded to a temp
+    # directory which is deleted after use.  So it has already disappeared.
+
+    for key, value in bucket_info["plugins"].items():
+        local_file = tmp_plugins_dir / key
+
+        assert local_file.exists()
+        assert local_file.read_bytes() == value
