@@ -19,7 +19,6 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
-from dioptra.restapi.v1.groups.schema import GroupRefSchema
 from dioptra.restapi.v1.plugin_parameter_types.schema import (
     PluginParameterTypeRefSchema,
 )
@@ -28,40 +27,28 @@ from dioptra.restapi.v1.schemas import (
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
 
+PluginRefBaseSchema = generate_base_resource_ref_schema("Plugin")
 
-class PluginRefSchema(Schema):
+
+class PluginRefSchema(PluginRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a Plugin resource."""
 
-    id = fields.Integer(
-        attribute="id",
-        metadata=dict(description="ID for the Plugin resource."),
-    )
-    group = fields.Nested(
-        GroupRefSchema,
-        attribute="group",
-        metadata=dict(description="Group that owns the Plugin resource."),
-    )
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the Plugin resource."),
     )
-    url = fields.Url(
-        attribute="url",
-        metadata=dict(description="URL for accessing the full Plugin resource."),
-        relative=True,
-    )
 
 
-class PluginFileRefSchema(Schema):
+PluginFileRefBaseSchema = generate_base_resource_ref_schema("PluginFile")
+
+
+class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a PluginFile."""
 
-    id = fields.Integer(
-        attribute="id",
-        metadata=dict(description="ID for the PluginFile resource."),
-    )
     pluginId = fields.Int(
         attribute="plugin_id",
         metadata=dict(description="ID for the Plugin resource this file belongs to."),
@@ -69,11 +56,6 @@ class PluginFileRefSchema(Schema):
     filename = fields.String(
         attribute="filename",
         metadata=dict(description="Filename of the PluginFile resource."),
-    )
-    url = fields.Url(
-        attribute="url",
-        metadata=dict(description="URL for accessing the full PluginFile resource."),
-        relative=True,
     )
 
 
@@ -84,12 +66,10 @@ class PluginTaskSchema(Schema):
         attribute="name",
         metadata=dict(description="Name of the PluginTask."),
     )
-
     number = fields.Integer(
         attribute="number",
         metadata=dict(description="The positional order of the parameter."),
     )
-
     inputParams = fields.Nested(
         PluginParameterTypeRefSchema,
         many=True,
@@ -97,7 +77,6 @@ class PluginTaskSchema(Schema):
             description="List of input PluginTaskParameters in this PluginTask."
         ),
     )
-
     outputParams = fields.Nested(
         PluginParameterTypeRefSchema,
         many=True,
@@ -107,15 +86,15 @@ class PluginTaskSchema(Schema):
     )
 
 
+PluginBaseSchema = generate_base_resource_schema("Plugin", snapshot=True)
+
+
 class PluginMutableFieldsSchema(Schema):
     """The schema for the mutable data fields in a Plugin resource."""
 
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Plugin resource.")
     )
-
-
-PluginBaseSchema = generate_base_resource_schema("Plugin")
 
 
 class PluginSchema(PluginMutableFieldsSchema, PluginBaseSchema):  # type: ignore
@@ -148,19 +127,18 @@ class PluginGetQueryParameters(
     """The query parameters for the GET method of the /queues endpoint."""
 
 
+PluginFileBaseSchema = generate_base_resource_schema("PluginFile", snapshot=True)
+
+
 class PluginFileMutableFieldsSchema(Schema):
     """The schema for the mutable data fields in a PluginFile resource."""
 
     filename = fields.String(
         attribute="name", metadata=dict(description="Name of the PluginFile resource.")
     )
-
     contents = fields.String(
         attribute="contents", metadata=dict(description="Contents of the file.")
     )
-
-
-PluginFileBaseSchema = generate_base_resource_schema("PluginFile")
 
 
 class PluginFileSchema(PluginFileMutableFieldsSchema, PluginFileBaseSchema):  # type: ignore
