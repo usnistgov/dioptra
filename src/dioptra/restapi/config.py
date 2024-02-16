@@ -111,7 +111,7 @@ class ProductionConfig(BaseConfig):
     )
 
 
-class TestingLoginDisabledConfig(BaseConfig):
+class TestingLoginDisabledConfig(TestingConfig):
     CONFIG_NAME = "test_no_login"
     LOGIN_DISABLED = True
 
