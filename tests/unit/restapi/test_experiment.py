@@ -23,7 +23,7 @@ experiments can be registered, retrieved, and deleted as expected through the RE
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Iterable, cast
 
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
@@ -156,7 +156,11 @@ def assert_retrieving_all_experiments_works(
             does not match the expected response.
     """
     response = client.get(f"/{V0_ROOT}/{EXPERIMENT_ROUTE}", follow_redirects=True)
-    assert response.status_code == 200 and response.get_json() == expected
+    response_sorted_list = sorted(
+        cast(Iterable[Any], response.get_json()), key=lambda x: x["name"]
+    )
+    expected_sorted_list = sorted(expected, key=lambda x: x["name"])
+    assert response.status_code == 200 and response_sorted_list == expected_sorted_list
 
 
 def assert_experiment_name_matches_expected_name(

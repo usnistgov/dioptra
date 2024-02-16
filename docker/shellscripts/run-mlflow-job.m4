@@ -132,10 +132,11 @@ start_mlflow() {
 
   echo "${logname}: mlproject file found - ${mlproject_file}"
   echo "${logname}: starting mlflow pipeline"
-  echo "${logname}: mlflow run options - --no-conda ${mlflow_backend_opts}\
+  echo "${logname}: mlflow run options - --env-manager=local ${mlflow_backend_opts}\
   --experiment-id ${mlflow_experiment_id} -e ${entry_point} ${entry_point_kwargs}"
 
-  python -m ${mlflow_run_module} run --no-conda \
+  python -m ${mlflow_run_module} run \
+    --env-manager=local \
     ${mlflow_backend_opts} \
     --experiment-id ${mlflow_experiment_id} \
     -e ${entry_point} \

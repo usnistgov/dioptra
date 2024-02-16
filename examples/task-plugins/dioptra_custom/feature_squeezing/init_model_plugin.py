@@ -136,8 +136,8 @@ def load_and_test_model(
             metrics=METRICS,
         )
 
-        mlflow.keras.log_model(
-            keras_model=newmodel,
+        mlflow.tensorflow.log_model(
+            model=newmodel,
             artifact_path="model",
             registered_model_name=model_name + "_logits",
         )
@@ -149,8 +149,8 @@ def load_and_test_model(
         metrics=METRICS,
     )
     if model_architecture != "mobilenet":
-        mlflow.keras.log_model(
-            keras_model=model,
+        mlflow.tensorflow.log_model(
+            model=model,
             artifact_path="model",
             registered_model_name=model_name,
         )
