@@ -94,15 +94,15 @@ class BasePageSchema(Schema):
         attribute="is_complete",
         metadata=dict(description="Boolean indicating if more data is available."),
     )
-    first = fields.String(
+    first = fields.Url(
         attribute="first",
         metadata=dict(description="URL to first page in results set."),
     )
-    next = fields.String(
+    next = fields.Url(
         attribute="next",
         metadata=dict(description="URL to next page in results set."),
     )
-    prev = fields.String(
+    prev = fields.Url(
         attribute="prev",
         metadata=dict(description="URL to last page in results set."),
     )
