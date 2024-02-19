@@ -247,7 +247,7 @@ def assert_retrieving_all_queues_works(
             does not match the expected response.
     """
     response = client.get(f"/{V0_ROOT}/{QUEUE_ROUTE}", follow_redirects=True)
-    assert response.status_code == 200 and response.get_json() == expected
+    assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
 def assert_registering_existing_queue_name_fails(
@@ -325,7 +325,28 @@ def assert_queue_count_matches_expected_count(
         f"/{V0_ROOT}/{QUEUE_ROUTE}",
         follow_redirects=True,
     )
-    assert len(response.get_json()) == expected
+    assert len(response.get_json()["data"]) == expected
+
+
+def assert_page_data_matches(
+    client: FlaskClient, index: int, page_length: int, expected: list[dict[str, Any]]
+) -> None:
+    """Assert that the returned page matches the expected page.
+    Args:
+        client: The Flask test client.
+        expected: The expected page.
+    Raises:
+        AssertionError: If the response status code is not 200 or if the number of
+            experiments does not match the expected number.
+    """
+
+    response = client.get(
+        f"/{V0_ROOT}/{QUEUE_ROUTE}?index={index}&pageLength={page_length}",
+        follow_redirects=True,
+    )
+
+    page = response.get_json()
+    assert response.status_code == 200 and page == expected
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -510,3 +531,37 @@ def test_lock_queue_by_name(client: FlaskClient, db: SQLAlchemy) -> None:
     assert_queue_count_matches_expected_count(client, expected=1)
     unlock_queue_with_name(client, name=tensorflow_gpu_name)
     assert_queue_count_matches_expected_count(client, expected=2)
+
+
+def test_queue_paging(client: FlaskClient, db: SQLAlchemy) -> None:
+    """Tests that queues can be retrieved according to paging information:
+        Scenario: Queue Paging
+            Given I am an authorized user,
+            I need to be able to select an index and page length,
+            in order to display a page of queues.
+    This test validates by following these actions:
+    - A user registers two queues, "queue1", "queue2", and "queue3".
+    - The user is able to retrieve a page after specifying the index and page length.
+    - The returned page of queues matches the information that was provided
+      during registration.
+    """
+
+    queue1_expected = register_queue(client, name="queue1").get_json()
+    queue2_expected = register_queue(client, name="queue2").get_json()
+    register_queue(client, name="queue3")
+    data = [
+        queue1_expected,
+        queue2_expected,
+    ]
+    index = 0
+    page_length = 2
+    is_complete = False
+    page_expected = {
+        "data": data,
+        "index": index,
+        "isComplete": is_complete,
+        "first": f"/api/v0/queue?index=0&pageLength={page_length}",
+        "next": f"/api/v0/queue?index={index+page_length}&pageLength={page_length}",
+        "prev": f"/api/v0/queue?index=0&pageLength={page_length}",
+    }
+    assert_page_data_matches(client, index=0, page_length=2, expected=page_expected)

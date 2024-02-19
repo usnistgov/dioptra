@@ -29,8 +29,14 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db.legacy_models import Queue
+from dioptra.restapi.page import Page
 
-from .schema import IdStatusResponseSchema, NameStatusResponseSchema, QueueSchema
+from .schema import (
+    IdStatusResponseSchema,
+    NameStatusResponseSchema,
+    QueuePageResponseSchema,
+    QueueSchema,
+)
 from .service import QueueNameService, QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -51,14 +57,30 @@ class QueueResource(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @responds(schema=QueueSchema(many=True), api=api)
-    def get(self) -> list[Queue]:
-        """Gets a list of all active queues."""
+    @responds(schema=QueuePageResponseSchema, api=api)
+    def get(self) -> Page:
+        """Gets a page of queues matching the query parameters."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queue", request_type="GET"
         )  # noqa: F841
         log.info("Request received")
-        return self._queue_service.get_all_unlocked(log=log)
+
+        index = request.args.get("index", 0, type=int)
+        page_length = request.args.get("pageLength", Queue.query.count(), type=int)
+
+        data = self._queue_service.get_page_unlocked(
+            index=index, page_length=page_length, log=log
+        )
+
+        is_complete = True if Queue.query.count() <= index + page_length else False
+
+        return Page(
+            data=data,
+            index=index,
+            is_complete=is_complete,
+            endpoint="v0/queue",
+            page_length=page_length,
+        )
 
     @login_required
     @accepts(schema=QueueSchema, api=api)

@@ -127,17 +127,26 @@ class QueueService(object):
 
         return cast(Queue, queue)
 
-    def get_all(self, **kwargs) -> list[Queue]:
-        """Fetch the list of all queues.
+    def get_page(self, index: int, page_length: int, **kwargs) -> list[Queue]:
+        """Fetch a page of queues.
+
+        Args:
+            index: Database index of first entry in page.
+            page_length: Length of page.
 
         Returns:
-            A list of queues.
+            A list of queue objects.
         """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.info("Get full list of queues")
-        return Queue.query.filter_by(is_deleted=False).all()  # type: ignore
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-    def get_all_unlocked(self, **kwargs) -> list[Queue]:
+        return (  # type: ignore
+            Queue.query.filter_by(is_deleted=False)
+            .offset(index)
+            .limit(page_length)
+            .all()
+        )
+
+    def get_page_unlocked(self, index: int, page_length: int, **kwargs) -> list[Queue]:
         """Fetch the list of all unlocked queues.
 
         Returns:
@@ -151,6 +160,8 @@ class QueueService(object):
                 QueueLock.queue_id == None,  # noqa: E711
                 Queue.is_deleted == False,  # noqa: E712
             )
+            .offset(index)
+            .limit(page_length)
             .all()
         )
 

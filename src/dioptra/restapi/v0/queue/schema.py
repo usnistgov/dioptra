@@ -24,6 +24,7 @@ from typing import Any
 
 from marshmallow import Schema, fields, post_load
 
+from dioptra.restapi.schemas import BasePageSchema
 from dioptra.restapi.utils import slugify
 
 
@@ -84,4 +85,14 @@ class NameStatusResponseSchema(Schema):
         metadata=dict(
             description="A list of names identifying the affected object(s)."
         ),
+    )
+
+
+class QueuePageResponseSchema(BasePageSchema):
+    """A simple response for reporting a page of queue objects."""
+
+    data = fields.Nested(
+        QueueSchema(many=True),
+        attribute="data",
+        metadata=dict(description="A list of queue object data for the page."),
     )
