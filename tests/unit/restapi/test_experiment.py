@@ -462,9 +462,9 @@ def test_experiment_paging(client: FlaskClient, db: SQLAlchemy) -> None:
         "data": data,
         "index": index,
         "isComplete": isComplete,
-        "first": f"/api/experiment?index=0&pageLength={page_length}",
-        "next": f"/api/experiment?index={index+page_length}&pageLength={page_length}",
-        "prev": f"/api/experiment?index=0&pageLength={page_length}",
+        "first": f"/api/v0/experiment?index=0&pageLength={page_length}",
+        "next": f"/api/v0/experiment?index={index+page_length}&pageLength={page_length}",
+        "prev": f"/api/v0/experiment?index=0&pageLength={page_length}",
     }
     assert_page_data_matches(
         client, index=0, page_length=2, expected=page_expected

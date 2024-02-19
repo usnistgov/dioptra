@@ -78,7 +78,7 @@ class ExperimentResource(Resource):
             data=data,
             index=index,
             is_complete=is_complete,
-            endpoint="experiment",
+            endpoint="v0/experiment",
             page_length=page_length,
         )
 
