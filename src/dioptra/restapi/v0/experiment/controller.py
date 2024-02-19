@@ -29,8 +29,14 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db.legacy_models import Experiment
+from dioptra.restapi.page import Page
 
-from .schema import ExperimentSchema, IdStatusResponseSchema, NameStatusResponseSchema
+from .schema import (
+    ExperimentPageResponseSchema,
+    ExperimentSchema,
+    IdStatusResponseSchema,
+    NameStatusResponseSchema,
+)
 from .service import ExperimentNameService, ExperimentService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -51,14 +57,30 @@ class ExperimentResource(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @responds(schema=ExperimentSchema(many=True), api=api)
-    def get(self) -> list[Experiment]:
-        """Gets a list of all registered experiments."""
+    @responds(schema=ExperimentPageResponseSchema, api=api)
+    def get(self) -> Page:
+        """Gets a page of registered experiments."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="GET"
         )  # noqa: F841
         log.info("Request received")
-        return self._experiment_service.get_all(log=log)
+
+        index = request.args.get("index", 0, type=int)
+        page_length = request.args.get("pageLength", Experiment.query.count(), type=int)
+
+        data = self._experiment_service.get_page(
+            index=index, page_length=page_length, log=log
+        )
+
+        is_complete = True if Experiment.query.count() <= index + page_length else False
+
+        return Page(
+            data=data,
+            index=index,
+            is_complete=is_complete,
+            endpoint="experiment",
+            page_length=page_length,
+        )
 
     @login_required
     @accepts(schema=ExperimentSchema, api=api)

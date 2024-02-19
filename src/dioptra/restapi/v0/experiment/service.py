@@ -183,6 +183,25 @@ class ExperimentService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
         return Experiment.query.filter_by(is_deleted=False).all()  # type: ignore
 
+    def get_page(self, index: int, page_length: int, **kwargs) -> list[Experiment]:
+        """Fetch a page of experiments.
+
+        Args:
+            index: Database index of first entry in page.
+            page_length: Length of page.
+
+        Returns:
+            A list of experiment objects.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+
+        return (  # type: ignore
+            Experiment.query.filter_by(is_deleted=False)
+            .offset(index)
+            .limit(page_length)
+            .all()
+        )
+
     def get(
         self, experiment_id: int, error_if_not_found: bool = False, **kwargs
     ) -> Experiment | None:

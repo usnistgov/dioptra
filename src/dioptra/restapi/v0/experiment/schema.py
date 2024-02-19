@@ -22,6 +22,8 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
+from ...schemas import BasePageSchema
+
 
 class ExperimentSchema(Schema):
     """The schema for the data stored in an |Experiment| object."""
@@ -77,4 +79,14 @@ class NameStatusResponseSchema(Schema):
         metadata=dict(
             description="A list of names identifying the affected object(s)."
         ),
+    )
+
+
+class ExperimentPageResponseSchema(BasePageSchema):
+    """A simple response for reporting a page of experiment objects."""
+
+    data = fields.Nested(
+        ExperimentSchema(many=True),
+        attribute="data",
+        metadata=dict(description="A list of experiment object data for the page."),
     )
