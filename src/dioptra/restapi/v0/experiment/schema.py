@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
-from ...schemas import BasePageSchema
+from dioptra.restapi.schemas import BasePageSchema
 
 
 class ExperimentSchema(Schema):
