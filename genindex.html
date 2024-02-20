@@ -167,6 +167,7 @@
 <li class="toctree-l1"><a class="reference internal" href="user-guide/entry-points.html">Entry Points</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/task-plugins.html">Task Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/custom-entry-points.html">Creating a New Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/task_engine_doc.html">Declarative Experiment Description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/custom-task-plugins.html">Custom Task Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/generics-plugin-system.html">Generics Plugin System</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="user-guide/task-plugins-collection.html">Task Plugins Collection</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -190,6 +191,7 @@
 <li class="toctree-l2"><a class="reference internal" href="user-guide/api-sdk/api-cryptography.html">cryptography</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/api-reference-client.html">Testbed Client API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/api-reference-restapi.html">Testbed REST API Reference</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
@@ -372,6 +374,8 @@ document.write(`
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.categorical_accuracy">categorical_accuracy() (in module dioptra_builtins.metrics.performance)</a>
 </li>
+      <li><a href="user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.paths.clear_directory">clear_directory() (in module dioptra.sdk.utilities.paths)</a>
+</li>
       <li><a href="user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.clear_logger_handlers">clear_logger_handlers() (in module dioptra.sdk.utilities.logging)</a>
 </li>
   </ul></td>
@@ -398,6 +402,15 @@ document.write(`
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.delete_custom_task_plugin">delete_custom_task_plugin() (DioptraClient method)</a>
+</li>
+      <li>
+    dioptra.client
+
+      <ul>
+        <li><a href="user-guide/api-reference-client.html#module-dioptra.client">module</a>
+</li>
+      </ul></li>
       <li>
     dioptra.rq.tasks
 
@@ -531,6 +544,8 @@ document.write(`
         <li><a href="user-guide/api-task-plugins/api-builtins-attacks.html#module-dioptra_builtins.attacks.fgm">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     dioptra_builtins.backend_configs
 
@@ -538,8 +553,6 @@ document.write(`
         <li><a href="user-guide/api-task-plugins/api-builtins-backend_configs.html#module-dioptra_builtins.backend_configs">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     dioptra_builtins.backend_configs.tensorflow
 
@@ -666,6 +679,8 @@ document.write(`
         <li><a href="user-guide/api-task-plugins/api-builtins-tracking.html#module-dioptra_builtins.tracking.mlflow">module</a>
 </li>
       </ul></li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient">DioptraClient (class in dioptra.client)</a>
+</li>
       <li><a href="user-guide/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.mlflow.download_all_artifacts_in_run">download_all_artifacts_in_run() (in module dioptra_builtins.artifacts.mlflow)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-random.html#dioptra_builtins.random.sample.draw_random_integer">draw_random_integer() (in module dioptra_builtins.random.sample)</a>
@@ -684,21 +699,11 @@ document.write(`
 </li>
       <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.exists">exists() (in module dioptra.pyplugs)</a>
 </li>
-      <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.exists_factory">exists_factory() (in module dioptra.pyplugs)</a>
-</li>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentAlreadyExistsError">ExperimentAlreadyExistsError</a>
-</li>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentDoesNotExistError">ExperimentDoesNotExistError</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError">ExperimentMLFlowTrackingAlreadyExistsError</a>
+      <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.exists_factory">exists_factory() (in module dioptra.pyplugs)</a>
 </li>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError">ExperimentMLFlowTrackingDoesNotExistError</a>
-</li>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError">ExperimentMLFlowTrackingRegistrationError</a>
-</li>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.experiment.errors.ExperimentRegistrationError">ExperimentRegistrationError</a>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.experiment_endpoint">experiment_endpoint (DioptraClient property)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.utils.extract_tarfile">extract_tarfile() (in module dioptra_builtins.artifacts.utils)</a>
 </li>
@@ -740,9 +745,17 @@ document.write(`
 </li>
       <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.get">get() (in module dioptra.pyplugs)</a>
 </li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.get_builtin_task_plugin">get_builtin_task_plugin() (DioptraClient method)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.get_custom_task_plugin">get_custom_task_plugin() (DioptraClient method)</a>
+</li>
       <li><a href="user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.get_distance_metric">get_distance_metric() (in module dioptra_builtins.metrics.distance)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.distance.get_distance_metric_list">get_distance_metric_list() (in module dioptra_builtins.metrics.distance)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.get_experiment_by_id">get_experiment_by_id() (DioptraClient method)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.get_experiment_by_name">get_experiment_by_name() (DioptraClient method)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-registry.html#dioptra_builtins.registry.mlflow.get_experiment_name">get_experiment_name() (in module dioptra_builtins.registry.mlflow)</a>
 </li>
@@ -750,11 +763,17 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.get_factory">get_factory() (in module dioptra.pyplugs)</a>
 </li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.get_job_by_id">get_job_by_id() (DioptraClient method)</a>
+</li>
       <li><a href="user-guide/api-task-plugins/api-builtins-data.html#dioptra_builtins.data.tensorflow.get_n_classes_from_directory_iterator">get_n_classes_from_directory_iterator() (in module dioptra_builtins.data.tensorflow)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.get_performance_metric">get_performance_metric() (in module dioptra_builtins.metrics.performance)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.get_performance_metric_list">get_performance_metric_list() (in module dioptra_builtins.metrics.performance)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.get_queue_by_id">get_queue_by_id() (DioptraClient method)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.get_queue_by_name">get_queue_by_name() (DioptraClient method)</a>
 </li>
       <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.get_task">get_task() (in module dioptra.pyplugs)</a>
 </li>
@@ -794,14 +813,10 @@ document.write(`
 <h2 id="J">J</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.job.errors.JobDoesNotExistError">JobDoesNotExistError</a>
-</li>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.job.errors.JobSubmissionError">JobSubmissionError</a>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.job_endpoint">job_endpoint (DioptraClient property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.job.errors.JobWorkflowUploadError">JobWorkflowUploadError</a>
-</li>
       <li><a href="glossary.html#term-JSMA"><strong>JSMA</strong></a>
 </li>
       <li><a href="glossary.html#term-JSON"><strong>JSON</strong></a>
@@ -820,12 +835,24 @@ document.write(`
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-estimators.html#dioptra_builtins.estimators.keras_classifiers.le_net">le_net() (in module dioptra_builtins.estimators.keras_classifiers)</a>
 </li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.list_all_task_plugins">list_all_task_plugins() (DioptraClient method)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.list_builtin_task_plugins">list_builtin_task_plugins() (DioptraClient method)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.list_custom_task_plugins">list_custom_task_plugins() (DioptraClient method)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.list_experiments">list_experiments() (DioptraClient method)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.list_jobs">list_jobs() (DioptraClient method)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.list_queues">list_queues() (DioptraClient method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-sdk/api-cryptography.html#dioptra.sdk.cryptography.common.load_payload">load_payload() (in module dioptra.sdk.cryptography.common)</a>
 </li>
       <li><a href="user-guide/api-sdk/api-cryptography.html#dioptra.sdk.cryptography.sign.load_private_key">load_private_key() (in module dioptra.sdk.cryptography.sign)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-sdk/api-cryptography.html#dioptra.sdk.cryptography.verify.load_public_key">load_public_key() (in module dioptra.sdk.cryptography.verify)</a>
 </li>
       <li><a href="user-guide/api-sdk/api-cryptography.html#dioptra.sdk.cryptography.verify.load_signature">load_signature() (in module dioptra.sdk.cryptography.verify)</a>
@@ -833,6 +860,8 @@ document.write(`
       <li><a href="user-guide/api-task-plugins/api-builtins-registry.html#dioptra_builtins.registry.mlflow.load_tensorflow_keras_classifier">load_tensorflow_keras_classifier() (in module dioptra_builtins.registry.mlflow)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-registry.html#dioptra_builtins.registry.art.load_wrapped_tensorflow_keras_classifier">load_wrapped_tensorflow_keras_classifier() (in module dioptra_builtins.registry.art)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.lock_queue">lock_queue() (DioptraClient method)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-tracking.html#dioptra_builtins.tracking.mlflow.log_metrics">log_metrics() (in module dioptra_builtins.tracking.mlflow)</a>
 </li>
@@ -856,6 +885,8 @@ document.write(`
     module
 
       <ul>
+        <li><a href="user-guide/api-reference-client.html#module-dioptra.client">dioptra.client</a>
+</li>
         <li><a href="user-guide/api-sdk/api-rq.html#module-dioptra.rq.tasks">dioptra.rq.tasks</a>
 </li>
         <li><a href="user-guide/api-sdk/api-cryptography.html#module-dioptra.sdk.cryptography">dioptra.sdk.cryptography</a>
@@ -977,13 +1008,7 @@ document.write(`
 <h2 id="Q">Q</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.queue.errors.QueueAlreadyExistsError">QueueAlreadyExistsError</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.queue.errors.QueueDoesNotExistError">QueueDoesNotExistError</a>
-</li>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.queue.errors.QueueRegistrationError">QueueRegistrationError</a>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.queue_endpoint">queue_endpoint (DioptraClient property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -997,6 +1022,10 @@ document.write(`
 </li>
       <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.register">register() (in module dioptra.pyplugs)</a>
 </li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.register_experiment">register_experiment() (DioptraClient method)</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.register_queue">register_queue() (DioptraClient method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.decorators.require_package">require_package() (in module dioptra.sdk.utilities.decorators)</a>
@@ -1006,6 +1035,8 @@ document.write(`
       <li><a href="user-guide/api-task-plugins/api-builtins-metrics.html#dioptra_builtins.metrics.performance.roc_auc">roc_auc() (in module dioptra_builtins.metrics.performance)</a>
 </li>
       <li><a href="user-guide/api-sdk/api-rq.html#dioptra.rq.tasks.run_mlflow_task">run_mlflow_task() (in module dioptra.rq.tasks)</a>
+</li>
+      <li><a href="user-guide/api-sdk/api-rq.html#dioptra.rq.tasks.run_task_engine_task">run_task_engine_task() (in module dioptra.rq.tasks)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1035,6 +1066,8 @@ document.write(`
 </li>
       <li><a href="user-guide/api-sdk/api-utilities.html#dioptra.sdk.utilities.logging.StdoutLogStream">StdoutLogStream (class in dioptra.sdk.utilities.logging)</a>
 </li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.submit_job">submit_job() (DioptraClient method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1043,13 +1076,13 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-sdk/api-pyplugs.html#dioptra.pyplugs.task_nout">task_nout() (in module dioptra.pyplugs)</a>
 </li>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.task_plugin.errors.TaskPluginAlreadyExistsError">TaskPluginAlreadyExistsError</a>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.task_plugin_builtins_endpoint">task_plugin_builtins_endpoint (DioptraClient property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.task_plugin.errors.TaskPluginDoesNotExistError">TaskPluginDoesNotExistError</a>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.task_plugin_custom_endpoint">task_plugin_custom_endpoint (DioptraClient property)</a>
 </li>
-      <li><a href="user-guide/api-reference-restapi.html#dioptra.restapi.task_plugin.errors.TaskPluginUploadError">TaskPluginUploadError</a>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.task_plugin_endpoint">task_plugin_endpoint (DioptraClient property)</a>
 </li>
       <li><a href="user-guide/api-sdk/api-exceptions.html#dioptra.sdk.exceptions.TensorflowDependencyError">TensorflowDependencyError</a>
 </li>
@@ -1069,9 +1102,13 @@ document.write(`
 </li>
       <li><a href="user-guide/api-sdk/api-exceptions.html#dioptra.sdk.exceptions.UnknownPluginFunctionError">UnknownPluginFunctionError</a>
 </li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.unlock_queue">unlock_queue() (DioptraClient method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="user-guide/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.exceptions.UnsupportedDataFrameFileFormatError">UnsupportedDataFrameFileFormatError</a>
+</li>
+      <li><a href="user-guide/api-reference-client.html#dioptra.client.DioptraClient.upload_custom_plugin_package">upload_custom_plugin_package() (DioptraClient method)</a>
 </li>
       <li><a href="user-guide/api-task-plugins/api-builtins-artifacts.html#dioptra_builtins.artifacts.mlflow.upload_data_frame_artifact">upload_data_frame_artifact() (in module dioptra_builtins.artifacts.mlflow)</a>
 </li>

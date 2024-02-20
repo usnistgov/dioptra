@@ -167,6 +167,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/entry-points.html">Entry Points</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/task-plugins.html">Task Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/custom-entry-points.html">Creating a New Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/task_engine_doc.html">Declarative Experiment Description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/custom-task-plugins.html">Custom Task Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/generics-plugin-system.html">Generics Plugin System</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../../user-guide/task-plugins-collection.html">Task Plugins Collection</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -190,6 +191,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../user-guide/api-sdk/api-cryptography.html">cryptography</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/api-reference-client.html">Testbed Client API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/api-reference-restapi.html">Testbed REST API Reference</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
@@ -331,16 +333,40 @@ document.write(`
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shlex</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">CompletedProcess</span>
 <span class="kn">from</span> <span class="nn">tempfile</span> <span class="kn">import</span> <span class="n">TemporaryDirectory</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
+<span class="kn">import</span> <span class="nn">boto3</span>
 <span class="kn">import</span> <span class="nn">structlog</span>
+<span class="kn">from</span> <span class="nn">botocore.client</span> <span class="kn">import</span> <span class="n">BaseClient</span>
 <span class="kn">from</span> <span class="nn">rq.job</span> <span class="kn">import</span> <span class="n">Job</span> <span class="k">as</span> <span class="n">RQJob</span>
 <span class="kn">from</span> <span class="nn">rq.job</span> <span class="kn">import</span> <span class="n">get_current_job</span>
 <span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
 
+<span class="kn">from</span> <span class="nn">dioptra.sdk.utilities.s3.uri</span> <span class="kn">import</span> <span class="n">s3_uri_to_bucket_prefix</span>
+<span class="kn">from</span> <span class="nn">dioptra.worker.s3_download</span> <span class="kn">import</span> <span class="n">s3_download</span>
+
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_download_workflow</span><span class="p">(</span><span class="n">s3</span><span class="p">:</span> <span class="n">BaseClient</span><span class="p">,</span> <span class="n">dest_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">workflow_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Download the file pointed to by workflow_uri, to directory dest_dir.</span>
+<span class="sd">    Directory structure implied by workflow_uri is not mirrored in the local</span>
+<span class="sd">    filesystem.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        s3: A boto3 S3 client object</span>
+<span class="sd">        dest_dir: A directory, as a str, which must already exist</span>
+<span class="sd">        workflow_uri: An S3 URI referring to a file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bucket</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">s3_uri_to_bucket_prefix</span><span class="p">(</span><span class="n">workflow_uri</span><span class="p">)</span>
+    <span class="n">dest_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>  <span class="c1"># get the last path component (a filename)</span>
+    <span class="n">dest_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dest_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">dest_file</span>
+
+    <span class="n">s3</span><span class="o">.</span><span class="n">download_file</span><span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest_path</span><span class="p">))</span>
 
 
 <div class="viewcode-block" id="run_mlflow_task"><a class="viewcode-back" href="../../../../user-guide/api-sdk/api-rq.html#dioptra.rq.tasks.run_mlflow_task">[docs]</a><span class="k">def</span> <span class="nf">run_mlflow_task</span><span class="p">(</span>
@@ -349,7 +375,22 @@ document.write(`
     <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">conda_env</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;base&quot;</span><span class="p">,</span>
     <span class="n">entry_point_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">s3</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BaseClient</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompletedProcess</span><span class="p">:</span>
+    <span class="n">mlflow_s3_endpoint_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;MLFLOW_S3_ENDPOINT_URL&quot;</span><span class="p">)</span>
+    <span class="n">dioptra_plugins_s3_uri</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DIOPTRA_PLUGINS_S3_URI&quot;</span><span class="p">)</span>
+    <span class="n">dioptra_custom_plugins_s3_uri</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DIOPTRA_CUSTOM_PLUGINS_S3_URI&quot;</span><span class="p">)</span>
+    <span class="n">dioptra_plugin_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DIOPTRA_PLUGIN_DIR&quot;</span><span class="p">)</span>
+
+    <span class="c1"># For mypy; assume correct environment variables</span>
+    <span class="k">assert</span> <span class="n">mlflow_s3_endpoint_url</span>
+    <span class="k">assert</span> <span class="n">dioptra_plugins_s3_uri</span>
+    <span class="k">assert</span> <span class="n">dioptra_custom_plugins_s3_uri</span>
+    <span class="k">assert</span> <span class="n">dioptra_plugin_dir</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">s3</span><span class="p">:</span>
+        <span class="n">s3</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s2">&quot;s3&quot;</span><span class="p">,</span> <span class="n">endpoint_url</span><span class="o">=</span><span class="n">mlflow_s3_endpoint_url</span><span class="p">)</span>
+
     <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;/usr/local/bin/run-mlflow-job.sh&quot;</span><span class="p">,</span>
         <span class="s2">&quot;--s3-workflow&quot;</span><span class="p">,</span>
@@ -374,6 +415,19 @@ document.write(`
         <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">entry_point_kwargs</span><span class="p">))</span>
 
     <span class="k">with</span> <span class="n">TemporaryDirectory</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DIOPTRA_WORKDIR&quot;</span><span class="p">))</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Downloading workflow: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">workflow_uri</span><span class="p">)</span>
+        <span class="n">_download_workflow</span><span class="p">(</span><span class="n">s3</span><span class="p">,</span> <span class="n">tmpdir</span><span class="p">,</span> <span class="n">workflow_uri</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Downloading plugins&quot;</span><span class="p">)</span>
+        <span class="n">s3_download</span><span class="p">(</span>
+            <span class="n">s3</span><span class="p">,</span>
+            <span class="n">dioptra_plugin_dir</span><span class="p">,</span>
+            <span class="kc">True</span><span class="p">,</span>
+            <span class="kc">True</span><span class="p">,</span>
+            <span class="n">dioptra_plugins_s3_uri</span><span class="p">,</span>
+            <span class="n">dioptra_custom_plugins_s3_uri</span><span class="p">,</span>
+        <span class="p">)</span>
+
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Executing MLFlow job&quot;</span><span class="p">,</span> <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
 

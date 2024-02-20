@@ -211,7 +211,7 @@ The following error handlers are registered to the queue endpoints.
 
 .. autoexception:: dioptra.restapi.queue.errors.QueueDoesNotExistError
 
-.. autoexception:: dioptra.restapi.queue.errors.QueueRegistrationError
+.. autoexception:: dioptra.restapi.queue.errors.QueueLockedError
 
 Task Plugin
 -----------

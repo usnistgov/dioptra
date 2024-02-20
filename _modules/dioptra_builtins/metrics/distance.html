@@ -167,6 +167,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../user-guide/entry-points.html">Entry Points</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../user-guide/task-plugins.html">Task Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../user-guide/custom-entry-points.html">Creating a New Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/task_engine_doc.html">Declarative Experiment Description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../user-guide/custom-task-plugins.html">Custom Task Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../user-guide/generics-plugin-system.html">Generics Plugin System</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../user-guide/task-plugins-collection.html">Task Plugins Collection</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -190,6 +191,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../user-guide/api-sdk/api-cryptography.html">cryptography</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/api-reference-client.html">Testbed Client API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../user-guide/api-reference-restapi.html">Testbed REST API Reference</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
@@ -382,9 +384,9 @@ document.write(`
     <span class="n">distance_metrics_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">request</span><span class="p">:</span>
-        <span class="n">metric_callable</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-            <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="n">DISTANCE_METRICS_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metric</span><span class="p">[</span><span class="s2">&quot;func&quot;</span><span class="p">])</span>
+        <span class="n">metric_callable</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">DISTANCE_METRICS_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metric</span><span class="p">[</span><span class="s2">&quot;func&quot;</span><span class="p">])</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">metric_callable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">distance_metrics_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">metric</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">metric_callable</span><span class="p">))</span>
@@ -420,9 +422,9 @@ document.write(`
 <span class="sd">    Returns:</span>
 <span class="sd">        A callable distance metric function.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">metric_callable</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-        <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="n">DISTANCE_METRICS_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="n">metric_callable</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">DISTANCE_METRICS_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">metric_callable</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">LOGGER</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>

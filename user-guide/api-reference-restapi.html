@@ -63,7 +63,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="System Requirements" href="../deployment-guide/system-requirements.html" />
-    <link rel="prev" title="cryptography" href="api-sdk/api-cryptography.html" />
+    <link rel="prev" title="Testbed Client API Reference" href="api-reference-client.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
@@ -170,6 +170,7 @@
 <li class="toctree-l1"><a class="reference internal" href="entry-points.html">Entry Points</a></li>
 <li class="toctree-l1"><a class="reference internal" href="task-plugins.html">Task Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="custom-entry-points.html">Creating a New Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="task_engine_doc.html">Declarative Experiment Description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="custom-task-plugins.html">Custom Task Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generics-plugin-system.html">Generics Plugin System</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="task-plugins-collection.html">Task Plugins Collection</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -193,6 +194,7 @@
 <li class="toctree-l2"><a class="reference internal" href="api-sdk/api-cryptography.html">cryptography</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference-client.html">Testbed Client API Reference</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Testbed REST API Reference</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
@@ -644,42 +646,6 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <section id="error-messages">
 <h3>Error Messages<a class="headerlink" href="#error-messages" title="Permalink to this headline">#</a></h3>
 <p>The following error handlers are registered to the experiment endpoints.</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentAlreadyExistsError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentAlreadyExistsError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentAlreadyExistsError" title="Permalink to this definition">#</a></dt>
-<dd><p>The experiment name already exists.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingAlreadyExistsError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentMLFlowTrackingAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError" title="Permalink to this definition">#</a></dt>
-<dd><p>The experiment name already exists on the MLFlow Tracking backend.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentDoesNotExistError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentDoesNotExistError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentDoesNotExistError" title="Permalink to this definition">#</a></dt>
-<dd><p>The requested experiment does not exist.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingDoesNotExistError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentMLFlowTrackingDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError" title="Permalink to this definition">#</a></dt>
-<dd><p>The requested experiment is in our database but is not in MLFlow Tracking.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentMLFlowTrackingRegistrationError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentMLFlowTrackingRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError" title="Permalink to this definition">#</a></dt>
-<dd><p>Experiment registration to the MLFlow Tracking backend has failed.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.experiment.errors.ExperimentRegistrationError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExperimentRegistrationError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/experiment/errors.html#ExperimentRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.experiment.errors.ExperimentRegistrationError" title="Permalink to this definition">#</a></dt>
-<dd><p>The experiment registration form contains invalid parameters.</p>
-</dd></dl>
-
 </section>
 </section>
 <section id="job">
@@ -810,24 +776,6 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <section id="id2">
 <h3>Error Messages<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <p>The following error handlers are registered to the job endpoints.</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.job.errors.JobDoesNotExistError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">JobDoesNotExistError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/job/errors.html#JobDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.job.errors.JobDoesNotExistError" title="Permalink to this definition">#</a></dt>
-<dd><p>The requested job does not exist.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.job.errors.JobSubmissionError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">JobSubmissionError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/job/errors.html#JobSubmissionError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.job.errors.JobSubmissionError" title="Permalink to this definition">#</a></dt>
-<dd><p>The job submission form contains invalid parameters.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.job.errors.JobWorkflowUploadError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">JobWorkflowUploadError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/job/errors.html#JobWorkflowUploadError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.job.errors.JobWorkflowUploadError" title="Permalink to this definition">#</a></dt>
-<dd><p>The service for storing the uploaded workfile file is unavailable.</p>
-</dd></dl>
-
 </section>
 </section>
 <section id="queue">
@@ -1139,24 +1087,6 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <section id="id4">
 <h3>Error Messages<a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <p>The following error handlers are registered to the queue endpoints.</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.queue.errors.QueueAlreadyExistsError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueueAlreadyExistsError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/queue/errors.html#QueueAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.queue.errors.QueueAlreadyExistsError" title="Permalink to this definition">#</a></dt>
-<dd><p>The queue name already exists.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.queue.errors.QueueDoesNotExistError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueueDoesNotExistError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/queue/errors.html#QueueDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.queue.errors.QueueDoesNotExistError" title="Permalink to this definition">#</a></dt>
-<dd><p>The requested queue does not exist.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.queue.errors.QueueRegistrationError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QueueRegistrationError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/queue/errors.html#QueueRegistrationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.queue.errors.QueueRegistrationError" title="Permalink to this definition">#</a></dt>
-<dd><p>The queue registration form contains invalid parameters.</p>
-</dd></dl>
-
 </section>
 </section>
 <section id="task-plugin">
@@ -1304,24 +1234,6 @@ Several of the Testbed demos that you can run on a personal computer publish the
 <section id="id6">
 <h3>Error Messages<a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <p>The following error handlers are registered to the task plugin endpoints.</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.task_plugin.errors.TaskPluginAlreadyExistsError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TaskPluginAlreadyExistsError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/task_plugin/errors.html#TaskPluginAlreadyExistsError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.task_plugin.errors.TaskPluginAlreadyExistsError" title="Permalink to this definition">#</a></dt>
-<dd><p>A task plugin package with this name already exists.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.task_plugin.errors.TaskPluginDoesNotExistError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TaskPluginDoesNotExistError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/task_plugin/errors.html#TaskPluginDoesNotExistError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.task_plugin.errors.TaskPluginDoesNotExistError" title="Permalink to this definition">#</a></dt>
-<dd><p>The requested task plugin package does not exist.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="dioptra.restapi.task_plugin.errors.TaskPluginUploadError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TaskPluginUploadError</span></span><a class="reference internal" href="../_modules/dioptra/restapi/task_plugin/errors.html#TaskPluginUploadError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.restapi.task_plugin.errors.TaskPluginUploadError" title="Permalink to this definition">#</a></dt>
-<dd><p>The task plugin upload form contains invalid parameters.</p>
-</dd></dl>
-
 </section>
 </section>
 </section>
@@ -1339,12 +1251,12 @@ Several of the Testbed demos that you can run on a personal computer publish the
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="api-sdk/api-cryptography.html"
+       href="api-reference-client.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">cryptography</p>
+        <p class="prev-next-title">Testbed Client API Reference</p>
       </div>
     </a>
     <a class="right-next"
