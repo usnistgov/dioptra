@@ -68,9 +68,7 @@ class TagBaseSchema(Schema):
     )
     lastModifiedOn = fields.DateTime(
         attribute="last_modified_on",
-        metadata=dict(
-            description="Timestamp when the Tag resource was last modified."
-        ),
+        metadata=dict(description="Timestamp when the Tag resource was last modified."),
         dump_only=True,
     )
 
