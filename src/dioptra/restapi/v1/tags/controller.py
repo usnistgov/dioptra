@@ -32,8 +32,8 @@ from .schema import (
     TagGetQueryParameters,
     TagMutableFieldsSchema,
     TagPageSchema,
+    TagResourceQueryParameters,
     TagSchema,
-    TagGetOnResourceQueryParameters
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -42,7 +42,7 @@ api: Namespace = Namespace("Tags", description="Tags endpoint")
 
 
 @api.route("/")
-class QueueEndpoint(Resource):
+class TagEndpoint(Resource):
     @login_required
     @accepts(query_params_schema=TagGetQueryParameters, api=api)
     @responds(schema=TagPageSchema, api=api)
@@ -68,7 +68,7 @@ class QueueEndpoint(Resource):
 
 @api.route("/<int:id>")
 @api.param("id", "ID for the Tag.")
-class QueueIdEndpoint(Resource):
+class TagIdEndpoint(Resource):
     @login_required
     @responds(schema=TagSchema, api=api)
     def get(self, id: int):
@@ -101,10 +101,9 @@ class QueueIdEndpoint(Resource):
 
 @api.route("/<int:id>/resources/")
 @api.param("id", "ID for the Tag.")
-class QueueIdEndpoint(Resource):
-
+class TagIdResourceEndpoint(Resource):
     @login_required
-    @accepts(query_params_schema=TagGetOnResourceQueryParameters, api=api)
+    @accepts(query_params_schema=TagResourceQueryParameters, api=api)
     @responds(schema=TagSchema, api=api)
     def get(self, id: int):
         """Gets a Tag."""
@@ -112,5 +111,4 @@ class QueueIdEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Tag", request_type="GET", id=id
         )
         log.debug("Request received")
-        parsed_query_params = request.parsed_query_params  # noqa: F841
-
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
