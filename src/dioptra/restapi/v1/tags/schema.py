@@ -19,6 +19,17 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
+from dioptra.restapi.v1.groups.schema import GroupRefSchema
+from dioptra.restapi.v1.users.schema import UserRefSchema
+from dioptra.restapi.v1.schemas import (
+    BasePageSchema,
+    GroupIdQueryParametersSchema,
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+    ResourceTypeQueryParametersSchema,
+    # generate_base_resource_schema,
+)
+
 
 class TagRefSchema(Schema):
     """The reference schema for the data stored in a Tag."""
@@ -36,3 +47,76 @@ class TagRefSchema(Schema):
         metadata=dict(description="URL for accessing the full Tag."),
         relative=True,
     )
+
+
+class TagMutableFieldsSchema(Schema):
+    """The fields schema for the mutable data in a Queue resource."""
+
+    name = fields.String(
+        attribute="name", metadata=dict(description="Name of the Queue resource.")
+    )
+
+# TagBaseSchema = generate_base_resource_schema("Tag") # Tag is not a resource.
+
+class TagBaseSchema(Schema):
+    """The reference schema for the data stored in a Tag."""
+
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="ID for the Tag."),
+        dump_only=True,
+    )
+    group= fields.Nested(
+        GroupRefSchema,
+        attribute="group",
+        metadata=dict(description=f"Group that owns the Tag."),
+        dump_only=True,
+    )
+    user= fields.Nested(
+        UserRefSchema,
+        attribute="user",
+        metadata=dict(description=f"User that created the Tag."),
+        dump_only=True,
+    )
+    createdOn= fields.DateTime(
+        attribute="created_on",
+        metadata=dict(
+            description=f"Timestamp when the Tag resource was created."
+        ),
+        dump_only=True,
+    )
+    lastModifiedOn= fields.DateTime(
+        attribute="last_modified_on",
+        metadata=dict(
+            description=f"Timestamp when the Tag resource was last modified."
+        ),
+        dump_only=True,
+    )
+
+
+class TagSchema(TagMutableFieldsSchema, TagBaseSchema):  # type: ignore
+    """The schema for the data stored in a Tag resource."""
+
+
+class TagPageSchema(BasePageSchema):
+    """The paged schema for the data stored in a Tag resource."""
+
+    data = fields.Nested(
+        TagSchema,
+        many=True,
+        metadata=dict(description="List of Tags in the current page."),
+    )
+
+class TagGetQueryParameters(
+    PagingQueryParametersSchema,
+    GroupIdQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /tags endpoint."""
+
+
+class TagGetOnResourceQueryParameters(
+    PagingQueryParametersSchema,
+    ResourceTypeQueryParametersSchema
+):
+    """The query parameters for the GET method of the /tags/{id:int}/resources/ endpoint."""
