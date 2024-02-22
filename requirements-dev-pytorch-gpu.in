@@ -3,5 +3,5 @@
 detectron2==0.6+cu113; sys_platform == 'linux' and python_version == '3.9' and (platform_machine == 'x86_64' or platform_machine == 'amd64' or platform_machine == 'AMD64')
 pytorch-lightning; python_version == '3.9'
 torch==2.2.0; sys_platform == 'linux' and python_version == '3.9' and (platform_machine == 'x86_64' or platform_machine == 'amd64' or platform_machine == 'AMD64')
-torchaudio==0.10.2+cu113; sys_platform == 'linux' and python_version == '3.9' and (platform_machine == 'x86_64' or platform_machine == 'amd64' or platform_machine == 'AMD64')
+torchaudio==2.2.1; sys_platform == 'linux' and python_version == '3.9' and (platform_machine == 'x86_64' or platform_machine == 'amd64' or platform_machine == 'AMD64')
 torchvision==0.17.0; sys_platform == 'linux' and python_version == '3.9' and (platform_machine == 'x86_64' or platform_machine == 'amd64' or platform_machine == 'AMD64')
