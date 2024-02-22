@@ -55,6 +55,7 @@ dependencies = [
     "Flask-SQLAlchemy>=2.4.0",
     "injector>=0.18.0",
     "jsonschema>=4.17.0",
+    "maite[all_interop]>=0.4.0",
     "marshmallow>=3.9.0,<4",
     "multimethod>=1.5",
     "numpy>=1.22.0",
