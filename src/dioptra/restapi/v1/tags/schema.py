@@ -30,6 +30,24 @@ from dioptra.restapi.v1.schemas import (  # generate_base_resource_schema,
 from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
+class TagRefSchema(Schema):
+    """The reference schema for the data stored in a Tag."""
+
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="ID for the Tag."),
+        dump_only=True,
+    )
+    name = fields.String(
+        attribute="name", metadata=dict(description="Name of the Tag.")
+    )
+    url = fields.Url(
+        attribute="url",
+        metadata=dict(description="URL for accessing the full Tag."),
+        relative=True,
+    )
+
+
 class TagMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Queue resource."""
 
