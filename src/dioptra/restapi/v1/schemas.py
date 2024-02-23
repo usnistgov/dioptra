@@ -97,14 +97,17 @@ class BasePageSchema(Schema):
     first = fields.Url(
         attribute="first",
         metadata=dict(description="URL to first page in results set."),
+        relative=True,
     )
     next = fields.Url(
         attribute="next",
         metadata=dict(description="URL to next page in results set."),
+        relative=True,
     )
     prev = fields.Url(
         attribute="prev",
         metadata=dict(description="URL to last page in results set."),
+        relative=True,
     )
 
 
