@@ -35,35 +35,35 @@ version: "2.4"
 #services:
   {% for tfcpu_worker_id in range(cookiecutter.num_tensorflow_cpu_workers|int) if cookiecutter.num_tensorflow_cpu_workers|int > 0 -%}
   #{{ cookiecutter.__project_slug }}-tfcpu-{{ "%02d" | format(tfcpu_worker_id+1|int) }}:
-	#volumes:
-	  #- /mnt/datasets:/dioptra/data:ro
-	  #- dioptra-datasets:/dioptra/data:ro
-    #environment:
-	  #NVIDIA_VISIBLE_DEVICES: all
+      #volumes:
+        #- /mnt/datasets:/dioptra/data:ro
+        #- dioptra-datasets:/dioptra/data:ro
+      #environment:
+        #NVIDIA_VISIBLE_DEVICES: all
   {% endfor %}
   {% for tfgpu_worker_id in range(cookiecutter.num_tensorflow_gpu_workers|int) if cookiecutter.num_tensorflow_gpu_workers|int > 0 -%}
   #{{ cookiecutter.__project_slug }}-tfgpu-{{ "%02d" | format(tfgpu_worker_id+1|int) }}:
-	#volumes:
-	  #- /mnt/datasets:/dioptra/data:ro
-	  #- dioptra-datasets:/dioptra/data:ro
-    #environment:
-	  #NVIDIA_VISIBLE_DEVICES: all
+      #volumes:
+        #- /mnt/datasets:/dioptra/data:ro
+        #- dioptra-datasets:/dioptra/data:ro
+      #environment:
+        #NVIDIA_VISIBLE_DEVICES: all
   {% endfor %}
   {% for pytorchcpu_worker_id in range(cookiecutter.num_pytorch_cpu_workers|int) if cookiecutter.num_pytorch_cpu_workers|int > 0 -%}
   #{{ cookiecutter.__project_slug }}-pytorchcpu-{{ "%02d" | format(pytorchcpu_worker_id+1|int) }}:
-	#volumes:
-	  #- /mnt/datasets:/dioptra/data:ro
-	  #- dioptra-datasets:/dioptra/data:ro
-    #environment:
-	  #NVIDIA_VISIBLE_DEVICES: all
+      #volumes:
+        #- /mnt/datasets:/dioptra/data:ro
+        #- dioptra-datasets:/dioptra/data:ro
+      #environment:
+        #NVIDIA_VISIBLE_DEVICES: all
   {% endfor %}
   {% for pytorchgpu_worker_id in range(cookiecutter.num_pytorch_gpu_workers|int) if cookiecutter.num_pytorch_gpu_workers|int > 0 -%}
   #{{ cookiecutter.__project_slug }}-pytorchgpu-{{ "%02d" | format(pytorchgpu_worker_id+1|int) }}:
-	#volumes:
-	  #- /mnt/datasets:/dioptra/data:ro
-	  #- dioptra-datasets:/dioptra/data:ro
-    #environment:
-	  #NVIDIA_VISIBLE_DEVICES: all
+      #volumes:
+        #- /mnt/datasets:/dioptra/data:ro
+        #- dioptra-datasets:/dioptra/data:ro
+      #environment:
+        #NVIDIA_VISIBLE_DEVICES: all
   {% endfor %}
 
 #volumes:
