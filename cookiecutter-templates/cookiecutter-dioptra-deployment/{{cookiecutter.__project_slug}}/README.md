@@ -68,6 +68,8 @@ The following subsections explain how to:
 -   Copy extra CA certificates into the containers
 -   Copy the certificate-key pairs that enable SSL/TLS encrypted connections in the NGINX and Postgres services
 -   Mount additional folders in the worker containers, for example a folder that contains your datasets
+-   Assigning GPUs to specific worker containers
+-   Integrate custom containers in the Dioptra deployment
 
 In addition to the above, you may want to further customize the `docker-compose.yml` file to suit your needs, such as allocating explicit CPUs for each container to use.
 See the [Compose specification documentation](https://docs.docker.com/compose/compose-file/) for the full list of available options.
@@ -167,6 +169,50 @@ To allow a worker to use all available GPUs, set `NVIDIA_VISIBLE_DEVICES` to `al
 ```yaml
   environment:
     NVIDIA_VISIBLE_DEVICES: all
+```
+### Integrating custom containers
+
+In some instances, you may want to utilize custom containers in the Dioptra environment. For this example, let's assume you have a container named `custom-container` that has a `dev` tag associated with it. To add this container to the deployment, nest the following code block in the ``services:`` section before the **top-level** ``volumes:`` section of the to the ``docker-compose.override.yml`` file:
+
+```yaml
+  custom-container:
+    image: custom-container:dev
+    restart: always
+    hostname: custom-container
+    healthcheck:
+      test:
+        - CMD
+        - /usr/local/bin/healthcheck.sh
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    environment:
+      AWS_ACCESS_KEY_ID: ${WORKER_AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${WORKER_AWS_SECRET_ACCESS_KEY}
+      DIOPTRA_RESTAPI_DATABASE_URI: ${DIOPTRA_RESTAPI_DATABASE_URI}
+    command:
+      - --wait-for
+      - dioptra-deployment-redis:6379
+      - --wait-for
+      - dioptra-deployment-minio:9001
+      - --wait-for
+      - dioptra-deployment-db:5432
+      - --wait-for
+      - dioptra-deployment-mlflow-tracking:5000
+      - --wait-for
+      - dioptra-deployment-restapi:5000
+      - tensorflow_cpu
+    env_file:
+      - ./envs/ca-certificates.env
+      - ./envs/dioptra-deployment-worker.env
+      - ./envs/dioptra-deployment-worker-cpu.env
+    networks:
+      - dioptra
+    volumes:
+      - worker-ca-certificates:/usr/local/share/ca-certificates:rw
+      - worker-etc-ssl:/etc/ssl:rw
+      - /Users/bhodges/Desktop/dioptra-cruft/data:/dioptra/data:ro
 ```
 
 ## Initializing the deployment
