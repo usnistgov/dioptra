@@ -62,3 +62,8 @@ a:hover {
   font-size: 14px !important
 }
 
+.fixedButton {
+  position: fixed !important;
+  bottom: 80px;
+  right: 80px; 
+}

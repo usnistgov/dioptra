@@ -119,12 +119,3 @@
   }
 
 </script>
-
-<style>
-  .fixedButton {
-      position: fixed;
-      bottom: 80px;
-      right: 80px; 
-  }
-
-</style>

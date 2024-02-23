@@ -5,7 +5,7 @@
       <q-route-tab label="Entry-Points" to="/entrypoints" />
       <q-route-tab label="Task-Plugins" to="/" />
       <q-route-tab label="Queues" to="/queues" />
-      <q-route-tab label="Experiments" to="/" />
+      <q-route-tab label="Experiments" to="/experiments" />
       <q-route-tab label="Jobs" to="/" />
     </q-tabs>
     <q-space />

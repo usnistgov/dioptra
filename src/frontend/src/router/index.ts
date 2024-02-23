@@ -5,27 +5,30 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      name: 'home',
       path: '/',
       component: HomeView
     },
     {
-      name: 'entrypoints',
       path: '/entrypoints',
       component: () => import('../views/EntryPointsView.vue')
     },
     {
-      name: 'queues',
       path: '/queues',
       component: () => import('../views/QueuesView.vue')
     },
     {
-      name: 'login',
+      path: '/experiments',
+      component: () => import('../views/ExperimentsView.vue')
+    },
+    {
+      path: '/experiments/create',
+      component: () => import('../views/CreateExperiment.vue')
+    },
+    {
       path: '/login',
       component: () => import('../views/BasicLoginView.vue')
     },
     {
-      name: 'register',
       path: '/register',
       component: () => import('@/components/RegisterForm.vue')
     }
