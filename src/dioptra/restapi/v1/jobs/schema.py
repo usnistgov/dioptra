@@ -97,14 +97,15 @@ class JobSchema(JobMutableFieldsSchema, JobBaseSchema):  # type: ignore
         metadata=dict(description="An integer identifying a registered entry point."),
         dump_only=True,
     )
-    values = fields.String(
+    values = fields.List(
+        fields.String(),
         attribute="values",
         allow_none=True,
         load_default=None,
         metadata=dict(
-            description="A string listing parameter values to pass to the entry point "
+            description="A list of parameter values to pass to the entry point "
             "for the job. The list of parameters is specified using the following "
-            'format: "-P param1=value1 -P param2=value2".',
+            'format: ["-P param1=value1", "-P param2=value2"].',
         ),
     )
     timeout = fields.String(
