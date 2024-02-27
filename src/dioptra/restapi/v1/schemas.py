@@ -21,13 +21,12 @@ from typing import Union
 
 from marshmallow import Schema, fields
 
-from dioptra.restapi.v1.groups.schema import GroupRefSchema
-from dioptra.restapi.v1.tags.schema import TagRefSchema
-from dioptra.restapi.v1.users.schema import UserRefSchema
-
 
 def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
     """Generates the base schema for a Resource."""
+    from dioptra.restapi.v1.groups.schema import GroupRefSchema
+    from dioptra.restapi.v1.tags.schema import TagRefSchema
+    from dioptra.restapi.v1.users.schema import UserRefSchema
 
     schema: dict[str, Union[fields.Field, type]] = {
         "id": fields.Integer(
