@@ -8,9 +8,9 @@ alembic==1.13.1
     # via mlflow
 blinker==1.7.0
     # via flask
-boto3==1.34.48
+boto3==1.34.44
     # via -r docker/pip-tools/mlflow-tracking-requirements.in
-botocore==1.34.48
+botocore==1.34.44
     # via
     #   boto3
     #   s3transfer
@@ -95,7 +95,7 @@ packaging==23.2
     #   gunicorn
     #   matplotlib
     #   mlflow
-pandas==2.2.1
+pandas==2.2.0
     # via mlflow
 pillow==10.2.0
     # via matplotlib

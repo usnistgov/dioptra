@@ -8,14 +8,8 @@ absl-py==2.1.0
     # via
     #   tensorboard
     #   tensorflow-cpu
-adversarial-robustness-toolbox==1.17.1
+adversarial-robustness-toolbox==1.17.0
     # via dioptra (pyproject.toml)
-aiohttp==3.9.3
-    # via
-    #   datasets
-    #   fsspec
-aiosignal==1.3.1
-    # via aiohttp
 alembic==1.13.1
     # via
     #   dioptra (pyproject.toml)
@@ -26,17 +20,14 @@ aniso8601==9.0.1
 astunparse==1.6.3
     # via tensorflow-cpu
 async-timeout==4.0.3
-    # via
-    #   aiohttp
-    #   redis
+    # via redis
 attrs==23.2.0
     # via
-    #   aiohttp
     #   jsonschema
     #   referencing
-boto3==1.34.48
+boto3==1.34.44
     # via dioptra (pyproject.toml)
-botocore==1.34.48
+botocore==1.34.44
     # via
     #   boto3
     #   s3transfer
@@ -80,14 +71,8 @@ dask==2024.2.0
     # via
     #   distributed
     #   prefect
-datasets==2.17.1
-    # via maite
 decorator==4.4.2
     # via moviepy
-dill==0.3.8
-    # via
-    #   datasets
-    #   multiprocess
 distributed==2024.2.0
     # via prefect
 docker==7.0.0
@@ -98,13 +83,6 @@ entrypoints==0.4
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
-filelock==3.13.1
-    # via
-    #   datasets
-    #   huggingface-hub
-    #   torch
-    #   transformers
-    #   triton
 flask==2.1.3
     # via
     #   dioptra (pyproject.toml)
@@ -134,23 +112,15 @@ flatbuffers==23.5.26
     # via tensorflow-cpu
 fonttools==4.49.0
     # via matplotlib
-frozenlist==1.4.1
-    # via
-    #   aiohttp
-    #   aiosignal
-fsspec[http]==2023.10.0
-    # via
-    #   dask
-    #   datasets
-    #   huggingface-hub
-    #   torch
+fsspec==2024.2.0
+    # via dask
 gast==0.4.0
     # via tensorflow-cpu
 gitdb==4.0.11
     # via gitpython
 gitpython==3.1.42
     # via mlflow
-google-auth==2.28.1
+google-auth==2.28.0
     # via
     #   google-auth-oauthlib
     #   tensorboard
@@ -160,7 +130,7 @@ google-pasta==0.2.0
     # via tensorflow-cpu
 greenlet==3.0.3
     # via sqlalchemy
-grpcio==1.62.0
+grpcio==1.60.1
     # via
     #   tensorboard
     #   tensorflow-cpu
@@ -172,17 +142,8 @@ gym-notices==0.0.8
     # via gym
 h5py==3.10.0
     # via tensorflow-cpu
-huggingface-hub==0.20.3
-    # via
-    #   datasets
-    #   maite
-    #   timm
-    #   tokenizers
-    #   transformers
 idna==3.6
-    # via
-    #   requests
-    #   yarl
+    # via requests
 imageio==2.34.0
     # via
     #   imgaug
@@ -216,7 +177,6 @@ jinja2==3.1.3
     #   distributed
     #   flask
     #   mlflow
-    #   torch
 jmespath==1.0.1
     # via
     #   boto3
@@ -237,16 +197,12 @@ lazy-loader==0.3
     # via scikit-image
 libclang==16.0.6
     # via tensorflow-cpu
-lightning-utilities==0.10.1
-    # via torchmetrics
 locket==1.0.0
     # via
     #   distributed
     #   partd
 lz4==4.3.3
     # via gym
-maite[all-interop]==0.4.0
-    # via dioptra (pyproject.toml)
 mako==1.3.2
     # via alembic
 markdown==3.5.2
@@ -282,39 +238,27 @@ mlflow==2.10.2
     # via dioptra (pyproject.toml)
 moviepy==1.0.3
     # via gym
-mpmath==1.3.0
-    # via sympy
 msgpack==1.0.7
     # via
     #   distributed
     #   prefect
-multidict==6.0.5
-    # via
-    #   aiohttp
-    #   yarl
-multimethod==1.11.1
+multimethod==1.11
     # via dioptra (pyproject.toml)
-multiprocess==0.70.16
-    # via datasets
 mypy-extensions==1.0.0
     # via prefect
 networkx==3.2.1
-    # via
-    #   scikit-image
-    #   torch
+    # via scikit-image
 numpy==1.24.3
     # via
     #   adversarial-robustness-toolbox
     #   cma
     #   contourpy
-    #   datasets
     #   dioptra (pyproject.toml)
     #   gym
     #   h5py
     #   imageio
     #   imgaug
     #   jax
-    #   maite
     #   matplotlib
     #   ml-dtypes
     #   mlflow
@@ -331,40 +275,6 @@ numpy==1.24.3
     #   tensorboard
     #   tensorflow-cpu
     #   tifffile
-    #   torchmetrics
-    #   torchvision
-    #   transformers
-nvidia-cublas-cu12==12.1.3.1
-    # via
-    #   nvidia-cudnn-cu12
-    #   nvidia-cusolver-cu12
-    #   torch
-nvidia-cuda-cupti-cu12==12.1.105
-    # via torch
-nvidia-cuda-nvrtc-cu12==12.1.105
-    # via torch
-nvidia-cuda-runtime-cu12==12.1.105
-    # via torch
-nvidia-cudnn-cu12==8.9.2.26
-    # via torch
-nvidia-cufft-cu12==11.0.2.54
-    # via torch
-nvidia-curand-cu12==10.3.2.106
-    # via torch
-nvidia-cusolver-cu12==11.4.5.107
-    # via torch
-nvidia-cusparse-cu12==12.1.0.106
-    # via
-    #   nvidia-cusolver-cu12
-    #   torch
-nvidia-nccl-cu12==2.18.1
-    # via torch
-nvidia-nvjitlink-cu12==12.3.101
-    # via
-    #   nvidia-cusolver-cu12
-    #   nvidia-cusparse-cu12
-nvidia-nvtx-cu12==12.1.105
-    # via torch
 oauthlib==3.2.2
     # via requests-oauthlib
 opencv-python==4.9.0.80
@@ -379,23 +289,17 @@ opt-einsum==3.3.0
 packaging==23.2
     # via
     #   dask
-    #   datasets
     #   distributed
     #   docker
     #   gunicorn
-    #   huggingface-hub
-    #   lightning-utilities
     #   marshmallow
     #   matplotlib
     #   mlflow
     #   prefect
     #   scikit-image
     #   tensorflow-cpu
-    #   torchmetrics
-    #   transformers
-pandas==2.2.1
+pandas==2.2.0
     # via
-    #   datasets
     #   dioptra (pyproject.toml)
     #   mlflow
 partd==1.4.1
@@ -411,7 +315,6 @@ pillow==10.2.0
     #   imgaug
     #   matplotlib
     #   scikit-image
-    #   torchvision
 prefect==1.4.1
     # via dioptra (pyproject.toml)
 proglog==0.1.10
@@ -427,11 +330,8 @@ psycopg2-binary==2.9.9
     # via -r docker/pip-tools/worker-requirements.in
 pyarrow==15.0.0
     # via
-    #   datasets
     #   dioptra (pyproject.toml)
     #   mlflow
-pyarrow-hotfix==0.6
-    # via datasets
 pyasn1==0.5.1
     # via
     #   pyasn1-modules
@@ -439,9 +339,7 @@ pyasn1==0.5.1
 pyasn1-modules==0.3.0
     # via google-auth
 pycocotools==2.0.7
-    # via
-    #   -r docker/pip-tools/worker-requirements.in
-    #   maite
+    # via -r docker/pip-tools/worker-requirements.in
 pycparser==2.21
     # via cffi
 pygame==2.1.0
@@ -476,14 +374,10 @@ pytz==2023.4
 pyyaml==6.0.1
     # via
     #   dask
-    #   datasets
     #   dioptra (pyproject.toml)
     #   distributed
-    #   huggingface-hub
     #   mlflow
     #   prefect
-    #   timm
-    #   transformers
 querystring-parser==1.2.4
     # via mlflow
 redis==5.0.1
@@ -494,22 +388,15 @@ referencing==0.33.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-regex==2023.12.25
-    # via transformers
 requests==2.31.0
     # via
-    #   datasets
     #   dioptra (pyproject.toml)
     #   docker
-    #   fsspec
-    #   huggingface-hub
     #   mlflow
     #   moviepy
     #   prefect
     #   requests-oauthlib
     #   tensorboard
-    #   torchvision
-    #   transformers
 requests-oauthlib==1.3.1
     # via google-auth-oauthlib
 rich==13.7.0
@@ -524,10 +411,6 @@ rsa==4.9
     # via google-auth
 s3transfer==0.10.0
     # via boto3
-safetensors==0.4.2
-    # via
-    #   timm
-    #   transformers
 scikit-image==0.22.0
     # via imgaug
 scikit-learn==1.0.2
@@ -571,10 +454,8 @@ sqlparse==0.4.4
     # via mlflow
 structlog==24.1.0
     # via dioptra (pyproject.toml)
-swig==4.2.0.post0
+swig==4.2.0
     # via gym
-sympy==1.12
-    # via torch
 tabulate==0.9.0
     # via prefect
 tblib==3.0.0
@@ -601,10 +482,6 @@ tifffile==2024.2.12
     # via scikit-image
 time-machine==2.13.0
     # via pendulum
-timm==0.9.16
-    # via maite
-tokenizers==0.15.2
-    # via transformers
 toml==0.10.2
     # via prefect
 toolz==0.12.1
@@ -612,45 +489,18 @@ toolz==0.12.1
     #   dask
     #   distributed
     #   partd
-torch==2.1.2
-    # via
-    #   maite
-    #   timm
-    #   torchmetrics
-    #   torchvision
-torcheval==0.0.7
-    # via maite
-torchmetrics==1.3.1
-    # via maite
-torchvision==0.16.2
-    # via
-    #   maite
-    #   timm
 tornado==6.4
     # via distributed
 tqdm==4.66.2
     # via
     #   adversarial-robustness-toolbox
-    #   datasets
-    #   huggingface-hub
-    #   maite
     #   moviepy
     #   proglog
-    #   transformers
-transformers==4.38.1
-    # via maite
-triton==2.1.0
-    # via torch
 typing-extensions==4.5.0
     # via
     #   alembic
     #   dioptra (pyproject.toml)
-    #   huggingface-hub
-    #   lightning-utilities
-    #   maite
     #   tensorflow-cpu
-    #   torch
-    #   torcheval
 tzdata==2024.1
     # via
     #   pandas
@@ -676,10 +526,6 @@ wheel==0.42.0
     #   tensorboard
 wrapt==1.14.1
     # via tensorflow-cpu
-xxhash==3.4.1
-    # via datasets
-yarl==1.9.4
-    # via aiohttp
 zict==3.0.0
     # via distributed
 zipp==3.17.0
