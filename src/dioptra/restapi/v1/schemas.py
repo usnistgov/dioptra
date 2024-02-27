@@ -17,6 +17,8 @@
 """Common schemas for serializing/deserializing resources."""
 from __future__ import annotations
 
+from typing import Union
+
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.groups.schema import GroupRefSchema
@@ -24,63 +26,111 @@ from dioptra.restapi.v1.tags.schema import TagRefSchema
 from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
-def generate_base_resource_schema(name: str) -> type[Schema]:
+def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
     """Generates the base schema for a Resource."""
 
-    return Schema.from_dict(
-        {
-            "id": fields.Integer(
-                attribute="id",
-                metadata=dict(description=f"ID for the {name} resource."),
-                dump_only=True,
+    schema: dict[str, Union[fields.Field, type]] = {
+        "id": fields.Integer(
+            attribute="id",
+            metadata=dict(description=f"ID for the {name} resource."),
+            dump_only=True,
+        ),
+        "snapshotId": fields.Integer(
+            attribute="snapshot_id",
+            metadata=dict(description=f"ID for the underlying {name} snapshot."),
+            dump_only=True,
+        ),
+        "groupId": fields.Integer(
+            attribute="group_id",
+            metadata=dict(
+                description=f"ID of the Group that will own the {name} resource."
             ),
-            "snapshotId": fields.Integer(
-                attribute="snapshot_id",
-                metadata=dict(description=f"ID for the underlying {name} snapshot."),
-                dump_only=True,
+            load_only=True,
+        ),
+        "group": fields.Nested(
+            GroupRefSchema,
+            attribute="group",
+            metadata=dict(description=f"Group that owns the {name} resource."),
+            dump_only=True,
+        ),
+        "user": fields.Nested(
+            UserRefSchema,
+            attribute="user",
+            metadata=dict(description=f"User that created the {name} resource."),
+            dump_only=True,
+        ),
+        "createdOn": fields.DateTime(
+            attribute="created_on",
+            metadata=dict(
+                description=f"Timestamp when the {name} resource was created."
             ),
-            "groupId": fields.Integer(
-                attribute="group_id",
-                metadata=dict(
-                    description=f"ID of the Group that will own the {name} resource."
-                ),
-                load_only=True,
+            dump_only=True,
+        ),
+        "lastModifiedOn": fields.DateTime(
+            attribute="last_modified_on",
+            metadata=dict(
+                description=f"Timestamp when the {name} resource was last modified."
             ),
-            "group": fields.Nested(
-                GroupRefSchema,
-                attribute="group",
-                metadata=dict(description=f"Group that owns the {name} resource."),
-                dump_only=True,
+            dump_only=True,
+        ),
+        "latestSnapshot": fields.Bool(
+            attribute="latest_snapshot",
+            metadata=dict(
+                description=f"Whether or not the {name} resource is the latest version."
             ),
-            "user": fields.Nested(
-                UserRefSchema,
-                attribute="user",
-                metadata=dict(description=f"User that created the {name} resource."),
-                dump_only=True,
-            ),
-            "createdOn": fields.DateTime(
-                attribute="created_on",
-                metadata=dict(
-                    description=f"Timestamp when the {name} resource was created."
-                ),
-                dump_only=True,
-            ),
-            "lastModifiedOn": fields.DateTime(
-                attribute="last_modified_on",
-                metadata=dict(
-                    description=f"Timestamp when the {name} resource was last modified."
-                ),
-                dump_only=True,
-            ),
-            "tags": fields.Nested(
-                TagRefSchema,
-                attribute="tags",
-                metadata=dict(description="Tags associated with the {name} resource."),
-                many=True,
-                dump_only=True,
-            ),
-        }
-    )
+            dump_only=True,
+        ),
+        "tags": fields.Nested(
+            TagRefSchema,
+            attribute="tags",
+            metadata=dict(description="Tags associated with the {name} resource."),
+            many=True,
+            dump_only=True,
+        ),
+    }
+
+    if not snapshot:
+        schema.pop("snapshotId")
+        schema.pop("user")
+        schema.pop("lastModifiedOn")
+        schema.pop("latestSnapshot")
+
+    return Schema.from_dict(schema, name=f"{name}BaseSchema")
+
+
+def generate_base_resource_ref_schema(
+    name: str, keep_snapshot_id: bool = False
+) -> type[Schema]:
+    """Generates the base schema for a ResourceRef."""
+
+    schema: dict[str, Union[fields.Field, type]] = {
+        "id": fields.Integer(
+            attribute="id",
+            metadata=dict(description=f"ID for the {name} resource."),
+        ),
+        "snapshotId": fields.Integer(
+            attribute="id",
+            metadata=dict(description=f"Snapshot ID for the {name} resource."),
+        ),
+        "group": fields.Nested(
+            GroupRefSchema,
+            attribute="group",
+            metadata=dict(description=f"Group that owns the {name} resource."),
+        ),
+        "url": fields.Url(
+            attribute="url",
+            metadata=dict(description=f"URL for accessing the full {name} resource."),
+            relative=True,
+        ),
+    }
+
+    if not keep_snapshot_id:
+        schema.pop("snapshotId")
+
+    return Schema.from_dict(schema, name="f{name}RefBaseSchema")
+
+
+SnapshotRefSchema = generate_base_resource_ref_schema("Snapshot", keep_snapshot_id=True)
 
 
 class BasePageSchema(Schema):

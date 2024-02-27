@@ -17,23 +17,18 @@
 """The schemas for serializing/deserializing PluginParameterType resources."""
 from __future__ import annotations
 
-from marshmallow import Schema, fields
+from marshmallow import fields
 
-from dioptra.restapi.v1.groups.schema import GroupRefSchema
+from dioptra.restapi.v1.schemas import generate_base_resource_ref_schema
+
+PluginParameterTypeRefBaseSchema = generate_base_resource_ref_schema(
+    "PluginParameterType"
+)
 
 
-class PluginParameterTypeRefSchema(Schema):
+class PluginParameterTypeRefSchema(PluginParameterTypeRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a PluginParameterType resource."""
 
-    id = fields.Integer(
-        attribute="id",
-        metadata=dict(description="ID for the PluginParameterType resource."),
-    )
-    group = fields.Nested(
-        GroupRefSchema,
-        attribute="group",
-        metadata=dict(description="Group that owns the PluginParameterType resource."),
-    )
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the PluginParameterType resource."),
@@ -41,11 +36,4 @@ class PluginParameterTypeRefSchema(Schema):
     structure = fields.Dict(
         attribute="structure",
         metadata=dict(description="Structure of the PluginParameterType resource."),
-    )
-    url = fields.Url(
-        attribute="url",
-        metadata=dict(
-            description="URL for accessing the full PluginParameterType resource."
-        ),
-        relative=True,
     )
