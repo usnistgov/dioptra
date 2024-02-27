@@ -363,9 +363,7 @@ def test_queue_registration(client: FlaskClient, db: SQLAlchemy) -> None:
     assert_retrieving_all_queues_works(client, expected=queue_expected_list)
 
 
-def test_queue_name_is_slugified(
-    client: FlaskClient, db: SQLAlchemy
-) -> None:
+def test_queue_name_is_slugified(client: FlaskClient, db: SQLAlchemy) -> None:
     """Test that registering a queue name with spaces/uppercase letters is slugified.
 
     This test validates the following sequence of actions:
