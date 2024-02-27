@@ -8,7 +8,7 @@ absl-py==2.1.0
     # via
     #   tensorboard
     #   tensorflow-cpu-aws
-adversarial-robustness-toolbox==1.17.0
+adversarial-robustness-toolbox==1.17.1
     # via dioptra (pyproject.toml)
 alembic==1.13.1
     # via
@@ -25,20 +25,18 @@ attrs==23.2.0
     # via
     #   jsonschema
     #   referencing
-boto3==1.34.44
+blinker==1.7.0
+    # via flask
+boto3==1.34.52
     # via dioptra (pyproject.toml)
-botocore==1.34.44
+botocore==1.34.52
     # via
     #   boto3
     #   s3transfer
-box2d-py==2.3.5
-    # via gym
-cachetools==5.3.2
+cachetools==5.3.3
     # via google-auth
 certifi==2024.2.2
     # via requests
-cffi==1.16.0
-    # via cryptography
 charset-normalizer==3.3.2
     # via requests
 click==8.1.7
@@ -54,26 +52,19 @@ cloudpickle==3.0.0
     # via
     #   dask
     #   distributed
-    #   gym
     #   mlflow
     #   prefect
-cma==3.3.0
-    # via -r docker/pip-tools/worker-requirements.in
 contourpy==1.2.0
     # via matplotlib
 croniter==2.0.1
     # via prefect
-cryptography==3.4.8
-    # via dioptra (pyproject.toml)
 cycler==0.12.1
     # via matplotlib
-dask==2024.2.0
+dask==2024.2.1
     # via
     #   distributed
     #   prefect
-decorator==4.4.2
-    # via moviepy
-distributed==2024.2.0
+distributed==2024.2.1
     # via prefect
 docker==7.0.0
     # via
@@ -83,7 +74,7 @@ entrypoints==0.4
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
-flask==2.1.3
+flask==3.0.2
     # via
     #   dioptra (pyproject.toml)
     #   flask-cors
@@ -104,7 +95,7 @@ flask-restx==1.3.0
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
-flask-sqlalchemy==2.5.1
+flask-sqlalchemy==3.1.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
@@ -120,7 +111,7 @@ gitdb==4.0.11
     # via gitpython
 gitpython==3.1.42
     # via mlflow
-google-auth==2.28.0
+google-auth==2.28.1
     # via
     #   google-auth-oauthlib
     #   tensorboard
@@ -130,16 +121,12 @@ google-pasta==0.2.0
     # via tensorflow-cpu-aws
 greenlet==3.0.3
     # via sqlalchemy
-grpcio==1.60.1
+grpcio==1.62.0
     # via
     #   tensorboard
     #   tensorflow-cpu-aws
 gunicorn==21.2.0
     # via mlflow
-gym[box2d,classic-control,classic_control,other,toy-text,toy_text]==0.26.2
-    # via -r docker/pip-tools/worker-requirements.in
-gym-notices==0.0.8
-    # via gym
 h5py==3.10.0
     # via tensorflow-cpu-aws
 idna==3.6
@@ -147,21 +134,17 @@ idna==3.6
 imageio==2.34.0
     # via
     #   imgaug
-    #   moviepy
     #   scikit-image
-imageio-ffmpeg==0.4.9
-    # via moviepy
 imgaug==0.4.0
     # via dioptra (pyproject.toml)
 importlib-metadata==7.0.1
     # via
     #   dask
     #   flask
-    #   gym
     #   jax
     #   markdown
     #   mlflow
-importlib-resources==6.1.1
+importlib-resources==6.1.2
     # via
     #   flask-restx
     #   matplotlib
@@ -170,7 +153,7 @@ injector==0.21.0
     # via dioptra (pyproject.toml)
 itsdangerous==2.1.2
     # via flask
-jax==0.4.24
+jax==0.4.25
     # via tensorflow-cpu-aws
 jinja2==3.1.3
     # via
@@ -201,8 +184,6 @@ locket==1.0.0
     # via
     #   distributed
     #   partd
-lz4==4.3.3
-    # via gym
 mako==1.3.2
     # via alembic
 markdown==3.5.2
@@ -215,7 +196,8 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   mako
-marshmallow==3.20.2
+    #   werkzeug
+marshmallow==3.21.0
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
@@ -226,7 +208,6 @@ marshmallow-oneofschema==3.1.1
 matplotlib==3.8.3
     # via
     #   -r docker/pip-tools/worker-requirements.in
-    #   gym
     #   imgaug
     #   mlflow
     #   pycocotools
@@ -236,13 +217,11 @@ ml-dtypes==0.3.2
     # via jax
 mlflow==2.10.2
     # via dioptra (pyproject.toml)
-moviepy==1.0.3
-    # via gym
 msgpack==1.0.7
     # via
     #   distributed
     #   prefect
-multimethod==1.11
+multimethod==1.11.2
     # via dioptra (pyproject.toml)
 mypy-extensions==1.0.0
     # via prefect
@@ -251,10 +230,8 @@ networkx==3.2.1
 numpy==1.24.3
     # via
     #   adversarial-robustness-toolbox
-    #   cma
     #   contourpy
     #   dioptra (pyproject.toml)
-    #   gym
     #   h5py
     #   imageio
     #   imgaug
@@ -262,7 +239,6 @@ numpy==1.24.3
     #   matplotlib
     #   ml-dtypes
     #   mlflow
-    #   moviepy
     #   opencv-python
     #   opt-einsum
     #   pandas
@@ -280,7 +256,6 @@ oauthlib==3.2.2
 opencv-python==4.9.0.80
     # via
     #   -r docker/pip-tools/worker-requirements.in
-    #   gym
     #   imgaug
 opt-einsum==3.3.0
     # via
@@ -298,7 +273,7 @@ packaging==23.2
     #   prefect
     #   scikit-image
     #   tensorflow-cpu-aws
-pandas==2.2.0
+pandas==2.2.1
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
@@ -317,8 +292,6 @@ pillow==10.2.0
     #   scikit-image
 prefect==1.4.1
     # via dioptra (pyproject.toml)
-proglog==0.1.10
-    # via moviepy
 protobuf==4.25.3
     # via
     #   mlflow
@@ -340,10 +313,6 @@ pyasn1-modules==0.3.0
     # via google-auth
 pycocotools==2.0.7
     # via -r docker/pip-tools/worker-requirements.in
-pycparser==2.21
-    # via cffi
-pygame==2.1.0
-    # via gym
 pygments==2.17.2
     # via rich
 pyparsing==3.1.1
@@ -380,7 +349,7 @@ pyyaml==6.0.1
     #   prefect
 querystring-parser==1.2.4
     # via mlflow
-redis==5.0.1
+redis==5.0.2
     # via
     #   dioptra (pyproject.toml)
     #   rq
@@ -393,19 +362,18 @@ requests==2.31.0
     #   dioptra (pyproject.toml)
     #   docker
     #   mlflow
-    #   moviepy
     #   prefect
     #   requests-oauthlib
     #   tensorboard
 requests-oauthlib==1.3.1
     # via google-auth-oauthlib
-rich==13.7.0
+rich==13.7.1
     # via -r docker/pip-tools/worker-requirements.in
 rpds-py==0.18.0
     # via
     #   jsonschema
     #   referencing
-rq==1.15.1
+rq==1.16.0
     # via dioptra (pyproject.toml)
 rsa==4.9
     # via google-auth
@@ -413,7 +381,7 @@ s3transfer==0.10.0
     # via boto3
 scikit-image==0.22.0
     # via imgaug
-scikit-learn==1.0.2
+scikit-learn==1.4.1.post1
     # via
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
@@ -444,7 +412,7 @@ smmap==5.0.1
     # via gitdb
 sortedcontainers==2.4.0
     # via distributed
-sqlalchemy==1.4.51
+sqlalchemy==2.0.24
     # via
     #   alembic
     #   dioptra (pyproject.toml)
@@ -454,8 +422,6 @@ sqlparse==0.4.4
     # via mlflow
 structlog==24.1.0
     # via dioptra (pyproject.toml)
-swig==4.2.0
-    # via gym
 tabulate==0.9.0
     # via prefect
 tblib==3.0.0
@@ -492,14 +458,12 @@ toolz==0.12.1
 tornado==6.4
     # via distributed
 tqdm==4.66.2
-    # via
-    #   adversarial-robustness-toolbox
-    #   moviepy
-    #   proglog
+    # via adversarial-robustness-toolbox
 typing-extensions==4.5.0
     # via
     #   alembic
     #   dioptra (pyproject.toml)
+    #   sqlalchemy
     #   tensorflow-cpu-aws
 tzdata==2024.1
     # via
@@ -512,7 +476,7 @@ urllib3==1.26.18
     #   docker
     #   prefect
     #   requests
-werkzeug==2.1.2
+werkzeug==3.0.1
     # via
     #   dioptra (pyproject.toml)
     #   flask
