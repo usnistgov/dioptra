@@ -101,6 +101,7 @@ def generate_base_resource_ref_schema(
     name: str, keep_snapshot_id: bool = False
 ) -> type[Schema]:
     """Generates the base schema for a ResourceRef."""
+    from dioptra.restapi.v1.groups.schema import GroupRefSchema
 
     schema: dict[str, Union[fields.Field, type]] = {
         "id": fields.Integer(
