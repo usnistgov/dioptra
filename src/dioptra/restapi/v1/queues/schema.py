@@ -31,7 +31,7 @@ from dioptra.restapi.v1.schemas import (
 QueueRefBaseSchema = generate_base_resource_ref_schema("Queue")
 
 
-class QueueRefSchema(Schema):
+class QueueRefSchema(QueueRefBaseSchema):
     """The reference schema for the data stored in a Queue resource."""
 
     name = fields.String(
