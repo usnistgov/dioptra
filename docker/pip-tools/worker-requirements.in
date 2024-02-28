@@ -1,5 +1,3 @@
-cma
-gym[box2d,classic_control,other,toy_text]
 matplotlib
 opencv-python
 Pillow>=9.2.0
