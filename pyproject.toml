@@ -122,7 +122,6 @@ examples = [
     "universal_pathlib>=0.0.23",
 ]
 sdk = [
-    "cryptography==3.*",
     "imgaug>=0.4.0",
     "prefect>=1.0.0,<2",
 ]
