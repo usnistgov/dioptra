@@ -40,7 +40,7 @@ def test_run_task_engine(monkeypatch, tmp_path, s3_stubbed_plugins):
     mlflow_experiment_id = None
 
     mlflow_run_info = mlflow.entities.RunInfo(
-        None, "exp1", "user1", "happy", "now", None, None, run_id="run_123"
+        "run_123", "exp1", "user1", "happy", "now", None, None
     )
     mlflow_run = mlflow.entities.Run(mlflow_run_info, None)
 

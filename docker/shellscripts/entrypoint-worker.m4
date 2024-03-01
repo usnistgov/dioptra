@@ -20,7 +20,6 @@
 echo "This is just a script template, not the script (yet) - pass it to 'argbash' to fix this." >&2
 exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([results-ttl],[],[Job results will be kept for this number of seconds],[500])
-# ARG_OPTIONAL_SINGLE([rq-worker-module],[],[Python module used to start the RQ Worker],[dioptra.rq.cli.rq])
 # ARG_OPTIONAL_REPEATED([wait-for],[],[Wait on the availability of a host and TCP port before proceeding],[])
 # ARG_LEFTOVERS([Queues to watch])
 # ARG_DEFAULTS_POS
@@ -39,7 +38,6 @@ set -euo pipefail
 readonly dioptra_workdir="${DIOPTRA_WORKDIR}"
 readonly job_queues="${_arg_leftovers[*]}"
 readonly logname="Container Entry Point"
-readonly rq_worker_module="${_arg_rq_worker_module}"
 readonly rq_redis_uri="${RQ_REDIS_URI-}"
 readonly rq_results_ttl="${_arg_results_ttl}"
 
@@ -72,7 +70,6 @@ wait_for_services() {
 #   logname
 #   rq_redis_uri
 #   rq_results_ttl
-#   rq_worker_module
 # Arguments:
 #   None
 # Returns:
@@ -80,12 +77,12 @@ wait_for_services() {
 ###########################################################################################
 
 start_rq() {
-  echo "${logname}: starting rq worker"
-  echo "${logname}: rq worker --url ${rq_redis_uri} --results-ttl ${rq_results_ttl} \
+  echo "${logname}: starting Dioptra worker"
+  echo "${logname}: dioptra-worker --url ${rq_redis_uri} --results-ttl ${rq_results_ttl} \
   ${job_queues}"
 
   cd ${dioptra_workdir}
-  PYTHONPATH="${DIOPTRA_PLUGIN_DIR}" python -m ${rq_worker_module} worker\
+  PYTHONPATH="${DIOPTRA_PLUGIN_DIR}" dioptra-worker \
     --url ${rq_redis_uri}\
     --results-ttl ${rq_results_ttl}\
     ${job_queues}
