@@ -28,7 +28,6 @@ from dioptra.restapi.db import db
 from dioptra.restapi.db.legacy_models import Experiment, Job
 
 ENVVAR_RESTAPI_ENV = "DIOPTRA_RESTAPI_ENV"
-ENVVAR_JOB_ID = "DIOPTRA_RQ_JOB_ID"
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -40,18 +39,8 @@ class DioptraDatabaseClient(object):
         return app
 
     @property
-    def job_id(self) -> Optional[str]:
-        return os.getenv(ENVVAR_JOB_ID)
-
-    @property
     def restapi_env(self) -> Optional[str]:
         return os.getenv(ENVVAR_RESTAPI_ENV)
-
-    def get_active_job(self) -> Optional[Dict[str, Any]]:
-        if self.job_id is None:
-            return None
-
-        return self.get_job(self.job_id)
 
     def get_job(self, job_id) -> Dict[str, Any]:
         with self.app.app_context():
@@ -62,12 +51,6 @@ class DioptraDatabaseClient(object):
                 "depends_on": job.depends_on,
                 "timeout": job.timeout,
             }
-
-    def update_active_job_status(self, status: str) -> None:
-        if self.job_id is None:
-            return None
-
-        self.update_job_status(job_id=self.job_id, status=status)
 
     def update_job_status(self, job_id: str, status: str) -> None:
         LOGGER.info(
@@ -87,14 +70,8 @@ class DioptraDatabaseClient(object):
                     db.session.rollback()
                     raise
 
-    def set_mlflow_run_id_in_db(self, run_id: str) -> None:
-        if self.job_id is None:
-            return None
-
-        LOGGER.info("=== Setting MLFlow run ID in the Dioptra database ===")
-        self.set_mlflow_run_id_for_job(run_id, self.job_id)
-
     def set_mlflow_run_id_for_job(self, run_id: str, job_id: str) -> None:
+        LOGGER.info("=== Setting MLFlow run ID in the Dioptra database ===")
         with self.app.app_context():
             job = Job.query.get(job_id)
             job.update(changes={"mlflow_run_id": run_id})
