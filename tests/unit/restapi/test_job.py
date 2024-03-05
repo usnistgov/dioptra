@@ -50,6 +50,7 @@ def job_request_factory(
     Returns:
         A factory function for creating job submission requests.
     """
+
     def wrapped() -> dict[str, Any]:
         return {
             "experimentName": "mnist",

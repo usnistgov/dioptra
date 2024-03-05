@@ -197,13 +197,13 @@ def _(client: RequestsSession) -> dict[str, Any]:
 
 
 @overload
-def login(client: FlaskClient, username: str, password: str) -> TestResponse:
-    ...
+def login(client: FlaskClient, username: str, password: str) -> TestResponse: ...
 
 
 @overload
-def login(client: RequestsSession, username: str, password: str) -> RequestsResponse:
-    ...
+def login(
+    client: RequestsSession, username: str, password: str
+) -> RequestsResponse: ...
 
 
 @singledispatch
@@ -241,13 +241,11 @@ def _(client: RequestsSession, username: str, password: str) -> RequestsResponse
 
 
 @overload
-def logout(client: FlaskClient, everywhere: bool) -> TestResponse:
-    ...
+def logout(client: FlaskClient, everywhere: bool) -> TestResponse: ...
 
 
 @overload
-def logout(client: RequestsSession, everywhere: bool) -> RequestsResponse:
-    ...
+def logout(client: RequestsSession, everywhere: bool) -> RequestsResponse: ...
 
 
 @singledispatch
@@ -285,15 +283,13 @@ def _(client: RequestsSession, everywhere: bool) -> RequestsResponse:
 @overload
 def change_password(
     client: FlaskClient, user_id: int, current_password: str, new_password: str
-) -> TestResponse:
-    ...
+) -> TestResponse: ...
 
 
 @overload
 def change_password(
     client: RequestsSession, user_id: int, current_password: str, new_password: str
-) -> RequestsResponse:
-    ...
+) -> RequestsResponse: ...
 
 
 @singledispatch
@@ -348,15 +344,13 @@ def _(
 @overload
 def change_current_user_password(
     client: FlaskClient, current_password: str, new_password: str
-) -> TestResponse:
-    ...
+) -> TestResponse: ...
 
 
 @overload
 def change_current_user_password(
     client: RequestsSession, current_password: str, new_password: str
-) -> RequestsResponse:
-    ...
+) -> RequestsResponse: ...
 
 
 @singledispatch
@@ -404,13 +398,11 @@ def _(
 
 
 @overload
-def delete_current_user(client: FlaskClient, password: str) -> TestResponse:
-    ...
+def delete_current_user(client: FlaskClient, password: str) -> TestResponse: ...
 
 
 @overload
-def delete_current_user(client: RequestsSession, password: str) -> RequestsResponse:
-    ...
+def delete_current_user(client: RequestsSession, password: str) -> RequestsResponse: ...
 
 
 @singledispatch
