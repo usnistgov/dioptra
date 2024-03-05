@@ -19,8 +19,8 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
-from dioptra.restapi.v1.users.schema import UserRefSchema
 from dioptra.restapi.v1.tags.schema import TagRefSchema
+from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
 class GroupRefSchema(Schema):
@@ -43,7 +43,7 @@ class GroupRefSchema(Schema):
 
 class MemberMutableFieldsSchema(Schema):
     """The fields schema of mutable data of a Group Member."""
-    
+
     read = fields.Boolean(
         attribute="read",
         metadata=dict(description="Permission for member to read Group Resources."),
@@ -51,10 +51,12 @@ class MemberMutableFieldsSchema(Schema):
     write = fields.Boolean(
         attribute="write",
         metadata=dict(description="Permission for member to modify Group Resources."),
-    )  
+    )
     shareRead = fields.Boolean(
         attribute="share_read",
-        metadata=dict(description="Permission for member to share read-only Group Resources."),
+        metadata=dict(
+            description="Permission for member to share read-only Group Resources."
+        ),
     )
 
 
@@ -69,18 +71,18 @@ class MemberSchema(MemberMutableFieldsSchema):
     group = fields.Nested(
         GroupRefSchema,
         attribute="group",
-        metadata=dict(description="The Group Resource of which the User is a member.")
+        metadata=dict(description="The Group Resource of which the User is a member."),
     )
 
 
 class ManagerMutableFieldsSchema(Schema):
     """The fields schema of mutable data of a Group Manager."""
 
-    owner= fields.Boolean(
+    owner = fields.Boolean(
         attribute="owner",
         metadata=dict(description="Flag for if the Manager is a Group owner."),
     )
-    admin= fields.Boolean(
+    admin = fields.Boolean(
         attribute="admin",
         metadata=dict(description="Flag for if the Maanger is a Group admin."),
     )
@@ -104,8 +106,7 @@ class GroupMangerMutableFieldsSchema(Schema):
     """The fields schema for the mutable data by Managers in a Group resource."""
 
     name = fields.String(
-        attribute="name", 
-        metadata=dict(description="Name of the Group resource.")
+        attribute="name", metadata=dict(description="Name of the Group resource.")
     )
     managers = fields.List(
         fields.Nested(ManagerSchema),
@@ -124,20 +125,18 @@ class GroupSchema(GroupMemberMutableFieldsSchema, GroupMangerMutableFieldsSchema
     )
     user = fields.Nested(
         UserRefSchema,
-        attribute="user"
-        metadata=dict(description="User that created the Group resource.")
+        attribute="user",
+        metadata=dict(description="User that created the Group resource."),
     )
     createdOn = fields.DateTime(
         attribute="created_on",
-        metadata=dict(
-            description=f"Timestamp when the Group resource was created."
-        ),
+        metadata=dict(description="Timestamp when the Group resource was created."),
         dump_only=True,
     )
     lastModifiedOn = fields.DateTime(
         attribute="last_modified_on",
         metadata=dict(
-            description=f"Timestamp when the Group resource was last modified."
+            description="Timestamp when the Group resource was last modified."
         ),
         dump_only=True,
     )
