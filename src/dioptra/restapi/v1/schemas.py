@@ -130,9 +130,6 @@ def generate_base_resource_ref_schema(
     return Schema.from_dict(schema, name="f{name}RefBaseSchema")
 
 
-SnapshotRefSchema = generate_base_resource_ref_schema("Snapshot", keep_snapshot_id=True)
-
-
 class ResourceUrlsSchema(Schema):
     """The schema for a list of Resource URLs"""
 
@@ -199,7 +196,7 @@ class ResourceTypeQueryParametersSchema(Schema):
 class GroupIdQueryParametersSchema(Schema):
     """A schema for adding group_id query parameters to a resource endpoint."""
 
-    groupId = fields.String(
+    groupId = fields.Integer(
         attribute="group_id",
         metadata=dict(description="Filter results by the Group ID."),
     )

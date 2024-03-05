@@ -36,6 +36,7 @@ V1_ARTIFACTS_ROUTE = "artifacts"
 V1_AUTH_ROUTE = "auth"
 V1_ENTRYPOINTS_ROUTE = "entrypoints"
 V1_EXPERIMENTS_ROUTE = "experiments"
+V1_GROUPS_ROUTE = "groups"
 V1_JOBS_ROUTE = "jobs"
 V1_PLUGIN_PARAMETER_TYPES_ROUTE = "pluginParameterTypes"
 V1_PLUGINS_ROUTE = "plugins"
@@ -84,6 +85,7 @@ def register_v1_routes(api: Api) -> None:
     from .v1.auth.controller import api as auth_api
     from .v1.entrypoints.controller import api as entrypoints_api
     from .v1.experiments.controller import api as experiments_api
+    from .v1.groups.controller import api as groups_api
     from .v1.jobs.controller import api as jobs_api
     from .v1.plugin_parameter_types.controller import api as plugin_parameter_types_api
     from .v1.plugins.controller import api as plugins_api
@@ -94,6 +96,7 @@ def register_v1_routes(api: Api) -> None:
     api.add_namespace(artifacts_api, path=f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}")
     api.add_namespace(entrypoints_api, path=f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}")
     api.add_namespace(experiments_api, path=f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}")
+    api.add_namespace(groups_api, path=f"/{V1_ROOT}/{V1_GROUPS_ROUTE}")
     api.add_namespace(jobs_api, path=f"/{V1_ROOT}/{V1_JOBS_ROUTE}")
     api.add_namespace(
         plugin_parameter_types_api, path=f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}"

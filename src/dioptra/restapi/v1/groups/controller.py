@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The module defining the endpoints for Plugin resources."""
+"""The module defining the endpoints for Group resources."""
 from __future__ import annotations
 
 import uuid
@@ -29,93 +29,118 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
 from .schema import (
-    PluginFileGetQueryParameters,
-    PluginFileMutableFieldsSchema,
-    PluginFilePageSchema,
-    PluginFileSchema,
-    PluginGetQueryParameters,
-    PluginMutableFieldsSchema,
-    PluginPageSchema,
-    PluginSchema,
+    GroupGetQueryParameters,
+    GroupMemberMutableFieldsSchema,
+    GroupMemberSchema,
+    GroupMutableFieldsSchema,
+    GroupPageSchema,
+    GroupSchema,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-api: Namespace = Namespace("Plugins", description="Plugins endpoint")
+api: Namespace = Namespace("Groups", description="Groups endpoint")
 
 
 @api.route("/")
-class PluginEndpoint(Resource):
+class GroupEndpoint(Resource):
     @login_required
-    @accepts(query_params_schema=PluginGetQueryParameters, api=api)
-    @responds(schema=PluginPageSchema, api=api)
+    @accepts(query_params_schema=GroupGetQueryParameters, api=api)
+    @responds(schema=GroupPageSchema, api=api)
     def get(self):
-        """Gets a list of all Plugin resources."""
+        """Gets a list of all Group resources."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Plugin", request_type="GET"
+            request_id=str(uuid.uuid4()), resource="Group", request_type="GET"
         )
         log.debug("Request received")
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
     @login_required
-    @accepts(schema=PluginSchema, api=api)
-    @responds(schema=PluginSchema, api=api)
+    @accepts(schema=GroupSchema, api=api)
+    @responds(schema=GroupSchema, api=api)
     def post(self):
-        """Creates a Plugin resource."""
+        """Creates a Group resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Plugin", request_type="POST"
+            request_id=str(uuid.uuid4()), resource="Group", request_type="POST"
         )
         log.debug("Request received")
         parsed_obj = request.parsed_obj  # noqa: F841
 
 
 @api.route("/<int:id>")
-@api.param("id", "ID for the Plugin resource.")
-class PluginIdEndpoint(Resource):
+@api.param("id", "ID for the Group resource.")
+class GroupIdEndpoint(Resource):
     @login_required
-    @responds(schema=PluginSchema, api=api)
+    @responds(schema=GroupSchema, api=api)
     def get(self, id: int):
-        """Gets a Plugin resource."""
+        """Gets a Group resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Plugin", request_type="GET", id=id
+            request_id=str(uuid.uuid4()), resource="Group", request_type="GET", id=id
         )
         log.debug("Request received")
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self, id: int):
-        """Deletes a Plugin resource."""
+        """Deletes a Group resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="Plugin",
-            request_type="DELETE",
-            id=id,
+            request_id=str(uuid.uuid4()), resource="Group", request_type="DELETE", id=id
         )
         log.debug("Request received")
 
     @login_required
-    @accepts(schema=PluginMutableFieldsSchema, api=api)
-    @responds(schema=PluginSchema, api=api)
+    @accepts(schema=GroupMutableFieldsSchema, api=api)
+    @responds(schema=GroupSchema, api=api)
     def put(self, id: int):
-        """Modifies a Plugin resource."""
+        """Modifies a Group resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Plugin", request_type="PUT", id=id
+            request_id=str(uuid.uuid4()), resource="Group", request_type="PUT", id=id
         )
         log.debug("Request received")
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
 
 
-@api.route("/<int:id>/files")
-@api.param("id", "ID for the Plugin resource.")
-class PluginIdFilesEndpoint(Resource):
+@api.route("/<int:id>/members")
+@api.param("id", "ID for the Group resource.")
+class GroupIdMembersEndpoint(Resource):
     @login_required
-    @accepts(PluginFileGetQueryParameters, api=api)
-    @responds(schema=PluginFilePageSchema, api=api)
+    @responds(schema=GroupMemberSchema(many=True), api=api)
     def get(self, id: int):
-        """Gets the PluginFile resources for a Plugin resource."""
+        """Gets a list of Member's Group Permissions."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="PluginFile",
+            resource="GroupMember",
+            request_type="GET",
+            id=id,
+        )
+        log.debug("Request received")
+
+    @login_required
+    @accepts(schema=GroupMemberSchema, api=api)
+    @responds(schema=GroupMemberSchema, api=api)
+    def post(self, id: int):
+        """Adds a Member to the Group with default permissions."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="GroupMember",
+            request_type="POST",
+            id=id,
+        )
+        log.debug("Request received")
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+
+
+@api.route("/<int:id>/members/<int:user_id>")
+@api.param("id", "ID for the Group resource.")
+@api.param("user_id", "ID for the User resource.")
+class GroupIdMembersUserIdEndpoint(Resource):
+    @login_required
+    @responds(schema=GroupMemberSchema, api=api)
+    def get(self, id: int, user_id: int):
+        """Gets a Member's Group permissions."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="GroupMember",
             request_type="GET",
             id=id,
         )
@@ -123,65 +148,25 @@ class PluginIdFilesEndpoint(Resource):
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
-    def delete(self, id: int):
-        """Deletes all PluginFile resource associated with a Plugin resource."""
+    def delete(self, id: int, user_id: int):
+        """Removes a Member from the Group."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="PluginFile",
+            resource="GroupMember",
             request_type="DELETE",
             id=id,
         )
         log.debug("Request received")
 
     @login_required
-    @accepts(schema=PluginFileSchema, api=api)
-    @responds(schema=PluginFileSchema, api=api)
-    def post(self):
-        """Creates a Plugin resource."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="PluginFile", request_type="POST"
-        )
-        log.debug("Request received")
-        parsed_obj = request.parsed_obj  # noqa: F841
-
-
-@api.route("/<int:id>/files/<int:file_id>")
-@api.param("id", "ID for the Plugin resource.")
-@api.param("file_id", "ID for the PluginFile resource.")
-class PluginIdFileIdEndpoint(Resource):
-    @login_required
-    @responds(schema=PluginFileSchema, api=api)
-    def get(self, id: int, file_id: int):
-        """Gets a PluginFile resource."""
+    @accepts(schema=GroupMemberMutableFieldsSchema, api=api)
+    @responds(schema=GroupMemberSchema, api=api)
+    def patch(self, id: int, user_id: int):
+        """Modifies a Member's Group permissions."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="PluginFile",
-            request_type="GET",
-            id=id,
-        )
-        log.debug("Request received")
-
-    @login_required
-    @responds(schema=IdStatusResponseSchema, api=api)
-    def delete(self, id: int, file_id: int):
-        """Deletes a PluginFile resource."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="PluginFile",
-            request_type="DELETE",
-            id=id,
-        )
-        log.debug("Request received")
-
-    @login_required
-    @accepts(schema=PluginFileMutableFieldsSchema, api=api)
-    @responds(schema=PluginFileSchema, api=api)
-    def put(self, id: int, file_id: int):
-        """Modifies a PluginFile resource."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="PluginFile",
-            request_type="PUT",
+            resource="GroupMember",
+            request_type="PATCH",
             id=id,
         )
         log.debug("Request received")
