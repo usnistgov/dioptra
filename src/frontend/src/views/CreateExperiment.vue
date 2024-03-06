@@ -16,50 +16,42 @@
       :done="step > 1"
       :header-nav="step > 1"
     >
-      <q-input 
-        outlined 
-        dense 
-        v-model.trim="orgName" 
-        autofocus 
-        :rules="[requiredRule]"
-        lazy-rules="ondemand"
-        ref="orgNameRef"
-        class="q-mb-sm"
-        @update:model-value="orgNameRef.validate()"
-      >
-        <template v-slot:before>
-          <div :class="`text-body2 label`">Organization Name:</div>
-        </template>
-      </q-input>
-      <q-input 
-        outlined 
-        dense 
-        v-model.trim="name" 
-        autofocus 
-        :rules="[requiredRule]"
-        lazy-rules="ondemand"
-        ref="nameRef"
-        class="q-mb-sm"
-        @update:model-value="nameRef.validate()"
-      >
-        <template v-slot:before>
-          <div :class="`text-body2 label`">Experiment Name:</div>
-        </template>
-      </q-input>
-      <q-select
-        outlined 
-        v-model="team" 
-        :options="groupOptions" 
-        dense
-        ref="teamRef"
-        :rules="[requiredRule]"
-        lazy-rules="ondemand"
-        @update:model-value="teamRef.resetValidation()"
-      >
-        <template v-slot:before>
-          <div class="text-body2 label">Team Name:</div>
-        </template>  
-      </q-select>
+      <q-form ref="step1Form" greedy>
+        <q-input 
+          outlined 
+          dense 
+          v-model.trim="orgName"
+          autofocus
+          :rules="[requiredRule]"
+          class="q-mb-sm"
+        >
+          <template v-slot:before>
+            <div :class="`text-body2 label`">Organization Name:</div>
+          </template>
+        </q-input>
+        <q-input 
+          outlined 
+          dense 
+          v-model.trim="name"
+          :rules="[requiredRule]"
+          class="q-mb-sm"
+        >
+          <template v-slot:before>
+            <div :class="`text-body2 label`">Experiment Name:</div>
+          </template>
+        </q-input>
+        <q-select
+          outlined 
+          v-model="team" 
+          :options="groupOptions" 
+          dense
+          :rules="[requiredRule]"
+        >
+          <template v-slot:before>
+            <div class="text-body2 label">Team Name:</div>
+          </template>  
+        </q-select>
+      </q-form>
 
     </q-step>
 
@@ -70,8 +62,13 @@
       :done="step > 2"
       :header-nav="step > 2"
     >
-      An ad group contains one or more ads which target a shared set of keywords.
+      <q-option-group
+        :options="entryPoints"
+        type="checkbox"
+        v-model="selectedEntryPoints"
+      >
 
+      </q-option-group>
     </q-step>
 
     <q-step
@@ -80,9 +77,30 @@
       icon="sell"
       :header-nav="step > 3"
     >
-      Try out different ad text to see what brings in the most customers, and learn how to
-      enhance your ads using features like ad extensions. If you run into any problems with
-      your ads, find out how to tell if they're running and how to resolve approval issues.
+      <div style="margin: 0 200px">
+        <q-btn 
+          v-for="(tag, i) in tags"
+          :key="i" 
+          :label="tag.label"
+          no-caps
+          class="q-ma-sm"
+          @click="tag.active = !tag.active"
+          :color="tag.active ? 'primary' : 'grey-6'"
+        />
+      </div>
+
+      <p style="margin: 50px 200px">
+        Selected Tags: <br>
+        <q-chip 
+        v-for="(tag, i) in selectedTags"
+        :key="i"
+        :label="tag.label"
+        color="primary"
+        class="text-white"
+      />
+      </p>
+
+
     </q-step>
 
     <template v-slot:navigation>
@@ -98,20 +116,20 @@
 
 <script setup>
   import PageTitle from '@/components/PageTitle.vue'
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
 
   const step =  ref(1)
 
   const stepper = ref(null)
 
+  const step1Form = ref(null)
+
   const orgName = ref('')
-  const orgNameRef = ref(null)
 
   const name = ref('')
-  const nameRef = ref(null)
 
   const team = ref('')
-  const teamRef = ref(null)
+
   const groupOptions = ref([
     'Team 1',
     'Team 2',
@@ -122,30 +140,60 @@
 
   function continueStep() {
     if(step.value === 1) {
-      orgNameRef.value.validate()
-      nameRef.value.validate()
-      teamRef.value.validate()
-      if(!orgNameRef.value.hasError && !nameRef.value.hasError && !teamRef.value.hasError) {
-        stepper.value.next()
-      }
+      step1Form.value.validate().then(success => {
+        if (success) {
+          stepper.value.next()
+        }
+        else {
+          step1Form.value.validate()
+        }
+      })
     } else {
       stepper.value.next()
     }
+
   }
 
   function reset() {
+    if(step.value === 1) step1Form.value.reset()
     step.value = 1
     orgName.value = ''
     name.value = ''
     team.value = ''
   }
 
+  const selectedEntryPoints = ref([])
+
+  const entryPoints = [
+    {label: 'Entry Point 1', value: 'Entry Point 1'},
+    {label: 'Entry Point 2', value: 'Entry Point 2'},
+    {label: 'Entry Point 3', value: 'Entry Point 3'},
+    {label: 'Entry Point 4', value: 'Entry Point 4'},
+    {label: 'Entry Point 5', value: 'Entry Point 5'},
+    {label: 'Entry Point 6', value: 'Entry Point 6'},
+  ]
+
+  const tags = ref([
+    { label: 'Machine Learning', active: false },
+    { label: 'Adversarial Machine Learning', active: false },
+    { label: 'Tensorflow', active: false },
+    { label: 'vgg16', active: false },
+    { label: 'Image Classification', active: false },
+    { label: 'Patch Attack', active: false },
+    { label: 'Categorical Data', active: false },
+    { label: 'AI', active: false }
+  ])
+
+  const selectedTags = computed(() => {
+    return tags.value.filter((tag) => tag.active === true)
+  })
+
 
 </script>
 
 <style>
   .q-stepper__content{
-    height: 50%;
+    height: 350px;
   }
 
   .label{
