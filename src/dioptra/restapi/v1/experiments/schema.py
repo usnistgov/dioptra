@@ -19,36 +19,24 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
-from dioptra.restapi.v1.groups.schema import GroupRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
 
+ExperimentRefBaseSchema = generate_base_resource_ref_schema("Experiment")
 
-class ExperimentRefSchema(Schema):
+
+class ExperimentRefSchema(ExperimentRefBaseSchema):
     """The reference schema for the data stored in a Experiment resource."""
 
-    id = fields.Integer(
-        attribute="id",
-        metadata=dict(description="ID for the Experiment resource."),
-    )
-    group = fields.Nested(
-        GroupRefSchema,
-        attribute="group",
-        metadata=dict(description="Group that owns the Experiment resource."),
-    )
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the Experiment resource."),
-    )
-    url = fields.Url(
-        attribute="url",
-        metadata=dict(description="URL for accessing the full Experiment resource."),
-        relative=True,
     )
 
 
