@@ -31,7 +31,7 @@ from dioptra.restapi.v1.schemas import (
 ExperimentRefBaseSchema = generate_base_resource_ref_schema("Experiment")
 
 
-class ExperimentRefSchema(ExperimentRefBaseSchema):
+class ExperimentRefSchema(ExperimentRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a Experiment resource."""
 
     name = fields.String(
@@ -48,7 +48,7 @@ class ExperimentMutableFieldsSchema(Schema):
     )
 
 
-ExperimentBaseSchema = generate_base_resource_schema("Experiment")
+ExperimentBaseSchema = generate_base_resource_schema("Experiment", snapshot=True)
 
 
 class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # type: ignore
