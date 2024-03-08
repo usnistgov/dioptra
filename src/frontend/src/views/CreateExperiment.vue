@@ -67,22 +67,39 @@
     >
       <div style="margin: 0 200px">
         <q-btn 
-          v-for="(tag, i) in tags"
+          v-for="(tag, i) in store.tags"
           :key="i" 
-          :label="tag.label"
+          :label="tag"
           no-caps
           class="q-ma-sm"
-          @click="tag.active = !tag.active"
-          :color="tag.active ? 'primary' : 'grey-6'"
+          @click="toggleTag(tag)"
+          :color="selectedTags.includes(tag) ? 'primary' : 'grey-6'"
         />
+
+        <q-input 
+          v-model="newTag" 
+          outlined 
+          dense 
+          label="Add new Tag" 
+          class="q-mt-lg" 
+          style="width: 250px"
+          @keydown.enter.prevent="addNewTag"
+        >
+          <template v-slot:prepend>
+            <q-icon name="sell" />
+          </template>
+          <template v-slot:append>
+            <q-btn round dense size="sm" icon="add" color="primary" @click="addNewTag()" />
+          </template>
+        </q-input>
       </div>
 
-      <p style="margin: 50px 200px">
+      <p style="margin: 40px 200px">
         Selected Tags: <br>
         <q-chip 
         v-for="(tag, i) in selectedTags"
         :key="i"
-        :label="tag.label"
+        :label="tag"
         color="primary"
         class="text-white"
       />
@@ -105,7 +122,7 @@
 
 <script setup>
   import PageTitle from '@/components/PageTitle.vue'
-  import { ref, computed } from 'vue'
+  import { ref, reactive } from 'vue'
   import router from '@/router'
   import { useDataStore } from '@/stores/DataStore.ts'
   const store = useDataStore()
@@ -145,7 +162,7 @@
       name: name.value,
       group: group.value,
       entryPoints: selectedEntryPoints.value,
-      tags: selectedTagLabels.value
+      tags: selectedTags
     }
     store.experiments.push(experiment)
     router.push('/experiments')
@@ -156,6 +173,7 @@
     step.value = 1
     name.value = ''
     group.value = ''
+    selectedEntryPoints.value = []
   }
 
   const selectedEntryPoints = ref([])
@@ -169,30 +187,32 @@
     {label: 'Entry Point 6', value: 'Entry Point 6'},
   ]
 
-  const tags = ref([
-    { label: 'Machine Learning', active: false },
-    { label: 'Adversarial Machine Learning', active: false },
-    { label: 'Tensorflow', active: false },
-    { label: 'vgg16', active: false },
-    { label: 'Image Classification', active: false },
-    { label: 'Patch Attack', active: false },
-    { label: 'Categorical Data', active: false },
-    { label: 'AI', active: false }
-  ])
+  let selectedTags = reactive([])
 
-  const selectedTags = computed(() => {
-    return tags.value.filter((tag) => tag.active === true)
-  })
+  function toggleTag(tag) {
+    if(!selectedTags.includes(tag)) {
+      selectedTags.push(tag)
+    } else {
+      selectedTags.forEach((selectedTag, i) => {
+        if(tag ===  selectedTag) {
+          selectedTags.splice(i, 1)
+        }
+      })
+    }
+  }
 
-  const selectedTagLabels = computed(() => {
-    return selectedTags.value.map((tag) => tag.label)
-  })
+  const newTag = ref('')
+
+  function addNewTag() {
+    store.tags.push(newTag.value)
+    newTag.value = ''
+  }
 
 </script>
 
 <style>
   .q-stepper__content{
-    height: 350px;
+    height: 450px;
   }
 
   .label{
