@@ -20,18 +20,6 @@
         <q-input 
           outlined 
           dense 
-          v-model.trim="orgName"
-          autofocus
-          :rules="[requiredRule]"
-          class="q-mb-sm"
-        >
-          <template v-slot:before>
-            <div :class="`text-body2 label`">Organization Name:</div>
-          </template>
-        </q-input>
-        <q-input 
-          outlined 
-          dense 
           v-model.trim="name"
           :rules="[requiredRule]"
           class="q-mb-sm"
@@ -42,13 +30,13 @@
         </q-input>
         <q-select
           outlined 
-          v-model="team" 
+          v-model="group" 
           :options="groupOptions" 
           dense
           :rules="[requiredRule]"
         >
           <template v-slot:before>
-            <div class="text-body2 label">Team Name:</div>
+            <div class="text-body2 label">Group Name:</div>
           </template>  
         </q-select>
       </q-form>
@@ -106,7 +94,8 @@
     <template v-slot:navigation>
       <q-separator class="q-mb-lg" />
       <q-stepper-navigation>
-        <q-btn @click="continueStep" color="primary" :label="step === 3 ? 'Submit' : 'Continue'" style="width: 120px" />
+        <q-btn v-if="step !== 3" @click="continueStep" color="primary" label="Continue" style="width: 120px" />
+        <q-btn v-if="step === 3" @click="submit" color="primary" label="Submit" style="width: 120px" />
         <q-btn v-if="step > 1" color="secondary" @click="$refs.stepper.previous()" label="Back" class="q-ml-md" />
         <q-btn label="Reset" @click="reset()" class="float-right" color="orange" />
       </q-stepper-navigation>
@@ -117,6 +106,9 @@
 <script setup>
   import PageTitle from '@/components/PageTitle.vue'
   import { ref, computed } from 'vue'
+  import router from '@/router'
+  import { useDataStore } from '@/stores/DataStore.ts'
+  const store = useDataStore()
 
   const step =  ref(1)
 
@@ -124,16 +116,14 @@
 
   const step1Form = ref(null)
 
-  const orgName = ref('')
-
   const name = ref('')
 
-  const team = ref('')
+  const group = ref('')
 
   const groupOptions = ref([
-    'Team 1',
-    'Team 2',
-    'Team 3',
+    'Group 1',
+    'Group 2',
+    'Group 3',
   ])
 
   const requiredRule = (val) => (val && val.length > 0) || "This field is required"
@@ -144,22 +134,28 @@
         if (success) {
           stepper.value.next()
         }
-        else {
-          step1Form.value.validate()
-        }
       })
     } else {
       stepper.value.next()
     }
+  }
 
+  function submit() {
+    const experiment = {
+      name: name.value,
+      group: group.value,
+      entryPoints: selectedEntryPoints.value,
+      tags: selectedTagLabels.value
+    }
+    store.experiments.push(experiment)
+    router.push('/experiments')
   }
 
   function reset() {
     if(step.value === 1) step1Form.value.reset()
     step.value = 1
-    orgName.value = ''
     name.value = ''
-    team.value = ''
+    group.value = ''
   }
 
   const selectedEntryPoints = ref([])
@@ -188,6 +184,9 @@
     return tags.value.filter((tag) => tag.active === true)
   })
 
+  const selectedTagLabels = computed(() => {
+    return selectedTags.value.map((tag) => tag.label)
+  })
 
 </script>
 
@@ -199,4 +198,4 @@
   .label{
     width: 150px
   }
-</style>
+</style>@/stores/DataStore

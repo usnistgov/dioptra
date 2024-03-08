@@ -1,5 +1,20 @@
 <template>
   <PageTitle />
+
+  <TableComponent 
+    :rows="experiments"
+    :columns="columns"
+    title="Experiments"
+    v-model="selected"
+    @click="console.log(experiments)"
+  >
+    <template #body-cell-tags="props">
+      <q-chip v-for="(tag, i) in props.row.tags" :key="i" color="primary" text-color="white">
+        {{ tag }}
+      </q-chip>
+    </template>
+  </TableComponent>
+
   <q-btn 
     class="fixedButton"
     round
@@ -30,4 +45,22 @@
 
 <script setup>
   import PageTitle from '@/components/PageTitle.vue'
+  import TableComponent from '@/components/TableComponent.vue'
+  import { reactive, ref } from 'vue'
+  import { useDataStore } from '@/stores/DataStore.ts'
+  const store = useDataStore()
+
+  const experiments = store.experiments
+
+  const columns = [
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
+    { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
+    { name: 'entryPoints', label: 'Entry Points', align: 'left', field: 'entryPoints', sortable: true },
+    { name: 'tags', label: 'Tags', align: 'left',sortable: false },
+  ]
+
+  const selected = ref([])
+
+
 </script>
+@/stores/DataStore
