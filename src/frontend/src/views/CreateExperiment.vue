@@ -50,13 +50,20 @@
       :done="step > 2"
       :header-nav="step > 2"
     >
-      <q-option-group
-        :options="entryPoints"
-        type="checkbox"
-        v-model="selectedEntryPoints"
-      >
-
-      </q-option-group>
+      <div v-for="(item, i) in store.entryPoints" :key="i">
+        <q-checkbox
+          :label="item"
+          v-model="selectedEntryPoints"
+          :val="item"
+        />
+      </div>
+      <q-btn 
+        color="primary"
+        icon-right="add"
+        label="Create new Entry Point"
+        class="q-mt-lg"
+        @click="showLeaveDialog = true" 
+      />
     </q-step>
 
     <q-step
@@ -118,14 +125,28 @@
       </q-stepper-navigation>
     </template>
   </q-stepper>
+  <LeaveExperimentsDialog 
+    v-model="showLeaveDialog"
+    @submit="leaveForm()"
+  />
+  <ReturnExperimentsDialog 
+    v-model="showReturnDialog"
+    @submit="loadForm()"
+  />
 </template>
 
 <script setup>
   import PageTitle from '@/components/PageTitle.vue'
-  import { ref, reactive } from 'vue'
+  import { ref, reactive, watch } from 'vue'
   import router from '@/router'
   import { useDataStore } from '@/stores/DataStore.ts'
+  import LeaveExperimentsDialog from '@/dialogs/LeaveExperimentsDialog.vue'
+  import ReturnExperimentsDialog from '@/dialogs/ReturnExperimentsDialog.vue'
+
   const store = useDataStore()
+
+  const showLeaveDialog = ref(false)
+  const showReturnDialog = ref(false)
 
   const step =  ref(1)
 
@@ -133,9 +154,49 @@
 
   const step1Form = ref(null)
 
+  // form inputs
   const name = ref('')
-
   const group = ref('')
+  let selectedEntryPoints = ref([])
+  let selectedTags = reactive([])
+
+  function leaveForm() {
+    let savedForm = {
+      name: name.value,
+      group: group.value
+    }
+    if(selectedEntryPoints.value.length > 0) {
+      savedForm.selectedEntryPoints = selectedEntryPoints.value
+    }
+    if(selectedTags.length > 0) {
+      savedForm.selectedTags = selectedTags
+    }
+    store.savedExperimentForm = savedForm
+    router.push('/entryPoints')
+  }
+
+  if(Object.keys(store.savedExperimentForm).length !== 0) {
+    showReturnDialog.value = true
+  }
+
+  function loadForm() {
+    name.value = store.savedExperimentForm.name
+    group.value = store.savedExperimentForm.group
+    if(store.savedExperimentForm.selectedEntryPoints?.length) {
+      selectedEntryPoints.value = store.savedExperimentForm.selectedEntryPoints
+    }
+    if(store.savedExperimentForm.selectedTags?.length) {
+      selectedTags = store.savedExperimentForm.selectedTags
+    }
+    showReturnDialog.value = false
+  }
+
+  watch(showReturnDialog, (newVal) => {
+    // regardless if user submits, cancels, or clicks outside dialog, clear saved form
+    if(newVal === false) {
+      store.savedExperimentForm = {}
+    }
+  })
 
   const groupOptions = ref([
     'Group 1',
@@ -174,20 +235,8 @@
     name.value = ''
     group.value = ''
     selectedEntryPoints.value = []
+    selectedTags = []
   }
-
-  const selectedEntryPoints = ref([])
-
-  const entryPoints = [
-    {label: 'Entry Point 1', value: 'Entry Point 1'},
-    {label: 'Entry Point 2', value: 'Entry Point 2'},
-    {label: 'Entry Point 3', value: 'Entry Point 3'},
-    {label: 'Entry Point 4', value: 'Entry Point 4'},
-    {label: 'Entry Point 5', value: 'Entry Point 5'},
-    {label: 'Entry Point 6', value: 'Entry Point 6'},
-  ]
-
-  let selectedTags = reactive([])
 
   function toggleTag(tag) {
     if(!selectedTags.includes(tag)) {

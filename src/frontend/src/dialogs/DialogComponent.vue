@@ -12,8 +12,8 @@
         </q-card-section>
         <q-separator />
         <q-card-actions align="right" class="text-primary">
-          <q-btn color="blue-grey-4" class="text-white" label="Cancel" v-close-popup />
-          <q-btn color="secondary" label="Confirm" type="submit" />
+          <q-btn color="secondary" class="text-white" label="Cancel" @click="$emit('emitCancel')" v-close-popup />
+          <q-btn color="primary" label="Confirm" type="submit" />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -22,5 +22,5 @@
 
 <script setup>
   const showDialog = defineModel()
-  defineEmits(['emitSubmit'])
+  defineEmits(['emitSubmit', 'emitCancel'])
 </script>
