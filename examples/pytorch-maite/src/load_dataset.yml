@@ -59,21 +59,43 @@ types:
   union_null_union_string_path:
     union: [union_string_path, "null"]
 parameters:
-  dataset_provider_name: huggingface
-  dataset_name: cifar10
-  dataset_task: image-classification
-  split: test
+  testing_dir: /dioptra/data/Mnist/testing
+  validation_split: 0.3
+  seed: 0
+  image_size: [28,28,3]
+  new_size: 224
   model_provider_name: huggingface
-  model_name: aaraki/vit-base-patch16-224-in21k-finetuned-cifar10
+  model_name: farleyknight-org-username/vit-base-mnist
   model_task: image-classification
   metric_provider_name: torchmetrics
   metric_name: Accuracy
   metric_task: multiclass
   classes: 10
   batch_size: 32
-  shape: [224, 224]
+  shape: [3,224,224]
   subset: 0
 tasks:
+  create_image_dataset:
+    plugin: dioptra_custom.maite.maite.create_image_dataset
+    inputs:
+      - data_dir: string
+      - image_size: tuple_integer_integer_integer
+      - name: new_size
+        type: integer
+        required: false
+      - seed: integer
+      - name: validation_split
+        type: union_null_number
+        required: false
+      - name: batch_size
+        type: integer
+        required: false
+      - name: label_mode
+        type: string
+        required: false
+    outputs:
+      - dataset_a: dataset
+      - dataset_b: dataset
   get_dataset:
     plugin: dioptra_custom.maite.maite.get_dataset
     inputs:
@@ -104,10 +126,13 @@ tasks:
     plugin: dioptra_custom.maite.maite.transform_tensor
     inputs:
       - dataset: dataset
-      - shape: tuple_integer_integer
+      - shape: any
+      - name: totensor
+        type: boolean
+        required: false
       - name: subset
         type: integer
-        required: False
+        required: false
     outputs:
       dataset: dataset
   compute_metric:
@@ -119,24 +144,30 @@ tasks:
       - task: string
       - batch_size: integer
     outputs:
-      computed: any
+      computed: mapping_string_number
   register_init_model:
     inputs:
       - name: name
         type: string
-        required: True
+        required: true
       - model_dir: string
       - model: model
     outputs:
       ret: model
     plugin: dioptra_custom.maite.maite.register_init_model
+  log_metrics:
+    plugin: dioptra_builtins.tracking.mlflow.log_metrics
+    inputs:
+      - metrics: mapping_string_number
 graph:
   dataset:
-    get_dataset: 
-      provider_name: $dataset_provider_name
-      dataset_name: $dataset_name
-      task: $dataset_task
-      split: $split
+    create_image_dataset: 
+      data_dir: $testing_dir
+      validation_split: $validation_split
+      batch_size: $batch_size
+      seed: $seed
+      image_size: $image_size
+      new_size: $new_size
   model:
     get_model: 
       provider_name: $model_provider_name
@@ -150,7 +181,7 @@ graph:
       classes: $classes
   transformed_dataset:
     transform_tensor: 
-      dataset: $dataset
+      dataset: $dataset.dataset_a
       shape: $shape
       subset: $subset
   metric_results:
@@ -161,8 +192,6 @@ graph:
       task: $model_task
       batch_size: $batch_size
     dependencies: [transformed_dataset, model, metric]
-  model_storage:
-    register_init_model:
-      model: $model
-      name: $model_name
-      model_dir: model
+  log_classifier_performance_metrics_result:
+    log_metrics:
+      metrics: $metric_results

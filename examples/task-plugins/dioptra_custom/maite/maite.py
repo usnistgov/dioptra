@@ -32,6 +32,11 @@ from maite import load_dataset
 from maite import load_model
 from maite import load_metric
 from maite import evaluate
+from maite._internals.interop.torchvision.datasets import TorchVisionDataset
+from torchvision import transforms
+from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader, Subset, random_split
+from torchvision.transforms import InterpolationMode
 from torchvision.transforms.functional import to_tensor
 
 @pyplugs.register
@@ -44,17 +49,16 @@ def get_dataset(provider_name: str, dataset_name: str, task: str, split: str) ->
     )
     return dataset
 @pyplugs.register
-def transform_tensor(dataset: Any, shape: Tuple[int, int], subset: int = 0) -> Any:
+def transform_tensor(dataset: Any, shape: Tuple[int, int], totensor=False, subset: int = 0) -> Any:
     dataset.set_transform(
         lambda x: {
-            "image": to_tensor(x["image"].resize(shape)),
+            "image": to_tensor(x["image"].resize(shape)) if totensor else x["image"].reshape(shape),
             "label": x["label"]
         }
     )
+    print("shape",dataset[0]["image"].shape)
     if (subset > 0):
         dataset = [dataset[i] for i in range(subset)]
-    print(type(dataset))
-    print(dataset[0])
     return dataset
 @pyplugs.register
 def get_model(provider_name: str, model_name: str, task: str) -> Any:
@@ -90,3 +94,72 @@ def register_init_model(name, model_dir, model) -> Model:
         pytorch_model=model, artifact_path=model_dir, registered_model_name=name
     )
     return model
+
+
+@pyplugs.register
+@pyplugs.task_nout(3)
+def create_image_dataset(
+    data_dir: str,
+    image_size,
+    seed: int,
+    new_size: int = 0,
+    validation_split = 0.2,
+    batch_size: int = 32,
+    label_mode: str = "categorical",
+) -> Tuple(Any, Any):
+    """Creates an image dataset from a directory, assuming the
+    subdirectories of the directory correspond to the classes of
+    the data.
+
+    Args:
+        data_dir: A string representing the directory the class
+            directories are located in.
+
+        image_size:  The size in pixels of each image in the dataset.
+
+        seed: Random seed for shuffling and transformations.
+
+        batch_size: Size of the batches of data.
+
+        validation_split: A float value representing the split between
+            training and validation data, if desired.
+
+        label_mode: One of 'int', 'categorical', or 'binary' depending on how the
+            classes are organized.
+
+    Returns:
+        One or two DataLoader object(s) which can be used to iterate over
+        images in the dataset. This will return two DataLoaders if
+        validation_split is set, otherwise it will return one.
+    """
+    color_mode: str = "color" if image_size[2] == 3 else "grayscale"
+    target_size: Tuple[int, int] = image_size[:2]
+
+    transform_list = [transforms.ToTensor()]
+    
+  
+    if color_mode == "grayscale":
+        transform_list += [transforms.Grayscale()]
+    if new_size > 0:
+        transform_list += [transforms.Resize(new_size, interpolation=InterpolationMode.BILINEAR, max_size=None, antialias=True)]
+    transform = transforms.Compose(transform_list)
+
+    dataset = ImageFolder(root=data_dir, transform=transform)
+    classes = list(dataset.class_to_idx.keys())
+
+    if validation_split != None:
+        train_size = (int)(validation_split * len(dataset))
+        val_size = len(dataset) - (int)(validation_split * len(dataset))
+
+        train, val = random_split(dataset, [train_size, val_size])
+
+        train_gen = DataLoader(train, batch_size=batch_size, shuffle=True)
+        val_gen = DataLoader(val, batch_size=batch_size, shuffle=True)
+      
+        train_gen.dataset.classes = classes
+        val_gen.dataset.classes = classes
+        return (TorchVisionDataset(train_gen.dataset), TorchVisionDataset(val_gen.dataset))
+    else:
+        data_generator = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        data_generator.dataset.classes = classes
+        return (TorchVisionDataset(data_generator.dataset), None)
