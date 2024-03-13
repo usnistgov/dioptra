@@ -7,6 +7,7 @@
     color="primary"
     animated
     bordered
+    :active-icon="isStep1FormValid ? 'edit' : 'warning'"
     style="margin: 50px 100px;"
   >
     <q-step
@@ -15,6 +16,8 @@
       icon="settings"
       :done="step > 1"
       :header-nav="step > 1"
+      :error="!isStep1FormValid"
+
     >
       <q-form ref="step1Form" greedy>
         <q-input 
@@ -47,8 +50,8 @@
       :name="2"
       title="Step 2: Entry Points"
       icon="create_new_folder"
-      :done="step > 2"
-      :header-nav="step > 2"
+      :done="step2Done"
+      :header-nav="step2Done"
     >
       <div v-for="(item, i) in store.entryPoints" :key="i">
         <q-checkbox
@@ -70,7 +73,8 @@
       :name="3"
       title="Step 3: Tags"
       icon="sell"
-      :header-nav="step > 3"
+      :done="step3Done"
+      :header-nav="step3Done"
     >
       <div style="margin: 0 200px">
         <q-btn 
@@ -104,12 +108,12 @@
       <p style="margin: 40px 200px">
         Selected Tags: <br>
         <q-chip 
-        v-for="(tag, i) in selectedTags"
-        :key="i"
-        :label="tag"
-        color="primary"
-        class="text-white"
-      />
+          v-for="(tag, i) in selectedTags"
+          :key="i"
+          :label="tag"
+          color="primary"
+          class="text-white"
+        />
       </p>
 
 
@@ -149,10 +153,18 @@
   const showReturnDialog = ref(false)
 
   const step =  ref(1)
+  const step2Done = ref(false)
+  const step3Done = ref(false)
+
+  watch(step, newVal => {
+    if(newVal === 2) step2Done.value = true
+    if(newVal === 3) step3Done.value = true
+  })
 
   const stepper = ref(null)
 
   const step1Form = ref(null)
+  let isStep1FormValid = ref(true)
 
   // form inputs
   const name = ref('')
@@ -163,7 +175,9 @@
   function leaveForm() {
     let savedForm = {
       name: name.value,
-      group: group.value
+      group: group.value,
+      step2Done: step2Done,
+      step3Done: step3Done,
     }
     if(selectedEntryPoints.value.length > 0) {
       savedForm.selectedEntryPoints = selectedEntryPoints.value
@@ -188,6 +202,8 @@
     if(store.savedExperimentForm.selectedTags?.length) {
       selectedTags = store.savedExperimentForm.selectedTags
     }
+    step2Done.value = store.savedExperimentForm.step2Done
+    step3Done.value = store.savedExperimentForm.step3Done
     showReturnDialog.value = false
   }
 
@@ -210,7 +226,10 @@
     if(step.value === 1) {
       step1Form.value.validate().then(success => {
         if (success) {
+          isStep1FormValid.value = true
           stepper.value.next()
+        } else {
+          isStep1FormValid.value = false
         }
       })
     } else {
@@ -253,7 +272,9 @@
   const newTag = ref('')
 
   function addNewTag() {
-    store.tags.push(newTag.value)
+    if(newTag.value.trim().length) {
+      store.tags.push(newTag.value)
+    }
     newTag.value = ''
   }
 
