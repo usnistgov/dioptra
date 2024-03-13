@@ -33,10 +33,6 @@ MLFlowRunBaseSchema = generate_base_resource_schema("MLFLowRun", snapshot=False)
 class MLFlowRunSchema(MLFlowRunBaseSchema):  # type: ignore
     """The schema for the data stored in an MLFlowRun resource."""
 
-    data = fields.Dict(
-        attribute="data",
-        metadata=dict(description="data to be entered into the MLFlow Tracking DB"),
-    )
     jobId = fields.Int(
         attribute="jobId",
         metadata=dict(description="ID of the job that created this MLFlow Run"),
