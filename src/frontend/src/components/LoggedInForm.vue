@@ -1,8 +1,8 @@
 <template>
   <q-card bordered class="q-pa-lg" style="min-width: 600px;">
     <q-card-section class="text-center">
-        <div class="text-h5 text-weight-bold">Logged In</div>
-        <div>You are currently logged in as <span class="text-weight-bold text-primary">{{ loggedInUser }}</span></div>
+        <h4 class="text-weight-bold" style="margin-top: 0; margin-bottom: 0;">Logged In</h4>
+        <p>You are currently logged in as <span class="text-weight-bold text-primary">{{ loggedInUser }}</span></p>
     </q-card-section>
     <q-form @submit="callLogout()" class="row flex-center">
       <q-checkbox
@@ -29,9 +29,9 @@
     >
       <q-form @submit="callChangePassword()">
         <q-card-section class="text-center shadow-2 q-mt-sm q-mb-sm">
-          <div>
+          <p>
             To change your password, enter your current and new password.
-          </div>
+          </p>
           <q-input
             class="q-py-sm"
             outlined
@@ -81,9 +81,9 @@
     >
       <q-form @submit="callDeleteUser()">
         <q-card-section class="text-center shadow-2 q-mt-sm q-mb-sm">
-          <div>
+          <p>
             To delete your account, enter your password and press the delete button.
-          </div>
+          </p>
           <q-input
             class="q-py-lg"
             outlined

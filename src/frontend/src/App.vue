@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
+import AccessibilityTest from '@/components/AccessibilityTest.vue'
 
 </script>
 
 <template>
   <NavBar />
-  <div class="q-ma-xl">
+  <main class="q-ma-xl">
     <RouterView />
-  </div>
+  </main>
+  <!-- <AccessibilityTest /> -->
+
 
 </template>

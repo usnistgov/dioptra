@@ -2,8 +2,8 @@
   <div class="flex flex-center q-mt-xl q-pt-xl">
     <q-card bordered class="q-pa-lg" style="min-width: 600px;">
       <q-card-section class="text-center">
-          <div class="text-h5 text-weight-bold">Register</div>
-          <div>Register a new user account</div>
+          <h4 class="text-weight-bold" style="margin-top: 0; margin-bottom: 0;">Register</h4>
+          <p>Register a new user account</p>
       </q-card-section>
       <q-form @submit="submit()">
         <q-input
@@ -60,7 +60,7 @@
           Register
         </q-btn>
         <q-card-section class="text-center q-pt-md">
-          <div>Go back to
+          <p>Go back to
             <router-link 
               role="button" 
               class="text-weight-bold text-primary" 
@@ -69,7 +69,7 @@
             >
               Login Menu.
             </router-link >
-          </div>
+          </p>
         </q-card-section>
       </q-form>
     </q-card>

@@ -1,22 +1,25 @@
 <template>
-  <div class="text-h3 text-capitalize q-mb-xs" @click="console.log(route)">{{ title }}</div>
-  <q-breadcrumbs class="text-grey text-capitalize">
-    <template v-slot:separator>
-      <q-icon
-        size="1.2em"
-        name="arrow_forward"
+  <h3 class="text-capitalize q-mb-xs">{{ title }}</h3>
+  <nav>
+    <q-breadcrumbs class="text-grey text-capitalize">
+      <template v-slot:separator>
+        <q-icon
+          size="1.2em"
+          name="arrow_forward"
+        />
+      </template>
+      <q-breadcrumbs-el label="Home" icon="home" to="/" />
+      <q-breadcrumbs-el 
+        :label="path[0]" 
+        :to="path[1] ? `/${path[0]}` : ''" 
       />
-    </template>
-    <q-breadcrumbs-el label="Home" icon="home" to="/" />
-    <q-breadcrumbs-el 
-      :label="path[0]" 
-      :to="path[1] ? `/${path[0]}` : ''" 
-    />
-    <q-breadcrumbs-el
-      v-if="path[1]"
-      :label="title"
-    />
-  </q-breadcrumbs>
+      <q-breadcrumbs-el
+        v-if="path[1]"
+        :label="title"
+        aria-disabled="true"
+      />
+    </q-breadcrumbs>
+  </nav>
 </template>
 
 <script setup>

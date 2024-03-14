@@ -255,6 +255,8 @@
     group.value = ''
     selectedEntryPoints.value = []
     selectedTags = []
+    step2Done.value = false
+    step3Done.value = false
   }
 
   function toggleTag(tag) {

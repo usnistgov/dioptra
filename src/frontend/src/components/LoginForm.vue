@@ -1,8 +1,8 @@
 <template>
   <q-card bordered class="q-pa-lg" style="min-width: 600px;">
     <q-card-section class="text-center">
-        <div class="text-h5 text-weight-bold">Login</div>
-        <div>Login below to access all API endpoints</div>
+        <h4 class="text-weight-bold" style="margin-top: 0; margin-bottom: 0;">Login</h4>
+        <p>Login below to access all API endpoints</p>
     </q-card-section>
     <q-form @submit="submit()">
       <q-input
@@ -36,7 +36,7 @@
         Login
       </q-btn>
       <q-card-section class="text-center q-pt-md">
-        <div>Don't have an account yet?
+        <p>Don't have an account yet?
           <router-link 
             role="button" 
             class="text-weight-bold text-primary" 
@@ -45,7 +45,7 @@
           >
             Signup.
           </router-link >
-        </div>
+        </p>
       </q-card-section>
     </q-form>
   </q-card>

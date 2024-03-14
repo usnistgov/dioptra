@@ -1,32 +1,57 @@
 <template>
   <q-toolbar class="bg-primary text-white">
-    <q-tabs shrink no-caps class="header">
-      <q-route-tab label="Home" to="/" />
-      <q-route-tab label="Entry-Points" to="/entrypoints" />
-      <q-route-tab label="Task-Plugins" to="/" />
-      <q-route-tab label="Queues" to="/queues" />
-      <q-route-tab label="Experiments" to="/experiments" />
-      <q-route-tab label="Jobs" to="/" />
-    </q-tabs>
+    <nav>
+      <q-tabs shrink no-caps class="header">
+        <q-route-tab label="Home" to="/" />
+        <q-route-tab label="Entry-Points" to="/entrypoints" />
+        <q-route-tab label="Task-Plugins" to="/" />
+        <q-route-tab label="Queues" to="/queues" />
+        <q-route-tab label="Experiments" to="/experiments" />
+        <q-route-tab label="Jobs" to="/" />
+      </q-tabs>
+    </nav>
+
     <q-space />
     <a href="https://github.com/usnistgov/dioptra" target="_blank" class="q-mr-md text-white">
       <q-icon name="fa-brands fa-github" size="sm" />
+      <span class="sr-only">Source Repository</span>
       <q-tooltip>
         Source Repository
       </q-tooltip>
     </a>
-    <q-icon name="sym_o_fullscreen" size="sm" @click="$q.fullscreen.toggle()" class="q-mr-md" style="cursor: pointer">
+    <q-icon 
+      name="sym_o_fullscreen" 
+      size="sm" 
+      @click="$q.fullscreen.toggle()"
+      @keyup.enter="$q.fullscreen.toggle()"
+      class="q-mr-md" 
+      style="cursor: pointer" 
+      tabindex="0" 
+      role="button"
+      aria-hidden="false"
+    >
       <q-tooltip>
         Toggle Fullscreen Mode
       </q-tooltip>
     </q-icon>
-    <q-icon :name="getIcon()" size="sm" @click="$q.dark.toggle()" class="q-mr-lg" style="cursor: pointer">
+    <q-icon 
+      :name="getIcon()" 
+      size="sm" 
+      @click="$q.dark.toggle()"
+      @keyup.enter="$q.dark.toggle()"
+      class="q-mr-lg" 
+      style="cursor: pointer"
+      tabindex="0" 
+      role="button"
+      aria-hidden="false"
+      aria-label="Toggle light/dark mode"
+    >
       <q-tooltip>
         Toggle Light/Dark Mode
       </q-tooltip>
     </q-icon> 
     <q-separator vertical inset color="white" />
-    <q-tabs shrink no-caps indicator-color="transparent" class="header q-ml-sm">
+    <q-tabs shrink no-caps class="header q-ml-sm">
       <q-route-tab 
         v-if="!store.loggedInUser"
         :label="getLabel()" to="/login"

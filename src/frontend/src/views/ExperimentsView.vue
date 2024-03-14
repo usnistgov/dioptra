@@ -54,6 +54,7 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
+    { name: 'draft', label: 'Draft', align: 'left', field: 'draft', sortable: true },
     { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
     { name: 'entryPoints', label: 'Entry Points', align: 'left', field: 'entryPoints', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left',sortable: false },
