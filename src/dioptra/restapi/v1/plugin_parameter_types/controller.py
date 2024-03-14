@@ -26,8 +26,11 @@ from flask_login import login_required
 from flask_restx import Namespace, Resource
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+
 from .schema import (
     PluginParameterTypeGetQueryParameters,
+    PluginParameterTypeMutableFieldsSchema,
     PluginParameterTypePageSchema,
     PluginParameterTypeSchema,
 )
@@ -66,3 +69,33 @@ class PluginParameterTypeEndpoint(Resource):
         )
         log.debug("Request received")
         parsed_obj = request.parsed_obj  # noqa: F841
+
+
+@api.route("/<int:id>")
+@api.param("id", "ID for the PluginParameterType resource.")
+class PluginParameterTypeIdEndpoint(Resource):
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self, id: int):
+        """Deletes a PluginParameterType resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="PluginParameterType",
+            request_type="DELETE",
+            id=id,
+        )
+        log.debug("Request received")
+
+    @login_required
+    @accepts(schema=PluginParameterTypeMutableFieldsSchema, api=api)
+    @responds(schema=PluginParameterTypeSchema, api=api)
+    def put(self, id: int):
+        """Modifies a PluginParameterType resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="PluginParameterType",
+            request_type="PUT",
+            id=id,
+        )
+        log.debug("Request received")
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841

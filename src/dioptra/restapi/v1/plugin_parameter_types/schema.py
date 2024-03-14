@@ -17,7 +17,7 @@
 """The schemas for serializing/deserializing PluginParameterType resources."""
 from __future__ import annotations
 
-from marshmallow import fields
+from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
@@ -46,13 +46,8 @@ class PluginParameterTypeRefSchema(PluginParameterTypeRefBaseSchema):  # type: i
     )
 
 
-PluginParameterTypeBaseSchema = generate_base_resource_schema(
-    "PluginParameterType", snapshot=True
-)
-
-
-class PluginParameterTypeSchema(PluginParameterTypeBaseSchema):  # type: ignore
-    """The schema for the data stored in a Plugin Parameter Type resource."""
+class PluginParameterTypeMutableFieldsSchema(Schema):
+    """The fields schema for the mutable data in a PluginParameterType resource."""
 
     name = fields.String(
         attribute="name",
@@ -62,6 +57,17 @@ class PluginParameterTypeSchema(PluginParameterTypeBaseSchema):  # type: ignore
         attribute="structure",
         metadata=dict(description="Structure of the PluginParameterType resource."),
     )
+
+
+PluginParameterTypeBaseSchema = generate_base_resource_schema(
+    "PluginParameterType", snapshot=True
+)
+
+
+class PluginParameterTypeSchema(
+        PluginParameterTypeMutableFieldsSchema,
+        PluginParameterTypeBaseSchema):  # type: ignore
+    """The schema for the data stored in a PluginParameterType resource."""
 
 
 class PluginParameterTypePageSchema(BasePageSchema):
