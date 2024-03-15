@@ -86,8 +86,9 @@ def register_v1_routes(api: Api) -> None:
     api.add_namespace(queues_api, path=f"/{V1_ROOT}/{V1_QUEUES_ROUTE}")
     api.add_namespace(mlflow_runs_api, path=f"/{V1_ROOT}/{V1_MLFLOW_RUNS_ROUTE}")
     api.add_namespace(artifacts_api, path=f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}")
-    api.add_namespace(plugin_parameter_types_api,
-                      path=f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}")
+    api.add_namespace(
+        plugin_parameter_types_api, path=f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}"
+    )
     api.add_namespace(
         plugin_parameter_types_api, path=f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}"
     )
