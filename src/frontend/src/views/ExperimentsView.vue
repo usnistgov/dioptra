@@ -22,6 +22,7 @@
     icon="add"
     size="lg"
   >
+    <span class="sr-only">Create a new Experiment</span>
     <q-tooltip>
       Create a new Experiment
     </q-tooltip>

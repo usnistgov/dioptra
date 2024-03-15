@@ -1,5 +1,5 @@
 <template>
-  <h3 class="text-capitalize q-mb-xs">{{ title }}</h3>
+  <h1 class="text-capitalize q-mb-xs">{{ title }}</h1>
   <nav>
     <q-breadcrumbs class="text-grey text-capitalize">
       <template v-slot:separator>

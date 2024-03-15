@@ -1,5 +1,5 @@
 <template>
-  <q-card bordered class="q-pa-lg" style="min-width: 600px;">
+  <q-card bordered class="q-pa-lg" style="min-width: 40%;">
     <q-card-section class="text-center">
         <h4 class="text-weight-bold" style="margin-top: 0; margin-bottom: 0;">Login</h4>
         <p>Login below to access all API endpoints</p>

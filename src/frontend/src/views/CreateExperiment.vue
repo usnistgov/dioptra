@@ -8,11 +8,11 @@
     animated
     bordered
     :active-icon="isStep1FormValid ? 'edit' : 'warning'"
-    style="margin: 50px 100px;"
+    :class="`${isMobile ? 'q-mt-md' : 'q-ma-xl'}`"
   >
     <q-step
       :name="1"
-      title="Step 1: Basic Info"
+      :title="`${isMobile ? '' : 'Step 1: Basic Info'}`"
       icon="settings"
       :done="step > 1"
       :header-nav="step > 1"
@@ -26,9 +26,10 @@
           v-model.trim="name"
           :rules="[requiredRule]"
           class="q-mb-sm"
+          role="textbox"
         >
           <template v-slot:before>
-            <div :class="`text-body2 label`">Experiment Name:</div>
+            <label :class="`text-body2 label`">Experiment Name:</label>
           </template>
         </q-input>
         <q-select
@@ -48,7 +49,7 @@
 
     <q-step
       :name="2"
-      title="Step 2: Entry Points"
+      :title="`${isMobile ? '' : 'Step 2: Entry Points'}`"
       icon="create_new_folder"
       :done="step2Done"
       :header-nav="step2Done"
@@ -71,12 +72,12 @@
 
     <q-step
       :name="3"
-      title="Step 3: Tags"
+      :title="`${isMobile ? '' : 'Step 3: Tags'}`"
       icon="sell"
       :done="step3Done"
       :header-nav="step3Done"
     >
-      <div style="margin: 0 200px">
+      <div :class="`${isMobile ? '' : 'q-mx-xl'}`">
         <q-btn 
           v-for="(tag, i) in store.tags"
           :key="i" 
@@ -105,7 +106,7 @@
         </q-input>
       </div>
 
-      <p style="margin: 40px 200px">
+      <p :class="`${isMobile ? '' : 'q-mx-xl'} q-mt-lg`">
         Selected Tags: <br>
         <q-chip 
           v-for="(tag, i) in selectedTags"
@@ -141,13 +142,15 @@
 
 <script setup>
   import PageTitle from '@/components/PageTitle.vue'
-  import { ref, reactive, watch } from 'vue'
+  import { ref, reactive, watch, inject } from 'vue'
   import router from '@/router'
   import { useDataStore } from '@/stores/DataStore.ts'
   import LeaveExperimentsDialog from '@/dialogs/LeaveExperimentsDialog.vue'
   import ReturnExperimentsDialog from '@/dialogs/ReturnExperimentsDialog.vue'
 
   const store = useDataStore()
+
+  const isMobile = inject('isMobile')
 
   const showLeaveDialog = ref(false)
   const showReturnDialog = ref(false)
@@ -284,7 +287,7 @@
 
 <style>
   .q-stepper__content{
-    height: 450px;
+    min-height: 40vh; 
   }
 
   .label{

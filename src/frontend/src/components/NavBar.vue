@@ -1,6 +1,36 @@
 <template>
   <q-toolbar class="bg-primary text-white">
-    <nav>
+    <q-btn
+      v-if="isMobile"
+      icon="menu"
+      flat
+      :ripple="false"
+    >
+      <span class="sr-only">Navigation Menu</span>
+      <q-menu class="text-h6">
+        <q-list style="min-width: 150px">
+          <q-item clickable v-close-popup to="/">
+            <q-item-section>Home</q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup to="/entryPoints">
+            <q-item-section>Entry-Points</q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup to="/taskPlugins">
+            <q-item-section>Task-Plugins</q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup to="/queues">
+            <q-item-section>Queues</q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup to="/experiments">
+            <q-item-section>Experiments</q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup to="/jobs">
+            <q-item-section>Jobs</q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
+    <nav v-if="!isMobile">
       <q-tabs shrink no-caps class="header">
         <q-route-tab label="Home" to="/" />
         <q-route-tab label="Entry-Points" to="/entrypoints" />
@@ -19,7 +49,8 @@
         Source Repository
       </q-tooltip>
     </a>
-    <q-icon 
+    <q-icon
+      v-if="!isMobile" 
       name="sym_o_fullscreen" 
       size="sm" 
       @click="$q.fullscreen.toggle()"
@@ -63,7 +94,7 @@
 
 <script setup>
   import { useQuasar } from 'quasar'
-  import { computed } from 'vue'
+  import { computed, inject } from 'vue'
   import { useRouter, START_LOCATION } from 'vue-router'
   import { useLoginStore } from '@/stores/LoginStore'
   import { storeToRefs } from 'pinia'
@@ -75,6 +106,8 @@
   const { loggedInUser } = storeToRefs(store);
 
   const $q = useQuasar()
+
+  const isMobile = inject('isMobile')
 
   const darkMode = computed(() => {
     return $q.dark.mode

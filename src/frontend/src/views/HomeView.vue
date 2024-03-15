@@ -1,5 +1,5 @@
 <template>
-  <h3 class="q-mb-lg">Welcome to Dioptra</h3>
+  <h1>Welcome to Dioptra</h1>
   <p>
     Here you can interact with the application by creating,
     viewing, and editing the components of your machine

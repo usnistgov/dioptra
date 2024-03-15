@@ -1,7 +1,7 @@
 <template>
   <q-table
     :rows="props.rows"
-    :columns="[{ name: 'radio', align: 'center', sortable: false }, ...props.columns]"
+    :columns="[{ name: 'radio', align: 'center', sortable: false, label: 'Select' }, ...props.columns]"
     :title="title"
     :filter="filter"
     selection="single"
