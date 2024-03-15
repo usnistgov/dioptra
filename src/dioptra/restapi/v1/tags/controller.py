@@ -26,7 +26,7 @@ from flask_login import login_required
 from flask_restx import Namespace, Resource
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.schemas import IdStatusResponseSchema, ResourceURLSchema
 
 from .schema import (
     TagGetQueryParameters,
@@ -47,7 +47,7 @@ class TagEndpoint(Resource):
     @accepts(query_params_schema=TagGetQueryParameters, api=api)
     @responds(schema=TagPageSchema, api=api)
     def get(self):
-        """Gets a list of all Tag."""
+        """Gets a list of all Tags."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Tag", request_type="GET"
         )
@@ -104,9 +104,9 @@ class TagIdEndpoint(Resource):
 class TagIdResourceEndpoint(Resource):
     @login_required
     @accepts(query_params_schema=TagResourceQueryParameters, api=api)
-    @responds(schema=TagSchema, api=api)
+    @responds(schema=ResourceURLSchema, api=api)
     def get(self, id: int):
-        """Gets a Tag."""
+        """Gets all Resources labeled with this Tag."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Tag", request_type="GET", id=id
         )
