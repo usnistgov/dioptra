@@ -92,7 +92,7 @@ class ManagerSchema(MemberSchema, ManagerMutableFieldsSchema):
     """The fields schema of a Group Manager."""
 
 
-class GroupMemberMutableFieldsSchema(Schema):
+class GroupMutableFieldsSchema(Schema):
     """The fields schema for the mutable data by Members in a Group resource."""
 
     members = fields.List(
@@ -100,11 +100,6 @@ class GroupMemberMutableFieldsSchema(Schema):
         attribute="members",
         metadata=dict(description="A list of Members in a Group."),
     )
-
-
-class GroupMangerMutableFieldsSchema(Schema):
-    """The fields schema for the mutable data by Managers in a Group resource."""
-
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Group resource.")
     )
@@ -115,7 +110,7 @@ class GroupMangerMutableFieldsSchema(Schema):
     )
 
 
-class GroupSchema(GroupMemberMutableFieldsSchema, GroupMangerMutableFieldsSchema):  # type: ignore
+class GroupSchema(GroupMutableFieldsSchema):  # type: ignore
     """The schema for the data stored in a Group resource."""
 
     id = fields.Integer(
