@@ -94,6 +94,7 @@ dioptra-db = "dioptra.restapi.db.alembic.run:cli"
 run-experiment = "dioptra.task_engine.run_experiment:main"
 validate-experiment = "dioptra.task_engine.validate:main"
 s3-download = "dioptra.worker.s3_download_cli:main"
+dioptra-worker = "dioptra.worker.dioptra_worker:main"
 
 [project.entry-points."dioptra.generics.estimator_predict"]
 tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"
@@ -121,14 +122,23 @@ examples = [
     "rich>=13.3.0",
     "universal_pathlib>=0.0.23",
 ]
-sdk = [
-    "imgaug>=0.4.0",
-    "prefect>=1.0.0,<2",
+postgres = [
+    "psycopg2-binary>=2.9.0",
 ]
-taskplugins = [
+worker = [
     "adversarial-robustness-toolbox>=1.9.0",
+    "imgaug>=0.4.0",
+    "matplotlib",
+    "opencv-python",
+    "Pillow>=9.2.0",
+    "prefect>=1.0.0,<2",
     "pyarrow",
+    "pycocotools",
+    "python-json-logger>=2.0.0",
+    "rich>=13.3.0",
     "scikit-learn>=1.0.0",
+    "simplejson",
+    "tensorboard",
 ]
 dev = [
     "autopep8",

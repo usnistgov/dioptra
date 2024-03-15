@@ -1,9 +1,0 @@
-matplotlib
-opencv-python
-Pillow>=9.2.0
-psycopg2-binary>=2.9.0
-pycocotools
-python-json-logger>=2.0.0
-rich>=13.3.0
-simplejson
-tensorboard

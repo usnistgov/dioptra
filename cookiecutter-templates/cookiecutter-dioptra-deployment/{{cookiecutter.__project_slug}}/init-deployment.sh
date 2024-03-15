@@ -28,6 +28,7 @@ SCRIPT_DIRPATH="$(realpath ${0%%/*})"
 LOGNAME="Init Deployment"
 
 DOCKER_COMPOSE_INIT_YML="${SCRIPT_DIRPATH}/docker-compose.init.yml"
+GENERATE_PASSWORD_TEMPLATES_SCRIPT="${SCRIPT_DIRPATH}/scripts/generate_password_templates.py"
 
 CONTAINER_DB_PORT="5432"
 CONTAINER_SSL_DIR="/ssl"
@@ -48,11 +49,13 @@ INIT_TFCPU_SSL_SERVICE="tfcpu-ssl"
 DEFAULT_ARG_BRANCH="main"
 DEFAULT_ARG_ENABLE_NGINX_SSL="off"
 DEFAULT_ARG_ENABLE_POSTGRES_SSL="off"
+DEFAULT_ARG_PYTHON="$(command -v ${SCRIPT_DIRPATH}/.venv/bin/python 2&>/dev/null && echo "${SCRIPT_DIRPATH}/.venv/bin/python" || echo "python")"
 DEFAULT_ARG_WORKER_SSL_SERVICE="tfcpu"
 
 _arg_branch="${DEFAULT_ARG_BRANCH}"
 _arg_enable_nginx_ssl="${DEFAULT_ARG_ENABLE_NGINX_SSL}"
 _arg_enable_postgres_ssl="${DEFAULT_ARG_ENABLE_POSTGRES_SSL}"
+_arg_python="${DEFAULT_ARG_PYTHON}"
 _arg_worker_ssl_service="${DEFAULT_ARG_WORKER_SSL_SERVICE}"
 
 ###########################################################################################
@@ -60,6 +63,7 @@ _arg_worker_ssl_service="${DEFAULT_ARG_WORKER_SSL_SERVICE}"
 #
 # Globals:
 #   DEFAULT_ARG_BRANCH
+#   DEFAULT_ARG_PYTHON
 #   DEFAULT_ARG_WORKER_SSL_SERVICE
 #   SCRIPT_CMDNAME
 # Arguments:
@@ -80,6 +84,9 @@ print_help() {
 		                               image
 		        --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
 		                  and the frontend files (default: '${DEFAULT_ARG_BRANCH}')
+		        --python: Command for invoking the Python interpreter. Must be Python 3.9 or
+		                  greater, and the jinja2 package must be installed.
+		                  (default: '${DEFAULT_ARG_PYTHON}')
 		        --worker-ssl-service: Image to use when bootstrapping the SSL named volumes for
 		                              the worker containers, must be 'tfcpu' or 'pytorchcpu'
 		                              (default: '${DEFAULT_ARG_WORKER_SSL_SERVICE}')
@@ -118,19 +125,49 @@ log_info() {
 }
 
 ###########################################################################################
+# Validate the value passed to the --python argument
+#
+# Globals:
+#   None
+# Arguments:
+#   Command for invoking the Python interpreter, a string
+# Returns:
+#   None
+###########################################################################################
+
+validate_python_cmd() {
+  local python_cmd="${1}"
+
+  if ! command -v "${python_cmd}" >/dev/null 2>&1; then
+    log_error "Command ${python_cmd} not found, exiting..."
+    exit 1
+  fi
+
+  local jinja2_installed
+  local jinja2_cmd_check="'import importlib.util;print(importlib.util.find_spec("jinja2") is not None)'"
+  if ! jinja2_installed="$(${python_cmd} -c ${jinja2_cmd_check})"; then
+    log_error "Command ${python_cmd} -c ${jinja2_cmd_check} failed, exiting..."
+    exit 1
+  fi
+
+  if [[ "${jinja2_installed}" != "True" ]]; then
+    log_error "The jinja2 package is not installed, exiting..."
+    exit 1
+  fi
+}
+
+###########################################################################################
 # Validate the value passed to the --worker-ssl-service argument
 #
 # Globals:
 #   None
 # Arguments:
-#   None
+#   Worker SSL service, a string
 # Returns:
 #   None
 ###########################################################################################
 
 validate_worker_ssl_service() {
-  local worker_ssl_service="${1}"
-
   case "${1}" in
     tfcpu | pytorchcpu)
       return 0
@@ -176,6 +213,11 @@ parse_args() {
         _arg_branch="${2}"
         shift 2
         ;;
+      --python)
+        validate_python_cmd "${2}"
+        _arg_python="${2}"
+        shift 2
+        ;;
       --worker-ssl-service)
         validate_worker_ssl_service "${2}"
         _arg_worker_ssl_service="${2}"
@@ -204,6 +246,24 @@ docker_compose() {
   if ! {{ cookiecutter.docker_compose_path }} "${@}"; then
     log_error "Encountered an error when executing" \
       "{{ cookiecutter.docker_compose_path }}, exiting..."
+    exit 1
+  fi
+}
+
+###########################################################################################
+# Wrapper for invoking python
+#
+# Globals:
+#   _arg_python
+# Arguments:
+#   Positional arguments, one or more strings
+# Returns:
+#   None
+###########################################################################################
+
+python_cmd() {
+  if ! "${_arg_python}" "${@}"; then
+    log_error "Encountered an error when executing python, exiting..."
     exit 1
   fi
 }
@@ -498,6 +558,22 @@ init_minio() {
 }
 
 ###########################################################################################
+# Wrapper for the generate_docker_templates.py and generate_password_templates.py utility
+# scripts
+#
+# Globals:
+#   GENERATE_PASSWORD_TEMPLATES_SCRIPT
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+init_templates() {
+  python_cmd "${GENERATE_PASSWORD_TEMPLATES_SCRIPT}"
+}
+
+###########################################################################################
 # Wrapper for the init-frontend.sh utility script
 #
 # Globals:
@@ -535,6 +611,7 @@ init_frontend() {
 
 main() {
   parse_args "${@}"
+  init_templates
   init_scripts
   init_extra_ca_certificates
   init_named_volumes

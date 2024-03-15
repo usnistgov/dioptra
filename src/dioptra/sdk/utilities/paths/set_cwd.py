@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # This Software (Dioptra) is being made available as a public service by the
 # National Institute of Standards and Technology (NIST), an Agency of the United
 # States Department of Commerce. This software was developed in part by employees of
@@ -15,18 +14,26 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import contextlib
 import os
+from pathlib import Path
+from typing import Iterator, Union
 
-from rq.cli.cli import main as rq_cli
 
-from dioptra.sdk.utilities.logging import (
-    attach_stdout_stream_handler,
-    set_logging_level,
-)
+@contextlib.contextmanager
+def set_cwd(temp_cwd: Union[str, Path]) -> Iterator[None]:
+    """
+    A convenient way to temporarily set the current working directory to a
+    particular directory, while executing a particular block of code.  Just
+    place the code into a with-statement which uses this function as a
+    contextmanager.
 
-if __name__ == "__main__":
-    attach_stdout_stream_handler(
-        True if os.getenv("DIOPTRA_RQ_WORKER_LOG_AS_JSON") else False,
-    )
-    set_logging_level(os.getenv("DIOPTRA_RQ_WORKER_LOG_LEVEL", default="INFO"))
-    rq_cli()
+    Args:
+        temp_cwd: The directory to temporarily set as current
+    """
+    saved_cwd = Path.cwd()
+    os.chdir(temp_cwd)
+    try:
+        yield
+    finally:
+        os.chdir(saved_cwd)

@@ -18,6 +18,7 @@
     "num_tensorflow_gpu_workers": "0",
     "num_pytorch_cpu_workers": "1",
     "num_pytorch_gpu_workers": "0",
+    "datasets_directory": "",
     "__containers": {
         "networks": ["dioptra"],
         "nginx": {
