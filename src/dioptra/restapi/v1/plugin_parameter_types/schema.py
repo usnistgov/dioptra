@@ -61,8 +61,8 @@ PluginParameterTypeBaseSchema = generate_base_resource_schema(
 
 
 class PluginParameterTypeSchema(
-    PluginParameterTypeMutableFieldsSchema, PluginParameterTypeBaseSchema
-):  # type: ignore
+    PluginParameterTypeMutableFieldsSchema, PluginParameterTypeBaseSchema  # type: ignore
+):
     """The schema for the data stored in a PluginParameterType resource."""
 
 
