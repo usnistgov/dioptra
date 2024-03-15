@@ -20,7 +20,7 @@ from __future__ import annotations
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.groups.schema import GroupRefSchema
-from dioptra.restapi.v1.schemas import (  # generate_base_resource_schema,
+from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
@@ -54,9 +54,6 @@ class TagMutableFieldsSchema(Schema):
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Queue resource.")
     )
-
-
-# TagBaseSchema = generate_base_resource_schema("Tag") # Tag is not a resource.
 
 
 class TagBaseSchema(Schema):

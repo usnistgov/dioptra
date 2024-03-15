@@ -82,6 +82,17 @@ def generate_base_resource_schema(name: str) -> type[Schema]:
     )
 
 
+class ResourceURLSchema(Schema):
+    """ """
+
+    urls = fields.List(
+        fields.Url(),
+        attribute="urls",
+        metadata=dict(description="A list of URLs to access Resources."),
+        relative=True,
+    )
+
+
 class BasePageSchema(Schema):
     """The base schema for adding paging to a resource endpoint."""
 
