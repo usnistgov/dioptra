@@ -76,8 +76,8 @@ def register_v1_routes(api: Api) -> None:
     Args:
         api: The main REST |Api| object.
     """
-    from .v1.mlflow_runs.controller import api as mlflow_runs_api
     from .v1.artifacts.controller import api as artifacts_api
+    from .v1.mlflow_runs.controller import api as mlflow_runs_api
     from .v1.plugins.controller import api as plugins_api
     from .v1.queues.controller import api as queues_api
 
