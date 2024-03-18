@@ -101,7 +101,7 @@ class JobIdStatusEndpoint(Resource):
     def get(self, id: int):
         """Gets a Job resource's status."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
+            request_id=str(uuid.uuid4()), resource="JobStatus", request_type="GET", id=id
         )
         log.debug("Request received")
 
@@ -114,7 +114,7 @@ class JobIdArtifactsEndpoint(Resource):
     def get(self, id: int):
         """Gets a list of a Job resource's artifacts."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
+            request_id=str(uuid.uuid4()), resource="JobArtifacts", request_type="GET", id=id
         )
         log.debug("Request received")
 
@@ -127,6 +127,6 @@ class JobIdParametersEndpoint(Resource):
     def get(self, id: int):
         """Gets a list of a Job resource's parameters."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
+            request_id=str(uuid.uuid4()), resource="JobParameters", request_type="GET", id=id
         )
         log.debug("Request received")
