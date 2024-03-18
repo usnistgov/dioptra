@@ -19,9 +19,6 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields, validate
 
-from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
-from dioptra.restapi.v1.experiments.schema import ExperimentRefSchema
-from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -54,6 +51,10 @@ JobBaseSchema = generate_base_resource_schema("Job", snapshot=True)
 
 class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
     """The schema for the data stored in a Job resource."""
+
+    from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
+    from dioptra.restapi.v1.experiments.schema import ExperimentRefSchema
+    from dioptra.restapi.v1.queues.schema import QueueRefSchema
 
     queueId = fields.Integer(
         attribute="queue_id",
