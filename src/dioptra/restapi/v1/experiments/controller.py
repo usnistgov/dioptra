@@ -85,7 +85,7 @@ class ExperimentEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Experiment", request_type="POST"
         )
         log.debug("Request received")
-        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        parsed_obj = request.parsed_obj  # noqa: F841
         # return self._experiment_service.create(parsed_obj["name"], log=log)
 
 
@@ -123,7 +123,7 @@ class ExperimentIdEndpoint(Resource):
         )  # noqa: F841
         log.debug("Request received")
         # parsed_obj = request.parsed_obj  # type: ignore
-        # return self._experiment_service.rename(id, new_name=parsed_obj["name"],log=log)
+        # return self._experiment_service.rename(id,new_name=parsed_obj["name"],log=log)
 
 
 @api.route("/<int:id>/jobs")
