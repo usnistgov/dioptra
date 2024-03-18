@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 from enum import Enum
+
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.schemas import (
@@ -35,27 +36,35 @@ class ParameterType(Enum):
     Float = "float"
     Path = "path"
     URI = "uri"
-    
+
 
 class EntrypointParameterSchema(Schema):
     """The schema for the data stored in a Entrypoint parameter resource."""
-    
-    entrypointId = fields.Integer(
-        attribute="entrypoint_id",
-        metadata=dict(description="ID for the associated entrypoint."),
-    ),
-    parameterNumber = fields.Integer(
-        attribute="parameter_number",
-        metadata=dict(description="Index of parameter in table."),
-    ),
-    name = fields.String(
-        attribute="name",
-        metadata=dict(description="Name of the Entrypoint parameter resource."),
-    ),
-    defaultValue = fields.Raw(
-        attribute="default_value",
-        metadata=dict(description="Default value of the Entrypoint parameter."),
-    ),
+
+    entrypointId = (
+        fields.Integer(
+            attribute="entrypoint_id",
+            metadata=dict(description="ID for the associated entrypoint."),
+        ),
+    )
+    parameterNumber = (
+        fields.Integer(
+            attribute="parameter_number",
+            metadata=dict(description="Index of parameter in table."),
+        ),
+    )
+    name = (
+        fields.String(
+            attribute="name",
+            metadata=dict(description="Name of the Entrypoint parameter resource."),
+        ),
+    )
+    defaultValue = (
+        fields.Raw(
+            attribute="default_value",
+            metadata=dict(description="Default value of the Entrypoint parameter."),
+        ),
+    )
     parameterType = fields.Enum(
         ParameterType,
         attribute="parameter_type",
@@ -78,13 +87,18 @@ class EntrypointRefSchema(EntrypointRefBaseSchema):  # type: ignore
 class EntrypointMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Entrypoint resource."""
 
-    name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Entrypoint resource.")
-    ),
-    taskGraph = fields.String(
-        attribute="task_graph",
-        metadata=dict(description="Task graph of the Entrypoint resource."),
-    ),
+    name = (
+        fields.String(
+            attribute="name",
+            metadata=dict(description="Name of the Entrypoint resource."),
+        ),
+    )
+    taskGraph = (
+        fields.String(
+            attribute="task_graph",
+            metadata=dict(description="Task graph of the Entrypoint resource."),
+        ),
+    )
     parameters = fields.Nested(
         EntrypointParameterSchema,
         many=True,
@@ -115,5 +129,3 @@ class EntrypointGetQueryParameters(
     SearchQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /Entrypoints endpoint."""
-
-
