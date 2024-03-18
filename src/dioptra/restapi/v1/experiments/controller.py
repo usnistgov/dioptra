@@ -24,7 +24,6 @@ from flask import request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
-from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
@@ -35,9 +34,12 @@ from .schema import (
     ExperimentPageSchema,
     ExperimentSchema,
 )
-from ..jobs.schema import JobRefSchema
-from ..entrypoints.schema import EntrypointRefSchema
-#from .service import ExperimentService
+
+# Commented out schemas as they're not merged in yet. Uncomment once it is.
+# from ..jobs.schema import JobRefSchema
+# from ..entrypoints.schema import EntrypointRefSchema
+
+# from .service import ExperimentService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -46,7 +48,7 @@ api: Namespace = Namespace("Experiments", description="Experiments endpoint")
 
 @api.route("/")
 class ExperimentEndpoint(Resource):
-    
+
     @login_required
     @accepts(query_params_schema=ExperimentGetQueryParameters, api=api)
     @responds(schema=ExperimentPageSchema, api=api)
@@ -73,7 +75,7 @@ class ExperimentEndpoint(Resource):
             endpoint="v0/experiment",
             page_length=page_length,
         )"""
-        
+
     @login_required
     @accepts(schema=ExperimentSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
@@ -83,10 +85,10 @@ class ExperimentEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Experiment", request_type="POST"
         )
         log.debug("Request received")
-        parsed_obj = request.parsed_obj  # noqa: F841
-        #return self._experiment_service.create(parsed_obj["name"], log=log)
-    
-    
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        # return self._experiment_service.create(parsed_obj["name"], log=log)
+
+
 @api.route("/<int:id>")
 @api.param("id", "An integer identifying a registered experiment.")
 class ExperimentIdEndpoint(Resource):
@@ -99,7 +101,7 @@ class ExperimentIdEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="id", request_type="GET", id=id
         )  # noqa: F841
         log.info("Request received")
-        #return self._experiment_service.get(id, error_if_not_found=True, log=log)
+        # return self._experiment_service.get(id, error_if_not_found=True, log=log)
 
     @login_required
     @responds(schema=IdStatusResponseSchema)
@@ -109,7 +111,7 @@ class ExperimentIdEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="id", request_type="DELETE", id=id
         )  # noqa: F841
         log.info("Request received")
-        #return self._experiment_service.delete(id)
+        # return self._experiment_service.delete(id)
 
     @login_required
     @accepts(schema=ExperimentMutableFieldsSchema, api=api)
@@ -120,71 +122,71 @@ class ExperimentIdEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="id", request_type="PUT", id=id
         )  # noqa: F841
         log.debug("Request received")
-        parsed_obj = request.parsed_obj  # type: ignore
-        #return self._experiment_service.rename(id, new_name=parsed_obj["name"],log=log)
+        # parsed_obj = request.parsed_obj  # type: ignore
+        # return self._experiment_service.rename(id, new_name=parsed_obj["name"],log=log)
 
 
 @api.route("/<int:id>/jobs")
 @api.param("id", "An integer identifying a registered experiment.")
 class ExperimentIdJobEndpoint(Resource):
-         
+
     @login_required
     @accepts(query_params_schema=ExperimentGetQueryParameters, api=api)
-    @responds(schema=JobRefSchema, api=api)
+    # @responds(schema=JobRefSchema, api=api)
     def get(self, id: int):
         """Returns a list of jobs for a specified experiment."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="id", request_type="GET", id=id
         )  # noqa: F841
         log.info("Request received")
-        #return self._experiment_service.get_jobs(id, error_if_not_found=True, log=log)
-    
-    
+        # return self._experiment_service.get_jobs(id, error_if_not_found=True, log=log)
+
+
 @api.route("/<int:id>/entrypoints")
 @api.param("id", "An integer identifying a registered experiment.")
 class ExperimentIdEntrypointEndpoint(Resource):
-         
+
     @login_required
     @accepts(query_params_schema=ExperimentGetQueryParameters, api=api)
-    @responds(schema=EntrypointRefSchema(many=True), api=api)
+    # @responds(schema=EntrypointRefSchema(many=True), api=api)
     def get(self, id: int):
         """Returns a list of associated entrypoints for a specified experiment."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="id", request_type="GET", id=id
         )  # noqa: F841
         log.info("Request received")
-        #return self._experiment_service.get_entrypoints(
+        # return self._experiment_service.get_entrypoints(
         #    id, error_if_not_found=True, log=log
-        #)
-        
+        # )
+
     @login_required
-    @accepts(schema=EntrypointRefSchema(many=True), api=api)
-    @responds(schema=EntrypointRefSchema(many=True), api=api)
+    # @accepts(schema=EntrypointRefSchema(many=True), api=api)
+    # @responds(schema=EntrypointRefSchema(many=True), api=api)
     def post(self, id: int):
         """Appends one or more entrypoints to a specified experiment."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="id", request_type="POST", id=id
         )  # noqa: F841
         log.info("Request received")
-        parsed_obj = request.parsed_obj  # type: ignore
-        #return self._experiment_service.append_entrypoints(
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        # return self._experiment_service.append_entrypoints(
         #    id, parsed_obj["entrypoints"], error_if_not_found=True, log=log
-        #)
-        
+        # )
+
     @login_required
-    @accepts(schema=EntrypointRefSchema(many=True), api=api)
-    @responds(schema=EntrypointRefSchema(many=True), api=api)
+    # @accepts(schema=EntrypointRefSchema(many=True), api=api)
+    # @responds(schema=EntrypointRefSchema(many=True), api=api)
     def put(self, id: int):
         """Remove any previous entry points and replaces with the list of ids."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="id", request_type="PUT", id=id
         )  # noqa: F841
         log.info("Request received")
-        parsed_obj = request.parsed_obj  # type: ignore
-        #return self._experiment_service.edit_entrypoints(
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        # return self._experiment_service.edit_entrypoints(
         #    id, parsed_obj["entrypoints"], error_if_not_found=True, log=log
-        #)
-        
+        # )
+
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self, id: int):
@@ -193,24 +195,24 @@ class ExperimentIdEntrypointEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="id", request_type="DELETE", id=id
         )  # noqa: F841
         log.info("Request received")
-        #return self._experiment_service.delete_entrypoints(
+        # return self._experiment_service.delete_entrypoints(
         #    id, error_if_not_found=True, log=log
-        #)
-        
-        
+        # )
+
+
 @api.route("/<int:id>/entrypoints/<int:entrypoint_id>")
 @api.param("id", "An integer identifying a registered experiment.")
 @api.param("entrypoint_id", "An integer identifying an associated entrypoint.")
 class ExperimentIdEntrypointIdEndpoint(Resource):
-        
+
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
-    def delete(self, id: int, entrypoint_id:int):
+    def delete(self, id: int, entrypoint_id: int):
         """Removes all entrypoints matching an id from a specified experiment ."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="id", request_type="DELETE", id=id
         )  # noqa: F841
         log.info("Request received")
-        #return self._experiment_service.delete_entrypoints(
+        # return self._experiment_service.delete_entrypoints(
         #    id, entrypoint_id, error_if_not_found=True, log=log
-        #)
+        # )
