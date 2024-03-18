@@ -20,7 +20,7 @@ from __future__ import annotations
 import datetime
 import uuid
 from datetime import datetime as PyDateTime
-from typing import Any, Optional, cast
+from typing import Any, Final, Optional, cast
 
 import structlog
 from flask_login import current_user
@@ -43,6 +43,8 @@ from .errors import (
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
 
 
 class UserService(object):
@@ -101,7 +103,9 @@ class UserService(object):
             raise UsernameNotAvailableError
 
         timestamp = datetime.datetime.now()
-        password_expire_on = timestamp.replace(year=timestamp.year + 1)
+        password_expire_on = timestamp + datetime.timedelta(
+            days=DAYS_TO_EXPIRE_PASSWORD_DEFAULT
+        )
 
         new_user: User = User(
             username=username,
@@ -426,7 +430,9 @@ class UserPasswordService(object):
         user.password = self._password_service.hash(password=new_password, log=log)
         user.alternative_id = uuid.uuid4()
         user.last_modified_on = timestamp
-        user.password_expire_on = timestamp.replace(year=timestamp.year + 1)
+        user.password_expire_on = timestamp + datetime.timedelta(
+            days=DAYS_TO_EXPIRE_PASSWORD_DEFAULT
+        )
         db.session.commit()
 
         return {"status": "Password Change Success", "username": [user.username]}

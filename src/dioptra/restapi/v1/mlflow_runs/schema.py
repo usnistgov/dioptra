@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # This Software (Dioptra) is being made available as a public service by the
 # National Institute of Standards and Technology (NIST), an Agency of the United
 # States Department of Commerce. This software was developed in part by employees of
@@ -15,20 +14,43 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import os
 
-from mlflow.cli import cli as mlflow_cli
+"""The schemas for serializing/deserializing MLFlowRun resources."""
+from __future__ import annotations
 
-from dioptra.sdk.utilities.logging import (
-    attach_stdout_stream_handler,
-    configure_structlog,
-    set_logging_level,
+from marshmallow import fields
+
+from dioptra.restapi.v1.schemas import (
+    BasePageSchema,
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+    generate_base_resource_schema,
 )
 
-if __name__ == "__main__":
-    attach_stdout_stream_handler(
-        True if os.getenv("DIOPTRA_MLFLOW_RUN_LOG_AS_JSON") else False,
+MLFlowRunBaseSchema = generate_base_resource_schema("MLFLowRun", snapshot=False)
+
+
+class MLFlowRunSchema(MLFlowRunBaseSchema):  # type: ignore
+    """The schema for the data stored in an MLFlowRun resource."""
+
+    jobId = fields.Int(
+        attribute="jobId",
+        metadata=dict(description="ID of the job that created this MLFlow Run"),
     )
-    set_logging_level(os.getenv("DIOPTRA_MLFLOW_RUN_LOG_LEVEL", default="INFO"))
-    configure_structlog()
-    mlflow_cli()
+
+
+class MLFlowRunPageSchema(BasePageSchema):
+    """The paged schema for the data stored in an MLFlowRun resource."""
+
+    data = fields.Nested(
+        MLFlowRunSchema,
+        many=True,
+        metadata=dict(description="List of MLFlowRun resources in the current page."),
+    )
+
+
+class MLFlowRunGetQueryParameters(
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /mlflowRuns endpoint."""

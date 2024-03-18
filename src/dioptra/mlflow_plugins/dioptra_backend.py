@@ -16,9 +16,9 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
 import subprocess
-from typing import Any, Dict, Optional
 
 import mlflow.tracking as tracking
+import rq
 import structlog
 from mlflow.entities import RunStatus
 from mlflow.exceptions import ExecutionException
@@ -67,6 +67,9 @@ class DioptraProjectBackend(AbstractBackend):
         storage_dir = backend_config[PROJECT_STORAGE_DIR]
         workflow_filepath = backend_config[PROJECT_WORKFLOW_FILEPATH]
 
+        rq_job = rq.get_current_job()
+        job_id = rq_job.get_id() if rq_job else None
+
         if MLFLOW_LOCAL_BACKEND_RUN_ID_CONFIG in backend_config:
             run_id = backend_config[MLFLOW_LOCAL_BACKEND_RUN_ID_CONFIG]
 
@@ -77,8 +80,14 @@ class DioptraProjectBackend(AbstractBackend):
         active_run = get_or_create_run(
             run_id, project_uri, experiment_id, work_dir, version, entry_point, params
         )
-        DioptraDatabaseClient().set_mlflow_run_id_in_db(run_id=active_run.info.run_id)
-        _set_dioptra_tags(run_id=active_run.info.run_id)
+
+        if job_id:
+            DioptraDatabaseClient().set_mlflow_run_id_for_job(
+                run_id=active_run.info.run_id, job_id=job_id
+            )
+
+            _set_dioptra_tags(run_id=active_run.info.run_id, job_id=job_id)
+
         _log_workflow_artifact(
             run_id=active_run.info.run_id, workflow_filepath=workflow_filepath
         )
@@ -90,15 +99,19 @@ class DioptraProjectBackend(AbstractBackend):
         )
         command_str = command_separator.join(command_args)
         submitted_run_obj = _run_entry_point(
-            command_str, work_dir, experiment_id, run_id=active_run.info.run_id
+            command_str,
+            work_dir,
+            experiment_id,
+            run_id=active_run.info.run_id,
+            job_id=job_id,
         )
 
-        _wait_for(submitted_run_obj)
+        _wait_for(submitted_run_obj, job_id)
 
         return submitted_run_obj
 
 
-def _run_entry_point(command, work_dir, experiment_id, run_id):
+def _run_entry_point(command, work_dir, experiment_id, run_id, job_id):
     """Run an entry point command in a subprocess, returning a SubmittedRun that can be
     used to query the run's status.
 
@@ -123,11 +136,13 @@ def _run_entry_point(command, work_dir, experiment_id, run_id):
             ["cmd", "/c", command], close_fds=True, cwd=work_dir, env=env
         )
 
-    DioptraDatabaseClient().update_active_job_status(status="started")
+    if job_id:
+        DioptraDatabaseClient().update_job_status(job_id=job_id, status="started")
+
     return LocalSubmittedRun(run_id, process)
 
 
-def _wait_for(submitted_run_obj):
+def _wait_for(submitted_run_obj, job_id):
     """Wait on the passed-in submitted run, reporting its status to the tracking
     server.
     """
@@ -143,18 +158,24 @@ def _wait_for(submitted_run_obj):
 
         if submitted_run_obj.wait():
             _logger.info(f"=== Run (ID '{run_id}') succeeded ===")
-            DioptraDatabaseClient().update_active_job_status(status="finished")
+            status = "finished"
             _maybe_set_run_terminated(active_run, "FINISHED")
 
         else:
-            DioptraDatabaseClient().update_active_job_status(status="failed")
+            status = "failed"
             _maybe_set_run_terminated(active_run, "FAILED")
+
+        if job_id:
+            DioptraDatabaseClient().update_job_status(job_id=job_id, status=status)
+
+        if status == "failed":
             raise ExecutionException("Run (ID '%s') failed" % run_id)
 
     except KeyboardInterrupt:
         _logger.error(f"=== Run (ID '{run_id}') interrupted, cancelling run ===")
         submitted_run_obj.cancel()
-        DioptraDatabaseClient().update_active_job_status(status="failed")
+        if job_id:
+            DioptraDatabaseClient().update_job_status(job_id=job_id, status="failed")
         _maybe_set_run_terminated(active_run, "FAILED")
         raise
 
@@ -180,11 +201,8 @@ def _log_workflow_artifact(run_id, workflow_filepath):
     client.log_artifact(run_id=run_id, local_path=workflow_filepath)
 
 
-def _set_dioptra_tags(run_id: str) -> None:
-    job: Optional[Dict[str, Any]] = DioptraDatabaseClient().get_active_job()
-
-    if job is None:
-        return None
+def _set_dioptra_tags(run_id: str, job_id: str) -> None:
+    job = DioptraDatabaseClient().get_job(job_id)
 
     client = tracking.MlflowClient()
     client.set_tag(run_id=run_id, key=DIOPTRA_JOB_ID, value=job.get("job_id", ""))

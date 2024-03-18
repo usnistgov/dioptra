@@ -16,9 +16,11 @@ attrs==23.2.0
     # via
     #   jsonschema
     #   referencing
-boto3==1.34.44
+blinker==1.7.0
+    # via flask
+boto3==1.34.52
     # via dioptra (pyproject.toml)
-botocore==1.34.44
+botocore==1.34.52
     # via
     #   boto3
     #   s3transfer
@@ -38,7 +40,7 @@ entrypoints==0.4
     # via
     #   dioptra (pyproject.toml)
     #   mlflow-skinny
-flask==2.1.3
+flask==3.0.2
     # via
     #   dioptra (pyproject.toml)
     #   flask-cors
@@ -58,7 +60,7 @@ flask-restx==1.3.0
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
-flask-sqlalchemy==2.5.1
+flask-sqlalchemy==3.1.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
@@ -76,7 +78,7 @@ importlib-metadata==7.0.1
     # via
     #   flask
     #   mlflow-skinny
-importlib-resources==6.1.1
+importlib-resources==6.1.2
     # via flask-restx
 injector==0.21.0
     # via dioptra (pyproject.toml)
@@ -100,13 +102,14 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   mako
-marshmallow==3.20.2
+    #   werkzeug
+marshmallow==3.21.0
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
 mlflow-skinny==2.10.2
     # via dioptra (pyproject.toml)
-multimethod==1.11
+multimethod==1.11.2
     # via dioptra (pyproject.toml)
 numpy==1.26.4
     # via
@@ -118,7 +121,7 @@ packaging==23.2
     #   gunicorn
     #   marshmallow
     #   mlflow-skinny
-pandas==2.2.0
+pandas==2.2.1
     # via dioptra (pyproject.toml)
 passlib==1.7.4
     # via dioptra (pyproject.toml)
@@ -144,7 +147,7 @@ pyyaml==6.0.1
     # via
     #   dioptra (pyproject.toml)
     #   mlflow-skinny
-redis==5.0.1
+redis==5.0.2
     # via
     #   dioptra (pyproject.toml)
     #   rq
@@ -160,7 +163,7 @@ rpds-py==0.18.0
     # via
     #   jsonschema
     #   referencing
-rq==1.15.1
+rq==1.16.0
     # via dioptra (pyproject.toml)
 s3transfer==0.10.0
     # via boto3
@@ -172,7 +175,7 @@ six==1.16.0
     # via python-dateutil
 smmap==5.0.1
     # via gitdb
-sqlalchemy==1.4.51
+sqlalchemy==2.0.27
     # via
     #   alembic
     #   dioptra (pyproject.toml)
@@ -181,17 +184,18 @@ sqlparse==0.4.4
     # via mlflow-skinny
 structlog==24.1.0
     # via dioptra (pyproject.toml)
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via
     #   alembic
     #   dioptra (pyproject.toml)
+    #   sqlalchemy
 tzdata==2024.1
     # via pandas
 urllib3==1.26.18
     # via
     #   botocore
     #   requests
-werkzeug==2.1.2
+werkzeug==3.0.1
     # via
     #   dioptra (pyproject.toml)
     #   flask

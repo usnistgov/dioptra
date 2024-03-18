@@ -22,16 +22,25 @@ import botocore.stub
 import pytest
 from botocore.client import BaseClient
 
+from tests.utils import make_tarball_bytes
+
 
 def _add_workflow_stubs(stubber: botocore.stub.Stubber) -> dict[str, dict[str, bytes]]:
     # No key listing mockup here: worker doesn't have permission to list keys
     # in the workflow bucket!
 
+    # Make up some paths and file contents for our test tarball.
+    tar_content_files = {
+        "dir1/file.txt": b"hello",
+        "dir1/dir2/MLproject": b"an mlproject file!",
+        "dir2/dir3/foo.py": b"print('world')"
+    }
+
     # Mock head response
     head_object_response = {"ContentType": "binary/octet-stream", "ContentLength": 3}
 
     # Mock file download responses
-    workflow_content = b"\x0d\x0e\x0f"
+    workflow_content = make_tarball_bytes(tar_content_files)
     workflow_content_stream = io.BytesIO(workflow_content)
     workflow_get_object_response = {"Body": workflow_content_stream}
 

@@ -22,10 +22,15 @@ networks:
   {%- endfor -%}
 {%- endmacro -%}
 
-{% macro service_volumes(volumes) -%}
+{% macro service_volumes(volumes, datasets_directory=none) -%}
+{%- if datasets_directory is not none and datasets_directory|trim != "" -%}
+{%- set _volumes_list = volumes + [datasets_directory + ":/dioptra/data:ro"] -%}
+{%- else -%}
+{%- set _volumes_list = volumes -%}
+{%- endif -%}
 volumes:
-  {% for volume in volumes -%}
-  - {{ volume }}{{ "
+  {% for volume in _volumes_list -%}
+  - "{{ volume }}"{{ "
   " if not loop.last }}
   {%- endfor -%}
 {%- endmacro -%}
@@ -61,9 +66,7 @@ volumes:
 {%- endmacro -%}
 
 {% macro db_service(cookiecutter) -%}
-{%- set _db_public_env_files = ["envs/" ~ cookiecutter.__project_slug ~ "-db.env"] -%}
-{%- set _db_secret_env_files = ["secrets/" ~ cookiecutter.__project_slug ~ "-db.env"] -%}
-{%- set _db_env_files = _db_public_env_files + _db_secret_env_files -%}
+{%- set _db_env_files = ["envs/" ~ cookiecutter.__project_slug ~ "-db.env"] -%}
 {%- set _db_volumes = ["postgres-data:/var/lib/postgresql/data:rw", "postgres-docker-entrypoint-initdb-d:/docker-entrypoint-initdb.d:rw", "postgres-etc-postgresql:/etc/postgresql:rw", "postgres-var-certs:/var/lib/postgresql/certs:rw"] -%}
 {{ cookiecutter.__project_slug }}-db:
   image: {{ container_image(cookiecutter.__containers.db) }}
@@ -84,6 +87,8 @@ volumes:
     timeout: 60s
     retries: 3
     start_period: 30s
+  environment:
+    POSTGRES_USER_DIOPTRA_PASSWORD: "${POSTGRES_USER_DIOPTRA_PASSWORD}"
   {{ service_env_files(_db_env_files)|indent(2) }}
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
@@ -92,9 +97,7 @@ volumes:
 {%- endmacro -%}
 
 {% macro dbadmin_service(cookiecutter) -%}
-{%- set _dbadmin_public_env_files = ["envs/" ~ cookiecutter.__project_slug ~ "-dbadmin.env"] -%}
-{%- set _dbadmin_secret_env_files = ["secrets/" ~ cookiecutter.__project_slug ~ "-dbadmin.env"] -%}
-{%- set _dbadmin_env_files = _dbadmin_public_env_files + _dbadmin_secret_env_files -%}
+{%- set _dbadmin_env_files = ["envs/" ~ cookiecutter.__project_slug ~ "-dbadmin.env"] -%}
 {%- set _dbadmin_volumes = ["dbadmin-ca-certificates:/etc/ssl/certs:rw", "dbadmin-data:/var/lib/pgadmin:rw"] -%}
 {{ cookiecutter.__project_slug }}-dbadmin:
   image: {{ container_image(cookiecutter.__containers.dbadmin) }}
@@ -114,6 +117,8 @@ volumes:
     timeout: 60s
     retries: 5
     start_period: 80s
+  environment:
+    PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
   {{ service_env_files(_dbadmin_env_files)|indent(2) }}
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
@@ -122,19 +127,11 @@ volumes:
 {%- endmacro -%}
 
 {% macro minio_service(cookiecutter) -%}
-{%- set _minio_public_env_files = [] -%}
-{%- set _minio_secret_env_files = ["secrets/" ~ cookiecutter.__project_slug ~ "-minio.env"] -%}
-{%- set _minio_env_files = _minio_public_env_files + _minio_secret_env_files -%}
 {%- set _minio_volumes = ["minio-certs:/root/.minio/certs:rw", "minio-data:/data:rw"] -%}
 {{ cookiecutter.__project_slug }}-minio:
   image: {{ container_image(cookiecutter.__containers.minio) }}
   restart: always
   hostname: {{ cookiecutter.__project_slug }}-minio
-  command:
-    - server
-    - /data
-    - --console-address
-    - ":9001"
   healthcheck:
     test:
       [
@@ -146,7 +143,15 @@ volumes:
     interval: 30s
     timeout: 10s
     retries: 3
-  {{ service_env_files(_minio_env_files)|indent(2) }}
+  environment:
+    MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+    MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+    MINIO_KMS_SECRET_KEY: "${MINIO_KMS_SECRET_KEY}"
+  command:
+    - server
+    - /data
+    - --console-address
+    - ":9001"
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
   {% endif -%}
@@ -206,9 +211,7 @@ volumes:
 {%- endmacro %}
 
 {% macro mlflow_tracking_service(cookiecutter) -%}
-{%- set _mlflow_tracking_public_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-mlflow-tracking.env"] -%}
-{%- set _mlflow_tracking_secret_env_files = ["secrets/" ~ cookiecutter.__project_slug ~ "-mlflow-tracking.env", "secrets/" ~ cookiecutter.__project_slug ~ "-mlflow-tracking-database-uri.env"] -%}
-{%- set _mlflow_tracking_env_files = _mlflow_tracking_public_env_files + _mlflow_tracking_secret_env_files -%}
+{%- set _mlflow_tracking_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-mlflow-tracking.env"] -%}
 {%- set _mlflow_tracking_volumes = ["mlflow-tracking-ca-certificates:/usr/local/share/ca-certificates:rw", "mlflow-tracking-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-mlflow-tracking:
   image: {{ container_image(cookiecutter.__containers.mlflow_tracking) }}
@@ -220,6 +223,10 @@ volumes:
     timeout: 10s
     retries: 3
     start_period: 10s
+  environment:
+    AWS_ACCESS_KEY_ID: "${MLFLOW_TRACKING_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${MLFLOW_TRACKING_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_MLFLOW_TRACKING_DATABASE_URI: "${DIOPTRA_MLFLOW_TRACKING_DATABASE_URI}"
   command:
     - --host
     - "0.0.0.0"
@@ -239,9 +246,7 @@ volumes:
 {%- endmacro -%}
 
 {% macro restapi_service(cookiecutter) -%}
-{%- set _restapi_public_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-restapi.env"] -%}
-{%- set _restapi_secret_env_files = ["secrets/" ~ cookiecutter.__project_slug ~ "-restapi.env", "secrets/" ~ cookiecutter.__project_slug ~ "-restapi-database-uri.env"] -%}
-{%- set _restapi_env_files = _restapi_public_env_files + _restapi_secret_env_files -%}
+{%- set _restapi_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-restapi.env"] -%}
 {%- set _restapi_volumes = ["restapi-ca-certificates:/usr/local/share/ca-certificates:rw", "restapi-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-restapi:
   image: {{ container_image(cookiecutter.__containers.restapi) }}
@@ -253,6 +258,10 @@ volumes:
     timeout: 10s
     retries: 3
     start_period: 30s
+  environment:
+    AWS_ACCESS_KEY_ID: "${RESTAPI_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${RESTAPI_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
   command:
     - --wait-for
     - {{ cookiecutter.__project_slug }}-redis:6379
@@ -270,9 +279,7 @@ volumes:
 {%- endmacro -%}
 
 {% macro tensorflow_cpu_service(cookiecutter, worker_id) -%}
-{%- set _tfcpu_public_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker-cpu.env"] -%}
-{%- set _tfcpu_secret_env_files = ["secrets/" ~ cookiecutter.__project_slug ~ "-worker.env", "secrets/" ~ cookiecutter.__project_slug ~ "-restapi-database-uri.env"] -%}
-{%- set _tfcpu_env_files = _tfcpu_public_env_files + _tfcpu_secret_env_files -%}
+{%- set _tfcpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker-cpu.env"] -%}
 {%- set _tfcpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-tfcpu-{{ "%02d" | format(worker_id|int) }}:
   image: {{ container_image(cookiecutter.__containers.tfcpu) }}
@@ -284,6 +291,10 @@ volumes:
     timeout: 60s
     retries: 5
     start_period: 80s
+  environment:
+    AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
   command:
     - --wait-for
     - {{ cookiecutter.__project_slug }}-redis:6379
@@ -300,13 +311,11 @@ volumes:
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
   {% endif -%}
-  {{ service_volumes(_tfcpu_volumes)|indent(2) }}
+  {{ service_volumes(_tfcpu_volumes, cookiecutter.datasets_directory)|indent(2) }}
 {%- endmacro -%}
 
 {% macro tensorflow_gpu_service(cookiecutter, worker_id, gpu_device_id) -%}
-{%- set _tfgpu_public_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env"] -%}
-{%- set _tfgpu_secret_env_files = ["secrets/" ~ cookiecutter.__project_slug ~ "-worker.env", "secrets/" ~ cookiecutter.__project_slug ~ "-restapi-database-uri.env"] -%}
-{%- set _tfgpu_env_files = _tfgpu_public_env_files + _tfgpu_secret_env_files -%}
+{%- set _tfgpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env"] -%}
 {%- set _tfgpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-tfgpu-{{ "%02d" | format(worker_id|int) }}:
   image: {{ container_image(cookiecutter.__containers.tfgpu) }}
@@ -320,6 +329,9 @@ volumes:
     retries: 5
     start_period: 80s
   environment:
+    AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
     NVIDIA_VISIBLE_DEVICES: {{ gpu_device_id }}
   command:
     - --wait-for
@@ -337,13 +349,11 @@ volumes:
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
   {% endif -%}
-  {{ service_volumes(_tfgpu_volumes)|indent(2) }}
+  {{ service_volumes(_tfgpu_volumes, cookiecutter.datasets_directory)|indent(2) }}
 {%- endmacro -%}
 
 {% macro pytorch_cpu_service(cookiecutter, worker_id) -%}
-{%- set _pytorchcpu_public_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker-cpu.env"] -%}
-{%- set _pytorchcpu_secret_env_files = ["secrets/" ~ cookiecutter.__project_slug ~ "-worker.env", "secrets/" ~ cookiecutter.__project_slug ~ "-restapi-database-uri.env"] -%}
-{%- set _pytorchcpu_env_files = _pytorchcpu_public_env_files + _pytorchcpu_secret_env_files -%}
+{%- set _pytorchcpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker-cpu.env"] -%}
 {%- set _pytorchcpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-pytorchcpu-{{ "%02d" | format(worker_id|int) }}:
   image: {{ container_image(cookiecutter.__containers.pytorchcpu) }}
@@ -355,6 +365,10 @@ volumes:
     timeout: 60s
     retries: 5
     start_period: 80s
+  environment:
+    AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
   command:
     - --wait-for
     - {{ cookiecutter.__project_slug }}-redis:6379
@@ -371,13 +385,11 @@ volumes:
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
   {% endif -%}
-  {{ service_volumes(_pytorchcpu_volumes)|indent(2) }}
+  {{ service_volumes(_pytorchcpu_volumes, cookiecutter.datasets_directory)|indent(2) }}
 {%- endmacro -%}
 
 {% macro pytorch_gpu_service(cookiecutter, worker_id, gpu_device_id) -%}
-{%- set _pytorchgpu_public_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env"] -%}
-{%- set _pytorchgpu_secret_env_files = ["secrets/" ~ cookiecutter.__project_slug ~ "-worker.env", "secrets/" ~ cookiecutter.__project_slug ~ "-restapi-database-uri.env"] -%}
-{%- set _pytorchgpu_env_files = _pytorchgpu_public_env_files + _pytorchgpu_secret_env_files -%}
+{%- set _pytorchgpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env"] -%}
 {%- set _pytorchgpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-pytorchgpu-{{ "%02d" | format(worker_id|int) }}:
   image: {{ container_image(cookiecutter.__containers.pytorchgpu) }}
@@ -391,6 +403,9 @@ volumes:
     retries: 5
     start_period: 80s
   environment:
+    AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
     NVIDIA_VISIBLE_DEVICES: {{ gpu_device_id }}
   command:
     - --wait-for
@@ -408,5 +423,5 @@ volumes:
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
   {% endif -%}
-  {{ service_volumes(_pytorchgpu_volumes)|indent(2) }}
+  {{ service_volumes(_pytorchgpu_volumes, cookiecutter.datasets_directory)|indent(2) }}
 {%- endmacro -%}

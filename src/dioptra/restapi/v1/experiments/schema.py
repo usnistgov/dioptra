@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The schemas for serializing/deserializing PluginParameterType resources."""
+"""The schemas for serializing/deserializing Experiment resources."""
 from __future__ import annotations
 
 from marshmallow import Schema, fields
@@ -28,61 +28,46 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_schema,
 )
 
-PluginParameterTypeRefBaseSchema = generate_base_resource_ref_schema(
-    "PluginParameterType"
-)
+ExperimentRefBaseSchema = generate_base_resource_ref_schema("Experiment")
 
 
-class PluginParameterTypeRefSchema(PluginParameterTypeRefBaseSchema):  # type: ignore
-    """The reference schema for the data stored in a PluginParameterType resource."""
+class ExperimentRefSchema(ExperimentRefBaseSchema):  # type: ignore
+    """The reference schema for the data stored in a Experiment resource."""
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the PluginParameterType resource."),
+        metadata=dict(description="Name of the Experiment resource."),
     )
 
 
-class PluginParameterTypeMutableFieldsSchema(Schema):
-    """The fields schema for the mutable data in a PluginParameterType resource."""
+class ExperimentMutableFieldsSchema(Schema):
+    """The fields schema for the mutable data in a Experiment resource."""
 
     name = fields.String(
-        attribute="name",
-        metadata=dict(description="Name of the PluginParameterType resource."),
-    )
-    structure = fields.Dict(
-        attribute="structure",
-        metadata=dict(description="Structure of the PluginParameterType resource."),
+        attribute="name", metadata=dict(description="Name of the Experiment resource.")
     )
 
 
-PluginParameterTypeBaseSchema = generate_base_resource_schema(
-    "PluginParameterType", snapshot=True
-)
+ExperimentBaseSchema = generate_base_resource_schema("Experiment", snapshot=True)
 
 
-class PluginParameterTypeSchema(
-    PluginParameterTypeMutableFieldsSchema, PluginParameterTypeBaseSchema  # type: ignore
-):
-    """The schema for the data stored in a PluginParameterType resource."""
+class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # type: ignore
+    """The schema for the data stored in a Experiment resource."""
 
 
-class PluginParameterTypePageSchema(BasePageSchema):
-    """The paged schema for the data stored in a PluginParameterType resource."""
+class ExperimentPageSchema(BasePageSchema):
+    """The paged schema for the data stored in a Experiment resource."""
 
     data = fields.Nested(
-        PluginParameterTypeSchema,
+        ExperimentSchema,
         many=True,
-        metadata=dict(
-            description="List of PluginParameterType resources in the \
-                                   current page."
-        ),
+        metadata=dict(description="List of Experiment resources in the current page."),
     )
 
 
-class PluginParameterTypeGetQueryParameters(
+class ExperimentGetQueryParameters(
     PagingQueryParametersSchema,
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
 ):
-    """The query parameters for the GET method of the /pluginParameterTypes
-    endpoint."""
+    """The query parameters for the GET method of the /Experiments endpoint."""

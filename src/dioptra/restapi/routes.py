@@ -36,6 +36,8 @@ V1_PLUGINS_ROUTE = "plugins"
 V1_PLUGIN_PARAMETER_TYPES_ROUTE = "pluginParameterTypes"
 V1_QUEUES_ROUTE = "queues"
 V1_MODELS_ROUTE = "models"
+V1_MLFLOW_RUNS_ROUTE = "mlflow_runs"
+V1_ARTIFACTS_ROUTE = "artifacts"
 
 
 def register_routes(api: Api) -> None:
@@ -76,9 +78,17 @@ def register_v1_routes(api: Api) -> None:
         api: The main REST |Api| object.
     """
     from .v1.models.controller import api as models_api
+    from .v1.artifacts.controller import api as artifacts_api
+    from .v1.mlflow_runs.controller import api as mlflow_runs_api
+    from .v1.plugin_parameter_types.controller import api as plugin_parameter_types_api
     from .v1.plugins.controller import api as plugins_api
     from .v1.queues.controller import api as queues_api
 
     api.add_namespace(plugins_api, path=f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}")
     api.add_namespace(queues_api, path=f"/{V1_ROOT}/{V1_QUEUES_ROUTE}")
     api.add_namespace(models_api, path=f"/{V1_ROOT}/{V1_MODELS_ROUTE}")
+    api.add_namespace(mlflow_runs_api, path=f"/{V1_ROOT}/{V1_MLFLOW_RUNS_ROUTE}")
+    api.add_namespace(artifacts_api, path=f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}")
+    api.add_namespace(
+        plugin_parameter_types_api, path=f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}"
+    )

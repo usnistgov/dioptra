@@ -137,7 +137,7 @@ jobs:
         run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: cache dependencies
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.1
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini') }}
@@ -197,7 +197,7 @@ jobs:
         run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: cache dependencies
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.1
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini') }}
@@ -259,7 +259,7 @@ jobs:
 
       - name: cache the mnist dataset download
         if: ${{ matrix.tox-env != 'containers' }}
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.1
         with:
           path: /tmp/dioptra-cache/mnist
           key: ${{ runner.os }}-dioptra-cache-mnist

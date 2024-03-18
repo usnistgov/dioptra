@@ -15,8 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 {% from "templates/macros/docker-compose.j2" import nfs_volume, db_service, dbadmin_service, minio_service, mlflow_tracking_service, nginx_service, pytorch_cpu_service, pytorch_gpu_service, redis_service, restapi_service, tensorflow_cpu_service, tensorflow_gpu_service -%}
-version: "2.4"
-
 {% if cookiecutter.__containers.networks -%}
 networks:
   {% for network in cookiecutter.__containers.networks -%}

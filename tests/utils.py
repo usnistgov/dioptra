@@ -16,9 +16,11 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
+import io
+import tarfile
 import timeit
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Mapping, Optional, Union
 
 PathLike = List[Union[str, Path]]
 
@@ -50,3 +52,30 @@ class Timer(object):
             return False
 
         return self._timeout < self.elapsed
+
+
+def make_tarball_bytes(tar_content: Mapping[str, bytes]) -> bytes:
+    """
+    Make a tarball containing the given content.  Return the tarball content
+    as bytes.
+
+    Args:
+        tar_content: A mapping from file path to bytes, which lays out the
+            paths and file content which should go into the tarball.
+
+    Returns:
+        Tarball bytes
+    """
+
+    tar_content_stream = io.BytesIO()
+    tf = tarfile.TarFile.open(fileobj=tar_content_stream, mode="w:gz")
+
+    for filepath, file_content in tar_content.items():
+        ti = tarfile.TarInfo(filepath)
+        ti.size = len(file_content)
+
+        tf.addfile(ti, io.BytesIO(file_content))
+
+    tf.close()
+
+    return tar_content_stream.getvalue()

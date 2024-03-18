@@ -24,6 +24,8 @@ from typing import IO, List, Optional, Union
 import structlog
 from structlog.stdlib import BoundLogger
 
+from .errors import UnsafeArchiveMemberPath
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
@@ -31,8 +33,9 @@ class IOFileService(object):
     def safe_extract_archive(
         self,
         output_dir: Union[str, Path],
-        archive_file_path: Optional[str] = None,
+        archive_file_path: Optional[Union[str, Path]] = None,
         archive_fileobj: Optional[IO[bytes]] = None,
+        preserve_paths: bool = False,
         **kwargs,
     ) -> List[str]:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -42,11 +45,15 @@ class IOFileService(object):
             archive_file_path, archive_fileobj, log=log
         ) as f_archive:
             for archive_file_info in f_archive:
-                safe_file_path: Path = self.sanitize_file_path(
+                safe_file_path: Optional[Path] = self.sanitize_file_path(
                     filepath=archive_file_info.name,
                     path_prefix=output_dir,
+                    preserve_paths=preserve_paths,
                     log=log,
                 )
+
+                if safe_file_path is None:
+                    raise UnsafeArchiveMemberPath(archive_file_info.name)
 
                 response: Optional[str] = self.safe_extract_archive_file(
                     file_path=safe_file_path,
@@ -77,6 +84,8 @@ class IOFileService(object):
         if f_archive_file is None:
             return None
 
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
         with file_path.open("wb") as f:
             f.write(f_archive_file.read())
 
@@ -88,17 +97,44 @@ class IOFileService(object):
     def sanitize_file_path(
         filepath: Union[str, Path],
         path_prefix: Optional[Union[str, Path]] = None,
+        preserve_paths: bool = False,
         **kwargs,
-    ) -> Path:
+    ) -> Optional[Path]:
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        path_prefix = path_prefix or Path.cwd()
+        filepath = Path(filepath)
 
-        return Path(path_prefix) / Path(filepath).name
+        if preserve_paths:
+            # Let's say we are willing to drop drive letters and root
+            # directory.  But any ".." path component is considered
+            # unsafe.  Also, if the path is only an anchor, it is unsafe.
+            filepath_parts = filepath.parts
+
+            if filepath.anchor:
+                # The "anchor" is a combination of windows drive letter
+                # (if any), and root path (if any).  Part 0 always contains the
+                # anchor, if present.
+                filepath_parts = filepath_parts[1:]
+
+            safe_filepath: Optional[Union[str, Path]]
+            if len(filepath_parts) == 0 or ".." in filepath_parts:
+                safe_filepath = None
+            else:
+                safe_filepath = Path(*filepath_parts)
+
+        else:
+            safe_filepath = filepath.name
+
+        if safe_filepath is None:
+            safe_path = None
+        else:
+            safe_path = Path(path_prefix or Path.cwd()) / safe_filepath
+
+        return safe_path
 
     @staticmethod
     def _tarfile_open(
-        file_path: Optional[str] = None,
+        file_path: Optional[Union[str, Path]] = None,
         fileobj: Optional[IO[bytes]] = None,
         **kwargs,
     ) -> TarFile:

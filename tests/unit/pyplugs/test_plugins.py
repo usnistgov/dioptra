@@ -78,7 +78,7 @@ def plugin_package():
 
 @pytest.fixture
 def pyplugs_no_prefect(monkeypatch):
-    package_modules = [x for x in sys.modules.keys() if "mitre" in x]
+    package_modules = [x for x in sys.modules.keys() if "dioptra" in x]
     prefect_modules = [x for x in sys.modules.keys() if "prefect" in x]
 
     for module in package_modules + prefect_modules:
