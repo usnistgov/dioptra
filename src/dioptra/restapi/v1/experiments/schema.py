@@ -46,6 +46,16 @@ class ExperimentMutableFieldsSchema(Schema):
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Experiment resource.")
     )
+    entrypointIds = fields.List(
+        fields.Int(),
+        attribute="entrypoint_ids",
+        allow_none=True,
+        load_default=None,
+        metadata=dict(
+            description="A list of Entrypoint IDs.",
+        ),
+        load_only=True,
+    )
 
 
 ExperimentBaseSchema = generate_base_resource_schema("Experiment", snapshot=True)
@@ -53,6 +63,34 @@ ExperimentBaseSchema = generate_base_resource_schema("Experiment", snapshot=True
 
 class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # type: ignore
     """The schema for the data stored in a Experiment resource."""
+
+    from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
+    from dioptra.restapi.v1.jobs.schema import JobRefSchema
+
+    tagIds = fields.List(
+        fields.Int(),
+        attribute="tag_ids",
+        allow_none=True,
+        load_default=None,
+        metadata=dict(
+            description="A list of Tag IDs.",
+        ),
+        load_only=True,
+    )
+    entrypoints = fields.Nested(
+        EntrypointRefSchema,
+        attribute="entrypoints",
+        many=True,
+        metadata=dict(description="List of associated Entrypoint resources."),
+        dump_only=True,
+    )
+    jobs = fields.Nested(
+        JobRefSchema,
+        attribute="jobs",
+        many=True,
+        metadata=dict(description="List of associated Jobs resources."),
+        dump_only=True,
+    )
 
 
 class ExperimentPageSchema(BasePageSchema):
@@ -70,4 +108,4 @@ class ExperimentGetQueryParameters(
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
 ):
-    """The query parameters for the GET method of the /Experiments endpoint."""
+    """The query parameters for the GET method of the /experiments endpoint."""
