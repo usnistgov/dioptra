@@ -23,6 +23,7 @@ from dioptra.restapi.v1.schemas import generate_base_resource_ref_schema
 
 EntryPointRefBaseSchema = generate_base_resource_ref_schema("EntryPoint")
 
+
 class EntryPointRefSchema(EntryPointRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a EntryPoint resource."""
 

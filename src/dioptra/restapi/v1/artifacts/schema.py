@@ -63,6 +63,7 @@ class ArtifactSchema(ArtifactBaseSchema):  # type: ignore
         relative=True,
     )
 
+
 class ArtifactPageSchema(BasePageSchema):
     """The paged schema for the data stored in an Artifact resource."""
 

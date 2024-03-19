@@ -31,7 +31,6 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_schema,
 )
 
-
 JobRefSchema = generate_base_resource_ref_schema("Job")
 
 
