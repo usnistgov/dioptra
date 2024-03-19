@@ -26,7 +26,9 @@ from flask_login import login_required
 from flask_restx import Namespace, Resource
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
+from dioptra.restapi.v1.jobs.schema import JobRefSchema
+from dioptra.restapi.v1.schemas import IdsListSchema, IdStatusResponseSchema
 
 from .schema import (
     ExperimentGetQueryParameters,
@@ -35,11 +37,6 @@ from .schema import (
     ExperimentSchema,
 )
 
-# Commented out schemas as they're not merged in yet. Uncomment once it is.
-# from ..jobs.schema import JobRefSchema
-# from ..entrypoints.schema import EntrypointRefSchema
-
-# from .service import ExperimentService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -132,7 +129,7 @@ class ExperimentIdJobEndpoint(Resource):
 
     @login_required
     @accepts(query_params_schema=ExperimentGetQueryParameters, api=api)
-    # @responds(schema=JobRefSchema, api=api)
+    @responds(schema=JobRefSchema, api=api)
     def get(self, id: int):
         """Returns a list of jobs for a specified experiment."""
         log = LOGGER.new(
@@ -148,7 +145,7 @@ class ExperimentIdEntrypointEndpoint(Resource):
 
     @login_required
     @accepts(query_params_schema=ExperimentGetQueryParameters, api=api)
-    # @responds(schema=EntrypointRefSchema(many=True), api=api)
+    @responds(schema=EntrypointRefSchema(many=True), api=api)
     def get(self, id: int):
         """Returns a list of associated entrypoints for a specified experiment."""
         log = LOGGER.new(
@@ -160,8 +157,8 @@ class ExperimentIdEntrypointEndpoint(Resource):
         # )
 
     @login_required
-    # @accepts(schema=EntrypointRefSchema(many=True), api=api)
-    # @responds(schema=EntrypointRefSchema(many=True), api=api)
+    @accepts(schema=IdsListSchema, api=api)
+    @responds(schema=EntrypointRefSchema(many=True), api=api)
     def post(self, id: int):
         """Appends one or more entrypoints to a specified experiment."""
         log = LOGGER.new(
@@ -174,8 +171,8 @@ class ExperimentIdEntrypointEndpoint(Resource):
         # )
 
     @login_required
-    # @accepts(schema=EntrypointRefSchema(many=True), api=api)
-    # @responds(schema=EntrypointRefSchema(many=True), api=api)
+    @accepts(schema=IdsListSchema, api=api)
+    @responds(schema=EntrypointRefSchema(many=True), api=api)
     def put(self, id: int):
         """Remove any previous entry points and replaces with the list of ids."""
         log = LOGGER.new(
