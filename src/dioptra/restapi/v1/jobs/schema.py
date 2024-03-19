@@ -19,10 +19,8 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields, validate
 
-from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.entry_points.schema import EntryPointRefSchema
 from dioptra.restapi.v1.experiments.schema import ExperimentRefSchema
-from dioptra.restapi.v1.groups.schema import GroupRefSchema
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
