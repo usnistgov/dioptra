@@ -82,7 +82,7 @@ class ModelIdVersionsEndpoint(Resource):
     @login_required
     @responds(schema=RegisteredModelSchema, api=api)
     def get(self, id: int):
-        """Gets all versions of a Model resource."""
+        """Gets all versions (RegisteredModels) of a Model resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Model", request_type="GET", id=id
         )
@@ -92,7 +92,7 @@ class ModelIdVersionsEndpoint(Resource):
     @accepts(schema=RegisteredModelSchema, api=api)
     @responds(schema=RegisteredModelSchema, api=api)
     def post(self):
-        """Creates a new version of an existing Model resource."""
+        """Creates a new version (RegisteredModel) of an existing Model resource."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Model", request_type="POST"
         )
@@ -102,12 +102,12 @@ class ModelIdVersionsEndpoint(Resource):
 
 @api.route("/<int:id>/versions/<int:version_number>")
 @api.param("id", "ID for the Model resource.")
-@api.param("version_numer", "Version for the Model resource.")
+@api.param("version_number", "Version for the Model resource.")
 class ModelIdVersionsNumberEndpoint(Resource):
     @login_required
     @responds(schema=RegisteredModelSchema, api=api)
     def get(self, id: int):
-        """Gets a Model resource with the specified version number."""
+        """Gets a Model resource with the specified version number (RegisteredModel)."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Model", request_type="GET", id=id
         )

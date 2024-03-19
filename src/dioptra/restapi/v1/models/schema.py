@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from marshmallow import fields
 
-from dioptra.restapi.v1.artifacts.schema import ArtifactBaseSchema
+from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     PagingQueryParametersSchema,
@@ -27,16 +27,26 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_schema,
 )
 
+RegisteredModelBaseSchema = generate_base_resource_schema(
+    "RegisteredModel", snapshot=False
+)
 
-class RegisteredModelSchema(ArtifactBaseSchema):
+
+class RegisteredModelSchema(RegisteredModelBaseSchema):  # type: ignore
     """The schema for the data stored in a Registered Model resource."""
+
+    modelId = fields.Integer(
+        attribute="model_id",
+        metadata=dict(description="The ID of the associated Model resource."),
+    )
 
     versionNumber = fields.Integer(
         attribute="version_number",
-        metadata=dict(
-            description="ID of the job that produced this \
-                                   Registered Model."
-        ),
+        metadata=dict(description="The version number of the Registered Model."),
+    )
+    artifact = fields.Nested(
+        ArtifactRefSchema,
+        metadata=dict(description="The artifact registered as the Registered Model."),
     )
 
 
