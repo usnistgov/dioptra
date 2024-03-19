@@ -58,34 +58,34 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
     queueId = fields.Integer(
         attribute="queue_id",
         metadata=dict(description="An integer identifying a registered queue."),
-        dump_only=True,
+        load_only=True,
     )
     queue = fields.Nested(
         QueueRefSchema,
         attribute="queue",
         metadata=dict(description="The active queue used to run the Job."),
-        load_only=True,
+        dump_only=True,
     )
     experimentId = fields.Integer(
         attribute="experiment_id",
         metadata=dict(description="An integer identifying a registered experiment."),
-        dump_only=True,
+        load_only=True,
     )
     experiment = fields.Nested(
         ExperimentRefSchema,
         attribute="experiment",
         metadata=dict(description="The registered experiment associated with the Job."),
+        dump_only=True,
+    )
+    entryPointId = fields.Integer(
+        attribute="entry_point_id",
+        metadata=dict(description="An integer identifying a registered entry point."),
         load_only=True,
     )
     entryPoint = fields.Nested(
         EntryPointRefSchema,
         attribute="entry_point",
         metadata=dict(description="The entry point associated with the Job."),
-        load_only=True,
-    )
-    entryPointId = fields.Integer(
-        attribute="entry_point_id",
-        metadata=dict(description="An integer identifying a registered entry point."),
         dump_only=True,
     )
     values = fields.List(
@@ -104,6 +104,7 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
             description="The maximum alloted time for a job before it times out and "
             "is stopped. If omitted, the job timeout will default to 24 hours.",
         ),
+        dump_only=True,
     )
 
 
