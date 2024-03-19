@@ -29,8 +29,6 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
 from .schema import (
-    JobArtifactsPageSchema,
-    JobGetArtifactsQueryParameters,
     JobGetParametersQueryParamters,
     JobGetQueryParameters,
     JobPageSchema,
@@ -104,40 +102,6 @@ class JobIdStatusEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="JobStatus",
-            request_type="GET",
-            id=id,
-        )
-        log.debug("Request received")
-
-
-@api.route("/<int:id>/artifacts")
-@api.param("id", "ID for the Job resource.")
-class JobIdArtifactsEndpoint(Resource):
-    @login_required
-    @accepts(JobGetArtifactsQueryParameters, api=api)
-    @responds(schema=JobArtifactsPageSchema, api=api)
-    def get(self, id: int):
-        """Gets a list of a Job resource's artifacts."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="JobArtifacts",
-            request_type="GET",
-            id=id,
-        )
-        log.debug("Request received")
-
-
-@api.route("/<int:id>/parameters")
-@api.param("id", "ID for the Job resource.")
-class JobIdParametersEndpoint(Resource):
-    @login_required
-    @accepts(JobGetParametersQueryParamters, api=api)
-    @responds(schema=JobParametersPageSchema, api=api)
-    def get(self, id: int):
-        """Gets a list of a Job resource's parameters."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="JobParameters",
             request_type="GET",
             id=id,
         )

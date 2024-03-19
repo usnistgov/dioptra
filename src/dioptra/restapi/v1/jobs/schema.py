@@ -162,30 +162,6 @@ class JobStatusSchema(JobStatusMutableSchema):
     """The fields schema for the data in a Job status resource."""
 
 
-class JobArtifactsSchema:
-    """The fields schema for the data in a Job artifacts resource."""
-
-    artifacts = fields.Nested(
-        ArtifactRefSchema,
-        many=True,
-        metadata=dict(description="List of Job artifacts."),
-    )
-
-
-class JobGetArtifactsQueryParameters(PagingQueryParametersSchema):
-    """The query parameters for the GET method of the /jobs/artifacts endpoint."""
-
-
-class JobArtifactsPageSchema(BasePageSchema):
-    """The paged schema for the data stored in a Job artifact's resource."""
-
-    data = fields.Nested(
-        JobArtifactsSchema,
-        many=True,
-        metadata=dict(description="List of Job artifacts in the current page."),
-    )
-
-
 class JobParametersSchema:
     """The fields schema for the data in a Job parameters resource."""
 
