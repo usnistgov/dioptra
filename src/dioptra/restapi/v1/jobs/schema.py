@@ -144,7 +144,7 @@ class JobGetQueryParameters(
     """The query parameters for the GET method of the /queues endpoint."""
 
 
-class JobStatusMutableSchema:
+class JobStatusMutableSchema(Schema):
     """The fields schema for the mutable data in a Job status resource."""
 
     status = fields.String(
