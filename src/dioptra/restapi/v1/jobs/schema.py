@@ -66,7 +66,7 @@ class JobMutableFieldsSchema(Schema):
     )
 
 
-JobBaseSchema = generate_base_resource_schema("Job")
+JobBaseSchema = generate_base_resource_schema("Job", snapshot=True)
 
 
 class JobSchema(JobMutableFieldsSchema, JobBaseSchema):  # type: ignore
