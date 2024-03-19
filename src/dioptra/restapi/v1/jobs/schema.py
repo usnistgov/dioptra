@@ -35,9 +35,8 @@ from dioptra.restapi.v1.schemas import (
 JobRefSchema = generate_base_resource_ref_schema("Job")
 
 
-
-class JobMutableFieldsSchema(Schema):
-    """The fields schema for the mutable data in a Job resource."""
+class JobStatusSchema(Schema):
+    """The fields schema for the data in a Job status resource."""
 
     status = fields.String(
         validate=validate.OneOf(
@@ -47,13 +46,14 @@ class JobMutableFieldsSchema(Schema):
             description="The current status of the job. The allowed values are: "
             "queued, started, deferred, finished, failed.",
         ),
+        dump_only=True,
     )
 
 
 JobBaseSchema = generate_base_resource_schema("Job", snapshot=True)
 
 
-class JobSchema(JobMutableFieldsSchema, JobBaseSchema):  # type: ignore
+class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
     """The schema for the data stored in a Job resource."""
 
     queueId = fields.Integer(
@@ -95,9 +95,7 @@ class JobSchema(JobMutableFieldsSchema, JobBaseSchema):  # type: ignore
         allow_none=True,
         load_default=None,
         metadata=dict(
-            description="A list of parameter values to pass to the entry point "
-            "for the job. The list of parameters is specified using the following "
-            'format: ["-P param1=value1", "-P param2=value2"].',
+            description="A list of parameter values to pass to the Job's EntryPoint.",
         ),
     )
     timeout = fields.String(
@@ -125,52 +123,4 @@ class JobGetQueryParameters(
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
 ):
-    """The query parameters for the GET method of the /queues endpoint."""
-
-
-class JobStatusMutableSchema(Schema):
-    """The fields schema for the mutable data in a Job status resource."""
-
-    status = fields.String(
-        validate=validate.OneOf(
-            ["queued", "started", "deferred", "finished", "failed"],
-        ),
-        metadata=dict(
-            description="The current status of the job. The allowed values are: "
-            "queued, started, deferred, finished, failed.",
-        ),
-    )
-
-
-class JobStatusSchema(JobStatusMutableSchema):
-    """The fields schema for the data in a Job status resource."""
-
-
-class JobParametersSchema:
-    """The fields schema for the data in a Job parameters resource."""
-
-    values = fields.List(
-        fields.String(),
-        attribute="values",
-        allow_none=True,
-        load_default=None,
-        metadata=dict(
-            description="A list of parameter values to pass to the entry point "
-            "for the job. The list of parameters is specified using the following "
-            'format: ["-P param1=value1", "-P param2=value2"].',
-        ),
-    )
-
-
-class JobGetParametersQueryParamters(PagingQueryParametersSchema):
-    """The query parameters for the GET method of the /jobs/parameters endpoint."""
-
-
-class JobParametersPageSchema(BasePageSchema):
-    """The paged schema for the data stored in a Job parameter's resource."""
-
-    data = fields.Nested(
-        JobParametersSchema,
-        many=True,
-        metadata=dict(description="List of Job parameters in the current page."),
-    )
+    """The query parameters for the GET method of the /jobs endpoint."""
