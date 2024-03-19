@@ -28,6 +28,9 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_schema,
 )
 
+# from ..entrypoints.schema import EntrypointRefSchema
+# from ..jobs.schema import JobRefSchema
+
 ExperimentRefBaseSchema = generate_base_resource_ref_schema("Experiment")
 
 
@@ -53,6 +56,17 @@ ExperimentBaseSchema = generate_base_resource_schema("Experiment", snapshot=True
 
 class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # type: ignore
     """The schema for the data stored in a Experiment resource."""
+
+    # entrypoints = fields.Nested(
+    #    EntrypointsRefSchema,
+    #    many=True,
+    #    metadata=dict(description="List of associated Entrypoint resources."),
+    # ),
+    # jobs = fields.Nested(
+    #    JobsRefSchema,
+    #    many=True,
+    #    metadata=dict(description="List of associated Jobs resources."),
+    # )
 
 
 class ExperimentPageSchema(BasePageSchema):
