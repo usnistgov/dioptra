@@ -27,27 +27,13 @@ from dioptra.restapi.v1.schemas import (
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
 
 
-class JobRefSchema(Schema):
-    """The reference schema for the data stored in a Job resource."""
+JobRefSchema = generate_base_resource_ref_schema("Job")
 
-    id = fields.Integer(
-        attribute="id",
-        metadata=dict(description="ID for the Job resource."),
-    )
-    group = fields.Nested(
-        GroupRefSchema,
-        attribute="group",
-        metadata=dict(description="Group that owns the Job resource."),
-    )
-    url = fields.Url(
-        attribute="url",
-        metadata=dict(description="URL for accessing the full Job resource."),
-        relative=True,
-    )
 
 
 class JobMutableFieldsSchema(Schema):
