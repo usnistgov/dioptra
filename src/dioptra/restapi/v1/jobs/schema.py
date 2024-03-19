@@ -125,6 +125,7 @@ class JobSchema(JobMutableFieldsSchema, JobBaseSchema):  # type: ignore
         ),
     )
 
+
 class JobPageSchema(BasePageSchema):
     """The paged schema for the data stored in a Job resource."""
 
@@ -134,6 +135,7 @@ class JobPageSchema(BasePageSchema):
         metadata=dict(description="List of Job resources in the current page."),
     )
 
+
 class JobGetQueryParameters(
     PagingQueryParametersSchema,
     GroupIdQueryParametersSchema,
@@ -141,7 +143,8 @@ class JobGetQueryParameters(
 ):
     """The query parameters for the GET method of the /queues endpoint."""
 
-class JobStatusMutableSchema():
+
+class JobStatusMutableSchema:
     """The fields schema for the mutable data in a Job status resource."""
 
     status = fields.String(
@@ -154,10 +157,12 @@ class JobStatusMutableSchema():
         ),
     )
 
+
 class JobStatusSchema(JobStatusMutableSchema):
     """The fields schema for the data in a Job status resource."""
 
-class JobArtifactsSchema():
+
+class JobArtifactsSchema:
     """The fields schema for the data in a Job artifacts resource."""
 
     artifacts = fields.Nested(
@@ -166,8 +171,10 @@ class JobArtifactsSchema():
         metadata=dict(description="List of Job artifacts."),
     )
 
+
 class JobGetArtifactsQueryParameters(PagingQueryParametersSchema):
     """The query parameters for the GET method of the /jobs/artifacts endpoint."""
+
 
 class JobArtifactsPageSchema(BasePageSchema):
     """The paged schema for the data stored in a Job artifact's resource."""
@@ -178,7 +185,8 @@ class JobArtifactsPageSchema(BasePageSchema):
         metadata=dict(description="List of Job artifacts in the current page."),
     )
 
-class JobParametersSchema():
+
+class JobParametersSchema:
     """The fields schema for the data in a Job parameters resource."""
 
     values = fields.List(
@@ -193,8 +201,10 @@ class JobParametersSchema():
         ),
     )
 
+
 class JobGetParametersQueryParamters(PagingQueryParametersSchema):
     """The query parameters for the GET method of the /jobs/parameters endpoint."""
+
 
 class JobParametersPageSchema(BasePageSchema):
     """The paged schema for the data stored in a Job parameter's resource."""

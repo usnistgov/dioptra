@@ -36,7 +36,9 @@ class ArtifactRefSchema(ArtifactRefBaseSchema):  # type: ignore
 
     artifactUri = fields.URL(
         attribute="artifact_uri",
-        metadata=dict(description="URL pointing to the location of the Artifact."),
+        metadata=dict(
+            description="URL pointing to the location of the Artifact resource."
+        ),
         relative=True,
     )
 
@@ -60,7 +62,6 @@ class ArtifactSchema(ArtifactBaseSchema):  # type: ignore
         metadata=dict(description="URL pointing to the location of the Artifact."),
         relative=True,
     )
-
 
 class ArtifactPageSchema(BasePageSchema):
     """The paged schema for the data stored in an Artifact resource."""

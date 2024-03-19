@@ -32,11 +32,11 @@ from .schema import (
     JobArtifactsPageSchema,
     JobGetArtifactsQueryParameters,
     JobGetParametersQueryParamters,
-    JobParametersPageSchema,
-    JobStatusSchema,
     JobGetQueryParameters,
     JobPageSchema,
+    JobParametersPageSchema,
     JobSchema,
+    JobStatusSchema,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -93,6 +93,7 @@ class JobIdEndpoint(Resource):
         )
         log.debug("Request received")
 
+
 @api.route("/<int:id>/status")
 @api.param("id", "ID for the Job resource.")
 class JobIdStatusEndpoint(Resource):
@@ -101,9 +102,13 @@ class JobIdStatusEndpoint(Resource):
     def get(self, id: int):
         """Gets a Job resource's status."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="JobStatus", request_type="GET", id=id
+            request_id=str(uuid.uuid4()),
+            resource="JobStatus",
+            request_type="GET",
+            id=id,
         )
         log.debug("Request received")
+
 
 @api.route("/<int:id>/artifacts")
 @api.param("id", "ID for the Job resource.")
@@ -114,9 +119,13 @@ class JobIdArtifactsEndpoint(Resource):
     def get(self, id: int):
         """Gets a list of a Job resource's artifacts."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="JobArtifacts", request_type="GET", id=id
+            request_id=str(uuid.uuid4()),
+            resource="JobArtifacts",
+            request_type="GET",
+            id=id,
         )
         log.debug("Request received")
+
 
 @api.route("/<int:id>/parameters")
 @api.param("id", "ID for the Job resource.")
@@ -127,6 +136,9 @@ class JobIdParametersEndpoint(Resource):
     def get(self, id: int):
         """Gets a list of a Job resource's parameters."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="JobParameters", request_type="GET", id=id
+            request_id=str(uuid.uuid4()),
+            resource="JobParameters",
+            request_type="GET",
+            id=id,
         )
         log.debug("Request received")
