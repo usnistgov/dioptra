@@ -17,29 +17,16 @@
 """The schemas for serializing/deserializing Entry Points."""
 from __future__ import annotations
 
-from marshmallow import Schema, fields
+from marshmallow import fields
 
-from dioptra.restapi.v1.groups.schema import GroupRefSchema
+from dioptra.restapi.v1.schemas import generate_base_resource_ref_schema
 
+EntryPointRefBaseSchema = generate_base_resource_ref_schema("EntryPoint")
 
-class EntryPointRefSchema(Schema):
-    """The reference schema for the data stored in a Entry Point resource."""
+class EntryPointRefSchema(EntryPointRefBaseSchema):  # type: ignore
+    """The reference schema for the data stored in a EntryPoint resource."""
 
-    id = fields.Integer(
-        attribute="id",
-        metadata=dict(description="ID for the Entry Point resource."),
-    )
-    group = fields.Nested(
-        GroupRefSchema,
-        attribute="group",
-        metadata=dict(description="Group that owns the Entry Point resource."),
-    )
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Entry Point resource."),
-    )
-    url = fields.Url(
-        attribute="url",
-        metadata=dict(description="URL for accessing the full Entry Point resource."),
-        relative=True,
+        metadata=dict(description="Name of the EntryPoint resource."),
     )
