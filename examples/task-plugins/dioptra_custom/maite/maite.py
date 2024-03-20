@@ -20,6 +20,7 @@ from types import FunctionType
 from typing import Any, Dict, List, Union
 
 import mlflow
+import random
 import structlog
 from structlog.stdlib import BoundLogger
 
@@ -56,9 +57,8 @@ def transform_tensor(dataset: Any, shape: Tuple[int, int], totensor=False, subse
             "label": x["label"]
         }
     )
-    print("shape",dataset[0]["image"].shape)
     if (subset > 0):
-        dataset = [dataset[i] for i in range(subset)]
+        dataset = [dataset[i] for i in random.sample(range(0, len(dataset)), subset)]
     return dataset
 @pyplugs.register
 def get_model(provider_name: str, model_name: str, task: str) -> Any:
@@ -86,7 +86,6 @@ def compute_metric(dataset: Any, model: Any, metric: Any, task: string, batch_si
       metric=dict(accuracy=metric),
       batch_size=batch_size,
     )
-    print(output)
     return output
 @pyplugs.register
 def register_init_model(name, model_dir, model) -> Model:
@@ -101,7 +100,6 @@ def register_init_model(name, model_dir, model) -> Model:
 def create_image_dataset(
     data_dir: str,
     image_size,
-    seed: int,
     new_size: int = 0,
     validation_split = 0.2,
     batch_size: int = 32,
@@ -116,8 +114,6 @@ def create_image_dataset(
             directories are located in.
 
         image_size:  The size in pixels of each image in the dataset.
-
-        seed: Random seed for shuffling and transformations.
 
         batch_size: Size of the batches of data.
 
@@ -137,7 +133,7 @@ def create_image_dataset(
 
     transform_list = [transforms.ToTensor()]
     
-  
+
     if color_mode == "grayscale":
         transform_list += [transforms.Grayscale()]
     if new_size > 0:

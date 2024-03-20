@@ -163,7 +163,6 @@ entry_points:
     parameters:
       testing_dir: { type: string, default: "/dioptra/data/Mnist/testing" }
       validation_split: { type: int, default: 0.3 }
-      seed: { type: int, default: 0 }
       image_size: { type: string, default: "[28,28,3]" }
       new_size: { type: integer, default: 224 }
       model_provider_name: { type: string, default: "huggingface" }
@@ -180,7 +179,80 @@ entry_points:
       PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment load_dataset.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment load_dataset.yml
       -P testing_dir={testing_dir}
       -P validation_split={validation_split}
-      -P seed={seed}
+      -P image_size={image_size}
+      -P new_size={new_size}
+      -P model_provider_name={model_provider_name}
+      -P model_name={model_name}
+      -P model_task={model_task}
+      -P metric_provider_name={metric_provider_name}
+      -P metric_name={metric_name}
+      -P metric_task={metric_task}
+      -P classes={classes}
+      -P batch_size={batch_size}
+      -P shape={shape}
+      -P subset={subset}
+  gen_fgm:
+    parameters:
+      adv_dir: { type: string, default: "adv_testing" }
+      out_dir: { type: string, default: "/dioptra/data/tmp/cifar/" }
+      image_size: { type: string, default: "[3,224,224]" }
+      dataset_provider_name: { type: string, default: "huggingface" }
+      dataset_name: { type: string, default: "cifar10" }
+      dataset_task: { type: string, default: "image-classification" }
+      split: { type: string, default: "test" }
+      model_provider_name: { type: string, default: "huggingface" }
+      model_name: { type: string, default: "aaraki/vit-base-patch16-224-in21k-finetuned-cifar10" }
+      model_task: { type: string, default: "image-classification" }
+      metric_provider_name: { type: string, default: "torchmetrics" }
+      metric_name: { type: string, default: "Accuracy" }
+      metric_task: { type: string, default: "multiclass" }
+      classes: { type: int, default: 10 }
+      batch_size: { type: int, default: 32 }
+      shape: { type: string, default: "[224,224]" }
+      subset: { type: int, default: 0 }
+      save_original: { type: bool, default: true }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment gen_fgm.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment gen_fgm.yml
+      -P adv_dir={adv_dir}
+      -P out_dir={out_dir}
+      -P split={split}
+      -P image_size={image_size}
+      -P dataset_provider_name={dataset_provider_name}
+      -P dataset_name={dataset_name}
+      -P dataset_task={dataset_task}
+      -P model_provider_name={model_provider_name}
+      -P model_name={model_name}
+      -P model_task={model_task}
+      -P metric_provider_name={metric_provider_name}
+      -P metric_name={metric_name}
+      -P metric_task={metric_task}
+      -P classes={classes}
+      -P batch_size={batch_size}
+      -P shape={shape}
+      -P subset={subset}
+      -P save_original={save_original}
+  infer_fgm:
+    parameters:
+      run_id: { type: string, default: "" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      adv_tar_name: { type: string, default: "fgm.tar.gz" }
+      image_size: { type: string, default: "[224,224,3]" }
+      new_size: { type: string, default: "224" }
+      model_provider_name: { type: string, default: "huggingface" }
+      model_name: { type: string, default: "aaraki/vit-base-patch16-224-in21k-finetuned-cifar10" }
+      model_task: { type: string, default: "image-classification" }
+      metric_provider_name: { type: string, default: "torchmetrics" }
+      metric_name: { type: string, default: "Accuracy" }
+      metric_task: { type: string, default: "multiclass" }
+      classes: { type: int, default: 10 }
+      batch_size: { type: int, default: 32 }
+      shape: { type: string, default: "[3,224,224]" }
+      subset: { type: int, default: 0 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment infer_fgm.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment infer_fgm.yml
+      -P run_id={run_id}
+      -P adv_data_dir={adv_data_dir}
+      -P adv_tar_name={adv_tar_name}
       -P image_size={image_size}
       -P new_size={new_size}
       -P model_provider_name={model_provider_name}

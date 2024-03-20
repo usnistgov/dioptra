@@ -59,19 +59,20 @@ types:
   union_null_union_string_path:
     union: [union_string_path, "null"]
 parameters:
-  testing_dir: /dioptra/data/Mnist/testing
-  validation_split: 0.3
-  image_size: [28,28,3]
+  run_id: ""
+  adv_tar_name: fgm.tar.gz
+  adv_data_dir: adv_testing
+  image_size: [3,224,224]
   new_size: 224
   model_provider_name: huggingface
-  model_name: farleyknight-org-username/vit-base-mnist
+  model_name: aaraki/vit-base-patch16-224-in21k-finetuned-cifar10
   model_task: image-classification
   metric_provider_name: torchmetrics
   metric_name: Accuracy
   metric_task: multiclass
   classes: 10
   batch_size: 32
-  shape: [3,224,224]
+  shape: [224,224]
   subset: 0
 tasks:
   create_image_dataset:
@@ -94,15 +95,6 @@ tasks:
     outputs:
       - dataset_a: dataset
       - dataset_b: dataset
-  get_dataset:
-    plugin: dioptra_custom.maite.maite.get_dataset
-    inputs:
-      - provider_name: string
-      - dataset_name: string
-      - task: string
-      - split: string
-    outputs:
-      dataset: dataset
   get_model:
     plugin: dioptra_custom.maite.maite.get_model
     inputs:
@@ -143,28 +135,50 @@ tasks:
       - batch_size: integer
     outputs:
       computed: mapping_string_number
-  register_init_model:
-    inputs:
-      - name: name
-        type: string
-        required: true
-      - model_dir: string
-      - model: model
-    outputs:
-      ret: model
-    plugin: dioptra_custom.maite.maite.register_init_model
   log_metrics:
     plugin: dioptra_builtins.tracking.mlflow.log_metrics
     inputs:
       - metrics: mapping_string_number
+  download_artifacts:
+    plugin: dioptra_builtins.artifacts.mlflow.download_all_artifacts_in_run
+    inputs:
+      - run_id: string
+      - artifact_path: string
+      - name: destination_path
+        type: union_null_string
+        required: false
+    outputs:
+      download_path: string
+
+  extract_tarfile:
+    plugin: dioptra_builtins.artifacts.utils.extract_tarfile
+    inputs:
+      - filepath: union_string_path
+      - name: tarball_read_mode
+        type: string
+        required: false
+      - name: output_dir
+        type: any
+        required: false
 graph:
+  adv_tar_path:
+    download_artifacts:
+      run_id: $run_id
+      artifact_path: $adv_tar_name
+
+  extract_tarfile_results:
+    extract_tarfile:
+      filepath: $adv_tar_path
+    dependencies: [adv_tar_path]
+      
   dataset:
     create_image_dataset: 
-      data_dir: $testing_dir
-      validation_split: $validation_split
+      data_dir: $adv_data_dir
+      validation_split: null
       batch_size: $batch_size
       image_size: $image_size
       new_size: $new_size
+    dependencies: [extract_tarfile_results]
   model:
     get_model: 
       provider_name: $model_provider_name
@@ -181,6 +195,7 @@ graph:
       dataset: $dataset.dataset_a
       shape: $shape
       subset: $subset
+    dependencies: [dataset]
   metric_results:
     compute_metric:
       dataset: $transformed_dataset.dataset
@@ -192,3 +207,4 @@ graph:
   log_classifier_performance_metrics_result:
     log_metrics:
       metrics: $metric_results
+    dependencies: [metric_results]
