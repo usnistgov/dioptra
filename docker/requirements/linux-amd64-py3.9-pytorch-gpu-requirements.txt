@@ -37,7 +37,7 @@ attrs==23.2.0
     #   aiohttp
     #   jsonschema
     #   referencing
-black==21.4b2
+black==24.3.0
     # via detectron2
 boto3==1.34.43
     # via dioptra (pyproject.toml)
