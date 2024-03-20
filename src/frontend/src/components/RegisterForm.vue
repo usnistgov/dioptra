@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-center q-mt-xl q-pt-xl">
+  <div :class="` flex-center q-mt-xl ${isMobile ? '' : 'flex q-pt-xl'}`">
     <q-card bordered class="q-pa-lg" style="min-width: 40%;">
       <q-card-section class="text-center">
-          <h4 class="text-weight-bold" style="margin-top: 0; margin-bottom: 0;">Register</h4>
+          <h1 class="form-title" style="margin-top: 0; margin-bottom: 0;">Register</h1>
           <p>Register a new user account</p>
       </q-card-section>
       <q-form @submit="submit()">
@@ -12,6 +12,7 @@
           label="Username"
           :rules="[requiredRule]"
           v-model="username"
+          aria-required="true"
         />
         <q-input
           class="q-mb-sm"
@@ -19,6 +20,7 @@
           label="Email Address"
           :rules="[requiredRule, emailRule]"
           v-model="emailAddress"
+          aria-required="true"
         />
         <q-input
           class="q-mb-sm"
@@ -27,6 +29,7 @@
           :type="showPassword ? 'text' : 'password'"
           :rules="[requiredRule]"
           v-model="password"
+          aria-required="true"
         >
           <template v-slot:append>
             <q-icon
@@ -43,6 +46,7 @@
           :type="showPassword ? 'text' : 'password'"
           :rules="[requiredRule, matchRule]"
           v-model="confirmPassword"
+          aria-required="true"
         >
           <template v-slot:append>
             <q-icon
@@ -77,10 +81,12 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue';
+  import { ref, inject } from 'vue';
   import * as notify from '../notify';
   import * as api from '@/services/loginApi';
   import router from '@/router';
+
+  const isMobile = inject('isMobile')
 
   const requiredRule = (val) => (val && val.length > 0) || "This field is required";
   const matchRule = (val) => (val && val === password.value) || 'Password mismatch';

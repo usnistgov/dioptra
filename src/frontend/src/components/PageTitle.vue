@@ -1,6 +1,6 @@
 <template>
   <h1 class="text-capitalize q-mb-xs">{{ title }}</h1>
-  <nav>
+  <nav aria-label="Breadcrumb">
     <q-breadcrumbs class="text-grey text-capitalize">
       <template v-slot:separator>
         <q-icon
@@ -12,11 +12,13 @@
       <q-breadcrumbs-el 
         :label="path[0]" 
         :to="path[1] ? `/${path[0]}` : ''" 
+        :aria-current="`${path.length === 1 ? 'true' : 'false'}`"
       />
       <q-breadcrumbs-el
         v-if="path[1]"
         :label="title"
         aria-disabled="true"
+        aria-current="page"
       />
     </q-breadcrumbs>
   </nav>

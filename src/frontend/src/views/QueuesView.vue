@@ -22,6 +22,7 @@
     size="lg"
     @click="showAddDialog = true"
   >
+    <span class="sr-only">Register a new Queue</span>
     <q-tooltip>
       Register a new Queue
     </q-tooltip>

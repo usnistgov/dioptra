@@ -3,7 +3,11 @@
     v-model="showDialog"
     @emitSubmit="$emit('submit')"
   >
-    <template #title>Confirm Delete</template>
+    <template #title>
+      <label id="modalTitle">
+        Confirm Delete
+      </label>
+    </template>
     <q-card-section class="q-pt-none">
       Are you sure you want to delete this Queue? <br>
       Name: <span class="text-bold">{{ name }}</span>

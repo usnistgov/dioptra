@@ -1,7 +1,7 @@
 <template>
   <q-card bordered class="q-pa-lg" style="min-width: 40%;">
     <q-card-section class="text-center">
-        <h4 class="text-weight-bold" style="margin-top: 0; margin-bottom: 0;">Logged In</h4>
+        <h1 class="form-title" style="margin-top: 0; margin-bottom: 0;">Logged In</h1>
         <p>You are currently logged in as <span class="text-weight-bold text-primary">{{ loggedInUser }}</span></p>
     </q-card-section>
     <q-form @submit="callLogout()" class="row flex-center">
@@ -39,6 +39,7 @@
             :type="showPassword ? 'text' : 'password'"
             :rules="[requiredRule]"
             v-model="password"
+            aria-required="true"
           >
             <template v-slot:append>
               <q-icon
@@ -55,6 +56,7 @@
             :type="showPassword ? 'text' : 'password'"
             :rules="[requiredRule]"
             v-model="newPassword"
+            aria-required="true"
           >
             <template v-slot:append>
               <q-icon
@@ -91,6 +93,7 @@
             :type="showDeletePassword ? 'text' : 'password'"
             :rules="[requiredRule]"
             v-model="deleteRequestPassword"
+            aria-required="true"
           >
             <template v-slot:append>
               <q-icon

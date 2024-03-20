@@ -3,11 +3,15 @@
     v-model="showDialog"
     @emitSubmit="emitAddOrEdit"
   >
-    <template #title>{{editQueue ? 'Edit Queue' : 'Register Queue'}}</template>
+    <template #title>
+      <label id="modalTitle">
+        {{editQueue ? 'Edit Queue' : 'Register Queue'}}
+      </label>
+    </template>
     <div class="row items-center">
-      <div class="col-3 q-mb-lg">
+      <label class="col-3 q-mb-lg" id="queueName">
         Queue Name:
-      </div>
+      </label>
       <q-input 
         class="col" 
         outlined 
@@ -15,13 +19,15 @@
         v-model="name" 
         autofocus 
         :rules="[rules.requiredRule]" 
+        aria-labelledby="queueName"
+        aria-required="true"
       />
     </div>
     <div class="row items-center">
-      <div class="col-3">
+      <label class="col-3" id="locked">
         Locked:
-      </div>
-      <q-toggle v-model="locked" class="q-mr-sm" />
+      </label>
+      <q-toggle v-model="locked" class="q-mr-sm" aria-labelledby="locked" />
       <q-icon :name="locked ? 'lock' : 'lock_open'" size="sm" />
     </div>
   </DialogComponent>

@@ -26,7 +26,7 @@
           v-model.trim="name"
           :rules="[requiredRule]"
           class="q-mb-sm"
-          role="textbox"
+          aria-required="true"
         >
           <template v-slot:before>
             <label :class="`text-body2 label`">Experiment Name:</label>
@@ -38,6 +38,7 @@
           :options="groupOptions" 
           dense
           :rules="[requiredRule]"
+          aria-required="true"
         >
           <template v-slot:before>
             <div class="text-body2 label">Group Name:</div>
@@ -291,6 +292,7 @@
   }
 
   .label{
-    width: 150px
+    width: 150px;
+    color: black;
   }
 </style>@/stores/DataStore

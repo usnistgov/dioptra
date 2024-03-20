@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-center q-mt-xl q-pt-xl">
+  <div :class="`flex flex-center q-mt-xl ${isMobile ? '' : 'q-pt-xl' } `">
 
     <LoginForm v-if="!loggedInUser" />
 
@@ -13,8 +13,11 @@
   import { storeToRefs } from 'pinia';
   import LoginForm from '../components/LoginForm.vue';
   import LoggedInForm from '../components/LoggedInForm.vue';
+  import { inject } from 'vue'
 
   const store = useLoginStore();
   const { loggedInUser } = storeToRefs(store);
+
+  const isMobile = inject('isMobile')
 
 </script>

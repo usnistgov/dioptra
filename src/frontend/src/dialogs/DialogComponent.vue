@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="showDialog">
+  <q-dialog v-model="showDialog" aria-labelledby="modalTitle">
     <q-card style="width: 95%" flat >
       <q-form @submit="$emit('emitSubmit')">
         <q-card-section class="bg-primary text-white q-mb-md">
@@ -12,7 +12,7 @@
         </q-card-section>
         <q-separator />
         <q-card-actions align="right" class="text-primary">
-          <q-btn color="secondary" class="text-white" label="Cancel" @click="$emit('emitCancel')" v-close-popup />
+          <q-btn color="red" class="text-white" label="Cancel" @click="$emit('emitCancel')" v-close-popup />
           <q-btn color="primary" label="Confirm" type="submit" />
         </q-card-actions>
       </q-form>

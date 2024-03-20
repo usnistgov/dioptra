@@ -26,11 +26,15 @@
         @click="props.selected = !props.selected; radioSelected = props.row.name" 
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
-          <q-radio v-model="radioSelected" :val="props.row.name" v-if="col.name === 'radio'" @click="handleRadioClick(props)"/>
-          <slot v-bind="props" :name="`body-cell-${col.name}`"></slot>
-          <div>
+          <q-radio 
+            v-model="radioSelected" 
+            :val="props.row.name"
+            v-if="col.name === 'radio'" 
+            @click="handleRadioClick(props)"
+          />
+          <slot v-bind="props" :name="`body-cell-${col.name}`">
             {{ col.value }}
-          </div>
+          </slot>
         </q-td>
       </q-tr>
     </template>
