@@ -77,14 +77,12 @@ class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # 
         ),
         load_only=True,
     )
-    entrypoints = (
-        fields.Nested(
-            EntrypointRefSchema,
-            attribute="entrypoints",
-            many=True,
-            metadata=dict(description="List of associated Entrypoint resources."),
-            dump_only=True,
-        ),
+    entrypoints = fields.Nested(
+        EntrypointRefSchema,
+        attribute="entrypoints",
+        many=True,
+        metadata=dict(description="List of associated Entrypoint resources."),
+        dump_only=True,
     )
     jobs = fields.Nested(
         JobRefSchema,
