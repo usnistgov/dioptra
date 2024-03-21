@@ -67,7 +67,7 @@ class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # 
         ),
         load_only=True,
     )
-    entryPointIds = fields.List(
+    entrypointIds = fields.List(
         fields.Int(),
         attribute="entrypoint_ids",
         allow_none=True,
@@ -77,7 +77,7 @@ class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # 
         ),
         load_only=True,
     )
-    entryPoints = (
+    entrypoints = (
         fields.Nested(
             EntrypointRefSchema,
             attribute="entrypoints",
