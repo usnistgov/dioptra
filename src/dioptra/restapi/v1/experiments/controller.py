@@ -28,7 +28,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.jobs.schema import JobRefSchema
-from dioptra.restapi.v1.schemas import IdsListSchema, IdStatusResponseSchema
+from dioptra.restapi.v1.schemas import ResourceIdsSchema, IdStatusResponseSchema
 
 from .schema import (
     ExperimentGetQueryParameters,
@@ -157,7 +157,7 @@ class ExperimentIdEntrypointEndpoint(Resource):
         # )
 
     @login_required
-    @accepts(schema=IdsListSchema, api=api)
+    @accepts(schema=ResourceIdsSchema, api=api)
     @responds(schema=EntrypointRefSchema(many=True), api=api)
     def post(self, id: int):
         """Appends one or more entrypoints to a specified experiment."""
@@ -171,7 +171,7 @@ class ExperimentIdEntrypointEndpoint(Resource):
         # )
 
     @login_required
-    @accepts(schema=IdsListSchema, api=api)
+    @accepts(schema=ResourceIdsSchema, api=api)
     @responds(schema=EntrypointRefSchema(many=True), api=api)
     def put(self, id: int):
         """Remove any previous entry points and replaces with the list of ids."""

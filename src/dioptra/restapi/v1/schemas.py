@@ -133,13 +133,14 @@ def generate_base_resource_ref_schema(
 SnapshotRefSchema = generate_base_resource_ref_schema("Snapshot", keep_snapshot_id=True)
 
 
-class IdsListSchema(Schema):
+class ResourceIdsSchema(Schema):
     """The schema for a list of resource IDs."""
 
     ids = fields.List(
         fields.Int(),
         attribute="ids",
         metadata=dict(discription="A list of Resource IDs"),
+        load_only=True,
     )
 
 
