@@ -14,20 +14,20 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The schemas for serializing/deserializing Entry Points."""
+"""The schemas for serializing/deserializing Entrypoints."""
 from __future__ import annotations
 
 from marshmallow import fields
 
 from dioptra.restapi.v1.schemas import generate_base_resource_ref_schema
 
-EntryPointRefBaseSchema = generate_base_resource_ref_schema("EntryPoint")
+EntrypointRefBaseSchema = generate_base_resource_ref_schema("Entrypoint")
 
 
-class EntryPointRefSchema(EntryPointRefBaseSchema):  # type: ignore
-    """The reference schema for the data stored in a EntryPoint resource."""
+class EntrypointRefSchema(EntrypointRefBaseSchema):  # type: ignore
+    """The reference schema for the data stored in a Entrypoint resource."""
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the EntryPoint resource."),
+        metadata=dict(description="Name of the Entrypoint resource."),
     )
