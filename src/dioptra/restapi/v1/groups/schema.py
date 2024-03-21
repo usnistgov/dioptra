@@ -29,7 +29,6 @@ class GroupRefSchema(Schema):
     id = fields.Integer(
         attribute="id",
         metadata=dict(description="ID for the Group resource."),
-        dump_only=True,
     )
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Group resource.")
@@ -58,6 +57,12 @@ class MemberMutableFieldsSchema(Schema):
             description="Permission for member to share read-only Group Resources."
         ),
     )
+    shareWrite = fields.Boolean(
+        attribute="share_write",
+        metadata=dict(
+            description="Permission for member to share read+write Group Resources."
+        ),
+    )
 
 
 class MemberSchema(MemberMutableFieldsSchema):
@@ -66,7 +71,7 @@ class MemberSchema(MemberMutableFieldsSchema):
     user = fields.Nested(
         UserRefSchema,
         attribute="user",
-        metadata=dict(description="User that is a memebr of the Group resource."),
+        metadata=dict(description="User that is a member of the Group resource."),
     )
     group = fields.Nested(
         GroupRefSchema,
@@ -75,8 +80,8 @@ class MemberSchema(MemberMutableFieldsSchema):
     )
 
 
-class ManagerMutableFieldsSchema(Schema):
-    """The fields schema of mutable data of a Group Manager."""
+class ManagerSchema(MemberSchema):
+    """The fields schema of a Group Manager."""
 
     owner = fields.Boolean(
         attribute="owner",
@@ -88,25 +93,25 @@ class ManagerMutableFieldsSchema(Schema):
     )
 
 
-class ManagerSchema(MemberSchema, ManagerMutableFieldsSchema):
-    """The fields schema of a Group Manager."""
-
-
 class GroupMutableFieldsSchema(Schema):
     """The fields schema for the mutable data by Members in a Group resource."""
 
-    members = fields.List(
-        fields.Nested(MemberSchema),
+    members = fields.Nested(
+        MemberSchema,
         attribute="members",
         metadata=dict(description="A list of Members in a Group."),
+        many=True,
+        dump_only = True,
     )
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Group resource.")
     )
-    managers = fields.List(
-        fields.Nested(ManagerSchema),
+    managers = fields.Nested(
+        ManagerSchema,
         attribute="managers",
         metadata=dict(description="A list of Managers in a Group."),
+        many=True,
+        dump_only = True,
     )
 
 
@@ -116,12 +121,12 @@ class GroupSchema(GroupMutableFieldsSchema):  # type: ignore
     id = fields.Integer(
         attribute="id",
         metadata=dict(description="ID for the Group resource."),
-        dump_only=True,
     )
     user = fields.Nested(
         UserRefSchema,
         attribute="user",
         metadata=dict(description="User that created the Group resource."),
+        dump_only = True,
     )
     createdOn = fields.DateTime(
         attribute="created_on",
@@ -135,10 +140,19 @@ class GroupSchema(GroupMutableFieldsSchema):  # type: ignore
         ),
         dump_only=True,
     )
-    tags = fields.Nested(
-        TagRefSchema,
+    resources = fields.Url(
+        attribute="resources",
+        metadata=dict(
+            description="A url pointing to a list of Resourcess associated with the Group."
+        ),
+        relative=True,
+        dump_only=True,
+    )
+    tags = fields.Url(
         attribute="tags",
-        metadata=dict(description="Tags associated with the Group resource."),
-        many=True,
+        metadata=dict(
+            description="A url pinting to a list of Tags associated with the Group."
+        ),
+        relative=True,
         dump_only=True,
     )
