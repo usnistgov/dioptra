@@ -95,15 +95,6 @@ tasks:
       - task: string
     outputs:
       model: model
-  get_metric:
-    plugin: dioptra_custom.maite.maite.get_metric
-    inputs:
-      - provider_name: string
-      - metric_name: string
-      - task: string
-      - classes: integer
-    outputs:
-      metric: metric
   transform_tensor:
     plugin: dioptra_custom.maite.maite.transform_tensor
     inputs:
@@ -117,30 +108,6 @@ tasks:
         required: false
     outputs:
       dataset: dataset
-  compute_metric:
-    plugin: dioptra_custom.maite.maite.compute_metric
-    inputs:
-      - dataset: dataset
-      - model: model
-      - metric: metric
-      - task: string
-      - batch_size: integer
-    outputs:
-      computed: mapping_string_number
-  register_init_model:
-    inputs:
-      - name: name
-        type: string
-        required: true
-      - model_dir: string
-      - model: model
-    outputs:
-      ret: model
-    plugin: dioptra_custom.maite.maite.register_init_model
-  log_metrics:
-    plugin: dioptra_builtins.tracking.mlflow.log_metrics
-    inputs:
-      - metrics: mapping_string_number
   create_fgm_dataset_from_hf_dataset:
     plugin: dioptra_custom.maite.fgm.create_fgm_dataset_from_hf_dataset
     inputs:
@@ -186,30 +153,6 @@ tasks:
       - request: list_mapping_string_string
     outputs:
       distance_metrics_list: list_tuple_string_any
-  upload_artifact_directory:
-    plugin: dioptra_builtins.artifacts.mlflow.upload_directory_as_tarball_artifact
-    inputs:
-      - source_dir: union_string_path
-      - tarball_filename: string
-      - name: tarball_write_mode
-        type: string
-        required: false
-      - name: working_dir
-        type: union_null_union_string_path
-        required: false
-
-  upload_artifact_dataframe:
-    plugin: dioptra_builtins.artifacts.mlflow.upload_data_frame_artifact
-    inputs:
-      - data_frame: dataframe
-      - file_name: string
-      - file_format: string
-      - name: file_format_kwargs
-        type: union_null_mapping_string_any
-        required: false
-      - name: working_dir
-        type: union_null_union_string_path
-        required: false
 
 graph:
   dataset:
@@ -255,18 +198,3 @@ graph:
       save_original: $save_original
       classifier: $model
       image_size: $image_size
-
-  upload_directory:
-    upload_artifact_directory:
-      - $adv_dir
-      - fgm.tar.gz
-    dependencies: distance_metric_results
-
-  upload_dataset:
-    upload_artifact_dataframe:
-      - $distance_metric_results
-      - distance_metrics.csv
-      - csv.gz
-      - index: false
-    dependencies: distance_metric_results
-

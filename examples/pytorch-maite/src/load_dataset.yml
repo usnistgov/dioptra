@@ -143,20 +143,6 @@ tasks:
       - batch_size: integer
     outputs:
       computed: mapping_string_number
-  register_init_model:
-    inputs:
-      - name: name
-        type: string
-        required: true
-      - model_dir: string
-      - model: model
-    outputs:
-      ret: model
-    plugin: dioptra_custom.maite.maite.register_init_model
-  log_metrics:
-    plugin: dioptra_builtins.tracking.mlflow.log_metrics
-    inputs:
-      - metrics: mapping_string_number
 graph:
   dataset:
     create_image_dataset: 
@@ -189,6 +175,3 @@ graph:
       task: $model_task
       batch_size: $batch_size
     dependencies: [transformed_dataset, model, metric]
-  log_classifier_performance_metrics_result:
-    log_metrics:
-      metrics: $metric_results

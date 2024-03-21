@@ -67,6 +67,7 @@ def get_model(provider_name: str, model_name: str, task: str) -> Any:
         model_name=model_name,
         task=task
     )
+    _register_init_model(model_name,'model',model)
     return model
 @pyplugs.register
 def get_metric(provider_name: str, metric_name: str, task: str, classes: int) -> Any:
@@ -86,9 +87,9 @@ def compute_metric(dataset: Any, model: Any, metric: Any, task: string, batch_si
       metric=dict(accuracy=metric),
       batch_size=batch_size,
     )
+    _log_metrics(output)
     return output
-@pyplugs.register
-def register_init_model(name, model_dir, model) -> Model:
+def _register_init_model(name, model_dir, model) -> Model:
     mlflow.pytorch.log_model(
         pytorch_model=model, artifact_path=model_dir, registered_model_name=name
     )
@@ -159,3 +160,20 @@ def create_image_dataset(
         data_generator = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         data_generator.dataset.classes = classes
         return (TorchVisionDataset(data_generator.dataset), None)
+def _log_metrics(metrics: Dict[str, float]) -> None:
+    """Logs metrics to the MLFlow Tracking service for the current run.
+
+    Args:
+        metrics: A dictionary with the metrics to be logged. The keys are the metric
+            names and the values are the metric values.
+
+    See Also:
+        - :py:func:`mlflow.log_metric`
+    """
+    for metric_name, metric_value in metrics.items():
+        mlflow.log_metric(key=metric_name, value=metric_value)
+        LOGGER.info(
+            "Log metric to MLFlow Tracking server",
+            metric_name=metric_name,
+            metric_value=metric_value,
+        )

@@ -83,14 +83,6 @@ tasks:
       - split: string
     outputs:
       dataset: dataset
-  get_model:
-    plugin: dioptra_custom.maite.maite.get_model
-    inputs:
-      - provider_name: string
-      - model_name: string
-      - task: string
-    outputs:
-      model: model
   get_metric:
     plugin: dioptra_custom.maite.maite.get_metric
     inputs:
@@ -123,16 +115,6 @@ tasks:
       - batch_size: integer
     outputs:
       computed: mapping_string_number
-  register_init_model:
-    inputs:
-      - name: name
-        type: string
-        required: true
-      - model_dir: string
-      - model: model
-    outputs:
-      ret: model
-    plugin: dioptra_custom.maite.maite.register_init_model
   load_pytorch_classifier:
     inputs:
       - name: name
@@ -142,10 +124,6 @@ tasks:
     outputs:
       ret: model
     plugin: dioptra_custom.pytorch_d2.registry_mlflow_detectron2.load_pytorch_classifier
-  log_metrics:
-    plugin: dioptra_builtins.tracking.mlflow.log_metrics
-    inputs:
-      - metrics: mapping_string_number
 graph:
   model:
     load_pytorch_classifier:
@@ -177,6 +155,3 @@ graph:
       task: $model_task
       batch_size: $batch_size
     dependencies: [transformed_dataset, model, metric]
-  log_classifier_performance_metrics_result:
-    log_metrics:
-      metrics: $metric_results

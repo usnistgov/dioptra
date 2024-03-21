@@ -72,24 +72,9 @@ tasks:
       - task: string
     outputs:
       model: model
-  register_init_model:
-    inputs:
-      - name: name
-        type: string
-        required: true
-      - model_dir: string
-      - model: model
-    outputs:
-      ret: model
-    plugin: dioptra_custom.maite.maite.register_init_model
 graph:
   model:
     get_model: 
       provider_name: $model_provider_name
       model_name: $model_name
       task: $model_task
-  model_storage:
-    register_init_model:
-      model: $model
-      name: $register_model
-      model_dir: model

@@ -135,10 +135,6 @@ tasks:
       - batch_size: integer
     outputs:
       computed: mapping_string_number
-  log_metrics:
-    plugin: dioptra_builtins.tracking.mlflow.log_metrics
-    inputs:
-      - metrics: mapping_string_number
   download_artifacts:
     plugin: dioptra_builtins.artifacts.mlflow.download_all_artifacts_in_run
     inputs:
@@ -149,7 +145,6 @@ tasks:
         required: false
     outputs:
       download_path: string
-
   extract_tarfile:
     plugin: dioptra_builtins.artifacts.utils.extract_tarfile
     inputs:
@@ -165,12 +160,10 @@ graph:
     download_artifacts:
       run_id: $run_id
       artifact_path: $adv_tar_name
-
   extract_tarfile_results:
     extract_tarfile:
       filepath: $adv_tar_path
     dependencies: [adv_tar_path]
-      
   dataset:
     create_image_dataset: 
       data_dir: $adv_data_dir
@@ -204,7 +197,3 @@ graph:
       task: $model_task
       batch_size: $batch_size
     dependencies: [transformed_dataset, model, metric]
-  log_classifier_performance_metrics_result:
-    log_metrics:
-      metrics: $metric_results
-    dependencies: [metric_results]
