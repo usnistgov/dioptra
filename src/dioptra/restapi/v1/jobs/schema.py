@@ -51,6 +51,7 @@ JobBaseSchema = generate_base_resource_schema("Job", snapshot=True)
 
 class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
     """The schema for the data stored in a Job resource."""
+
     from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
     from dioptra.restapi.v1.experiments.schema import ExperimentRefSchema
     from dioptra.restapi.v1.queues.schema import QueueRefSchema
@@ -77,7 +78,7 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
         metadata=dict(description="The registered experiment associated with the Job."),
         dump_only=True,
     )
-    entrypoint = fields.Integer(
+    entrypointId = fields.Integer(
         attribute="entrypoint_id",
         metadata=dict(description="An integer identifying a registered entry point."),
         load_only=True,

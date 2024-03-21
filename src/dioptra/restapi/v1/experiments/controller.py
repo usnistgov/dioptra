@@ -28,7 +28,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.jobs.schema import JobRefSchema
-from dioptra.restapi.v1.schemas import ResourceIdsSchema, IdStatusResponseSchema
+from dioptra.restapi.v1.schemas import IdStatusResponseSchema, ResourceIdsSchema
 
 from .schema import (
     ExperimentGetQueryParameters,
@@ -36,7 +36,6 @@ from .schema import (
     ExperimentPageSchema,
     ExperimentSchema,
 )
-
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
