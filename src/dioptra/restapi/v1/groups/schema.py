@@ -84,7 +84,7 @@ class ManagerMutableFieldsSchema(Schema):
     )
     admin = fields.Boolean(
         attribute="admin",
-        metadata=dict(description="Flag for if the Maanger is a Group admin."),
+        metadata=dict(description="Flag for if the Manager is a Group admin."),
     )
 
 
