@@ -19,7 +19,6 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
-from dioptra.restapi.v1.tags.schema import TagRefSchema
 from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
@@ -101,7 +100,7 @@ class GroupMutableFieldsSchema(Schema):
         attribute="members",
         metadata=dict(description="A list of Members in a Group."),
         many=True,
-        dump_only = True,
+        dump_only=True,
     )
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Group resource.")
@@ -111,7 +110,7 @@ class GroupMutableFieldsSchema(Schema):
         attribute="managers",
         metadata=dict(description="A list of Managers in a Group."),
         many=True,
-        dump_only = True,
+        dump_only=True,
     )
 
 
@@ -126,7 +125,7 @@ class GroupSchema(GroupMutableFieldsSchema):  # type: ignore
         UserRefSchema,
         attribute="user",
         metadata=dict(description="User that created the Group resource."),
-        dump_only = True,
+        dump_only=True,
     )
     createdOn = fields.DateTime(
         attribute="created_on",
