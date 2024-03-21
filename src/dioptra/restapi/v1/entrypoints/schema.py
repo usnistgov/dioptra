@@ -41,34 +41,26 @@ class ParameterType(Enum):
 class EntrypointParameterSchema(Schema):
     """The schema for the data stored in a Entrypoint parameter resource."""
 
-    entrypointId = (
-        fields.Integer(
-            attribute="entrypoint_id",
-            metadata=dict(description="ID for the associated entrypoint."),
-        ),
-    )
-    parameterNumber = (
-        fields.Integer(
-            attribute="parameter_number",
-            metadata=dict(description="Index of parameter in table."),
-        ),
-    )
-    name = (
-        fields.String(
-            attribute="name",
-            metadata=dict(description="Name of the Entrypoint parameter resource."),
-        ),
-    )
-    defaultValue = (
-        fields.Raw(
-            attribute="default_value",
-            metadata=dict(description="Default value of the Entrypoint parameter."),
-        ),
-    )
+    entrypointId = fields.Integer(
+        attribute="entrypoint_id",
+        metadata=dict(description="ID for the associated entrypoint.")
+    ),
+    parameterNumber = fields.Integer(
+        attribute="parameter_number",
+        metadata=dict(description="Index of parameter in table.")
+    ),
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Entrypoint parameter resource.")
+    ),
+    defaultValue = fields.Raw(
+        attribute="default_value",
+        metadata=dict(description="Default value of the Entrypoint parameter.")
+    ),
     parameterType = fields.Enum(
         ParameterType,
         attribute="parameter_type",
-        metadata=dict(description="Data type of the Entrypoint parameter."),
+        metadata=dict(description="Data type of the Entrypoint parameter.")
     )
 
 
@@ -80,29 +72,25 @@ class EntrypointRefSchema(EntrypointRefBaseSchema):  # type: ignore
 
     name = fields.String(
         attribute="name",
-        metadata=dict(description="Name of the Entrypoint resource."),
+        metadata=dict(description="Name of the Entrypoint resource.")
     )
 
 
 class EntrypointMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Entrypoint resource."""
 
-    name = (
-        fields.String(
-            attribute="name",
-            metadata=dict(description="Name of the Entrypoint resource."),
-        ),
-    )
-    taskGraph = (
-        fields.String(
-            attribute="task_graph",
-            metadata=dict(description="Task graph of the Entrypoint resource."),
-        ),
-    )
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Entrypoint resource.")
+    ),
+    taskGraph = fields.String(
+        attribute="task_graph",
+        metadata=dict(description="Task graph of the Entrypoint resource.")
+    ),
     parameters = fields.Nested(
         EntrypointParameterSchema,
         many=True,
-        metadata=dict(description="List of parameters for the entrypoint."),
+        metadata=dict(description="List of parameters for the entrypoint.")
     )
 
 
@@ -119,7 +107,7 @@ class EntrypointPageSchema(BasePageSchema):
     data = fields.Nested(
         EntrypointSchema,
         many=True,
-        metadata=dict(description="List of Entrypoint resources in the current page."),
+        metadata=dict(description="List of Entrypoint resources in the current page.")
     )
 
 
