@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields, validate
 
-from dioptra.restapi.v1.entry_points.schema import EntryPointRefSchema
+from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.experiments.schema import ExperimentRefSchema
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -77,14 +77,14 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
         metadata=dict(description="The registered experiment associated with the Job."),
         dump_only=True,
     )
-    entryPointId = fields.Integer(
-        attribute="entry_point_id",
+    entrypointId = fields.Integer(
+        attribute="entrypoint_id",
         metadata=dict(description="An integer identifying a registered entry point."),
         load_only=True,
     )
-    entryPoint = fields.Nested(
-        EntryPointRefSchema,
-        attribute="entry_point",
+    entrypoint = fields.Nested(
+        EntrypointRefSchema,
+        attribute="entrypoint",
         metadata=dict(description="The entry point associated with the Job."),
         dump_only=True,
     )
@@ -94,7 +94,7 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
         allow_none=True,
         load_default=None,
         metadata=dict(
-            description="A list of parameter values to pass to the Job's EntryPoint.",
+            description="A list of parameter values to pass to the Job's Entrypoint.",
         ),
     )
     timeout = fields.String(
