@@ -17,8 +17,6 @@
 """The schemas for serializing/deserializing Entrypoint resources."""
 from __future__ import annotations
 
-from enum import Enum
-
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.schemas import (
@@ -31,13 +29,6 @@ from dioptra.restapi.v1.schemas import (
 )
 
 
-class ParameterType(Enum):
-    String = "string"
-    Float = "float"
-    Path = "path"
-    URI = "uri"
-
-
 class EntrypointParameterSchema(Schema):
     """The schema for the data stored in a Entrypoint parameter resource."""
 
@@ -47,18 +38,17 @@ class EntrypointParameterSchema(Schema):
     )
     parameterNumber = fields.Integer(
         attribute="parameter_number",
-        metadata=dict(description="Index of parameter in table."),
+        metadata=dict(description="Index of the Entrypoint parameter."),
     )
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the Entrypoint parameter resource."),
     )
-    defaultValue = fields.Raw(
+    defaultValue = fields.String(
         attribute="default_value",
         metadata=dict(description="Default value of the Entrypoint parameter."),
     )
-    parameterType = fields.Enum(
-        ParameterType,
+    parameterType = fields.String(
         attribute="parameter_type",
         metadata=dict(description="Data type of the Entrypoint parameter."),
     )
@@ -116,4 +106,4 @@ class EntrypointGetQueryParameters(
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
 ):
-    """The query parameters for the GET method of the /Entrypoints endpoint."""
+    """The query parameters for the GET method of the /entrypoints endpoint."""
