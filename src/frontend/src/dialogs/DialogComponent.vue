@@ -12,7 +12,7 @@
         </q-card-section>
         <q-separator />
         <q-card-actions align="right" class="text-primary">
-          <q-btn color="red" class="text-white" label="Cancel" @click="$emit('emitCancel')" v-close-popup />
+          <q-btn color="negative" class="text-white" label="Cancel" @click="$emit('emitCancel')" v-close-popup />
           <q-btn color="primary" label="Confirm" type="submit" />
         </q-card-actions>
       </q-form>

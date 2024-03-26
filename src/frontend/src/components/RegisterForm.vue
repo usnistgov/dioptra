@@ -84,7 +84,9 @@
   import { ref, inject } from 'vue';
   import * as notify from '../notify';
   import * as api from '@/services/loginApi';
-  import router from '@/router';
+  import { useRouter } from 'vue-router'
+  
+  const router = useRouter()
 
   const isMobile = inject('isMobile')
 

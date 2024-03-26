@@ -17,7 +17,6 @@
       :done="step > 1"
       :header-nav="step > 1"
       :error="!isStep1FormValid"
-
     >
       <q-form ref="step1Form" greedy>
         <q-input 
@@ -46,6 +45,12 @@
         </q-select>
       </q-form>
 
+      <q-banner v-if="nameWarning" dense class="text-white bg-negative absolute-bottom">
+        <template v-slot:avatar>
+          <q-icon name="warning" color="white" />
+        </template>
+        You must fill out at least the name field to save a draft.
+      </q-banner>
     </q-step>
 
     <q-step
@@ -64,10 +69,10 @@
       </div>
       <q-btn 
         color="primary"
-        icon-right="add"
+        icon="add"
         label="Create new Entry Point"
         class="q-mt-lg"
-        @click="showLeaveDialog = true" 
+        @click="router.push('/entryPoints')" 
       />
     </q-step>
 
@@ -123,17 +128,44 @@
 
     <template v-slot:navigation>
       <q-separator class="q-mb-lg" />
-      <q-stepper-navigation>
-        <q-btn v-if="step !== 3" @click="continueStep" color="primary" label="Continue" style="width: 120px" />
-        <q-btn v-if="step === 3" @click="submit" color="primary" label="Submit" style="width: 120px" />
-        <q-btn v-if="step > 1" color="secondary" @click="$refs.stepper.previous()" label="Back" class="q-ml-md" />
-        <q-btn label="Reset" @click="reset()" class="float-right" color="orange" />
+      <q-stepper-navigation class="overflow-auto">
+        <q-btn 
+          :disabled="step === 1" 
+          color="secondary" 
+          @click="$refs.stepper.previous()" 
+          label="Back" 
+          style="width: 142px"
+          icon="arrow_back"
+        />
+        <q-btn 
+          v-if="step !== 3" 
+          @click="continueStep" 
+          color="primary" 
+          label="Continue" 
+          style="width: 142px"
+          class="q-ml-md"
+          icon-right="arrow_forward"
+        />
+        <q-btn 
+          v-if="step === 3" 
+          @click="submit()" 
+          color="primary" 
+          label="Submit" 
+          style="width: 120px" 
+          class="q-ml-md" 
+        />
+
+        <div class="float-right">
+          <q-btn label="Reset" @click="reset()" icon="restart_alt" class="q-mr-md" color="negative" />
+          <q-btn label="Save Draft" @click="submit(true)" icon="save" color="primary" />
+        </div>
+
       </q-stepper-navigation>
     </template>
   </q-stepper>
   <LeaveExperimentsDialog 
     v-model="showLeaveDialog"
-    @submit="leaveForm()"
+    @leaveForm="isSubmitting = true; router.push(toPath)"
   />
   <ReturnExperimentsDialog 
     v-model="showReturnDialog"
@@ -144,10 +176,12 @@
 <script setup>
   import PageTitle from '@/components/PageTitle.vue'
   import { ref, reactive, watch, inject } from 'vue'
-  import router from '@/router'
+  import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import { useDataStore } from '@/stores/DataStore.ts'
   import LeaveExperimentsDialog from '@/dialogs/LeaveExperimentsDialog.vue'
   import ReturnExperimentsDialog from '@/dialogs/ReturnExperimentsDialog.vue'
+
+  const router = useRouter()
 
   const store = useDataStore()
 
@@ -176,38 +210,45 @@
   let selectedEntryPoints = ref([])
   let selectedTags = reactive([])
 
-  function leaveForm() {
-    let savedForm = {
-      name: name.value,
-      group: group.value,
-      step2Done: step2Done,
-      step3Done: step3Done,
-    }
-    if(selectedEntryPoints.value.length > 0) {
-      savedForm.selectedEntryPoints = selectedEntryPoints.value
-    }
-    if(selectedTags.length > 0) {
-      savedForm.selectedTags = selectedTags
-    }
-    store.savedExperimentForm = savedForm
-    router.push('/entryPoints')
-  }
+  // function leaveForm() {
+  //   let savedForm = {
+  //     name: name.value,
+  //     group: group.value,
+  //     step2Done: step2Done,
+  //     step3Done: step3Done,
+  //   }
+  //   if(selectedEntryPoints.value.length > 0) {
+  //     savedForm.selectedEntryPoints = selectedEntryPoints.value
+  //   }
+  //   if(selectedTags.length > 0) {
+  //     savedForm.selectedTags = selectedTags
+  //   }
+  //   store.savedExperimentForm = savedForm
+  //   router.push('/entryPoints')
+  // }
+
+  let editMode = ref(false)
 
   if(Object.keys(store.savedExperimentForm).length !== 0) {
-    showReturnDialog.value = true
+    // showReturnDialog.value = true
+    editMode.value = true
+    loadForm()
   }
 
   function loadForm() {
+    console.log('savedExperimentForm = ', store.savedExperimentForm)
     name.value = store.savedExperimentForm.name
     group.value = store.savedExperimentForm.group
-    if(store.savedExperimentForm.selectedEntryPoints?.length) {
-      selectedEntryPoints.value = store.savedExperimentForm.selectedEntryPoints
+    if(store.savedExperimentForm.entryPoints?.length) {
+      selectedEntryPoints.value = store.savedExperimentForm.entryPoints
+      step2Done.value = true
     }
-    if(store.savedExperimentForm.selectedTags?.length) {
-      selectedTags = store.savedExperimentForm.selectedTags
+    if(store.savedExperimentForm.tags?.length) {
+      selectedTags = store.savedExperimentForm.tags
+      step3Done.value = true
     }
-    step2Done.value = store.savedExperimentForm.step2Done
-    step3Done.value = store.savedExperimentForm.step3Done
+    // step2Done.value = store.savedExperimentForm.step2Done
+    // step3Done.value = store.savedExperimentForm.step3Done
     showReturnDialog.value = false
   }
 
@@ -241,14 +282,38 @@
     }
   }
 
-  function submit() {
+  const isSubmitting = ref(false)
+
+  let nameWarning = ref(false)
+
+  watch(name, newVal => {
+    if(newVal.length > 0) {
+      nameWarning.value = false
+    }
+  })
+
+  function submit(draft = false) {
+    if(name.value.length === 0) {
+      nameWarning.value = true
+      return
+    }
     const experiment = {
       name: name.value,
       group: group.value,
       entryPoints: selectedEntryPoints.value,
-      tags: selectedTags
+      tags: selectedTags,
+      draft: draft
     }
-    store.experiments.push(experiment)
+    if(!editMode.value) {
+      const id = new Date().getTime().toString()
+      experiment.id = id
+      store.experiments.push(experiment)
+    } else {
+      experiment.id = store.savedExperimentForm.id
+      const editIndex = store.experiments.findIndex((storedExperiment) => storedExperiment.id === experiment.id)
+      store.experiments[editIndex] = experiment
+    }
+    isSubmitting.value = true
     router.push('/experiments')
   }
 
@@ -284,6 +349,21 @@
     newTag.value = ''
   }
 
+
+
+  let toPath = reactive({})
+
+  onBeforeRouteLeave((to, from, next) => {
+    showLeaveDialog.value = true
+    toPath = to.path
+    if(isSubmitting.value) {
+      store.savedExperimentForm = {}
+      next(true)
+    } else {
+      next(false)
+    }
+  })
+
 </script>
 
 <style>
@@ -295,4 +375,4 @@
     width: 150px;
     color: black;
   }
-</style>@/stores/DataStore
+</style>

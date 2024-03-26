@@ -10,6 +10,7 @@
     class="q-mt-lg"
     flat
     bordered
+    :pagination="pagination"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
@@ -41,7 +42,7 @@
 
     <template #top-right>
       <q-btn color="secondary" icon="edit" label="Edit" class="q-mr-lg" @click="$emit('edit')"  :disabled="!selected.length" />
-      <q-btn color="red" icon="sym_o_delete" label="Delete" class="q-mr-lg"  @click="$emit('delete')" :disabled="!selected.length" />
+      <q-btn color="negative" icon="sym_o_delete" label="Delete" class="q-mr-lg"  @click="$emit('delete')" :disabled="!selected.length" />
       <q-input v-model="filter" dense placeholder="Search" outlined>
           <template #append>
             <q-icon name="search" />
@@ -55,7 +56,7 @@
   import { ref, watch, computed } from 'vue'
   import { useQuasar } from 'quasar'
 
-  const props = defineProps(['columns', 'rows', 'title'])
+  const props = defineProps(['columns', 'rows', 'title', 'pagination'])
   defineEmits(['edit', 'delete'])
 
   const $q = useQuasar()
