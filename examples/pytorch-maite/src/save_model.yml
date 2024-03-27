@@ -70,6 +70,7 @@ tasks:
       - provider_name: string
       - model_name: string
       - task: string
+      - register_model_name: string
     outputs:
       model: model
 graph:
@@ -78,3 +79,4 @@ graph:
       provider_name: $model_provider_name
       model_name: $model_name
       task: $model_task
+      register_model_name: $register_model

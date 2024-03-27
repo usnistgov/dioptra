@@ -61,13 +61,13 @@ def transform_tensor(dataset: Any, shape: Tuple[int, int], totensor=False, subse
         dataset = [dataset[i] for i in random.sample(range(0, len(dataset)), subset)]
     return dataset
 @pyplugs.register
-def get_model(provider_name: str, model_name: str, task: str) -> Any:
+def get_model(provider_name: str, model_name: str, task: str, register_model_name: str = 'loaded_model') -> Any:
     model = load_model(
         provider=provider_name,
         model_name=model_name,
         task=task
     )
-    _register_init_model(model_name,'model',model)
+    _register_init_model(register_model_name,'model',model)
     return model
 @pyplugs.register
 def get_metric(provider_name: str, metric_name: str, task: str, classes: int) -> Any:
