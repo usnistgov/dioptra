@@ -75,6 +75,18 @@ class PluginParameterTypeEndpoint(Resource):
 @api.param("id", "ID for the PluginParameterType resource.")
 class PluginParameterTypeIdEndpoint(Resource):
     @login_required
+    @responds(schema=PluginParameterTypeSchema, api=api)
+    def get(self, id: int):
+        """Gets a PluginParameterType resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="PluginParameterType",
+            request_type="GET",
+            id=id,
+        )
+        log.debug("Request received")
+
+    @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self, id: int):
         """Deletes a PluginParameterType resource."""
