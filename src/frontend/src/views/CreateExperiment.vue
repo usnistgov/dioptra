@@ -1,5 +1,4 @@
 <template>
-  <PageTitle />
   <q-stepper
     v-model="step"
     header-nav
@@ -28,7 +27,7 @@
           aria-required="true"
         >
           <template v-slot:before>
-            <label :class="`text-body2 label`">Experiment Name:</label>
+            <label :class="`field-label myowndark`">Experiment Name:</label>
           </template>
         </q-input>
         <q-select
@@ -40,7 +39,7 @@
           aria-required="true"
         >
           <template v-slot:before>
-            <div class="text-body2 label">Group Name:</div>
+            <div class="field-label">Group Name:</div>
           </template>  
         </q-select>
       </q-form>
@@ -174,7 +173,6 @@
 </template>
 
 <script setup>
-  import PageTitle from '@/components/PageTitle.vue'
   import { ref, reactive, watch, inject } from 'vue'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import { useDataStore } from '@/stores/DataStore.ts'
@@ -227,11 +225,11 @@
   //   router.push('/entryPoints')
   // }
 
-  let editMode = ref(false)
+  // let editMode = ref(false)
 
   if(Object.keys(store.savedExperimentForm).length !== 0) {
     // showReturnDialog.value = true
-    editMode.value = true
+    // editMode.value = true
     loadForm()
   }
 
@@ -304,7 +302,7 @@
       tags: selectedTags,
       draft: draft
     }
-    if(!editMode.value) {
+    if(!store.editMode) {
       const id = new Date().getTime().toString()
       experiment.id = id
       store.experiments.push(experiment)
@@ -312,6 +310,7 @@
       experiment.id = store.savedExperimentForm.id
       const editIndex = store.experiments.findIndex((storedExperiment) => storedExperiment.id === experiment.id)
       store.experiments[editIndex] = experiment
+      store.editMode = false
     }
     isSubmitting.value = true
     router.push('/experiments')
@@ -371,8 +370,4 @@
     min-height: 40vh; 
   }
 
-  .label{
-    width: 150px;
-    color: black;
-  }
 </style>

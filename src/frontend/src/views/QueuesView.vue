@@ -1,5 +1,4 @@
 <template>
-  <PageTitle />
   <TableComponent 
     :rows="queues"
     :columns="columns"
@@ -41,7 +40,6 @@
 </template>
 
 <script setup>
-  import PageTitle from '@/components/PageTitle.vue'
   import * as api from '@/services/queuesApi'
   import { ref, watch } from 'vue'
   import * as notify from '../notify';

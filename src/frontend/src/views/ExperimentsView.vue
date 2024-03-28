@@ -1,14 +1,11 @@
 <template>
-  <PageTitle />
-
   <TableComponent 
     :rows="experiments"
     :columns="columns"
     title="Experiments"
     v-model="selected"
     :pagination="{sortBy: 'draft', descending: true}"
-    @edit="store.savedExperimentForm = selected[0]; router.push('/experiments/create')"
-    @click="console.log(store.experiments)"
+    @edit="store.savedExperimentForm = selected[0]; store.editMode = true; router.push('/experiments/create')"
   >
     <template #body-cell-draft="props">
       <q-chip v-if="props.row.draft" outline color="red" text-color="white" class="q-ml-none">
@@ -53,7 +50,7 @@
 </template>
 
 <script setup>
-  import PageTitle from '@/components/PageTitle.vue'
+
   import TableComponent from '@/components/TableComponent.vue'
   import { ref } from 'vue'
   import { useDataStore } from '@/stores/DataStore.ts'

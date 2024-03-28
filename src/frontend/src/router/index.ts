@@ -13,6 +13,10 @@ const router = createRouter({
       component: () => import('../views/EntryPointsView.vue')
     },
     {
+      path: '/entrypoints/create',
+      component: () => import('../views/CreateEntryPoint.vue')
+    },
+    {
       path: '/queues',
       component: () => import('../views/QueuesView.vue')
     },

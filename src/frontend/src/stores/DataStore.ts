@@ -4,6 +4,8 @@ import { ref, reactive } from 'vue'
 export const useDataStore = defineStore('data', () => {
   // ref()'s are state properties
 
+  const editMode = ref(false)
+
   const experiments = ref([])
 
   const tags = ref([
@@ -33,5 +35,5 @@ export const useDataStore = defineStore('data', () => {
   // function()'s are actions
   
 
-  return { experiments, tags, entryPoints, savedExperimentForm }
+  return { experiments, tags, entryPoints, savedExperimentForm, editMode }
 })

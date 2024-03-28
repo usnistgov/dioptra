@@ -91,3 +91,13 @@ h1 {
   font-size: clamp(1rem, 10vw, 3rem) !important;
   font-weight: bold;
 }
+
+.field-label {
+  width: 150px;
+  font-size: 1rem;
+  color: black;
+}
+
+.body--dark .field-label {
+  color: white;
+}

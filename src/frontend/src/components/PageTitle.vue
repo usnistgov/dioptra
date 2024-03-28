@@ -1,5 +1,5 @@
 <template>
-  <h1 class="text-capitalize q-mb-xs">{{ title }}</h1>
+  <h1 class="text-capitalize q-mb-xs" @click="console.log(route, title)">{{ title }}</h1>
   <nav aria-label="Breadcrumb">
     <q-breadcrumbs class="text-grey text-capitalize">
       <template v-slot:separator>
@@ -27,6 +27,8 @@
 <script setup>
   import { useRoute } from 'vue-router'
   import { computed } from 'vue'
+  import { useDataStore } from '@/stores/DataStore.ts'
+  const store = useDataStore()
 
   const route = useRoute()
 
@@ -34,9 +36,14 @@
     return route.path.split('/').slice(1)
   })
 
+  const newOrEdit = computed(() => {
+    return store.editMode ? 'Edit' : 'New'
+  })
+
   const title = computed(() => {
+    if(route.path === '/entrypoints/create') return 'New Entry Point'
     if(path.value[0] === 'entrypoints') return 'Entry Points'
-    if(route.path === '/experiments/create') return 'New Experiment'
+    if(route.path === '/experiments/create') return `${newOrEdit.value} Experiment`
     return path.value[0]
   })
 
