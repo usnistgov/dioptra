@@ -1,6 +1,6 @@
-# PyTorch MNIST Membership Inference Demo
+# PyTorch MAITE Demo
 
-The demo provided in the Jupyter notebook `demo.ipynb` uses Dioptra to run experiments that investigate the membership inference attack when launched on a neural network model trained on the MNIST dataset.
+The demo provided in the Jupyter notebook `demo.ipynb` uses Dioptra to run experiments that demonstrate compatibility with the MAITE framework to run an attack on datasets and models downloaded from the huggingface repository.
 
 ## Running the example
 
