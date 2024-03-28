@@ -26,7 +26,7 @@
 
 <script setup>
   import { useRoute } from 'vue-router'
-  import { computed } from 'vue'
+  import { computed, watch } from 'vue'
   import { useDataStore } from '@/stores/DataStore.ts'
   const store = useDataStore()
 
@@ -40,8 +40,14 @@
     return store.editMode ? 'Edit' : 'New'
   })
 
+  watch(() => route.path, (newVal) => {
+    if(newVal !== '/entrypoints/create' && newVal !== '/experiments/create') {
+      store.editMode = false
+    }
+  })
+
   const title = computed(() => {
-    if(route.path === '/entrypoints/create') return 'New Entry Point'
+    if(route.path === '/entrypoints/create') return `${newOrEdit.value} Entry Point`
     if(path.value[0] === 'entrypoints') return 'Entry Points'
     if(route.path === '/experiments/create') return `${newOrEdit.value} Experiment`
     return path.value[0]

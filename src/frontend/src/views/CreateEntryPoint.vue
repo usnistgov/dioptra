@@ -50,10 +50,15 @@
           bordered
           class="q-mt-lg"
           separator="cell"
-          :hide-bottom="params.length > 0"
+          :hide-bottom="entryPoint.parameters.length > 0"
         >
           <template v-slot:no-data>
             <span>No parameters entered..........</span>
+          </template>
+          <template #body-cell-delete="props">
+            <q-td :props="props">
+              <q-btn icon="sym_o_delete" round size="sm" color="negative" @click="deleteParam(props.rowIndex)" />
+            </q-td>
           </template>
         </q-table>
 
@@ -69,14 +74,14 @@
             <q-input 
               outlined 
               dense 
-              v-model.trim="paramName"
+              v-model.trim="parameter.name"
               :rules="[requiredRule]"
               class="q-mb-sm "
               label="Enter Name"
             />
             <q-select
               outlined 
-              v-model="paramType" 
+              v-model="parameter.parameter_type" 
               :options="typeOptions" 
               dense
               :rules="[requiredRule]"
@@ -87,7 +92,7 @@
             <q-input 
               outlined 
               dense 
-              v-model.trim="paramDefaultValue"
+              v-model.trim="parameter.default_value"
               class="q-mb-sm"
               label="Enter Default Value"
             />
@@ -115,6 +120,11 @@
     label="Submit Entry Point"
     :class="`${isMobile ? '' : 'q-mx-xl'}`" 
   />
+  <q-btn  
+    to="/entrypoints"
+    color="negative" 
+    label="Cancel"
+  />
 </template>
 
 <script setup>
@@ -136,15 +146,17 @@
     parameters: []
   })
 
+  const parameter = reactive({
+    name: '',
+    parameter_type: '',
+    default_value: '',
+  })
+
   const groupOptions = ref([
     'Group 1',
     'Group 2',
     'Group 3',
   ])
-
-  const paramName = ref('')
-  const paramType = ref('')
-  const paramDefaultValue = ref('')
 
   const typeOptions = ref([
     'Path',
@@ -157,35 +169,51 @@
 
 
   const columns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, style: 'flex: 1' },
-    { name: 'type', label: 'Type', align: 'left', field: 'parameter_type', sortable: true, style: 'flex: 1' },
-    { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'default_value', sortable: true, style: 'flex: 1' },
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
+    { name: 'type', label: 'Type', align: 'left', field: 'parameter_type', sortable: true, },
+    { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'default_value', sortable: true, },
+    { name: 'delete', label: 'Delete', align: 'center',  },
   ]
 
-  const params = ref([])
+  if(Object.keys(store.editEntryPoint).length !== 0) {
+    entryPoint = store.editEntryPoint
+    store.editMode = true
+    store.editEntryPoint = {}
+  }
+
 
   function addParam() {
     entryPoint.parameters.push({
-      name: paramName.value,
-      parameter_type: paramType.value,
-      default_value: paramDefaultValue.value,
+      name: parameter.name,
+      parameter_type: parameter.parameter_type,
+      default_value: parameter.default_value,
     })
-    paramName.value = ''
-    paramType.value = null
-    paramDefaultValue.value = ''
+    parameter.name = ''
+    parameter.parameter_type = ''
+    parameter.default_value = ''
     paramForm.value.reset()
   }
 
   function submit() {
     basicInfoForm.value.validate().then(success => {
       if (success) {
-        store.entryPoints.push(entryPoint)
+        if(!store.editMode) {
+          entryPoint.id = new Date().getTime().toString()
+          store.entryPoints.push(entryPoint)
+        } else {
+          const editIndex = store.entryPoints.findIndex((storedentryPoint) => storedentryPoint.id === entryPoint.id)
+          store.entryPoints[editIndex] = entryPoint
+        }
         router.push('/entrypoints')
       }
       else {
         // error
       }
     })
+  }
+
+  function deleteParam(index) {
+    entryPoint.parameters.splice(index, 1)
   }
 
 </script>

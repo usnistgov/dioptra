@@ -21,7 +21,9 @@ export const useDataStore = defineStore('data', () => {
 
   const entryPoints = ref([
     { 
-      name: 'Entry Point 1', 
+      name: 'Entry Point 1',
+      group: 'Group 1',
+      id: 1,
       parameters: [
         {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'path'},
         {name: 'image_size', default_value: '28-28-1', parameter_type: 'String'},
@@ -29,7 +31,9 @@ export const useDataStore = defineStore('data', () => {
       ]
     },
     { 
-      name: 'Entry Point 2', 
+      name: 'Entry Point 2',
+      group: 'Group 2',
+      id: 2,
       parameters: [
         {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'path'},
         {name: 'image_size', default_value: '28-28-1', parameter_type: 'String'},
@@ -37,7 +41,9 @@ export const useDataStore = defineStore('data', () => {
       ]
     },
     { 
-      name: 'Entry Point 3', 
+      name: 'Entry Point 3',
+      group: 'Group 3',
+      id: 3,
       parameters: [
         {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'path'},
         {name: 'image_size', default_value: '28-28-1', parameter_type: 'String'},

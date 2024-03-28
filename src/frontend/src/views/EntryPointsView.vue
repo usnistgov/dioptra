@@ -44,6 +44,9 @@
   import TableComponent from '@/components/TableComponent.vue'
   import { ref } from 'vue'
   import { useDataStore } from '@/stores/DataStore.ts'
+  import { useRouter } from 'vue-router'
+  
+  const router = useRouter()
 
   const store = useDataStore()
 

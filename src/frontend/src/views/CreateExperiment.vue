@@ -310,7 +310,6 @@
       experiment.id = store.savedExperimentForm.id
       const editIndex = store.experiments.findIndex((storedExperiment) => storedExperiment.id === experiment.id)
       store.experiments[editIndex] = experiment
-      store.editMode = false
     }
     isSubmitting.value = true
     router.push('/experiments')
