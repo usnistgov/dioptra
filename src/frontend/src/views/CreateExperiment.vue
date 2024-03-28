@@ -61,9 +61,9 @@
     >
       <div v-for="(item, i) in store.entryPoints" :key="i">
         <q-checkbox
-          :label="item"
+          :label="item.name"
           v-model="selectedEntryPoints"
-          :val="item"
+          :val="item.name"
         />
       </div>
       <q-btn 
@@ -71,7 +71,7 @@
         icon="add"
         label="Create new Entry Point"
         class="q-mt-lg"
-        @click="router.push('/entryPoints')" 
+        @click="router.push('/entryPoints/create')" 
       />
     </q-step>
 

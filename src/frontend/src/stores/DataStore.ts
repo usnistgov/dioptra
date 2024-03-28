@@ -20,20 +20,40 @@ export const useDataStore = defineStore('data', () => {
   ])
 
   const entryPoints = ref([
-    'Entry Point 1',
-    'Entry Point 2',
-    'Entry Point 3',
-    'Entry Point 4',
-    'Entry Point 5',
-    'Entry Point 6',
+    { 
+      name: 'Entry Point 1', 
+      parameters: [
+        {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'path'},
+        {name: 'image_size', default_value: '28-28-1', parameter_type: 'String'},
+        {name: 'test_param', default_value: 'hello', parameter_type: 'String'},
+      ]
+    },
+    { 
+      name: 'Entry Point 2', 
+      parameters: [
+        {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'path'},
+        {name: 'image_size', default_value: '28-28-1', parameter_type: 'String'},
+        {name: 'test_param', default_value: 'hello', parameter_type: 'String'},
+      ]
+    },
+    { 
+      name: 'Entry Point 3', 
+      parameters: [
+        {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'path'},
+        {name: 'image_size', default_value: '28-28-1', parameter_type: 'String'},
+        {name: 'test_param', default_value: 'hello', parameter_type: 'String'},
+      ]
+    }
   ])
 
   const savedExperimentForm = reactive({})
+
+  const editEntryPoint = reactive({})
 
   // computed()'s are getters
 
   // function()'s are actions
   
 
-  return { experiments, tags, entryPoints, savedExperimentForm, editMode }
+  return { experiments, tags, entryPoints, savedExperimentForm, editMode, editEntryPoint }
 })

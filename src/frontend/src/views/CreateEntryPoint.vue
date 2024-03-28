@@ -120,6 +120,9 @@
 <script setup>
   import { ref, inject, reactive } from 'vue'
   import { useDataStore } from '@/stores/DataStore.ts'
+  import { useRouter } from 'vue-router'
+  
+  const router = useRouter()
 
   const store = useDataStore()
 
@@ -127,7 +130,6 @@
 
   const requiredRule = (val) => (val && val.length > 0) || "This field is required"
 
-  // form inputs
   let entryPoint = reactive({
     name: '',
     group: '',
@@ -156,8 +158,8 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, style: 'flex: 1' },
-    { name: 'type', label: 'Type', align: 'left', field: 'type', sortable: true, style: 'flex: 1' },
-    { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'defaultValue', sortable: true, style: 'flex: 1' },
+    { name: 'type', label: 'Type', align: 'left', field: 'parameter_type', sortable: true, style: 'flex: 1' },
+    { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'default_value', sortable: true, style: 'flex: 1' },
   ]
 
   const params = ref([])
@@ -165,8 +167,8 @@
   function addParam() {
     entryPoint.parameters.push({
       name: paramName.value,
-      type: paramType.value,
-      defaultValue: paramDefaultValue.value,
+      parameter_type: paramType.value,
+      default_value: paramDefaultValue.value,
     })
     paramName.value = ''
     paramType.value = null
@@ -177,11 +179,8 @@
   function submit() {
     basicInfoForm.value.validate().then(success => {
       if (success) {
-        console.log('entryPoint = ', JSON.parse(JSON.stringify(entryPoint)))
-        entryPoint.name = ''
-        entryPoint.group = ''
-        entryPoint.parameters = []
-        basicInfoForm.value.reset()
+        store.entryPoints.push(entryPoint)
+        router.push('/entrypoints')
       }
       else {
         // error
@@ -190,7 +189,3 @@
   }
 
 </script>
-
-<style>
-
-</style>
