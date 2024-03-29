@@ -39,6 +39,7 @@ V1_MLFLOW_RUNS_ROUTE = "mlflow_runs"
 V1_PLUGINS_ROUTE = "plugins"
 V1_PLUGIN_PARAMETER_TYPES_ROUTE = "pluginParameterTypes"
 V1_QUEUES_ROUTE = "queues"
+V1_TAGS_ROUTE = "tags"
 
 
 def register_routes(api: Api) -> None:
@@ -85,6 +86,7 @@ def register_v1_routes(api: Api) -> None:
     from .v1.plugin_parameter_types.controller import api as plugin_parameter_types_api
     from .v1.plugins.controller import api as plugins_api
     from .v1.queues.controller import api as queues_api
+    from .v1.tags.controller import api as tags_api
 
     api.add_namespace(artifacts_api, path=f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}")
     api.add_namespace(entrypoints_api, path=f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}")
@@ -95,3 +97,4 @@ def register_v1_routes(api: Api) -> None:
         plugin_parameter_types_api, path=f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}"
     )
     api.add_namespace(queues_api, path=f"/{V1_ROOT}/{V1_QUEUES_ROUTE}")
+    api.add_namespace(tags_api, path=f"/{V1_ROOT}/{V1_TAGS_ROUTE}")
