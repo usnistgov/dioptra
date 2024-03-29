@@ -133,8 +133,8 @@ def generate_base_resource_ref_schema(
 SnapshotRefSchema = generate_base_resource_ref_schema("Snapshot", keep_snapshot_id=True)
 
 
-class ResourceURLSchema(Schema):
-    """ """
+class ResourceUrlsSchema(Schema):
+    """The schema for a list of Resource URLs"""
 
     urls = fields.List(
         fields.Url(),
