@@ -32,9 +32,10 @@
     @updateQueue="updateQueue"
     :editQueue="selected.length && editing ? selected[0] : ''"
   />
-  <DeleteQueueDialog 
+  <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="deleteQueue"
+    type="Queue"
     :name="selected.length ? selected[0].name : ''"
   />
 </template>
@@ -45,7 +46,7 @@
   import * as notify from '../notify';
   import TableComponent from '@/components/TableComponent.vue'
   import AddQueueDialog from '@/dialogs/AddQueueDialog.vue'
-  import DeleteQueueDialog from '@/dialogs/DeleteQueueDialog.vue'
+  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)

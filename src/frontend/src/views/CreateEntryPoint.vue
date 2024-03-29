@@ -49,15 +49,16 @@
           flat
           bordered
           class="q-mt-lg"
-          separator="cell"
+          separator="horizontal"
           :hide-bottom="entryPoint.parameters.length > 0"
         >
           <template v-slot:no-data>
             <span>No parameters entered..........</span>
           </template>
-          <template #body-cell-delete="props">
+          <template #body-cell-actions="props">
             <q-td :props="props">
-              <q-btn icon="sym_o_delete" round size="sm" color="negative" @click="deleteParam(props.rowIndex)" />
+              <q-btn icon="edit" round size="sm" color="primary" flat @click="console.log(props)" />
+              <q-btn icon="sym_o_delete" round size="sm" color="negative" flat @click="selectedParamName = props.row.name; showDeleteDialog = true" />
             </q-td>
           </template>
         </q-table>
@@ -65,7 +66,7 @@
         <q-card
           flat
           bordered
-          class="q-px-lg q-my-xl"
+          class="q-px-lg q-my-lg"
         >
           <q-card-section class="q-px-none">
             <label class="text-body1">Add Parameter</label>
@@ -125,12 +126,20 @@
     color="negative" 
     label="Cancel"
   />
+
+  <DeleteDialog 
+    v-model="showDeleteDialog"
+    @submit="deleteParam()"
+    type="Parameter"
+    :name="selectedParamName"
+  />
 </template>
 
 <script setup>
   import { ref, inject, reactive } from 'vue'
   import { useDataStore } from '@/stores/DataStore.ts'
   import { useRouter } from 'vue-router'
+  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   
   const router = useRouter()
 
@@ -172,7 +181,7 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'type', label: 'Type', align: 'left', field: 'parameter_type', sortable: true, },
     { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'default_value', sortable: true, },
-    { name: 'delete', label: 'Delete', align: 'center',  },
+    { name: 'actions', label: 'Actions', align: 'center',  },
   ]
 
   if(Object.keys(store.editEntryPoint).length !== 0) {
@@ -212,8 +221,12 @@
     })
   }
 
-  function deleteParam(index) {
-    entryPoint.parameters.splice(index, 1)
+  const showDeleteDialog = ref(false)
+  const selectedParamName = ref('')
+
+  function deleteParam() {
+    entryPoint.parameters = entryPoint.parameters.filter((param) => param.name !== selectedParamName.value)
+    showDeleteDialog.value = false
   }
 
 </script>
