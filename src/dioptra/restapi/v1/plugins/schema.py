@@ -59,26 +59,53 @@ class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
     )
 
 
+class PluginTaskParameterSchema(Schema):
+    """The schema for the data stored in a PluginTaskParameter"""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the PluginTaskParameter."),
+    )
+    parameterTypeId = fields.Int(
+        attribute="parameter_type_id",
+        data_key="parameterType",
+        metadata=dict(
+            description="The ID of the assigned PluginParameterType resource"
+        ),
+        load_only=True,
+    )
+    parameterType = fields.Nested(
+        PluginParameterTypeRefSchema,
+        attribute="parameter_type",
+        metadata=dict(description="The assigned PluginParameterType resource."),
+        dump_only=True,
+    )
+
+
 class PluginTaskSchema(Schema):
     """The schema for the data stored in a PluginTask."""
 
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the PluginTask."),
-    )
-    number = fields.Integer(
-        attribute="number",
-        metadata=dict(description="The positional order of the parameter."),
+        # marshmallow does not properly respect dump_only in a nested type if there
+        # are no other dump_only fields in the schema. Setting this field as both
+        # load_only and dump_only fixes the nested type issue while keeping this field
+        # present in both load and dump usage.
+        load_only=True,
+        dump_only=True,
     )
     inputParams = fields.Nested(
-        PluginParameterTypeRefSchema,
+        PluginTaskParameterSchema,
+        attribute="input_params",
         many=True,
         metadata=dict(
             description="List of input PluginTaskParameters in this PluginTask."
         ),
     )
     outputParams = fields.Nested(
-        PluginParameterTypeRefSchema,
+        PluginTaskParameterSchema,
+        attribute="output_params",
         many=True,
         metadata=dict(
             description="List of output PluginTaskParameters in this PluginTask."
@@ -139,16 +166,20 @@ class PluginFileMutableFieldsSchema(Schema):
     contents = fields.String(
         attribute="contents", metadata=dict(description="Contents of the file.")
     )
-
-
-class PluginFileSchema(PluginFileMutableFieldsSchema, PluginFileBaseSchema):  # type: ignore
-    """The schema for the data stored in a PluginFile resource."""
-
     tasks = fields.Nested(
         PluginTaskSchema,
         attribute="tasks",
         metadata=dict(description="Tasks associated with the PluginFile resource."),
         many=True,
+    )
+
+
+class PluginFileSchema(PluginFileMutableFieldsSchema, PluginFileBaseSchema):  # type: ignore
+    """The schema for the data stored in a PluginFile resource."""
+
+    pluginId = fields.Int(
+        attribute="plugin_id",
+        metadata=dict(description="ID for the Plugin resource this file belongs to."),
         dump_only=True,
     )
 
