@@ -133,6 +133,17 @@ def generate_base_resource_ref_schema(
 SnapshotRefSchema = generate_base_resource_ref_schema("Snapshot", keep_snapshot_id=True)
 
 
+class ResourceUrlsSchema(Schema):
+    """The schema for a list of Resource URLs"""
+
+    urls = fields.List(
+        fields.Url(),
+        attribute="urls",
+        metadata=dict(description="A list of URLs to access Resources."),
+        relative=True,
+    )
+
+
 class BasePageSchema(Schema):
     """The base schema for adding paging to a resource endpoint."""
 
