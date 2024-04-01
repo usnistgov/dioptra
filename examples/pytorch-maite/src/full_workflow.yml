@@ -75,7 +75,7 @@ parameters:
   subset: 0
 tasks:
   get_dataset:
-    plugin: dioptra_custom.maite.maite.get_dataset
+    plugin: dioptra_custom.maite.maite_compat.get_dataset
     inputs:
       - provider_name: string
       - dataset_name: string
@@ -84,7 +84,7 @@ tasks:
     outputs:
       dataset: dataset
   get_model:
-    plugin: dioptra_custom.maite.maite.get_model
+    plugin: dioptra_custom.maite.maite_compat.get_model
     inputs:
       - provider_name: string
       - model_name: string
@@ -92,7 +92,7 @@ tasks:
     outputs:
       model: model
   get_metric:
-    plugin: dioptra_custom.maite.maite.get_metric
+    plugin: dioptra_custom.maite.maite_compat.get_metric
     inputs:
       - provider_name: string
       - metric_name: string
@@ -101,7 +101,7 @@ tasks:
     outputs:
       metric: metric
   transform_tensor:
-    plugin: dioptra_custom.maite.maite.transform_tensor
+    plugin: dioptra_custom.maite.maite_compat.transform_tensor
     inputs:
       - dataset: dataset
       - shape: any
@@ -114,7 +114,7 @@ tasks:
     outputs:
       dataset: dataset
   compute_metric:
-    plugin: dioptra_custom.maite.maite.compute_metric
+    plugin: dioptra_custom.maite.maite_compat.compute_metric
     inputs:
       - dataset: dataset
       - model: model

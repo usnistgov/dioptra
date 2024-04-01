@@ -16,80 +16,88 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-from types import FunctionType
-from typing import Any, Dict, List, Union
+import random
+from typing import Any, Dict, Tuple
 
 import mlflow
-import random
 import structlog
+from maite import evaluate, load_dataset, load_metric, load_model
+from maite._internals.interop.torchvision.datasets import TorchVisionDataset
 from structlog.stdlib import BoundLogger
+from torch.utils.data import DataLoader, random_split
+from torchvision import transforms
+from torchvision.datasets import ImageFolder
+from torchvision.transforms import InterpolationMode
+from torchvision.transforms.functional import to_tensor
 
 from dioptra import pyplugs
-from dioptra.sdk.utilities.decorators import require_package
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-from maite import load_dataset
-from maite import load_model
-from maite import load_metric
-from maite import evaluate
-from maite._internals.interop.torchvision.datasets import TorchVisionDataset
-from torchvision import transforms
-from torchvision.datasets import ImageFolder
-from torch.utils.data import DataLoader, Subset, random_split
-from torchvision.transforms import InterpolationMode
-from torchvision.transforms.functional import to_tensor
 
 @pyplugs.register
 def get_dataset(provider_name: str, dataset_name: str, task: str, split: str) -> Any:
     dataset = load_dataset(
-        provider=provider_name,
-        dataset_name=dataset_name,
-        task=task,
-        split=split
+        provider=provider_name, dataset_name=dataset_name, task=task, split=split
     )
     return dataset
+
+
 @pyplugs.register
-def transform_tensor(dataset: Any, shape: Tuple[int, int], totensor=False, subset: int = 0) -> Any:
+def transform_tensor(
+    dataset: Any, shape: Tuple[int, int], totensor=False, subset: int = 0
+) -> Any:
     dataset.set_transform(
         lambda x: {
-            "image": to_tensor(x["image"].resize(shape)) if totensor else x["image"].reshape(shape),
-            "label": x["label"]
+            "image": (
+                to_tensor(x["image"].resize(shape))
+                if totensor
+                else x["image"].reshape(shape)
+            ),
+            "label": x["label"],
         }
     )
-    if (subset > 0):
+    if subset > 0:
         dataset = [dataset[i] for i in random.sample(range(0, len(dataset)), subset)]
     return dataset
+
+
 @pyplugs.register
-def get_model(provider_name: str, model_name: str, task: str, register_model_name: str = 'loaded_model') -> Any:
-    model = load_model(
-        provider=provider_name,
-        model_name=model_name,
-        task=task
-    )
-    _register_init_model(register_model_name,'model',model)
+def get_model(
+    provider_name: str,
+    model_name: str,
+    task: str,
+    register_model_name: str = "loaded_model",
+) -> Any:
+    model = load_model(provider=provider_name, model_name=model_name, task=task)
+    _register_init_model(register_model_name, "model", model)
     return model
+
+
 @pyplugs.register
 def get_metric(provider_name: str, metric_name: str, task: str, classes: int) -> Any:
     metric = load_metric(
-        provider=provider_name,
-        metric_name=metric_name,
-        task=task,
-        num_classes=classes
+        provider=provider_name, metric_name=metric_name, task=task, num_classes=classes
     )
     return metric
+
+
 @pyplugs.register
-def compute_metric(dataset: Any, model: Any, metric: Any, task: string, batch_size: int) -> Any: 
+def compute_metric(
+    dataset: Any, model: Any, metric: Any, task: str, batch_size: int
+) -> Any:
     evaluator = evaluate(task)
     output = evaluator(
-      model,
-      dataset,
-      metric=dict(accuracy=metric),
-      batch_size=batch_size,
+        model,
+        dataset,
+        metric=dict(accuracy=metric),
+        batch_size=batch_size,
     )
     _log_metrics(output)
     return output
-def _register_init_model(name, model_dir, model) -> Model:
+
+
+def _register_init_model(name, model_dir, model) -> Any:
     mlflow.pytorch.log_model(
         pytorch_model=model, artifact_path=model_dir, registered_model_name=name
     )
@@ -102,10 +110,10 @@ def create_image_dataset(
     data_dir: str,
     image_size,
     new_size: int = 0,
-    validation_split = 0.2,
+    validation_split=0.2,
     batch_size: int = 32,
     label_mode: str = "categorical",
-) -> Tuple(Any, Any):
+) -> Tuple[Any, Any]:
     """Creates an image dataset from a directory, assuming the
     subdirectories of the directory correspond to the classes of
     the data.
@@ -130,21 +138,26 @@ def create_image_dataset(
         validation_split is set, otherwise it will return one.
     """
     color_mode: str = "color" if image_size[2] == 3 else "grayscale"
-    target_size: Tuple[int, int] = image_size[:2]
 
     transform_list = [transforms.ToTensor()]
-    
 
     if color_mode == "grayscale":
         transform_list += [transforms.Grayscale()]
     if new_size > 0:
-        transform_list += [transforms.Resize(new_size, interpolation=InterpolationMode.BILINEAR, max_size=None, antialias=True)]
+        transform_list += [
+            transforms.Resize(
+                new_size,
+                interpolation=InterpolationMode.BILINEAR,
+                max_size=None,
+                antialias=True,
+            )
+        ]
     transform = transforms.Compose(transform_list)
 
     dataset = ImageFolder(root=data_dir, transform=transform)
     classes = list(dataset.class_to_idx.keys())
 
-    if validation_split != None:
+    if validation_split is not None:
         train_size = (int)(validation_split * len(dataset))
         val_size = len(dataset) - (int)(validation_split * len(dataset))
 
@@ -152,14 +165,19 @@ def create_image_dataset(
 
         train_gen = DataLoader(train, batch_size=batch_size, shuffle=True)
         val_gen = DataLoader(val, batch_size=batch_size, shuffle=True)
-      
+
         train_gen.dataset.classes = classes
         val_gen.dataset.classes = classes
-        return (TorchVisionDataset(train_gen.dataset), TorchVisionDataset(val_gen.dataset))
+        return (
+            TorchVisionDataset(train_gen.dataset),
+            TorchVisionDataset(val_gen.dataset),
+        )
     else:
         data_generator = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         data_generator.dataset.classes = classes
         return (TorchVisionDataset(data_generator.dataset), None)
+
+
 def _log_metrics(metrics: Dict[str, float]) -> None:
     """Logs metrics to the MLFlow Tracking service for the current run.
 

@@ -65,7 +65,7 @@ parameters:
   register_model: loaded_model
 tasks:
   get_model:
-    plugin: dioptra_custom.maite.maite.get_model
+    plugin: dioptra_custom.maite.maite_compat.get_model
     inputs:
       - provider_name: string
       - model_name: string

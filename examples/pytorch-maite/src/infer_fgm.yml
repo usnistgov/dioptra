@@ -76,7 +76,7 @@ parameters:
   subset: 0
 tasks:
   create_image_dataset:
-    plugin: dioptra_custom.maite.maite.create_image_dataset
+    plugin: dioptra_custom.maite.maite_compat.create_image_dataset
     inputs:
       - data_dir: string
       - image_size: tuple_integer_integer_integer
@@ -96,7 +96,7 @@ tasks:
       - dataset_a: dataset
       - dataset_b: dataset
   get_model:
-    plugin: dioptra_custom.maite.maite.get_model
+    plugin: dioptra_custom.maite.maite_compat.get_model
     inputs:
       - provider_name: string
       - model_name: string
@@ -104,7 +104,7 @@ tasks:
     outputs:
       model: model
   get_metric:
-    plugin: dioptra_custom.maite.maite.get_metric
+    plugin: dioptra_custom.maite.maite_compat.get_metric
     inputs:
       - provider_name: string
       - metric_name: string
@@ -113,7 +113,7 @@ tasks:
     outputs:
       metric: metric
   transform_tensor:
-    plugin: dioptra_custom.maite.maite.transform_tensor
+    plugin: dioptra_custom.maite.maite_compat.transform_tensor
     inputs:
       - dataset: dataset
       - shape: any
@@ -126,7 +126,7 @@ tasks:
     outputs:
       dataset: dataset
   compute_metric:
-    plugin: dioptra_custom.maite.maite.compute_metric
+    plugin: dioptra_custom.maite.maite_compat.compute_metric
     inputs:
       - dataset: dataset
       - model: model

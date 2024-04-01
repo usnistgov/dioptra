@@ -79,7 +79,7 @@ parameters:
   adv_dir: adv_testing
 tasks:
   get_dataset:
-    plugin: dioptra_custom.maite.maite.get_dataset
+    plugin: dioptra_custom.maite.maite_compat.get_dataset
     inputs:
       - provider_name: string
       - dataset_name: string
@@ -88,7 +88,7 @@ tasks:
     outputs:
       dataset: dataset
   get_model:
-    plugin: dioptra_custom.maite.maite.get_model
+    plugin: dioptra_custom.maite.maite_compat.get_model
     inputs:
       - provider_name: string
       - model_name: string
@@ -96,7 +96,7 @@ tasks:
     outputs:
       model: model
   transform_tensor:
-    plugin: dioptra_custom.maite.maite.transform_tensor
+    plugin: dioptra_custom.maite.maite_compat.transform_tensor
     inputs:
       - dataset: dataset
       - shape: any
