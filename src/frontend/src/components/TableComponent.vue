@@ -1,7 +1,7 @@
 <template>
   <q-table
     :rows="props.rows"
-    :columns="[{ name: 'radio', align: 'center', sortable: false, label: 'Select' }, ...props.columns]"
+    :columns="finalColumns"
     :title="title"
     :filter="filter"
     selection="single"
@@ -36,6 +36,13 @@
           <slot v-bind="props" :name="`body-cell-${col.name}`">
             {{ col.value }}
           </slot>
+          <q-btn v-if="col.name === 'expand'" size="lg" flat dense round  @click="props.expand = !props.expand" :icon="props.expand ? 'expand_less' : 'expand_more'" @click.stop />
+        </q-td>
+      </q-tr>
+      <q-tr v-show="props.expand" :props="props">
+        <q-td colspan="100%">
+          <div class="text-left ">Additional info for {{ props.row.name }}.</div>
+          <slot name="expandedSlot" :row="props.row" />
         </q-td>
       </q-tr>
     </template>
@@ -56,8 +63,19 @@
   import { ref, watch, computed } from 'vue'
   import { useQuasar } from 'quasar'
 
-  const props = defineProps(['columns', 'rows', 'title', 'pagination'])
+  const props = defineProps(['columns', 'rows', 'title', 'pagination', 'showExpand'])
   defineEmits(['edit', 'delete'])
+
+  const finalColumns = computed(() => {
+    let defaultColumns = [
+      { name: 'radio', align: 'center', sortable: false, label: 'Select' },
+       ...props.columns,
+      ]
+    if(props.showExpand) {
+      defaultColumns.push({ name: 'expand', align: 'center', sortable: false, label: 'Expand' })
+    }
+    return defaultColumns
+  })
 
   const $q = useQuasar()
 

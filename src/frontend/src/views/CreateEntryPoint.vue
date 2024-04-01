@@ -1,5 +1,5 @@
 <template>
-  <div :class="`row q-mt-xl ${isMobile ? '' : 'q-mx-xl'}`">
+  <div :class="`row q-mt-xl ${isMobile ? '' : 'q-mx-xl'} q-mb-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
         <legend>Basic Info</legend>
@@ -34,8 +34,8 @@
       </fieldset>
       <fieldset class="q-mt-lg">
         <legend>Task Graph</legend>
-        <div style="padding: 0 5%">
-          <div>TBD</div>
+        <div style="padding: 0 2%" class="row">
+          <CodeEditor v-model="entryPoint.task_graph" style="width: 0; flex-grow: 1;" />
         </div>
       </fieldset>
     </div>
@@ -115,17 +115,21 @@
       </div>
     </fieldset>
   </div>
-  <q-btn  
-    @click="submit()" 
-    color="primary" 
-    label="Submit Entry Point"
-    :class="`${isMobile ? '' : 'q-mx-xl'}`" 
-  />
-  <q-btn  
-    to="/entrypoints"
-    color="negative" 
-    label="Cancel"
-  />
+
+  <div :class="`${isMobile ? '' : 'q-mx-xl'} float-right q-mb-lg`">
+      <q-btn  
+        to="/entrypoints"
+        color="negative" 
+        label="Cancel"
+        class="q-mr-lg"
+      />
+      <q-btn  
+        @click="submit()" 
+        color="primary" 
+        label="Submit Entry Point"
+
+      />
+    </div>
 
   <DeleteDialog 
     v-model="showDeleteDialog"
@@ -140,6 +144,7 @@
   import { useDataStore } from '@/stores/DataStore.ts'
   import { useRouter } from 'vue-router'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+  import CodeEditor from '@/components/CodeEditor.vue'
   
   const router = useRouter()
 
@@ -152,7 +157,8 @@
   let entryPoint = reactive({
     name: '',
     group: '',
-    parameters: []
+    parameters: [],
+    task_graph: ''
   })
 
   const parameter = reactive({

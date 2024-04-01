@@ -2,6 +2,7 @@ import './assets/main.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import VueCodemirror from 'vue-codemirror'
 
 import { Quasar, AppFullscreen, Loading, Notify } from 'quasar'
 
@@ -31,5 +32,6 @@ app.use(Quasar, {
 
 app.use(createPinia())
 app.use(router)
+app.use(VueCodemirror)
 
 app.mount('#app')

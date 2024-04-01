@@ -13,11 +13,17 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@codemirror/lang-yaml": "^6.0.0",
+    "@codemirror/lint": "^6.5.0",
+    "@codemirror/theme-one-dark": "^6.1.2",
     "@quasar/extras": "^1.16.9",
     "axios": "^1.6.7",
+    "codemirror": "^6.0.1",
+    "js-yaml": "^4.1.0",
     "pinia": "^2.1.7",
     "quasar": "^2.14.2",
     "vue": "^3.3.11",
+    "vue-codemirror": "^6.1.1",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
