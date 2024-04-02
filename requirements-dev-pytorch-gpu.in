@@ -5,3 +5,4 @@ pytorch-lightning; python_version == '3.9'
 torch==2.2.0; sys_platform == 'linux' and python_version == '3.9' and (platform_machine == 'x86_64' or platform_machine == 'amd64' or platform_machine == 'AMD64')
 torchaudio==2.2.0; sys_platform == 'linux' and python_version == '3.9' and (platform_machine == 'x86_64' or platform_machine == 'amd64' or platform_machine == 'AMD64')
 torchvision==0.17.0; sys_platform == 'linux' and python_version == '3.9' and (platform_machine == 'x86_64' or platform_machine == 'amd64' or platform_machine == 'AMD64')
+maite[all_interop]==0.5.0; python_version == '3.9'
