@@ -29,6 +29,14 @@ const router = createRouter({
       component: () => import('../views/CreateExperiment.vue')
     },
     {
+      path: '/groups',
+      component: () => import('../views/GroupsView.vue')
+    },
+    {
+      path: '/groups/admin',
+      component: () => import('../views/GroupsAdminView.vue')
+    },
+    {
       path: '/login',
       component: () => import('../views/BasicLoginView.vue')
     },

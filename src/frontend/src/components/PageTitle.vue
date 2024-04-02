@@ -41,13 +41,14 @@
   })
 
   watch(() => route.path, (newVal) => {
-    if(newVal !== '/entrypoints/create' && newVal !== '/experiments/create') {
+    if(newVal !== '/entrypoints/create' && newVal !== '/experiments/create' && newVal !== '/groups/admin') {
       store.editMode = false
     }
   })
 
   const title = computed(() => {
     if(route.path === '/entrypoints/create') return `${newOrEdit.value} Entry Point`
+    if(route.path === '/groups/admin') return `${store.editMode ? 'Edit Group ' : 'New Group'}`
     if(path.value[0] === 'entrypoints') return 'Entry Points'
     if(route.path === '/experiments/create') return `${newOrEdit.value} Experiment`
     return path.value[0]

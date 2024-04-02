@@ -25,7 +25,7 @@ export const useDataStore = defineStore('data', () => {
       group: 'Group 1',
       id: 1,
       parameters: [
-        {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'path'},
+        {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'Path'},
         {name: 'image_size', default_value: '28-28-1', parameter_type: 'String'},
         {name: 'test_param', default_value: 'hello', parameter_type: 'String'},
       ],
@@ -54,7 +54,7 @@ xmas-fifth-day:
       group: 'Group 2',
       id: 2,
       parameters: [
-        {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'path'},
+        {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'Path'},
         {name: 'image_size', default_value: '28-28-1', parameter_type: 'String'},
         {name: 'test_param', default_value: 'hello', parameter_type: 'String'},
       ],
@@ -65,7 +65,7 @@ xmas-fifth-day:
       group: 'Group 3',
       id: 3,
       parameters: [
-        {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'path'},
+        {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'Path'},
         {name: 'image_size', default_value: '28-28-1', parameter_type: 'String'},
         {name: 'test_param', default_value: 'hello', parameter_type: 'String'},
       ],

@@ -27,6 +27,9 @@
           <q-item clickable v-close-popup to="/jobs">
             <q-item-section>Jobs</q-item-section>
           </q-item>
+          <q-item clickable v-close-popup to="/groups">
+            <q-item-section>Groups</q-item-section>
+          </q-item>
         </q-list>
       </q-menu>
     </q-btn>
@@ -38,6 +41,7 @@
         <q-route-tab label="Queues" to="/queues" />
         <q-route-tab label="Experiments" to="/experiments" />
         <q-route-tab label="Jobs" to="/" />
+        <q-route-tab label="Groups" to="/groups" />
       </q-tabs>
     </nav>
 
@@ -87,14 +91,33 @@
         v-if="!store.loggedInUser"
         :label="getLabel()" to="/login"
       />
-      <q-btn v-else color="primary" icon-right="person" :label="store.loggedInUser" to="/login" dense />
+      <div v-else >
+        <q-btn color="primary" icon="person" :label="isMobile ? '' : store.loggedInUser" to="/login" dense class="q-mr-sm" />
+        <q-btn-dropdown style="background-color: #CF5C36;" icon="groups" :label="isMobile ? '' : store.loggedInGroup" dense>
+          <q-list>
+            <q-item 
+              v-for="(group, i) in store.groups" 
+              :key="i" 
+              clickable 
+              v-close-popup 
+              @click="store.loggedInGroup = group.name" 
+              :active="group === store.loggedInGroup"
+              active-class="bg-blue-3 text-bold"
+            >
+              <q-item-section>
+                <q-item-label>{{ group.name }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+      </div>
     </q-tabs>
   </q-toolbar>
 </template>
 
 <script setup>
   import { useQuasar } from 'quasar'
-  import { computed, inject } from 'vue'
+  import { computed, inject, ref } from 'vue'
   import { useRouter, START_LOCATION } from 'vue-router'
   import { useLoginStore } from '@/stores/LoginStore'
   import { storeToRefs } from 'pinia'
@@ -103,7 +126,7 @@
   const router = useRouter()
 
   const store = useLoginStore()
-  const { loggedInUser } = storeToRefs(store);
+  // const { loggedInUser } = storeToRefs(store);
 
   const $q = useQuasar()
 
@@ -135,11 +158,13 @@
   async function callGetLoginStatus() {
     try {
       const res = await api.getLoginStatus()
-      loggedInUser.value = res.data.username
+      store.loggedInUser = res.data.username
     } catch(err) {
-      loggedInUser.value = ''
+      store.loggedInUser = ''
     }
   }
+
+
 
 
 </script>

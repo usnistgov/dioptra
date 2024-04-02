@@ -7,8 +7,18 @@
     v-model="selected"
     :pagination="{sortBy: 'draft', descending: true}"
     @edit="store.editEntryPoint = selected[0]; router.push('/entrypoints/create')"
-    @click="console.log(store.entryPoints)"
   >
+    <template #body-cell-taskGraph="props">
+      <q-btn
+        v-if="props.row.task_graph.length"
+        label="View YAML"
+        color="primary"
+        @click.stop="displayYaml = props.row.task_graph; showTaskGraphDialog = true;"
+      />
+      <span v-else class="text-negative">
+        EMPTY
+      </span>
+    </template>
     <template #body-cell-parameterNames="props">
       <label v-for="(param, i) in props.row.parameters" :key="i">
         {{ param.name }} <br>
@@ -42,6 +52,17 @@
       Register new Entry Point
     </q-tooltip>
   </q-btn>
+
+  <InfoPopupDialog
+    v-model="showTaskGraphDialog"
+  >
+    <template #title>
+      <label id="modalTitle">
+        Task Graph YAML
+      </label>
+    </template>
+    <CodeEditor v-model="displayYaml" style="height: 500px;" />
+  </InfoPopupDialog>
 </template>
 
 <script setup>
@@ -50,6 +71,7 @@
   import { useDataStore } from '@/stores/DataStore.ts'
   import { useRouter } from 'vue-router'
   import CodeEditor from '@/components/CodeEditor.vue'
+  import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
   
   const router = useRouter()
 
@@ -58,6 +80,7 @@
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true, },
+    { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'task_graph',sortable: true, },
     { name: 'parameterNames', label: 'Parameter Name(s)', align: 'left', sortable: true },
     { name: 'parameterTypes', label: 'Parameter Type(s)', align: 'left', field: 'parameterTypes', sortable: true },
     { name: 'defaultValues', label: 'Default Values', align: 'left', field: 'defaultValues', sortable: true },
@@ -65,15 +88,7 @@
 
   const selected = ref([])
 
-  // const entryPoints = ref([
-  //   { 
-  //     name: 'Entry Point 1', 
-  //     parameters: [
-  //       {name: 'data_dir', default_value: 'nfs/data', parameter_type: 'path'},
-  //       {name: 'image_size', default_value: '28-28-1', parameter_type: 'String'},
-  //       {name: 'test_param', default_value: 'hello', parameter_type: 'String'},
-  //     ]
-  //   }
-  // ])
+  const showTaskGraphDialog = ref(false)
+  const displayYaml = ref('')
 
 </script>

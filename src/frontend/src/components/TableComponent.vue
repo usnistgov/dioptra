@@ -7,7 +7,7 @@
     selection="single"
     v-model:selected="selected"
     row-key="name"
-    class="q-mt-lg"
+    class="q-mt-lg q-mx-xl"
     flat
     bordered
     :pagination="pagination"
@@ -34,7 +34,12 @@
             @click="handleRadioClick(props)"
           />
           <slot v-bind="props" :name="`body-cell-${col.name}`">
-            {{ col.value }}
+            <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
+              {{ col.value ? '✅' : 	'❌'}}
+            </div>
+            <div v-else>
+              {{ col.value }}
+            </div>
           </slot>
           <q-btn v-if="col.name === 'expand'" size="lg" flat dense round  @click="props.expand = !props.expand" :icon="props.expand ? 'expand_less' : 'expand_more'" @click.stop />
         </q-td>

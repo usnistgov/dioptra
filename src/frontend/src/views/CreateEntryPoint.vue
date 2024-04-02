@@ -57,8 +57,8 @@
           </template>
           <template #body-cell-actions="props">
             <q-td :props="props">
-              <q-btn icon="edit" round size="sm" color="primary" flat @click="console.log(props)" />
-              <q-btn icon="sym_o_delete" round size="sm" color="negative" flat @click="selectedParamName = props.row.name; showDeleteDialog = true" />
+              <q-btn icon="edit" round size="sm" color="primary" flat @click="selectedParam = props.row; selectedParamIndex = props.rowIndex;showEditParamDialog = true" />
+              <q-btn icon="sym_o_delete" round size="sm" color="negative" flat @click="selectedParam = props.row; showDeleteDialog = true" />
             </q-td>
           </template>
         </q-table>
@@ -135,7 +135,13 @@
     v-model="showDeleteDialog"
     @submit="deleteParam()"
     type="Parameter"
-    :name="selectedParamName"
+    :name="selectedParam.name"
+  />
+
+  <EditParamDialog 
+    v-model="showEditParamDialog"
+    :editParam="selectedParam"
+    @updateParam="updateParam"
   />
 </template>
 
@@ -145,6 +151,7 @@
   import { useRouter } from 'vue-router'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import CodeEditor from '@/components/CodeEditor.vue'
+  import EditParamDialog from '@/dialogs/EditParamDialog.vue'
   
   const router = useRouter()
 
@@ -174,9 +181,10 @@
   ])
 
   const typeOptions = ref([
-    'Path',
     'String',
-    'Number',
+    'Float',
+    'Path',
+    'URI',
   ])
 
   const basicInfoForm = ref(null)
@@ -191,7 +199,8 @@
   ]
 
   if(Object.keys(store.editEntryPoint).length !== 0) {
-    entryPoint = store.editEntryPoint
+    // entryPoint = JSON.parse(JSON.stringify(store.editEntryPoint))
+    entryPoint = Object.assign(entryPoint, JSON.parse(JSON.stringify(store.editEntryPoint)))
     store.editMode = true
     store.editEntryPoint = {}
   }
@@ -228,11 +237,19 @@
   }
 
   const showDeleteDialog = ref(false)
-  const selectedParamName = ref('')
+  const selectedParam = ref({})
+  const selectedParamIndex = ref('')
 
   function deleteParam() {
-    entryPoint.parameters = entryPoint.parameters.filter((param) => param.name !== selectedParamName.value)
+    entryPoint.parameters = entryPoint.parameters.filter((param) => param.name !== selectedParam.value.name)
     showDeleteDialog.value = false
+  }
+
+  const showEditParamDialog = ref(false)
+
+  function updateParam(parameter) {
+    entryPoint.parameters[selectedParamIndex.value] = { ...parameter }
+    showEditParamDialog.value = false
   }
 
 </script>
