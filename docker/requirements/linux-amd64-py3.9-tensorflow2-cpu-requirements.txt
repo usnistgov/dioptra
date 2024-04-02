@@ -8,7 +8,7 @@ absl-py==2.1.0
     # via
     #   tensorboard
     #   tensorflow-cpu
-adversarial-robustness-toolbox==1.17.0
+adversarial-robustness-toolbox==1.17.1
     # via dioptra (pyproject.toml)
 alembic==1.13.1
     # via
@@ -16,7 +16,9 @@ alembic==1.13.1
     #   flask-migrate
     #   mlflow
 aniso8601==9.0.1
-    # via flask-restx
+    # via
+    #   flask-restx
+    #   graphene
 astunparse==1.6.3
     # via tensorflow-cpu
 async-timeout==4.0.3
@@ -25,15 +27,15 @@ attrs==23.2.0
     # via
     #   jsonschema
     #   referencing
-boto3==1.34.44
+boto3==1.34.75
     # via dioptra (pyproject.toml)
-botocore==1.34.44
+botocore==1.34.75
     # via
     #   boto3
     #   s3transfer
 box2d-py==2.3.5
     # via gym
-cachetools==5.3.2
+cachetools==5.3.3
     # via google-auth
 certifi==2024.2.2
     # via requests
@@ -61,19 +63,19 @@ cma==3.3.0
     # via -r docker/pip-tools/worker-requirements.in
 contourpy==1.2.0
     # via matplotlib
-croniter==2.0.1
+croniter==2.0.3
     # via prefect
 cryptography==3.4.8
     # via dioptra (pyproject.toml)
 cycler==0.12.1
     # via matplotlib
-dask==2024.2.0
+dask==2024.4.0
     # via
     #   distributed
     #   prefect
 decorator==4.4.2
     # via moviepy
-distributed==2024.2.0
+distributed==2024.4.0
     # via prefect
 docker==7.0.0
     # via
@@ -98,7 +100,7 @@ flask-cors==4.0.0
     # via dioptra (pyproject.toml)
 flask-login==0.6.3
     # via dioptra (pyproject.toml)
-flask-migrate==4.0.5
+flask-migrate==4.0.7
     # via dioptra (pyproject.toml)
 flask-restx==1.3.0
     # via
@@ -108,19 +110,19 @@ flask-sqlalchemy==2.5.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
-flatbuffers==23.5.26
+flatbuffers==24.3.25
     # via tensorflow-cpu
-fonttools==4.49.0
+fonttools==4.50.0
     # via matplotlib
-fsspec==2024.2.0
+fsspec==2024.3.1
     # via dask
 gast==0.4.0
     # via tensorflow-cpu
 gitdb==4.0.11
     # via gitpython
-gitpython==3.1.42
+gitpython==3.1.43
     # via mlflow
-google-auth==2.28.0
+google-auth==2.29.0
     # via
     #   google-auth-oauthlib
     #   tensorboard
@@ -128,9 +130,17 @@ google-auth-oauthlib==1.0.0
     # via tensorboard
 google-pasta==0.2.0
     # via tensorflow-cpu
+graphene==3.3
+    # via mlflow
+graphql-core==3.2.3
+    # via
+    #   graphene
+    #   graphql-relay
+graphql-relay==3.2.0
+    # via graphene
 greenlet==3.0.3
     # via sqlalchemy
-grpcio==1.60.1
+grpcio==1.62.1
     # via
     #   tensorboard
     #   tensorflow-cpu
@@ -153,7 +163,7 @@ imageio-ffmpeg==0.4.9
     # via moviepy
 imgaug==0.4.0
     # via dioptra (pyproject.toml)
-importlib-metadata==7.0.1
+importlib-metadata==7.1.0
     # via
     #   dask
     #   flask
@@ -161,7 +171,7 @@ importlib-metadata==7.0.1
     #   jax
     #   markdown
     #   mlflow
-importlib-resources==6.1.1
+importlib-resources==6.4.0
     # via
     #   flask-restx
     #   matplotlib
@@ -170,7 +180,7 @@ injector==0.21.0
     # via dioptra (pyproject.toml)
 itsdangerous==2.1.2
     # via flask
-jax==0.4.24
+jax==0.4.25
     # via tensorflow-cpu
 jinja2==3.1.3
     # via
@@ -195,7 +205,7 @@ kiwisolver==1.4.5
     # via matplotlib
 lazy-loader==0.3
     # via scikit-image
-libclang==16.0.6
+libclang==18.1.1
     # via tensorflow-cpu
 locket==1.0.0
     # via
@@ -205,7 +215,7 @@ lz4==4.3.3
     # via gym
 mako==1.3.2
     # via alembic
-markdown==3.5.2
+markdown==3.6
     # via
     #   mlflow
     #   tensorboard
@@ -215,7 +225,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   mako
-marshmallow==3.20.2
+marshmallow==3.21.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
@@ -232,17 +242,17 @@ matplotlib==3.8.3
     #   pycocotools
 mdurl==0.1.2
     # via markdown-it-py
-ml-dtypes==0.3.2
+ml-dtypes==0.4.0
     # via jax
-mlflow==2.10.2
+mlflow==2.11.3
     # via dioptra (pyproject.toml)
 moviepy==1.0.3
     # via gym
-msgpack==1.0.7
+msgpack==1.0.8
     # via
     #   distributed
     #   prefect
-multimethod==1.11
+multimethod==1.11.2
     # via dioptra (pyproject.toml)
 mypy-extensions==1.0.0
     # via prefect
@@ -298,7 +308,7 @@ packaging==23.2
     #   prefect
     #   scikit-image
     #   tensorflow-cpu
-pandas==2.2.0
+pandas==2.2.1
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
@@ -308,7 +318,7 @@ passlib==1.7.4
     # via dioptra (pyproject.toml)
 pendulum==3.0.0
     # via prefect
-pillow==10.2.0
+pillow==10.3.0
     # via
     #   -r docker/pip-tools/worker-requirements.in
     #   imageio
@@ -328,29 +338,29 @@ psutil==5.9.8
     # via distributed
 psycopg2-binary==2.9.9
     # via -r docker/pip-tools/worker-requirements.in
-pyarrow==15.0.0
+pyarrow==15.0.2
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
-pyasn1==0.5.1
+pyasn1==0.6.0
     # via
     #   pyasn1-modules
     #   rsa
-pyasn1-modules==0.3.0
+pyasn1-modules==0.4.0
     # via google-auth
 pycocotools==2.0.7
     # via -r docker/pip-tools/worker-requirements.in
-pycparser==2.21
+pycparser==2.22
     # via cffi
 pygame==2.1.0
     # via gym
 pygments==2.17.2
     # via rich
-pyparsing==3.1.1
+pyparsing==3.1.2
     # via matplotlib
 python-box==7.1.1
     # via prefect
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   croniter
@@ -364,7 +374,7 @@ python-json-logger==2.0.7
     # via -r docker/pip-tools/worker-requirements.in
 python-slugify==8.0.4
     # via prefect
-pytz==2023.4
+pytz==2024.1
     # via
     #   croniter
     #   flask-restx
@@ -380,11 +390,11 @@ pyyaml==6.0.1
     #   prefect
 querystring-parser==1.2.4
     # via mlflow
-redis==5.0.1
+redis==5.0.3
     # via
     #   dioptra (pyproject.toml)
     #   rq
-referencing==0.33.0
+referencing==0.34.0
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -397,19 +407,19 @@ requests==2.31.0
     #   prefect
     #   requests-oauthlib
     #   tensorboard
-requests-oauthlib==1.3.1
+requests-oauthlib==2.0.0
     # via google-auth-oauthlib
-rich==13.7.0
+rich==13.7.1
     # via -r docker/pip-tools/worker-requirements.in
 rpds-py==0.18.0
     # via
     #   jsonschema
     #   referencing
-rq==1.15.1
+rq==1.16.1
     # via dioptra (pyproject.toml)
 rsa==4.9
     # via google-auth
-s3transfer==0.10.0
+s3transfer==0.10.1
     # via boto3
 scikit-image==0.22.0
     # via imgaug
@@ -444,7 +454,7 @@ smmap==5.0.1
     # via gitdb
 sortedcontainers==2.4.0
     # via distributed
-sqlalchemy==1.4.51
+sqlalchemy==1.4.52
     # via
     #   alembic
     #   dioptra (pyproject.toml)
@@ -454,7 +464,7 @@ sqlparse==0.4.4
     # via mlflow
 structlog==24.1.0
     # via dioptra (pyproject.toml)
-swig==4.2.0
+swig==4.2.1
     # via gym
 tabulate==0.9.0
     # via prefect
@@ -476,11 +486,11 @@ termcolor==2.4.0
     # via tensorflow-cpu
 text-unidecode==1.3
     # via python-slugify
-threadpoolctl==3.3.0
+threadpoolctl==3.4.0
     # via scikit-learn
 tifffile==2024.2.12
     # via scikit-image
-time-machine==2.13.0
+time-machine==2.14.1
     # via pendulum
 toml==0.10.2
     # via prefect
@@ -520,7 +530,7 @@ werkzeug==2.1.2
     #   flask-login
     #   flask-restx
     #   tensorboard
-wheel==0.42.0
+wheel==0.43.0
     # via
     #   astunparse
     #   tensorboard
@@ -528,7 +538,7 @@ wrapt==1.14.1
     # via tensorflow-cpu
 zict==3.0.0
     # via distributed
-zipp==3.17.0
+zipp==3.18.1
     # via
     #   importlib-metadata
     #   importlib-resources

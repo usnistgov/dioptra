@@ -9,7 +9,7 @@
 
 absl-py==2.1.0
     # via tensorboard
-adversarial-robustness-toolbox==1.17.0
+adversarial-robustness-toolbox==1.17.1
     # via dioptra (pyproject.toml)
 aiohttp==3.9.3
     # via fsspec
@@ -21,7 +21,9 @@ alembic==1.13.1
     #   flask-migrate
     #   mlflow
 aniso8601==9.0.1
-    # via flask-restx
+    # via
+    #   flask-restx
+    #   graphene
 async-timeout==4.0.3
     # via
     #   aiohttp
@@ -31,9 +33,9 @@ attrs==23.2.0
     #   aiohttp
     #   jsonschema
     #   referencing
-boto3==1.34.44
+boto3==1.34.75
     # via dioptra (pyproject.toml)
-botocore==1.34.44
+botocore==1.34.75
     # via
     #   boto3
     #   s3transfer
@@ -65,19 +67,19 @@ cma==3.3.0
     # via -r docker/pip-tools/worker-requirements.in
 contourpy==1.2.0
     # via matplotlib
-croniter==2.0.1
+croniter==2.0.3
     # via prefect
 cryptography==3.4.8
     # via dioptra (pyproject.toml)
 cycler==0.12.1
     # via matplotlib
-dask==2024.2.0
+dask==2024.4.0
     # via
     #   distributed
     #   prefect
 decorator==4.4.2
     # via moviepy
-distributed==2024.2.0
+distributed==2024.4.0
     # via prefect
 docker==7.0.0
     # via
@@ -87,6 +89,8 @@ entrypoints==0.4
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
+filelock==3.13.3
+    # via torch
 flask==2.1.3
     # via
     #   dioptra (pyproject.toml)
@@ -102,7 +106,7 @@ flask-cors==4.0.0
     # via dioptra (pyproject.toml)
 flask-login==0.6.3
     # via dioptra (pyproject.toml)
-flask-migrate==4.0.5
+flask-migrate==4.0.7
     # via dioptra (pyproject.toml)
 flask-restx==1.3.0
     # via
@@ -112,23 +116,32 @@ flask-sqlalchemy==2.5.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
-fonttools==4.49.0
+fonttools==4.50.0
     # via matplotlib
 frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2024.2.0
+fsspec[http]==2024.3.1
     # via
     #   dask
     #   pytorch-lightning
+    #   torch
 gitdb==4.0.11
     # via gitpython
-gitpython==3.1.42
+gitpython==3.1.43
     # via mlflow
+graphene==3.3
+    # via mlflow
+graphql-core==3.2.3
+    # via
+    #   graphene
+    #   graphql-relay
+graphql-relay==3.2.0
+    # via graphene
 greenlet==3.0.3
     # via sqlalchemy
-grpcio==1.60.1
+grpcio==1.62.1
     # via tensorboard
 gunicorn==21.2.0
     # via mlflow
@@ -149,14 +162,14 @@ imageio-ffmpeg==0.4.9
     # via moviepy
 imgaug==0.4.0
     # via dioptra (pyproject.toml)
-importlib-metadata==7.0.1
+importlib-metadata==7.1.0
     # via
     #   dask
     #   flask
     #   gym
     #   markdown
     #   mlflow
-importlib-resources==6.1.1
+importlib-resources==6.4.0
     # via
     #   flask-restx
     #   matplotlib
@@ -170,6 +183,7 @@ jinja2==3.1.3
     #   distributed
     #   flask
     #   mlflow
+    #   torch
 jmespath==1.0.1
     # via
     #   boto3
@@ -186,7 +200,7 @@ kiwisolver==1.4.5
     # via matplotlib
 lazy-loader==0.3
     # via scikit-image
-lightning-utilities==0.10.1
+lightning-utilities==0.11.2
     # via
     #   pytorch-lightning
     #   torchmetrics
@@ -196,9 +210,11 @@ locket==1.0.0
     #   partd
 lz4==4.3.3
     # via gym
+maite[all-interop]==0.5.0 ; python_version == "3.9"
+    # via -r requirements-dev-pytorch.in
 mako==1.3.2
     # via alembic
-markdown==3.5.2
+markdown==3.6
     # via
     #   mlflow
     #   tensorboard
@@ -208,7 +224,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   mako
-marshmallow==3.20.2
+marshmallow==3.21.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
@@ -225,11 +241,13 @@ matplotlib==3.8.3
     #   pycocotools
 mdurl==0.1.2
     # via markdown-it-py
-mlflow==2.10.2
+mlflow==2.11.3
     # via dioptra (pyproject.toml)
 moviepy==1.0.3
     # via gym
-msgpack==1.0.7
+mpmath==1.3.0
+    # via sympy
+msgpack==1.0.8
     # via
     #   distributed
     #   prefect
@@ -237,12 +255,14 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-multimethod==1.11
+multimethod==1.11.2
     # via dioptra (pyproject.toml)
 mypy-extensions==1.0.0
     # via prefect
 networkx==3.2.1
-    # via scikit-image
+    # via
+    #   scikit-image
+    #   torch
 numpy==1.26.4
     # via
     #   adversarial-robustness-toolbox
@@ -252,6 +272,7 @@ numpy==1.26.4
     #   gym
     #   imageio
     #   imgaug
+    #   maite
     #   matplotlib
     #   mlflow
     #   moviepy
@@ -287,7 +308,7 @@ packaging==23.2
     #   pytorch-lightning
     #   scikit-image
     #   torchmetrics
-pandas==2.2.0
+pandas==2.2.1
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
@@ -297,7 +318,7 @@ passlib==1.7.4
     # via dioptra (pyproject.toml)
 pendulum==3.0.0
     # via prefect
-pillow==10.2.0
+pillow==10.3.0
     # via
     #   -r docker/pip-tools/worker-requirements.in
     #   imageio
@@ -317,23 +338,23 @@ psutil==5.9.8
     # via distributed
 psycopg2-binary==2.9.9
     # via -r docker/pip-tools/worker-requirements.in
-pyarrow==15.0.0
+pyarrow==15.0.2
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
 pycocotools==2.0.7
     # via -r docker/pip-tools/worker-requirements.in
-pycparser==2.21
+pycparser==2.22
     # via cffi
 pygame==2.1.0
     # via gym
 pygments==2.17.2
     # via rich
-pyparsing==3.1.1
+pyparsing==3.1.2
     # via matplotlib
 python-box==7.1.1
     # via prefect
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   croniter
@@ -347,9 +368,9 @@ python-json-logger==2.0.7
     # via -r docker/pip-tools/worker-requirements.in
 python-slugify==8.0.4
     # via prefect
-pytorch-lightning==1.9.5 ; python_version == "3.9"
+pytorch-lightning==2.2.1 ; python_version == "3.9"
     # via -r requirements-dev-pytorch.in
-pytz==2023.4
+pytz==2024.1
     # via
     #   croniter
     #   flask-restx
@@ -366,11 +387,11 @@ pyyaml==6.0.1
     #   pytorch-lightning
 querystring-parser==1.2.4
     # via mlflow
-redis==5.0.1
+redis==5.0.3
     # via
     #   dioptra (pyproject.toml)
     #   rq
-referencing==0.33.0
+referencing==0.34.0
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -381,15 +402,16 @@ requests==2.31.0
     #   mlflow
     #   moviepy
     #   prefect
-rich==13.7.0
+    #   torchvision
+rich==13.7.1
     # via -r docker/pip-tools/worker-requirements.in
 rpds-py==0.18.0
     # via
     #   jsonschema
     #   referencing
-rq==1.15.1
+rq==1.16.1
     # via dioptra (pyproject.toml)
-s3transfer==0.10.0
+s3transfer==0.10.1
     # via boto3
 scikit-image==0.22.0
     # via imgaug
@@ -421,7 +443,7 @@ smmap==5.0.1
     # via gitdb
 sortedcontainers==2.4.0
     # via distributed
-sqlalchemy==1.4.51
+sqlalchemy==1.4.52
     # via
     #   alembic
     #   dioptra (pyproject.toml)
@@ -431,8 +453,10 @@ sqlparse==0.4.4
     # via mlflow
 structlog==24.1.0
     # via dioptra (pyproject.toml)
-swig==4.2.0
+swig==4.2.1
     # via gym
+sympy==1.12
+    # via torch
 tabulate==0.9.0
     # via prefect
 tblib==3.0.0
@@ -443,11 +467,11 @@ tensorboard-data-server==0.7.2
     # via tensorboard
 text-unidecode==1.3
     # via python-slugify
-threadpoolctl==3.3.0
+threadpoolctl==3.4.0
     # via scikit-learn
 tifffile==2024.2.12
     # via scikit-image
-time-machine==2.13.0
+time-machine==2.14.1
     # via pendulum
 toml==0.10.2
     # via prefect
@@ -456,18 +480,19 @@ toolz==0.12.1
     #   dask
     #   distributed
     #   partd
-torch==1.10.2 ; python_version == "3.9" and (sys_platform == "darwin" or (sys_platform == "linux" and platform_machine == "aarch64"))
+torch==2.2.0 ; python_version == "3.9" and (sys_platform == "darwin" or (sys_platform == "linux" and platform_machine == "aarch64"))
     # via
     #   -r requirements-dev-pytorch.in
+    #   maite
     #   pytorch-lightning
     #   torchaudio
     #   torchmetrics
     #   torchvision
-torchaudio==0.10.2 ; python_version == "3.9" and (sys_platform == "darwin" or (sys_platform == "linux" and platform_machine == "aarch64"))
+torchaudio==2.2.0 ; python_version == "3.9" and (sys_platform == "darwin" or (sys_platform == "linux" and platform_machine == "aarch64"))
     # via -r requirements-dev-pytorch.in
-torchmetrics==1.3.1
+torchmetrics==1.3.2
     # via pytorch-lightning
-torchvision==0.11.3 ; python_version == "3.9" and (sys_platform == "darwin" or (sys_platform == "linux" and platform_machine == "aarch64"))
+torchvision==0.17.0 ; python_version == "3.9" and (sys_platform == "darwin" or (sys_platform == "linux" and platform_machine == "aarch64"))
     # via -r requirements-dev-pytorch.in
 tornado==6.4
     # via distributed
@@ -477,11 +502,12 @@ tqdm==4.66.2
     #   moviepy
     #   proglog
     #   pytorch-lightning
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via
     #   alembic
     #   dioptra (pyproject.toml)
     #   lightning-utilities
+    #   maite
     #   pytorch-lightning
     #   torch
 tzdata==2024.1
@@ -507,7 +533,7 @@ yarl==1.9.4
     # via aiohttp
 zict==3.0.0
     # via distributed
-zipp==3.17.0
+zipp==3.18.1
     # via
     #   importlib-metadata
     #   importlib-resources

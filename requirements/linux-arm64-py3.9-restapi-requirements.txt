@@ -16,9 +16,9 @@ attrs==23.2.0
     # via
     #   jsonschema
     #   referencing
-boto3==1.34.74
+boto3==1.34.75
     # via dioptra (pyproject.toml)
-botocore==1.34.74
+botocore==1.34.75
     # via
     #   boto3
     #   s3transfer
@@ -38,8 +38,6 @@ entrypoints==0.4
     # via
     #   dioptra (pyproject.toml)
     #   mlflow-skinny
-filelock==3.13.3
-    # via torch
 flask==2.1.3
     # via
     #   dioptra (pyproject.toml)
@@ -64,8 +62,6 @@ flask-sqlalchemy==2.5.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
-fsspec==2024.3.1
-    # via torch
 gitdb==4.0.11
     # via gitpython
 gitpython==3.1.43
@@ -87,9 +83,7 @@ injector==0.21.0
 itsdangerous==2.1.2
     # via flask
 jinja2==3.1.3
-    # via
-    #   flask
-    #   torch
+    # via flask
 jmespath==1.0.1
     # via
     #   boto3
@@ -100,8 +94,6 @@ jsonschema==4.21.1
     #   flask-restx
 jsonschema-specifications==2023.12.1
     # via jsonschema
-maite[all-interop]==0.5.0
-    # via dioptra (pyproject.toml)
 mako==1.3.2
     # via alembic
 markupsafe==2.1.5
@@ -114,16 +106,11 @@ marshmallow==3.21.1
     #   flask-accepts
 mlflow-skinny==2.11.3
     # via dioptra (pyproject.toml)
-mpmath==1.3.0
-    # via sympy
 multimethod==1.11.2
     # via dioptra (pyproject.toml)
-networkx==3.2.1
-    # via torch
 numpy==1.26.4
     # via
     #   dioptra (pyproject.toml)
-    #   maite
     #   pandas
     #   scipy
 packaging==23.2
@@ -194,16 +181,10 @@ sqlparse==0.4.4
     # via mlflow-skinny
 structlog==24.1.0
     # via dioptra (pyproject.toml)
-sympy==1.12
-    # via torch
-torch==2.2.2
-    # via maite
 typing-extensions==4.10.0
     # via
     #   alembic
     #   dioptra (pyproject.toml)
-    #   maite
-    #   torch
 tzdata==2024.1
     # via pandas
 urllib3==1.26.18
