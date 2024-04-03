@@ -42,26 +42,14 @@
     <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
       <legend>Parameters</legend>
       <div style="padding: 0 5%">
-        <q-table
+        <BasicTable
           :columns="columns"
           :rows="entryPoint.parameters"
-          dense
-          flat
-          bordered
-          class="q-mt-lg"
-          separator="horizontal"
-          :hide-bottom="entryPoint.parameters.length > 0"
+          :hideSearch="true"
+          @edit="(param, i) => {selectedParam = param; selectedParamIndex = i; showEditParamDialog = true}"
+          @delete="(param) => {selectedParam = param; showDeleteDialog = true}"
         >
-          <template v-slot:no-data>
-            <span>No parameters entered..........</span>
-          </template>
-          <template #body-cell-actions="props">
-            <q-td :props="props">
-              <q-btn icon="edit" round size="sm" color="primary" flat @click="selectedParam = props.row; selectedParamIndex = props.rowIndex;showEditParamDialog = true" />
-              <q-btn icon="sym_o_delete" round size="sm" color="negative" flat @click="selectedParam = props.row; showDeleteDialog = true" />
-            </q-td>
-          </template>
-        </q-table>
+        </BasicTable>
 
         <q-card
           flat
@@ -152,6 +140,7 @@
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import CodeEditor from '@/components/CodeEditor.vue'
   import EditParamDialog from '@/dialogs/EditParamDialog.vue'
+  import BasicTable from '@/components/BasicTable.vue'
   
   const router = useRouter()
 

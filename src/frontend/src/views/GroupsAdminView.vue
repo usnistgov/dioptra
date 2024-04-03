@@ -49,13 +49,35 @@
     </div>
   </div>
   <h2 class="q-mt-xl">Members</h2>
+  <BasicTable
+    :columns="columns"
+    :rows="store.users"
+    @edit="(param, i) => {selectedParam = param; selectedParamIndex = i; showEditParamDialog = true}"
+    @delete="(param) => {selectedParam = param; showDeleteDialog = true}"
+  >
+  </BasicTable>
 </template>
 
 <script setup>
   import { ref } from 'vue'
+  import BasicTable from '@/components/BasicTable.vue'
+  import { useLoginStore } from '@/stores/LoginStore'
+
+  const store = useLoginStore()
 
   const name = ref('')
 
   const requiredRule = (val) => (val && val.length > 0) || "This field is required"
+
+  const columns = [
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
+    { name: 'read', label: 'Read', align: 'left', field: 'read', sortable: true },
+    { name: 'write', label: 'Write', align: 'left', field: 'write', sortable: true },
+    { name: 'shareRead', label: 'Share Read', align: 'left', field: 'shareRead', sortable: true, style: 'width: 200px' },
+    { name: 'shareWrite', label: 'Share Write', align: 'left', field: 'shareWrite', sortable: true, style: 'width: 200px' },
+    { name: 'admin', label: 'Admin', align: 'left', field: 'admin', sortable: true },
+    { name: 'owner', label: 'Owner', align: 'left', field: 'owner', sortable: true },
+    { name: 'actions', label: 'Actions', align: 'center',  },
+  ]
 
 </script>
