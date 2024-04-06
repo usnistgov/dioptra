@@ -30,8 +30,8 @@ from dioptra.mlflow_plugins.dioptra_tags import (
     DIOPTRA_JOB_ID,
     DIOPTRA_QUEUE,
 )
+from dioptra.rq.tasks.run_task_engine_stoppable import run_experiment_stoppable
 from dioptra.sdk.utilities.paths import set_cwd
-from dioptra.task_engine.task_engine import run_experiment
 from dioptra.task_engine.validation import is_valid
 from dioptra.worker.s3_download import s3_download
 
@@ -65,6 +65,7 @@ def run_task_engine_task(
             normally used, but useful in unit tests when you need a specially
             configured object with stubbed responses.
     """
+
     rq_job = get_current_job()
     rq_job_id = rq_job.get_id() if rq_job else None
 
@@ -147,11 +148,17 @@ def _run_experiment(
 
         db_client.update_job_status(rq_job_id, "started")
 
-        run_experiment(experiment_desc, global_parameters)
+        was_stopped = run_experiment_stoppable(experiment_desc, global_parameters)
 
-        log.info("=== Run succeeded ===")
-        mlflow.end_run()
-        db_client.update_job_status(rq_job_id, "finished")
+        if was_stopped:
+            log.info("=== Run stopped ===")
+            mlflow.end_run("KILLED")
+            # We don't have a job status value for "stopped" or "killed"...
+            db_client.update_job_status(rq_job_id, "failed")
+        else:
+            log.info("=== Run succeeded ===")
+            mlflow.end_run()
+            db_client.update_job_status(rq_job_id, "finished")
 
     except Exception:
         mlflow.end_run("FAILED")
