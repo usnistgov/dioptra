@@ -25,6 +25,7 @@ from __future__ import annotations
 from typing import Any, BinaryIO, Callable
 
 import pytest
+from dioptra.tests.unit.restapi.lib import mock_rq, mock_s3
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from pytest import MonkeyPatch
@@ -32,8 +33,6 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import EXPERIMENT_ROUTE, JOB_ROUTE, QUEUE_ROUTE, V1_ROOT
 from dioptra.restapi.v0.shared.s3.service import S3Service
-
-from dioptra.tests.unit.restapi.lib import mock_rq, mock_s3
 
 # -- Fixtures --------------------------------------------------------------------------
 
