@@ -26,14 +26,14 @@ from typing import Any, BinaryIO, Callable
 
 import pytest
 from flask.testing import FlaskClient
-# from flask_sqlalchemy import SQLAlchemy
-# from pytest import MonkeyPatch
+from flask_sqlalchemy import SQLAlchemy
+from pytest import MonkeyPatch
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import EXPERIMENT_ROUTE, JOB_ROUTE, QUEUE_ROUTE, V1_ROOT
-# from dioptra.restapi.v0.shared.s3.service import S3Service
+from dioptra.restapi.v0.shared.s3.service import S3Service
 
-# from .lib import mock_rq, mock_s3
+from .lib import mock_rq, mock_s3
 
 # -- Fixtures --------------------------------------------------------------------------
 
@@ -118,6 +118,25 @@ def submit_job(
         follow_redirects=True,
     )
 
+def delete_job(
+        client: FlaskClient,
+        id: int,
+) -> TestResponse:
+    """Delete a job using the API.
+
+    Args:
+        client: The Flask test client.
+        id: The unique id of the Job.
+
+    Returns:
+        The response from the API.
+    """
+    return client.delete(
+        f"/{V1_ROOT}/{JOB_ROUTE}/",
+        json={"id": f"{id}"},
+        follow_redirects=True,
+    )
+
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -156,10 +175,26 @@ def assert_retrieving_all_jobs_works(
     response = client.get(f"/{V1_ROOT}/{JOB_ROUTE}", follow_redirects=True)
     assert response.status_code == 200 and response.get_json() == expected
 
+def assert_job_not_found(
+    client: FlaskClient, id: int
+) -> None:
+    """Assert that retrieving a job by id doesn't work.
+
+    Args:
+        client: The Flask test client.
+        id: The id of the job to retrieve.
+
+    Raises:
+        AssertionError: If the response status code is not 404
+    """
+    response = client.get(f"/{V1_ROOT}/{JOB_ROUTE}/{id}", follow_redirects=True)
+    assert response.status_code == 404
+
 
 # -- Tests -----------------------------------------------------------------------------
 
 
+@pytest.mark.v1
 def test_submit_job(
     monkeypatch: MonkeyPatch,
     client: FlaskClient,
@@ -170,10 +205,10 @@ def test_submit_job(
 
         Setup: An experiment 'mnist' and queue 'tensorflow_cpu' is registered.
 
-        Scenario: Get a Job
-            Given I am an authorized user,
-            I need to be able to submit a job request,
-            in order to queue up a job as part of an experiment.
+        Scenario: Create a New Job Resource for an Experiment
+            Given I am an authorized user, an experiment exists, and a queue exists
+            I need to submit a post request with that includes the experiment name, queue name, and job parameters
+            In order to create a new job resource for the given experiment to be run on the given queue
 
     This test validates this scenario by following these actions:
 
@@ -194,6 +229,7 @@ def test_submit_job(
     assert_retrieving_job_by_id_works(client, id=job_expected["jobId"], expected=job_expected)  # noqa: B950; fmt: skip
 
 
+@pytest.mark.v1
 def test_list_jobs(
     monkeypatch: MonkeyPatch,
     client: FlaskClient,
@@ -228,3 +264,41 @@ def test_list_jobs(
     job3_expected = submit_job(client, form_request=job_request_factory()).get_json()  # noqa: B950; fmt: skip
     job_expected_list = [job1_expected, job2_expected, job3_expected]
     assert_retrieving_all_jobs_works(client, expected=job_expected_list)
+
+
+@pytest.mark.v1
+def test_delete_job(
+    monkeypatch: MonkeyPatch,
+    client: FlaskClient,
+    db: SQLAlchemy,
+    job_request_factory: Callable[[], dict[str, Any]],
+) -> None:
+    """Test that a job can be deleted following the scenario below:
+
+        Setup: An experiment 'mnist', queue 'tensorflow_cpu' is registered, and a Job Resource has been created.
+
+        Scenario: Delete a Job Resource for an Experiment by its Unique ID
+            Given I am an authorized user and an experiment with jobs exists
+            I need to submit a delete request with a job id
+            In order to delete the job resource matching the given id
+
+
+    This test validates this scenario by following these actions:
+
+    - The user retrieves information about the job that matches the information that
+      was provided during registration id as an identifier.
+    - A user deletes the job.
+    - The user is no longer able to retrieve the job resource using is unique identifier.
+    """
+    # Inline import necessary to prevent circular import
+    import dioptra.restapi.v0.shared.rq.service as rq_service
+
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+    monkeypatch.setattr(S3Service, "upload", mock_s3.mock_s3_upload)
+
+    register_mnist_experiment(client)
+    register_tensorflow_cpu_queue(client)
+    job_expected = submit_job(client, form_request=job_request_factory()).get_json()  # noqa: B950; fmt: skip
+    assert_retrieving_job_by_id_works(client, id=job_expected["jobId"], expected=job_expected)  # noqa: B950; fmt: skip
+    delete_job(client, id=job_expected["jobId"])
+    assert_job_not_found(client, id=job_expected["jobId"])
