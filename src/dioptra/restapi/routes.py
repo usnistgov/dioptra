@@ -33,6 +33,7 @@ TASK_PLUGIN_ROUTE = "taskPlugin"
 USER_ROUTE = "user"
 
 V1_ARTIFACTS_ROUTE = "artifacts"
+V1_AUTH_ROUTE = "auth"
 V1_ENTRYPOINTS_ROUTE = "entrypoints"
 V1_EXPERIMENTS_ROUTE = "experiments"
 V1_JOBS_ROUTE = "jobs"
@@ -81,6 +82,7 @@ def register_v1_routes(api: Api) -> None:
         api: The main REST |Api| object.
     """
     from .v1.artifacts.controller import api as artifacts_api
+    from .v1.auth.controller import api as auth_api
     from .v1.entrypoints.controller import api as entrypoints_api
     from .v1.experiments.controller import api as experiments_api
     from .v1.jobs.controller import api as jobs_api
@@ -90,6 +92,7 @@ def register_v1_routes(api: Api) -> None:
     from .v1.queues.controller import api as queues_api
     from .v1.tags.controller import api as tags_api
 
+    api.add_namespace(auth_api, path=f"/{V1_ROOT}/{V1_AUTH_ROUTE}")
     api.add_namespace(artifacts_api, path=f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}")
     api.add_namespace(entrypoints_api, path=f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}")
     api.add_namespace(experiments_api, path=f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}")
