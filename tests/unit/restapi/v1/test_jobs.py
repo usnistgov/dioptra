@@ -214,7 +214,7 @@ def assert_job_not_found(
 
 
 @pytest.mark.v1
-def test_submit_job(
+def test_job(
     monkeypatch: MonkeyPatch,
     client: FlaskClient,
     db: SQLAlchemy,
