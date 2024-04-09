@@ -50,6 +50,7 @@ def job_request_factory(
     Returns:
         A factory function for creating job submission requests.
     """
+
     def wrapped() -> dict[str, Any]:
         return {
             "experimentName": "mnist",
@@ -120,8 +121,8 @@ def submit_job(
 
 
 def delete_job(
-        client: FlaskClient,
-        id: int,
+    client: FlaskClient,
+    id: int,
 ) -> TestResponse:
     """Delete a job using the API.
 
@@ -194,9 +195,8 @@ def assert_retrieving_all_jobs_works(
     response = client.get(f"/{V1_ROOT}/{JOB_ROUTE}", follow_redirects=True)
     assert response.status_code == 200 and response.get_json() == expected
 
-def assert_job_not_found(
-    client: FlaskClient, id: int
-) -> None:
+
+def assert_job_not_found(client: FlaskClient, id: int) -> None:
     """Assert that retrieving a job by id doesn't work.
 
     Args:
@@ -253,7 +253,7 @@ def test_job(
     register_tensorflow_cpu_queue(client)
     job_expected = submit_job(client, form_request=job_request_factory()).get_json()  # noqa: B950; fmt: skip
     assert_retrieving_job_by_id_works(client, id=job_expected["jobId"], expected=job_expected)  # noqa: B950; fmt: skip
-    assert_retrieving_job_status_works(client, id=job_expected["jobId"], status=job_expected["status"]) # noqa: B950; fmt: skip
+    assert_retrieving_job_status_works(client, id=job_expected["jobId"], status=job_expected["status"])  # noqa: B950; fmt: skip
 
 
 @pytest.mark.v1
