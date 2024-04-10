@@ -19,6 +19,13 @@ from __future__ import annotations
 
 from marshmallow import Schema, fields
 
+from dioptra.restapi.v1.groups.schema import GroupRefSchema
+from dioptra.restapi.v1.schemas import (
+    BasePageSchema,
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+)
+
 
 class UserRefSchema(Schema):
     """The reference schema for the data stored in a User resource."""
@@ -37,3 +44,102 @@ class UserRefSchema(Schema):
         metadata=dict(description="URL for accessing the full User resource."),
         relative=True,
     )
+
+
+class UserMutableFieldsSchema(Schema):
+    """The schema for the mutable data fields in a User resource."""
+
+    username = fields.String(
+        attribute="name", metadata=dict(description="Username of the User.")
+    )
+
+    email = fields.String(
+        attribute="email", metadata=dict(description="Email of the User.")
+    )
+
+
+class UserSchema(UserMutableFieldsSchema):
+    """The schema for a User that is not the logged-in User."""
+
+    password = fields.String(
+        attribute="password",
+        metadata=dict(description="Password for the User resource."),
+        load_only=True,
+    )
+
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="ID for the User resource."),
+        dump_only=True,
+    )
+
+
+class UserCurrentSchema(UserSchema):
+    """The schema for the currently logged-in User."""
+
+    memberOf = fields.Nested(
+        GroupRefSchema,
+        attribute="member_of",
+        metadata=dict(description="A list of Groups the User is a part of."),
+        many=True,
+        dump_only=True,
+    )
+    createdOn = fields.DateTime(
+        attribute="created_on",
+        metadata=dict(
+            description="Timestamp when the User resource was created.",
+            dump_only=True,
+        ),
+    )
+    lastModifiedOn = fields.DateTime(
+        attribute="last_modified_on",
+        metadata=dict(
+            description="Timestamp when the User resource was last modified."
+        ),
+        dump_only=True,
+    )
+    lastLoginOn = fields.DateTime(
+        attribute="last_login_on",
+        metadata=dict(
+            description="Timestamp when the User resource was last logged in."
+        ),
+        dump_only=True,
+    )
+    passwordExpiresOn = fields.DateTime(
+        attribute="password_expires_on",
+        metadata=dict(
+            description="Timestamp when the User resource password expires on."
+        ),
+        dump_only=True,
+    )
+
+
+class UserPasswordSchema(Schema):
+    """The schema for changing a User's password."""
+
+    oldPassword = fields.String(
+        attribute="old_password",
+        metadata=dict(description="Old password for the User resource."),
+    )
+
+    newPassword = fields.String(
+        attribute="new_password",
+        metadata=dict(description="New password for the User resource."),
+    )
+
+
+class UserPageSchema(BasePageSchema):
+    """The paged schema for the data stored in a User resource."""
+
+    data = fields.Nested(
+        UserSchema,
+        many=True,
+        metadata=dict(description="List of User resources in the current page."),
+    )
+
+
+class UserGetQueryParameters(
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /users endpoint."""
