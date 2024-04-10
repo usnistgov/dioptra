@@ -41,6 +41,7 @@ V1_PLUGIN_PARAMETER_TYPES_ROUTE = "pluginParameterTypes"
 V1_PLUGINS_ROUTE = "plugins"
 V1_QUEUES_ROUTE = "queues"
 V1_TAGS_ROUTE = "tags"
+V1_USERS_ROUTE = "users"
 
 
 def register_routes(api: Api) -> None:
@@ -49,8 +50,8 @@ def register_routes(api: Api) -> None:
     Args:
         api: The main REST |Api| object.
     """
-    register_v0_routes(api)
-    # register_v1_routes(api)
+    # register_v0_routes(api)
+    register_v1_routes(api)
 
 
 def register_v0_routes(api: Api) -> None:
@@ -89,6 +90,7 @@ def register_v1_routes(api: Api) -> None:
     from .v1.plugins.controller import api as plugins_api
     from .v1.queues.controller import api as queues_api
     from .v1.tags.controller import api as tags_api
+    from .v1.users.controller import api as users_api
 
     api.add_namespace(artifacts_api, path=f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}")
     api.add_namespace(entrypoints_api, path=f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}")
@@ -101,3 +103,4 @@ def register_v1_routes(api: Api) -> None:
     api.add_namespace(plugins_api, path=f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}")
     api.add_namespace(queues_api, path=f"/{V1_ROOT}/{V1_QUEUES_ROUTE}")
     api.add_namespace(tags_api, path=f"/{V1_ROOT}/{V1_TAGS_ROUTE}")
+    api.add_namespace(users_api, path=f"/{V1_ROOT}/{V1_USERS_ROUTE}")
