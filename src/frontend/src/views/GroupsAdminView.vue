@@ -28,23 +28,9 @@
         </div>
       </fieldset>
 
-      <fieldset class="q-mt-xl q-pa-lg">
+      <fieldset class="q-mt-xl q-pa-lg" v-if="dataStore.editMode">
         <legend>Owner Only Options</legend>
         <q-list bordered>
-          <q-item>
-            <q-item-section>
-              <q-item-label class="text-bold">Transfer Ownership</q-item-label>
-              <q-item-label caption>Transfer this group to another user.</q-item-label>
-            </q-item-section>
-
-            <q-item-section side>
-              <q-btn 
-                label="Transfer Ownership"
-                color="primary"
-              />
-            </q-item-section>
-          </q-item>
-          <q-separator />
           <q-item>
             <q-item-section>
               <q-item-label class="text-bold">Delete Group</q-item-label>
@@ -122,6 +108,7 @@
       <BasicTable
         :columns="columns"
         :rows="store.users"
+        :hideEditRow="true"
         @edit="(param, i) => {selectedParam = param; selectedParamIndex = i; showEditParamDialog = true}"
         @delete="(param) => {selectedParam = param; showDeleteDialog = true}"
         style="max-height: 500px;"
@@ -135,6 +122,8 @@
   import { ref, inject } from 'vue'
   import BasicTable from '@/components/BasicTable.vue'
   import { useLoginStore } from '@/stores/LoginStore'
+  import { useDataStore } from '@/stores/DataStore.ts'
+  const dataStore = useDataStore()
 
   const isMobile = inject('isMobile')
 

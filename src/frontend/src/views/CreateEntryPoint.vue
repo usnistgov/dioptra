@@ -46,6 +46,7 @@
           :columns="columns"
           :rows="entryPoint.parameters"
           :hideSearch="true"
+          :hideEditTable="true"
           @edit="(param, i) => {selectedParam = param; selectedParamIndex = i; showEditParamDialog = true}"
           @delete="(param) => {selectedParam = param; showDeleteDialog = true}"
         >
