@@ -10,9 +10,12 @@
 -e file:.#egg=dioptra
     # via -r requirements-dev.in
 adversarial-robustness-toolbox==1.17.1
-    # via dioptra (pyproject.toml)
+    # via
+    #   dioptra (pyproject.toml)
+    #   heart-library
 aiohttp==3.9.3
     # via
+    #   datasets
     #   dioptra (pyproject.toml)
     #   fsspec
 aiosignal==1.3.1
@@ -73,11 +76,11 @@ bleach==6.1.0
     # via
     #   kaggle
     #   nbconvert
-boto3==1.34.75
+boto3==1.34.82
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-botocore==1.34.75
+botocore==1.34.82
     # via
     #   boto3
     #   s3transfer
@@ -131,7 +134,7 @@ comm==0.2.2
     # via
     #   ipykernel
     #   ipywidgets
-contourpy==1.2.0
+contourpy==1.2.1
     # via matplotlib
 cookiecutter==2.1.1
     # via
@@ -143,19 +146,25 @@ cryptography==3.4.8
     # via dioptra (pyproject.toml)
 cycler==0.12.1
     # via matplotlib
-dask==2024.4.0
+dask==2024.4.1
     # via
     #   distributed
     #   prefect
+datasets==2.18.0
+    # via maite
 debugpy==1.8.1
     # via ipykernel
 decorator==5.1.1
     # via ipython
 defusedxml==0.7.1
     # via nbconvert
+dill==0.3.8
+    # via
+    #   datasets
+    #   multiprocess
 distlib==0.3.8
     # via virtualenv
-distributed==2024.4.0
+distributed==2024.4.1
     # via prefect
 docker==7.0.0
     # via
@@ -180,10 +189,13 @@ executing==2.0.1
     # via stack-data
 fastjsonschema==2.19.1
     # via nbformat
-filelock==3.13.3
+filelock==3.13.4
     # via
+    #   datasets
+    #   huggingface-hub
     #   torch
     #   tox
+    #   transformers
     #   virtualenv
 flake8==7.0.0
     # via
@@ -227,7 +239,7 @@ flask-sqlalchemy==2.5.1
     #   dioptra
     #   dioptra (pyproject.toml)
     #   flask-migrate
-fonttools==4.50.0
+fonttools==4.51.0
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
@@ -237,9 +249,11 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec[http]==2024.3.1
+fsspec[http]==2024.2.0
     # via
     #   dask
+    #   datasets
+    #   huggingface-hub
     #   pytorch-lightning
     #   torch
     #   universal-pathlib
@@ -261,11 +275,20 @@ gunicorn==21.2.0
     # via mlflow
 h11==0.14.0
     # via httpcore
+heart-library==0.3.0 ; python_version == "3.9"
+    # via -r requirements-dev-pytorch.in
 httpcore==1.0.5
     # via httpx
 httpx==0.27.0
     # via jupyterlab
-idna==3.6
+huggingface-hub==0.22.2
+    # via
+    #   datasets
+    #   maite
+    #   timm
+    #   tokenizers
+    #   transformers
+idna==3.7
     # via
     #   anyio
     #   httpx
@@ -344,7 +367,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.3.2
+joblib==1.4.0
     # via scikit-learn
 json5==0.9.24
     # via jupyterlab-server
@@ -384,7 +407,7 @@ jupyter-core==5.7.2
     #   qtconsole
 jupyter-events==0.10.0
     # via jupyter-server
-jupyter-lsp==2.2.4
+jupyter-lsp==2.2.5
     # via jupyterlab
 jupyter-server==2.13.0
     # via
@@ -395,23 +418,23 @@ jupyter-server==2.13.0
     #   notebook-shim
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.1.5
+jupyterlab==4.1.6
     # via
     #   dioptra (pyproject.toml)
     #   notebook
 jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.25.4
+jupyterlab-server==2.26.0
     # via
     #   jupyterlab
     #   notebook
 jupyterlab-widgets==3.0.10
     # via ipywidgets
-kaggle==1.6.8
+kaggle==1.6.11
     # via dioptra (pyproject.toml)
 kiwisolver==1.4.5
     # via matplotlib
-lazy-loader==0.3
+lazy-loader==0.4
     # via scikit-image
 lightning-utilities==0.11.2
     # via
@@ -423,9 +446,11 @@ locket==1.0.0
     #   partd
 lsprotocol==2023.0.1
     # via pygls
-maite[all-interop]==0.5.0 ; python_version == "3.9"
-    # via -r requirements-dev-pytorch.in
-mako==1.3.2
+maite[all-interop]==0.4.0 ; python_version == "3.9"
+    # via
+    #   -r requirements-dev-pytorch.in
+    #   heart-library
+mako==1.3.3
     # via alembic
 markdown==3.6
     # via mlflow
@@ -445,10 +470,11 @@ marshmallow==3.21.1
     #   prefect
 marshmallow-oneofschema==3.1.1
     # via prefect
-matplotlib==3.8.3
+matplotlib==3.8.4
     # via
     #   imgaug
     #   mlflow
+    #   pycocotools
 matplotlib-inline==0.1.6
     # via
     #   ipykernel
@@ -475,6 +501,8 @@ multimethod==1.11.2
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
+multiprocess==0.70.16
+    # via datasets
 mypy-extensions==1.0.0
     # via prefect
 nbclient==0.10.0
@@ -484,7 +512,7 @@ nbconvert==7.16.3
     #   dioptra (pyproject.toml)
     #   jupyter
     #   jupyter-server
-nbformat==5.10.3
+nbformat==5.10.4
     # via
     #   jupyter-server
     #   nbclient
@@ -505,8 +533,10 @@ numpy==1.26.4
     # via
     #   adversarial-robustness-toolbox
     #   contourpy
+    #   datasets
     #   dioptra
     #   dioptra (pyproject.toml)
+    #   heart-library
     #   imageio
     #   imgaug
     #   maite
@@ -515,6 +545,7 @@ numpy==1.26.4
     #   opencv-python
     #   pandas
     #   pyarrow
+    #   pycocotools
     #   pytorch-lightning
     #   scikit-image
     #   scikit-learn
@@ -523,6 +554,7 @@ numpy==1.26.4
     #   tifffile
     #   torchmetrics
     #   torchvision
+    #   transformers
 opencv-python==4.9.0.80
     # via imgaug
 overrides==7.7.0
@@ -531,13 +563,16 @@ packaging==23.2
     # via
     #   build
     #   dask
+    #   datasets
     #   distributed
     #   docker
     #   gunicorn
+    #   huggingface-hub
     #   ipykernel
     #   jupyter-server
     #   jupyterlab
     #   jupyterlab-server
+    #   lazy-loader
     #   lightning-utilities
     #   marshmallow
     #   matplotlib
@@ -553,14 +588,16 @@ packaging==23.2
     #   sphinx
     #   torchmetrics
     #   tox
-pandas==2.2.1
+    #   transformers
+pandas==2.2.2
     # via
+    #   datasets
     #   dioptra
     #   dioptra (pyproject.toml)
     #   mlflow
 pandocfilters==1.5.1
     # via nbconvert
-parso==0.8.3
+parso==0.8.4
     # via jedi
 partd==1.4.1
     # via dask
@@ -614,8 +651,13 @@ pure-eval==0.2.2
     # via stack-data
 pyarrow==15.0.2
     # via
+    #   datasets
     #   dioptra (pyproject.toml)
     #   mlflow
+pyarrow-hotfix==0.6
+    # via datasets
+pycocotools==2.0.7
+    # via maite
 pycodestyle==2.11.1
     # via
     #   autopep8
@@ -692,13 +734,17 @@ pyyaml==6.0.1
     # via
     #   cookiecutter
     #   dask
+    #   datasets
     #   dioptra
     #   dioptra (pyproject.toml)
     #   distributed
+    #   huggingface-hub
     #   jupyter-events
     #   mlflow
     #   prefect
     #   pytorch-lightning
+    #   timm
+    #   transformers
 pyzmq==25.1.2
     # via
     #   ipykernel
@@ -722,18 +768,23 @@ referencing==0.34.0
     #   jsonschema
     #   jsonschema-specifications
     #   jupyter-events
+regex==2023.12.25
+    # via transformers
 requests==2.31.0
     # via
     #   cookiecutter
+    #   datasets
     #   dioptra
     #   dioptra (pyproject.toml)
     #   docker
+    #   huggingface-hub
     #   jupyterlab-server
     #   kaggle
     #   mlflow
     #   prefect
     #   sphinx
     #   torchvision
+    #   transformers
 rfc3339-validator==0.1.4
     # via
     #   jsonschema
@@ -754,14 +805,19 @@ rq==1.16.1
     #   dioptra (pyproject.toml)
 s3transfer==0.10.1
     # via boto3
+safetensors==0.4.2
+    # via
+    #   timm
+    #   transformers
 scikit-image==0.22.0
     # via imgaug
 scikit-learn==1.0.2
     # via
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
+    #   heart-library
     #   mlflow
-scipy==1.12.0
+scipy==1.13.0
     # via
     #   adversarial-robustness-toolbox
     #   dioptra
@@ -770,7 +826,7 @@ scipy==1.12.0
     #   mlflow
     #   scikit-image
     #   scikit-learn
-send2trash==1.8.2
+send2trash==1.8.3
     # via jupyter-server
 shapely==2.0.3
     # via imgaug
@@ -779,6 +835,7 @@ six==1.16.0
     #   adversarial-robustness-toolbox
     #   asttokens
     #   bleach
+    #   heart-library
     #   imgaug
     #   kaggle
     #   python-dateutil
@@ -847,8 +904,12 @@ tifffile==2024.2.12
     # via scikit-image
 time-machine==2.14.1
     # via pendulum
+timm==0.9.16
+    # via maite
 tinycss2==1.2.1
     # via nbconvert
+tokenizers==0.15.2
+    # via transformers
 toml==0.10.2
     # via prefect
 tomli==2.0.1
@@ -872,15 +933,23 @@ torch==2.2.0 ; python_version == "3.9" and (sys_platform == "darwin" or (sys_pla
     #   -r requirements-dev-pytorch.in
     #   maite
     #   pytorch-lightning
+    #   timm
     #   torchaudio
     #   torchmetrics
     #   torchvision
 torchaudio==2.2.0 ; python_version == "3.9" and (sys_platform == "darwin" or (sys_platform == "linux" and platform_machine == "aarch64"))
     # via -r requirements-dev-pytorch.in
+torcheval==0.0.7
+    # via maite
 torchmetrics==1.3.2
-    # via pytorch-lightning
+    # via
+    #   maite
+    #   pytorch-lightning
 torchvision==0.17.0 ; python_version == "3.9" and (sys_platform == "darwin" or (sys_platform == "linux" and platform_machine == "aarch64"))
-    # via -r requirements-dev-pytorch.in
+    # via
+    #   -r requirements-dev-pytorch.in
+    #   maite
+    #   timm
 tornado==6.4
     # via
     #   distributed
@@ -895,8 +964,13 @@ tox==4.14.2
 tqdm==4.66.2
     # via
     #   adversarial-robustness-toolbox
+    #   datasets
+    #   heart-library
+    #   huggingface-hub
     #   kaggle
+    #   maite
     #   pytorch-lightning
+    #   transformers
 traitlets==5.14.2
     # via
     #   comm
@@ -914,9 +988,11 @@ traitlets==5.14.2
     #   nbconvert
     #   nbformat
     #   qtconsole
+transformers==4.39.3
+    # via maite
 types-python-dateutil==2.9.0.20240316
     # via arrow
-typing-extensions==4.10.0
+typing-extensions==4.11.0
     # via
     #   alembic
     #   anyio
@@ -924,11 +1000,13 @@ typing-extensions==4.10.0
     #   cattrs
     #   dioptra
     #   dioptra (pyproject.toml)
+    #   huggingface-hub
     #   ipython
     #   lightning-utilities
     #   maite
     #   pytorch-lightning
     #   torch
+    #   torcheval
 tzdata==2024.1
     # via
     #   pandas
@@ -971,6 +1049,8 @@ wheel==0.43.0
     #   pip-tools
 widgetsnbextension==4.0.10
     # via ipywidgets
+xxhash==3.4.1
+    # via datasets
 yarl==1.9.4
     # via aiohttp
 zict==3.0.0

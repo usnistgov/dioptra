@@ -74,11 +74,11 @@ bleach==6.1.0
     # via
     #   kaggle
     #   nbconvert
-boto3==1.34.75
+boto3==1.34.82
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-botocore==1.34.75
+botocore==1.34.82
     # via
     #   boto3
     #   s3transfer
@@ -134,7 +134,7 @@ comm==0.2.2
     # via
     #   ipykernel
     #   ipywidgets
-contourpy==1.2.0
+contourpy==1.2.1
     # via matplotlib
 cookiecutter==2.1.1
     # via
@@ -146,7 +146,7 @@ cryptography==3.4.8
     # via dioptra (pyproject.toml)
 cycler==0.12.1
     # via matplotlib
-dask==2024.4.0
+dask==2024.4.1
     # via
     #   distributed
     #   prefect
@@ -158,7 +158,7 @@ defusedxml==0.7.1
     # via nbconvert
 distlib==0.3.8
     # via virtualenv
-distributed==2024.4.0
+distributed==2024.4.1
     # via prefect
 docker==7.0.0
     # via
@@ -183,7 +183,7 @@ executing==2.0.1
     # via stack-data
 fastjsonschema==2.19.1
     # via nbformat
-filelock==3.13.3
+filelock==3.13.4
     # via
     #   tox
     #   virtualenv
@@ -231,7 +231,7 @@ flask-sqlalchemy==2.5.1
     #   flask-migrate
 flatbuffers==24.3.25
     # via tensorflow-cpu
-fonttools==4.50.0
+fonttools==4.51.0
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
@@ -277,13 +277,13 @@ gunicorn==21.2.0
     # via mlflow
 h11==0.14.0
     # via httpcore
-h5py==3.10.0
+h5py==3.11.0
     # via tensorflow-cpu
 httpcore==1.0.5
     # via httpx
 httpx==0.27.0
     # via jupyterlab
-idna==3.6
+idna==3.7
     # via
     #   anyio
     #   httpx
@@ -342,7 +342,7 @@ isoduration==20.11.0
     # via jsonschema
 itsdangerous==2.1.2
     # via flask
-jax==0.4.25
+jax==0.4.26
     # via tensorflow-cpu
 jedi==0.19.1
     # via ipython
@@ -364,7 +364,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.3.2
+joblib==1.4.0
     # via scikit-learn
 json5==0.9.24
     # via jupyterlab-server
@@ -404,7 +404,7 @@ jupyter-core==5.7.2
     #   qtconsole
 jupyter-events==0.10.0
     # via jupyter-server
-jupyter-lsp==2.2.4
+jupyter-lsp==2.2.5
     # via jupyterlab
 jupyter-server==2.13.0
     # via
@@ -415,25 +415,25 @@ jupyter-server==2.13.0
     #   notebook-shim
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.1.5
+jupyterlab==4.1.6
     # via
     #   dioptra (pyproject.toml)
     #   notebook
 jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.25.4
+jupyterlab-server==2.26.0
     # via
     #   jupyterlab
     #   notebook
 jupyterlab-widgets==3.0.10
     # via ipywidgets
-kaggle==1.6.8
+kaggle==1.6.11
     # via dioptra (pyproject.toml)
 keras==2.12.0
     # via tensorflow-cpu
 kiwisolver==1.4.5
     # via matplotlib
-lazy-loader==0.3
+lazy-loader==0.4
     # via scikit-image
 libclang==18.1.1
     # via tensorflow-cpu
@@ -443,7 +443,7 @@ locket==1.0.0
     #   partd
 lsprotocol==2023.0.1
     # via pygls
-mako==1.3.2
+mako==1.3.3
     # via alembic
 markdown==3.6
     # via
@@ -465,7 +465,7 @@ marshmallow==3.21.1
     #   prefect
 marshmallow-oneofschema==3.1.1
     # via prefect
-matplotlib==3.8.3
+matplotlib==3.8.4
     # via
     #   imgaug
     #   mlflow
@@ -504,7 +504,7 @@ nbconvert==7.16.3
     #   dioptra (pyproject.toml)
     #   jupyter
     #   jupyter-server
-nbformat==5.10.3
+nbformat==5.10.4
     # via
     #   jupyter-server
     #   nbclient
@@ -564,6 +564,7 @@ packaging==23.2
     #   jupyter-server
     #   jupyterlab
     #   jupyterlab-server
+    #   lazy-loader
     #   marshmallow
     #   matplotlib
     #   mlflow
@@ -577,14 +578,14 @@ packaging==23.2
     #   sphinx
     #   tensorflow-cpu
     #   tox
-pandas==2.2.1
+pandas==2.2.2
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
     #   mlflow
 pandocfilters==1.5.1
     # via nbconvert
-parso==0.8.3
+parso==0.8.4
     # via jedi
 partd==1.4.1
     # via dask
@@ -795,7 +796,7 @@ scikit-learn==1.0.2
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
     #   mlflow
-scipy==1.12.0
+scipy==1.13.0
     # via
     #   adversarial-robustness-toolbox
     #   dioptra
@@ -805,7 +806,7 @@ scipy==1.12.0
     #   mlflow
     #   scikit-image
     #   scikit-learn
-send2trash==1.8.2
+send2trash==1.8.3
     # via jupyter-server
 shapely==2.0.3
     # via imgaug

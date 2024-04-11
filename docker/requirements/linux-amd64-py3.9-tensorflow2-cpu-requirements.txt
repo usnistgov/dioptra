@@ -27,9 +27,9 @@ attrs==23.2.0
     # via
     #   jsonschema
     #   referencing
-boto3==1.34.75
+boto3==1.34.82
     # via dioptra (pyproject.toml)
-botocore==1.34.75
+botocore==1.34.82
     # via
     #   boto3
     #   s3transfer
@@ -61,7 +61,7 @@ cloudpickle==3.0.0
     #   prefect
 cma==3.3.0
     # via -r docker/pip-tools/worker-requirements.in
-contourpy==1.2.0
+contourpy==1.2.1
     # via matplotlib
 croniter==2.0.3
     # via prefect
@@ -69,13 +69,13 @@ cryptography==3.4.8
     # via dioptra (pyproject.toml)
 cycler==0.12.1
     # via matplotlib
-dask==2024.4.0
+dask==2024.4.1
     # via
     #   distributed
     #   prefect
 decorator==4.4.2
     # via moviepy
-distributed==2024.4.0
+distributed==2024.4.1
     # via prefect
 docker==7.0.0
     # via
@@ -112,7 +112,7 @@ flask-sqlalchemy==2.5.1
     #   flask-migrate
 flatbuffers==24.3.25
     # via tensorflow-cpu
-fonttools==4.50.0
+fonttools==4.51.0
     # via matplotlib
 fsspec==2024.3.1
     # via dask
@@ -150,9 +150,9 @@ gym[box2d,classic-control,classic_control,other,toy-text,toy_text]==0.26.2
     # via -r docker/pip-tools/worker-requirements.in
 gym-notices==0.0.8
     # via gym
-h5py==3.10.0
+h5py==3.11.0
     # via tensorflow-cpu
-idna==3.6
+idna==3.7
     # via requests
 imageio==2.34.0
     # via
@@ -180,7 +180,7 @@ injector==0.21.0
     # via dioptra (pyproject.toml)
 itsdangerous==2.1.2
     # via flask
-jax==0.4.25
+jax==0.4.26
     # via tensorflow-cpu
 jinja2==3.1.3
     # via
@@ -191,7 +191,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.3.2
+joblib==1.4.0
     # via scikit-learn
 jsonschema==4.21.1
     # via
@@ -203,7 +203,7 @@ keras==2.12.0
     # via tensorflow-cpu
 kiwisolver==1.4.5
     # via matplotlib
-lazy-loader==0.3
+lazy-loader==0.4
     # via scikit-image
 libclang==18.1.1
     # via tensorflow-cpu
@@ -213,7 +213,7 @@ locket==1.0.0
     #   partd
 lz4==4.3.3
     # via gym
-mako==1.3.2
+mako==1.3.3
     # via alembic
 markdown==3.6
     # via
@@ -233,7 +233,7 @@ marshmallow==3.21.1
     #   prefect
 marshmallow-oneofschema==3.1.1
     # via prefect
-matplotlib==3.8.3
+matplotlib==3.8.4
     # via
     #   -r docker/pip-tools/worker-requirements.in
     #   gym
@@ -302,13 +302,14 @@ packaging==23.2
     #   distributed
     #   docker
     #   gunicorn
+    #   lazy-loader
     #   marshmallow
     #   matplotlib
     #   mlflow
     #   prefect
     #   scikit-image
     #   tensorflow-cpu
-pandas==2.2.1
+pandas==2.2.2
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
@@ -428,7 +429,7 @@ scikit-learn==1.0.2
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
     #   mlflow
-scipy==1.12.0
+scipy==1.13.0
     # via
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
