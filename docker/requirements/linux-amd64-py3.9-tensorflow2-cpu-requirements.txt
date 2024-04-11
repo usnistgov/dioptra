@@ -16,7 +16,9 @@ alembic==1.13.1
     #   flask-migrate
     #   mlflow
 aniso8601==9.0.1
-    # via flask-restx
+    # via
+    #   flask-restx
+    #   graphene
 astunparse==1.6.3
     # via tensorflow-cpu
 async-timeout==4.0.3
@@ -27,9 +29,9 @@ attrs==23.2.0
     #   referencing
 blinker==1.7.0
     # via flask
-boto3==1.34.52
+boto3==1.34.81
     # via dioptra (pyproject.toml)
-botocore==1.34.52
+botocore==1.34.81
     # via
     #   boto3
     #   s3transfer
@@ -54,17 +56,17 @@ cloudpickle==3.0.0
     #   distributed
     #   mlflow
     #   prefect
-contourpy==1.2.0
+contourpy==1.2.1
     # via matplotlib
-croniter==2.0.2
+croniter==2.0.3
     # via prefect
 cycler==0.12.1
     # via matplotlib
-dask==2024.2.1
+dask==2024.4.1
     # via
     #   distributed
     #   prefect
-distributed==2024.2.1
+distributed==2024.4.1
     # via prefect
 docker==7.0.0
     # via
@@ -74,7 +76,7 @@ entrypoints==0.4
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
-flask==3.0.2
+flask==3.0.3
     # via
     #   dioptra (pyproject.toml)
     #   flask-cors
@@ -89,7 +91,7 @@ flask-cors==4.0.0
     # via dioptra (pyproject.toml)
 flask-login==0.6.3
     # via dioptra (pyproject.toml)
-flask-migrate==4.0.5
+flask-migrate==4.0.7
     # via dioptra (pyproject.toml)
 flask-restx==1.3.0
     # via
@@ -99,19 +101,19 @@ flask-sqlalchemy==3.1.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-migrate
-flatbuffers==23.5.26
+flatbuffers==24.3.25
     # via tensorflow-cpu
-fonttools==4.49.0
+fonttools==4.51.0
     # via matplotlib
-fsspec==2024.2.0
+fsspec==2024.3.1
     # via dask
 gast==0.4.0
     # via tensorflow-cpu
 gitdb==4.0.11
     # via gitpython
-gitpython==3.1.42
+gitpython==3.1.43
     # via mlflow
-google-auth==2.28.1
+google-auth==2.29.0
     # via
     #   google-auth-oauthlib
     #   tensorboard
@@ -119,15 +121,23 @@ google-auth-oauthlib==1.0.0
     # via tensorboard
 google-pasta==0.2.0
     # via tensorflow-cpu
+graphene==3.3
+    # via mlflow
+graphql-core==3.2.3
+    # via
+    #   graphene
+    #   graphql-relay
+graphql-relay==3.2.0
+    # via graphene
 greenlet==3.0.3
     # via sqlalchemy
-grpcio==1.62.0
+grpcio==1.62.1
     # via
     #   tensorboard
     #   tensorflow-cpu
 gunicorn==21.2.0
     # via mlflow
-h5py==3.10.0
+h5py==3.11.0
     # via tensorflow-cpu
 idna==3.6
     # via requests
@@ -137,14 +147,14 @@ imageio==2.34.0
     #   scikit-image
 imgaug==0.4.0
     # via dioptra (pyproject.toml)
-importlib-metadata==7.0.1
+importlib-metadata==7.1.0
     # via
     #   dask
     #   flask
     #   jax
     #   markdown
     #   mlflow
-importlib-resources==6.1.2
+importlib-resources==6.4.0
     # via
     #   flask-restx
     #   matplotlib
@@ -153,7 +163,7 @@ injector==0.21.0
     # via dioptra (pyproject.toml)
 itsdangerous==2.1.2
     # via flask
-jax==0.4.25
+jax==0.4.26
     # via tensorflow-cpu
 jinja2==3.1.3
     # via
@@ -164,7 +174,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.3.2
+joblib==1.4.0
     # via scikit-learn
 jsonschema==4.21.1
     # via
@@ -176,17 +186,17 @@ keras==2.12.0
     # via tensorflow-cpu
 kiwisolver==1.4.5
     # via matplotlib
-lazy-loader==0.3
+lazy-loader==0.4
     # via scikit-image
-libclang==16.0.6
+libclang==18.1.1
     # via tensorflow-cpu
 locket==1.0.0
     # via
     #   distributed
     #   partd
-mako==1.3.2
+mako==1.3.3
     # via alembic
-markdown==3.5.2
+markdown==3.6
     # via
     #   mlflow
     #   tensorboard
@@ -197,7 +207,7 @@ markupsafe==2.1.5
     #   jinja2
     #   mako
     #   werkzeug
-marshmallow==3.21.0
+marshmallow==3.21.1
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
@@ -205,19 +215,20 @@ marshmallow==3.21.0
     #   prefect
 marshmallow-oneofschema==3.1.1
     # via prefect
-matplotlib==3.8.3
+matplotlib==3.8.4
     # via
     #   dioptra (pyproject.toml)
     #   imgaug
     #   mlflow
+    #   pybsm
     #   pycocotools
 mdurl==0.1.2
     # via markdown-it-py
-ml-dtypes==0.3.2
+ml-dtypes==0.4.0
     # via jax
-mlflow==2.10.2
+mlflow==2.11.3
     # via dioptra (pyproject.toml)
-msgpack==1.0.7
+msgpack==1.0.8
     # via
     #   distributed
     #   prefect
@@ -227,6 +238,8 @@ mypy-extensions==1.0.0
     # via prefect
 networkx==3.2.1
     # via scikit-image
+nrtk==0.3.0
+    # via dioptra (pyproject.toml)
 numpy==1.24.3
     # via
     #   adversarial-robustness-toolbox
@@ -239,15 +252,21 @@ numpy==1.24.3
     #   matplotlib
     #   ml-dtypes
     #   mlflow
+    #   nrtk
     #   opencv-python
     #   opt-einsum
     #   pandas
     #   pyarrow
+    #   pybsm
     #   pycocotools
     #   scikit-image
     #   scikit-learn
     #   scipy
     #   shapely
+    #   smqtk-classifier
+    #   smqtk-dataprovider
+    #   smqtk-descriptors
+    #   smqtk-image-io
     #   tensorboard
     #   tensorflow-cpu
     #   tifffile
@@ -257,6 +276,8 @@ opencv-python==4.9.0.80
     # via
     #   dioptra (pyproject.toml)
     #   imgaug
+    #   nrtk
+    #   pybsm
 opt-einsum==3.3.0
     # via
     #   jax
@@ -267,6 +288,7 @@ packaging==23.2
     #   distributed
     #   docker
     #   gunicorn
+    #   lazy-loader
     #   marshmallow
     #   matplotlib
     #   mlflow
@@ -283,13 +305,15 @@ passlib==1.7.4
     # via dioptra (pyproject.toml)
 pendulum==3.0.0
     # via prefect
-pillow==10.2.0
+pillow==10.3.0
     # via
     #   dioptra (pyproject.toml)
     #   imageio
     #   imgaug
     #   matplotlib
+    #   nrtk
     #   scikit-image
+    #   smqtk-image-io
 prefect==1.4.1
     # via dioptra (pyproject.toml)
 protobuf==4.25.3
@@ -301,25 +325,29 @@ psutil==5.9.8
     # via distributed
 psycopg2-binary==2.9.9
     # via dioptra (pyproject.toml)
-pyarrow==15.0.0
+pyarrow==15.0.2
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
-pyasn1==0.5.1
+pyasn1==0.6.0
     # via
     #   pyasn1-modules
     #   rsa
-pyasn1-modules==0.3.0
+pyasn1-modules==0.4.0
     # via google-auth
+pybsm==0.1.1
+    # via nrtk
 pycocotools==2.0.7
-    # via dioptra (pyproject.toml)
+    # via
+    #   dioptra (pyproject.toml)
+    #   nrtk
 pygments==2.17.2
     # via rich
-pyparsing==3.1.1
+pyparsing==3.1.2
     # via matplotlib
 python-box==7.1.1
     # via prefect
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   botocore
     #   croniter
@@ -333,7 +361,7 @@ python-json-logger==2.0.7
     # via dioptra (pyproject.toml)
 python-slugify==8.0.4
     # via prefect
-pytz==2023.4
+pytz==2024.1
     # via
     #   croniter
     #   flask-restx
@@ -349,11 +377,11 @@ pyyaml==6.0.1
     #   prefect
 querystring-parser==1.2.4
     # via mlflow
-redis==5.0.2
+redis==5.0.3
     # via
     #   dioptra (pyproject.toml)
     #   rq
-referencing==0.33.0
+referencing==0.34.0
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -364,8 +392,9 @@ requests==2.31.0
     #   mlflow
     #   prefect
     #   requests-oauthlib
+    #   smqtk-dataprovider
     #   tensorboard
-requests-oauthlib==1.3.1
+requests-oauthlib==2.0.0
     # via google-auth-oauthlib
 rich==13.7.1
     # via dioptra (pyproject.toml)
@@ -373,26 +402,29 @@ rpds-py==0.18.0
     # via
     #   jsonschema
     #   referencing
-rq==1.16.0
+rq==1.16.1
     # via dioptra (pyproject.toml)
 rsa==4.9
     # via google-auth
-s3transfer==0.10.0
+s3transfer==0.10.1
     # via boto3
 scikit-image==0.22.0
-    # via imgaug
-scikit-learn==1.4.1.post1
+    # via
+    #   imgaug
+    #   nrtk
+scikit-learn==1.4.2
     # via
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
     #   mlflow
-scipy==1.12.0
+scipy==1.13.0
     # via
     #   adversarial-robustness-toolbox
     #   dioptra (pyproject.toml)
     #   imgaug
     #   jax
     #   mlflow
+    #   pybsm
     #   scikit-image
     #   scikit-learn
 shapely==2.0.3
@@ -410,6 +442,33 @@ six==1.16.0
     #   tensorflow-cpu
 smmap==5.0.1
     # via gitdb
+smqtk-classifier==0.19.0
+    # via
+    #   nrtk
+    #   smqtk-detection
+smqtk-core==0.19.0
+    # via
+    #   nrtk
+    #   smqtk-classifier
+    #   smqtk-dataprovider
+    #   smqtk-descriptors
+    #   smqtk-detection
+    #   smqtk-image-io
+smqtk-dataprovider==0.18.0
+    # via
+    #   smqtk-classifier
+    #   smqtk-descriptors
+    #   smqtk-detection
+    #   smqtk-image-io
+smqtk-descriptors==0.19.0
+    # via smqtk-classifier
+smqtk-detection==0.20.1
+    # via nrtk
+smqtk-image-io==0.17.1
+    # via
+    #   nrtk
+    #   smqtk-descriptors
+    #   smqtk-detection
 sortedcontainers==2.4.0
     # via distributed
 sqlalchemy==2.0.24
@@ -442,11 +501,11 @@ termcolor==2.4.0
     # via tensorflow-cpu
 text-unidecode==1.3
     # via python-slugify
-threadpoolctl==3.3.0
+threadpoolctl==3.4.0
     # via scikit-learn
 tifffile==2024.2.12
     # via scikit-image
-time-machine==2.13.0
+time-machine==2.14.1
     # via pendulum
 toml==0.10.2
     # via prefect
@@ -458,7 +517,9 @@ toolz==0.12.1
 tornado==6.4
     # via distributed
 tqdm==4.66.2
-    # via adversarial-robustness-toolbox
+    # via
+    #   adversarial-robustness-toolbox
+    #   nrtk
 typing-extensions==4.5.0
     # via
     #   alembic
@@ -476,7 +537,7 @@ urllib3==1.26.18
     #   docker
     #   prefect
     #   requests
-werkzeug==3.0.1
+werkzeug==3.0.2
     # via
     #   dioptra (pyproject.toml)
     #   flask
@@ -484,7 +545,7 @@ werkzeug==3.0.1
     #   flask-login
     #   flask-restx
     #   tensorboard
-wheel==0.42.0
+wheel==0.43.0
     # via
     #   astunparse
     #   tensorboard
@@ -492,7 +553,7 @@ wrapt==1.14.1
     # via tensorflow-cpu
 zict==3.0.0
     # via distributed
-zipp==3.17.0
+zipp==3.18.1
     # via
     #   importlib-metadata
     #   importlib-resources
