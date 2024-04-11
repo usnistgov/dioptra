@@ -9,3 +9,4 @@ torch==2.2.0; python_version == '3.9' and (sys_platform == 'darwin' or (sys_plat
 torchaudio==2.2.0; python_version == '3.9' and (sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64'))
 torchvision==0.17.0; python_version == '3.9' and (sys_platform == 'darwin' or (sys_platform == 'linux' and platform_machine == 'aarch64'))
 maite[all_interop]==0.4.0; python_version == '3.9'
+heart-library==0.3.0; python_version == '3.9'

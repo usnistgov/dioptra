@@ -6,3 +6,4 @@ torch==2.2.0; sys_platform == 'linux' and python_version == '3.9' and (platform_
 torchaudio==2.2.0; sys_platform == 'linux' and python_version == '3.9' and (platform_machine == 'x86_64' or platform_machine == 'amd64' or platform_machine == 'AMD64')
 torchvision==0.17.0; sys_platform == 'linux' and python_version == '3.9' and (platform_machine == 'x86_64' or platform_machine == 'amd64' or platform_machine == 'AMD64')
 maite[all_interop]==0.4.0; python_version == '3.9'
+heart-library==0.3.0; python_version == '3.9'
