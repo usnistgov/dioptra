@@ -6,8 +6,9 @@
     flat
     bordered
     class="q-mt-lg"
-    separator="horizontal"
+    separator="cell"
     :filter="filter"
+    :rows-per-page-options="[0]"
   >
     <template v-slot:body="props">
       <q-tr :props="props">

@@ -93,7 +93,7 @@
       />
       <div v-else >
         <q-btn color="primary" icon="person" :label="isMobile ? '' : store.loggedInUser" to="/login" dense class="q-mr-sm" />
-        <q-btn-dropdown style="background-color: #CF5C36;" icon="groups" :label="isMobile ? '' : store.loggedInGroup" dense>
+        <q-btn-dropdown style="background-color: #CF5C36;" icon="groups" :label="isMobile ? '' : store.loggedInGroup" dense class="q-pl-md">
           <q-list>
             <q-item 
               v-for="(group, i) in store.groups" 

@@ -104,6 +104,16 @@ h2 {
   color: black;
 }
 
+.field-label-short {
+  width: 100px;
+  font-size: 1rem;
+  color: black;
+}
+
 .body--dark .field-label {
   color: white;
+}
+
+legend {
+  font-size: large;
 }

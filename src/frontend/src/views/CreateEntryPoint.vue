@@ -1,5 +1,5 @@
 <template>
-  <div :class="`row q-mt-xl ${isMobile ? '' : 'q-mx-xl'} q-mb-lg`">
+  <div :class="`row q-mt-lg ${isMobile ? '' : 'q-mx-xl'} q-mb-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
         <legend>Basic Info</legend>
