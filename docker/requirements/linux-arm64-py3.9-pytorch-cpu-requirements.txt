@@ -141,7 +141,7 @@ gym[box2d,classic-control,classic_control,other,toy-text,toy_text]==0.26.2
     # via -r docker/pip-tools/worker-requirements.in
 gym-notices==0.0.8
     # via gym
-idna==3.6
+idna==3.7
     # via
     #   requests
     #   yarl

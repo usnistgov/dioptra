@@ -43,7 +43,7 @@ greenlet==3.0.3
     # via sqlalchemy
 gunicorn==20.1.0
     # via mlflow
-idna==3.6
+idna==3.7
     # via requests
 importlib-metadata==5.2.0
     # via
