@@ -17,9 +17,14 @@
 """The module defining the endpoints for User resources."""
 from __future__ import annotations
 
+import uuid
+
+import structlog
+from flask import request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
+from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
@@ -32,6 +37,8 @@ from .schema import (
     UserSchema,
 )
 
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
 api: Namespace = Namespace("Users", description="Users endpoint")
 
 
@@ -43,13 +50,22 @@ class UserEndpoint(Resource):
     @responds(schema=UserPageSchema, api=api)
     def get(self):
         """Gets a list of all User resources."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="User", request_type="GET"
+        )
+        log.debug("Request received")
+        parsed_query_params = request.parsed_obj  # noqa: F841
 
     @login_required
     @accepts(schema=UserSchema, api=api)
     @responds(schema=UserCurrentSchema, api=api)
     def post(self):
         """Creates a User resource."""
-        ...
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="User", request_type="POST"
+        )
+        log.debug("Request received")
+        parsed_obj = request.parsed_obj  # noqa: F841
 
 
 @api.route("/<int:id>")
@@ -60,6 +76,10 @@ class UserIdEndpoint(Resource):
     @responds(schema=UserSchema, api=api)
     def get(self, id: int):
         """Gets the User with the provided ID."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="User", request_type="GET", id=id
+        )
+        log.debug("Request received")
 
 
 @api.route("/current")
@@ -69,19 +89,34 @@ class UserCurrentEndpoint(Resource):
     @responds(schema=UserCurrentSchema, api=api)
     def get(self):
         """Gets the Current User."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="User", request_type="GET"
+        )
+        log.debug("Request received")
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self):
         """Deletes a Current User."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="User",
+            request_type="DELETE",
+        )
+        log.debug("Request received")
 
     @login_required
     @accepts(schema=UserMutableFieldsSchema, api=api)
-    # NOTE: should we have response schema be a UserSchema as in groups?
-    @responds(schema=IdStatusResponseSchema, api=api)
+    @responds(schema=UserSchema, api=api)
     def put(self):
         """Modifies the Current User"""
-        ...
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="User",
+            request_type="PUT",
+        )
+        log.debug("Request received")
+        parsed_obj = request.parsed_obj  # noqa: F841
 
 
 @api.route("/<int:id>/password")
@@ -93,6 +128,11 @@ class UserIdPasswordEndpoint(Resource):
     @responds(schema=IdStatusResponseSchema, api=api)
     def post(self, id: int):
         """Updates the User's password with a given ID."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="User", request_type="POST", id=id
+        )
+        log.debug("Request received")
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
 
 
 @api.route("/current/password")
@@ -103,6 +143,10 @@ class UserCurrentPasswordEndpoint(Resource):
     @responds(schema=IdStatusResponseSchema, api=api)
     def post(self):
         """Updates the Current User's password."""
-
-
-# TODO: Return list of users (see doc)
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="User",
+            request_type="POST",
+        )
+        log.debug("Request received")
+        parsed_obj = request.parsed_obj  # noqa: F841
