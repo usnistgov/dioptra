@@ -76,7 +76,7 @@ gitpython==3.1.42
     # via mlflow
 greenlet==3.0.3
     # via sqlalchemy
-gunicorn==20.1.0
+gunicorn==22.0.0
     # via
     #   -r docker/pip-tools/restapi-requirements.in
     #   mlflow

@@ -151,7 +151,7 @@ greenlet==3.0.3
     # via sqlalchemy
 grpcio==1.60.1
     # via tensorboard
-gunicorn==20.1.0
+gunicorn==22.0.0
     # via mlflow
 gym[box2d,classic-control,classic_control,other,toy-text,toy_text]==0.26.2
     # via -r docker/pip-tools/worker-requirements.in
