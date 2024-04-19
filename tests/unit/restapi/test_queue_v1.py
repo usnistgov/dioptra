@@ -255,6 +255,7 @@ def assert_queue_count_matches_expected_count(
 # -- Tests -----------------------------------------------------------------------------
 
 
+@pytest.mark.v1
 def test_queue_registration(client: FlaskClient, db: SQLAlchemy) -> None:
     """Test that queues can be registered and retrieved using the API.
 
@@ -287,6 +288,7 @@ def test_queue_registration(client: FlaskClient, db: SQLAlchemy) -> None:
     assert_retrieving_all_queues_works(client, expected=queue_expected_list)
 
 
+@pytest.mark.v1
 def test_queue_search_query(client: FlaskClient, db: SQLAlchemy) -> None:
     """Test that queues can be registered and retrieved using the API  with search terms.
 
@@ -327,6 +329,7 @@ def test_queue_search_query(client: FlaskClient, db: SQLAlchemy) -> None:
     )
 
 
+@pytest.mark.v1
 def test_queue_group_query(client: FlaskClient, db: SQLAlchemy) -> None:
     """Test that queues can be registered and retrieved using the API  with search terms.
 
@@ -365,6 +368,7 @@ def test_queue_group_query(client: FlaskClient, db: SQLAlchemy) -> None:
     )
 
 
+@pytest.mark.v1
 def test_cannot_register_existing_queue_name(
     client: FlaskClient, db: SQLAlchemy
 ) -> None:
@@ -380,6 +384,7 @@ def test_cannot_register_existing_queue_name(
     assert_registering_existing_queue_name_fails(client, name=queue_name)
 
 
+@pytest.mark.v1
 def test_rename_queue(client: FlaskClient, db: SQLAlchemy) -> None:
     """Test that a queue can be renamed.
 
@@ -405,6 +410,7 @@ def test_rename_queue(client: FlaskClient, db: SQLAlchemy) -> None:
     )
 
 
+@pytest.mark.v1
 def test_delete_queue_by_id(client: FlaskClient, db: SQLAlchemy) -> None:
     """Test that a queue can be deleted by referencing its id.
 
