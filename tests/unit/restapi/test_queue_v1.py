@@ -37,8 +37,8 @@ from dioptra.restapi.utils import slugify
 def register_queue(
     client: FlaskClient,
     name: str,
-    group_id: int | None,
-    description: str | None,
+    group_id: int | None = None,
+    description: str | None = None,
 ) -> TestResponse:
     """Register a queue using the API.
 
@@ -70,7 +70,7 @@ def rename_queue(
     client: FlaskClient,
     queue_id: int,
     new_name: str,
-    new_description: str | None,
+    new_description: str | None = None,
 ) -> TestResponse:
     """Rename a queue using the API.
 
@@ -141,9 +141,9 @@ def assert_retrieving_queue_by_id_works(
 def assert_retrieving_all_queues_works(
     client: FlaskClient,
     expected: list[dict[str, Any]],
-    Q: dict[str, Any],
-    G: dict[str, Any],
-    P: dict[str, Any],
+    Q: dict[str, Any] | None = None,
+    G: dict[str, Any] | None = None,
+    P: dict[str, Any] | None = None,
 ) -> None:
     """Assert that retrieving all queues works.
 
