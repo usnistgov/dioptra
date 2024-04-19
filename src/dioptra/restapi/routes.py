@@ -52,8 +52,8 @@ def register_routes(api: Api) -> None:
     Args:
         api: The main REST |Api| object.
     """
-    # register_v0_routes(api)
-    register_v1_routes(api)
+    register_v0_routes(api)
+    # register_v1_routes(api)
 
 
 def register_v0_routes(api: Api) -> None:
