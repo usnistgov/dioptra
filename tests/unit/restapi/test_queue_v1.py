@@ -22,6 +22,8 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 from __future__ import annotations
 
+import pytest
+
 from typing import Any
 
 from flask.testing import FlaskClient
