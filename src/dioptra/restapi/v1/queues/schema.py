@@ -34,7 +34,7 @@ QueueRefBaseSchema = generate_base_resource_ref_schema("Queue")
 class QueueRefSchema(QueueRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a Queue resource."""
 
-    name = fields.String(
+    name = fields.String(  # should this be here?
         attribute="name",
         metadata=dict(description="Name of the Queue resource."),
     )
