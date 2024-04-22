@@ -27,6 +27,7 @@ from flask_restx import Namespace, Resource
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.tags.controller import ResourceTagEndpoint
 
 from .schema import (
     QueueGetQueryParameters,
@@ -38,6 +39,17 @@ from .schema import (
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 api: Namespace = Namespace("Queues", description="Queues endpoint")
+
+
+@api.route("/<int:id>/tags")
+class QueueTagsEndpoint(ResourceTagEndpoint):
+    """Tagging functionality"""
+
+    # @inject
+    # def __init__(self, *args, queue_service: QueueService, **kwargs) -> None:
+    # self._queue_service = queue_service
+    # self._resource_name = "Queue"
+    # super().__init__(*args, **kwargs)
 
 
 @api.route("/")

@@ -41,6 +41,36 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 api: Namespace = Namespace("Tags", description="Tags endpoint")
 
 
+class ResourceTagEndpoint(Resource):
+    """Re-usable endpoint for adding tagging functionality to Resources"""
+
+    @login_required
+    @accepts(query_params_schema=TagGetQueryParameters, api=api)
+    @responds(schema=TagPageSchema, api=api)
+    def get(self, id: int):
+        """Gets a list of all Tags for this resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource=self._resource_name,
+            request_type="GET",
+        )
+        log.info("Request received")
+        # parsed_query_params = request.parsed_query_params  # noqa: F841
+
+    @login_required
+    @accepts(schema=TagSchema, api=api)
+    @responds(schema=TagSchema, api=api)
+    def post(self, id: int):
+        """Appends a Tag to this Resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource=self._resource_name,
+            request_type="POST",
+        )
+        log.debug("Request received")
+        # parsed_obj = request.parsed_obj  # noqa: F841
+
+
 @api.route("/")
 class TagEndpoint(Resource):
     @login_required
