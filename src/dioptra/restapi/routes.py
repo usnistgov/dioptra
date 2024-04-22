@@ -38,6 +38,7 @@ V1_ENTRYPOINTS_ROUTE = "entrypoints"
 V1_EXPERIMENTS_ROUTE = "experiments"
 V1_GROUPS_ROUTE = "groups"
 V1_JOBS_ROUTE = "jobs"
+V1_MODELS_ROUTE = "models"
 V1_PLUGIN_PARAMETER_TYPES_ROUTE = "pluginParameterTypes"
 V1_PLUGINS_ROUTE = "plugins"
 V1_QUEUES_ROUTE = "queues"
@@ -87,6 +88,7 @@ def register_v1_routes(api: Api) -> None:
     from .v1.experiments.controller import api as experiments_api
     from .v1.groups.controller import api as groups_api
     from .v1.jobs.controller import api as jobs_api
+    from .v1.models.controller import api as models_api
     from .v1.plugin_parameter_types.controller import api as plugin_parameter_types_api
     from .v1.plugins.controller import api as plugins_api
     from .v1.queues.controller import api as queues_api
@@ -98,6 +100,7 @@ def register_v1_routes(api: Api) -> None:
     api.add_namespace(experiments_api, path=f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}")
     api.add_namespace(groups_api, path=f"/{V1_ROOT}/{V1_GROUPS_ROUTE}")
     api.add_namespace(jobs_api, path=f"/{V1_ROOT}/{V1_JOBS_ROUTE}")
+    api.add_namespace(models_api, path=f"/{V1_ROOT}/{V1_MODELS_ROUTE}")
     api.add_namespace(
         plugin_parameter_types_api, path=f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}"
     )
