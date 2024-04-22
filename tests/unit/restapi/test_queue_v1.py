@@ -22,18 +22,96 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 from __future__ import annotations
 
-import pytest
-
+import datetime
 from typing import Any
 
+import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import QUEUE_ROUTE, V1_ROOT
-from dioptra.restapi.utils import slugify
+from dioptra.restapi.routes import V1_AUTH_ROUTE, V1_QUEUES_ROUTE, V1_ROOT
+
+# -- Fixtures --------------------------------------------------------------------------
+
+
+@pytest.fixture
+def auth_account(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
+    user_info = register_user(client)
+    login(client, username=user_info["username"], password=user_info["password"])
+    return user_info
+
+
+@pytest.fixture
+def registered_queues(
+    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+) -> dict[str, Any]:
+    queue1_response = register_queue(
+        client,
+        name="tensorflow_cpu",
+        description="The first queue.",
+        group_id=auth_account["default_group_id"],
+    )
+    queue2_response = register_queue(
+        client,
+        name="tensorflow_gpu",
+        description="The second queue.",
+        group_id=auth_account["default_group_id"],
+    )
+    queue3_response = register_queue(
+        client,
+        name="pytorch_cpu",
+        description="Not retrieved.",
+        group_id=auth_account["default_group_id"],
+    )
+    return {
+        "queue1": queue1_response,
+        "queue2": queue2_response,
+        "queue3": queue3_response,
+    }
+
+
+# -- Helpers ---------------------------------------------------------------------------
+
+
+def is_iso_format(date_string: str) -> bool:
+    try:
+        datetime.datetime.fromisoformat(date_string)
+        return True
+
+    except ValueError:
+        return False
+
 
 # -- Actions ---------------------------------------------------------------------------
+
+
+def register_user(client: FlaskClient) -> dict[str, Any]:
+    password = "supersecurepassword"
+    response = client.post(
+        f"/{V1_ROOT}/{V1_USER_ROUTE}",  # TODO: Import V1_USER_ROUTE once its defined
+        json={
+            "username": "username",
+            "email": "username@example.org",
+            "password": password,
+            "confirmPassword": password,
+        },
+        follow_redirects=True,
+    ).get_json()
+    return {
+        "user_id": response["id"],
+        "username": response["username"],
+        "password": password,
+        "email_address": response["email"],
+        "default_group_id": response["groups"][0]["id"],
+    }
+
+
+def login(client: FlaskClient, username: str, password: str) -> TestResponse:
+    return client.post(
+        f"/{V1_ROOT}/{V1_AUTH_ROUTE}/login",
+        json={"username": username, "password": password},
+    )
 
 
 def register_queue(
@@ -62,7 +140,7 @@ def register_queue(
         payload["group_id"] = group_id
 
     return client.post(
-        f"/{V1_ROOT}/{QUEUE_ROUTE}/",
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/",
         json=payload,
         follow_redirects=True,
     )
@@ -90,7 +168,7 @@ def rename_queue(
         payload["description"] = new_description
 
     return client.put(
-        f"/{V1_ROOT}/{QUEUE_ROUTE}/{queue_id}",
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}",
         json=payload,
         follow_redirects=True,
     )
@@ -111,12 +189,63 @@ def delete_queue_with_id(
     """
 
     return client.delete(
-        f"/{V1_ROOT}/{QUEUE_ROUTE}/{queue_id}",
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}",
         follow_redirects=True,
     )
 
 
 # -- Assertions ------------------------------------------------------------------------
+
+
+def assert_queue_response_contents_matches_expectations(
+    response: dict[str, Any], expected_contents: dict[str, Any]
+) -> None:
+    expected_keys = {
+        "id",
+        "snapshotId",
+        "group",
+        "user",
+        "createdOn",
+        "lastModifiedOn",
+        "latestSnapshot",
+        "name",
+        "description",
+        "tags",
+    }
+    assert set(response.keys()) == expected_keys
+
+    # Validate the non-Ref fields
+    assert isinstance(response["id"], int)
+    assert isinstance(response["snapshotId"], int)
+    assert isinstance(response["name"], str)
+    assert isinstance(response["description"], str)
+    assert isinstance(response["createdOn"], str)
+    assert isinstance(response["lastModifiedOn"], str)
+    assert isinstance(response["latestSnapshot"], bool)
+
+    assert response["name"] == expected_contents["name"]
+    assert response["description"] == expected_contents["description"]
+
+    assert is_iso_format(response["createdOn"])
+    assert is_iso_format(response["lastModifiedOn"])
+
+    # Validate the UserRef structure
+    assert isinstance(response["user"]["id"], int)
+    assert isinstance(response["user"]["username"], str)
+    assert isinstance(response["user"]["url"], str)
+    assert response["user"]["id"] == expected_contents["user_id"]
+
+    # Validate the GroupRef structure
+    assert isinstance(response["group"]["id"], int)
+    assert isinstance(response["group"]["name"], str)
+    assert isinstance(response["group"]["url"], str)
+    assert response["group"]["id"] == expected_contents["group_id"]
+
+    # Validate the TagRef structure
+    for tag in response["tags"]:
+        assert isinstance(tag["id"], int)
+        assert isinstance(tag["name"], str)
+        assert isinstance(tag["url"], str)
 
 
 def assert_retrieving_queue_by_id_works(
@@ -135,7 +264,9 @@ def assert_retrieving_queue_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(f"/{V1_ROOT}/{QUEUE_ROUTE}/{queue_id}", follow_redirects=True)
+    response = client.get(
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}", follow_redirects=True
+    )
     assert response.status_code == 200 and response.get_json() == expected
 
 
@@ -171,7 +302,7 @@ def assert_retrieving_all_queues_works(
         payload.update(P)
 
     response = client.get(
-        f"/{V1_ROOT}/{QUEUE_ROUTE}", payload=payload, follow_redirects=True
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}", payload=payload, follow_redirects=True
     )
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
@@ -207,7 +338,7 @@ def assert_queue_name_matches_expected_name(
             queue does not match the expected name.
     """
     response = client.get(
-        f"/{V1_ROOT}/{QUEUE_ROUTE}/{queue_id}",
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}",
         follow_redirects=True,
     )
     assert response.status_code == 200 and response.get_json()["name"] == expected_name
@@ -227,7 +358,7 @@ def assert_queue_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = client.get(
-        f"/{V1_ROOT}/{QUEUE_ROUTE}/{queue_id}",
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}",
         follow_redirects=True,
     )
     assert response.status_code == 404
@@ -248,7 +379,7 @@ def assert_queue_count_matches_expected_count(
             queues does not match the expected number.
     """
     response = client.get(
-        f"/{V1_ROOT}/{QUEUE_ROUTE}",
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}",
         follow_redirects=True,
     )
     assert len(response.get_json()["data"]) == expected
@@ -258,7 +389,11 @@ def assert_queue_count_matches_expected_count(
 
 
 @pytest.mark.v1
-def test_queue_registration(client: FlaskClient, db: SQLAlchemy) -> None:
+def test_create_queue(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
     """Test that queues can be registered and retrieved using the API.
 
     This test validates the following sequence of actions:
@@ -270,28 +405,35 @@ def test_queue_registration(client: FlaskClient, db: SQLAlchemy) -> None:
     - In all cases, the returned information matches the information that was provided
       during registration.
     """
+    name = "tensorflow_cpu"
+    description = "The first queue."
+    user_id = auth_account["user_id"]
+    group_id = auth_account["default_group_id"]
     queue1_response = register_queue(
-        client, name="tensorflow_cpu", description="The first queue.", group_id=1
-    )
-    queue2_response = register_queue(
-        client, name="pytorch_cpu", description="The second queue.", group_id=1
+        client, name=name, description=description, group_id=group_id
     )
     queue1_expected = queue1_response.get_json()
-    queue2_expected = queue2_response.get_json()
-    queue_expected_list = [queue1_expected, queue2_expected]
+    assert_queue_response_contents_matches_expectations(
+        response=queue1_expected,
+        expected_contents={
+            "name": name,
+            "description": description,
+            "user_id": user_id,
+            "group_id": group_id,
+        },
+    )
     assert_retrieving_queue_by_id_works(
         client, queue_id=queue1_expected["queueId"], expected=queue1_expected
     )
 
-    assert_retrieving_queue_by_id_works(
-        client, queue_id=queue2_expected["queueId"], expected=queue2_expected
-    )
-
-    assert_retrieving_all_queues_works(client, expected=queue_expected_list)
-
 
 @pytest.mark.v1
-def test_queue_search_query(client: FlaskClient, db: SQLAlchemy) -> None:
+def test_queue_search_query(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
     """Test that queues can be registered and retrieved using the API  with search terms.
 
     This test validates the following sequence of actions:
@@ -302,26 +444,9 @@ def test_queue_search_query(client: FlaskClient, db: SQLAlchemy) -> None:
     - In all cases, the returned information matches the information that was provided
       during registration.
     """
-    queue1_response = register_queue(
-        client, name="tensorflow_cpu", description="The first queue.", group_id=1
-    )
-    queue2_response = register_queue(
-        client, name="tensorflow_gpu", description="The second queue.", group_id=1
-    )
-
-    queue3_response = register_queue(
-        client, name="pytorch_cpu", description="Not retrieved.", group_id=1
-    )
-
-    queue1_expected = queue1_response.get_json()
-    queue2_expected = queue2_response.get_json()
-    queue3_expected = queue3_response.get_json()
-
+    queue1_expected = registered_queues["queue1"].get_json()
+    queue2_expected = registered_queues["queue2"].get_json()
     queue_expected_list = [queue1_expected, queue2_expected]
-
-    assert_retrieving_queue_by_id_works(
-        client, queue_id=queue3_response["queueId"], expected=queue3_expected
-    )
 
     # TODO the query field must be updated when the grammar for searches is updated.
     search_parameters = {"query": "*queue*", "field": "description"}
