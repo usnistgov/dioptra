@@ -27,7 +27,7 @@
           aria-required="true"
         >
           <template v-slot:before>
-            <label :class="`field-label myowndark`">Experiment Name:</label>
+            <label :class="`field-label`">Name:</label>
           </template>
         </q-input>
         <q-select
@@ -39,7 +39,7 @@
           aria-required="true"
         >
           <template v-slot:before>
-            <div class="field-label">Group Name:</div>
+            <div class="field-label">Group:</div>
           </template>  
         </q-select>
       </q-form>

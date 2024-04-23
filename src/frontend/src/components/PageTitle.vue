@@ -51,6 +51,7 @@
     if(route.path === '/groups/admin') return `${store.editMode ? 'Edit Group ' : 'New Group'}`
     if(path.value[0] === 'entrypoints') return 'Entry Points'
     if(route.path === '/experiments/create') return `${newOrEdit.value} Experiment`
+    if(route.path.startsWith('/plugins/')) return `Edit Plugin`
     return path.value[0]
   })
 

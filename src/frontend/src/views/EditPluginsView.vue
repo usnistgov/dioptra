@@ -8,7 +8,7 @@
             <q-input 
               outlined 
               dense 
-              v-model.trim="entryPoint.name"
+              v-model.trim="plugin.name"
               :rules="[requiredRule]"
               class="q-mb-sm q-mt-md"
               aria-required="true"
@@ -19,8 +19,8 @@
             </q-input>
             <q-select
               outlined 
-              v-model="entryPoint.group" 
-              :options="groupOptions" 
+              v-model="plugin.group" 
+              :options="loginStore.groups.map((group) => group.name)" 
               dense
               :rules="[requiredRule]"
               aria-required="true"
@@ -33,26 +33,52 @@
         </div>
       </fieldset>
       <fieldset class="q-mt-lg">
-        <legend>Task Graph</legend>
+        <legend>Tags</legend>
         <div style="padding: 0 2%" class="row">
-          <CodeEditor v-model="entryPoint.task_graph" style="width: 0; flex-grow: 1;" />
+          <div :class="`${isMobile ? '' : 'q-mx-xl'}`">
+            <q-btn 
+              v-for="(tag, i) in store.tags"
+              :key="i" 
+              :label="tag"
+              no-caps
+              class="q-ma-sm"
+              @click="toggleTag(tag)"
+              :color="selectedTags.includes(tag) ? 'primary' : 'grey-6'"
+            />
+
+            <q-input 
+              v-model="newTag" 
+              outlined 
+              dense 
+              label="Add new Tag" 
+              class="q-mt-lg" 
+              style="width: 250px"
+              @keydown.enter.prevent="addNewTag"
+            >
+              <template v-slot:prepend>
+                <q-icon name="sell" />
+              </template>
+              <template v-slot:append>
+                <q-btn round dense size="sm" icon="add" color="primary" @click="addNewTag()" />
+              </template>
+            </q-input>
+          </div>
         </div>
       </fieldset>
     </div>
     <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
-      <legend>Parameters</legend>
+      <legend>Plugin Files</legend>
       <div style="padding: 0 5%">
         <BasicTable
           :columns="columns"
-          :rows="entryPoint.parameters"
+          :rows="[]"
           :hideSearch="true"
           :hideEditTable="true"
           @edit="(param, i) => {selectedParam = param; selectedParamIndex = i; showEditParamDialog = true}"
           @delete="(param) => {selectedParam = param; showDeleteDialog = true}"
-        >
-        </BasicTable>
+        />
 
-        <q-card
+        <!-- <q-card
           flat
           bordered
           class="q-px-lg q-my-lg"
@@ -100,14 +126,14 @@
               </q-btn>
             </q-card-actions>
           </q-form>
-        </q-card>
+        </q-card> -->
       </div>
     </fieldset>
   </div>
 
   <div :class="`${isMobile ? '' : 'q-mx-xl'} float-right q-mb-lg`">
       <q-btn  
-        to="/entrypoints"
+        to="/plugins"
         color="negative" 
         label="Cancel"
         class="q-mr-lg"
@@ -115,131 +141,79 @@
       <q-btn  
         @click="submit()" 
         color="primary" 
-        label="Submit Entry Point"
-
+        label="Save Plugin"
+        type="submit"
       />
     </div>
-
-  <DeleteDialog 
-    v-model="showDeleteDialog"
-    @submit="deleteParam()"
-    type="Parameter"
-    :name="selectedParam.name"
-  />
-
-  <EditParamDialog 
-    v-model="showEditParamDialog"
-    :editParam="selectedParam"
-    @updateParam="updateParam"
-  />
 </template>
 
 <script setup>
-  import { ref, inject, reactive } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { ref, inject, reactive, computed } from 'vue'
   import { useDataStore } from '@/stores/DataStore.ts'
-  import { useRouter } from 'vue-router'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import CodeEditor from '@/components/CodeEditor.vue'
-  import EditParamDialog from '@/dialogs/EditParamDialog.vue'
+  import { useLoginStore } from '@/stores/LoginStore.ts'
   import BasicTable from '@/components/BasicTable.vue'
-  
-  const router = useRouter()
 
   const store = useDataStore()
+  const loginStore = useLoginStore()
 
   const isMobile = inject('isMobile')
 
-  const requiredRule = (val) => (val && val.length > 0) || "This field is required"
+  const route = useRoute()
+  const router = useRouter()
 
-  let entryPoint = reactive({
-    name: '',
-    group: '',
-    parameters: [],
-    task_graph: ''
+  const storePlugin = computed(() => {
+    return store.plugins.find((obj) => {
+      return obj.id === route.params.id
+    })
   })
 
-  const parameter = reactive({
-    name: '',
-    parameter_type: '',
-    default_value: '',
+  const plugin = reactive({
+    ...storePlugin.value
   })
 
-  const groupOptions = ref([
-    'Group 1',
-    'Group 2',
-    'Group 3',
-  ])
+  function requiredRule(val) {
+    return (val && val.length > 0) || "This field is required"
+  }
 
-  const typeOptions = ref([
-    'String',
-    'Float',
-    'Path',
-    'URI',
-  ])
+  let selectedTags = reactive([...plugin.tags])
 
-  const basicInfoForm = ref(null)
-  const paramForm = ref(null)
+  function toggleTag(tag) {
+    if(!selectedTags.includes(tag)) {
+      selectedTags.push(tag)
+    } else {
+      selectedTags.forEach((selectedTag, i) => {
+        if(tag ===  selectedTag) {
+          selectedTags.splice(i, 1)
+        }
+      })
+    }
+  }
 
+  const newTag = ref('')
+
+  function addNewTag() {
+    if(newTag.value.trim().length) {
+      store.tags.push(newTag.value)
+    }
+    newTag.value = ''
+  }
+
+  const basicInfoForm = ref()
+
+  function submit() {
+    const index = store.plugins.findIndex((obj) => {
+      return obj.id === route.params.id
+    })
+    plugin.tags = selectedTags
+    store.plugins[index] = plugin
+    router.push('/plugins')
+  }
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'type', label: 'Type', align: 'left', field: 'parameter_type', sortable: true, },
-    { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'default_value', sortable: true, },
-    { name: 'actions', label: 'Actions', align: 'center',  },
+    { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: true, },
   ]
 
-  if(Object.keys(store.editEntryPoint).length !== 0) {
-    // entryPoint = JSON.parse(JSON.stringify(store.editEntryPoint))
-    entryPoint = Object.assign(entryPoint, JSON.parse(JSON.stringify(store.editEntryPoint)))
-    store.editMode = true
-    store.editEntryPoint = {}
-  }
-
-
-  function addParam() {
-    entryPoint.parameters.push({
-      name: parameter.name,
-      parameter_type: parameter.parameter_type,
-      default_value: parameter.default_value,
-    })
-    parameter.name = ''
-    parameter.parameter_type = ''
-    parameter.default_value = ''
-    paramForm.value.reset()
-  }
-
-  function submit() {
-    basicInfoForm.value.validate().then(success => {
-      if (success) {
-        if(!store.editMode) {
-          entryPoint.id = new Date().getTime().toString()
-          store.entryPoints.push(entryPoint)
-        } else {
-          const editIndex = store.entryPoints.findIndex((storedentryPoint) => storedentryPoint.id === entryPoint.id)
-          store.entryPoints[editIndex] = entryPoint
-        }
-        router.push('/entrypoints')
-      }
-      else {
-        // error
-      }
-    })
-  }
-
-  const showDeleteDialog = ref(false)
-  const selectedParam = ref({})
-  const selectedParamIndex = ref('')
-
-  function deleteParam() {
-    entryPoint.parameters = entryPoint.parameters.filter((param) => param.name !== selectedParam.value.name)
-    showDeleteDialog.value = false
-  }
-
-  const showEditParamDialog = ref(false)
-
-  function updateParam(parameter) {
-    entryPoint.parameters[selectedParamIndex.value] = { ...parameter }
-    showEditParamDialog.value = false
-  }
 
 </script>

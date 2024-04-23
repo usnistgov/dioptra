@@ -15,8 +15,8 @@
           <q-item clickable v-close-popup to="/entryPoints">
             <q-item-section>Entry-Points</q-item-section>
           </q-item>
-          <q-item clickable v-close-popup to="/taskPlugins">
-            <q-item-section>Task-Plugins</q-item-section>
+          <q-item clickable v-close-popup to="/plugins">
+            <q-item-section>Plugins</q-item-section>
           </q-item>
           <q-item clickable v-close-popup to="/queues">
             <q-item-section>Queues</q-item-section>
@@ -37,7 +37,7 @@
       <q-tabs shrink no-caps class="header">
         <q-route-tab label="Home" to="/" />
         <q-route-tab label="Entry-Points" to="/entrypoints" />
-        <q-route-tab label="Task-Plugins" to="/" />
+        <q-route-tab label="Plugins" to="/plugins" />
         <q-route-tab label="Queues" to="/queues" />
         <q-route-tab label="Experiments" to="/experiments" />
         <q-route-tab label="Jobs" to="/" />

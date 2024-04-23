@@ -17,6 +17,14 @@ const router = createRouter({
       component: () => import('../views/CreateEntryPoint.vue')
     },
     {
+      path: '/plugins',
+      component: () => import('../views/PluginsView.vue')
+    },
+    {
+      path: '/plugins/:id',
+      component: () => import('../views/EditPluginsView.vue')
+    },
+    {
       path: '/queues',
       component: () => import('../views/QueuesView.vue')
     },

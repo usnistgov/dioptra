@@ -77,10 +77,20 @@ xmas-fifth-day:
 
   const editEntryPoint = reactive({})
 
+  const plugins = ref([
+    {
+      name: 'plugin 1',
+      id: '1',
+      group: 'Group 1',
+      files: [],
+      tags: ['Machine Learning']
+    }
+  ])
+
   // computed()'s are getters
 
   // function()'s are actions
   
 
-  return { experiments, tags, entryPoints, savedExperimentForm, editMode, editEntryPoint }
+  return { experiments, tags, entryPoints, savedExperimentForm, editMode, editEntryPoint, plugins }
 })
