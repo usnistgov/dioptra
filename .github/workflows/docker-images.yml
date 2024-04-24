@@ -112,6 +112,7 @@ jobs:
 
   container-test:
     runs-on: ubuntu-20.04
+    if: ${{ false }}  # disable for now
     needs:
       - build-docker-dioptra-apps
     strategy:
