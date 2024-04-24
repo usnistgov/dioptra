@@ -23,7 +23,7 @@ from typing import Any
 from dioptra.restapi.db.db import db
 
 
-class QueueLock(db.Model):
+class QueueLock(db.Model):  # type: ignore[name-defined]
     """The queue_locks table.
 
     Attributes:
@@ -43,7 +43,7 @@ class QueueLock(db.Model):
     queue = db.relationship("Queue", back_populates="lock")
 
 
-class Queue(db.Model):
+class Queue(db.Model):  # type: ignore[name-defined]
     """The queues table.
 
     Attributes:

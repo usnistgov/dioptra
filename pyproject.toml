@@ -290,7 +290,7 @@ cache_dir = "/dev/null"
 exclude = [
     'alembic/.*$',  # exclude all files, folders under alembic directory
 ]
-plugins = "numpy.typing.mypy_plugin,sqlalchemy.ext.mypy.plugin"
+plugins = "numpy.typing.mypy_plugin"
 
 [tool.pyright]
 include = ["src"]

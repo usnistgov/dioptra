@@ -232,7 +232,7 @@ class QueueService(object):
         if (queue := self.get(queue_id, error_if_not_found=True, log=log)) is None:
             return {"status": "Success", "id": []}
 
-        db.session.delete(queue.lock[0])
+        db.session.delete(queue.lock[0])  # type: ignore[index]
         db.session.commit()
         log.info("Queue unlocked", queue_id=queue.queue_id)
         return {"status": "Success", "id": [queue.queue_id]}
@@ -340,7 +340,7 @@ class QueueNameService(object):
         if (queue := self.get(name, error_if_not_found=True, log=log)) is None:
             return {"status": "Success", "name": []}
 
-        db.session.delete(queue.lock[0])
+        db.session.delete(queue.lock[0])  # type: ignore[index]
         db.session.commit()
         log.info("Queue unlocked", name=name)
         return {"status": "Success", "name": [queue.name]}

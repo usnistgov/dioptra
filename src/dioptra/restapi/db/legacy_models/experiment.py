@@ -23,7 +23,7 @@ from typing import Any, Dict
 from dioptra.restapi.db.db import db
 
 
-class Experiment(db.Model):
+class Experiment(db.Model):  # type: ignore[name-defined]
     """The experiments table.
 
     Attributes:

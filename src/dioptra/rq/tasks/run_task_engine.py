@@ -101,7 +101,10 @@ def run_task_engine_task(
                 set_cwd(tempdir),
             ):
                 _run_experiment(
-                    rq_job_id, experiment_id, experiment_desc, global_parameters
+                    rq_job_id,  # type: ignore[arg-type]
+                    experiment_id,
+                    experiment_desc,
+                    global_parameters,
                 )
 
         else:

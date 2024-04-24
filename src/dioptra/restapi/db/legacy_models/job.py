@@ -27,7 +27,7 @@ job_statuses = db.Table(
 )
 
 
-class Job(db.Model):
+class Job(db.Model):  # type: ignore[name-defined]
     """The jobs table.
 
     Attributes:

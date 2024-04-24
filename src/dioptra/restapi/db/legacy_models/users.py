@@ -25,7 +25,7 @@ from dioptra.restapi.db.custom_types import GUID
 from dioptra.restapi.db.db import db
 
 
-class User(db.Model):
+class User(db.Model):  # type: ignore[name-defined]
     """The users table.
 
     Attributes:
