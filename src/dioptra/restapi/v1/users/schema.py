@@ -138,7 +138,7 @@ class UserPasswordSchema(Schema):
     confirmNewPassword = fields.String(
         attribute="confirm_new_password",
         metadata=dict(
-            description="The new password confirmation when creating a new user account."
+            description="The new password confirmation when changing a password."
         ),
         load_only=True,
     )
