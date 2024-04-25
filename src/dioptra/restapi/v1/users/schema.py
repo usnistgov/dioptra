@@ -67,6 +67,14 @@ class UserSchema(UserMutableFieldsSchema):
         load_only=True,
     )
 
+    confirmPassword = fields.String(
+        attribute="confirm_password",
+        metadata=dict(
+            description="The password confirmation when creating a new user account."
+        ),
+        load_only=True,
+    )
+
     id = fields.Integer(
         attribute="id",
         metadata=dict(description="ID for the User resource."),
@@ -77,9 +85,9 @@ class UserSchema(UserMutableFieldsSchema):
 class UserCurrentSchema(UserSchema):
     """The schema for the currently logged-in User."""
 
-    memberOf = fields.Nested(
+    groups = fields.Nested(
         GroupRefSchema,
-        attribute="member_of",
+        attribute="groups",
         metadata=dict(description="A list of Groups the User is a part of."),
         many=True,
         dump_only=True,
@@ -125,6 +133,14 @@ class UserPasswordSchema(Schema):
     newPassword = fields.String(
         attribute="new_password",
         metadata=dict(description="New password for the User resource."),
+    )
+
+    confirmNewPassword = fields.String(
+        attribute="confirm_new_password",
+        metadata=dict(
+            description="The new password confirmation when creating a new user account."
+        ),
+        load_only=True,
     )
 
 
