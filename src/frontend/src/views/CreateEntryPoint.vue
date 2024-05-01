@@ -35,7 +35,12 @@
       <fieldset class="q-mt-lg">
         <legend>Task Graph</legend>
         <div style="padding: 0 2%" class="row">
-          <CodeEditor v-model="entryPoint.task_graph" style="width: 0; flex-grow: 1;" />
+          <CodeEditor 
+            v-model="entryPoint.task_graph"
+            placeholder="# task graph yaml file"
+            style="width: 0; 
+            flex-grow: 1;" 
+          />
         </div>
       </fieldset>
     </div>

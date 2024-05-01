@@ -7,9 +7,10 @@
     selection="single"
     v-model:selected="selected"
     row-key="name"
-    class="q-mt-lg q-mx-xl"
+    :class="`q-mt-lg ${isMobile ? '' : 'q-mx-xl' }`"
     flat
     bordered
+    dense
     :pagination="pagination"
   >
     <template v-slot:header="props">
@@ -52,7 +53,7 @@
       </q-tr>
     </template>
 
-    <template #top-right>
+    <template #top-right v-if="!hideButtons">
       <q-btn color="secondary" icon="edit" label="Edit" class="q-mr-lg" @click="$emit('edit')"  :disabled="!selected.length" />
       <q-btn color="negative" icon="sym_o_delete" label="Delete" class="q-mr-lg"  @click="$emit('delete')" :disabled="!selected.length" />
       <q-input v-model="filter" dense placeholder="Search" outlined>
@@ -65,10 +66,12 @@
 </template>
 
 <script setup>
-  import { ref, watch, computed } from 'vue'
+  import { ref, watch, computed, inject } from 'vue'
   import { useQuasar } from 'quasar'
+  
+  const isMobile = inject('isMobile')
 
-  const props = defineProps(['columns', 'rows', 'title', 'pagination', 'showExpand'])
+  const props = defineProps(['columns', 'rows', 'title', 'pagination', 'showExpand', 'hideButtons'])
   defineEmits(['edit', 'delete'])
 
   const finalColumns = computed(() => {

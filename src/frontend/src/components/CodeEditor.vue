@@ -1,7 +1,7 @@
 <template>
   <codemirror
     v-model="code"
-    placeholder="# task graph yaml file"
+    :placeholder="placeholder"
     :style="{ 'min-height': '250px', 'max-height': '400px' }"
     :autofocus="false"
     :indent-with-tab="true"
@@ -21,6 +21,8 @@
   import { oneDark } from '@codemirror/theme-one-dark'
   import { linter, lintGutter } from "@codemirror/lint"
   import parser from "js-yaml"
+
+  defineProps(['placeholder'])
 
   // const code = ref('')
 

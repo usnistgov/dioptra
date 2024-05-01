@@ -5,7 +5,6 @@
     dense
     flat
     bordered
-    class="q-mt-lg"
     separator="cell"
     :filter="filter"
     :rows-per-page-options="[0]"

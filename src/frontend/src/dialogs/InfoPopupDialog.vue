@@ -7,7 +7,7 @@
         </div>
       </q-card-section>
       <q-card-section>
-        <slot v-if="finished"  />
+        <slot />
       </q-card-section>
       <q-separator />
       <q-card-actions align="right" class="text-primary">
@@ -21,11 +21,5 @@
   import { onMounted, ref } from 'vue'
 
   const showDialog = defineModel()
-
-  const finished = ref(false)
-
-  onMounted(() => {
-    finished.value = true
-  })
 
 </script>

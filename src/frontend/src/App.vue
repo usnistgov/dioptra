@@ -1,6 +1,6 @@
 <template>
-  <NavBar />
-  <main :class="isMobile ? 'q-ma-md' : 'q-ma-xl'">
+  <NavBar class="fixed-top" style="z-index: 999;" />
+  <main :class="isMobile ? 'q-ma-md' : 'q-ma-xl'" style="margin-top: 75px;">
     <PageTitle v-if="!hidePageTitle" />
     <RouterView />
   </main>
