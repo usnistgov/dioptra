@@ -6,8 +6,13 @@
           <slot name="title" />
         </div>
       </q-card-section>
-      <q-card-section>
-        <CodeEditor v-model="editCode" :placeholder="'#Enter plugin file code here...'"  />
+      <q-card-section class="row">
+        <CodeEditor 
+          v-model="editCode"
+          language="python"
+          :placeholder="'#Enter plugin file code here...'" 
+          style="width: 0; flex-grow: 1;" 
+        />
       </q-card-section>
       <q-separator />
       <q-card-actions align="right" class="text-primary">

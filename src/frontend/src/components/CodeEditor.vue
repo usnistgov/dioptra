@@ -2,7 +2,7 @@
   <codemirror
     v-model="code"
     :placeholder="placeholder"
-    :style="{ 'min-height': '250px', 'max-height': '400px' }"
+    :style="{ 'min-height': '250px', 'max-height': '70vh' }"
     :autofocus="false"
     :indent-with-tab="true"
     :tab-size="2"
@@ -15,14 +15,15 @@
 </template>
 
 <script setup>
-  import { ref, shallowRef, defineModel } from 'vue'
+  import { computed, shallowRef, defineModel } from 'vue'
   import { Codemirror } from 'vue-codemirror'
   import { yaml } from '@codemirror/lang-yaml'
   import { oneDark } from '@codemirror/theme-one-dark'
   import { linter, lintGutter } from "@codemirror/lint"
   import parser from "js-yaml"
+  import { python } from '@codemirror/lang-python'
 
-  defineProps(['placeholder'])
+  const props = defineProps(['placeholder', 'language'])
 
   // const code = ref('')
 
@@ -56,10 +57,15 @@
   })
 
 
-  const extensions = [
-    yaml(), 
-    oneDark,
-    yamlLinter,
-    lintGutter()
-  ]
+  const extensions = computed(() => {
+    if(props.language === 'python') {
+      return [python(), oneDark]
+    }
+    return [
+      yaml(), 
+      oneDark,
+      yamlLinter,
+      lintGutter()
+    ]
+  })
 </script>

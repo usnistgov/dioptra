@@ -35,7 +35,7 @@
       </label>
     </template>
     <template #expandedSlot="{ row }">
-      <CodeEditor v-model="row.task_graph" />
+      <CodeEditor v-model="row.task_graph" language="yaml" />
     </template>
   </TableComponent>
 

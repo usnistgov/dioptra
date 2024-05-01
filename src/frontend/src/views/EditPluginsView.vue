@@ -106,12 +106,28 @@
           />
         </div> -->
 
-        <div class="q-mb-lg">
+        <div class="row q-mb-lg">
           <q-btn
             label="Edit Code"
             color="primary"
             @click="showCodeDialog = true;"
+            class="col q-mr-lg"
           />
+
+          <q-file
+            v-model="uploadedFile"
+            label="Upload Python File"
+            outlined
+            use-chips
+            dense
+            accept=".py, text/x-python"
+            @update:model-value="processFile"
+            class="col"
+          >
+            <template v-slot:prepend>
+              <q-icon name="attach_file" />
+            </template>
+          </q-file>
         </div>
 
         <label for="taskTable">Plugin Tasks</label>
@@ -213,7 +229,7 @@
 
 <script setup>
   import { useRoute, useRouter } from 'vue-router'
-  import { ref, inject, reactive, computed } from 'vue'
+  import { ref, inject, reactive, computed, watch } from 'vue'
   import { useDataStore } from '@/stores/DataStore.ts'
   import { useLoginStore } from '@/stores/LoginStore.ts'
   import BasicTable from '@/components/BasicTable.vue'
@@ -316,6 +332,28 @@
   ]
 
   const showCodeDialog = ref(false)
+  const uploadedFile = ref(null)
 
+  console.log('uploadedFile = ', uploadedFile.value)
+
+  watch(selected, (newVal) => {
+    // uploadedFile.value = null
+  })
+
+  function processFile() {
+    const file = uploadedFile.value
+    if (!file) {
+      pluginFile.value.contents = ''
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      pluginFile.value.contents = e.target.result;
+    }
+    reader.onerror = (e) => {
+      console.log('error = ', e)
+    }
+    reader.readAsText(file); // Reads the file as text
+  }
 
 </script>

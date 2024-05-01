@@ -37,6 +37,7 @@
         <div style="padding: 0 2%" class="row">
           <CodeEditor 
             v-model="entryPoint.task_graph"
+            language="yaml"
             placeholder="# task graph yaml file"
             style="width: 0; 
             flex-grow: 1;" 
