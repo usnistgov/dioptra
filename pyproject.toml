@@ -40,7 +40,7 @@ maintainers = [
 ]
 description = "Dioptra provides Machine Learning Security researchers with an environment for organizing and running experiments."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
     "alembic>=1.13.0",
     "boto3>=1.16.0",
@@ -77,8 +77,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Security",
 ]
@@ -126,6 +125,7 @@ postgres = [
     "psycopg2-binary>=2.9.0",
 ]
 worker = [
+    "async_timeout",
     "adversarial-robustness-toolbox>=1.9.0",
     "imgaug>=0.4.0",
     "matplotlib",
@@ -169,7 +169,7 @@ dev = [
 
 [tool.black]
 line-length = 88
-target-version = ['py39', 'py310']
+target-version = ['py311']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -271,7 +271,7 @@ profile = "black"
 honor_noqa = true
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 platform = "linux"
 mypy_path = "src,task-plugins"
 explicit_package_bases = true

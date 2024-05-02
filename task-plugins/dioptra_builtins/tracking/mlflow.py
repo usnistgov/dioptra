@@ -92,7 +92,7 @@ def log_tensorflow_keras_estimator(estimator: Sequential, model_dir: str) -> Non
         model_dir: The relative artifact directory where MLFlow should save the
             model.
     """
-    mlflow.tensorflow.log_model(model=estimator, artifact_path=model_dir)
+    mlflow.keras.log_model(model=estimator, artifact_path=model_dir)
     LOGGER.info(
         "Tensorflow Keras model logged to tracking server",
         model_dir=model_dir,

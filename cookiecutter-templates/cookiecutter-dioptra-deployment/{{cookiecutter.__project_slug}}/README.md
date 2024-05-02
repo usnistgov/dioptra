@@ -267,7 +267,7 @@ If you run `./init-deployment.sh --help`, you will print the script's help messa
                                    image
             --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
                       and the frontend files (default: 'main')
-            --python: Command for invoking the Python interpreter. Must be Python 3.9 or
+            --python: Command for invoking the Python interpreter. Must be Python 3.11 or
                       greater, and the jinja2 package must be installed.
                       (default: 'python')
             --worker-ssl-service: Image to use when bootstrapping the SSL named volumes for

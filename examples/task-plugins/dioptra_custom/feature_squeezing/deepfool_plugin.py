@@ -36,7 +36,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
     from art.attacks.evasion import DeepFool
-    from art.estimators.classification import KerasClassifier
+    from art.estimators.classification import TensorFlowV2Classifier
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -78,7 +78,7 @@ def create_adversarial_deepfool_dataset(
     nb_grads: int,
     max_iter: int,
     image_size: Tuple[int, int],  # = (224, 224),
-    keras_classifier: KerasClassifier,
+    keras_classifier: TensorFlowV2Classifier,
     adv_data_dir: Path = None,
     rescale: float = 1.0,
     batch_size: int = 40,
