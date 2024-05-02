@@ -320,13 +320,13 @@ def init_gen_patch_flow() -> Flow:
                 tensorflow_global_seed=tensorflow_global_seed,
                 dataset_seed=dataset_seed,
                 rescale=rescale,
-                clip_values=clip_values
+                clip_values=clip_values,
             ),
         )
 
         keras_classifier = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
-            "registry_art",
+            f"{_PLUGINS_IMPORT_PATH}.registry",
+            "art",
             "load_wrapped_tensorflow_keras_classifier",
             name=model_name,
             version=model_version,

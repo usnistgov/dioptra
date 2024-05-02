@@ -35,7 +35,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
     from art.attacks.evasion import CarliniL2Method
-    from art.estimators.classification import KerasClassifier
+    from art.estimators.classification import TensorFlowV2Classifier
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -67,7 +67,7 @@ def create_adversarial_cw_l2_dataset(
     binary_search_steps: int,
     max_iter: int,
     initial_const: float,
-    keras_classifier: KerasClassifier,
+    keras_classifier: TensorFlowV2Classifier,
     adv_data_dir: Path = None,
     rescale: float = 1.0 / 255,
     batch_size: int = 32,
@@ -168,13 +168,13 @@ def create_adversarial_cw_l2_dataset(
 
 
 def _init_cw_l2(
-    keras_classifier: KerasClassifier, batch_size: int, **kwargs
+    keras_classifier: TensorFlowV2Classifier, batch_size: int, **kwargs
 ) -> CarliniL2Method:
     """Initializes :py:class:`~art.attacks.evasionCarliniLInfMethod`.
 
     Args:
         keras_classifier: A trained :py:class:`~art.estimators.classification\\
-            .KerasClassifier`.
+            .TensorFlowV2Classifier`.
         batch_size: The size of the batch on which adversarial samples are generated.
 
     Returns:

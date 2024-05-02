@@ -368,8 +368,8 @@ def deploy_adversarial_patch() -> Flow:
         )
 
         keras_classifier = pyplugs.call_task(
-            f"{_CUSTOM_PLUGINS_IMPORT_PATH}.custom_patch_plugins",
-            "registry_art",
+            f"{_PLUGINS_IMPORT_PATH}.registry",
+            "art",
             "load_wrapped_tensorflow_keras_classifier",
             name=model_name,
             version=model_version,

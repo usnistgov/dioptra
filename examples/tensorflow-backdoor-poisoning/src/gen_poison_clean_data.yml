@@ -220,7 +220,7 @@ tasks:
       type: boolean
     outputs:
       ret: kerasclassifier
-    plugin: dioptra_custom.custom_poisoning_plugins.registry_art.load_wrapped_tensorflow_keras_classifier
+    plugin: dioptra_builtins.registry.art.load_wrapped_tensorflow_keras_classifier
 
   prepend_cwd:
     plugin:
@@ -265,8 +265,9 @@ graph:
     load_wrapped_tensorflow_keras_classifier:
       name: $model_name
       version: $model_version
-      clip_values: $clip_values
       imagenet_preprocessing: $imagenet_preprocessing
+      classifier_kwargs:
+        clip_values: $clip_values
     dependencies: init_tensorflow_results
 
   distance_metrics_list:

@@ -29,7 +29,7 @@ Prerequisites
 -------------
 
 - `Bash v5 or higher <https://tiswww.case.edu/php/chet/bash/bashtop.html>`__
-- `Python 3.9 or higher <https://www.python.org/>`__
+- `Python 3.11 or higher <https://www.python.org/>`__
 - `Cruft 2.15.0 or higher <https://cruft.github.io/cruft/>`__
 - `Docker Engine 20.10.13 or higher <https://docs.docker.com/engine/install/>`__
 - `Docker Compose <https://docs.docker.com/compose/install/>`__
@@ -633,7 +633,7 @@ If you run ``./init-deployment.sh --help``, you will print the script's help mes
                                   image
            --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
                      and the frontend files (default: 'main')
-           --python: Command for invoking the Python interpreter. Must be Python 3.9 or
+           --python: Command for invoking the Python interpreter. Must be Python 3.11 or
                      greater, and the jinja2 package must be installed.
                      (default: 'python')
            --worker-ssl-service: Image to use when bootstrapping the SSL named volumes for
