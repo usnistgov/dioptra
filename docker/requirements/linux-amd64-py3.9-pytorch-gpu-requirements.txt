@@ -541,7 +541,7 @@ torchvision==0.11.3+cu113 ; sys_platform == "linux" and python_version == "3.9" 
     # via -r requirements-dev-pytorch-gpu.in
 tornado==6.4
     # via distributed
-tqdm==4.66.2
+tqdm==4.66.3
     # via
     #   adversarial-robustness-toolbox
     #   detectron2

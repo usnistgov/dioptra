@@ -484,7 +484,7 @@ torchvision==0.11.3 ; python_version == "3.9" and (sys_platform == "darwin" or (
     # via -r requirements-dev-pytorch.in
 tornado==6.4
     # via distributed
-tqdm==4.66.2
+tqdm==4.66.3
     # via
     #   adversarial-robustness-toolbox
     #   moviepy

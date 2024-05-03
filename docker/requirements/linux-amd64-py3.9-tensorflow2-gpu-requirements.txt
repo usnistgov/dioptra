@@ -501,7 +501,7 @@ toolz==0.12.1
     #   partd
 tornado==6.4
     # via distributed
-tqdm==4.66.2
+tqdm==4.66.3
     # via
     #   adversarial-robustness-toolbox
     #   moviepy
