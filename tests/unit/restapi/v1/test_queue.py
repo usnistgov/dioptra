@@ -22,7 +22,6 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 from __future__ import annotations
 
-import datetime
 from typing import Any
 
 import pytest
@@ -30,120 +29,13 @@ from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_AUTH_ROUTE, V1_QUEUES_ROUTE, V1_ROOT
+from ..lib.actions import register_queue
+from ..lib.helpers import is_iso_format
 
-# -- Fixtures --------------------------------------------------------------------------
-
-
-@pytest.fixture
-def auth_account(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
-    user_info = register_user(client)
-    login(client, username=user_info["username"], password=user_info["password"])
-    return user_info
-
-
-@pytest.fixture
-def registered_queues(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
-) -> dict[str, Any]:
-    queue1_response = register_queue(
-        client,
-        name="tensorflow_cpu",
-        description="The first queue.",
-        group_id=auth_account["default_group_id"],
-    )
-    queue2_response = register_queue(
-        client,
-        name="tensorflow_gpu",
-        description="The second queue.",
-        group_id=auth_account["default_group_id"],
-    )
-    queue3_response = register_queue(
-        client,
-        name="pytorch_cpu",
-        description="Not retrieved.",
-        group_id=auth_account["default_group_id"],
-    )
-    return {
-        "queue1": queue1_response,
-        "queue2": queue2_response,
-        "queue3": queue3_response,
-    }
-
-
-# -- Helpers ---------------------------------------------------------------------------
-
-
-def is_iso_format(date_string: str) -> bool:
-    try:
-        datetime.datetime.fromisoformat(date_string)
-        return True
-
-    except ValueError:
-        return False
+from dioptra.restapi.routes import V1_QUEUES_ROUTE, V1_ROOT
 
 
 # -- Actions ---------------------------------------------------------------------------
-
-
-def register_user(client: FlaskClient) -> dict[str, Any]:
-    password = "supersecurepassword"
-    response = client.post(
-        f"/{V1_ROOT}/{V1_USER_ROUTE}",  # TODO: Import V1_USER_ROUTE once its defined
-        json={
-            "username": "username",
-            "email": "username@example.org",
-            "password": password,
-            "confirmPassword": password,
-        },
-        follow_redirects=True,
-    ).get_json()
-    return {
-        "user_id": response["id"],
-        "username": response["username"],
-        "password": password,
-        "email_address": response["email"],
-        "default_group_id": response["groups"][0]["id"],
-    }
-
-
-def login(client: FlaskClient, username: str, password: str) -> TestResponse:
-    return client.post(
-        f"/{V1_ROOT}/{V1_AUTH_ROUTE}/login",
-        json={"username": username, "password": password},
-    )
-
-
-def register_queue(
-    client: FlaskClient,
-    name: str,
-    group_id: int | None = None,
-    description: str | None = None,
-) -> TestResponse:
-    """Register a queue using the API.
-
-    Args:
-        client: The Flask test client.
-        name: The name to assign to the new queue.
-        group_id: The group to create the new queue in.
-        description: The description of the new queue.
-
-    Returns:
-        The response from the API.
-    """
-
-    payload = {"name": name}
-
-    if description:
-        payload["description"] = description
-    if group_id:
-        payload["group_id"] = group_id
-
-    return client.post(
-        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/",
-        json=payload,
-        follow_redirects=True,
-    )
 
 
 def rename_queue(
@@ -449,7 +341,7 @@ def test_queue_search_query(
     queue_expected_list = [queue1_expected, queue2_expected]
 
     # TODO the query field must be updated when the grammar for searches is updated.
-    search_parameters = {"query": "*queue*", "field": "description"}
+    search_parameters = {"query": "*queue*"}
 
     assert_retrieving_all_queues_works(
         client, expected=queue_expected_list, Q=search_parameters
@@ -457,7 +349,12 @@ def test_queue_search_query(
 
 
 @pytest.mark.v1
-def test_queue_group_query(client: FlaskClient, db: SQLAlchemy) -> None:
+def test_queue_group_query(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
     """Test that queues can be registered and retrieved using the API  with search terms.
 
     This test validates the following sequence of actions:
@@ -468,27 +365,11 @@ def test_queue_group_query(client: FlaskClient, db: SQLAlchemy) -> None:
     - In all cases, the returned information matches the information that was provided
       during registration.
     """
-    queue1_response = register_queue(
-        client, name="tensorflow_cpu", description="The first queue.", group_id=1
-    )
-    queue2_response = register_queue(
-        client, name="tensorflow_gpu", description="The second queue.", group_id=1
-    )
-    queue3_response = register_queue(
-        client, name="pytorch_cpu", description="Not retrieved.", group_id=2
-    )
-
-    queue1_expected = queue1_response.get_json()
-    queue2_expected = queue2_response.get_json()
-    queue3_expected = queue3_response.get_json()
-
+    queue1_expected = registered_queues["queue1"].get_json()
+    queue2_expected = registered_queues["queue2"].get_json()
     queue_expected_list = [queue1_expected, queue2_expected]
 
-    assert_retrieving_queue_by_id_works(
-        client, queue_id=queue3_response["queueId"], expected=queue3_expected
-    )
-
-    search_parameters = {"group_id": 1}
+    search_parameters = {"group_id": auth_account["default_group_id"]}
 
     assert_retrieving_all_queues_works(
         client, expected=queue_expected_list, G=search_parameters
@@ -496,8 +377,35 @@ def test_queue_group_query(client: FlaskClient, db: SQLAlchemy) -> None:
 
 
 @pytest.mark.v1
+def test_queue_id_get(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    """Test that queues can be registered and retrieved using the API  with search terms.
+
+    This test validates the following sequence of actions:
+
+    - A user registers three queues, "tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu".
+    - The user is able to retrieve a list of all registered queues with a description
+      that are part of group 1.
+    - In all cases, the returned information matches the information that was provided
+      during registration.
+    """
+    queue3_expected = registered_queues["queue3"].get_json()
+
+    assert_retrieving_queue_by_id_works(
+        client, queue_id=queue3_expected["queueId"], expected=queue3_expected
+    )
+
+
+@pytest.mark.v1
 def test_cannot_register_existing_queue_name(
-    client: FlaskClient, db: SQLAlchemy
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
 ) -> None:
     """Test that registering a queue with an existing name fails.
 
@@ -506,13 +414,17 @@ def test_cannot_register_existing_queue_name(
     - A user registers a queue named "tensorflow_cpu".
     - The user attempts to register a second queue with the same name, which fails.
     """
-    queue_name = "tensorflow_cpu"
-    register_queue(client, name="tensorflow_cpu")
-    assert_registering_existing_queue_name_fails(client, name=queue_name)
+    queue1_expected = registered_queues["queue1"].get_json()
+    assert_registering_existing_queue_name_fails(client, name=queue1_expected["name"])
 
 
 @pytest.mark.v1
-def test_rename_queue(client: FlaskClient, db: SQLAlchemy) -> None:
+def test_rename_queue(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
     """Test that a queue can be renamed.
 
     This test validates the following sequence of actions:
@@ -524,21 +436,23 @@ def test_rename_queue(client: FlaskClient, db: SQLAlchemy) -> None:
     - The user retrieves information about the same queue and it reflects the name
       change.
     """
-    queue_name = "tensorflow_cpu"
     updated_queue_name = "tensorflow_gpu"
-    registration_response = register_queue(client, name=queue_name)
-    queue_json = registration_response.get_json()
-    assert_queue_name_matches_expected_name(
-        client, queue_id=queue_json["queueId"], expected_name=queue_name
+    queue_to_rename = registered_queues["queue1"].json()
+    rename_queue(
+        client, queue_id=queue_to_rename["queueId"], new_name=updated_queue_name
     )
-    rename_queue(client, queue_id=queue_json["queueId"], new_name=updated_queue_name)
     assert_queue_name_matches_expected_name(
-        client, queue_id=queue_json["queueId"], expected_name=updated_queue_name
+        client, queue_id=queue_to_rename["queueId"], expected_name=updated_queue_name
     )
 
 
 @pytest.mark.v1
-def test_delete_queue_by_id(client: FlaskClient, db: SQLAlchemy) -> None:
+def test_delete_queue_by_id(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
     """Test that a queue can be deleted by referencing its id.
 
     This test validates the following sequence of actions:
@@ -550,11 +464,6 @@ def test_delete_queue_by_id(client: FlaskClient, db: SQLAlchemy) -> None:
     - The user attempts to retrieve information about the "tensorflow_cpu" queue, which
       is no longer found.
     """
-    queue_name = "tensorflow_cpu"
-    registration_response = register_queue(client, name=queue_name)
-    queue_json = registration_response.get_json()
-    assert_retrieving_queue_by_id_works(
-        client, queue_id=queue_json["queueId"], expected=queue_json
-    )
-    delete_queue_with_id(client, queue_id=queue_json["queueId"])
-    assert_queue_is_not_found(client, queue_id=queue_json["queueId"])
+    queue_to_delete = registered_queues["queue1"].json()
+    delete_queue_with_id(client, queue_id=queue_to_delete["queueId"])
+    assert_queue_is_not_found(client, queue_id=queue_to_delete["queueId"])
