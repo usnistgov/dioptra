@@ -318,6 +318,29 @@ def test_create_queue(
         client, queue_id=queue1_expected["queueId"], expected=queue1_expected
     )
 
+@pytest.mark.v1
+def test_queue_get_all(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    """Test that all queues can be retrieved.
+
+    Given an authenticated user and registered queues, this test validates the following
+        sequence of actions:
+
+    - A user registers three queues, "tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu".
+    - The user is able to retrieve a list of all registered queues.
+    - The returned list of queues matches the full list of registered queues.
+    """
+    queue1_expected = registered_queues["queue1"].get_json()
+    queue2_expected = registered_queues["queue2"].get_json()
+    queue3_expected = registered_queues["queue3"].get_json()
+    queue_expected_list = [queue1_expected, queue2_expected, queue3_expected]
+
+    assert_retrieving_all_queues_works(client, expected=queue_expected_list)
+
 
 @pytest.mark.v1
 def test_queue_search_query(
