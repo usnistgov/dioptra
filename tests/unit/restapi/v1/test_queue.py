@@ -286,16 +286,13 @@ def test_create_queue(
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
-    """Test that queues can be registered and retrieved using the API.
+    """Test that queues can be correctly registered and retrieved using the API.
 
-    This test validates the following sequence of actions:
+    Given an authenticated user, this test validates the following sequence of actions:
 
-    - A user registers two queues, "tensorflow_cpu" and "tensorflow_gpu".
-    - The user is able to retrieve information about each queue using either the
-      queue id or the unique queue name.
-    - The user is able to retrieve a list of all registered queues.
-    - In all cases, the returned information matches the information that was provided
-      during registration.
+    - The user registers a queue named "tensorflow_cpu".
+    - The response is valid matches the expected values given the registration request.
+    - The user is able to retrieve information about the queue using the queue id.
     """
     name = "tensorflow_cpu"
     description = "The first queue."
@@ -349,22 +346,21 @@ def test_queue_search_query(
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
 ) -> None:
-    """Test that queues can be registered and retrieved using the API  with search terms.
+    """Test that queues can be queried with a search term.
 
-    This test validates the following sequence of actions:
+    Given an authenticated user and registered queues, this test validates the following
+        sequence of actions:
 
-    - A user registers three queues, "tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu".
     - The user is able to retrieve a list of all registered queues with a description
       that contains 'queue'.
-    - In all cases, the returned information matches the information that was provided
-      during registration.
+    - The returned list of queues matches the expected matches from the query.
     """
     queue1_expected = registered_queues["queue1"].get_json()
     queue2_expected = registered_queues["queue2"].get_json()
     queue_expected_list = [queue1_expected, queue2_expected]
 
     # TODO the query field must be updated when the grammar for searches is updated.
-    search_parameters = {"query": "*queue*"}
+    search_parameters = {"query": "description:*queue*"}
 
     assert_retrieving_all_queues_works(
         client, expected=queue_expected_list, Q=search_parameters
@@ -378,15 +374,14 @@ def test_queue_group_query(
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
 ) -> None:
-    """Test that queues can be registered and retrieved using the API  with search terms.
+    """Test that queues can retrieved using a group filter.
 
-    This test validates the following sequence of actions:
+    Given an authenticated user and registered queues, this test validates the following
+        sequence of actions:
 
-    - A user registers three queues, "tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu".
-    - The user is able to retrieve a list of all registered queues with a description
-      that are part of group 1.
-    - In all cases, the returned information matches the information that was provided
-      during registration.
+    - The user is able to retrieve a list of all registered queues that are owned by the
+      default group.
+    - The returned list of queues matches the expected list owned by the default group.
     """
     queue1_expected = registered_queues["queue1"].get_json()
     queue2_expected = registered_queues["queue2"].get_json()
@@ -406,15 +401,13 @@ def test_queue_id_get(
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
 ) -> None:
-    """Test that queues can be registered and retrieved using the API  with search terms.
+    """Test that queues can be retrieved by their unique ID.
 
-    This test validates the following sequence of actions:
+    Given an authenticated user and registered queues, this test validates the following
+        sequence of actions:
 
-    - A user registers three queues, "tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu".
-    - The user is able to retrieve a list of all registered queues with a description
-      that are part of group 1.
-    - In all cases, the returned information matches the information that was provided
-      during registration.
+    - The user is able to retrieve single queue by its ID.
+    - The response is a single queue with a matching ID.
     """
     queue3_expected = registered_queues["queue3"].get_json()
 
@@ -432,12 +425,14 @@ def test_cannot_register_existing_queue_name(
 ) -> None:
     """Test that registering a queue with an existing name fails.
 
-    This test validates the following sequence of actions:
+    Given an authenticated user and registered queues, this test validates the following
+        sequence of actions:
 
-    - A user registers a queue named "tensorflow_cpu".
-    - The user attempts to register a second queue with the same name, which fails.
+    - The user attempts to register a second queue with the same name.
+    - The request fails with an appropriate error message and response code.
     """
     queue1_expected = registered_queues["queue1"].get_json()
+
     assert_registering_existing_queue_name_fails(client, name=queue1_expected["name"])
 
 
@@ -450,20 +445,20 @@ def test_rename_queue(
 ) -> None:
     """Test that a queue can be renamed.
 
-    This test validates the following sequence of actions:
+    Given an authenticated user and registered queues, this test validates the following
+        sequence of actions:
 
-    - A user registers a queue named "tensorflow_cpu".
-    - The user is able to retrieve information about the "tensorflow_cpu" queue that
-      matches the information that was provided during registration.
-    - The user renames this same queue to "tensorflow_gpu".
+    - The user issues a request to change the name of a queue.
     - The user retrieves information about the same queue and it reflects the name
       change.
     """
     updated_queue_name = "tensorflow_gpu"
     queue_to_rename = registered_queues["queue1"].json()
+
     rename_queue(
         client, queue_id=queue_to_rename["queueId"], new_name=updated_queue_name
     )
+
     assert_queue_name_matches_expected_name(
         client, queue_id=queue_to_rename["queueId"], expected_name=updated_queue_name
     )
@@ -480,13 +475,12 @@ def test_delete_queue_by_id(
 
     This test validates the following sequence of actions:
 
-    - A user registers a queue named "tensorflow_cpu".
-    - The user is able to retrieve information about the "tensorflow_cpu" queue that
-      matches the information that was provided during registration.
     - The user deletes the "tensorflow_cpu" queue by referencing its id.
-    - The user attempts to retrieve information about the "tensorflow_cpu" queue, which
-      is no longer found.
+    - The user attempts to retrieve information about the queue and response indicates
+      the queue is no longer found.
     """
     queue_to_delete = registered_queues["queue1"].json()
+
     delete_queue_with_id(client, queue_id=queue_to_delete["queueId"])
+
     assert_queue_is_not_found(client, queue_id=queue_to_delete["queueId"])
