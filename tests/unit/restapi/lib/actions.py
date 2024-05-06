@@ -28,8 +28,8 @@ from werkzeug.test import TestResponse
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
     V1_QUEUES_ROUTE,
-    V1_USERS_ROUTE,
     V1_ROOT,
+    V1_USERS_ROUTE,
 )
 
 
@@ -40,13 +40,13 @@ def login(client: FlaskClient, username: str, password: str) -> TestResponse:
     )
 
 
-def register_user(client: FlaskClient) -> dict[str, Any]:
+def register_user(client: FlaskClient, username: str, email: str) -> dict[str, Any]:
     password = "supersecurepassword"
     response = client.post(
         f"/{V1_ROOT}/{V1_USERS_ROUTE}",
         json={
-            "username": "username",
-            "email": "username@example.org",
+            "username": username,
+            "email": email,
             "password": password,
             "confirmPassword": password,
         },

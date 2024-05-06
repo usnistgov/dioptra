@@ -18,7 +18,6 @@
 
 from typing import Any
 
-
 import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
@@ -39,9 +38,13 @@ def auth_account(
 
 @pytest.fixture
 def registered_users(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
-    user1_response = register_user(client)
+    user1_response = register_user(client, "user1", "user1@example.org")
+    user2_response = register_user(client, "user2", "user2@example.org")
+    user3_response = register_user(client, "user3", "user3@example.org")
     return {
         "user1": user1_response,
+        "user2": user2_response,
+        "user3": user3_response,
     }
 
 
@@ -65,7 +68,7 @@ def registered_queues(
         client,
         name="pytorch_cpu",
         description="Not retrieved.",
-        group_id=auth_account["default_group_id"] + 1,
+        group_id=auth_account["default_group_id"],
     )
     return {
         "queue1": queue1_response,

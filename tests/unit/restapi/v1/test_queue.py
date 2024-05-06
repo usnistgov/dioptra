@@ -29,11 +29,10 @@ from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
-from ..lib.actions import register_queue
-from ..lib.helpers import is_iso_format
-
 from dioptra.restapi.routes import V1_QUEUES_ROUTE, V1_ROOT
 
+from ..lib.actions import register_queue
+from ..lib.helpers import is_iso_format
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -277,6 +276,27 @@ def assert_queue_count_matches_expected_count(
     assert len(response.get_json()["data"]) == expected
 
 
+def assert_cannot_rename_queue_with_existing_name(
+    client: FlaskClient,
+    queue_id: int,
+    existing_name: str,
+) -> None:
+    """Assert that renaming a queue with an existing name fails.
+    Args:
+        client: The Flask test client.
+        queue_id: The id of the queue to rename.
+        name: The name of an existing queue.
+    Raises:
+        AssertionError: If the response status code is not 400.
+    """
+    response = rename_queue(
+        client=client,
+        queue_id=queue_id,
+        new_name=existing_name,
+    )
+    assert response.status_code == 400
+
+
 # -- Tests -----------------------------------------------------------------------------
 
 
@@ -314,6 +334,7 @@ def test_create_queue(
     assert_retrieving_queue_by_id_works(
         client, queue_id=queue1_expected["queueId"], expected=queue1_expected
     )
+
 
 @pytest.mark.v1
 def test_queue_get_all(
@@ -385,7 +406,8 @@ def test_queue_group_query(
     """
     queue1_expected = registered_queues["queue1"].get_json()
     queue2_expected = registered_queues["queue2"].get_json()
-    queue_expected_list = [queue1_expected, queue2_expected]
+    queue3_expected = registered_queues["queue3"].get_json()
+    queue_expected_list = [queue1_expected, queue2_expected, queue3_expected]
 
     search_parameters = {"group_id": auth_account["default_group_id"]}
 
@@ -451,9 +473,13 @@ def test_rename_queue(
     - The user issues a request to change the name of a queue.
     - The user retrieves information about the same queue and it reflects the name
       change.
+    - The user issues a request to change the name of a queue to an existing queue's
+      name.
+    - The request fails with an appropriate error message and response code.
     """
     updated_queue_name = "tensorflow_gpu"
     queue_to_rename = registered_queues["queue1"].json()
+    existing_queue = registered_queues["queue2"].json()
 
     rename_queue(
         client, queue_id=queue_to_rename["queueId"], new_name=updated_queue_name
@@ -461,6 +487,10 @@ def test_rename_queue(
 
     assert_queue_name_matches_expected_name(
         client, queue_id=queue_to_rename["queueId"], expected_name=updated_queue_name
+    )
+
+    assert_cannot_rename_queue_with_existing_name(
+        client, tag_id=queue_to_rename["tagId"], existing_name=existing_queue["name"]
     )
 
 
