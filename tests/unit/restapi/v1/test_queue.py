@@ -31,17 +31,16 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import V1_QUEUES_ROUTE, V1_ROOT
 
-from ..lib.actions import register_queue
-from ..lib.helpers import is_iso_format
+from ..lib import actions, helpers
 
 # -- Actions ---------------------------------------------------------------------------
 
 
-def rename_queue(
+def modify_queue(
     client: FlaskClient,
     queue_id: int,
     new_name: str,
-    new_description: str | None = None,
+    new_description: str,
 ) -> TestResponse:
     """Rename a queue using the API.
 
@@ -54,9 +53,7 @@ def rename_queue(
     Returns:
         The response from the API.
     """
-    payload = {"name": new_name}
-    if new_description:
-        payload["description"] = new_description
+    payload = {"name": new_name, "description": new_description}
 
     return client.put(
         f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/{queue_id}",
@@ -117,8 +114,8 @@ def assert_queue_response_contents_matches_expectations(
     assert response["name"] == expected_contents["name"]
     assert response["description"] == expected_contents["description"]
 
-    assert is_iso_format(response["createdOn"])
-    assert is_iso_format(response["lastModifiedOn"])
+    assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["lastModifiedOn"])
 
     # Validate the UserRef structure
     assert isinstance(response["user"]["id"], int)
@@ -161,13 +158,12 @@ def assert_retrieving_queue_by_id_works(
     assert response.status_code == 200 and response.get_json() == expected
 
 
-# TODO handle Q,G,P
-def assert_retrieving_all_queues_works(
+def assert_retrieving_queues_works(
     client: FlaskClient,
     expected: list[dict[str, Any]],
-    Q: dict[str, Any] | None = None,
-    G: dict[str, Any] | None = None,
-    P: dict[str, Any] | None = None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that retrieving all queues works.
 
@@ -183,23 +179,25 @@ def assert_retrieving_all_queues_works(
             does not match the expected response.
     """
 
-    payload = {}
-
-    if Q:
-        payload.update(Q)
-    if G:
-        payload.update(G)
-    if P:
-        payload.update(P)
+    query_string = {}
+    if group_id is not None:
+        query_string["group_id"] = group_id
+    if search is not None:
+        query_string["query"] = search
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["pageLength"] = paging_info["page_length"]
 
     response = client.get(
-        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}", payload=payload, follow_redirects=True
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
     )
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
 def assert_registering_existing_queue_name_fails(
-    client: FlaskClient, name: str
+    client: FlaskClient, name: str, group_id: int
 ) -> None:
     """Assert that registering a queue with an existing name fails.
 
@@ -210,7 +208,7 @@ def assert_registering_existing_queue_name_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = register_queue(client, name=name)
+    response = actions.register_queue(client, name=name, group_id=group_id)
     assert response.status_code == 400
 
 
@@ -280,6 +278,7 @@ def assert_cannot_rename_queue_with_existing_name(
     client: FlaskClient,
     queue_id: int,
     existing_name: str,
+    existing_description: str,
 ) -> None:
     """Assert that renaming a queue with an existing name fails.
     Args:
@@ -289,10 +288,11 @@ def assert_cannot_rename_queue_with_existing_name(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = rename_queue(
+    response = modify_queue(
         client=client,
         queue_id=queue_id,
         new_name=existing_name,
+        new_description=existing_description,
     )
     assert response.status_code == 400
 
@@ -318,7 +318,7 @@ def test_create_queue(
     description = "The first queue."
     user_id = auth_account["user_id"]
     group_id = auth_account["default_group_id"]
-    queue1_response = register_queue(
+    queue1_response = actions.register_queue(
         client, name=name, description=description, group_id=group_id
     )
     queue1_expected = queue1_response.get_json()
@@ -352,12 +352,12 @@ def test_queue_get_all(
     - The user is able to retrieve a list of all registered queues.
     - The returned list of queues matches the full list of registered queues.
     """
-    queue1_expected = registered_queues["queue1"].get_json()
-    queue2_expected = registered_queues["queue2"].get_json()
-    queue3_expected = registered_queues["queue3"].get_json()
+    queue1_expected = registered_queues["queue1"]
+    queue2_expected = registered_queues["queue2"]
+    queue3_expected = registered_queues["queue3"]
     queue_expected_list = [queue1_expected, queue2_expected, queue3_expected]
 
-    assert_retrieving_all_queues_works(client, expected=queue_expected_list)
+    assert_retrieving_queues_works(client, expected=queue_expected_list)
 
 
 @pytest.mark.v1
@@ -376,15 +376,14 @@ def test_queue_search_query(
       that contains 'queue'.
     - The returned list of queues matches the expected matches from the query.
     """
-    queue1_expected = registered_queues["queue1"].get_json()
-    queue2_expected = registered_queues["queue2"].get_json()
+    queue1_expected = registered_queues["queue1"]
+    queue2_expected = registered_queues["queue2"]
     queue_expected_list = [queue1_expected, queue2_expected]
 
-    # TODO the query field must be updated when the grammar for searches is updated.
-    search_parameters = {"query": "description:*queue*"}
-
-    assert_retrieving_all_queues_works(
-        client, expected=queue_expected_list, Q=search_parameters
+    assert_retrieving_queues_works(
+        client,
+        expected=queue_expected_list,
+        search="description:*queue*",
     )
 
 
@@ -404,15 +403,13 @@ def test_queue_group_query(
       default group.
     - The returned list of queues matches the expected list owned by the default group.
     """
-    queue1_expected = registered_queues["queue1"].get_json()
-    queue2_expected = registered_queues["queue2"].get_json()
-    queue3_expected = registered_queues["queue3"].get_json()
+    queue1_expected = registered_queues["queue1"]
+    queue2_expected = registered_queues["queue2"]
+    queue3_expected = registered_queues["queue3"]
     queue_expected_list = [queue1_expected, queue2_expected, queue3_expected]
 
-    search_parameters = {"group_id": auth_account["default_group_id"]}
-
-    assert_retrieving_all_queues_works(
-        client, expected=queue_expected_list, G=search_parameters
+    assert_retrieving_queues_works(
+        client, expected=queue_expected_list, group_id=auth_account["default_group_id"]
     )
 
 
@@ -431,7 +428,7 @@ def test_queue_id_get(
     - The user is able to retrieve single queue by its ID.
     - The response is a single queue with a matching ID.
     """
-    queue3_expected = registered_queues["queue3"].get_json()
+    queue3_expected = registered_queues["queue3"]
 
     assert_retrieving_queue_by_id_works(
         client, queue_id=queue3_expected["queueId"], expected=queue3_expected
@@ -453,9 +450,13 @@ def test_cannot_register_existing_queue_name(
     - The user attempts to register a second queue with the same name.
     - The request fails with an appropriate error message and response code.
     """
-    queue1_expected = registered_queues["queue1"].get_json()
+    existing_queue = registered_queues["queue1"]
 
-    assert_registering_existing_queue_name_fails(client, name=queue1_expected["name"])
+    assert_registering_existing_queue_name_fails(
+        client,
+        name=existing_queue["name"],
+        group_id=existing_queue["group_id"],
+    )
 
 
 @pytest.mark.v1
@@ -478,19 +479,23 @@ def test_rename_queue(
     - The request fails with an appropriate error message and response code.
     """
     updated_queue_name = "tensorflow_gpu"
-    queue_to_rename = registered_queues["queue1"].json()
-    existing_queue = registered_queues["queue2"].json()
+    queue_to_rename = registered_queues["queue1"]
+    existing_queue = registered_queues["queue2"]
 
-    rename_queue(
-        client, queue_id=queue_to_rename["queueId"], new_name=updated_queue_name
+    modify_queue(
+        client,
+        queue_id=queue_to_rename["queueId"],
+        new_name=updated_queue_name,
+        new_description=queue_to_rename["description"],
     )
-
     assert_queue_name_matches_expected_name(
         client, queue_id=queue_to_rename["queueId"], expected_name=updated_queue_name
     )
-
     assert_cannot_rename_queue_with_existing_name(
-        client, tag_id=queue_to_rename["tagId"], existing_name=existing_queue["name"]
+        client,
+        queue_id=queue_to_rename["tagId"],
+        existing_name=existing_queue["name"],
+        existing_description=queue_to_rename["description"],
     )
 
 
@@ -509,8 +514,7 @@ def test_delete_queue_by_id(
     - The user attempts to retrieve information about the queue and response indicates
       the queue is no longer found.
     """
-    queue_to_delete = registered_queues["queue1"].json()
+    queue_to_delete = registered_queues["queue1"]
 
     delete_queue_with_id(client, queue_id=queue_to_delete["queueId"])
-
     assert_queue_is_not_found(client, queue_id=queue_to_delete["queueId"])

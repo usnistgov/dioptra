@@ -64,8 +64,8 @@ def register_user(client: FlaskClient, username: str, email: str) -> dict[str, A
 def register_queue(
     client: FlaskClient,
     name: str,
-    group_id: int | None = None,
-    description: str | None = None,
+    group_id: int,
+    description: str = "",
 ) -> TestResponse:
     """Register a queue using the API.
 
@@ -79,12 +79,7 @@ def register_queue(
         The response from the API.
     """
 
-    payload = {"name": name}
-
-    if description:
-        payload["description"] = description
-    if group_id:
-        payload["group_id"] = group_id
+    payload = {"name": name, "group_id": group_id, "description": description}
 
     return client.post(
         f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/",
