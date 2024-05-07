@@ -253,27 +253,6 @@ def assert_queue_is_not_found(
     assert response.status_code == 404
 
 
-def assert_queue_count_matches_expected_count(
-    client: FlaskClient,
-    expected: int,
-) -> None:
-    """Assert that the number of queues matches the expected number.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected number of queues.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the number of
-            queues does not match the expected number.
-    """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}",
-        follow_redirects=True,
-    )
-    assert len(response.get_json()["data"]) == expected
-
-
 def assert_cannot_rename_queue_with_existing_name(
     client: FlaskClient,
     queue_id: int,
