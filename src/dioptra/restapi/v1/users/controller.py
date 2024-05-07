@@ -107,7 +107,7 @@ class UserCurrentEndpoint(Resource):
 
     @login_required
     @accepts(schema=UserMutableFieldsSchema, api=api)
-    @responds(schema=UserSchema, api=api)
+    @responds(schema=UserCurrentSchema, api=api)
     def put(self):
         """Modifies the Current User"""
         log = LOGGER.new(
