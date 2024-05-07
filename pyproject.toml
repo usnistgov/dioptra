@@ -128,7 +128,7 @@ worker = [
     "async_timeout",
     "adversarial-robustness-toolbox>=1.9.0",
     "imgaug>=0.4.0",
-    "maite[all_interop]=0.4.0",
+    "maite[all_interop]==0.4.0",
     "matplotlib",
     "modelscan>=0.1.1",
     "nrtk>=0.3.0",
