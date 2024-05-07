@@ -170,9 +170,9 @@ def assert_retrieving_queues_works(
     Args:
         client: The Flask test client.
         expected: The expected response from the API.
-        Q: The search query parameters.
-        G: The group query parameters.
-        P: The paging query parameters.
+        group_id: The group ID used in query parameters.
+        search: The search string used in query parameters.
+        paging_info: The paging information used in query parameters.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
@@ -508,11 +508,12 @@ def test_delete_queue_by_id(
 ) -> None:
     """Test that a queue can be deleted by referencing its id.
 
-    This test validates the following sequence of actions:
+    Given an authenticated user and registered queues, this test validates the following
+        sequence of actions:
 
-    - The user deletes the "tensorflow_cpu" queue by referencing its id.
-    - The user attempts to retrieve information about the queue and response indicates
-      the queue is no longer found.
+    - The user deletes a queue by referencing its id.
+    - The user attempts to retrieve information about the deleted queue.
+    - The request fails with an appropriate error message and response code.
     """
     queue_to_delete = registered_queues["queue1"]
 
