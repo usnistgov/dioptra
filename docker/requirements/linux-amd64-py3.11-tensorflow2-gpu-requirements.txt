@@ -28,11 +28,11 @@ attrs==23.2.0
     # via
     #   jsonschema
     #   referencing
-blinker==1.8.1
+blinker==1.8.2
     # via flask
-boto3==1.34.93
+boto3==1.34.99
     # via dioptra (pyproject.toml)
-botocore==1.34.93
+botocore==1.34.99
     # via
     #   boto3
     #   s3transfer
@@ -47,6 +47,7 @@ click==8.1.7
     #   distributed
     #   flask
     #   mlflow
+    #   modelscan
     #   prefect
     #   rq
 cloudpickle==3.0.0
@@ -55,17 +56,19 @@ cloudpickle==3.0.0
     #   distributed
     #   mlflow
     #   prefect
+cmake==3.29.2
+    # via triton
 contourpy==1.2.1
     # via matplotlib
 croniter==2.0.5
     # via prefect
 cycler==0.12.1
     # via matplotlib
-dask==2024.4.2
+dask==2024.5.0
     # via
     #   distributed
     #   prefect
-distributed==2024.4.2
+distributed==2024.5.0
     # via prefect
 docker==7.0.0
     # via
@@ -75,6 +78,10 @@ entrypoints==0.4
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
+filelock==3.14.0
+    # via
+    #   torch
+    #   triton
 flask==3.0.3
     # via
     #   dioptra (pyproject.toml)
@@ -86,7 +93,7 @@ flask==3.0.3
     #   mlflow
 flask-accepts==0.18.4
     # via dioptra (pyproject.toml)
-flask-cors==4.0.0
+flask-cors==4.0.1
     # via dioptra (pyproject.toml)
 flask-login==0.6.3
     # via dioptra (pyproject.toml)
@@ -124,7 +131,7 @@ graphql-relay==3.2.0
     # via graphene
 greenlet==3.0.3
     # via sqlalchemy
-grpcio==1.62.2
+grpcio==1.63.0
     # via
     #   tensorboard
     #   tensorflow
@@ -154,18 +161,19 @@ injector==0.21.0
     # via dioptra (pyproject.toml)
 itsdangerous==2.2.0
     # via flask
-jinja2==3.1.3
+jinja2==3.1.4
     # via
     #   distributed
     #   flask
     #   mlflow
+    #   torch
 jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.4.0
+joblib==1.4.2
     # via scikit-learn
-jsonschema==4.21.1
+jsonschema==4.22.0
     # via
     #   dioptra (pyproject.toml)
     #   flask-restx
@@ -179,10 +187,14 @@ lazy-loader==0.4
     # via scikit-image
 libclang==18.1.1
     # via tensorflow
+lit==18.1.4
+    # via triton
 locket==1.0.0
     # via
     #   distributed
     #   partd
+maite[all-interop]==0.5.0
+    # via dioptra (pyproject.toml)
 mako==1.3.3
     # via alembic
 markdown==3.6
@@ -196,7 +208,7 @@ markupsafe==2.1.5
     #   jinja2
     #   mako
     #   werkzeug
-marshmallow==3.21.1
+marshmallow==3.21.2
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
@@ -219,6 +231,10 @@ ml-dtypes==0.3.2
     #   tensorflow
 mlflow==2.12.1
     # via dioptra (pyproject.toml)
+modelscan==0.7.3
+    # via dioptra (pyproject.toml)
+mpmath==1.3.0
+    # via sympy
 msgpack==1.0.8
     # via
     #   distributed
@@ -230,10 +246,12 @@ mypy-extensions==1.0.0
 namex==0.0.8
     # via keras
 networkx==3.3
-    # via scikit-image
-nrtk==0.3.1
+    # via
+    #   scikit-image
+    #   torch
+nrtk==0.4.0
     # via dioptra (pyproject.toml)
-numpy==1.26.4
+numpy==1.24.0
     # via
     #   adversarial-robustness-toolbox
     #   contourpy
@@ -242,9 +260,11 @@ numpy==1.26.4
     #   imageio
     #   imgaug
     #   keras
+    #   maite
     #   matplotlib
     #   ml-dtypes
     #   mlflow
+    #   modelscan
     #   nrtk
     #   opencv-python
     #   opt-einsum
@@ -263,33 +283,56 @@ numpy==1.26.4
     #   tensorboard
     #   tensorflow
     #   tifffile
+nvidia-cublas-cu11==11.10.3.66
+    # via
+    #   nvidia-cudnn-cu11
+    #   nvidia-cusolver-cu11
+    #   torch
 nvidia-cublas-cu12==12.3.4.1
     # via
     #   nvidia-cudnn-cu12
     #   nvidia-cusolver-cu12
     #   tensorflow
+nvidia-cuda-cupti-cu11==11.7.101
+    # via torch
 nvidia-cuda-cupti-cu12==12.3.101
     # via tensorflow
 nvidia-cuda-nvcc-cu12==12.3.107
     # via tensorflow
+nvidia-cuda-nvrtc-cu11==11.7.99
+    # via torch
 nvidia-cuda-nvrtc-cu12==12.3.107
     # via
     #   nvidia-cudnn-cu12
     #   tensorflow
+nvidia-cuda-runtime-cu11==11.7.99
+    # via torch
 nvidia-cuda-runtime-cu12==12.3.101
     # via tensorflow
+nvidia-cudnn-cu11==8.5.0.96
+    # via torch
 nvidia-cudnn-cu12==8.9.7.29
     # via tensorflow
+nvidia-cufft-cu11==10.9.0.58
+    # via torch
 nvidia-cufft-cu12==11.0.12.1
     # via tensorflow
+nvidia-curand-cu11==10.2.10.91
+    # via torch
 nvidia-curand-cu12==10.3.4.107
     # via tensorflow
+nvidia-cusolver-cu11==11.4.0.1
+    # via torch
 nvidia-cusolver-cu12==11.5.4.101
     # via tensorflow
+nvidia-cusparse-cu11==11.7.4.91
+    # via torch
 nvidia-cusparse-cu12==12.2.0.103
     # via
     #   nvidia-cusolver-cu12
     #   tensorflow
+nvidia-nccl-cu11==2.14.3
+    # via torch
 nvidia-nccl-cu12==2.19.3
     # via tensorflow
 nvidia-nvjitlink-cu12==12.3.101
@@ -297,6 +340,8 @@ nvidia-nvjitlink-cu12==12.3.101
     #   nvidia-cusolver-cu12
     #   nvidia-cusparse-cu12
     #   tensorflow
+nvidia-nvtx-cu11==11.7.91
+    # via torch
 opencv-python==4.9.0.80
     # via
     #   dioptra (pyproject.toml)
@@ -324,7 +369,7 @@ pandas==2.2.2
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
-partd==1.4.1
+partd==1.4.2
     # via dask
 passlib==1.7.4
     # via dioptra (pyproject.toml)
@@ -354,13 +399,13 @@ pyarrow==15.0.2
     # via
     #   dioptra (pyproject.toml)
     #   mlflow
-pybsm==0.1.1
+pybsm==0.2.0
     # via nrtk
 pycocotools==2.0.7
     # via
     #   dioptra (pyproject.toml)
     #   nrtk
-pygments==2.17.2
+pygments==2.18.0
     # via rich
 pyparsing==3.1.2
     # via matplotlib
@@ -400,7 +445,7 @@ redis==5.0.4
     # via
     #   dioptra (pyproject.toml)
     #   rq
-referencing==0.35.0
+referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -416,11 +461,12 @@ rich==13.7.1
     # via
     #   dioptra (pyproject.toml)
     #   keras
-rpds-py==0.18.0
+    #   modelscan
+rpds-py==0.18.1
     # via
     #   jsonschema
     #   referencing
-rq==1.16.1
+rq==1.16.2
     # via dioptra (pyproject.toml)
 s3transfer==0.10.1
     # via boto3
@@ -487,7 +533,7 @@ smqtk-image-io==0.17.1
     #   smqtk-detection
 sortedcontainers==2.4.0
     # via distributed
-sqlalchemy==2.0.29
+sqlalchemy==2.0.30
     # via
     #   alembic
     #   dioptra (pyproject.toml)
@@ -497,6 +543,8 @@ sqlparse==0.5.0
     # via mlflow
 structlog==24.1.0
     # via dioptra (pyproject.toml)
+sympy==1.12
+    # via torch
 tabulate==0.9.0
     # via prefect
 tblib==3.0.0
@@ -509,38 +557,50 @@ tensorboard-data-server==0.7.2
     # via tensorboard
 tensorflow[and-cuda]==2.16.1 ; sys_platform == "linux" and (platform_machine == "x86_64" or platform_machine == "amd64" or platform_machine == "AMD64")
     # via -r requirements-dev-tensorflow-gpu.in
-tensorflow-io-gcs-filesystem==0.36.0
-    # via tensorflow
+tensorflow-io-gcs-filesystem==0.34.0
+    # via
+    #   modelscan
+    #   tensorflow
 termcolor==2.4.0
     # via tensorflow
 text-unidecode==1.3
     # via python-slugify
 threadpoolctl==3.5.0
     # via scikit-learn
-tifffile==2024.4.24
+tifffile==2024.5.3
     # via scikit-image
 time-machine==2.14.1
     # via pendulum
 toml==0.10.2
     # via prefect
+tomlkit==0.12.4
+    # via modelscan
 toolz==0.12.1
     # via
     #   dask
     #   distributed
     #   partd
+torch==2.0.1
+    # via
+    #   maite
+    #   triton
 tornado==6.4
     # via distributed
-tqdm==4.66.2
+tqdm==4.66.4
     # via
     #   adversarial-robustness-toolbox
     #   nrtk
+triton==2.0.0
+    # via torch
 typing-extensions==4.11.0
     # via
     #   alembic
     #   dioptra (pyproject.toml)
+    #   maite
     #   optree
     #   sqlalchemy
     #   tensorflow
+    #   torch
 tzdata==2024.1
     # via
     #   pandas
@@ -552,7 +612,7 @@ urllib3==2.2.1
     #   docker
     #   prefect
     #   requests
-werkzeug==3.0.2
+werkzeug==3.0.3
     # via
     #   dioptra (pyproject.toml)
     #   flask
@@ -561,7 +621,14 @@ werkzeug==3.0.2
     #   flask-restx
     #   tensorboard
 wheel==0.43.0
-    # via astunparse
+    # via
+    #   astunparse
+    #   nvidia-cublas-cu11
+    #   nvidia-cuda-cupti-cu11
+    #   nvidia-cuda-runtime-cu11
+    #   nvidia-curand-cu11
+    #   nvidia-cusparse-cu11
+    #   nvidia-nvtx-cu11
 wrapt==1.16.0
     # via tensorflow
 zict==3.0.0

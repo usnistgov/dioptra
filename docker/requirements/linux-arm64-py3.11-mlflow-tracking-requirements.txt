@@ -8,11 +8,11 @@ alembic==1.13.1
     # via mlflow
 aniso8601==9.0.1
     # via graphene
-blinker==1.8.1
+blinker==1.8.2
     # via flask
-boto3==1.34.93
+boto3==1.34.99
     # via -r docker/pip-tools/mlflow-tracking-requirements.in
-botocore==1.34.93
+botocore==1.34.99
     # via
     #   boto3
     #   s3transfer
@@ -60,7 +60,7 @@ importlib-metadata==7.1.0
     # via mlflow
 itsdangerous==2.2.0
     # via flask
-jinja2==3.1.3
+jinja2==3.1.4
     # via
     #   flask
     #   mlflow
@@ -68,7 +68,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.4.0
+joblib==1.4.2
     # via scikit-learn
 kiwisolver==1.4.5
     # via matplotlib
@@ -145,7 +145,7 @@ six==1.16.0
     #   querystring-parser
 smmap==5.0.1
     # via gitdb
-sqlalchemy==2.0.29
+sqlalchemy==2.0.30
     # via
     #   alembic
     #   mlflow
@@ -164,7 +164,7 @@ urllib3==2.2.1
     #   botocore
     #   docker
     #   requests
-werkzeug==3.0.2
+werkzeug==3.0.3
     # via flask
 zipp==3.18.1
     # via importlib-metadata
