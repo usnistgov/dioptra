@@ -262,10 +262,12 @@ def assert_cannot_rename_queue_with_existing_name(
     existing_description: str,
 ) -> None:
     """Assert that renaming a queue with an existing name fails.
+
     Args:
         client: The Flask test client.
         queue_id: The id of the queue to rename.
         name: The name of an existing queue.
+
     Raises:
         AssertionError: If the response status code is not 400.
     """
