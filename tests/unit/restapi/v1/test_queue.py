@@ -179,10 +179,13 @@ def assert_retrieving_queues_works(
     """
 
     query_string = {}
+
     if group_id is not None:
         query_string["groupId"] = group_id
+
     if search is not None:
         query_string["query"] = search
+
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
         query_string["pageLength"] = paging_info["page_length"]
