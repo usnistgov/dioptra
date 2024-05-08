@@ -34,6 +34,16 @@ from dioptra.restapi.routes import (
 
 
 def login(client: FlaskClient, username: str, password: str) -> TestResponse:
+    """Login a user using the API.
+
+    Args:
+        client: The Flask test client.
+        username: The username of the user to be logged in.
+        password: The password of the user to be logged in.
+
+    Returns:
+        The response from the API.
+    """
     return client.post(
         f"/{V1_ROOT}/{V1_AUTH_ROUTE}/login",
         json={"username": username, "password": password},

@@ -87,6 +87,17 @@ def delete_queue_with_id(
 def assert_queue_response_contents_matches_expectations(
     response: dict[str, Any], expected_contents: dict[str, Any]
 ) -> None:
+    """Assert that queue response contents is valid.
+
+    Args:
+        response: The actual response from the API.
+        expected_contents: The expected response from the API.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response or if the response contents is not
+            valid.
+    """
     expected_keys = {
         "id",
         "snapshotId",
@@ -329,7 +340,7 @@ def test_queue_get_all(
     """Test that all queues can be retrieved.
 
     Given an authenticated user and registered queues, this test validates the following
-        sequence of actions:
+    sequence of actions:
 
     - A user registers three queues, "tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu".
     - The user is able to retrieve a list of all registered queues.
@@ -353,7 +364,7 @@ def test_queue_search_query(
     """Test that queues can be queried with a search term.
 
     Given an authenticated user and registered queues, this test validates the following
-        sequence of actions:
+    sequence of actions:
 
     - The user is able to retrieve a list of all registered queues with a description
       that contains 'queue'.
@@ -380,7 +391,7 @@ def test_queue_group_query(
     """Test that queues can retrieved using a group filter.
 
     Given an authenticated user and registered queues, this test validates the following
-        sequence of actions:
+    sequence of actions:
 
     - The user is able to retrieve a list of all registered queues that are owned by the
       default group.
@@ -406,7 +417,7 @@ def test_queue_id_get(
     """Test that queues can be retrieved by their unique ID.
 
     Given an authenticated user and registered queues, this test validates the following
-        sequence of actions:
+    sequence of actions:
 
     - The user is able to retrieve single queue by its ID.
     - The response is a single queue with a matching ID.
@@ -428,7 +439,7 @@ def test_cannot_register_existing_queue_name(
     """Test that registering a queue with an existing name fails.
 
     Given an authenticated user and registered queues, this test validates the following
-        sequence of actions:
+    sequence of actions:
 
     - The user attempts to register a second queue with the same name.
     - The request fails with an appropriate error message and response code.
@@ -452,7 +463,7 @@ def test_rename_queue(
     """Test that a queue can be renamed.
 
     Given an authenticated user and registered queues, this test validates the following
-        sequence of actions:
+    sequence of actions:
 
     - The user issues a request to change the name of a queue.
     - The user retrieves information about the same queue and it reflects the name
@@ -492,7 +503,7 @@ def test_delete_queue_by_id(
     """Test that a queue can be deleted by referencing its id.
 
     Given an authenticated user and registered queues, this test validates the following
-        sequence of actions:
+    sequence of actions:
 
     - The user deletes a queue by referencing its id.
     - The user attempts to retrieve information about the deleted queue.
