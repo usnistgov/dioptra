@@ -20,7 +20,6 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
-from __future__ import annotations
 
 from typing import Any
 
