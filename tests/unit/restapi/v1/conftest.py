@@ -27,14 +27,27 @@ from ..lib import actions
 
 @pytest.fixture
 def registered_users(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
-    user1_response = actions.register_user(client, "user1", "user1@example.org")
-    user2_response = actions.register_user(client, "user2", "user2@example.org")
-    user3_response = actions.register_user(client, "user3", "user3@example.org")
-    return {
+    password = "supersecurepassword"
+    user1_response = actions.register_user(
+        client, "user1", "user1@example.org", password
+    ).get_json()
+    user2_response = actions.register_user(
+        client, "user2", "user2@example.org", password
+    ).get_json()
+    user3_response = actions.register_user(
+        client, "user3", "user3@example.org", password
+    ).get_json()
+    users_info = {
         "user1": user1_response,
         "user2": user2_response,
         "user3": user3_response,
     }
+
+    for _, user_info in users_info.items():
+        user_info["password"] = password
+        user_info["default_group_id"] = user_info["groups"][0]["id"]
+
+    return users_info
 
 
 @pytest.fixture
@@ -43,7 +56,7 @@ def auth_account(
     db: SQLAlchemy,
     registered_users: dict[str, Any],  # noqa: F811
 ) -> dict[str, Any]:
-    user_info = registered_users["user1"].json()
+    user_info = registered_users["user1"]
     actions.login(
         client, username=user_info["username"], password=user_info["password"]
     )
@@ -59,19 +72,19 @@ def registered_queues(
         name="tensorflow_cpu",
         description="The first queue.",
         group_id=auth_account["default_group_id"],
-    )
+    ).get_json()
     queue2_response = actions.register_queue(
         client,
         name="tensorflow_gpu",
         description="The second queue.",
         group_id=auth_account["default_group_id"],
-    )
+    ).get_json()
     queue3_response = actions.register_queue(
         client,
         name="pytorch_cpu",
         description="Not retrieved.",
         group_id=auth_account["default_group_id"],
-    )
+    ).get_json()
     return {
         "queue1": queue1_response,
         "queue2": queue2_response,

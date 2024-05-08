@@ -20,8 +20,6 @@ This module contains shared actions used across test suites for each of the REST
 API endpoints.
 """
 
-from typing import Any
-
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
 
@@ -50,9 +48,21 @@ def login(client: FlaskClient, username: str, password: str) -> TestResponse:
     )
 
 
-def register_user(client: FlaskClient, username: str, email: str) -> dict[str, Any]:
-    password = "supersecurepassword"
-    response = client.post(
+def register_user(
+    client: FlaskClient, username: str, email: str, password: str
+) -> TestResponse:
+    """Register a user using the API.
+
+    Args:
+        client: The Flask test client.
+        username: The username to assign to the new user.
+        email: The email to assign to the new user.
+        password: The password to set for the new user.
+
+    Returns:
+        The response from the API.
+    """
+    return client.post(
         f"/{V1_ROOT}/{V1_USERS_ROUTE}",
         json={
             "username": username,
@@ -61,14 +71,7 @@ def register_user(client: FlaskClient, username: str, email: str) -> dict[str, A
             "confirmPassword": password,
         },
         follow_redirects=True,
-    ).get_json()
-    return {
-        "user_id": response["id"],
-        "username": response["username"],
-        "password": password,
-        "email_address": response["email"],
-        "default_group_id": response["groups"][0]["id"],
-    }
+    )
 
 
 def register_queue(
