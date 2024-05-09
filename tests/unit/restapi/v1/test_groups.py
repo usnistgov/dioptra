@@ -87,8 +87,6 @@ def assert_group_response_contents_matches_expectations(
         "user",
         "createdOn",
         "lastModifiedOn",
-        "resources",
-        "tags",
     }
     assert set(response.keys()) == expected_keys
 
@@ -109,19 +107,6 @@ def assert_group_response_contents_matches_expectations(
     assert isinstance(response["user"]["username"], str)
     assert isinstance(response["user"]["url"], str)
     assert response["user"]["id"] == expected_contents["user_id"]
-
-    # TODO confirm that there are no more common feilds for various resourceRef types
-    # Validate the ResourceRef structure
-    for resource in response["resources"]:
-        assert isinstance(resource["id"], int)
-        assert isinstance(resource["name"], str)
-        assert isinstance(resource["url"], str)
-
-    # Validate the TagRef structure
-    for tag in response["tags"]:
-        assert isinstance(tag["id"], int)
-        assert isinstance(tag["name"], str)
-        assert isinstance(tag["url"], str)
 
 
 def assert_retrieving_group_by_id_works(
