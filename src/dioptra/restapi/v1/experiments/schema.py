@@ -49,6 +49,7 @@ class ExperimentMutableFieldsSchema(Schema):
     entrypointIds = fields.List(
         fields.Int(),
         attribute="entrypoint_ids",
+        data_key="entrypoints",
         allow_none=True,
         load_default=None,
         metadata=dict(
@@ -70,6 +71,7 @@ class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # 
     tagIds = fields.List(
         fields.Int(),
         attribute="tag_ids",
+        data_key="tags",
         allow_none=True,
         load_default=None,
         metadata=dict(

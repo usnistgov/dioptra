@@ -34,6 +34,7 @@ class EntrypointParameterSchema(Schema):
 
     entrypointId = fields.Integer(
         attribute="entrypoint_id",
+        data_key="entrypoint",
         metadata=dict(description="ID for the associated entrypoint."),
     )
     parameterNumber = fields.Integer(

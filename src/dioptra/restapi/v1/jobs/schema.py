@@ -58,6 +58,7 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
 
     queueId = fields.Integer(
         attribute="queue_id",
+        data_key="queue",
         metadata=dict(description="An integer identifying a registered queue."),
         load_only=True,
     )
@@ -69,6 +70,7 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
     )
     experimentId = fields.Integer(
         attribute="experiment_id",
+        data_key="experiment",
         metadata=dict(description="An integer identifying a registered experiment."),
         load_only=True,
     )
@@ -80,6 +82,7 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
     )
     entrypointId = fields.Integer(
         attribute="entrypoint_id",
+        data_key="entrypoint",
         metadata=dict(description="An integer identifying a registered entry point."),
         load_only=True,
     )
