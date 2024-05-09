@@ -487,7 +487,7 @@ def test_rename_queue(
     )
     assert_cannot_rename_queue_with_existing_name(
         client,
-        queue_id=queue_to_rename["tagId"],
+        queue_id=queue_to_rename["queueId"],
         existing_name=existing_queue["name"],
         existing_description=queue_to_rename["description"],
     )
