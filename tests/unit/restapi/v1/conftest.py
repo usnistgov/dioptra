@@ -90,3 +90,26 @@ def registered_queues(
         "queue2": queue2_response,
         "queue3": queue3_response,
     }
+
+
+@pytest.fixture
+def registered_groups(
+    client, FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+) -> dict[str, Any]:
+    group1_response = actions.register_group(
+        client,
+        name="group_one",
+    ).get_json()
+    group2_response = actions.register_group(
+        client,
+        name="group_two",
+    ).get_json()
+    group3_response = actions.register_group(
+        client,
+        name="team_one",
+    ).get_json()
+    return {
+        "group1": group1_response,
+        "group2": group2_response,
+        "group3": group3_response,
+    }
