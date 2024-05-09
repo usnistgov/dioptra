@@ -14,6 +14,19 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from . import actions, helpers
+"""Shared utilities for REST API unit tests.
 
-__all__ = ["actions", "helpers"]
+This module contains shared functionality used across test suites for each of the REST
+API endpoints.
+"""
+
+import datetime
+
+
+def is_iso_format(date_string: str) -> bool:
+    try:
+        datetime.datetime.fromisoformat(date_string)
+        return True
+
+    except ValueError:
+        return False
