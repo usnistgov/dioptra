@@ -51,6 +51,7 @@ class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
 
     pluginId = fields.Int(
         attribute="plugin_id",
+        data_key="plugin",
         metadata=dict(description="ID for the Plugin resource this file belongs to."),
     )
     filename = fields.String(

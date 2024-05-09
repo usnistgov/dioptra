@@ -33,11 +33,13 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
         ),
         "snapshotId": fields.Integer(
             attribute="snapshot_id",
+            data_key="snapshot",
             metadata=dict(description=f"ID for the underlying {name} snapshot."),
             dump_only=True,
         ),
         "groupId": fields.Integer(
             attribute="group_id",
+            data_key="group",
             metadata=dict(
                 description=f"ID of the Group that will own the {name} resource."
             ),

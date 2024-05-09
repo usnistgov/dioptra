@@ -51,10 +51,12 @@ class ArtifactSchema(ArtifactBaseSchema):  # type: ignore
 
     jobId = fields.Int(
         attribute="job_id",
+        data_key="job",
         metadata=dict(description="id of the job that produced this Artifact"),
     )
     mlflowRunId = fields.Int(
         attribute="mlflow_run_id",
+        data_key="mlflowRun",
         metadata=dict(description="id of the tracking MLflow run"),
     )
     artifactUri = fields.URL(
