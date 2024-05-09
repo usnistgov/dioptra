@@ -32,10 +32,6 @@ from dioptra.restapi.routes import V1_GROUPS_ROUTE, V1_ROOT
 
 from ..lib import actions, helpers
 
-# TODO rebase once queues PR is merged into dev and add:
-#      - register_group to actions.py
-#      - resgisted_groups to conftest.py
-
 # -- Actions ---------------------------------------------------------------------------
 
 
