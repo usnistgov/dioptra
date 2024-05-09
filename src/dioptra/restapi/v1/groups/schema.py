@@ -26,6 +26,7 @@ from dioptra.restapi.v1.schemas import (
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
 )
+from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
 class GroupRefSchema(Schema):
@@ -104,20 +105,17 @@ GroupMemberCreateFieldsSchema = generate_group_permissions_schema(
     is_response=False, use_defaults=True
 )
 
-
 GroupMemberMutableFieldsSchema = generate_group_permissions_schema(
     is_response=False, use_defaults=False
+)
+
+GroupPermissionsResponseSchema = generate_group_permissions_schema(
+    is_response=True, use_defaults=False
 )
 
 
 class GroupMemberBaseSchema(Schema):
     """The base schema of a Group Member."""
-
-    from dioptra.restapi.v1.users.schema import UserRefSchema
-
-    GroupPermissionsResponseSchema = generate_group_permissions_schema(
-        is_response=True, use_defaults=False
-    )
 
     userId = fields.Integer(
         attribute="user_id",
@@ -178,8 +176,8 @@ class GroupSchema(GroupMutableFieldsSchema):
     members = fields.Nested(
         GroupMemberSchema,
         attribute="members",
-        metadata=dict(description="A list of GroupMembers in a Group."),
         many=True,
+        metadata=dict(description="A list of GroupMembers in a Group."),
         dump_only=True,
     )
     createdOn = fields.DateTime(

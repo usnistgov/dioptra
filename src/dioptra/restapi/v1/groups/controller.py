@@ -129,6 +129,20 @@ class GroupIdMembersEndpoint(Resource):
         log.debug("Request received")
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
 
+    @login_required
+    @accepts(schema=GroupMemberSchema(many=True), api=api)
+    @responds(schema=GroupMemberSchema(many=True), api=api)
+    def put(self, id: int):
+        """Modifies all Group Members' permisssions."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="GroupMember",
+            request_type="POST",
+            id=id,
+        )
+        log.debug("Request received")
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+
 
 @api.route("/<int:id>/members/<int:user_id>")
 @api.param("id", "ID for the Group resource.")
