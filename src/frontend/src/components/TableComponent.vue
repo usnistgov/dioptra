@@ -21,16 +21,16 @@
       </q-tr>
     </template> 
     <template v-slot:body="props">
-      <!-- props.row[field] - field needs to be unique ID, pass this in as a prop, using name for now -->
+      <!-- props.row[field] - field needs to be unique ID, pass this in as a prop, or just use id -->
       <q-tr 
         :class="`${getSelectedColor(props.selected)} cursor-pointer` " 
         :props="props"
-        @click="props.selected = !props.selected; radioSelected = props.row.name" 
+        @click="props.selected = !props.selected; radioSelected = props.row.id" 
       >
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           <q-radio 
             v-model="radioSelected" 
-            :val="props.row.name"
+            :val="props.row.id"
             v-if="col.name === 'radio'" 
             @click="handleRadioClick(props)"
           />
@@ -99,6 +99,7 @@
   const radioSelected = ref('')
 
   function handleRadioClick(props) {
+    console.log('props = ', props)
     props.selected = !props.selected
     event.stopPropagation()
   }

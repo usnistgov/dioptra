@@ -83,9 +83,9 @@ xmas-fifth-day:
       id: '1',
       group: 'Group 1',
       files: [
-        { name: 'file1', contents: 'print("Hello, World! This is file 1.")', tasks: [] },
-        { name: 'file2', contents: 'print("Hello, World! This is file 2.")', tasks: [] },
-        { name: 'file3', contents: 'print("Hello, World! This is file 3.")', tasks: [] },
+        { id: '1', name: 'file1', contents: 'print("Hello, World! This is file 1.")', tasks: [] },
+        { id: '2', name: 'file2', contents: 'print("Hello, World! This is file 2.")', tasks: [] },
+        { id: '3', name: 'file3', contents: 'print("Hello, World! This is file 3.")', tasks: [] },
       ],
       tags: ['Machine Learning']
     }

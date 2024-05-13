@@ -53,7 +53,8 @@
   const plugin = ref({
     name: '',
     group: '',
-    tags: []
+    tags: [],
+    files: []
   })
 
   function requiredRule(val) {

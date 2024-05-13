@@ -1,4 +1,18 @@
 <template>
+
+
+  <!-- <div :class="`${isMobile ? 'q-mx-sm' : 'q-mx-xl'}`">
+    <div class="row q-gutter-x-xl">
+      <fieldset :class="`${isMobile ? 'col-12' : 'col'} `">
+
+      </fieldset>
+      <fieldset :class="`${isMobile ? 'col-12' : 'col'} `">
+
+      </fieldset>
+    </div>
+  </div> -->
+
+
   <div :class="`row q-mt-lg ${isMobile ? '' : 'q-mx-xl'} q-mb-lg`">
     <fieldset :class="`${isMobile ? 'col-12' : 'col-6'} q-mr-xl`">
       <legend>Basic Info</legend>
@@ -76,12 +90,18 @@
         v-model="selected"
         @edit="store.editMode = true; router.push(`/plugins/${selected[0].id}`)"
         :hideButtons="true"
-      />
+      >
+      <template #body-cell-tasks="props">
+        <div>
+          {{ props.row.tasks.length }}
+        </div>
+      </template>
+      </TableComponent>
     </fieldset>
     <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
       <legend>Add/Edit File</legend>
       <div style="padding: 0 5%">
-        <q-form ref="basicInfoForm" >
+        <q-form @submit.prevent="submitFile" ref="fileForm" greedy>
           <q-input 
             outlined 
             dense 
@@ -89,7 +109,6 @@
             :rules="[requiredRule]"
             class="q-mb-sm q-mt-md"
             aria-required="true"
-            :lazy-rules="true"
           >
             <template v-slot:before>
               <label :class="`field-label`">Filename:</label>
@@ -130,56 +149,58 @@
           </q-file>
         </div>
 
-        <label for="taskTable">Plugin Tasks</label>
-        <BasicTable
+        <fieldset>
+          <legend>Plugin Tasks</legend>
+          <BasicTable
           :columns="taskColumns"
-          :rows="[]"
+          :rows="pluginFile.tasks"
           :hideSearch="true"
           :hideEditTable="true"
           id="taskTable"
           @edit="(param, i) => {selectedParam = param; selectedParamIndex = i; showEditParamDialog = true}"
           @delete="(param) => {selectedParam = param; showDeleteDialog = true}"
         />
-        <q-form ref="paramForm" greedy @submit.prevent="addTask" class="q-mt-lg">
-            <q-input 
-              outlined 
-              dense 
-              v-model.trim="task.name"
-              :rules="[requiredRule]"
-              class="q-mb-sm "
-              label="Task Name"
-            />
-            <q-select
-              outlined 
-              v-model="task.input_params" 
-              :options="[]" 
-              dense
-              :rules="[requiredRule]"
-              aria-required="true"
-              class="q-mb-sm"
-              label="Task Input Params"
-            />
-            <q-input 
-              outlined 
-              dense 
-              v-model.trim="task.output_params"
-              class="q-mb-sm"
-              label="Task Output Params"
-            />
-            <q-card-actions align="right">
-              <q-btn
-                round
-                color="secondary"
-                icon="add"
-                type="submit"
-              >
-                <span class="sr-only">Add Task</span>
-                <q-tooltip>
-                  Add Task
-                </q-tooltip>
-              </q-btn>
-            </q-card-actions>
-          </q-form>
+        <q-form ref="taskForm" greedy @submit.prevent="addTask" class="q-mt-lg">
+          <q-input 
+            outlined 
+            dense 
+            v-model.trim="task.name"
+            :rules="[requiredRule]"
+            class="q-mb-sm"
+            label="Task Name"
+          />
+          <q-input 
+            outlined 
+            dense 
+            v-model.trim="task.input_params"
+            :rules="[requiredRule]"
+            class="q-mb-sm"
+            label="Task Input Params"
+          />
+          <q-input 
+            outlined 
+            dense 
+            v-model.trim="task.output_params"
+            :rules="[requiredRule]"
+            class="q-mb-sm"
+            label="Task Output Params"
+          />
+          <q-card-actions align="right">
+            <q-btn
+              round
+              color="secondary"
+              icon="add"
+              type="submit"
+            >
+              <span class="sr-only">Add Task</span>
+              <q-tooltip>
+                Add Task
+              </q-tooltip>
+            </q-btn>
+          </q-card-actions>
+        </q-form>
+        </fieldset>
+        <!-- <label for="taskTable">Plugin Tasks</label> -->
         <div :class="`float-right q-my-lg`">
           <q-btn  
             to="/plugins"
@@ -197,8 +218,6 @@
       </div>
     </fieldset>
   </div>
-
-  selected: {{ selected }}
 
   <div :class="`${isMobile ? '' : 'q-mx-xl'} float-right q-mb-lg`">
     <q-btn  
@@ -250,6 +269,7 @@
       return obj.id === route.params.id
     })
   })
+  console.log('storePlugin = ', storePlugin.value)
 
   const plugin = reactive({
     ...storePlugin.value
@@ -282,7 +302,7 @@
     newTag.value = ''
   }
 
-  const basicInfoForm = ref()
+  const fileForm = ref()
 
   function submit() {
     const index = store.plugins.findIndex((obj) => {
@@ -294,10 +314,76 @@
   }
 
   function submitFile() {
-    
+    if(selected.value.length) {
+      fileForm.value.validate().then(success => {
+      if (success) {
+        const fileIndex = storePlugin.value.files.findIndex((file) => file.id === pluginFile.value.id)
+        storePlugin.value.files[fileIndex] = JSON.parse(JSON.stringify(pluginFile.value))
+        // resetFileForm()
+        task.value ={
+          name: '',
+          input_params: '',
+          output_params: ''
+        }
+        taskForm.value.reset()
+      }
+      else {
+        // error
+      }
+    })
+    } else {
+      fileForm.value.validate().then(success => {
+        if (success) {
+          pluginFile.value.id = String(Math.floor(Math.random()*90000) + 10000)
+          storePlugin.value.files.push(pluginFile.value)
+          resetFileForm()
+          task.value ={
+            name: '',
+            input_params: '',
+            output_params: ''
+          }
+          taskForm.value.reset()
+        }
+        else {
+          // error
+        }
+      })
+    }
   }
 
+  function resetFileForm() {
+    pluginFile.value = {
+      name: '',
+      contents: '',
+      tasks: []
+    }
+    uploadedFile.value = null
+    fileForm.value.reset()
+  }
+
+  const taskForm = ref(null)
+
   function addTask() {
+    taskForm.value.validate().then(success => {
+      if (success) {
+        pluginFile.value.tasks.push({
+          name: task.value.name,
+          input_params: task.value.input_params,
+          output_params: task.value.output_params
+        })
+        task.value ={
+          name: '',
+          input_params: '',
+          output_params: ''
+        }
+        taskForm.value.reset()
+      }
+      else {
+        // error
+      }
+    })
+
+    
 
   }
 
@@ -309,15 +395,10 @@
 
   const selected = ref([])
 
-  const pluginFile = computed(() => {
-    if(selected.value.length) {
-      return JSON.parse(JSON.stringify(selected.value[0]))
-    }
-    return {
-      filename: '',
-      contents: '',
-      tasks: []
-    }
+  const pluginFile = ref({
+    name: '',
+    contents: '',
+    tasks: []
   })
 
   const task = ref({
@@ -327,6 +408,7 @@
   })
 
   const fileColumns = [
+    // field must be name or else selection doesn't work, possible quasar bug
     { name: 'filename', label: 'Filename', align: 'left', field: 'name', sortable: true, },
     { name: 'tasks', label: 'Number of Tasks', align: 'left', field: 'tasks', sortable: true, },
   ]
@@ -334,10 +416,18 @@
   const showCodeDialog = ref(false)
   const uploadedFile = ref(null)
 
-  console.log('uploadedFile = ', uploadedFile.value)
-
   watch(selected, (newVal) => {
-    // uploadedFile.value = null
+    uploadedFile.value = null
+    if(newVal.length) {
+      pluginFile.value = JSON.parse(JSON.stringify(selected.value[0]))
+    } else {
+      pluginFile.value = {
+        name: '',
+        contents: '',
+        tasks: []
+      }
+      fileForm.value.reset()
+    }
   })
 
   function processFile() {
