@@ -50,9 +50,8 @@ class UserMutableFieldsSchema(Schema):
     """The schema for the mutable data fields in a User resource."""
 
     username = fields.String(
-        attribute="name", metadata=dict(description="Username of the User.")
+        attribute="username", metadata=dict(description="Username of the User.")
     )
-
     email = fields.String(
         attribute="email", metadata=dict(description="Email of the User.")
     )
@@ -66,7 +65,6 @@ class UserSchema(UserMutableFieldsSchema):
         metadata=dict(description="Password for the User resource."),
         load_only=True,
     )
-
     confirmPassword = fields.String(
         attribute="confirm_password",
         metadata=dict(
@@ -74,7 +72,6 @@ class UserSchema(UserMutableFieldsSchema):
         ),
         load_only=True,
     )
-
     id = fields.Integer(
         attribute="id",
         metadata=dict(description="ID for the User resource."),
@@ -129,12 +126,10 @@ class UserPasswordSchema(Schema):
         attribute="old_password",
         metadata=dict(description="Old password for the User resource."),
     )
-
     newPassword = fields.String(
         attribute="new_password",
         metadata=dict(description="New password for the User resource."),
     )
-
     confirmNewPassword = fields.String(
         attribute="confirm_new_password",
         metadata=dict(

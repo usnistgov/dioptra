@@ -18,15 +18,18 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 import structlog
 from flask import request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
+from injector import inject
 from structlog.stdlib import BoundLogger
 
 from .schema import LoginSchema, LogoutSchema
+from .service import AuthService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -40,23 +43,46 @@ api: Namespace = Namespace(
 class LoginResource(Resource):
     """Methods for the /auth/login endpoint."""
 
+    @inject
+    def __init__(self, auth_service: AuthService, *args, **kwargs) -> None:
+        """Initialize the login resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            auth_service: An AuthService object.
+        """
+        self._auth_service = auth_service
+        super().__init__(*args, **kwargs)
+
     @accepts(schema=LoginSchema, api=api)
     @responds(schema=LoginSchema, api=api)
-    def post(self):
+    def post(self) -> dict[str, Any]:
         """Login to a registered user account."""
-        log = LOGGER.new(
+        log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="auth/login", request_type="POST"
         )
-        log.debug("Request received")
-        parsed_query_params = request.parsed_query_params  # noqa: F841
-        # username = str(parsed_obj["username"])
-        # password = str(parsed_obj["password"])
-        # return self._auth_service.login(username=username, password=password, log=log)
+        parsed_obj = request.parsed_obj  # type: ignore
+        username = str(parsed_obj["username"])
+        password = str(parsed_obj["password"])
+        return self._auth_service.login(username=username, password=password, log=log)
 
 
 @api.route("/logout")
 class LogoutResource(Resource):
     """Methods for the /auth/logout endpoint."""
+
+    @inject
+    def __init__(self, auth_service: AuthService, *args, **kwargs) -> None:
+        """Initialize the login resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            auth_service: An AuthService object.
+        """
+        self._auth_service = auth_service
+        super().__init__(*args, **kwargs)
 
     @login_required
     @accepts(query_params_schema=LogoutSchema, api=api)
@@ -66,10 +92,9 @@ class LogoutResource(Resource):
 
         Must be logged in.
         """
-        log = LOGGER.new(
+        log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="auth/logout", request_type="POST"
         )
-        log.debug("Request received")
         parsed_query_params = request.parsed_query_params  # noqa: F841
-        # everywhere = bool(parsed_query_params["everywhere"])
-        # return self._auth_service.logout(everywhere=everywhere, log=log)
+        everywhere = bool(parsed_query_params["everywhere"])
+        return self._auth_service.logout(everywhere=everywhere, log=log)
