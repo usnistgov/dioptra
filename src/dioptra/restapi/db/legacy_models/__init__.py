@@ -14,9 +14,16 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from .experiment import Experiment
-from .job import Job, job_statuses
-from .queues import Queue, QueueLock
-from .users import User
+from .experiment import LegacyExperiment
+from .job import LegacyJob, legacy_job_statuses
+from .queues import LegacyQueue, LegacyQueueLock
+from .users import LegacyUser
 
-__all__ = ["Experiment", "Job", "job_statuses", "Queue", "QueueLock", "User"]
+__all__ = [
+    "LegacyExperiment",
+    "LegacyJob",
+    "LegacyQueue",
+    "LegacyQueueLock",
+    "LegacyUser",
+    "legacy_job_statuses",
+]

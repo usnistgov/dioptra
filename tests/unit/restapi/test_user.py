@@ -46,6 +46,7 @@ from dioptra.restapi.db import db as restapi_db
 from dioptra.restapi.routes import AUTH_ROUTE, USER_ROUTE, V0_ROOT
 
 from .conftest import wait_for_healthcheck_success
+from .lib import db as libdb
 from .lib.server import FlaskTestServer
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -118,20 +119,8 @@ def db(app: Flask) -> SQLAlchemy:
 
 
 @pytest.fixture(autouse=True)
-def seed_database(db):
-    from dioptra.restapi.db.legacy_models import job_statuses
-
-    db.session.execute(
-        job_statuses.insert(),
-        [
-            {"status": "queued"},
-            {"status": "started"},
-            {"status": "deferred"},
-            {"status": "finished"},
-            {"status": "failed"},
-        ],
-    )
-    db.session.commit()
+def seed_database(db: SQLAlchemy):
+    libdb.setup_ontology(db.session)
 
 
 @pytest.fixture

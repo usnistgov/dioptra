@@ -75,11 +75,11 @@ bleach==6.1.0
     #   nbconvert
 blinker==1.8.1
     # via flask
-boto3==1.34.93
+boto3==1.34.96
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-botocore==1.34.93
+botocore==1.34.96
     # via
     #   boto3
     #   s3transfer
@@ -177,6 +177,8 @@ esbonio==0.16.4
     # via dioptra (pyproject.toml)
 executing==2.0.1
     # via stack-data
+faker==25.0.1
+    # via dioptra (pyproject.toml)
 fastjsonschema==2.19.1
     # via nbformat
 filelock==3.14.0
@@ -259,7 +261,7 @@ graphql-relay==3.2.0
     # via graphene
 greenlet==3.0.3
     # via sqlalchemy
-grpcio==1.62.2
+grpcio==1.63.0
     # via
     #   tensorboard
     #   tensorflow-intel
@@ -341,13 +343,13 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.4.0
+joblib==1.4.2
     # via scikit-learn
 json5==0.9.25
     # via jupyterlab-server
 jsonpointer==2.4
     # via jsonschema
-jsonschema[format-nongpl]==4.21.1
+jsonschema[format-nongpl]==4.22.0
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -434,7 +436,7 @@ markupsafe==2.1.5
     #   mako
     #   nbconvert
     #   werkzeug
-marshmallow==3.21.1
+marshmallow==3.21.2
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -504,7 +506,7 @@ notebook-shim==0.2.4
     # via
     #   jupyterlab
     #   notebook
-nrtk==0.3.1
+nrtk==0.3.2
     # via dioptra (pyproject.toml)
 numpy==1.26.4
     # via
@@ -688,6 +690,7 @@ python-dateutil==2.9.0.post0
     #   croniter
     #   dioptra
     #   dioptra (pyproject.toml)
+    #   faker
     #   freezegun
     #   jupyter-client
     #   kaggle
@@ -733,7 +736,7 @@ pyyaml==6.0.1
     #   jupyter-events
     #   mlflow
     #   prefect
-pyzmq==26.0.2
+pyzmq==26.0.3
     # via
     #   ipykernel
     #   jupyter-client
@@ -751,7 +754,7 @@ redis==5.0.4
     #   dioptra
     #   dioptra (pyproject.toml)
     #   rq
-referencing==0.35.0
+referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -785,7 +788,7 @@ rpds-py==0.18.0
     # via
     #   jsonschema
     #   referencing
-rq==1.16.1
+rq==1.16.2
     # via
     #   dioptra
     #   dioptra (pyproject.toml)

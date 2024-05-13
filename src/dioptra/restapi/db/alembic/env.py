@@ -7,7 +7,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import create_engine
 
-from dioptra.restapi.db.custom_types import GUID
+from dioptra.restapi.db.custom_types import GUID, TZDateTime
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -52,6 +52,13 @@ def render_item(type_, obj, autogen_context):
     if type_ == "type" and isinstance(obj, GUID):
         # add import for this type
         autogen_context.imports.add("from dioptra.restapi.db.custom_types import GUID")
+        return "%r" % obj
+
+    if type_ == "type" and isinstance(obj, TZDateTime):
+        # add import for this type
+        autogen_context.imports.add(
+            "from dioptra.restapi.db.custom_types import TZDateTime"
+        )
         return "%r" % obj
 
     # default rendering for other objects

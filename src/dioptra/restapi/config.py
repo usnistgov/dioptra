@@ -93,9 +93,7 @@ class TestingConfig(BaseConfig):
     TESTING = True
     WTF_CSRF_ENABLED = False
     SESSION_PROTECTION: str | None = None
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DIOPTRA_RESTAPI_TEST_DATABASE_URI", "sqlite://"
-    )
+    SQLALCHEMY_DATABASE_URI = "sqlite://"
 
 
 class ProductionConfig(BaseConfig):

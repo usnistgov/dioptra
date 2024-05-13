@@ -220,6 +220,7 @@ The cruft tool makes it easy to fetch the latest updates to the template:
 Cookiecutter variables can also be updated via cruft:
 
 .. code:: sh
+
    # Activate the virtual environment (if not active)
    source .venv/bin/activate
 

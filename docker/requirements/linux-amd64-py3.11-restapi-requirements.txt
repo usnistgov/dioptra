@@ -18,9 +18,9 @@ attrs==23.2.0
     #   referencing
 blinker==1.8.1
     # via flask
-boto3==1.34.93
+boto3==1.34.96
     # via dioptra (pyproject.toml)
-botocore==1.34.93
+botocore==1.34.96
     # via
     #   boto3
     #   s3transfer
@@ -88,7 +88,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-jsonschema==4.21.1
+jsonschema==4.22.0
     # via
     #   dioptra (pyproject.toml)
     #   flask-restx
@@ -101,7 +101,7 @@ markupsafe==2.1.5
     #   jinja2
     #   mako
     #   werkzeug
-marshmallow==3.21.1
+marshmallow==3.21.2
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
@@ -149,7 +149,7 @@ redis==5.0.4
     # via
     #   dioptra (pyproject.toml)
     #   rq
-referencing==0.35.0
+referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -161,7 +161,7 @@ rpds-py==0.18.0
     # via
     #   jsonschema
     #   referencing
-rq==1.16.1
+rq==1.16.2
     # via dioptra (pyproject.toml)
 s3transfer==0.10.1
     # via boto3

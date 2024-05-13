@@ -25,7 +25,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi import create_app
 from dioptra.restapi.db import db
-from dioptra.restapi.db.legacy_models import Experiment, Job
+from dioptra.restapi.db.legacy_models import LegacyExperiment, LegacyJob
 
 ENVVAR_RESTAPI_ENV = "DIOPTRA_RESTAPI_ENV"
 
@@ -44,7 +44,7 @@ class DioptraDatabaseClient(object):
 
     def get_job(self, job_id) -> Dict[str, Any]:
         with self.app.app_context():
-            job: Job = Job.query.get(job_id)
+            job: LegacyJob = LegacyJob.query.get(job_id)
             return {
                 "job_id": job.job_id,
                 "queue": job.queue.name,
@@ -58,7 +58,7 @@ class DioptraDatabaseClient(object):
         )
 
         with self.app.app_context():
-            job = Job.query.get(job_id)
+            job = LegacyJob.query.get(job_id)
 
             if job.status != status:
                 job.update(changes={"status": status})
@@ -73,7 +73,7 @@ class DioptraDatabaseClient(object):
     def set_mlflow_run_id_for_job(self, run_id: str, job_id: str) -> None:
         LOGGER.info("=== Setting MLFlow run ID in the Dioptra database ===")
         with self.app.app_context():
-            job = Job.query.get(job_id)
+            job = LegacyJob.query.get(job_id)
             job.update(changes={"mlflow_run_id": run_id})
 
             try:
@@ -87,7 +87,7 @@ class DioptraDatabaseClient(object):
         timestamp = datetime.datetime.now()
 
         with self.app.app_context():
-            new_job: Job = Job(
+            new_job: LegacyJob = LegacyJob(
                 job_id=job_id,
                 experiment_id=experiment_id,
                 created_on=timestamp,
@@ -108,7 +108,7 @@ class DioptraDatabaseClient(object):
         )
 
         with self.app.app_context():
-            job: Job = Job.query.get(job_id)  # noqa: F841
+            job: LegacyJob = LegacyJob.query.get(job_id)  # noqa: F841
 
             try:
                 db.session.commit()
@@ -123,7 +123,7 @@ class DioptraDatabaseClient(object):
         )
 
         with self.app.app_context():
-            job: Job = Job.query.get(job_id)  # noqa: F841
+            job: LegacyJob = LegacyJob.query.get(job_id)  # noqa: F841
 
             try:
                 db.session.commit()
@@ -132,12 +132,12 @@ class DioptraDatabaseClient(object):
                 db.session.rollback()
                 raise
 
-    def get_experiment_by_id(self, experiment_id: int) -> Optional[Experiment]:
-        result = Experiment.query.get(experiment_id)
+    def get_experiment_by_id(self, experiment_id: int) -> Optional[LegacyExperiment]:
+        result = LegacyExperiment.query.get(experiment_id)
         # 1.4 SQLAlchemy type stubs don't seem to have a return type annotation for the
         # get() method, so mypy assumes Any. Latest SQLAlchemy code uses Optional[Any].
         # https://github.com/sqlalchemy/sqlalchemy/blob/d9d0ffd96c632750be9adcb03a207d75aecaa80f/lib/sqlalchemy/orm/query.py#L1048
-        return cast(Optional[Experiment], result)
+        return cast(Optional[LegacyExperiment], result)
 
     def create_experiment(self, experiment_name: str, experiment_id: int) -> None:
         timestamp = datetime.datetime.now()
@@ -148,7 +148,7 @@ class DioptraDatabaseClient(object):
         )
 
         with self.app.app_context():
-            new_experiment: Experiment = Experiment(
+            new_experiment: LegacyExperiment = LegacyExperiment(
                 experiment_id=experiment_id,
                 name=experiment_name,
                 created_on=timestamp,
@@ -170,7 +170,7 @@ class DioptraDatabaseClient(object):
         )
 
         with self.app.app_context():
-            experiment: Experiment = Experiment.query.get(experiment_id)
+            experiment: LegacyExperiment = LegacyExperiment.query.get(experiment_id)
             experiment.update(changes={"name": new_name})
 
             try:
@@ -187,7 +187,9 @@ class DioptraDatabaseClient(object):
         )
 
         with self.app.app_context():
-            experiment: Experiment = Experiment.query.get(experiment_id)  # noqa: F841
+            experiment: LegacyExperiment = LegacyExperiment.query.get(  # noqa: F841
+                experiment_id
+            )
 
             try:
                 db.session.commit()

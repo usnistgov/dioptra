@@ -14,8 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from __future__ import annotations
-
+from . import legacy_models, models
 from .db import db
 
-__all__ = ["db"]
+__all__ = ["db", "legacy_models", "models"]

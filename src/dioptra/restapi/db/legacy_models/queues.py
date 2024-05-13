@@ -15,15 +15,19 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The data models for the queue endpoint objects."""
-from __future__ import annotations
-
 import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from dioptra.restapi.db.db import db
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from dioptra.restapi.db.db import db, intpk, text_
+
+if TYPE_CHECKING:
+    from .job import LegacyJob
 
 
-class QueueLock(db.Model):  # type: ignore[name-defined]
+class LegacyQueueLock(db.Model):  # type: ignore[name-defined]
     """The queue_locks table.
 
     Attributes:
@@ -33,17 +37,19 @@ class QueueLock(db.Model):  # type: ignore[name-defined]
 
     __tablename__ = "legacy_queue_locks"
 
-    queue_id = db.Column(
-        db.BigInteger().with_variant(db.Integer, "sqlite"),
-        db.ForeignKey("legacy_queues.queue_id"),
-        primary_key=True,
+    queue_id: Mapped[intpk] = mapped_column(
+        ForeignKey("legacy_queues.queue_id"), init=False
     )
-    created_on = db.Column(db.DateTime(), default=datetime.datetime.now)
+    created_on: Mapped[datetime.datetime] = mapped_column(init=False, nullable=True)
 
-    queue = db.relationship("Queue", back_populates="lock")
+    queue: Mapped["LegacyQueue"] = relationship(init=False, back_populates="lock")
+
+    def __post_init__(self) -> None:
+        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+        self.created_on = timestamp
 
 
-class Queue(db.Model):  # type: ignore[name-defined]
+class LegacyQueue(db.Model):  # type: ignore[name-defined]
     """The queues table.
 
     Attributes:
@@ -56,28 +62,31 @@ class Queue(db.Model):  # type: ignore[name-defined]
 
     __tablename__ = "legacy_queues"
 
-    queue_id = db.Column(
-        db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True
-    )
-    created_on = db.Column(db.DateTime())
-    last_modified = db.Column(db.DateTime())
-    name = db.Column(db.Text(), index=True, nullable=False, unique=True)
-    is_deleted = db.Column(db.Boolean(), default=False)
+    queue_id: Mapped[intpk]
+    created_on: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    last_modified: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    name: Mapped[text_] = mapped_column(nullable=False, unique=True, index=True)
+    is_deleted: Mapped[bool] = mapped_column(init=False, nullable=True)
 
-    jobs = db.relationship("Job", back_populates="queue", lazy="dynamic")
-    lock = db.relationship("QueueLock", back_populates="queue")
+    jobs: Mapped["LegacyJob"] = relationship(init=False, back_populates="queue")
+    lock: Mapped[list["LegacyQueueLock"]] = relationship(
+        init=False, back_populates="queue"
+    )
+
+    def __post_init__(self) -> None:
+        self.is_deleted = False
 
     @classmethod
     def next_id(cls) -> int:
         """Generates the next id in the sequence."""
-        queue: Queue | None = cls.query.order_by(cls.queue_id.desc()).first()
+        queue: LegacyQueue | None = cls.query.order_by(cls.queue_id.desc()).first()
 
         if queue is None:
             return 1
 
         return int(queue.queue_id) + 1
 
-    def update(self, changes: dict[str, Any]) -> Queue:
+    def update(self, changes: dict[str, Any]) -> "LegacyQueue":
         """Updates the record.
 
         Args:
