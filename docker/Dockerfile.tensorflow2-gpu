@@ -55,11 +55,13 @@ RUN sed -i -e "s/https/http/g" /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.li
     gnupg \
     libbz2-1.0 \
     libgl1 \
+    libhdf5-dev \
     liblz4-1 \
     liblzma5 \
     libsnappy1v5 \
     libzstd1 \
     netcat \
+    pkg-config \
     postgresql-client \
     tzdata \
     unzip \
