@@ -28,7 +28,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db.legacy_models import User
+from dioptra.restapi.db.legacy_models import LegacyUser
 
 from .schema import (
     ChangePasswordCurrentUserSchema,
@@ -65,7 +65,7 @@ class UserResource(Resource):
 
     @accepts(schema=UserSchema, api=api)
     @responds(schema=UserSchema, api=api)
-    def post(self) -> User:
+    def post(self) -> LegacyUser:
         """Register a new user."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="user", request_type="POST"
@@ -142,7 +142,7 @@ class UserIdResource(Resource):
 
     @login_required
     @responds(schema=UserSchema, api=api)
-    def get(self, userId: int) -> User:
+    def get(self, userId: int) -> LegacyUser:
         """Get info about a specified user.
 
         Must be logged in.
@@ -151,7 +151,7 @@ class UserIdResource(Resource):
             request_id=str(uuid.uuid4()), resource="current", request_type="GET"
         )  # noqa: F841
         return cast(
-            User,
+            LegacyUser,
             self._user_service.get(user_id=userId, error_if_not_found=True, log=log),
         )
 
@@ -176,7 +176,7 @@ class CurrentUserResource(Resource):
 
     @login_required
     @responds(schema=UserSchema, api=api)
-    def get(self) -> User:
+    def get(self) -> LegacyUser:
         """Get info about the current user.
 
         Must be logged in.

@@ -26,7 +26,7 @@ from mlflow.exceptions import RestException
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db
-from dioptra.restapi.db.legacy_models import Experiment
+from dioptra.restapi.db.legacy_models import LegacyExperiment
 from dioptra.restapi.utils import slugify
 from dioptra.restapi.v0.shared.mlflow_tracking.service import MLFlowTrackingService
 
@@ -63,7 +63,7 @@ class ExperimentService(object):
         self,
         experiment_name: str,
         **kwargs,
-    ) -> Experiment:
+    ) -> LegacyExperiment:
         """Create a new experiment.
 
         Args:
@@ -99,7 +99,7 @@ class ExperimentService(object):
         if experiment_id is None:
             raise ExperimentMLFlowTrackingAlreadyExistsError
 
-        new_experiment = Experiment(
+        new_experiment = LegacyExperiment(
             experiment_id=int(experiment_id),
             name=experiment_name,
             created_on=timestamp,
@@ -143,7 +143,7 @@ class ExperimentService(object):
         db.session.commit()
         return {"status": "Success", "id": [experiment_id]}
 
-    def rename(self, experiment_id: int, new_name: str, **kwargs) -> Experiment:
+    def rename(self, experiment_id: int, new_name: str, **kwargs) -> LegacyExperiment:
         """Rename an experiment.
 
         Args:
@@ -160,7 +160,7 @@ class ExperimentService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
         new_name = slugify(new_name)
         experiment = cast(
-            Experiment, self.get(experiment_id, error_if_not_found=True, log=log)
+            LegacyExperiment, self.get(experiment_id, error_if_not_found=True, log=log)
         )
         response = self._mlflow_tracking_service.rename_experiment(
             experiment_id=experiment_id, new_name=new_name, log=log
@@ -174,18 +174,18 @@ class ExperimentService(object):
         log.info("Experiment renamed", queue_id=experiment_id, new_name=new_name)
         return experiment
 
-    def get_all(self, **kwargs) -> list[Experiment]:
+    def get_all(self, **kwargs) -> list[LegacyExperiment]:
         """Fetch the list of all experiments.
 
         Returns:
             A list of experiment objects.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
-        return Experiment.query.filter_by(is_deleted=False).all()  # type: ignore
+        return LegacyExperiment.query.filter_by(is_deleted=False).all()  # type: ignore
 
     def get(
         self, experiment_id: int, error_if_not_found: bool = False, **kwargs
-    ) -> Experiment | None:
+    ) -> LegacyExperiment | None:
         """Fetch an experiment by its unique identifier.
 
         Args:
@@ -201,7 +201,7 @@ class ExperimentService(object):
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
-        experiment = Experiment.query.filter_by(
+        experiment = LegacyExperiment.query.filter_by(
             experiment_id=experiment_id, is_deleted=False
         ).first()
 
@@ -212,7 +212,7 @@ class ExperimentService(object):
 
             return None
 
-        return cast(Experiment, experiment)
+        return cast(LegacyExperiment, experiment)
 
 
 class ExperimentNameService(object):
@@ -235,7 +235,7 @@ class ExperimentNameService(object):
         experiment_name: str,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> Experiment | None:
+    ) -> LegacyExperiment | None:
         """Fetch an experiment by its name.
 
         Args:
@@ -253,7 +253,7 @@ class ExperimentNameService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         experiment_name = slugify(experiment_name)
         log.info("Get experiment by name", experiment_name=experiment_name)
-        experiment = Experiment.query.filter_by(
+        experiment = LegacyExperiment.query.filter_by(
             name=experiment_name, is_deleted=False
         ).first()
 
@@ -264,7 +264,7 @@ class ExperimentNameService(object):
 
             return None
 
-        return cast(Experiment, experiment)
+        return cast(LegacyExperiment, experiment)
 
     def delete(self, experiment_name: str, **kwargs) -> dict[str, Any]:
         """Delete an experiment by name.

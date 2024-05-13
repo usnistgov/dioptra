@@ -30,7 +30,7 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 from dioptra.restapi.db import db
-from dioptra.restapi.db.legacy_models import Experiment, Job, Queue
+from dioptra.restapi.db.legacy_models import LegacyExperiment, LegacyJob, LegacyQueue
 from dioptra.restapi.v0.experiment.service import ExperimentNameService
 from dioptra.restapi.v0.queue.service import QueueNameService
 from dioptra.restapi.v0.shared.rq.service import RQService
@@ -70,18 +70,18 @@ class JobService(object):
         self._experiment_name_service = experiment_name_service
         self._queue_name_service = queue_name_service
 
-    def get_all(self, **kwargs) -> list[Job]:
+    def get_all(self, **kwargs) -> list[LegacyJob]:
         """Fetch the list of all jobs.
 
         Returns:
             A list of job objects.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
-        return Job.query.all()  # type: ignore
+        return LegacyJob.query.all()  # type: ignore
 
     def get(
         self, job_id: str, error_if_not_found: bool = False, **kwargs
-    ) -> Job | None:
+    ) -> LegacyJob | None:
         """Fetch a job by its unique identifier.
 
         Args:
@@ -97,7 +97,7 @@ class JobService(object):
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
-        job = Job.query.filter_by(job_id=job_id).first()
+        job = LegacyJob.query.filter_by(job_id=job_id).first()
 
         if job is None:
             if error_if_not_found:
@@ -106,7 +106,7 @@ class JobService(object):
 
             return None
 
-        return cast(Job, job)
+        return cast(LegacyJob, job)
 
     def create(
         self,
@@ -118,7 +118,7 @@ class JobService(object):
         depends_on: str,
         workflow: FileStorage,
         **kwargs,
-    ) -> Job:
+    ) -> LegacyJob:
         """Create a new job.
 
         Args:
@@ -139,13 +139,13 @@ class JobService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         experiment = cast(
-            Experiment,
+            LegacyExperiment,
             self._experiment_name_service.get(
                 experiment_name=experiment_name, error_if_not_found=True, log=log
             ),
         )
         queue = cast(
-            Queue,
+            LegacyQueue,
             self._queue_name_service.get(
                 queue_name=queue_name,
                 unlocked_only=True,
@@ -163,7 +163,7 @@ class JobService(object):
 
         job_id = str(uuid.uuid4())
         timestamp = datetime.datetime.now()
-        new_job = Job(
+        new_job = LegacyJob(
             job_id=job_id,
             experiment_id=experiment.experiment_id,
             queue_id=queue.queue_id,
@@ -191,7 +191,7 @@ class JobService(object):
         log.info("Job submission successful", job_id=new_job.job_id)
         return new_job
 
-    def change_status(self, job_id: str, status: str, **kwargs) -> Job | None:
+    def change_status(self, job_id: str, status: str, **kwargs) -> LegacyJob | None:
         """Change the status of a job.
 
         Args:
@@ -206,7 +206,7 @@ class JobService(object):
             JobStatusIncorrectError: If the provided status is not valid.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        job = cast(Job, self.get(job_id=job_id, error_if_not_found=True, log=log))
+        job = cast(LegacyJob, self.get(job_id=job_id, error_if_not_found=True, log=log))
         job.update({"status": status})
         db.session.commit()
         log.info("Job update successful", job_id=job.job_id, status=status)
@@ -255,7 +255,7 @@ class JobNewTaskEngineService(object):
         timeout: str | None = None,
         depends_on: str | None = None,
         **kwargs,
-    ) -> Job:
+    ) -> LegacyJob:
         """Submit a task engine job.
 
         Args:
@@ -275,13 +275,13 @@ class JobNewTaskEngineService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         experiment = cast(
-            Experiment,
+            LegacyExperiment,
             self._experiment_name_service.get(
                 experiment_name=experiment_name, error_if_not_found=True, log=log
             ),
         )
         queue = cast(
-            Queue,
+            LegacyQueue,
             self._queue_name_service.get(
                 queue_name, unlocked_only=True, error_if_not_found=True, log=log
             ),
@@ -292,7 +292,7 @@ class JobNewTaskEngineService(object):
 
         job_id = str(uuid.uuid4())
         timestamp = datetime.datetime.now()
-        new_job = Job(
+        new_job = LegacyJob(
             job_id=job_id,
             experiment_id=experiment.experiment_id,
             queue_id=queue.queue_id,

@@ -28,7 +28,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db.legacy_models import Job
+from dioptra.restapi.db.legacy_models import LegacyJob
 from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 
 from .schema import (
@@ -63,7 +63,7 @@ class JobResource(Resource):
 
     @login_required
     @responds(schema=JobSchema(many=True), api=api)
-    def get(self) -> list[Job]:
+    def get(self) -> list[LegacyJob]:
         """Gets a list of all submitted jobs."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="job", request_type="GET"
@@ -80,7 +80,7 @@ class JobResource(Resource):
     )
     @accepts(form_schema=JobBaseSchema, api=api)
     @responds(schema=JobSchema, api=api)
-    def post(self) -> Job:
+    def post(self) -> LegacyJob:
         """Creates a new job via a job submission form with an attached file."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="job", request_type="POST"
@@ -111,21 +111,21 @@ class JobIdResource(Resource):
 
     @login_required
     @responds(schema=JobSchema, api=api)
-    def get(self, jobId: str) -> Job:
+    def get(self, jobId: str) -> LegacyJob:
         """Gets a job by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="jobId", request_type="GET"
         )  # noqa: F841
         log.info("Request received", job_id=jobId)
         return cast(
-            Job,
+            LegacyJob,
             self._job_service.get(jobId, error_if_not_found=True, log=log),
         )
 
     @login_required
     @accepts(schema=JobMutableFieldsSchema, api=api)
     @responds(schema=JobSchema, api=api)
-    def put(self, jobId: str) -> Job:
+    def put(self, jobId: str) -> LegacyJob:
         """Updates a job's status by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="jobId", request_type="PUT"
@@ -133,7 +133,7 @@ class JobIdResource(Resource):
         parsed_obj = request.parsed_obj  # type: ignore
         log.info("Request received", job_id=jobId, status=parsed_obj["status"])
         return cast(
-            Job,
+            LegacyJob,
             self._job_service.change_status(
                 jobId, status=parsed_obj["status"], error_if_not_found=True, log=log
             ),
@@ -154,7 +154,7 @@ class JobNewTaskEngineResource(Resource):
     @login_required
     @accepts(schema=JobNewTaskEngineSchema, api=api)
     @responds(schema=JobSchema, api=api)
-    def post(self) -> Job:
+    def post(self) -> LegacyJob:
         """Creates a new job using the new declarative task engine."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),

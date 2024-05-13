@@ -15,17 +15,16 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The data models for the user endpoint objects."""
-from __future__ import annotations
-
 import datetime
 import uuid
 from typing import Any
 
-from dioptra.restapi.db.custom_types import GUID
-from dioptra.restapi.db.db import db
+from sqlalchemy.orm import Mapped, mapped_column
+
+from dioptra.restapi.db.db import db, guid, intpk, text_
 
 
-class User(db.Model):  # type: ignore[name-defined]
+class LegacyUser(db.Model):  # type: ignore[name-defined]
     """The users table.
 
     Attributes:
@@ -46,20 +45,22 @@ class User(db.Model):  # type: ignore[name-defined]
 
     __tablename__ = "legacy_users"
 
-    user_id: int = db.Column(
-        db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True
+    user_id: Mapped[intpk] = mapped_column(init=False)
+    alternative_id: Mapped[guid] = mapped_column(
+        init=False, nullable=False, unique=True
     )
-    alternative_id: uuid.UUID = db.Column(
-        GUID(), nullable=False, unique=True, default=uuid.uuid4
-    )
-    username: str = db.Column(db.Text(), nullable=False)
-    password: str = db.Column(db.Text(), nullable=False)
-    email_address: str = db.Column(db.Text(), nullable=False)
-    created_on: datetime.datetime = db.Column(db.DateTime(), nullable=False)
-    last_modified_on: datetime.datetime = db.Column(db.DateTime(), nullable=False)
-    last_login_on: datetime.datetime = db.Column(db.DateTime(), nullable=False)
-    password_expire_on: datetime.datetime = db.Column(db.DateTime(), nullable=False)
-    is_deleted: bool = db.Column(db.Boolean(), nullable=False, default=False)
+    username: Mapped[text_] = mapped_column(nullable=False)
+    password: Mapped[text_] = mapped_column(nullable=False)
+    email_address: Mapped[text_] = mapped_column(nullable=False)
+    created_on: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    last_modified_on: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    last_login_on: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    password_expire_on: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    is_deleted: Mapped[bool] = mapped_column(init=False)
+
+    def __post_init__(self) -> None:
+        self.alternative_id = uuid.uuid4()
+        self.is_deleted = False
 
     @property
     def is_authenticated(self) -> bool:

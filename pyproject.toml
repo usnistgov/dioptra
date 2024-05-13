@@ -147,6 +147,7 @@ dev = [
     "build",
     "entrypoints",
     "esbonio",
+    "Faker>=24.0.0",
     "flake8-bugbear",
     "flake8>=3.8.0",
     "freezegun",

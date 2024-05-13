@@ -30,8 +30,6 @@ Testbed SDK API Reference
    api-sdk/api-utilities
    api-sdk/api-exceptions
    api-sdk/api-pyplugs
-   api-sdk/api-rq
-   api-sdk/api-cryptography
 
 generics
 --------
@@ -101,29 +99,3 @@ pyplugs
    pyplugs.call_factory
    pyplugs.get_task_factory
    pyplugs.call_task_factory
-
-rq
---
-
-.. currentmodule:: dioptra.rq
-
-.. autosummary::
-
-   tasks.run_mlflow_task
-
-cryptography
-------------
-
-.. currentmodule:: dioptra.sdk.cryptography
-
-.. autosummary::
-
-   common.load_payload
-   keygen.generate_rsa_key_pair
-   keygen.save_private_key
-   keygen.save_public_key
-   sign.load_private_key
-   sign.sign_payload
-   verify.load_public_key
-   verify.load_signature
-   verify.verify_payload
