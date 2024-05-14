@@ -284,7 +284,7 @@ def test_group_search_query(
     assert_retrieving_groups_works(
         client,
         expected=group_expected_list,
-        search="description:*group*",
+        search="name:*group*",
     )
 
 
