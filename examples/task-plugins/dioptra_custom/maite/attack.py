@@ -25,7 +25,7 @@ import pandas as pd
 import scipy
 import structlog
 import torch
-from art.attacks.evasion import FastGradientMethod
+from art.attacks.evasion import FastGradientMethod, ProjectedGradientDescentPyTorch, HopSkipJump, PixelAttack
 from art.estimators.classification.hugging_face import HuggingFaceClassifierPyTorch
 from structlog.stdlib import BoundLogger
 from torch.nn import CrossEntropyLoss
@@ -35,31 +35,138 @@ from dioptra import pyplugs
 from dioptra.sdk.exceptions import ARTDependencyError
 from dioptra.sdk.utilities.decorators import require_package
 from dioptra.sdk.utilities.paths import set_path_ext
+from heart_library.estimators.classification.pytorch import JaticPyTorchClassifier
+from heart_library.attacks.attack import JaticAttack, JaticEvasionAttackOutput
 
 warnings.filterwarnings("ignore")
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-
-def wrap_hf_classifier(torch_model, loss_fn, input_shape, classes) -> HuggingFaceClassifierPyTorch:
+def _wrap_hf_classifier(torch_model, loss_fn, input_shape, classes) -> HuggingFaceClassifierPyTorch:
     return HuggingFaceClassifierPyTorch(
-        model=torch_model, loss=loss_fn, input_shape=input_shape, nb_classes=classes
+        model=torch_model, loss=loss_fn, input_shape=input_shape, nb_classes=classes, clip_values=(0,1)
     )
 
+def _wrap_jatic_classifier(model, loss_fn, input_shape, labels, classes):
+  return JaticPyTorchClassifier(
+    model=model, loss=loss_fn, input_shape=input_shape, nb_classes=classes, labels=labels, clip_values=(0, 1)
+  )
 
-def _init_fgm(
+def _construct_attack(attack_name: str, model, loss_fn, input_shape, labels, classes, batch_size: int, **kwargs) -> JaticAttack:
+    global DECLARED_ATTACKS
+    #classifier = _wrap_jatic_classifier(model, loss_fn, input_shape, labels, classes)
+    classifier = _wrap_hf_classifier(model, loss_fn, input_shape, classes)
+    attack = DECLARED_ATTACKS[attack_name](classifier, loss_fn, input_shape, classes, batch_size, **kwargs)
+    attack = JaticAttack(attack)
+    return attack
+
+def _fgm(
     model, loss_fn, input_shape, classes, batch_size: int, **kwargs
 ) -> FastGradientMethod:
-    classifier = wrap_hf_classifier(model, loss_fn, input_shape, classes)
-    attack: FastGradientMethod = FastGradientMethod(
-        estimator=classifier, batch_size=batch_size, **kwargs
+    return FastGradientMethod(
+        estimator=model, batch_size=batch_size, **kwargs
     )
-    return attack
+def _pgd(
+    model, loss_fn, input_shape, classes, batch_size: int, **kwargs
+) -> ProjectedGradientDescentPyTorch:
+    return ProjectedGradientDescentPyTorch(
+        estimator=model, batch_size=batch_size, **kwargs
+    )
+def _hsj(
+    model, loss_fn, input_shape, classes, batch_size: int, **kwargs
+) -> HopSkipJump:
+    return HopSkipJump(
+        classifier=model, batch_size=batch_size, **kwargs
+    )
+def _pt(
+    model, loss_fn, input_shape, classes, batch_size: int, **kwargs
+) -> PixelAttack:
+    return PixelAttack(
+        classifier=model, **kwargs
+    )
+
+DECLARED_ATTACKS = {"fgm": _fgm, "pgd": _pgd, "hsj": _hsj, "pt": _pt}
+
+def _adv_gen(attack_name, dataset, adv_data_dir, data_dir, loss_fn, classifier, image_size, save_original, batch_size, target_index, **kwargs):
+    adv_data_dir = Path(adv_data_dir)
+    data_dir = Path(data_dir)
+
+    num_images = len(dataset)
+    class_names_list = sorted(list(set([m["label"] for m in dataset])))
+    classes = len(class_names_list)
+
+    attack = _construct_attack(attack_name=attack_name,
+        model=classifier,
+        loss_fn=loss_fn,
+        input_shape=image_size,
+        labels = class_names_list,
+        classes=classes,
+        batch_size=batch_size,
+        **kwargs
+    )
+
+    for batch_num in range(num_images // batch_size):
+        batch_range = range(batch_num * batch_size, (batch_num + 1) * batch_size)
+        batch = [dataset[min(i, len(dataset) - 1)] for i in batch_range]
+        x = np.array([m["image"] for m in batch])
+        y = np.array([m["label"] for m in batch])
+
+        LOGGER.info(
+            "Generate adversarial image batch",
+            attack=attack_name,
+            batch_num=batch_num,
+        )
+        if target_index >= 0:
+            y_one_hot = np.zeros(classes)
+            y_one_hot[target_index] = 1.0
+            y_target = np.tile(y_one_hot, (x.shape[0], 1))
+          
+            adv_batch = [attack.run_attack(data=image, y=y_target) for image in batch]
+        else:
+            adv_batch = [attack.run_attack(data=image) for image in batch]
+
+        if save_original:
+            _save_batch(batch_range, x, data_dir, y, class_names_list, adv=False)
+        _save_batch(batch_range, adv_batch, adv_data_dir, y, class_names_list, adv=True)
+    _upload_directory_as_tarball_artifact(adv_data_dir, "fgm.tar.gz")
 
 
 @pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
-def create_fgm_dataset_from_hf_dataset(
+def attack_by_name(
+    dataset,
+    attack_name: str,
+    data_dir: Union[str, Path],
+    adv_data_dir: Union[str, Path],
+    classifier,
+    image_size: Tuple[int, int, int],
+    save_original=False,
+    distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
+    batch_size: int = 32,
+    target_index: int = -1,
+    attack_kwargs: Optional[str] = None
+) -> pd.DataFrame:
+    print("attack_kwargs:",attack_kwargs)
+    _adv_gen(
+      attack_name,
+      dataset,
+      data_dir,
+      adv_data_dir,
+      CrossEntropyLoss(), 
+      classifier.model,
+      image_size,
+      save_original,
+      batch_size, 
+      target_index=target_index,
+      **attack_kwargs
+    )  
+
+
+
+
+@pyplugs.register
+@require_package("art", exc_type=ARTDependencyError)
+def create_fgm_dataset_from_hf_dataset_old(
     dataset,
     data_dir: Union[str, Path],
     adv_data_dir: Union[str, Path],
@@ -67,7 +174,6 @@ def create_fgm_dataset_from_hf_dataset(
     image_size: Tuple[int, int, int],
     save_original=False,
     distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
-    rescale: float = 1.0 / 255,
     batch_size: int = 32,
     label_mode: str = "categorical",
     eps: float = 0.3,
@@ -130,7 +236,6 @@ def create_fgm_dataset_from_hf_dataset(
             adv_batch = attack.generate(x=x, y=y_target)
         else:
             adv_batch = attack.generate(x=x)
-
         if save_original:
             _save_batch(batch_range, x, data_dir, y_int, class_names_list, adv=False)
         _save_batch(
@@ -156,6 +261,7 @@ def create_fgm_dataset_from_hf_dataset(
 
 def _save_batch(batch_indices, batch, data_dir, y, class_names_list, adv=False) -> None:
     for batch_image_num, image in enumerate(batch):
+        image = image.adversarial_examples
         out_label = class_names_list[y[batch_image_num]]
         prefix = "adv_" if adv else ""
         image_path = (

@@ -1,0 +1,186 @@
+types:
+  callback:
+  dataset:
+  directoryiterator:
+  functiontype:
+  kerasclassifier:
+  metric:
+  mlflowrun:
+  tuple:
+  model:
+  modelversion:
+  np.ndarray:
+  optimizer:
+  path:
+  dataframe:
+  rngenerator:
+  sequential:
+  tarfile:
+  list_tuple_string_any:
+    list: tuple_string_any
+  list_union_metric_functiontype:
+    list: union_metric_functiontype
+  list_union_string_path:
+    list: union_string_path
+  list_mapping_string_string:
+    list: mapping_string_string
+  mapping_string_any:
+    mapping: [string, any]
+  mapping_string_number:
+    mapping: [string, number]
+  mapping_string_string:
+    mapping: [string, string]
+  tuple_integer_integer:
+    tuple: [integer, integer]
+  tuple_integer_integer_integer:
+    tuple: [integer, integer, integer]
+  tuple_string_any:
+    tuple: [string, any]
+  union_integer_number_string:
+    union: [integer, number, string]
+  union_integer_any:
+    union: [integer, any]
+  union_metric_functiontype:
+    union: [metric, functiontype]
+  union_null_list_tuple_string_any:
+    union: [list_tuple_string_any , "null"]
+  union_null_mapping_string_any:
+    union: [mapping_string_any, "null"]
+  union_null_modelversion:
+    union: [modelversion, "null"]
+  union_null_number:
+    union: [number, "null"]
+  union_null_string:
+    union: [string, "null"]
+  union_null_union_integer_any:
+    union: [union_integer_any, "null"]
+  union_string_path:
+    union: [string, path]
+  union_null_union_string_path:
+    union: [union_string_path, "null"]
+parameters:
+  dataset_provider_name: huggingface
+  dataset_name: cifar10
+  dataset_task: image-classification
+  split: test
+  model_provider_name: huggingface
+  model_name: aaraki/vit-base-patch16-224-in21k-finetuned-cifar10
+  model_task: image-classification
+  metric_provider_name: torchmetrics
+  metric_name: Accuracy
+  metric_task: multiclass
+  classes: 10
+  batch_size: 32
+  shape: [224, 224]
+  image_size: [3, 224, 224]
+  subset: 0
+  save_original: true
+  out_dir: /dioptra/data/tmp/cifar/
+  adv_dir: adv_testing
+tasks:
+  get_dataset:
+    plugin: dioptra_custom.maite.maite_compat.get_dataset
+    inputs:
+      - provider_name: string
+      - dataset_name: string
+      - task: string
+      - split: string
+    outputs:
+      dataset: dataset
+  get_model:
+    plugin: dioptra_custom.maite.maite_compat.get_model
+    inputs:
+      - provider_name: string
+      - model_name: string
+      - task: string
+    outputs:
+      model: model
+  transform_tensor:
+    plugin: dioptra_custom.maite.maite_compat.transform_tensor
+    inputs:
+      - dataset: dataset
+      - shape: any
+      - name: totensor
+        type: boolean
+        required: false
+      - name: subset
+        type: integer
+        required: false
+    outputs:
+      dataset: dataset
+  attack_by_name:
+    plugin: dioptra_custom.maite.attack.attack_by_name
+    inputs:
+      - dataset: dataset
+      - attack_name: string
+      - data_dir: union_string_path
+      - adv_data_dir: union_string_path
+      - classifier: model
+      - image_size: tuple_integer_integer_integer
+      - save_original: boolean
+      - distance_metrics_list: union_null_list_tuple_string_any
+      - name: batch_size
+        type: integer
+        required: false
+      - name: target_index
+        type: integer
+        required: false
+      - name: attack_kwargs
+        type: union_null_mapping_string_any
+        required: false
+  distance_metrics:
+    plugin: dioptra_builtins.metrics.distance.get_distance_metric_list
+    inputs:
+      - request: list_mapping_string_string
+    outputs:
+      distance_metrics_list: list_tuple_string_any
+graph:
+  dataset:
+    get_dataset: 
+      provider_name: $dataset_provider_name
+      dataset_name: $dataset_name
+      task: $dataset_task
+      split: $split
+  model:
+    get_model: 
+      provider_name: $model_provider_name
+      model_name: $model_name
+      task: $model_task
+  transformed_dataset:
+    transform_tensor: 
+      dataset: $dataset
+      shape: $shape
+      subset: $subset
+      totensor: true
+  distance_metrics:
+    distance_metrics:
+      - - name: l_infinity_norm
+          func: l_inf_norm
+        - name: l_1_norm
+          func: l_1_norm
+        - name: l_2_norm
+          func: l_2_norm
+        - name: cosine_similarity
+          func: paired_cosine_similarities
+        - name: euclidean_distance
+          func: paired_euclidean_distances
+        - name: manhattan_distance
+          func: paired_manhattan_distances
+        - name: wasserstein_distance
+          func: paired_wasserstein_distances
+  distance_metric_results:
+    attack_by_name:
+      dataset: $transformed_dataset
+      attack_name: "hsj"
+      distance_metrics_list: $distance_metrics
+      data_dir: $out_dir
+      adv_data_dir: $adv_dir
+      save_original: $save_original
+      classifier: $model
+      image_size: $image_size
+      attack_kwargs: 
+        max_iter: 5
+        max_eval: 40
+        init_eval: 2
+        init_size: 10
+        norm: "inf"
