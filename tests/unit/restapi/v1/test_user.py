@@ -470,9 +470,7 @@ def test_create_user(
     assert_retrieving_current_user_works(client, expected=user_response)
 
     # Getting a user by id returns UserSchema.
-    user_expected = {
-        k: v for k, v in user_response.items() if k in ["username", "email", "id"]
-    }
+    user_expected = {k:v for k,v in user_expected.items() if k in ["username", "email", "id"]}
     assert_retrieving_user_by_id_works(client, user_expected["id"], user_expected)
 
 
