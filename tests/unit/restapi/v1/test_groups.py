@@ -87,6 +87,8 @@ def assert_group_response_contents_matches_expectations(
         "user",
         "createdOn",
         "lastModifiedOn",
+        "resources",
+        "tags",
     }
     assert set(response.keys()) == expected_keys
 
@@ -107,6 +109,19 @@ def assert_group_response_contents_matches_expectations(
     assert isinstance(response["user"]["username"], str)
     assert isinstance(response["user"]["url"], str)
     assert response["user"]["id"] == expected_contents["user_id"]
+
+    # TODO confirm that there are no more common feilds for various resourceRef types
+    # Validate the ResourceRef structure
+    for resource in response["resources"]:
+        assert isinstance(resource["id"], int)
+        assert isinstance(resource["name"], str)
+        assert isinstance(resource["url"], str)
+
+    # Validate the TagRef structure
+    for tag in response["tags"]:
+        assert isinstance(tag["id"], int)
+        assert isinstance(tag["name"], str)
+        assert isinstance(tag["url"], str)
 
 
 def assert_retrieving_group_by_id_works(
@@ -243,7 +258,7 @@ def test_create_group(
     - The user registers a group named "new_group".
     - The response is valid matches the expected values given the registration request.
     - The user is able to retrieve information about the group using the group id^[1].
-      
+
     [1] The group id is generated in the backend during the POST and is returned in the response.
     """
     name = "new_group"
@@ -251,7 +266,7 @@ def test_create_group(
 
     group_response = actions.register_group(client, name=name)
     group_expected = group_response.get_json()
-   
+
     assert_group_response_contents_matches_expectations(
         response=group_expected,
         expected_contents={
@@ -288,11 +303,7 @@ def test_group_search_query(
     assert_retrieving_groups_works(
         client,
         expected=group_expected_list,
-<<<<<<< HEAD
         search="name:*group*",
-=======
-        search="description:*group*",
->>>>>>> 43463839 (build(restapi): Added unit tests for groups.)
     )
 
 
