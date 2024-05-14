@@ -24,6 +24,7 @@ from flask import request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
+from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
@@ -36,6 +37,7 @@ from .schema import (
     GroupPageSchema,
     GroupSchema,
 )
+from .service import GroupService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -44,6 +46,21 @@ api: Namespace = Namespace("Groups", description="Groups endpoint")
 
 @api.route("/")
 class GroupEndpoint(Resource):
+
+    @inject
+    def __init__(
+        self,
+        group_service: GroupService,
+    ) -> None:
+        """Initialize the group service
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            group_service: A GroupService object.
+        """
+        self._group_service = group_service
+
     @login_required
     @accepts(query_params_schema=GroupGetQueryParameters, api=api)
     @responds(schema=GroupPageSchema, api=api)

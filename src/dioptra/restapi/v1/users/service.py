@@ -29,6 +29,7 @@ from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.v1.utils import build_group_ref, build_paging_envelope
 
 from .errors import (
     NoCurrentUserError,
@@ -48,7 +49,7 @@ from .errors import (
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-MAX_PAGE_LENGTH = 20
+MAX_PAGE_LENGTH: Final[int] = 50
 DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
 
 
@@ -104,10 +105,7 @@ class UserService(object):
                 "The password and confirmation password did not match."
             )
 
-        if (
-            self._user_name_service.get(username, err_if_not_found=False, log=log)
-            is not None
-        ):
+        if self._user_name_service.get(username, log=log) is not None:
             log.info("Username already exists", username=username)
             raise UsernameNotAvailableError
 
@@ -119,6 +117,28 @@ class UserService(object):
         new_user: models.User = models.User(
             username=username, password=hashed_password, email_address=email_address
         )
+
+        stmt = select(models.Group).filter_by(group_id=0)
+        public_group: models.Group | None = db.session.scalars(stmt).first()
+        if public_group is None:
+            log.info("HERE")
+            public_group = models.Group(name="public", creator=new_user)
+            public_group.managers.append(
+                models.GroupManager(user=new_user, owner=True, admin=True)
+            )
+            db.session.add(public_group)
+
+        log.info("THERE", group=public_group)
+        public_group.members.append(
+            models.GroupMember(
+                user=new_user,
+                read=True,
+                write=True,
+                share_read=True,
+                share_write=True,
+            )
+        )
+
         db.session.add(new_user)
         db.session.commit()
 
@@ -132,7 +152,7 @@ class UserService(object):
         page_index: int | None = None,
         page_length: int | None = None,
         **kwargs,
-    ) -> dict[str:Any]:
+    ) -> dict[str, Any]:
         """Fetch a list of users, optionally filtering by search string and paging
         parameters.
 
@@ -172,8 +192,8 @@ class UserService(object):
             "users", users, search_string, page_index, page_length
         )
 
-    def _get_by_email(
-        self, email_address: str, error_if_not_found: bool = True, **kwargs
+    def _get_user_by_email(
+        self, email_address: str, error_if_not_found: bool = False, **kwargs
     ) -> models.User | None:
         """Fetch a user by its email address.
 
@@ -192,11 +212,10 @@ class UserService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Lookup user account by email", email_address=email_address)
 
-        stmt = select(models.User).filter_by(email_address=email_address)
+        stmt = select(models.User).filter_by(
+            email_address=email_address, is_deleted=False
+        )
         user: models.User | None = db.session.scalars(stmt).first()
-
-        if not user.is_active:
-            user = None
 
         if user is None:
             if error_if_not_found:
@@ -257,6 +276,28 @@ class UserCurrentService(object):
         log.info("User account deleted", user_id=current_user.user_id)
 
         return {"status": "Success", "username": [current_user.username]}
+
+    def modify(self, username: str, email_address: str, **kwargs) -> dict[str, Any]:
+        """Modifies the current user
+
+        Args:
+            username: The user's current username.
+            email_address: The user's current email_address.
+
+        Returns:
+            The current user object.
+
+        Raises:
+            UserPasswordChangeError: If the password change fails.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.info("Modify user account", user_id=current_user.user_id)
+
+        current_user.username = username
+        current_user.email_address = email_address
+        db.session.commit()
+
+        return build_user(current_user)
 
     def change_password(
         self,
@@ -324,11 +365,8 @@ class UserNameService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Lookup user account by unique username", username=username)
 
-        stmt = select(models.User).filter_by(username=username)
+        stmt = select(models.User).filter_by(username=username, is_deleted=False)
         user: models.User | None = db.session.scalars(stmt).first()
-
-        if not user.is_active:
-            user = None
 
         if user is None:
             if error_if_not_found:
@@ -338,38 +376,6 @@ class UserNameService(object):
             return None
 
         return user
-
-    def change_password(
-        self,
-        username: str,
-        current_password: str,
-        new_password: str,
-        confirm_new_password: str,
-        **kwargs,
-    ) -> dict[str, Any]:
-        """Change a user's password.
-
-        Args:
-            username: The username of the user.
-            current_password: The user's current password.
-            new_password: The user's new password, to replace the current one after
-                authentication.
-
-        Returns:
-            A dictionary containing the password change success message if the password
-            change is successful.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.info("Change a user's password", username=username)
-        user = cast(
-            models.User, self.get(username=username, error_if_not_found=True, log=log)
-        )
-        return self._user_password_service.change(
-            user=user,
-            current_password=current_password,
-            new_password=new_password,
-            log=log,
-        )
 
 
 class UserIdService(object):
@@ -409,11 +415,8 @@ class UserIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Lookup user account by unique id", user_id=user_id)
 
-        stmt = select(models.User).filter_by(user_id=user_id)
+        stmt = select(models.User).filter_by(user_id=user_id, is_deleted=False)
         user: models.User | None = db.session.scalars(stmt).first()
-
-        if not user.is_active:
-            user = None
 
         if user is None:
             if error_if_not_found:
@@ -576,10 +579,6 @@ class PasswordService(object):
         return pbkdf2_sha256.verify(password, hashed_password)
 
 
-def build_user_ref(user: models.User) -> dict[str:Any]:
-    return {"id": user.id, "username": user.username, "url": f"/users/{user.id}"}
-
-
 def build_user(user: models.User) -> dict[str:Any]:
     return {
         "id": user.user_id,
@@ -593,37 +592,9 @@ def build_current_user(user: models.User) -> dict[str:Any]:
         "id": user.user_id,
         "username": user.username,
         "email": user.email_address,
-        "groups": [],  # [GroupMemberRefSchema.from_orm(g) for g in user.member_of]
+        "groups": [build_group_ref(group) for group in user.group_memberships],
         "createdOn": user.created_on,
         "lastModifiedOn": user.last_modified_on,
         "lastLoginOn": user.last_login_on,
         "passwordExpiresOn": user.password_expire_on,
     }
-
-
-def build_paging_envelope(name, data, query, index, length):
-    has_prev = index > 0
-    has_next = len(data) > length
-    is_complete = not (has_prev or has_next)
-    data = data[:length]
-    paged_data = {
-        "query": query,
-        "index": index,
-        "is_complete": is_complete,
-        "data": data,
-    }
-    if has_prev:
-        prev_index = max(index - length, 0)
-        prev_url = build_paging_url("users", query, prev_index, length)
-        paged_data.update({"prev": prev_url})
-
-    if has_next:
-        next_index = index + length
-        next_url = build_paging_url("users", query, next_index, length)
-        paged_data.update({"next": next_url})
-
-    return paged_data
-
-
-def build_paging_url(name: str, search: str, index: int, length: int):
-    return f"/{name}/?query={search}&index={index}&pageLength={length}"

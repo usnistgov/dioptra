@@ -28,7 +28,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from .schema import LoginSchema, LogoutSchema
+from .schema import LoginSchema, LogoutSchema, LogoutQueryParametersSchema
 from .service import AuthService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -85,7 +85,7 @@ class LogoutResource(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(query_params_schema=LogoutSchema, api=api)
+    @accepts(query_params_schema=LogoutQueryParametersSchema, api=api)
     @responds(schema=LogoutSchema, api=api)
     def post(self):
         """Logout the current user.

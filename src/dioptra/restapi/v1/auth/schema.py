@@ -40,7 +40,7 @@ class LoginSchema(Schema):
 
 
 class LogoutSchema(Schema):
-    """The request and response fields used when logging out of an account."""
+    """The response fields used when logging out of an account."""
 
     username = fields.String(
         attribute="username",
@@ -56,4 +56,13 @@ class LogoutSchema(Schema):
         attribute="status",
         metadata=dict(description="The status of the logout request."),
         dump_only=True,
+    )
+
+class LogoutQueryParametersSchema(Schema):
+    """The query parameters schema for logging out of an account."""
+
+    everywhere = fields.Bool(
+        attribute="everywhere",
+        metadata=dict(description="Logout on all devices."),
+        load_default=lambda: False,
     )
