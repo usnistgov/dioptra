@@ -29,6 +29,29 @@ def build_user_ref(user: models.User) -> dict[str, Any]:
         "url": f"/users/{user.user_id}",
     }
 
+def build_user(user: models.User) -> dict[str:Any]:
+    return {
+        "id": user.user_id,
+        "username": user.username,
+        "email": user.email_address,
+    }
+
+def build_current_user(user: models.User) -> dict[str:Any]:
+    member_of = {x.group.group_id: x.group for x in user.group_memberships}
+    manager_of = {x.group.group_id: x.group for x in user.group_managementships}
+    groups = {**member_of, **manager_of}.values()
+
+    return {
+        "id": user.user_id,
+        "username": user.username,
+        "email": user.email_address,
+        "groups": [build_group_ref(group) for group in groups],
+        "createdOn": user.created_on,
+        "lastModifiedOn": user.last_modified_on,
+        "lastLoginOn": user.last_login_on,
+        "passwordExpiresOn": user.password_expire_on,
+    }
+
 
 def build_group_ref(group: models.Group) -> dict[str, Any]:
     return {
@@ -37,6 +60,31 @@ def build_group_ref(group: models.Group) -> dict[str, Any]:
         "url": f"/groups/{group.group_id}",
     }
 
+
+def build_group(group: models.Group) -> dict[str:Any]:
+    members = [
+        {
+            "user": build_user_ref(member.user),
+            "group": build_group_ref(group),
+            "permissions": {
+                "read": member.read,
+                "write": member.write,
+                "shareRead": member.share_read,
+                "shareWrite": member.share_write,
+                "admin": False,
+                "owner": False,
+            },
+        }
+        for member in group.members
+    ]
+    return {
+        "id": group.group_ud,
+        "name": group.name,
+        "user": build_user_ref(group.creator),
+        "members": members,
+        "createdOn": group.created_on,
+        "lastModified_on": group.last_modified_on,
+    }
 
 def build_paging_envelope(name, data, query, index, length):
     has_prev = index > 0

@@ -26,6 +26,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.utils import build_user, build_current_user
 
 from .schema import (
     UserCurrentSchema,

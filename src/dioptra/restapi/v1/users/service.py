@@ -29,7 +29,12 @@ from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.v1.utils import build_group_ref, build_paging_envelope
+from dioptra.restapi.v1.groups.service import GroupService
+from dioptra.restapi.v1.utils import (
+    build_current_user,
+    build_user,
+    build_paging_envelope,
+)
 
 from .errors import (
     NoCurrentUserError,
@@ -61,6 +66,7 @@ class UserService(object):
         self,
         user_password_service: UserPasswordService,
         user_name_service: UserNameService,
+        group_service: GroupService,
     ) -> None:
         """Initialize the user service.
 
@@ -69,9 +75,11 @@ class UserService(object):
         Args:
             user_password_service: A UserPasswordService object.
             user_name_service: A UserNameService object.
+            group_service: A GroupService object.
         """
         self._user_password_service = user_password_service
         self._user_name_service = user_name_service
+        self._group_service = group_service
 
     def create(
         self,
@@ -118,17 +126,10 @@ class UserService(object):
             username=username, password=hashed_password, email_address=email_address
         )
 
-        stmt = select(models.Group).filter_by(group_id=0)
-        public_group: models.Group | None = db.session.scalars(stmt).first()
-        if public_group is None:
-            log.info("HERE")
-            public_group = models.Group(name="public", creator=new_user)
-            public_group.managers.append(
-                models.GroupManager(user=new_user, owner=True, admin=True)
-            )
-            db.session.add(public_group)
-
-        log.info("THERE", group=public_group)
+        public_group = self._group_service.create("public", error_if_exists=False)
+        public_group.managers.append(
+            models.GroupManager(user=new_user, owner=True, admin=True)
+        )
         public_group.members.append(
             models.GroupMember(
                 user=new_user,
@@ -577,24 +578,3 @@ class PasswordService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Verifying password")
         return pbkdf2_sha256.verify(password, hashed_password)
-
-
-def build_user(user: models.User) -> dict[str:Any]:
-    return {
-        "id": user.user_id,
-        "username": user.username,
-        "email": user.email_address,
-    }
-
-
-def build_current_user(user: models.User) -> dict[str:Any]:
-    return {
-        "id": user.user_id,
-        "username": user.username,
-        "email": user.email_address,
-        "groups": [build_group_ref(group) for group in user.group_memberships],
-        "createdOn": user.created_on,
-        "lastModifiedOn": user.last_modified_on,
-        "lastLoginOn": user.last_login_on,
-        "passwordExpiresOn": user.password_expire_on,
-    }

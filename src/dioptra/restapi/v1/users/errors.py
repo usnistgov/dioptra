@@ -36,12 +36,12 @@ class UserPasswordVerificationError(Exception):
     """Password verification failed."""
 
 
-class UserEmailNotAvailableError(Exception):
-    """The email address is not available."""
-
-
 class UsernameNotAvailableError(Exception):
     """The username is not available."""
+
+
+class UserEmailNotAvailableError(Exception):
+    """The email address is not available."""
 
 
 class UserDoesNotExistError(Exception):
@@ -78,6 +78,16 @@ def register_error_handlers(api: Api) -> None:
         return (
             {
                 "message": "Bad Request - The username on the registration form "
+                "is not available. Please select another and resubmit."
+            },
+            400,
+        )
+
+    @api.errorhandler(UserEmailNotAvailableError)
+    def handle_email_not_available_error(error):
+        return (
+            {
+                "message": "Bad Request - The email on the registration form "
                 "is not available. Please select another and resubmit."
             },
             400,

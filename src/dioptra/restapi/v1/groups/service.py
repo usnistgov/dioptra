@@ -26,49 +26,51 @@ from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.v1.utils import build_group_ref, build_user_ref
+from dioptra.restapi.v1.utils import build_group
+
+from .errors import GroupNameNotAvailableError, GroupDoesNotExistError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 class GroupService(object):
-    """The service methods used to register and manage user accounts."""
+    """The service methods used to register and manage groups."""
 
     @inject
     def __init__(
         self,
     ) -> None:
-        """Initialize the user service.
+        """Initialize the group service.
 
         All arguments are provided via dependency injection.
-
-        Args:
-            user_password_service: A UserPasswordService object.
-            user_name_service: A UserNameService object.
         """
 
     def create(
         self,
         name: str,
+        error_if_exists: bool = False,
         **kwargs,
     ) -> models.User:
         """Create a new group.
 
         Args:
             name: The name requested by the user.
-            password: The password for the new user.
-            confirm_password: The password confirmation for the new user.
 
         Returns:
-            The new user object.
+            The new group object.
 
         Raises:
-            UserRegistrationError: If the password and confirmation password do not
-                match.
-            UsernameNotAvailableError: If the username already exists.
-            UserEmailNotAvailableError: If the email already exists.
+            GroupNameNotAvailable: If the group name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        group: models.Group = self._get_group_by_name(name)
+        if group is not None:
+            if error_if_exists:
+                log.info("Group name already exists", name=name)
+                raise GroupNameNotAvailableError
+            else:
+                return build_group(group)
 
         new_group: models.Group = models.Group(name=name, creator=current_user)
         db.session.add(new_group)
@@ -78,28 +80,34 @@ class GroupService(object):
 
         return build_group(new_group)
 
+    def _get_group_by_name(
+        self, name: str, error_if_not_found: bool = False, **kwargs
+    ) -> models.Group | None:
+        """Fetch a group by its name.
 
-def build_group(group: models.Group) -> dict[str:Any]:
-    members = [
-        {
-            "user": build_user_ref(member.user),
-            "group": build_group_ref(group),
-            "permissions": {
-                "read": member.read,
-                "write": member.write,
-                "shareRead": member.share_read,
-                "shareWrite": member.share_write,
-                "admin": False,
-                "owner": False,
-            },
-        }
-        for member in group.members
-    ]
-    return {
-        "id": group.group_ud,
-        "name": group.name,
-        "user": build_user_ref(group.creator),
-        "members": members,
-        "createdOn": group.created_on,
-        "lastModified_on": group.last_modified_on,
-    }
+        Args:
+            name: The name of the group.
+            error_if_not_found: If True, raise an error if the user is not found.
+                Defaults to False.
+
+        Returns:
+            The group object if found, otherwise None.
+
+        Raises:
+            GroupDoesNotExistError: If the group is not found and `error_if_not_found`
+                is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.info("Lookup group by name", name=name)
+
+        stmt = select(models.Group).filter_by(group_name=name)
+        group: models.Group | None = db.session.scalars(stmt).first()
+
+        if group is None:
+            if error_if_not_found:
+                log.error("Group not found", name=name)
+                raise GroupDoesNotExistError
+
+            return None
+
+
