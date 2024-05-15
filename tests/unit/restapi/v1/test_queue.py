@@ -134,9 +134,9 @@ def assert_queue_response_contents_matches_expectations(
     assert response["user"]["id"] == expected_contents["user_id"]
 
     # Validate the GroupRef structure
-    assert isinstance(response["group"]["id"], int)
-    assert isinstance(response["group"]["name"], str)
-    assert isinstance(response["group"]["url"], str)
+    assert isinstance(response["group"][0]["id"], int)
+    assert isinstance(response["group"][0]["name"], str)
+    assert isinstance(response["group"][0]["url"], str)
     assert response["group"]["id"] == expected_contents["group_id"]
 
     # Validate the TagRef structure

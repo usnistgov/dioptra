@@ -155,8 +155,8 @@ class UserService(object):
             )
         )
 
-        db.session.add(personal_group)
         db.session.add(public_group)
+        db.session.add(personal_group)
         db.session.add(new_user)
         db.session.commit()
 

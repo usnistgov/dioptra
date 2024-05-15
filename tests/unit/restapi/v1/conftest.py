@@ -57,10 +57,9 @@ def auth_account(
     registered_users: dict[str, Any],  # noqa: F811
 ) -> dict[str, Any]:
     user_info = registered_users["user1"]
-    actions.login(
+    return actions.login(
         client, username=user_info["username"], password=user_info["password"]
-    )
-    return user_info
+    ).get_json()
 
 
 @pytest.fixture

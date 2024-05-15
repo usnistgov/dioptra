@@ -42,10 +42,11 @@ def login(client: FlaskClient, username: str, password: str) -> TestResponse:
     Returns:
         The response from the API.
     """
-    return client.post(
+    client.post(
         f"/{V1_ROOT}/{V1_AUTH_ROUTE}/login",
         json={"username": username, "password": password},
     )
+    return client.get(f"/{V1_ROOT}/{V1_USERS_ROUTE}/current")
 
 
 def register_user(
