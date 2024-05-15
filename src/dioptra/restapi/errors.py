@@ -29,6 +29,16 @@ def register_error_handlers(api: Api) -> None:
     Args:
         api: The main REST |Api| object.
     """
+    register_v0_error_handlers(api)
+    register_v1_error_handlers(api)
+
+
+def register_v0_error_handlers(api: Api) -> None:
+    """Registers the error handlers with the main application.
+
+    Args:
+        api: The main REST |Api| object.
+    """
     from .v0.experiment import (
         register_error_handlers as attach_experiment_error_handlers,
     )
@@ -45,3 +55,19 @@ def register_error_handlers(api: Api) -> None:
     attach_job_queue_error_handlers(api)
     attach_task_plugin_error_handlers(api)
     attach_user_error_handlers(api)
+
+
+def register_v1_error_handlers(api: Api) -> None:
+    """Registers the error handlers with the main application.
+
+    Args:
+        api: The main REST |Api| object.
+    """
+    from .v1.groups.errors import (
+        register_error_handlers as attach_groups_error_handlers,
+    )
+    from .v1.users.errors import register_error_handlers as attach_users_error_handlers
+
+    # Add error handlers
+    attach_groups_error_handlers(api)
+    attach_users_error_handlers(api)

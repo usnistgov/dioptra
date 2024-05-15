@@ -17,6 +17,8 @@
 """The module defining the endpoints for User resources."""
 import uuid
 
+from typing import Any, cast
+
 import structlog
 from flask import request
 from flask_accepts import accepts, responds
@@ -25,11 +27,13 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.db import models
+from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
-from dioptra.restapi.v1.utils import build_user, build_current_user
 
 from .schema import (
     UserCurrentSchema,
+    UserDeleteSchema,
     UserGetQueryParameters,
     UserMutableFieldsSchema,
     UserPageSchema,
@@ -57,7 +61,7 @@ class UserEndpoint(Resource):
         self._user_service = user_service
         super().__init__(*args, **kwargs)
 
-    @login_required
+    # @login_required
     @accepts(query_params_schema=UserGetQueryParameters, api=api)
     @responds(schema=UserPageSchema, api=api)
     def get(self):
@@ -67,11 +71,21 @@ class UserEndpoint(Resource):
         )
         parsed_query_params = request.parsed_args  # noqa: F841
 
-        return self._user_service.get(
-            search_string=parsed_query_params["query"],
-            page_index=parsed_query_params["index"],
-            page_length=parsed_query_params["pageLength"],
-            log=log,
+        search_string = parsed_query_params["query"] or ""
+        page_index = parsed_query_params["index"] or 0
+        page_length = parsed_query_params["pageLength"] or 20
+
+        users = cast(
+            models.User,
+            self._user_service.get(
+                search_string=search_string,
+                page_index=page_index,
+                page_length=page_length,
+                log=log,
+            ),
+        )
+        return utils.build_paging_envelope(
+            "users", utils.build_user, users, search_string, page_index, page_length
         )
 
     @accepts(schema=UserSchema, api=api)
@@ -83,13 +97,14 @@ class UserEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # noqa: F841
 
-        return self._user_service.create(
-            username=parsed_obj["username"],
-            email_address=parsed_obj["email"],
-            password=parsed_obj["password"],
-            confirm_password=parsed_obj["confirm_password"],
+        user = self._user_service.create(
+            username=str(parsed_obj["username"]),
+            email_address=str(parsed_obj["email"]),
+            password=str(parsed_obj["password"]),
+            confirm_password=str(parsed_obj["confirm_password"]),
             log=log,
         )
+        return utils.build_current_user(user)
 
 
 @api.route("/<int:id>")
@@ -109,12 +124,13 @@ class UserIdEndpoint(Resource):
 
     # @login_required
     @responds(schema=UserSchema, api=api)
-    def get(self, id: int):
+    def get(self, id: int) -> dict[str, Any]:
         """Gets the User with the provided ID."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="User", request_type="GET", id=id
         )
-        return self._user_service.get_by_id(id, log=log)
+        user = cast(models.User, self._user_id_service.get(id, log=log))
+        return utils.build_user(user)
 
 
 @api.route("/<int:id>/password")
@@ -132,7 +148,7 @@ class UserIdPasswordEndpoint(Resource):
         self._user_id_service = user_id_service
         super().__init__(*args, **kwargs)
 
-    @login_required
+    # @login_required
     @accepts(schema=UserPasswordSchema, api=api)
     @responds(schema=IdStatusResponseSchema, api=api)
     def post(self, id: int):
@@ -141,12 +157,17 @@ class UserIdPasswordEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="User", request_type="POST", id=id
         )
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
-        return self._user_id_service.change_password(log=log)
+        return self._user_id_service.change_password(
+            user_id=id,
+            current_password=parsed_obj["old_password"],
+            new_password=parsed_obj["new_password"],
+            confirm_new_password=parsed_obj["confirm_new_password"],
+            log=log,
+        )
 
 
 @api.route("/current")
 class UserCurrentEndpoint(Resource):
-
     @inject
     def __init__(
         self, user_current_service: UserCurrentService, *args, **kwargs
@@ -168,9 +189,11 @@ class UserCurrentEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="User", request_type="GET"
         )
-        return self._user_current_service.get(log=log)
+        user = self._user_current_service.get(log=log)
+        return utils.build_current_user(user)
 
     @login_required
+    @accepts(schema=UserDeleteSchema, api=api)
     @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self):
         """Deletes a Current User."""
@@ -184,19 +207,20 @@ class UserCurrentEndpoint(Resource):
     @login_required
     @accepts(schema=UserMutableFieldsSchema, api=api)
     @responds(schema=UserCurrentSchema, api=api)
-    def put(self):
+    def put(self) -> dict[str, Any]:
         """Modifies the Current User"""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="User",
             request_type="PUT",
         )
-        parsed_obj = request.parsed_obj  # noqa: F841
-        self._user_current_service.modify(
+        parsed_obj = request.parsed_obj  # type: ignore
+        user = self._user_current_service.modify(
             username=parsed_obj["username"],
-            email=parsed_obj["email"],
+            email_address=parsed_obj["email"],
             log=log,
         )
+        return utils.build_current_user(user)
 
 
 @api.route("/current/password")
@@ -215,7 +239,7 @@ class UserCurrentPasswordEndpoint(Resource):
         self._user_current_service = user_current_service
         super().__init__(*args, **kwargs)
 
-    @login_required
+    # @login_required
     @accepts(schema=UserPasswordSchema, api=api)
     @responds(schema=IdStatusResponseSchema, api=api)
     def post(self):
@@ -226,10 +250,9 @@ class UserCurrentPasswordEndpoint(Resource):
             request_type="POST",
         )
         parsed_obj = request.parsed_obj  # noqa: F841
-        self._user_current_service.modify()
         return self._user_current_service.change_password(
-            current_password=parsed_obj["current_password"],
+            current_password=parsed_obj["old_password"],
             new_password=parsed_obj["new_password"],
-            confirm_new_password=parsed_obj["new_password"],
+            confirm_new_password=parsed_obj["confirm_new_password"],
             log=log,
         )

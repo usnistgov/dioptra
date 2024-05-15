@@ -58,6 +58,7 @@ class LogoutSchema(Schema):
         dump_only=True,
     )
 
+
 class LogoutQueryParametersSchema(Schema):
     """The query parameters schema for logging out of an account."""
 

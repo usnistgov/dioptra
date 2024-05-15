@@ -30,11 +30,6 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.v1.groups.service import GroupService
-from dioptra.restapi.v1.utils import (
-    build_current_user,
-    build_user,
-    build_paging_envelope,
-)
 
 from .errors import (
     NoCurrentUserError,
@@ -54,7 +49,6 @@ from .errors import (
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-MAX_PAGE_LENGTH: Final[int] = 50
 DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
 
 
@@ -121,12 +115,17 @@ class UserService(object):
             log.info("Email already exists", email_address=email_address)
             raise UserEmailNotAvailableError
 
+        stmt = select(models.Group).filter_by(name="public")
+        public_group: models.Group | None = db.session.scalars(stmt).first()
+
         hashed_password = self._user_password_service.hash(password, log=log)
         new_user: models.User = models.User(
             username=username, password=hashed_password, email_address=email_address
         )
 
-        public_group = self._group_service.create("public", error_if_exists=False)
+        if public_group is None:
+            public_group = models.Group(name="public", creator=new_user)
+
         public_group.managers.append(
             models.GroupManager(user=new_user, owner=True, admin=True)
         )
@@ -140,20 +139,38 @@ class UserService(object):
             )
         )
 
+        personal_group: models.Group = models.Group(
+            name=new_user.username, creator=new_user
+        )
+        personal_group.managers.append(
+            models.GroupManager(user=new_user, owner=True, admin=True)
+        )
+        personal_group.members.append(
+            models.GroupMember(
+                user=new_user,
+                read=True,
+                write=True,
+                share_read=True,
+                share_write=True,
+            )
+        )
+
+        db.session.add(personal_group)
+        db.session.add(public_group)
         db.session.add(new_user)
         db.session.commit()
 
         log.info("User registration successful", user_id=new_user.user_id)
 
-        return build_current_user(new_user)
+        return new_user
 
     def get(
         self,
-        search_string: str | None = None,
-        page_index: int | None = None,
-        page_length: int | None = None,
+        search_string: str,
+        page_index: int,
+        page_length: int,
         **kwargs,
-    ) -> dict[str, Any]:
+    ) -> list[models.User]:
         """Fetch a list of users, optionally filtering by search string and paging
         parameters.
 
@@ -168,17 +185,7 @@ class UserService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Get list of users")
 
-        if search_string is None:
-            pattern = "%"
-            # search_terms = search_parser.parse_string(search)
-        else:
-            pattern = search_string
-
-        if page_index is None:
-            page_index = 0
-
-        if page_length is None or page_length > MAX_PAGE_LENGTH:
-            page_length = MAX_PAGE_LENGTH
+        pattern = search_string or "%"
 
         stmt = (
             select(models.User)
@@ -188,10 +195,7 @@ class UserService(object):
         )
         users = db.session.scalars(stmt).all()
 
-        users = [build_user(user) for user in users]
-        return build_paging_envelope(
-            "users", users, search_string, page_index, page_length
-        )
+        return list(users)
 
     def _get_user_by_email(
         self, email_address: str, error_if_not_found: bool = False, **kwargs
@@ -221,157 +225,6 @@ class UserService(object):
         if user is None:
             if error_if_not_found:
                 log.error("User not found", email_address=email_address)
-                raise UserDoesNotExistError
-
-            return None
-
-
-class UserCurrentService(object):
-    """The service methods used to manage the current user."""
-
-    @inject
-    def __init__(
-        self,
-        user_password_service: UserPasswordService,
-    ) -> None:
-        """Initialize the current user service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            user_password_service: A UserPasswordService object.
-        """
-        self._user_password_service = user_password_service
-
-    def get(self, **kwargs) -> models.User:
-        """Fetch information about the current user.
-
-        Returns:
-            The current user object.
-
-        Raises:
-            NoCurrentUserError: If there is no current user.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        if not current_user.is_authenticated:
-            log.error("There is no current user.")
-            raise NoCurrentUserError
-
-        return build_user(current_user)
-
-    def delete(self, **kwargs) -> dict[str, Any]:
-        """Permanently deletes the current user.
-
-        Returns:
-            A dictionary containing the delete user success message if the user is
-            deleted successfully.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.info("Delete user account", user_id=current_user.user_id)
-
-        deleted_user_lock = models.UserLock(user_lock_type="delete", user=current_user)
-        db.session.add(deleted_user_lock)
-        db.session.commit()
-
-        log.info("User account deleted", user_id=current_user.user_id)
-
-        return {"status": "Success", "username": [current_user.username]}
-
-    def modify(self, username: str, email_address: str, **kwargs) -> dict[str, Any]:
-        """Modifies the current user
-
-        Args:
-            username: The user's current username.
-            email_address: The user's current email_address.
-
-        Returns:
-            The current user object.
-
-        Raises:
-            UserPasswordChangeError: If the password change fails.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.info("Modify user account", user_id=current_user.user_id)
-
-        current_user.username = username
-        current_user.email_address = email_address
-        db.session.commit()
-
-        return build_user(current_user)
-
-    def change_password(
-        self,
-        current_password: str,
-        new_password: str,
-        confirm_new_password: str,
-        **kwargs,
-    ) -> dict[str, Any]:
-        """Change the current user's password.
-
-        Args:
-            current_password: The user's current password.
-            new_password: The user's new password, to replace the current one after
-                authentication.
-
-        Returns:
-            A dictionary containing the password change success message if the password
-            change is successful.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.info("Change the current user's password", user_id=current_user.user_id)
-        return self._user_password_service.change(
-            user=current_user,
-            current_password=current_password,
-            new_password=new_password,
-            confirm_new_password=new_password,
-            log=log,
-        )
-
-
-class UserNameService(object):
-    """The service methods used to register and manage user accounts by username."""
-
-    @inject
-    def __init__(
-        self,
-        user_password_service: UserPasswordService,
-    ) -> None:
-        """Initialize the user name service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            user_password_service: A UserPasswordService object.
-        """
-        self._user_password_service = user_password_service
-
-    def get(
-        self, username: str, error_if_not_found: bool = False, **kwargs
-    ) -> models.User | None:
-        """Fetch a user by its username.
-
-        Args:
-            username: The username of the user.
-            error_if_not_found: If True, raise an error if the user is not found.
-                Defaults to False.
-
-        Returns:
-            The user object if found, otherwise None.
-
-        Raises:
-            UserDoesNotExistError: If the user is not found and `error_if_not_found`
-                is True.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.info("Lookup user account by unique username", username=username)
-
-        stmt = select(models.User).filter_by(username=username, is_deleted=False)
-        user: models.User | None = db.session.scalars(stmt).first()
-
-        if user is None:
-            if error_if_not_found:
-                log.error("User not found", username=username)
                 raise UserDoesNotExistError
 
             return None
@@ -442,6 +295,7 @@ class UserIdService(object):
             current_password: The user's current password.
             new_password: The user's new password, to replace the current one after
                 authentication.
+            confirm_new_password: Confirmation of the new password.
 
         Returns:
             A dictionary containing the password change success message if the password
@@ -456,9 +310,186 @@ class UserIdService(object):
             user=user,
             current_password=current_password,
             new_password=new_password,
-            confirm_new_password=new_password,
+            confirm_new_password=confirm_new_password,
             log=log,
         )
+
+
+class UserCurrentService(object):
+    """The service methods used to manage the current user."""
+
+    @inject
+    def __init__(
+        self,
+        user_id_service: UserIdService,
+        user_password_service: UserPasswordService,
+    ) -> None:
+        """Initialize the current current user service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            user_id_service: A UserIdService object.
+            user_password_service: A UserPasswordService object.
+        """
+        self._user_id_service = user_id_service
+        self._user_password_service = user_password_service
+
+    def get(self, **kwargs) -> models.User:
+        """Fetch information about the current user.
+
+        Returns:
+            The current user object.
+
+        Raises:
+            NoCurrentUserError: If there is no current user.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        if not current_user.is_authenticated:
+            log.error("There is no current user.")
+            raise NoCurrentUserError
+
+        return cast(models.User, current_user)
+
+    def modify(self, username: str, email_address: str, **kwargs) -> models.User:
+        """Modifies the current user
+
+        Args:
+            username: The user's current username.
+            email_address: The user's current email_address.
+
+        Returns:
+            The current user object.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.info("Modify user account", user_id=current_user.user_id)
+
+        if username != current_user.username:
+            stmt = select(models.Group).filter_by(name=current_user.username)
+            personal_group: models.Group | None = db.session.scalars(stmt).first()
+            if (
+                personal_group is not None
+                and personal_group.creator.user_id == current_user.user_id
+            ):
+                personal_group.name = username
+
+        current_user.username = username
+        current_user.email_address = email_address
+        db.session.commit()
+
+        return cast(models.User, current_user)
+
+    def delete(self, password: str, **kwargs) -> dict[str, Any]:
+        """Permanently deletes the current user.
+
+        Args:
+            password: The current user's password.
+
+        Returns:
+            A dictionary containing the delete user success message if the user is
+            deleted successfully.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.info("Delete user account", user_id=current_user.user_id)
+        self._user_password_service.authenticate(
+            password=password,
+            user_password=current_user.password,
+            expiration_date=current_user.password_expire_on,
+            error_if_failed=True,
+            log=log,
+        )
+
+        username = current_user.username
+
+        deleted_user_lock = models.UserLock(
+            user_lock_type="delete",
+            user=current_user,
+        )
+        db.session.add(deleted_user_lock)
+        db.session.commit()
+        log.info("User account deleted", user_id=current_user.user_id)
+
+        return {"status": "Success", "username": [username]}
+
+    def change_password(
+        self,
+        current_password: str,
+        new_password: str,
+        confirm_new_password: str,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Change the current user's password.
+
+        Args:
+            current_password: The user's current password.
+            new_password: The user's new password, to replace the current one after
+                authentication.
+            confirm_new_password: Confirmation of the new password.
+
+        Returns:
+            A dictionary containing the password change success message if the password
+            change is successful.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.info("Change the current user's password", user_id=current_user.user_id)
+        return self._user_password_service.change(
+            user=current_user,
+            current_password=current_password,
+            new_password=new_password,
+            confirm_new_password=confirm_new_password,
+            log=log,
+        )
+
+
+class UserNameService(object):
+    """The service methods used to register and manage user accounts by username."""
+
+    @inject
+    def __init__(
+        self,
+        user_password_service: UserPasswordService,
+    ) -> None:
+        """Initialize the user name service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            user_password_service: A UserPasswordService object.
+        """
+        self._user_password_service = user_password_service
+
+    def get(
+        self, username: str, error_if_not_found: bool = False, **kwargs
+    ) -> models.User | None:
+        """Fetch a user by its username.
+
+        Args:
+            username: The username of the user.
+            error_if_not_found: If True, raise an error if the user is not found.
+                Defaults to False.
+
+        Returns:
+            The user object if found, otherwise None.
+
+        Raises:
+            UserDoesNotExistError: If the user is not found and `error_if_not_found`
+                is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.info("Lookup user account by unique username", username=username)
+
+        stmt = select(models.User).filter_by(username=username, is_deleted=False)
+        user: models.User | None = db.session.scalars(stmt).first()
+
+        if user is None:
+            if error_if_not_found:
+                log.error("User not found", username=username)
+                raise UserDoesNotExistError
+
+            return None
+
+        return user
 
 
 class UserPasswordService(object):
@@ -520,7 +551,12 @@ class UserPasswordService(object):
         return authenticated
 
     def change(
-        self, user: models.User, current_password: str, new_password: str, **kwargs
+        self,
+        user: models.User,
+        current_password: str,
+        new_password: str,
+        confirm_new_password: str,
+        **kwargs,
     ) -> dict[str, Any]:
         """Change a user's password.
 
@@ -529,6 +565,7 @@ class UserPasswordService(object):
             current_password: The user's current password.
             new_password: The user's new password, to replace the current one after
                 authentication.
+            confirm_new_password: Confirmation of the new password.
 
         Returns:
             A dictionary containing the password change success message if the password
@@ -540,8 +577,12 @@ class UserPasswordService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         if not self._password_service.verify(
-            password=current_password, hashed_password=user.password, log=log
+            password=current_password, hashed_password=str(user.password), log=log
         ):
+            raise UserPasswordChangeError
+
+        log.info("pw", new=new_password, conf=confirm_new_password)
+        if new_password != confirm_new_password:
             raise UserPasswordChangeError
 
         timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -549,8 +590,9 @@ class UserPasswordService(object):
         user.alternative_id = uuid.uuid4()
         user.last_modified_on = timestamp
         user.password_expire_on = timestamp + datetime.timedelta(
-            tz=datetime.timezone.utc, days=DAYS_TO_EXPIRE_PASSWORD_DEFAULT
+            days=DAYS_TO_EXPIRE_PASSWORD_DEFAULT
         )
+
         db.session.commit()
 
         return {"status": "Password Change Success", "username": [user.username]}
@@ -572,9 +614,10 @@ class PasswordService(object):
     def hash(self, password: str, **kwargs) -> str:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Hashing password")
-        return pbkdf2_sha256.hash(password)
+        return str(pbkdf2_sha256.hash(password))
 
     def verify(self, password: str, hashed_password: str, **kwargs) -> bool:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Verifying password")
-        return pbkdf2_sha256.verify(password, hashed_password)
+
+        return bool(pbkdf2_sha256.verify(password, hashed_password))

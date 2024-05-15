@@ -27,6 +27,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
 from .schema import (
@@ -69,8 +70,21 @@ class GroupEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="GET"
         )
-        log.debug("Request received")
         parsed_query_params = request.parsed_query_params  # noqa: F841
+
+        search_string = parsed_query_params["query"] or ""
+        page_index = parsed_query_params["index"] or 0
+        page_length = parsed_query_params["pageLength"] or 20
+
+        groups = self._group_service.get(
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            log=log,
+        )
+        return utils.build_paging_envelope(
+            "groups", utils.build_group, groups, search_string, page_index, page_length
+        )
 
     @login_required
     @accepts(schema=GroupSchema, api=api)
@@ -80,8 +94,13 @@ class GroupEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="POST"
         )
-        log.debug("Request received")
         parsed_obj = request.parsed_obj  # noqa: F841
+
+        group = self._group_service.create(
+            name=str(parsed_obj["name"]),
+            log=log,
+        )
+        return utils.build_group(group)
 
 
 @api.route("/<int:id>")
@@ -94,7 +113,8 @@ class GroupIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="GET", id=id
         )
-        log.debug("Request received")
+        group = self._group_id_service.get(id, log=log)
+        return utils.build_group(group)
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
@@ -103,7 +123,7 @@ class GroupIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="DELETE", id=id
         )
-        log.debug("Request received")
+        return self._group_id_service.delete(id, log=log)
 
     @login_required
     @accepts(schema=GroupMutableFieldsSchema, api=api)
@@ -113,8 +133,9 @@ class GroupIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Group", request_type="PUT", id=id
         )
-        log.debug("Request received")
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        group = self._group_id_service.modify(id, name=str(parsed_obj["name"]), log=log)
+        return utils.build_group(group)
 
 
 @api.route("/<int:id>/members")

@@ -17,7 +17,7 @@
 """Utility functions to help in building responses from ORM models"""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 from dioptra.restapi.db import models
 
@@ -29,16 +29,18 @@ def build_user_ref(user: models.User) -> dict[str, Any]:
         "url": f"/users/{user.user_id}",
     }
 
-def build_user(user: models.User) -> dict[str:Any]:
+
+def build_user(user: models.User) -> dict[str, Any]:
     return {
         "id": user.user_id,
         "username": user.username,
         "email": user.email_address,
     }
 
-def build_current_user(user: models.User) -> dict[str:Any]:
+
+def build_current_user(user: models.User) -> dict[str, Any]:
     member_of = {x.group.group_id: x.group for x in user.group_memberships}
-    manager_of = {x.group.group_id: x.group for x in user.group_managementships}
+    manager_of = {x.group.group_id: x.group for x in user.group_managerships}
     groups = {**member_of, **manager_of}.values()
 
     return {
@@ -46,10 +48,10 @@ def build_current_user(user: models.User) -> dict[str:Any]:
         "username": user.username,
         "email": user.email_address,
         "groups": [build_group_ref(group) for group in groups],
-        "createdOn": user.created_on,
-        "lastModifiedOn": user.last_modified_on,
-        "lastLoginOn": user.last_login_on,
-        "passwordExpiresOn": user.password_expire_on,
+        "created_on": user.created_on,
+        "last_modified_on": user.last_modified_on,
+        "last_login_on": user.last_login_on,
+        "password_expires_on": user.password_expire_on,
     }
 
 
@@ -61,9 +63,9 @@ def build_group_ref(group: models.Group) -> dict[str, Any]:
     }
 
 
-def build_group(group: models.Group) -> dict[str:Any]:
-    members = [
-        {
+def build_group(group: models.Group) -> dict[str, Any]:
+    members = {
+        member.user.user_id: {
             "user": build_user_ref(member.user),
             "group": build_group_ref(group),
             "permissions": {
@@ -76,25 +78,40 @@ def build_group(group: models.Group) -> dict[str:Any]:
             },
         }
         for member in group.members
-    ]
+    }
+    for manager in group.managers:
+        members[manager.user.user_id]["permissions"].update(
+            {"admin": manager.admin, "owner": manager.owner}
+        )
+
     return {
         "id": group.group_ud,
         "name": group.name,
         "user": build_user_ref(group.creator),
-        "members": members,
+        "members": list(members.values()),
         "createdOn": group.created_on,
-        "lastModified_on": group.last_modified_on,
+        "last_modified_on": group.last_modified_on,
     }
 
-def build_paging_envelope(name, data, query, index, length):
+
+def build_paging_envelope(
+    name: str,
+    build_fn: Callable[[Any], dict[str, Any]],
+    data: list[Any],
+    query: str,
+    index: int,
+    length: int,
+):
     has_prev = index > 0
     has_next = len(data) > length
     is_complete = not (has_prev or has_next)
+
     paged_data = {
-        "query": query,
         "index": index,
+        "page_langth": length,
         "is_complete": is_complete,
-        "data": data[:length],
+        "first": build_paging_url("users", query, 0, length),
+        "data": [build_fn(x) for x in data[:length]],
     }
 
     if has_prev:
@@ -110,5 +127,5 @@ def build_paging_envelope(name, data, query, index, length):
     return paged_data
 
 
-def build_paging_url(name: str, search: str, index: int, length: int):
+def build_paging_url(name: str, search: str, index: int, length: int) -> str:
     return f"/{name}/?query={search}&index={index}&pageLength={length}"

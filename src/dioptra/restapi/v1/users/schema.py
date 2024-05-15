@@ -137,6 +137,15 @@ class UserPasswordSchema(Schema):
     )
 
 
+class UserDeleteSchema(Schema):
+    """The schema for deleting a User."""
+
+    pssword = fields.String(
+        attribute="password",
+        metadata=dict(description="The users current password."),
+    )
+
+
 class UserPageSchema(BasePageSchema):
     """The paged schema for the data stored in a User resource."""
 

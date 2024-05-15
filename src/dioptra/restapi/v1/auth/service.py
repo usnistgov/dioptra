@@ -76,7 +76,7 @@ class AuthService(object):
         )
         self._user_password_service.authenticate(
             password=password,
-            user_password=user.password,
+            user_password=str(user.password),
             expiration_date=user.password_expire_on,
             error_if_failed=True,
             log=log,
