@@ -47,12 +47,8 @@ api: Namespace = Namespace("Groups", description="Groups endpoint")
 
 @api.route("/")
 class GroupEndpoint(Resource):
-
     @inject
-    def __init__(
-        self,
-        group_service: GroupService,
-    ) -> None:
+    def __init__(self, group_service: GroupService, *args, **kwargs) -> None:
         """Initialize the group service
 
         All arguments are provided via dependency injection.
@@ -61,6 +57,7 @@ class GroupEndpoint(Resource):
             group_service: A GroupService object.
         """
         self._group_service = group_service
+        super().__init__(*args, **kwargs)
 
     @login_required
     @accepts(query_params_schema=GroupGetQueryParameters, api=api)

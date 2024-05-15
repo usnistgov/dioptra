@@ -21,7 +21,6 @@ from typing import Any
 
 import structlog
 from flask_login import current_user
-from injector import inject
 from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
@@ -34,15 +33,6 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 class GroupService(object):
     """The service methods used to register and manage groups."""
-
-    @inject
-    def __init__(
-        self,
-    ) -> None:
-        """Initialize the group service.
-
-        All arguments are provided via dependency injection.
-        """
 
     def create(
         self,
