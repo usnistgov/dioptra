@@ -1,9 +1,10 @@
 """The application's REST controllers for the API."""
+
 from __future__ import annotations
 
 from typing import Any, cast
 
-from flask import request
+from flask import current_app, request
 from flask_accepts import accepts
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -43,7 +44,9 @@ foo_api: Namespace = Namespace(
     "Foo",
     description="Foo endpoint",
 )
-
+logging_api: Namespace = Namespace(
+    "Logging", description="Destination for logging information"
+)
 
 # -- Authentication Resources ---------------------------------------------------------
 
@@ -234,3 +237,10 @@ class FooResource(Resource):
         Must be logged in.
         """
         return SERVICES.foo.say_bar()
+
+
+@logging_api.route("/")
+class LoggingResource(Resource):
+    @login_required
+    def post(self):
+        current_app.logger.info(str(request.form))

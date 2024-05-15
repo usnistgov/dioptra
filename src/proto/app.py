@@ -3,6 +3,7 @@
 This module contains the application factory function and the application's
 configuration parameters.
 """
+
 from __future__ import annotations
 
 import os
@@ -113,7 +114,15 @@ def _register_routes(api: Api, root: str = "api") -> None:
         Registering flask-restx namespaces does the same thing as registering Flask
         blueprints.
     """
-    from .controllers import auth_api, foo_api, hello_api, test_api, user_api, world_api
+    from .controllers import (
+        auth_api,
+        foo_api,
+        hello_api,
+        logging_api,
+        test_api,
+        user_api,
+        world_api,
+    )
 
     api.add_namespace(auth_api, path=f"/{root}/auth")
     api.add_namespace(user_api, path=f"/{root}/user")
@@ -121,6 +130,7 @@ def _register_routes(api: Api, root: str = "api") -> None:
     api.add_namespace(test_api, path=f"/{root}/test")
     api.add_namespace(world_api, path=f"/{root}/world")
     api.add_namespace(foo_api, path=f"/{root}/foo")
+    api.add_namespace(logging_api, path=f"/{root}/logging")
 
 
 def _register_test_users_in_db() -> None:
