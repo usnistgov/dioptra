@@ -16,7 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for User resources."""
 import uuid
-
 from typing import Any, cast
 
 import structlog
