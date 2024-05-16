@@ -81,6 +81,7 @@ def assert_group_response_contents_matches_expectations(
         "id",
         "name",
         "user",
+        "members",
         "createdOn",
         "lastModifiedOn",
     }
@@ -102,6 +103,24 @@ def assert_group_response_contents_matches_expectations(
     assert isinstance(response["user"]["username"], str)
     assert isinstance(response["user"]["url"], str)
     assert response["user"]["id"] == expected_contents["user_id"]
+
+    # Validate the that each member is a GroupMember
+    for member in response["members"]:
+        
+        # Validate the UserRef structure for member
+        assert isinstance(member["user"]["id"], int)
+        assert isinstance(member["user"]["username"], str)
+        assert isinstance(member["user"]["url"], str)
+        
+        # Validate the GroupRef structure for member
+        assert isinstance(member["group"]["id"], int)
+        assert isinstance(member["group"]["name"], str)
+
+        # Validate permissions
+        assert isinstance(member["read"], bool)
+        assert isinstance(member["write"], bool)
+        assert isinstance(member["share_read"], bool)
+        assert isinstance(member["share_right"], bool)
 
 
 def assert_retrieving_group_by_id_works(
