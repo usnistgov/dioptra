@@ -239,7 +239,7 @@ def test_create_group(
     - The user registers a group named "new_group".
     - The response is valid matches the expected values given the registration request.
     - The user is able to retrieve information about the group using the group id^[1].
-      
+
     [1] The group id is generated in the backend during the POST and is returned in the response.
     """
     name = "new_group"
@@ -247,7 +247,7 @@ def test_create_group(
 
     group_response = actions.register_group(client, name=name)
     group_expected = group_response.get_json()
-   
+
     assert_group_response_contents_matches_expectations(
         response=group_expected,
         expected_contents={
