@@ -106,12 +106,12 @@ def assert_group_response_contents_matches_expectations(
 
     # Validate the that each member is a GroupMember
     for member in response["members"]:
-        
+
         # Validate the UserRef structure for member
         assert isinstance(member["user"]["id"], int)
         assert isinstance(member["user"]["username"], str)
         assert isinstance(member["user"]["url"], str)
-        
+
         # Validate the GroupRef structure for member
         assert isinstance(member["group"]["id"], int)
         assert isinstance(member["group"]["name"], str)
