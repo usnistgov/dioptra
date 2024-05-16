@@ -372,7 +372,6 @@ def test_rename_group(
     updated_group_name = "updated_name"
     group_to_rename = registered_groups["group1"]
     existing_group = registered_groups["group2"]
-
     modify_group(
         client,
         group_id=group_to_rename["groupId"],
