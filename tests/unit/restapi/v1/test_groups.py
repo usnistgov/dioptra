@@ -262,7 +262,6 @@ def test_create_group(
     """
     name = "new_group"
     user_id = auth_account["user_id"]
-
     group_response = actions.register_group(client, name=name)
     group_expected = group_response.get_json()
 
