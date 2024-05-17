@@ -276,7 +276,7 @@ def test_create_group(
     )
 
     assert_retrieving_group_by_id_works(
-        client, group_id=group_expected["groupId"], expected=group_expected
+        client, group_id=group_expected["id"], expected=group_expected
     )
 
 
