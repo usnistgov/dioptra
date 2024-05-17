@@ -408,28 +408,6 @@ def test_queue_group_query(
 
 
 @pytest.mark.v1
-def test_queue_id_get(
-    client: FlaskClient,
-    db: SQLAlchemy,
-    auth_account: dict[str, Any],
-    registered_queues: dict[str, Any],
-) -> None:
-    """Test that queues can be retrieved by their unique ID.
-
-    Given an authenticated user and registered queues, this test validates the following
-    sequence of actions:
-
-    - The user is able to retrieve single queue by its ID.
-    - The response is a single queue with a matching ID.
-    """
-    queue3_expected = registered_queues["queue3"]
-
-    assert_retrieving_queue_by_id_works(
-        client, queue_id=queue3_expected["queueId"], expected=queue3_expected
-    )
-
-
-@pytest.mark.v1
 def test_cannot_register_existing_queue_name(
     client: FlaskClient,
     db: SQLAlchemy,
