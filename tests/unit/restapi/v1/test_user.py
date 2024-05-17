@@ -211,6 +211,43 @@ def assert_retrieving_current_user_works(
     assert response.status_code == 200 and response.get_json() == expected
 
 
+
+def assert_retrieving_all_users_works(
+    client: FlaskClient,
+    expected: list[dict[str, Any]],
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
+) -> None:
+    """Assert that retrieving all queues works.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected response from the API.
+        search: The search string used in query parameters.
+        paging_info: The paging information used in query parameters.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+    query_string = {}
+
+    if search is not None:
+        query_string["query"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["pageLength"] = paging_info["page_length"]
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_USERS_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and response.get_json()["data"] == expected
+
+
+
 def assert_retrieving_users_works(
     client: FlaskClient,
     expected: list[dict[str, Any]],
