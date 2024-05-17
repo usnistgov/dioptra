@@ -294,7 +294,7 @@ def test_group_search_query(
     Given an authenticated user and registered groups, this test validates the following
     sequence of actions:
 
-    - The user is able to retrieve a list of all registered groups with a description
+    - The user is able to retrieve a list of all registered groups with a name
       that contains 'group'.
     - The returned list of groups matches the expected matches from the query.
     """
