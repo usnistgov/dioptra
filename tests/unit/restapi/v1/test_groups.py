@@ -117,6 +117,8 @@ def assert_group_response_contents_matches_expectations(
         assert isinstance(member["group"]["name"], str)
 
         # Validate permissions
+        assert isinstance(member["owner"], bool)
+        assert isinstance(member["admin"], bool)
         assert isinstance(member["read"], bool)
         assert isinstance(member["write"], bool)
         assert isinstance(member["shareRead"], bool)
