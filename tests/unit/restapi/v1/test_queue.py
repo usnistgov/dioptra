@@ -189,7 +189,7 @@ def assert_retrieving_queues_works(
             does not match the expected response.
     """
 
-    query_string = {}
+    query_string: dict[str, Any] = {}
 
     if group_id is not None:
         query_string["groupId"] = group_id
@@ -326,7 +326,7 @@ def test_create_queue(
         },
     )
     assert_retrieving_queue_by_id_works(
-        client, queue_id=queue1_expected["queueId"], expected=queue1_expected
+        client, queue_id=queue1_expected["id"], expected=queue1_expected
     )
 
 
@@ -427,7 +427,7 @@ def test_cannot_register_existing_queue_name(
     assert_registering_existing_queue_name_fails(
         client,
         name=existing_queue["name"],
-        group_id=existing_queue["group_id"],
+        group_id=existing_queue["group"]["id"],
     )
 
 
@@ -456,16 +456,16 @@ def test_rename_queue(
 
     modify_queue(
         client,
-        queue_id=queue_to_rename["queueId"],
+        queue_id=queue_to_rename["id"],
         new_name=updated_queue_name,
         new_description=queue_to_rename["description"],
     )
     assert_queue_name_matches_expected_name(
-        client, queue_id=queue_to_rename["queueId"], expected_name=updated_queue_name
+        client, queue_id=queue_to_rename["id"], expected_name=updated_queue_name
     )
     assert_cannot_rename_queue_with_existing_name(
         client,
-        queue_id=queue_to_rename["queueId"],
+        queue_id=queue_to_rename["id"],
         existing_name=existing_queue["name"],
         existing_description=queue_to_rename["description"],
     )
@@ -489,5 +489,5 @@ def test_delete_queue_by_id(
     """
     queue_to_delete = registered_queues["queue1"]
 
-    delete_queue_with_id(client, queue_id=queue_to_delete["queueId"])
-    assert_queue_is_not_found(client, queue_id=queue_to_delete["queueId"])
+    delete_queue_with_id(client, queue_id=queue_to_delete["id"])
+    assert_queue_is_not_found(client, queue_id=queue_to_delete["id"])

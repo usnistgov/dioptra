@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from flask.testing import FlaskClient
@@ -60,7 +60,7 @@ def auth_account(
     actions.login(
         client, username=user_info["username"], password=user_info["password"]
     )
-    return user_info
+    return cast(dict[str, Any], user_info)
 
 
 @pytest.fixture
