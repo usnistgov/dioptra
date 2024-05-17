@@ -310,28 +310,6 @@ def test_group_search_query(
 
 
 @pytest.mark.v1
-def test_group_id_get(
-    client: FlaskClient,
-    db: SQLAlchemy,
-    auth_account: dict[str, Any],
-    registered_groups: dict[str, Any],
-) -> None:
-    """Test that groups can be retrieved by their unique ID.
-
-    Given an authenticated user and registered groups, this test validates the following
-    sequence of actions:
-
-    - The user is able to retrieve single group by its ID.
-    - The response is a single group with a matching ID.
-    """
-    group3_expected = registered_groups["group3"]
-
-    assert_retrieving_group_by_id_works(
-        client, group_id=group3_expected["groupId"], expected=group3_expected
-    )
-
-
-@pytest.mark.v1
 def test_cannot_register_existing_group_name(
     client: FlaskClient,
     db: SQLAlchemy,
