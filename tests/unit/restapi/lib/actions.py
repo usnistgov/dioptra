@@ -20,6 +20,7 @@ This module contains shared actions used across test suites for each of the REST
 API endpoints.
 """
 
+from typing import Any
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
 
@@ -107,6 +108,7 @@ def register_queue(
 def register_group(
     client: FlaskClient,
     name: str,
+    description: str | None = None,
 ) -> TestResponse:
     """Register a group using the API.
 
@@ -117,7 +119,10 @@ def register_group(
     Returns:
         The response from the API.
     """
-    payload = {"name": name}
+    payload: dict[str, Any] = {"name": name}
+
+    if description is not None:
+        payload["description"] = description
 
     return client.post(
         f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/",

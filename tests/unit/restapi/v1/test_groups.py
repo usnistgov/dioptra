@@ -39,6 +39,7 @@ def modify_group(
     client: FlaskClient,
     group_id: int,
     new_name: str,
+    new_description: str,
 ) -> TestResponse:
     """Rename a group using the API.
 
@@ -51,7 +52,7 @@ def modify_group(
     Returns:
         The response from the API.
     """
-    payload = {"name": new_name}
+    payload: dict[str, Any] = {"name": new_name, "description": new_description}
 
     return client.put(
         f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{group_id}",
@@ -80,6 +81,7 @@ def assert_group_response_contents_matches_expectations(
     expected_keys = {
         "id",
         "name",
+        "description",
         "user",
         "members",
         "createdOn",
@@ -90,10 +92,12 @@ def assert_group_response_contents_matches_expectations(
     # Validate the non-Ref fields
     assert isinstance(response["id"], int)
     assert isinstance(response["name"], str)
+    assert isinstance(response["description"], str)
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
 
     assert response["name"] == expected_contents["name"]
+    assert response["description"] == expected_contents["description"]
 
     assert helpers.is_iso_format(response["createdOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
@@ -224,6 +228,7 @@ def assert_cannot_rename_group_with_existing_name(
     client: FlaskClient,
     group_id: int,
     existing_name: str,
+    existing_description: str,
 ) -> None:
     """Assert that renaming a group with an existing name fails.
 
@@ -239,6 +244,7 @@ def assert_cannot_rename_group_with_existing_name(
         client=client,
         group_id=group_id,
         new_name=existing_name,
+        new_description=existing_description,
     )
     assert response.status_code == 400
 
@@ -265,18 +271,19 @@ def test_create_group(
         response.
     """
     name = "new_group"
+    description ="The first group"
     user_id = auth_account["user_id"]
-    group_response = actions.register_group(client, name=name)
+    group_response = actions.register_group(client, name=name, description=description)
     group_expected = group_response.get_json()
 
     assert_group_response_contents_matches_expectations(
         response=group_expected,
         expected_contents={
             "name": name,
+            "description": description,
             "user_id": user_id,
         },
     )
-
     assert_retrieving_group_by_id_works(
         client, group_id=group_expected["id"], expected=group_expected
     )
@@ -294,7 +301,7 @@ def test_group_search_query(
     Given an authenticated user and registered groups, this test validates the following
     sequence of actions:
 
-    - The user is able to retrieve a list of all registered groups with a name
+    - The user is able to retrieve a list of all registered groups with a description
       that contains 'group'.
     - The returned list of groups matches the expected matches from the query.
     """
@@ -305,7 +312,7 @@ def test_group_search_query(
     assert_retrieving_groups_works(
         client,
         expected=group_expected_list,
-        search="name:*group*",
+        search="description:*group*",
     )
 
 
@@ -354,18 +361,19 @@ def test_rename_group(
     updated_group_name = "updated_name"
     group_to_rename = registered_groups["group1"]
     existing_group = registered_groups["group2"]
+
     modify_group(
         client,
         group_id=group_to_rename["id"],
         new_name=updated_group_name,
+        new_description=group_to_rename["description"],
     )
-
     assert_group_name_matches_expected_name(
         client, group_id=group_to_rename["id"], expected_name=updated_group_name
     )
-
     assert_cannot_rename_group_with_existing_name(
         client,
         group_id=group_to_rename["id"],
         existing_name=existing_group["name"],
+        existing_description=group_to_rename["description"],
     )

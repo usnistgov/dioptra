@@ -99,14 +99,17 @@ def registered_groups(
     group1_response = actions.register_group(
         client,
         name="group_one",
+        description="The first group.",
     ).get_json()
     group2_response = actions.register_group(
         client,
         name="group_two",
+        description="The second group.",
     ).get_json()
     group3_response = actions.register_group(
         client,
-        name="team_one",
+        name="group_three",
+        description="Not retrieved.",
     ).get_json()
     return {
         "group1": group1_response,
