@@ -256,9 +256,11 @@ def test_create_group(
 
     - The user registers a group named "new_group".
     - The response is valid matches the expected values given the registration request.
-    - The user is able to retrieve information about the group using the group id^[1].
+    - The user is able to retrieve information about the group using the group id.
 
-    [1] The group id is generated in the backend during the POST and is returned in the response.
+    Notes:
+        The group id is generated in the backend during the POST and is returned in the
+        response.
     """
     name = "new_group"
     user_id = auth_account["user_id"]
