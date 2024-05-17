@@ -22,11 +22,27 @@ from typing import Any, Callable
 from dioptra.restapi.db import models
 
 
+# -- Ref Types -----------------------------------------------------------------
+
 def build_user_ref(user: models.User) -> dict[str, Any]:
     return {
         "id": user.user_id,
         "username": user.username,
         "url": f"/users/{user.user_id}",
+    }
+
+def build_group_ref(group: models.Group) -> dict[str, Any]:
+    return {
+        "id": group.group_id,
+        "name": group.name,
+        "url": f"/groups/{group.group_id}",
+    }
+
+def build_tag_ref(tag: models.Group) -> dict[str, Any]:
+    return {
+        "id": tag.tag_id,
+        "name": tag.name,
+        "url": f"/tags/{tag.tag_id}",
     }
 
 
@@ -55,77 +71,81 @@ def build_current_user(user: models.User) -> dict[str, Any]:
     }
 
 
-def build_group_ref(group: models.Group) -> dict[str, Any]:
-    return {
-        "id": group.group_id,
-        "name": group.name,
-        "url": f"/groups/{group.group_id}",
-    }
-
-
 def build_group(group: models.Group) -> dict[str, Any]:
-    members = {
-        member.user.user_id: {
-            "user": build_user_ref(member.user),
-            "group": build_group_ref(group),
+    permissions = {
+        x.user.user_id: {
+            "user": build_user_ref(x.user),
+            "group": build_group_ref(x.group),
             "permissions": {
-                "read": member.read,
-                "write": member.write,
-                "shareRead": member.share_read,
-                "shareWrite": member.share_write,
-                "admin": False,
+                "read": False,
+                "write": False,
+                "share_read": False,
+                "share_write": False,
                 "owner": False,
+                "admin": False,
             },
         }
-        for member in group.members
+        for x in group.members + group.managers
     }
-    for manager in group.managers:
-        members[manager.user.user_id]["permissions"].update(
-            {"admin": manager.admin, "owner": manager.owner}
+    for member in group.members:
+        permissions[member.user.user_id]["permissions"].update(
+            {
+                "read": member.read,
+                "write": member.write,
+                "share_read": member.share_read,
+                "share_write": member.share_write,
+            }
         )
-
+    for manager in group.manager:
+        permissions[manager.user.user_id]["permissions"].update(
+            {"owner": manager.owner, "admin": manager.admin}
+        )
     return {
         "id": group.group_ud,
         "name": group.name,
         "user": build_user_ref(group.creator),
-        "members": list(members.values()),
-        "createdOn": group.created_on,
+        "members": list(permissions.values()),
+        "created_on": group.created_on,
         "last_modified_on": group.last_modified_on,
     }
 
 
+
+# -- Paging --------------------------------------------------------------------
+
 def build_paging_envelope(
-    name: str,
+    resource_type: str,
     build_fn: Callable[[Any], dict[str, Any]],
     data: list[Any],
     query: str,
     index: int,
     length: int,
+    total_num_elements: bool,
 ):
     has_prev = index > 0
-    has_next = len(data) > length
-    is_complete = not (has_prev or has_next)
+    has_next = total_num_elements > index + length
+    is_complete = len(data) == total_num_elements
 
     paged_data = {
         "index": index,
         "page_langth": length,
         "is_complete": is_complete,
-        "first": build_paging_url("users", query, 0, length),
+        "first": build_paging_url(resource_type, query, 0, length),
         "data": [build_fn(x) for x in data[:length]],
     }
 
     if has_prev:
         prev_index = max(index - length, 0)
-        prev_url = build_paging_url("users", query, prev_index, length)
+        prev_url = build_paging_url(resource_type, query, prev_index, length)
         paged_data.update({"prev": prev_url})
 
     if has_next:
         next_index = index + length
-        next_url = build_paging_url("users", query, next_index, length)
+        next_url = build_paging_url(resource_type, query, next_index, length)
         paged_data.update({"next": next_url})
 
     return paged_data
 
 
-def build_paging_url(name: str, search: str, index: int, length: int) -> str:
-    return f"/{name}/?query={search}&index={index}&pageLength={length}"
+def build_paging_url(resource_type: str, search: str, index: int, length: int) -> str:
+    return f"/{resource_type}/?query={search}&index={index}&pageLength={length}"

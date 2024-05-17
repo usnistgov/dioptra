@@ -70,19 +70,19 @@ def registered_queues(
         client,
         name="tensorflow_cpu",
         description="The first queue.",
-        group_id=auth_account["default_group_id"],
+        group_id=auth_account["groups"][0]["id"],
     ).get_json()
     queue2_response = actions.register_queue(
         client,
         name="tensorflow_gpu",
         description="The second queue.",
-        group_id=auth_account["default_group_id"],
+        group_id=auth_account["groups"][0]["id"]
     ).get_json()
     queue3_response = actions.register_queue(
         client,
         name="pytorch_cpu",
         description="Not retrieved.",
-        group_id=auth_account["default_group_id"],
+        group_id=auth_account["groups"][0]["id"],
     ).get_json()
     return {
         "queue1": queue1_response,

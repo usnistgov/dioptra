@@ -70,21 +70,25 @@ class UserEndpoint(Resource):
         )
         parsed_query_params = request.parsed_args  # noqa: F841
 
+        # TODO: make sure defaults are being handled in marshmallow
         search_string = parsed_query_params["query"] or ""
         page_index = parsed_query_params["index"] or 0
         page_length = parsed_query_params["pageLength"] or 20
 
-        users = cast(
-            models.User,
-            self._user_service.get(
-                search_string=search_string,
-                page_index=page_index,
-                page_length=page_length,
-                log=log,
-            ),
+        users, total_num_users = self._user_service.get(
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            log=log,
         )
         return utils.build_paging_envelope(
-            "users", utils.build_user, users, search_string, page_index, page_length
+            "users",
+            utils.build_user,
+            users,
+            search_string,
+            page_index,
+            page_length,
+            total_num_users,
         )
 
     @accepts(schema=UserSchema, api=api)
@@ -121,7 +125,7 @@ class UserIdEndpoint(Resource):
         self._user_id_service = user_id_service
         super().__init__(*args, **kwargs)
 
-    # @login_required
+    @login_required
     @responds(schema=UserSchema, api=api)
     def get(self, id: int) -> dict[str, Any]:
         """Gets the User with the provided ID."""
@@ -147,7 +151,7 @@ class UserIdPasswordEndpoint(Resource):
         self._user_id_service = user_id_service
         super().__init__(*args, **kwargs)
 
-    # @login_required
+    @login_required
     @accepts(schema=UserPasswordSchema, api=api)
     @responds(schema=IdStatusResponseSchema, api=api)
     def post(self, id: int):
@@ -238,7 +242,7 @@ class UserCurrentPasswordEndpoint(Resource):
         self._user_current_service = user_current_service
         super().__init__(*args, **kwargs)
 
-    # @login_required
+    @login_required
     @accepts(schema=UserPasswordSchema, api=api)
     @responds(schema=IdStatusResponseSchema, api=api)
     def post(self):

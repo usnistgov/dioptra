@@ -63,11 +63,8 @@ def register_v1_error_handlers(api: Api) -> None:
     Args:
         api: The main REST |Api| object.
     """
-    from .v1.groups.errors import (
-        register_error_handlers as attach_groups_error_handlers,
-    )
-    from .v1.users.errors import register_error_handlers as attach_users_error_handlers
 
-    # Add error handlers
-    attach_groups_error_handlers(api)
-    attach_users_error_handlers(api)
+    from dioptra import restapi
+
+    restapi.v1.groups.errors.register_error_handlers(api)
+    restapi.v1.users.errors.register_error_handlers(api)

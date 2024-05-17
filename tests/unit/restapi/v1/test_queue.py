@@ -310,8 +310,8 @@ def test_create_queue(
     """
     name = "tensorflow_cpu"
     description = "The first queue."
-    user_id = auth_account["user_id"]
-    group_id = auth_account["default_group_id"]
+    user_id = auth_account["user"]["id"]
+    group_id = auth_account["groups"][0]["id"]
     queue1_response = actions.register_queue(
         client, name=name, description=description, group_id=group_id
     )
@@ -403,7 +403,9 @@ def test_queue_group_query(
     queue_expected_list = [queue1_expected, queue2_expected, queue3_expected]
 
     assert_retrieving_queues_works(
-        client, expected=queue_expected_list, group_id=auth_account["default_group_id"]
+        client,
+        expected=queue_expected_list,
+        group_id=auth_account["groups"][0]["group_id"],
     )
 
 

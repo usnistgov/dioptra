@@ -17,7 +17,7 @@
 """The server-side functions that perform group endpoint operations."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Final
 
 import structlog
 from flask_login import current_user
@@ -29,6 +29,18 @@ from dioptra.restapi.db import db, models
 from .errors import GroupDoesNotExistError, GroupNameNotAvailableError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+NEW_GROUP_MEMBER_PERMISSIONS: Final[dict[str, bool]] = {
+    "read": True,
+    "write": True,
+    "share_read": True,
+    "share_write": True,
+}
+
+NEW_GROUP_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
+    "owner": True,
+    "admin": True,
+}
 
 
 class GroupService(object):
@@ -53,15 +65,14 @@ class GroupService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        group: models.Group | None = self._get_group_by_name(name)
-        if group is not None:
-            if error_if_exists:
-                log.info("Group name already exists", name=name)
-                raise GroupNameNotAvailableError
-            else:
-                return group
-
-        new_group: models.Group = models.Group(name=name, creator=current_user)
+        new_group = GroupService.create_group(
+            name,
+            current_user,
+            NEW_GROUP_MEMBER_PERMISSIONS,
+            NEW_GROUP_MANAGER_PERMISSIONS,
+            error_if_exists=error_if_exists,
+            log=log,
+        )
         db.session.add(new_group)
         db.session.commit()
 
@@ -69,8 +80,69 @@ class GroupService(object):
 
         return new_group
 
-    def _get_group_by_name(
-        self, name: str, error_if_not_found: bool = False, **kwargs
+    @staticmethod
+    def create_group(
+        name: str,
+        user: models.User,
+        member_permissions: dict[str, Any] | None = None,
+        manager_permissions: dict[str, Any] | None = None,
+        error_if_exists: bool = False,
+        **kwargs,
+    ):
+        """
+        Constructs a new Group object and attaches GroupManager and GroupMember objects.
+        If a group with the specified name already exists, retrieve it and attach
+        permissions.
+
+        Args:
+            name: The name of the group.
+            user: The creator of the group.
+            member_permissions: A dictionary specifying the member permissions.
+            manager_permissions: A dictionary specifying the member permissions.
+            error_if_exist: If True, raise an error if the group already exists.
+                Defaults to False.
+
+        Raises:
+            GroupNameNotAvailable: If the group name already exists.
+
+        Returns:
+            The group object if found, otherwise None.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        group: models.Group | None = GroupService.get_group_by_name(name)
+        if group is None:
+            group: models.Group = models.Group(name=name, creator=current_user)
+        else:
+            if error_if_exists:
+                log.info("Group name already exists", name=name)
+                raise GroupNameNotAvailableError
+
+        if manager_permissions is not None:
+            group.managers.append(
+                models.GroupManager(
+                    user=user,
+                    owner=manager_permissions.get("owner", False),
+                    admin=manager_permissions.get("admin", False),
+                )
+            )
+
+        if member_permissions is not None:
+            group.members.append(
+                models.GroupMember(
+                    user=user,
+                    read=member_permissions.get("read", False),
+                    write=member_permissions.get("read", False),
+                    share_read=member_permissions.get("share_read", False),
+                    share_write=member_permissions.get("share_write", False),
+                )
+            )
+
+        return group
+
+    @staticmethod
+    def get_group_by_name(
+        name: str, error_if_not_found: bool = False, **kwargs
     ) -> models.Group | None:
         """Fetch a group by its name.
 

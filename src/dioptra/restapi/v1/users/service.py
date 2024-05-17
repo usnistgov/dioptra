@@ -24,8 +24,7 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from passlib.hash import pbkdf2_sha256
-from sqlalchemy import select
+from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
@@ -42,13 +41,12 @@ from .errors import (
     UserRegistrationError,
 )
 
-# from dioptra.restapi.v1.shared.password.service import PasswordService
-
-# from dioptra.restapi.v1 import search_parser
+from dioptra.restapi.v0.shared.password.service import PasswordService
 
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
+DEFAULT_GROUP_NAME: Final[str] = "public"
 DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
 
 
@@ -60,7 +58,6 @@ class UserService(object):
         self,
         user_password_service: UserPasswordService,
         user_name_service: UserNameService,
-        group_service: GroupService,
     ) -> None:
         """Initialize the user service.
 
@@ -69,11 +66,9 @@ class UserService(object):
         Args:
             user_password_service: A UserPasswordService object.
             user_name_service: A UserNameService object.
-            group_service: A GroupService object.
         """
         self._user_password_service = user_password_service
         self._user_name_service = user_name_service
-        self._group_service = group_service
 
     def create(
         self,
@@ -115,48 +110,19 @@ class UserService(object):
             log.info("Email already exists", email_address=email_address)
             raise UserEmailNotAvailableError
 
-        stmt = select(models.Group).filter_by(name="public")
-        public_group: models.Group | None = db.session.scalars(stmt).first()
-
         hashed_password = self._user_password_service.hash(password, log=log)
         new_user: models.User = models.User(
             username=username, password=hashed_password, email_address=email_address
         )
 
-        if public_group is None:
-            public_group = models.Group(name="public", creator=new_user)
-
-        public_group.managers.append(
-            models.GroupManager(user=new_user, owner=True, admin=True)
-        )
-        public_group.members.append(
-            models.GroupMember(
-                user=new_user,
-                read=True,
-                write=True,
-                share_read=True,
-                share_write=True,
-            )
+        default_group = GroupService.create_group(
+            DEFAULT_GROUP_NAME,
+            new_user,
+            group_member_permissions={"read": True, "write": True},
+            log=log,
         )
 
-        personal_group: models.Group = models.Group(
-            name=new_user.username, creator=new_user
-        )
-        personal_group.managers.append(
-            models.GroupManager(user=new_user, owner=True, admin=True)
-        )
-        personal_group.members.append(
-            models.GroupMember(
-                user=new_user,
-                read=True,
-                write=True,
-                share_read=True,
-                share_write=True,
-            )
-        )
-
-        db.session.add(public_group)
-        db.session.add(personal_group)
+        db.session.add(default_group)
         db.session.add(new_user)
         db.session.commit()
 
@@ -180,22 +146,30 @@ class UserService(object):
             page_length: The maximum number of users to be returned.
 
         Returns:
-            A paging envelope containing a list of fetched users.
+            - A list of fetched users.
+            - A count of the total_number of users matching the query
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Get list of users")
 
-        pattern = search_string or "%"
+        if search_string:
+            log.warn("Searching is not implemented", search_string=search_string)
+
+        stmt = select(func.count(models.User.user_id)).filter_by(is_deleted=False)
+        total_num_users = db.session.scalars(stmt).first()
+
+        if total_num_users == 0:
+            return []
 
         stmt = (
             select(models.User)
-            .where(models.User.username.like(pattern))
+            .filter_by(is_deleted=False)
             .offset(page_index)
-            .limit(page_length + 1)
+            .limit(page_length)
         )
         users = db.session.scalars(stmt).all()
 
-        return list(users)
+        return list(users), total_num_users
 
     def _get_user_by_email(
         self, email_address: str, error_if_not_found: bool = False, **kwargs
@@ -581,7 +555,6 @@ class UserPasswordService(object):
         ):
             raise UserPasswordChangeError
 
-        log.info("pw", new=new_password, conf=confirm_new_password)
         if new_password != confirm_new_password:
             raise UserPasswordChangeError
 
@@ -608,16 +581,3 @@ class UserPasswordService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         return self._password_service.hash(password=password, log=log)
-
-
-class PasswordService(object):
-    def hash(self, password: str, **kwargs) -> str:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Hashing password")
-        return str(pbkdf2_sha256.hash(password))
-
-    def verify(self, password: str, hashed_password: str, **kwargs) -> bool:
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Verifying password")
-
-        return bool(pbkdf2_sha256.verify(password, hashed_password))
