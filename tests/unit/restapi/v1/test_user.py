@@ -32,8 +32,6 @@ from dioptra.restapi.routes import V1_ROOT, V1_USERS_ROUTE
 
 from ..lib import actions, helpers
 
-NoneType = type(None)
-
 # -- Actions ---------------------------------------------------------------------------
 
 
@@ -640,7 +638,6 @@ def test_change_current_user_password(
     old_password = registered_users["user1"]["password"]
     change_current_user_password(client, old_password, new_password)
     assert_login_works(client, username="user1", password=new_password)
-
 
 @pytest.mark.v1
 def test_change_user_password(
