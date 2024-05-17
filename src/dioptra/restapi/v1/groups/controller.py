@@ -69,7 +69,7 @@ class GroupEndpoint(Resource):
         )
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
-        search_string = parsed_query_params["query"] or ""
+        search_string = parsed_query_params["search"] or ""
         page_index = parsed_query_params["index"] or 0
         page_length = parsed_query_params["pageLength"] or 20
 

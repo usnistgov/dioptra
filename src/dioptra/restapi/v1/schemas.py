@@ -202,7 +202,7 @@ class GroupIdQueryParametersSchema(Schema):
 class SearchQueryParametersSchema(Schema):
     """A schema for adding search query parameters to a resource endpoint."""
 
-    query = fields.String(
+    search = fields.String(
         attribute="search",
         metadata=dict(description="Search terms for the query (* and ? wildcards)."),
         load_default="",

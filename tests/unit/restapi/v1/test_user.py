@@ -213,7 +213,7 @@ def assert_retrieving_all_users_works(
     client: FlaskClient,
     expected: list[dict[str, Any]],
     search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
+    paging_info: dict[str, int] | None = None,
 ) -> None:
     """Assert that retrieving all queues works.
 
@@ -230,7 +230,7 @@ def assert_retrieving_all_users_works(
     query_string = {}
 
     if search is not None:
-        query_string["query"] = search
+        query_string["search"] = search
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
@@ -248,7 +248,7 @@ def assert_retrieving_users_works(
     client: FlaskClient,
     expected: list[dict[str, Any]],
     search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
+    paging_info: dict[str, int] | None = None,
 ) -> None:
     """Assert that retrieving all users works.
 
@@ -265,7 +265,7 @@ def assert_retrieving_users_works(
     query_string = {}
 
     if search is not None:
-        query_string["query"] = search
+        query_string["search"] = search
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]

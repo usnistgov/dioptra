@@ -134,7 +134,7 @@ class UserService(object):
         page_index: int,
         page_length: int,
         **kwargs,
-    ) -> list[models.User]:
+    ) -> tuple[list[models.User], int]:
         """Fetch a list of users, optionally filtering by search string and paging
         parameters.
 
@@ -157,7 +157,7 @@ class UserService(object):
         total_num_users = db.session.scalars(stmt).first()
 
         if total_num_users == 0:
-            return []
+            return [], total_num_users
 
         stmt = (
             select(models.User)
