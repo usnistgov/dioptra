@@ -164,7 +164,7 @@ def assert_retrieving_groups_works(
             does not match the expected response.
     """
 
-    query_string = {}
+    query_string: dict[str, Any] = {}
 
     if search is not None:
         query_string["query"] = search
