@@ -32,6 +32,8 @@ from dioptra.restapi.routes import V1_ROOT, V1_USERS_ROUTE
 
 from ..lib import actions, helpers
 
+NoneType = type(None)
+
 # -- Actions ---------------------------------------------------------------------------
 
 
@@ -209,13 +211,13 @@ def assert_retrieving_current_user_works(
     assert response.status_code == 200 and response.get_json() == expected
 
 
-def assert_retrieving_all_users_works(
+def assert_retrieving_users_works(
     client: FlaskClient,
     expected: list[dict[str, Any]],
     search: str | None = None,
     paging_info: dict[str, int] | None = None,
 ) -> None:
-    """Assert that retrieving all queues works.
+    """Assert that retrieving all users works.
 
     Args:
         client: The Flask test client.
@@ -470,7 +472,9 @@ def test_create_user(
     assert_retrieving_current_user_works(client, expected=user_response)
 
     # Getting a user by id returns UserSchema.
-    user_expected = {k:v for k,v in user_expected.items() if k in ["username", "email", "id"]}
+    user_expected = {
+        k: v for k, v in user_response.items() if k in ["username", "email", "id"]
+    }
     assert_retrieving_user_by_id_works(client, user_expected["id"], user_expected)
 
 
