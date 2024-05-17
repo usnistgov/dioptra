@@ -60,7 +60,7 @@ class UserEndpoint(Resource):
         self._user_service = user_service
         super().__init__(*args, **kwargs)
 
-    # @login_required
+    @login_required
     @accepts(query_params_schema=UserGetQueryParameters, api=api)
     @responds(schema=UserPageSchema, api=api)
     def get(self):
@@ -70,10 +70,9 @@ class UserEndpoint(Resource):
         )
         parsed_query_params = request.parsed_args  # noqa: F841
 
-        # TODO: make sure defaults are being handled in marshmallow
-        search_string = parsed_query_params["query"] or ""
-        page_index = parsed_query_params["index"] or 0
-        page_length = parsed_query_params["pageLength"] or 20
+        search_string = str(parsed_query_params["query"])
+        page_index = int(parsed_query_params["index"])
+        page_length = int(parsed_query_params["pageLength"])
 
         users, total_num_users = self._user_service.get(
             search_string=search_string,

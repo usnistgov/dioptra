@@ -203,12 +203,9 @@ class SearchQueryParametersSchema(Schema):
     """A schema for adding search query parameters to a resource endpoint."""
 
     query = fields.String(
-        attribute="query",
+        attribute="search",
         metadata=dict(description="Search terms for the query (* and ? wildcards)."),
-    )
-    field = fields.Integer(
-        attribute="field",
-        metadata=dict(description="Name of the resource field to search."),
+        load_default="",
     )
 
 
