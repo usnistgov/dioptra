@@ -376,16 +376,16 @@ def test_rename_group(
     existing_group = registered_groups["group2"]
     modify_group(
         client,
-        group_id=group_to_rename["groupId"],
+        group_id=group_to_rename["id"],
         new_name=updated_group_name,
     )
 
     assert_group_name_matches_expected_name(
-        client, group_id=group_to_rename["groupId"], expected_name=updated_group_name
+        client, group_id=group_to_rename["id"], expected_name=updated_group_name
     )
 
     assert_cannot_rename_group_with_existing_name(
         client,
-        group_id=group_to_rename["groupId"],
+        group_id=group_to_rename["id"],
         existing_name=existing_group["name"],
     )
