@@ -120,7 +120,7 @@ def assert_group_response_contents_matches_expectations(
         assert isinstance(member["read"], bool)
         assert isinstance(member["write"], bool)
         assert isinstance(member["shareRead"], bool)
-        assert isinstance(member["share_write"], bool)
+        assert isinstance(member["shareWrite"], bool)
 
 
 def assert_retrieving_group_by_id_works(
