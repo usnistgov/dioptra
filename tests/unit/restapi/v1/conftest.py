@@ -76,7 +76,7 @@ def registered_queues(
         client,
         name="tensorflow_gpu",
         description="The second queue.",
-        group_id=auth_account["groups"][0]["id"]
+        group_id=auth_account["groups"][0]["id"],
     ).get_json()
     queue3_response = actions.register_queue(
         client,

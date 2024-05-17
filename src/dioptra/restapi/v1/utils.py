@@ -21,8 +21,8 @@ from typing import Any, Callable
 
 from dioptra.restapi.db import models
 
-
 # -- Ref Types -----------------------------------------------------------------
+
 
 def build_user_ref(user: models.User) -> dict[str, Any]:
     return {
@@ -31,6 +31,7 @@ def build_user_ref(user: models.User) -> dict[str, Any]:
         "url": f"/users/{user.user_id}",
     }
 
+
 def build_group_ref(group: models.Group) -> dict[str, Any]:
     return {
         "id": group.group_id,
@@ -38,7 +39,8 @@ def build_group_ref(group: models.Group) -> dict[str, Any]:
         "url": f"/groups/{group.group_id}",
     }
 
-def build_tag_ref(tag: models.Group) -> dict[str, Any]:
+
+def build_tag_ref(tag: models.Tag) -> dict[str, Any]:
     return {
         "id": tag.tag_id,
         "name": tag.name,
@@ -112,6 +114,7 @@ def build_group(group: models.Group) -> dict[str, Any]:
 
 
 # -- Paging --------------------------------------------------------------------
+
 
 def build_paging_envelope(
     resource_type: str,

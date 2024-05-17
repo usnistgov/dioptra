@@ -28,6 +28,7 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.v0.shared.password.service import PasswordService
 from dioptra.restapi.v1.groups.service import GroupService
 
 from .errors import (
@@ -40,9 +41,6 @@ from .errors import (
     UserPasswordVerificationError,
     UserRegistrationError,
 )
-
-from dioptra.restapi.v0.shared.password.service import PasswordService
-
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -118,7 +116,7 @@ class UserService(object):
         default_group = GroupService.create_group(
             DEFAULT_GROUP_NAME,
             new_user,
-            group_member_permissions={"read": True, "write": True},
+            member_permissions={"read": True, "write": True},
             log=log,
         )
 

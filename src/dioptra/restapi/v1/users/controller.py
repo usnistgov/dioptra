@@ -21,7 +21,7 @@ from typing import Any, cast
 import structlog
 from flask import request
 from flask_accepts import accepts, responds
-from flask_login import current_user, login_required
+from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
@@ -132,7 +132,9 @@ class UserIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="User", request_type="GET", id=id
         )
-        user = cast(models.User, self._user_id_service.get(id, log=log))
+        user = cast(
+            models.User, self._user_id_service.get(id, error_if_not_found=True, log=log)
+        )
         return utils.build_user(user)
 
 
@@ -205,7 +207,8 @@ class UserCurrentEndpoint(Resource):
             resource="User",
             request_type="DELETE",
         )
-        return self._current_user_service.delete(current_user.id, log=log)
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        return self._user_current_service.delete(parsed_obj["password"], log=log)
 
     @login_required
     @accepts(schema=UserMutableFieldsSchema, api=api)

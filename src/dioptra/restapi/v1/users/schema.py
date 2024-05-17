@@ -140,7 +140,7 @@ class UserPasswordSchema(Schema):
 class UserDeleteSchema(Schema):
     """The schema for deleting a User."""
 
-    pssword = fields.String(
+    password = fields.String(
         attribute="password",
         metadata=dict(description="The users current password."),
     )

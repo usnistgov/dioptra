@@ -112,7 +112,7 @@ class GroupService(object):
 
         group: models.Group | None = GroupService.get_group_by_name(name)
         if group is None:
-            group: models.Group = models.Group(name=name, creator=current_user)
+            group: models.Group = models.Group(name=name, creator=user)
         else:
             if error_if_exists:
                 log.info("Group name already exists", name=name)
