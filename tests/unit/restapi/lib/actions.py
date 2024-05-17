@@ -105,8 +105,8 @@ def register_queue(
 
 
 def register_group(
-        client: FlaskClient,
-        name: str,
+    client: FlaskClient,
+    name: str,
 ) -> TestResponse:
     """Register a group using the API.
 
