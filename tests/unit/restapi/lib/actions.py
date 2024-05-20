@@ -19,7 +19,6 @@
 This module contains shared actions used across test suites for each of the REST
 API endpoints.
 """
-
 from typing import Any
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
