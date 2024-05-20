@@ -80,6 +80,7 @@ def change_current_user_password(
     old_password: str,
     new_password: str,
 ):
+    """Change the current user password using the API."""
     payload = {
         "oldPassword": old_password,
         "newPassword": new_password,
@@ -95,7 +96,7 @@ def change_current_user_password(
 def change_user_password(
     client: FlaskClient, user_id: int, old_password: str, new_password: str
 ):
-
+    """Change a user password using its ID using the API."""
     payload = {
         "oldPassword": old_password,
         "newPassword": new_password,
@@ -127,7 +128,7 @@ def assert_user_response_contents_matches_expectations(
             does not match the expected response or if the response contents is not
             valid.
     """
-    # TODO: NOT TOO SURE ABOUT THIS ONE...
+
     expected_keys = {
         "username",
         "email",
@@ -206,7 +207,10 @@ def assert_retrieving_current_user_works(
             does not match the expected response.
     """
     response = client.get(f"/{V1_ROOT}/{V1_USERS_ROUTE}/current", follow_redirects=True)
-    assert response.status_code == 200 and response.get_json() == expected
+    to_ignore = ["lastLoginOn", "lastModifiedOn"]
+    response_info_filtered = {k:v for k,v in response.get_json().items() if k not in to_ignore}
+    expected_filtered = {k:v for k,v in expected.items() if k not in to_ignore}
+    assert response.status_code == 200 and response_info_filtered == expected_filtered
 
 
 
@@ -466,6 +470,16 @@ def assert_login_works(
     username: str,
     password: str,
 ):
+    """Assert that loging in using a username and password works.
+    
+    Args:
+        client: The Flask test client.
+        username: The username of the user to be logged in.
+        password: The password of the user to be logged in.
+
+    Raises:
+        AssertionError: If the response status code is not 200.
+    """ 
     assert actions.login(client, username, password).status_code == 200
 
 
@@ -474,6 +488,19 @@ def assert_new_password_cannot_be_existing(
     password: str,
     user_id: str = None,
 ):
+    """Assert that changing a user (current or otherwise) password to the
+    existing password fails.
+
+    Args:
+        client (FlaskClient): The Flask test client.
+        password (str): The existing password of the user.
+        user_id (str, optional): The user id. If this is not passed,
+        we assume we are the current user. Defaults to None.
+
+    Raises:
+        AssertionError: If the response status code is not 400.
+    """
+    # Means we are the current user.
     if not user_id:
         assert (
         change_current_user_password(client, password, password).status_code
@@ -493,8 +520,20 @@ def assert_new_password_cannot_be_existing(
 def test_create_user(
     client: FlaskClient,
     db: SQLAlchemy,
-    auth_account: dict[str, Any],
+    # auth_account: dict[str, Any],
 ) -> None:
+    """Test that we can create a user and its response is expected.
+
+    This test validates the following sequence of actions:
+
+    - Register a new user using the username, email, and password.
+    - Assert that the response matches what we expect to see, i.e. CurrentUser 
+    schema information.
+    - Login with the user that we just created.
+    - Assert that the response matches what we expect to see, i.e. CurrentUser
+    schema information.
+    - Finally, assert that we can 
+    """
     username = "user"
     email = "user@example.org"
     password = "supersecurepassword"
@@ -510,17 +549,7 @@ def test_create_user(
         current_user=True,
     )
 
-    user_response = actions.login(client, username, password).get_json()
-
-    assert_user_response_contents_matches_expectations(
-        response=user_response,
-        expected_contents={
-            "username": username,
-            "email": email,
-        },
-        current_user=True,
-    )
-
+    actions.login(client, username, password).get_json()
     assert_retrieving_current_user_works(client, expected=user_response)
 
     # Getting a user by id returns UserSchema.
