@@ -469,6 +469,23 @@ def assert_login_works(
     assert actions.login(client, username, password).status_code == 200
 
 
+def assert_new_password_cannot_be_existing(
+    client: FlaskClient,
+    password: str,
+    user_id: str = None,
+):
+    if not user_id:
+        assert (
+        change_current_user_password(client, password, password).status_code
+        == 400
+        )
+    else:
+        assert (
+        change_user_password(client, user_id, password, password).status_code
+        == 400
+        )
+
+
 # -- Tests -------------------------------------------------------------
 
 
@@ -660,15 +677,11 @@ def test_new_password_cannot_be_existing(
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ):
-    old_password = new_password = registered_users["user1"]
-    assert (
-        change_current_user_password(client, old_password, new_password).status_code
-        == 400
-    )
+    # Current user
+    password = registered_users["user1"]["password"]
+    assert_new_password_cannot_be_existing(client, password)
 
-    old_password = new_password = registered_users["user2"]
+    # User (with id)
+    password = registered_users["user2"]["password"]
     user_id = registered_users["user2"]["id"]
-    assert (
-        change_user_password(client, user_id, old_password, new_password).status_code
-        == 400
-    )
+    assert_new_password_cannot_be_existing(client, password, user_id)
