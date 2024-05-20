@@ -217,33 +217,20 @@ def assert_retrieving_current_user_works(
 def assert_retrieving_all_users_works(
     client: FlaskClient,
     expected: list[dict[str, Any]],
-    search: str | None = None,
-    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that retrieving all queues works.
 
     Args:
         client: The Flask test client.
         expected: The expected response from the API.
-        search: The search string used in query parameters.
-        paging_info: The paging information used in query parameters.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    query_string = {}
-
-    if search is not None:
-        query_string["query"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
-
     response = client.get(
         f"/{V1_ROOT}/{V1_USERS_ROUTE}",
-        query_string=query_string,
+        query_string={},
         follow_redirects=True,
     )
     assert response.status_code == 200 and response.get_json()["data"] == expected
@@ -284,40 +271,6 @@ def assert_retrieving_users_works(
     )
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
-
-def assert_retrieving_users_works(
-    client: FlaskClient,
-    expected: list[dict[str, Any]],
-    search: str | None = None,
-    paging_info: dict[str, int] | None = None,
-) -> None:
-    """Assert that retrieving all users works.
-
-    Args:
-        client: The Flask test client.
-        expected: The expected response from the API.
-        search: The search string used in query parameters.
-        paging_info: The paging information used in query parameters.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-    query_string = {}
-
-    if search is not None:
-        query_string["search"] = search
-
-    if paging_info is not None:
-        query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
-
-    response = client.get(
-        f"/{V1_ROOT}/{V1_USERS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
 def assert_registering_existing_username_fails(
@@ -530,9 +483,9 @@ def test_create_user(
     - Assert that the response matches what we expect to see, i.e. CurrentUser 
     schema information.
     - Login with the user that we just created.
-    - Assert that the response matches what we expect to see, i.e. CurrentUser
-    schema information.
-    - Finally, assert that we can 
+    - Assert that retrieving the current user works. 
+    - Finally, assert that we can retrieve the current user by ID and it matches
+    our expectations.
     """
     username = "user"
     email = "user@example.org"
@@ -604,11 +557,21 @@ def test_user_search_query(
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ) -> None:
+    """Test that users can be found using a search query.
+    
+    Given an authenticated user and registered users, this test validates the following
+    sequence of actions:
+
+    - The user is able to retrieve a list of all users that have "user" in the username.
+    - The returned list of users matches the expected matches from the query.
+    
+    
+    """
     user_expected_list = [
         {"username": user["username"], "email": user["email"], "id": user["id"]}
         for user in list(registered_users.values())
     ]
-    assert_retrieving_all_users_works(client, expected=user_expected_list)
+    assert_retrieving_users_works(client, expected=user_expected_list, search="username:*user*")
 
 
 @pytest.mark.v1
@@ -618,6 +581,15 @@ def test_cannot_register_existing_username(
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ) -> None:
+    """Test that registering a user with an existing username fails.
+
+    Given an authenticated user and registered users, this test validates the following
+    sequence of actions:
+
+    - One user is registered, "user1".
+    - A new user is registered with the same email as user1, but _not_ the same username.
+    - The request fails with an appropriate error message and response code.
+    """
     existing_user = registered_users["user1"]
     assert_registering_existing_username_fails(
         client,
@@ -655,9 +627,16 @@ def test_rename_current_user(
     client: FlaskClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
-):
-    new_username = "new_name"
+) -> None:
+    """Test that renaming the current user works.
+    
+    Given an authenticated user, this test validates the following sequence of actions:
 
+    - A user modifies its username and we record the response from the API.
+    - Retrieving the current user works and responds with the response we recorded
+    that reflects the updated username.
+    """
+    new_username = "new_name"
     user = modify_current_user(client, new_username, auth_account["email"]).get_json()
     assert_retrieving_current_user_works(client, expected=user)
 
@@ -669,6 +648,13 @@ def test_delete_current_user(
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ) -> None:
+    """Test that deleting the current user works.
+    
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - The current user deletes itself using its password.
+    - The user that existed can now not be found.
+    """
     delete_current_user(client, registered_users["user1"]["password"])
     assert_user_is_not_found(client, user_id=registered_users["user1"]["id"])
 
@@ -680,6 +666,13 @@ def test_change_current_user_password(
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ):
+    """Test that changing the current user password works.
+    
+    Given an authenticated user, this test validates the following sequence of actions:
+    
+    - The current user changes its password, and it does not fail.
+    - The current user is able to login with the new password.
+    """
     new_password = "new_password"
     old_password = registered_users["user1"]["password"]
     change_current_user_password(client, old_password, new_password)
@@ -692,6 +685,13 @@ def test_change_user_password(
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ):
+    """Test that changing a user password works.
+    
+    Given an authenticated user, this test validates the following sequence of actions:
+    
+    - Using its ID, a user's password is changed, and it does not fail.
+    - This user is then able to login with the new password.
+    """
     new_password = "new_password"
     old_password = registered_users["user2"]["password"]
     user_id = registered_users["user2"]["id"]
@@ -706,6 +706,16 @@ def test_new_password_cannot_be_existing(
     auth_account: dict[str, Any],
     registered_users: dict[str, Any],
 ):
+    """Test that changing a password and setting the new password as the
+    old password fails. 
+    
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - The current user tries to set its new password which is the same as its existing 
+    password and this action fails.
+    - The same password as the existing password for a user with an ID is attempted
+    to be set and this action fails.
+    """
     # Current user
     password = registered_users["user1"]["password"]
     assert_new_password_cannot_be_existing(client, password)
