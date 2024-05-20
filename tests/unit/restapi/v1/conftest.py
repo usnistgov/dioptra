@@ -64,6 +64,35 @@ def auth_account(
 
 
 @pytest.fixture
+def registered_plugins(
+    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+) -> dict[str, Any]:
+    plugin1_response = actions.register_plugin(
+        client,
+        name="plugin_one",
+        description="The first plugin.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    plugin2_response = actions.register_plugin(
+        client,
+        name="plugin_two",
+        description="The second plugin.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    plugin3_response = actions.register_plugin(
+        client,
+        name="plugin_three",
+        description="Not retrieved.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    return {
+        "plugin1": plugin1_response,
+        "plugin2": plugin2_response,
+        "plugin3": plugin3_response,
+    }
+
+
+@pytest.fixture
 def registered_queues(
     client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
