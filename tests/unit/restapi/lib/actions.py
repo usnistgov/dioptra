@@ -19,12 +19,13 @@
 This module contains shared actions used across test suites for each of the REST
 API endpoints.
 """
-
+from typing import Any
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
+    V1_PLUGINS_ROUTE,
     V1_QUEUES_ROUTE,
     V1_ROOT,
     V1_USERS_ROUTE,
@@ -70,6 +71,35 @@ def register_user(
             "password": password,
             "confirmPassword": password,
         },
+        follow_redirects=True,
+    )
+
+
+def register_plugin(
+    client: FlaskClient,
+    name: str,
+    group_id: int,
+    description: str | None = None,   
+) -> TestResponse:
+    """Register a plugin using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name to assign to the new plugin.
+        group_id: The group to create the new plugin in.
+        description: The description of the new plugin.
+
+    Returns:
+        The response from the API.
+    """
+    payload: dict[str, Any] = {"name": name, "group_id": group_id}
+
+    if description is not None:
+        payload["description"] = description
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/",
+        json=payload,
         follow_redirects=True,
     )
 
