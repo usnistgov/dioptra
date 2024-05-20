@@ -52,7 +52,7 @@ def modify_plugin(
     Returns:
         The response from the API.
     """
-    payload = {"name": new_name, "description": new_description}
+    payload: dict[str, Any] = {"name": new_name, "description": new_description}
 
     return client.put(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}",
@@ -74,7 +74,6 @@ def delete_plugin_with_id(
     Returns:
         The response from the API.
     """
-
     return client.delete(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}",
         follow_redirects=True,
@@ -138,7 +137,7 @@ def assert_plugin_response_contents_matches_expectations(
     assert isinstance(response["group"]["id"], int)
     assert isinstance(response["group"]["name"], str)
     assert isinstance(response["group"]["url"], str)
-    assert response["group"]["id"] == expected_contents["group_id"]
+    assert response["group"]["id"] == expected_contents["group"]["id"]
 
     # Validate the TagRef structure
     for tag in response["tags"]:
@@ -197,7 +196,7 @@ def assert_retrieving_plugins_works(
             does not match the expected response.
     """
 
-    query_string = {}
+    query_string: dict[str, Any] = {}
 
     if group_id is not None:
         query_string["groupId"] = group_id
@@ -335,7 +334,7 @@ def test_create_plugin(
         },
     )
     assert_retrieving_plugin_by_id_works(
-        client, plugin_id=plugin_expected["pluginId"], expected=plugin_expected
+        client, plugin_id=plugin_expected["id"], expected=plugin_expected
     )
 
 
@@ -435,7 +434,7 @@ def test_cannot_register_existing_plugin_name(
     assert_registering_existing_plugin_name_fails(
         client,
         name=existing_plugin["name"],
-        group_id=existing_plugin["group_id"],
+        group_id=existing_plugin["group"]["id"],
     )
 
 
@@ -464,16 +463,16 @@ def test_rename_plugin(
 
     modify_plugin(
         client,
-        plugin_id=plugin_to_rename["pluginId"],
+        plugin_id=plugin_to_rename["id"],
         new_name=updated_plugin_name,
         new_description=plugin_to_rename["description"],
     )
     assert_plugin_name_matches_expected_name(
-        client, plugin_id=plugin_to_rename["pluginId"], expected_name=updated_plugin_name
+        client, plugin_id=plugin_to_rename["id"], expected_name=updated_plugin_name
     )
     assert_cannot_rename_plugin_with_existing_name(
         client,
-        plugin_id=plugin_to_rename["pluginId"],
+        plugin_id=plugin_to_rename["id"],
         existing_name=existing_plugin["name"],
         existing_description=plugin_to_rename["description"],
     )
@@ -497,5 +496,5 @@ def test_delete_plugin_by_id(
     """
     plugin_to_delete = registered_plugins["plugin1"]
 
-    delete_plugin_with_id(client, plugin_id=plugin_to_delete["pluginId"])
-    assert_plugin_is_not_found(client, plugin_id=plugin_to_delete["pluginId"])
+    delete_plugin_with_id(client, plugin_id=plugin_to_delete["id"])
+    assert_plugin_is_not_found(client, plugin_id=plugin_to_delete["id"])
