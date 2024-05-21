@@ -103,7 +103,7 @@ pyyaml==6.0.1
     # via mlflow
 querystring-parser==1.2.4
     # via mlflow
-requests==2.31.0
+requests==2.32.0
     # via
     #   databricks-cli
     #   docker
