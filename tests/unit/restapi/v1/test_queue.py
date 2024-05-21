@@ -98,7 +98,7 @@ def assert_queue_response_contents_matches_expectations(
             does not match the expected response or if the response contents is not
             valid.
     """
-    expected_keys = {
+    expected_keys: set[str] = {
         "id",
         "snapshotId",
         "group",
@@ -111,39 +111,20 @@ def assert_queue_response_contents_matches_expectations(
         "tags",
     }
     assert set(response.keys()) == expected_keys
-
-    # Validate the non-Ref fields
-    assert isinstance(response["id"], int)
-    assert isinstance(response["snapshotId"], int)
-    assert isinstance(response["name"], str)
-    assert isinstance(response["description"], str)
-    assert isinstance(response["createdOn"], str)
-    assert isinstance(response["lastModifiedOn"], str)
-    assert isinstance(response["latestSnapshot"], bool)
-
-    assert response["name"] == expected_contents["name"]
-    assert response["description"] == expected_contents["description"]
-
-    assert helpers.is_iso_format(response["createdOn"])
-    assert helpers.is_iso_format(response["lastModifiedOn"])
-
-    # Validate the UserRef structure
-    assert isinstance(response["user"]["id"], int)
-    assert isinstance(response["user"]["username"], str)
-    assert isinstance(response["user"]["url"], str)
-    assert response["user"]["id"] == expected_contents["user_id"]
-
-    # Validate the GroupRef structure
-    assert isinstance(response["group"]["id"], int)
-    assert isinstance(response["group"]["name"], str)
-    assert isinstance(response["group"]["url"], str)
-    assert response["group"]["id"] == expected_contents["group_id"]
-
-    # Validate the TagRef structure
-    for tag in response["tags"]:
-        assert isinstance(tag["id"], int)
-        assert isinstance(tag["name"], str)
-        assert isinstance(tag["url"], str)
+    assert helpers.validate_non_ref_feilds(
+        expected_keys=expected_keys,
+        response=response,
+        expected_contents=expected_contents,
+    )
+    assert helpers.validate_user_ref(
+        user_ref=response["user"],
+        expected_contents=expected_contents,
+    )
+    assert helpers.validate_group_ref(
+        group_ref=response["group"],
+        expected_contents=expected_contents,
+    )
+    assert helpers.validate_tag_ref(tags_ref=response["tags"])
 
 
 def assert_retrieving_queue_by_id_works(
