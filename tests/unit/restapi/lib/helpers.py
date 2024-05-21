@@ -44,7 +44,7 @@ def validate_non_ref_feilds(
             "snapshotId",
             "createdOn",
             "lastModifiedOn",
-            "lastestSnapshot",
+            "latestSnapshot",
         }
         for key in base_resource_keys:
             assert key in expected_keys
