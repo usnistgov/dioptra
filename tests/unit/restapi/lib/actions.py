@@ -102,6 +102,45 @@ def register_plugin(
     )
 
 
+def register_plugin_file(
+    client: FlaskClient,
+    plugin_id: int,
+    group_id: int,
+    filename: str,
+    contents: str,
+    description: str,
+) -> TestResponse:
+    """Register a plugin file using the API.
+
+    Args:
+        client: The Flask test client.
+        group_id: The group to create the new plugin in.
+        plugin_id: The plugin resource to create the file in.
+        filename: The name of the plugin file.
+        contents: The contents of the file containing imports, 
+          functions, structures, etc.
+        tasks: Tasks associated with the plugin file resource.
+        description: The description of the plugin file.
+
+    Returns:
+        The response from the API.
+    """
+    payload: dict[str, Any] = {
+        "group_id": group_id,
+        "filename": filename,
+        "contents": contents,
+    }
+
+    if description is not None:
+        payload["description"] = description
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
 def register_queue(
     client: FlaskClient,
     name: str,

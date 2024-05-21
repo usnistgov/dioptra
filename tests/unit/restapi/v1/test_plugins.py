@@ -20,7 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the plugin entity. The tests ensure that the plugins can be
 registered, renamed, and deleted as expected through the REST API.
 """
-
+import textwrap
 from typing import Any
 
 import pytest
@@ -153,6 +153,83 @@ def assert_plugin_response_contents_matches_expectations(
         assert isinstance(file["filename"], str)
 
 
+def assert_plugin_file_response_contents_matches_expectations(
+    response: dict[str, Any], expected_contents: dict[str, Any]
+) -> None:
+    """Assert that plugin file response contents is valid.
+
+    Args:
+        response: The actual response from the API.
+        expected_contents: The expected response from the API.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response or if the response contents is not
+            valid.
+    """
+    expected_keys = {
+        "id",
+        "snapshotId",
+        "group",
+        "user",
+        "createdOn",
+        "lastModifiedOn",
+        "latestSnapshot",
+        "filename",
+        "description",
+        "contents",
+        "tasks",
+    }
+    assert set(response.keys()) == expected_keys
+
+    # Validate the non-Ref fields
+    assert isinstance(response["id"], int)
+    assert isinstance(response["snapshotId"], int)
+    assert isinstance(response["filename"], str)
+    assert isinstance(response["description"], str)
+    assert isinstance(response["contents"], str)
+    assert isinstance(response["createdOn"], str)
+    assert isinstance(response["lastModifiedOn"], str)
+    assert isinstance(response["latestSnapshot"], bool)
+    
+    assert response["filename"] == expected_contents["filename"]
+    assert response["description"] == expected_contents["description"]
+    assert response["contents"] == expected_contents["contents"]
+
+    assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["lastModifiedOn"])
+
+    # Validate the UserRef structure
+    assert isinstance(response["user"]["id"], int)
+    assert isinstance(response["user"]["username"], str)
+    assert isinstance(response["user"]["url"], str)
+    assert response["user"]["id"] == expected_contents["user_id"]
+
+    # Validate the GroupRef structure
+    assert isinstance(response["group"]["id"], int)
+    assert isinstance(response["group"]["name"], str)
+    assert isinstance(response["group"]["url"], str)
+    assert response["group"]["id"] == expected_contents["group"]["id"]
+
+    # Validate the PluginTask structure
+    for task in response["tasks"]:
+        assert isinstance(task["name"], str)
+
+        # Validate PluginTaskParameter Structure for inputs and outputs
+        for param in task["input_params"] + task["output_params"]:
+            assert isinstance(param["number"], int)
+            assert isinstance(param["name"], str)
+
+            # Validate PluginParameterTypeRef structure
+            assert isinstance(param["plugin_param_type"]["id"], int)
+            assert isinstance(param["plugin_param_type"]["name"], str)
+
+            # Validate the GroupRef structure
+            assert isinstance(param["plugin_param_type"]["group"]["id"], int)
+            assert isinstance(param["plugin_param_type"]["group"]["name"], str)
+            assert isinstance(param["plugin_param_type"]["group"]["url"], str)
+    
+
 def assert_retrieving_plugin_by_id_works(
     client: FlaskClient,
     plugin_id: int,
@@ -171,6 +248,30 @@ def assert_retrieving_plugin_by_id_works(
     """
     response = client.get(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}", follow_redirects=True
+    )
+    assert response.status_code == 200 and response.get_json() == expected
+
+
+def assert_retrieving_plugin_file_by_id_works(
+    client: FlaskClient,
+    plugin_id: int,
+    plugin_file_id: int,
+    expected: dict[str, Any],
+) -> None:
+    """Assert that retrieving a plugin file by id works.
+
+    Args:
+        client: The Flask test client.
+        plugin_id: The id of the plugin to that contains the file.
+        plugin_file_id: The id of the plugin file to retrieve.
+        expected: The expected response from the API.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+    response = client.get(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}", follow_redirects=True
     )
     assert response.status_code == 200 and response.get_json() == expected
 
@@ -498,3 +599,60 @@ def test_delete_plugin_by_id(
 
     delete_plugin_with_id(client, plugin_id=plugin_to_delete["id"])
     assert_plugin_is_not_found(client, plugin_id=plugin_to_delete["id"])
+
+
+@pytest.mark.v1
+def test_create_plugin_file(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+) -> None:
+    """Test that plugin files can be correctly registered to a plugin and retrieved using the API.
+
+    Given an authenticated user and a registered plugin, this test validates the following sequence of actions:
+
+    - The user registers a plugin file named "my_plugin_file".
+    - The response is valid matches the expected values given the registration request.
+    - The user is able to retrieve information about the plugin using the plugin id.
+    """
+    existing_plugin = registered_plugins["plugin1"]
+    plugin_id = existing_plugin["id"]
+    filename = "my_plugin_file"
+    description = "The first plugin file."
+    user_id = auth_account["user_id"]
+    group_id = auth_account["default_group_id"]
+    contents = textwrap.dedent(
+        """from dioptra import pyplugs
+
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f"Hello, {name}!"
+        """
+    )   
+    plugin_file_response = actions.register_plugin_file(
+        client,
+        plugin_id=plugin_id,
+        filename=filename, 
+        description=description, 
+        group_id=group_id,
+        contents=contents,
+    )
+    plugin_file_expected = plugin_file_response.get_json()
+    
+    assert_plugin_file_response_contents_matches_expectations(
+        response=plugin_file_expected,
+        expected_contents={
+            "filename": filename,
+            "description": description,
+            "contents": contents,
+            "user_id": user_id,
+            "group_id": group_id,
+        },
+    )
+    assert_retrieving_plugin_file_by_id_works(
+        client, 
+        plugin_id=plugin_id,
+        plugin_file_id=plugin_file_expected["id"]
+        expected=plugin_file_expected,
+    )
