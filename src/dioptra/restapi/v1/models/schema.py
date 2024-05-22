@@ -22,8 +22,11 @@ from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
+
+ModelBaseRefSchema = generate_base_resource_ref_schema("Model")
 
 
 class ModelMutableFieldsSchema(Schema):
