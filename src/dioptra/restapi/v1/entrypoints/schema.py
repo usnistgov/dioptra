@@ -72,6 +72,10 @@ class EntrypointMutableFieldsSchema(Schema):
         attribute="name",
         metadata=dict(description="Name of the Entrypoint resource."),
     )
+    description = fields.String(
+        attribute="description",
+        metadata=dict(description="Description of the Entrypoint resource."),
+    )
     taskGraph = fields.String(
         attribute="task_graph",
         metadata=dict(description="Task graph of the Entrypoint resource."),
