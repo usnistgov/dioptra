@@ -16,8 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Artifact resources."""
 
-from __future__ import annotations
-
 from marshmallow import fields
 
 from dioptra.restapi.v1.schemas import (

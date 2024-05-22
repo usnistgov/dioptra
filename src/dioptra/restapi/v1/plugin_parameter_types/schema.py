@@ -15,8 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing PluginParameterType resources."""
-from __future__ import annotations
-
 from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.schemas import (
