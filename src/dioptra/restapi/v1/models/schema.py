@@ -33,6 +33,10 @@ class ModelMutableFieldsSchema(Schema):
         attribute="name",
         metadata=dict(description="Name of the Model resource."),
     )
+    description = fields.String(
+        attribute="description",
+        metadata=dict(description="Description of the Model resource."),
+    )
     artifactId = fields.Integer(
         attribute="artifact_id",
         data_key="artifact",

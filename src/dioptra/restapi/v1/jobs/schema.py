@@ -54,6 +54,10 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
     from dioptra.restapi.v1.experiments.schema import ExperimentRefSchema
     from dioptra.restapi.v1.queues.schema import QueueRefSchema
 
+    description = fields.String(
+        attribute="description",
+        metadata=dict(description="Description of the Job resource."),
+    )
     queueId = fields.Integer(
         attribute="queue_id",
         data_key="queue",

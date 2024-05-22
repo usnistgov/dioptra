@@ -44,6 +44,10 @@ class ExperimentMutableFieldsSchema(Schema):
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Experiment resource.")
     )
+    description = fields.String(
+        attribute="description",
+        metadata=dict(description="Description of the Experiment resource."),
+    )
     entrypointIds = fields.List(
         fields.Int(),
         attribute="entrypoint_ids",

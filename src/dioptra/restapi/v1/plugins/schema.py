@@ -121,6 +121,10 @@ class PluginMutableFieldsSchema(Schema):
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Plugin resource.")
     )
+    description = fields.String(
+        attribute="description",
+        metadata=dict(description="Description of the Plugin resource."),
+    )
 
 
 class PluginSchema(PluginMutableFieldsSchema, PluginBaseSchema):  # type: ignore
