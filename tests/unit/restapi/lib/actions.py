@@ -110,7 +110,7 @@ def register_plugin_file(
     group_id: int,
     filename: str,
     contents: str,
-    description: str,
+    description: str | None = None,  
 ) -> TestResponse:
     """Register a plugin file using the API.
 

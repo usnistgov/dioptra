@@ -16,6 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
 
+import textwrap
 from typing import Any
 
 import pytest
@@ -89,6 +90,59 @@ def registered_plugins(
         "plugin1": plugin1_response,
         "plugin2": plugin2_response,
         "plugin3": plugin3_response,
+    }
+
+
+@pytest.fixture
+def registered_plugin_with_files(
+    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+) -> dict[str, Any]:
+    plugin_response = actions.register_plugin(
+        client,
+        name="plugin",
+        description="The plugin with files.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+
+    plugin_id = plugin_response["id"]
+    contents = textwrap.dedent(
+        """from dioptra import pyplugs
+
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f"Hello, {name}!"
+        """
+    )
+
+    plugin_file1_response = actions.register_plugin(
+        client,
+        plugin_id=plugin_id,
+        filename="plugin_file_one", 
+        description="The first plugin file.", 
+        group_id=auth_account["default_group_id"],
+        contents=contents,
+    ).get_json()
+    plugin_file2_response = actions.register_plugin(
+        client,
+        plugin_id=plugin_id,
+        filename="plugin_file_two", 
+        description="The second plugin file.", 
+        group_id=auth_account["default_group_id"],
+        contents=contents,
+    ).get_json()
+    plugin_file3_response = actions.register_plugin(
+        client,
+        plugin_id=plugin_id,
+        filename="plugin_file_three", 
+        description="Not Retrieved.", 
+        group_id=auth_account["default_group_id"],
+        contents=contents,
+    ).get_json()
+    return {
+        "plugin": plugin_response,
+        "plugin_file1": plugin_file1_response,
+        "plugin_file2": plugin_file2_response,
+        "plugin_file3": plugin_file3_response,
     }
 
 
