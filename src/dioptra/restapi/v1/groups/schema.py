@@ -26,7 +26,6 @@ from dioptra.restapi.v1.schemas import (
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
 )
-from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
 class GroupRefSchema(Schema):
@@ -116,6 +115,8 @@ GroupPermissionsResponseSchema = generate_group_permissions_schema(
 
 class GroupMemberBaseSchema(Schema):
     """The base schema of a Group Member."""
+
+    from dioptra.restapi.v1.users.schema import UserRefSchema
 
     userId = fields.Integer(
         attribute="user_id",

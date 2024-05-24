@@ -15,9 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Common schemas for serializing/deserializing resources."""
-from __future__ import annotations
-
-from typing import Union
 
 from marshmallow import Schema, fields
 
@@ -28,7 +25,7 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
     from dioptra.restapi.v1.tags.schema import TagRefSchema
     from dioptra.restapi.v1.users.schema import UserRefSchema
 
-    schema: dict[str, Union[fields.Field, type]] = {
+    schema: dict[str, fields.Field | type] = {
         "id": fields.Integer(
             attribute="id",
             metadata=dict(description=f"ID for the {name} resource."),
@@ -103,7 +100,7 @@ def generate_base_resource_ref_schema(
     """Generates the base schema for a ResourceRef."""
     from dioptra.restapi.v1.groups.schema import GroupRefSchema
 
-    schema: dict[str, Union[fields.Field, type]] = {
+    schema: dict[str, fields.Field | type] = {
         "id": fields.Integer(
             attribute="id",
             metadata=dict(description=f"ID for the {name} resource."),
@@ -205,13 +202,10 @@ class GroupIdQueryParametersSchema(Schema):
 class SearchQueryParametersSchema(Schema):
     """A schema for adding search query parameters to a resource endpoint."""
 
-    query = fields.String(
-        attribute="query",
+    search = fields.String(
+        attribute="search",
         metadata=dict(description="Search terms for the query (* and ? wildcards)."),
-    )
-    field = fields.Integer(
-        attribute="field",
-        metadata=dict(description="Name of the resource field to search."),
+        load_default="",
     )
 
 
