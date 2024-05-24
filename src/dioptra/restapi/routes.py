@@ -46,14 +46,16 @@ V1_TAGS_ROUTE = "tags"
 V1_USERS_ROUTE = "users"
 
 
-def register_routes(api: Api) -> None:
+def register_routes(api: Api, restapi_version: str) -> None:
     """Registers the endpoint routes with the main application.
 
     Args:
         api: The main REST |Api| object.
     """
-    register_v0_routes(api)
-    # register_v1_routes(api)
+    if restapi_version == "v0":
+        register_v0_routes(api)
+    elif restapi_version == "v1":
+        register_v1_routes(api)
 
 
 def register_v0_routes(api: Api) -> None:

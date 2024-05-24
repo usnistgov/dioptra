@@ -23,7 +23,41 @@ from __future__ import annotations
 from flask_restx import Api
 
 
-def register_error_handlers(api: Api) -> None:
+class BackendDatabaseError(Exception):
+    """The backend database returned an unexpected response."""
+
+
+class SearchNotImplementedError(Exception):
+    """The search functionality has not been implemented."""
+
+
+def register_base_v1_error_handlers(api: Api) -> None:
+    @api.errorhandler(BackendDatabaseError)
+    def handle_backend_database_error(error):
+        return {
+            "message": "The backend database returned an unexpected response, please "
+            "contact the system administrator"
+        }, 500
+
+    @api.errorhandler(SearchNotImplementedError)
+    def handle_no_current_user_error(error):
+        return {"message": "The search functionality has not been implemented"}, 501
+
+
+def register_error_handlers(api: Api, restapi_version: str) -> None:
+    """Registers the error handlers with the main application.
+
+    Args:
+        api: The main REST |Api| object.
+    """
+    if restapi_version == "v0":
+        register_v0_error_handlers(api)
+
+    elif restapi_version == "v1":
+        register_v1_error_handlers(api)
+
+
+def register_v0_error_handlers(api: Api) -> None:
     """Registers the error handlers with the main application.
 
     Args:
@@ -45,3 +79,17 @@ def register_error_handlers(api: Api) -> None:
     attach_job_queue_error_handlers(api)
     attach_task_plugin_error_handlers(api)
     attach_user_error_handlers(api)
+
+
+def register_v1_error_handlers(api: Api) -> None:
+    """Registers the error handlers with the main application.
+
+    Args:
+        api: The main REST |Api| object.
+    """
+
+    from dioptra.restapi import v1
+
+    register_base_v1_error_handlers(api)
+    v1.groups.errors.register_error_handlers(api)
+    v1.users.errors.register_error_handlers(api)

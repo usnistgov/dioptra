@@ -20,11 +20,13 @@ This module contains shared actions used across test suites for each of the REST
 API endpoints.
 """
 
+from typing import Any
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
+    V1_GROUPS_ROUTE,
     V1_QUEUES_ROUTE,
     V1_ROOT,
     V1_USERS_ROUTE,
@@ -100,4 +102,39 @@ def register_queue(
         f"/{V1_ROOT}/{V1_QUEUES_ROUTE}/",
         json=payload,
         follow_redirects=True,
+    )
+
+
+def register_group(
+    client: FlaskClient,
+    name: str,
+) -> TestResponse:
+    """Register a group using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name to assign to the new group.
+
+    Returns:
+        The response from the API.
+    """
+    payload: dict[str, Any] = {"name": name}
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/",
+        json=payload,
+        follow_redirects=True,
+    )
+
+def get_public_group(client: FlaskClient) -> TestResponse:
+    """Get the public group.
+
+    Args:
+        client: The Flask test client.
+
+    Returns:
+        The response from the API.
+    """
+    return client.get(
+        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True
     )

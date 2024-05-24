@@ -14,7 +14,28 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""The users endpoint subpackage."""
-from . import errors
+"""Error handlers for the group endpoints."""
+from __future__ import annotations
 
-__all__ = ["errors"]
+from flask_restx import Api
+
+
+class GroupNameNotAvailableError(Exception):
+    """The group name is not available."""
+
+
+class GroupDoesNotExistError(Exception):
+    """The requested group does not exist."""
+
+
+def register_error_handlers(api: Api) -> None:
+    @api.errorhandler(GroupDoesNotExistError)
+    def handle_user_does_not_exist_error(error):
+        return {"message": "Not Found - The requested group does not exist"}, 404
+
+    @api.errorhandler(GroupNameNotAvailableError)
+    def handle_no_current_user_error(error):
+        return (
+            {"message": "Bad Request - The group name is not available"},
+            400,
+        )

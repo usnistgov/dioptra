@@ -16,13 +16,25 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
 
-from typing import Any, cast
+from typing import Any
 
 import pytest
+from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
+from injector import Injector
 
 from ..lib import actions
+
+
+@pytest.fixture
+def app(dependency_modules: list[Any]) -> Flask:
+    from dioptra.restapi import create_app
+
+    injector = Injector(dependency_modules)
+    app = create_app(env="test_v1", injector=injector)
+
+    yield app
 
 
 @pytest.fixture
@@ -35,7 +47,7 @@ def registered_users(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
         client, "user2", "user2@example.org", password
     ).get_json()
     user3_response = actions.register_user(
-        client, "user3", "user3@example.org", password
+        client, "name", "user3@example.org", password
     ).get_json()
     users_info = {
         "user1": user1_response,
@@ -57,10 +69,12 @@ def auth_account(
     registered_users: dict[str, Any],  # noqa: F811
 ) -> dict[str, Any]:
     user_info = registered_users["user1"]
-    actions.login(
+    login_response = actions.login(
         client, username=user_info["username"], password=user_info["password"]
     )
-    return cast(dict[str, Any], user_info)
+    if login_response.status_code != 200:
+        raise ValueError("User login failed.")
+    return user_info
 
 
 @pytest.fixture
@@ -71,22 +85,47 @@ def registered_queues(
         client,
         name="tensorflow_cpu",
         description="The first queue.",
-        group_id=auth_account["default_group_id"],
+        group_id=auth_account["groups"][0]["id"],
     ).get_json()
     queue2_response = actions.register_queue(
         client,
         name="tensorflow_gpu",
         description="The second queue.",
-        group_id=auth_account["default_group_id"],
+        group_id=auth_account["groups"][0]["id"],
     ).get_json()
     queue3_response = actions.register_queue(
         client,
         name="pytorch_cpu",
         description="Not retrieved.",
-        group_id=auth_account["default_group_id"],
+        group_id=auth_account["groups"][0]["id"],
     ).get_json()
     return {
         "queue1": queue1_response,
         "queue2": queue2_response,
         "queue3": queue3_response,
+    }
+
+
+@pytest.fixture
+def registered_groups(
+    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+) -> dict[str, Any]:
+    public_response = actions.get_public_group(client).get_json()
+    # group1_response = actions.register_group(
+    # client,
+    #  name="group_one",
+    # ).get_json()
+    # group2_response = actions.register_group(
+    # client,
+    # name="group_two",
+    # ).get_json()
+    # group3_response = actions.register_group(
+    # client,
+    # name="group_three",
+    # ).get_json()
+    return {
+        "public": public_response,
+        # "group1": group1_response,
+        # "group2": group2_response,
+        # "group3": group3_response,
     }

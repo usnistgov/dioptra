@@ -76,6 +76,8 @@ The following steps will be necessary:
 
         -   for `DIOPTRA_RESTAPI_ENV` change from `prod` to `dev`
 
+        -   for `DIOPTRA_RESTAPI_VERSION` change from `v0` to `v1` if you wish to use v1 of the API
+
         -   Change the hostname for each of the URLs to `localhost` from their generated values
 
     -   The final script file should look something like the below:
@@ -88,6 +90,7 @@ The following steps will be necessary:
         export RQ_REDIS_URI=redis://localhost:6379/0
         export DIOPTRA_RESTAPI_DEV_DATABASE_URI=sqlite:///$(pwd)/dioptra-dev.db
         export DIOPTRA_RESTAPI_ENV=dev
+        export DIOPTRA_RESTAPI_VERSION=v0
         flask run --host ::1
         ```
 

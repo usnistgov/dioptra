@@ -32,5 +32,5 @@ def pytest_collection_modifyitems(config, items):
         return
     skip_v1 = pytest.mark.skip(reason="need --run-v1 option to run")
     for item in items:
-        if "v1" in item.keywords:
+        if "v1_test" in item.keywords:
             item.add_marker(skip_v1)

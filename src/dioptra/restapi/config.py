@@ -70,6 +70,7 @@ class BaseConfig(object):
     DIOPTRA_PLUGINS_BUCKET = os.getenv("DIOPTRA_PLUGINS_BUCKET", "plugins")
     DIOPTRA_SWAGGER_PATH = os.getenv("DIOPTRA_SWAGGER_PATH", "/")
     DIOPTRA_BASE_URL = os.getenv("DIOPTRA_BASE_URL")
+    DIOPTRA_RESTAPI_VERSION = os.getenv("DIOPTRA_RESTAPI_VERSION", "v0")
 
 
 class DevelopmentConfig(BaseConfig):
@@ -114,10 +115,16 @@ class TestingLoginDisabledConfig(TestingConfig):
     LOGIN_DISABLED = True
 
 
+class TestingV1Config(TestingConfig):
+    CONFIG_NAME = "test_v1"
+    DIOPTRA_RESTAPI_VERSION = "v1"
+
+
 EXPORT_CONFIGS: List[Type[BaseConfig]] = [
     DevelopmentConfig,
     TestingConfig,
     ProductionConfig,
+    TestingV1Config,
     TestingLoginDisabledConfig,
 ]
 config_by_name = {cfg.CONFIG_NAME: cfg for cfg in EXPORT_CONFIGS}
