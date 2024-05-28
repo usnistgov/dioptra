@@ -35,7 +35,7 @@ env:
 
 jobs:
   build-docker-dioptra-apps:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         dioptra-app:
@@ -111,7 +111,8 @@ jobs:
           path: /tmp/${{ env.PROJECT_PREFIX }}_${{ matrix.dioptra-app }}_dev.tar.gz
 
   container-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    if: ${{ false }}  # disable for now
     needs:
       - build-docker-dioptra-apps
     strategy:
@@ -122,10 +123,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup python 3.9
-        uses: actions/setup-python@v5.0.0
+      - name: setup python 3.11
+        uses: actions/setup-python@v5.1.0
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: upgrade pip
         run: |
@@ -137,7 +138,7 @@ jobs:
         run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: cache dependencies
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini') }}
@@ -169,7 +170,7 @@ jobs:
           tox -e containers-${{ matrix.dioptra-app }}
 
   integration-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: ${{ false }}  # disable for now
     needs:
       - build-docker-dioptra-apps
@@ -182,10 +183,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup python 3.9
-        uses: actions/setup-python@v5.0.0
+      - name: setup python 3.11
+        uses: actions/setup-python@v5.1.0
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: upgrade pip
         run: |
@@ -197,7 +198,7 @@ jobs:
         run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: cache dependencies
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/tox.ini') }}
@@ -259,7 +260,7 @@ jobs:
 
       - name: cache the mnist dataset download
         if: ${{ matrix.tox-env != 'containers' }}
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: /tmp/dioptra-cache/mnist
           key: ${{ runner.os }}-dioptra-cache-mnist

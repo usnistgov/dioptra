@@ -151,7 +151,7 @@ tasks:
       type: boolean
     outputs:
       ret: kerasclassifier
-    plugin: dioptra_custom.custom_patch_plugins.registry_art.load_wrapped_tensorflow_keras_classifier
+    plugin: dioptra_builtins.registry.art.load_wrapped_tensorflow_keras_classifier
   get_distance_metric_list:
     plugin: dioptra_builtins.metrics.distance.get_distance_metric_list
     inputs:

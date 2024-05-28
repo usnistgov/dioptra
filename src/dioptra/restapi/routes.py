@@ -23,6 +23,7 @@ from __future__ import annotations
 from flask_restx import Api
 
 V0_ROOT = "api/v0"
+V1_ROOT = "api/v1"
 
 AUTH_ROUTE = "auth"
 EXPERIMENT_ROUTE = "experiment"
@@ -31,14 +32,30 @@ QUEUE_ROUTE = "queue"
 TASK_PLUGIN_ROUTE = "taskPlugin"
 USER_ROUTE = "user"
 
+V1_ARTIFACTS_ROUTE = "artifacts"
+V1_AUTH_ROUTE = "auth"
+V1_ENTRYPOINTS_ROUTE = "entrypoints"
+V1_EXPERIMENTS_ROUTE = "experiments"
+V1_GROUPS_ROUTE = "groups"
+V1_JOBS_ROUTE = "jobs"
+V1_MODELS_ROUTE = "models"
+V1_PLUGIN_PARAMETER_TYPES_ROUTE = "pluginParameterTypes"
+V1_PLUGINS_ROUTE = "plugins"
+V1_QUEUES_ROUTE = "queues"
+V1_TAGS_ROUTE = "tags"
+V1_USERS_ROUTE = "users"
 
-def register_routes(api: Api) -> None:
+
+def register_routes(api: Api, restapi_version: str) -> None:
     """Registers the endpoint routes with the main application.
 
     Args:
         api: The main REST |Api| object.
     """
-    register_v0_routes(api)
+    if restapi_version == "v0":
+        register_v0_routes(api)
+    elif restapi_version == "v1":
+        register_v1_routes(api)
 
 
 def register_v0_routes(api: Api) -> None:
@@ -60,3 +77,38 @@ def register_v0_routes(api: Api) -> None:
     api.add_namespace(queue_api, path=f"/{V0_ROOT}/{QUEUE_ROUTE}")
     api.add_namespace(task_plugin_api, path=f"/{V0_ROOT}/{TASK_PLUGIN_ROUTE}")
     api.add_namespace(user_api, path=f"/{V0_ROOT}/{USER_ROUTE}")
+
+
+def register_v1_routes(api: Api) -> None:
+    """Registers the endpoint routes with the main application.
+
+    Args:
+        api: The main REST |Api| object.
+    """
+    from .v1.artifacts.controller import api as artifacts_api
+    from .v1.auth.controller import api as auth_api
+    from .v1.entrypoints.controller import api as entrypoints_api
+    from .v1.experiments.controller import api as experiments_api
+    from .v1.groups.controller import api as groups_api
+    from .v1.jobs.controller import api as jobs_api
+    from .v1.models.controller import api as models_api
+    from .v1.plugin_parameter_types.controller import api as plugin_parameter_types_api
+    from .v1.plugins.controller import api as plugins_api
+    from .v1.queues.controller import api as queues_api
+    from .v1.tags.controller import api as tags_api
+    from .v1.users.controller import api as users_api
+
+    api.add_namespace(auth_api, path=f"/{V1_ROOT}/{V1_AUTH_ROUTE}")
+    api.add_namespace(artifacts_api, path=f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}")
+    api.add_namespace(entrypoints_api, path=f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}")
+    api.add_namespace(experiments_api, path=f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}")
+    api.add_namespace(groups_api, path=f"/{V1_ROOT}/{V1_GROUPS_ROUTE}")
+    api.add_namespace(jobs_api, path=f"/{V1_ROOT}/{V1_JOBS_ROUTE}")
+    api.add_namespace(models_api, path=f"/{V1_ROOT}/{V1_MODELS_ROUTE}")
+    api.add_namespace(
+        plugin_parameter_types_api, path=f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}"
+    )
+    api.add_namespace(plugins_api, path=f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}")
+    api.add_namespace(queues_api, path=f"/{V1_ROOT}/{V1_QUEUES_ROUTE}")
+    api.add_namespace(tags_api, path=f"/{V1_ROOT}/{V1_TAGS_ROUTE}")
+    api.add_namespace(users_api, path=f"/{V1_ROOT}/{V1_USERS_ROUTE}")

@@ -26,7 +26,7 @@ from rq.job import Job as RQJob
 from rq.queue import Queue as RQQueue
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db.legacy_models import Job
+from dioptra.restapi.db.legacy_models import LegacyJob
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -37,7 +37,7 @@ class RQService(object):
         self._run_mlflow = run_mlflow
         self._run_task_engine = run_task_engine
 
-    def get_job_status(self, job: Job, **kwargs) -> str:
+    def get_job_status(self, job: LegacyJob, **kwargs) -> str:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         rq_job: Optional[RQJob] = self.get_rq_job(job=job, log=log)
@@ -49,10 +49,10 @@ class RQService(object):
 
         return str(rq_job.get_status())
 
-    def get_rq_job(self, job: Union[Job, str], **kwargs) -> Optional[RQJob]:
+    def get_rq_job(self, job: Union[LegacyJob, str], **kwargs) -> Optional[RQJob]:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        job_id: str = job.job_id if isinstance(job, Job) else job
+        job_id: str = job.job_id if isinstance(job, LegacyJob) else job
         log.info("Fetching RQ job", job_id=job_id)
 
         try:

@@ -1,4 +1,2 @@
-tensorflow-cpu==2.12.1; (sys_platform == "linux" or sys_platform == "win32" or sys_platform == "darwin") and (platform_machine == "x86_64" or platform_machine == "amd64" or platform_machine == "AMD64")
-tensorflow-cpu-aws==2.12.1; sys_platform == "linux" and (platform_machine == "aarch64" or platform_machine == "arm64")
-tensorflow-macos==2.12.0; (sys_platform == "darwin") and (platform_machine == "aarch64" or platform_machine == "arm64")
-tensorflow-metal==0.8.0; (sys_platform == "darwin") and (platform_machine == "aarch64" or platform_machine == "arm64")
+tensorflow==2.16.1
+tensorflow-metal==1.1.0; (sys_platform == "darwin") and (platform_machine == "aarch64" or platform_machine == "arm64")

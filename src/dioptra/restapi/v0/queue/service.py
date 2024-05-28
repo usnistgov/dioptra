@@ -25,7 +25,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db
-from dioptra.restapi.db.legacy_models import Queue, QueueLock
+from dioptra.restapi.db.legacy_models import LegacyQueue, LegacyQueueLock
 
 from .errors import QueueAlreadyExistsError, QueueDoesNotExistError, QueueLockedError
 
@@ -53,7 +53,7 @@ class QueueService(object):
         self,
         name: str,
         **kwargs,
-    ) -> Queue:
+    ) -> LegacyQueue:
         """Create a new queue.
 
         Args:
@@ -71,8 +71,8 @@ class QueueService(object):
             raise QueueAlreadyExistsError
 
         timestamp = datetime.datetime.now()
-        new_queue: Queue = Queue(
-            queue_id=Queue.next_id(),
+        new_queue: LegacyQueue = LegacyQueue(
+            queue_id=LegacyQueue.next_id(),
             name=name,
             created_on=timestamp,
             last_modified=timestamp,
@@ -92,7 +92,7 @@ class QueueService(object):
         unlocked_only: bool = False,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> Queue | None:
+    ) -> LegacyQueue | None:
         """Fetch a queue by its unique id.
 
         Args:
@@ -112,7 +112,7 @@ class QueueService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Get queue by id", queue_id=queue_id)
-        queue = Queue.query.filter_by(queue_id=queue_id, is_deleted=False).first()
+        queue = LegacyQueue.query.filter_by(queue_id=queue_id, is_deleted=False).first()
 
         if queue is None:
             if error_if_not_found:
@@ -125,9 +125,9 @@ class QueueService(object):
             log.error("Queue is locked", queue_id=queue_id)
             raise QueueLockedError
 
-        return cast(Queue, queue)
+        return cast(LegacyQueue, queue)
 
-    def get_all(self, **kwargs) -> list[Queue]:
+    def get_all(self, **kwargs) -> list[LegacyQueue]:
         """Fetch the list of all queues.
 
         Returns:
@@ -135,9 +135,9 @@ class QueueService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Get full list of queues")
-        return Queue.query.filter_by(is_deleted=False).all()  # type: ignore
+        return LegacyQueue.query.filter_by(is_deleted=False).all()  # type: ignore
 
-    def get_all_unlocked(self, **kwargs) -> list[Queue]:
+    def get_all_unlocked(self, **kwargs) -> list[LegacyQueue]:
         """Fetch the list of all unlocked queues.
 
         Returns:
@@ -146,15 +146,17 @@ class QueueService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Get full list of unlocked queues")
         return (  # type: ignore
-            Queue.query.outerjoin(QueueLock, Queue.queue_id == QueueLock.queue_id)
+            LegacyQueue.query.outerjoin(
+                LegacyQueueLock, LegacyQueue.queue_id == LegacyQueueLock.queue_id
+            )
             .filter(
-                QueueLock.queue_id == None,  # noqa: E711
-                Queue.is_deleted == False,  # noqa: E712
+                LegacyQueueLock.queue_id == None,  # noqa: E711
+                LegacyQueue.is_deleted == False,  # noqa: E712
             )
             .all()
         )
 
-    def rename(self, queue_id: int, new_name: str, **kwargs) -> Queue:
+    def rename(self, queue_id: int, new_name: str, **kwargs) -> LegacyQueue:
         """Rename a queue.
 
         Args:
@@ -168,7 +170,7 @@ class QueueService(object):
             QueueDoesNotExistError: If the queue is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        queue = cast(Queue, self.get(queue_id, error_if_not_found=True, log=log))
+        queue = cast(LegacyQueue, self.get(queue_id, error_if_not_found=True, log=log))
         queue.update(changes={"name": new_name})
         db.session.commit()
         log.info("Queue renamed", queue_id=queue.queue_id, new_name=new_name)
@@ -210,7 +212,7 @@ class QueueService(object):
         if (queue := self.get(queue_id, error_if_not_found=True, log=log)) is None:
             return {"status": "Success", "id": []}
 
-        queue.lock.append(QueueLock())
+        queue.lock.append(LegacyQueueLock())
         db.session.commit()
         log.info("Queue locked", queue_id=queue.queue_id)
         return {"status": "Success", "id": [queue.queue_id]}
@@ -247,7 +249,7 @@ class QueueNameService(object):
         unlocked_only: bool = False,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> Queue | None:
+    ) -> LegacyQueue | None:
         """Fetch a queue by its name.
 
         Args:
@@ -268,7 +270,7 @@ class QueueNameService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Get queue by name", queue_name=queue_name)
 
-        queue = Queue.query.filter_by(name=queue_name, is_deleted=False).first()
+        queue = LegacyQueue.query.filter_by(name=queue_name, is_deleted=False).first()
 
         if queue is None:
             if error_if_not_found:
@@ -281,7 +283,7 @@ class QueueNameService(object):
             log.error("Queue is locked", name=queue_name)
             raise QueueLockedError
 
-        return cast(Queue, queue)
+        return cast(LegacyQueue, queue)
 
     def delete(self, name: str, **kwargs) -> dict[str, Any]:
         """Delete a queue.
@@ -318,7 +320,7 @@ class QueueNameService(object):
         if (queue := self.get(name, error_if_not_found=True, log=log)) is None:
             return {"status": "Success", "name": []}
 
-        queue.lock.append(QueueLock())
+        queue.lock.append(LegacyQueueLock())
         db.session.commit()
         log.info("Queue locked", name=queue.name)
         return {"status": "Success", "name": [queue.name]}

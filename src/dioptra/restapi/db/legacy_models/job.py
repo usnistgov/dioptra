@@ -15,19 +15,33 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The data models for the job endpoint objects."""
-from __future__ import annotations
-
 import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from dioptra.restapi.db.db import db
+from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-job_statuses = db.Table(
-    "legacy_job_statuses", db.Column("status", db.String(255), primary_key=True)
+from dioptra.restapi.db.db import (
+    bigintnovariant,
+    db,
+    optionalstr36,
+    str36,
+    str255,
+    text_,
+)
+
+if TYPE_CHECKING:
+    from .experiment import LegacyExperiment
+    from .queues import LegacyQueue
+
+
+legacy_job_statuses = db.Table(
+    "legacy_job_statuses",
+    Column("status", String(255), primary_key=True),
 )
 
 
-class Job(db.Model):
+class LegacyJob(db.Model):  # type: ignore[name-defined]
     """The jobs table.
 
     Attributes:
@@ -52,32 +66,35 @@ class Job(db.Model):
 
     __tablename__ = "legacy_jobs"
 
-    job_id = db.Column(db.String(36), primary_key=True)
-    """A UUID that identifies the job."""
+    job_id: Mapped[str36] = mapped_column(
+        primary_key=True, doc="A UUID that identifies the job."
+    )
+    mlflow_run_id: Mapped[optionalstr36] = mapped_column(init=False, index=True)
+    experiment_id: Mapped[bigintnovariant] = mapped_column(
+        ForeignKey("legacy_experiments.experiment_id"), nullable=True, index=True
+    )
+    queue_id: Mapped[bigintnovariant] = mapped_column(
+        ForeignKey("legacy_queues.queue_id"), nullable=True, index=True
+    )
+    created_on: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    last_modified: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    timeout: Mapped[text_] = mapped_column(nullable=True)
+    workflow_uri: Mapped[text_] = mapped_column(nullable=True)
+    entry_point: Mapped[text_] = mapped_column(nullable=True)
+    entry_point_kwargs: Mapped[text_] = mapped_column(nullable=True)
+    status: Mapped[str255] = mapped_column(
+        ForeignKey("legacy_job_statuses.status"), init=False, nullable=True, index=True
+    )
+    depends_on: Mapped[optionalstr36] = mapped_column(nullable=True)
 
-    mlflow_run_id = db.Column(db.String(36), index=True)
-    experiment_id = db.Column(
-        db.BigInteger(), db.ForeignKey("legacy_experiments.experiment_id"), index=True
+    experiment: Mapped["LegacyExperiment"] = relationship(
+        init=False, back_populates="jobs"
     )
-    queue_id = db.Column(
-        db.BigInteger(), db.ForeignKey("legacy_queues.queue_id"), index=True
-    )
-    created_on = db.Column(db.DateTime())
-    last_modified = db.Column(db.DateTime())
-    timeout = db.Column(db.Text())
-    workflow_uri = db.Column(db.Text())
-    entry_point = db.Column(db.Text())
-    entry_point_kwargs = db.Column(db.Text())
-    status = db.Column(
-        db.String(255),
-        db.ForeignKey("legacy_job_statuses.status"),
-        default="queued",
-        index=True,
-    )
-    depends_on = db.Column(db.String(36))
+    queue: Mapped["LegacyQueue"] = relationship(init=False, back_populates="jobs")
 
-    experiment = db.relationship("Experiment", back_populates="jobs")
-    queue = db.relationship("Queue", back_populates="jobs")
+    def __post_init__(self) -> None:
+        self.mlflow_run_id = None
+        self.status = "queued"
 
     def update(self, changes: dict[str, Any]):
         """Updates the record.

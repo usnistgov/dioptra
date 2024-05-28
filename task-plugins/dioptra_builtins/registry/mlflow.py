@@ -20,10 +20,10 @@ from __future__ import annotations
 
 from typing import Optional
 
+import mlflow
 import structlog
 from mlflow.entities import Run as MlflowRun
 from mlflow.entities.model_registry import ModelVersion
-from mlflow.keras import load_model as load_tf_keras_model
 from mlflow.tracking import MlflowClient
 from structlog.stdlib import BoundLogger
 
@@ -67,7 +67,7 @@ def add_model_to_registry(
     artifact_uri: str = active_run.info.artifact_uri
     source: str = f"{artifact_uri}/{model_dir}"
 
-    registered_models = [x.name for x in MlflowClient().list_registered_models()]
+    registered_models = [x.name for x in MlflowClient().search_registered_models()]
 
     if name not in registered_models:
         LOGGER.info("create registered model", name=name)
@@ -117,4 +117,4 @@ def load_tensorflow_keras_classifier(name: str, version: int) -> Sequential:
     uri: str = f"models:/{name}/{version}"
     LOGGER.info("Load Keras classifier from model registry", uri=uri)
 
-    return load_tf_keras_model(model_uri=uri)
+    return mlflow.keras.load_model(model_uri=uri)

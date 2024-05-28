@@ -25,19 +25,28 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["ubuntu-20.04", "macos-latest", "windows-latest"]
-        python-version: ["3.9"]
-        architecture: ["x86_64"]
+        os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"]
+        python-version: ["3.11"]
+        architecture: ["x86_64", "aarch64"]
         requirements:
           - "requirements-dev"
           - "requirements-dev-pytorch"
           - "requirements-dev-tensorflow"
+        exclude:
+          - os: "macos-latest"
+            architecture: "x86_64"
+          - os: "ubuntu-22.04"
+            architecture: "aarch64"
+          - os: "macos-13"
+            architecture: "aarch64"
+          - os: "windows-latest"
+            architecture: "aarch64"
 
     steps:
       - uses: actions/checkout@v4
 
       - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -58,7 +67,7 @@ jobs:
 
       - name: cache dependencies
         if: ${{ matrix.os != 'windows-latest' }}
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini', 'requirements-dev*.in') }}
@@ -67,7 +76,7 @@ jobs:
 
       - name: cache dependencies (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: ${{ steps.pip-cache-win.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini', 'requirements-dev*.in') }}
@@ -77,35 +86,20 @@ jobs:
       - name: install dependencies
         run: python3 -m pip install --upgrade tox
 
-      - name: run tox (Linux, Python 3.9)
-        if: ${{ matrix.os == 'ubuntu-20.04' && matrix.python-version == '3.9' }}
+      - name: run tox (Linux, Python 3.11)
+        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.python-version == '3.11' }}
         run: |
-          python3 -m tox run -e py39-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
+          python3 -m tox run -e py311-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
 
-      - name: run tox (Linux, Python 3.10)
-        if: ${{ matrix.os == 'ubuntu-20.04' && matrix.python-version == '3.10' }}
+      - name: run tox (MacOS, Python 3.11)
+        if: ${{ (matrix.os == 'macos-13' || matrix.os == 'macos-latest') && matrix.python-version == '3.11' }}
         run: |
-          python3 -m tox run -e py310-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
+          python3 -m tox run -e py311-macos-${{ matrix.architecture }}-${{ matrix.requirements }}
 
-      - name: run tox (MacOS, Python 3.9)
-        if: ${{ matrix.os == 'macos-latest' && matrix.python-version == '3.9' }}
+      - name: run tox (Windows, Python 3.11)
+        if: ${{ matrix.os == 'windows-latest' && matrix.python-version == '3.11' }}
         run: |
-          python3 -m tox run -e py39-macos-${{ matrix.architecture }}-${{ matrix.requirements }}
-
-      - name: run tox (MacOS, Python 3.10)
-        if: ${{ matrix.os == 'macos-latest' && matrix.python-version == '3.10' }}
-        run: |
-          python3 -m tox run -e py310-macos-${{ matrix.architecture }}-${{ matrix.requirements }}
-
-      - name: run tox (Windows, Python 3.9)
-        if: ${{ matrix.os == 'windows-latest' && matrix.python-version == '3.9' }}
-        run: |
-          python3 -m tox run -e py39-win-${{ matrix.architecture }}-${{ matrix.requirements }}
-
-      - name: run tox (Windows, Python 3.10)
-        if: ${{ matrix.os == 'windows-latest' && matrix.python-version == '3.10' }}
-        run: |
-          python3 -m tox run -e py310-win-${{ matrix.architecture }}-${{ matrix.requirements }}
+          python3 -m tox run -e py311-win-${{ matrix.architecture }}-${{ matrix.requirements }}
 
       - name: archive the requirements file
         uses: actions/upload-artifact@v4
@@ -117,8 +111,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["ubuntu-20.04"]
-        python-version: ["3.9"]
+        os: ["ubuntu-22.04"]
+        python-version: ["3.11"]
         architecture: ["x86_64"]
         requirements:
           - "mlflow-tracking-requirements"
@@ -132,7 +126,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -146,7 +140,7 @@ jobs:
         run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: cache dependencies
-        uses: actions/cache@v4.0.0
+        uses: actions/cache@v4.0.2
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini', '**/requirements-dev*.in', '**/docker/pip-tools/*-requirements.in') }}
@@ -158,7 +152,7 @@ jobs:
 
       - name: run tox
         run: |
-          python3 -m tox run -e py39-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
+          python3 -m tox run -e py311-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
 
       - name: archive the requirements file
         uses: actions/upload-artifact@v4
@@ -167,17 +161,17 @@ jobs:
           path: venvs
 
   pip-compile-aarch64:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         tox-testenv:
-          - "py39-linux-aarch64-requirements-dev"
-          - "py39-linux-aarch64-requirements-dev-pytorch"
-          - "py39-linux-aarch64-requirements-dev-tensorflow"
-          - "py39-linux-aarch64-mlflow-tracking-requirements"
-          - "py39-linux-aarch64-restapi-requirements"
-          - "py39-linux-aarch64-pytorch-cpu-requirements"
-          - "py39-linux-aarch64-tensorflow2-cpu-requirements"
+          - "py311-linux-aarch64-requirements-dev"
+          - "py311-linux-aarch64-requirements-dev-pytorch"
+          - "py311-linux-aarch64-requirements-dev-tensorflow"
+          - "py311-linux-aarch64-mlflow-tracking-requirements"
+          - "py311-linux-aarch64-restapi-requirements"
+          - "py311-linux-aarch64-pytorch-cpu-requirements"
+          - "py311-linux-aarch64-tensorflow2-cpu-requirements"
 
     steps:
       - uses: actions/checkout@v4
@@ -190,7 +184,7 @@ jobs:
 
       - name: setup dockerfile and output folder
         run: |
-          echo 'FROM python:3.9-slim-bullseye' > Dockerfile.aarch64
+          echo 'FROM python:3.11-slim-bullseye' > Dockerfile.aarch64
           echo 'COPY . /app' >> Dockerfile.aarch64
           echo 'WORKDIR /app' >> Dockerfile.aarch64
           echo 'RUN python -m pip install --upgrade pip tox && \' >> Dockerfile.aarch64
@@ -218,7 +212,7 @@ jobs:
           path: /image/app/venvs
 
   consolidate-requirements-files:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - pip-compile
       - pip-compile-containers

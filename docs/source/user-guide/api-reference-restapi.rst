@@ -74,23 +74,6 @@ The following is the list of endpoints under the ``/api/experiment/`` namespace.
    :include:
      /api/experiment/name/.*
 
-Error Messages
-^^^^^^^^^^^^^^
-
-The following error handlers are registered to the experiment endpoints.
-
-.. autoexception:: dioptra.restapi.experiment.errors.ExperimentAlreadyExistsError
-
-.. autoexception:: dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingAlreadyExistsError
-
-.. autoexception:: dioptra.restapi.experiment.errors.ExperimentDoesNotExistError
-
-.. autoexception:: dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingDoesNotExistError
-
-.. autoexception:: dioptra.restapi.experiment.errors.ExperimentMLFlowTrackingRegistrationError
-
-.. autoexception:: dioptra.restapi.experiment.errors.ExperimentRegistrationError
-
 Job
 ---
 
@@ -150,17 +133,6 @@ The following is the list of endpoints under the ``/api/job/`` namespace.
    :include:
      /api/job/{.*
 
-Error Messages
-^^^^^^^^^^^^^^
-
-The following error handlers are registered to the job endpoints.
-
-.. autoexception:: dioptra.restapi.job.errors.JobDoesNotExistError
-
-.. autoexception:: dioptra.restapi.job.errors.JobSubmissionError
-
-.. autoexception:: dioptra.restapi.job.errors.JobWorkflowUploadError
-
 Queue
 -----
 
@@ -201,17 +173,6 @@ The following is the list of endpoints under the ``/api/queue/`` namespace.
 .. openapi:: api-restapi/openapi.yml
    :include:
      /api/queue/name/.*
-
-Error Messages
-^^^^^^^^^^^^^^
-
-The following error handlers are registered to the queue endpoints.
-
-.. autoexception:: dioptra.restapi.queue.errors.QueueAlreadyExistsError
-
-.. autoexception:: dioptra.restapi.queue.errors.QueueDoesNotExistError
-
-.. autoexception:: dioptra.restapi.queue.errors.QueueLockedError
 
 Task Plugin
 -----------
@@ -257,73 +218,3 @@ The following is the list of endpoints under the ``/api/taskPlugin/`` namespace.
 .. openapi:: api-restapi/openapi.yml
    :include:
      /api/taskPlugin/dioptra_custom/.*
-
-Error Messages
-^^^^^^^^^^^^^^
-
-The following error handlers are registered to the task plugin endpoints.
-
-.. autoexception:: dioptra.restapi.task_plugin.errors.TaskPluginAlreadyExistsError
-
-.. autoexception:: dioptra.restapi.task_plugin.errors.TaskPluginDoesNotExistError
-
-.. autoexception:: dioptra.restapi.task_plugin.errors.TaskPluginUploadError
-
-.. User
-.. ----
-
-.. User accounts.
-
-.. Endpoints
-.. ^^^^^^^^^
-
-.. The following is the list of endpoints under the ``/api/user/`` namespace.
-
-.. .. http:get:: /api/user/
-
-..    **Gets a list of all registered users**
-
-..    :status 200: Success
-..    :reqheader X-Fields: An optional fields mask
-..    :>json string [].createdOn: The date and time the user account was created.
-..    :>json string [].emailAddress: The email address associated with the user account.
-..    :>json string [].lastLoginOn: The date and time the user last logged into their account.
-..    :>json string [].lastModifiedOn: The date and time the user account was last modified.
-..    :>json string [].passwordExpireOn: The date and time the user's password is set to expire.
-..    :>json string [].userExpireOn: The date and time the user account is set to expire.
-..    :>json integer [].userId: An integer identifying a registered user account.
-..    :>json string [].username: The username for logging into the user account.
-
-.. .. http:post:: /api/user/
-
-..    **Creates a new user via an user registration form**
-
-..    :status 200: Success
-..    :reqheader X-Fields: An optional fields mask
-..    :form username: *(required)* The username for logging into the user account. Must be unique.
-..    :form password: *(required)* The password used for authenticating the user account.
-..    :form password_confirm: *(required)* The password confirmation field, this should exactly match the value in password.
-..    :form email_address: *(required)* The email address associated with the user account.
-..    :>json string createdOn: The date and time the user account was created.
-..    :>json string emailAddress: The email address associated with the user account.
-..    :>json string lastLoginOn: The date and time the user last logged into their account.
-..    :>json string lastModifiedOn: The date and time the user account was last modified.
-..    :>json string passwordExpireOn: The date and time the user's password is set to expire.
-..    :>json string userExpireOn: The date and time the user account is set to expire.
-..    :>json integer userId: An integer identifying a registered user account.
-..    :>json string username: The username for logging into the user account.
-
-.. .. openapi:: api-restapi/openapi.yml
-..    :include:
-..      /api/user/{.*
-
-.. Error Messages
-.. ^^^^^^^^^^^^^^
-
-.. The following error handlers are registered to the user endpoints.
-
-.. .. autoexception:: dioptra.restapi.user.errors.UsernameNotAvailableError
-
-.. .. autoexception:: dioptra.restapi.user.errors.UserDoesNotExistError
-
-.. .. autoexception:: dioptra.restapi.user.errors.UserRegistrationError

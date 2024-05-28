@@ -38,6 +38,7 @@ from requests import Session as RequestsSession
 from dioptra.restapi.db import db as restapi_db
 from dioptra.restapi.v0.shared.request_scope import request
 
+from .lib import db as libdb
 from .lib.server import FlaskTestServer
 
 
@@ -183,20 +184,8 @@ def db(app: Flask) -> SQLAlchemy:
 
 
 @pytest.fixture(autouse=True)
-def seed_database(db):
-    from dioptra.restapi.db.legacy_models import job_statuses
-
-    db.session.execute(
-        job_statuses.insert(),
-        [
-            {"status": "queued"},
-            {"status": "started"},
-            {"status": "deferred"},
-            {"status": "finished"},
-            {"status": "failed"},
-        ],
-    )
-    db.session.commit()
+def seed_database(db: SQLAlchemy):
+    libdb.setup_ontology(db.session)
 
 
 @pytest.fixture

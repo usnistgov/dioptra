@@ -23,10 +23,33 @@ For further information about configuring the SQLAlchemy constraint naming conve
 see:
 https://docs.sqlalchemy.org/en/20/core/constraints.html#constraint-naming-conventions
 """
-from __future__ import annotations
+import datetime
+import uuid
+from sqlite3 import Connection as SQLite3Connection
+from typing import Annotated, Any, Optional
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
+from sqlalchemy import JSON, BigInteger, Integer, MetaData, String, Text, event
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass, mapped_column
+
+from .custom_types import GUID, TZDateTime
+
+intpk = Annotated[
+    int, mapped_column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True)
+]
+bigint = Annotated[int, mapped_column(BigInteger().with_variant(Integer, "sqlite"))]
+bigintnovariant = Annotated[int, mapped_column(BigInteger())]
+guid = Annotated[uuid.UUID, mapped_column(GUID())]
+datetimetz = Annotated[datetime.datetime, mapped_column(TZDateTime())]
+optionaldatetimetz = Annotated[Optional[datetime.datetime], mapped_column(TZDateTime())]
+optionaljson_ = Annotated[Optional[dict[str, Any]], mapped_column(JSON)]
+optionalstr = Annotated[Optional[str], mapped_column(Text(), nullable=True)]
+optionalstr36 = Annotated[Optional[str], mapped_column(String(36), nullable=True)]
+json_ = Annotated[dict[str, Any], mapped_column(JSON)]
+str36 = Annotated[str, mapped_column(String(36))]
+str255 = Annotated[str, mapped_column(String(255))]
+text_ = Annotated[str, mapped_column(Text())]
 
 _naming_convention = {
     "ix": "ix_%(column_0_label)s",
@@ -37,4 +60,23 @@ _naming_convention = {
 }
 
 metadata_obj = MetaData(naming_convention=_naming_convention)
-db = SQLAlchemy(metadata=metadata_obj)
+
+
+@event.listens_for(Engine, "connect")
+def _set_sqlite_pragma(
+    dbapi_connection: SQLite3Connection, connection_record: Any
+) -> None:
+    """Set 'PRAGMA foreign_keys=ON' for each new SQLite connection."""
+    if isinstance(dbapi_connection, SQLite3Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON;")
+        cursor.close()
+
+
+class Base(DeclarativeBase, MappedAsDataclass):
+    """The base ORM class."""
+
+    metadata = metadata_obj
+
+
+db = SQLAlchemy(model_class=Base)

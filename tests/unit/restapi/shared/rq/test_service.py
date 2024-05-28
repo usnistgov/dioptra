@@ -25,7 +25,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from freezegun import freeze_time
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db.legacy_models import Job
+from dioptra.restapi.db.legacy_models import LegacyJob
 from dioptra.restapi.v0.shared.rq.service import RQService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -125,7 +125,7 @@ def rq_service(dependency_injector, monkeypatch: MonkeyPatch) -> RQService:
 def test_get_rq_job(rq_service: RQService):
     timestamp: datetime.datetime = datetime.datetime.now()
 
-    job: Job = Job(
+    job = LegacyJob(
         job_id="4520511d-678b-4966-953e-af2d0edcea32",
         experiment_id=1,
         queue_id=1,
@@ -136,8 +136,8 @@ def test_get_rq_job(rq_service: RQService):
         entry_point="main",
         entry_point_kwargs="-P var1=testing",
         depends_on=None,
-        status="started",
     )
+    job.status = "started",
 
     rq_job = rq_service.get_rq_job(job=job)
 

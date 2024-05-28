@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
-import pathlib
 import tempfile
 from typing import Any, Mapping, MutableMapping, Optional
 
@@ -31,6 +30,7 @@ from dioptra.mlflow_plugins.dioptra_tags import (
     DIOPTRA_JOB_ID,
     DIOPTRA_QUEUE,
 )
+from dioptra.sdk.utilities.paths import set_cwd
 from dioptra.task_engine.task_engine import run_experiment
 from dioptra.task_engine.validation import is_valid
 from dioptra.worker.s3_download import s3_download
@@ -96,15 +96,16 @@ def run_task_engine_task(
                 dioptra_custom_plugins_s3_uri,
             )
 
-            saved_cwd = pathlib.Path.cwd()
-            with tempfile.TemporaryDirectory(dir=dioptra_work_dir) as tempdir:
-                os.chdir(tempdir)
-                try:
-                    _run_experiment(
-                        rq_job_id, experiment_id, experiment_desc, global_parameters
-                    )
-                finally:
-                    os.chdir(saved_cwd)
+            with (
+                tempfile.TemporaryDirectory(dir=dioptra_work_dir) as tempdir,
+                set_cwd(tempdir),
+            ):
+                _run_experiment(
+                    rq_job_id,  # type: ignore[arg-type]
+                    experiment_id,
+                    experiment_desc,
+                    global_parameters,
+                )
 
         else:
             log.error("Experiment description was invalid!")

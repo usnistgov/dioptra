@@ -1,0 +1,17 @@
+[Unit]
+Description=Dioptra service
+Requires=docker.socket {{ cookiecutter.systemd_required_mounts }}
+After=docker.socket {{ cookiecutter.systemd_required_mounts }}
+Wants=syslog.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory={{ "{{ working_directory }}" }}
+ExecStart={{ cookiecutter.docker_compose_path }} up -d --remove-orphans --force-recreate
+ExecReload={{ cookiecutter.docker_compose_path }} restart
+ExecStop={{ cookiecutter.docker_compose_path }} down --remove-orphans
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

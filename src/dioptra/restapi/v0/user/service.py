@@ -20,7 +20,7 @@ from __future__ import annotations
 import datetime
 import uuid
 from datetime import datetime as PyDateTime
-from typing import Any, Optional, cast
+from typing import Any, Final, cast
 
 import structlog
 from flask_login import current_user
@@ -29,7 +29,7 @@ from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db
-from dioptra.restapi.db.legacy_models import User
+from dioptra.restapi.db.legacy_models import LegacyUser
 from dioptra.restapi.v0.shared.password.service import PasswordService
 
 from .errors import (
@@ -43,6 +43,8 @@ from .errors import (
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
 
 
 class UserService(object):
@@ -72,7 +74,7 @@ class UserService(object):
         password: str,
         confirm_password: str,
         **kwargs,
-    ) -> User:
+    ) -> LegacyUser:
         """Create a new user.
 
         Args:
@@ -101,9 +103,11 @@ class UserService(object):
             raise UsernameNotAvailableError
 
         timestamp = datetime.datetime.now()
-        password_expire_on = timestamp.replace(year=timestamp.year + 1)
+        password_expire_on = timestamp + datetime.timedelta(
+            days=DAYS_TO_EXPIRE_PASSWORD_DEFAULT
+        )
 
-        new_user: User = User(
+        new_user: LegacyUser = LegacyUser(
             username=username,
             password=self._user_password_service.hash(password, log=log),
             email_address=email_address,
@@ -124,7 +128,7 @@ class UserService(object):
 
     def get(
         self, user_id: int, error_if_not_found: bool = False, **kwargs
-    ) -> User | None:
+    ) -> LegacyUser | None:
         """Fetch a user by its unique id.
 
         Args:
@@ -141,8 +145,8 @@ class UserService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Lookup user account by unique id", user_id=user_id)
-        stmt = select(User).filter_by(user_id=user_id, is_deleted=False)
-        user: User | None = db.session.scalars(stmt).first()
+        stmt = select(LegacyUser).filter_by(user_id=user_id, is_deleted=False)
+        user: LegacyUser | None = db.session.scalars(stmt).first()
 
         if user is None:
             if error_if_not_found:
@@ -170,7 +174,9 @@ class UserService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Change a user's password", user_id=user_id)
-        user = cast(User, self.get(user_id=user_id, error_if_not_found=True, log=log))
+        user = cast(
+            LegacyUser, self.get(user_id=user_id, error_if_not_found=True, log=log)
+        )
         return self._user_password_service.change(
             user=user,
             current_password=current_password,
@@ -198,7 +204,7 @@ class UserNameService(object):
 
     def get(
         self, username: str, error_if_not_found: bool = False, **kwargs
-    ) -> User | None:
+    ) -> LegacyUser | None:
         """Fetch a user by its username.
 
         Args:
@@ -215,8 +221,8 @@ class UserNameService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Lookup user account by unique username", username=username)
-        stmt = select(User).filter_by(username=username, is_deleted=False)
-        user: User | None = db.session.scalars(stmt).first()
+        stmt = select(LegacyUser).filter_by(username=username, is_deleted=False)
+        user: LegacyUser | None = db.session.scalars(stmt).first()
 
         if user is None:
             if error_if_not_found:
@@ -244,7 +250,9 @@ class UserNameService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.info("Change a user's password", username=username)
-        user = cast(User, self.get(username=username, error_if_not_found=True, log=log))
+        user = cast(
+            LegacyUser, self.get(username=username, error_if_not_found=True, log=log)
+        )
         return self._user_password_service.change(
             user=user,
             current_password=current_password,
@@ -270,7 +278,7 @@ class CurrentUserService(object):
         """
         self._user_password_service = user_password_service
 
-    def get(self, **kwargs) -> User:
+    def get(self, **kwargs) -> LegacyUser:
         """Fetch information about the current user.
 
         Returns:
@@ -285,7 +293,7 @@ class CurrentUserService(object):
             log.error("There is no current user.")
             raise NoCurrentUserError
 
-        return cast(User, current_user)
+        return cast(LegacyUser, current_user)
 
     def delete(self, password: str, **kwargs) -> dict[str, Any]:
         """Permanently deletes the current user.
@@ -398,7 +406,7 @@ class UserPasswordService(object):
         return authenticated
 
     def change(
-        self, user: User, current_password: str, new_password: str, **kwargs
+        self, user: LegacyUser, current_password: str, new_password: str, **kwargs
     ) -> dict[str, Any]:
         """Change a user's password.
 
@@ -426,7 +434,9 @@ class UserPasswordService(object):
         user.password = self._password_service.hash(password=new_password, log=log)
         user.alternative_id = uuid.uuid4()
         user.last_modified_on = timestamp
-        user.password_expire_on = timestamp.replace(year=timestamp.year + 1)
+        user.password_expire_on = timestamp + datetime.timedelta(
+            days=DAYS_TO_EXPIRE_PASSWORD_DEFAULT
+        )
         db.session.commit()
 
         return {"status": "Password Change Success", "username": [user.username]}
@@ -444,7 +454,7 @@ class UserPasswordService(object):
         return self._password_service.hash(password=password, log=log)
 
 
-def load_user(user_id: str) -> User | None:
+def load_user(user_id: str) -> LegacyUser | None:
     """Load the user associated with a provided id.
 
     Args:
@@ -453,5 +463,7 @@ def load_user(user_id: str) -> User | None:
     Returns:
         A user object if the user is found, otherwise None.
     """
-    stmt = select(User).filter_by(alternative_id=uuid.UUID(user_id), is_deleted=False)
-    return cast(Optional[User], db.session.scalars(stmt).first())
+    stmt = select(LegacyUser).filter_by(
+        alternative_id=uuid.UUID(user_id), is_deleted=False
+    )
+    return db.session.scalars(stmt).first()

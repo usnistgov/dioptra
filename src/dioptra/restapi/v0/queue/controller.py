@@ -28,7 +28,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db.legacy_models import Queue
+from dioptra.restapi.db.legacy_models import LegacyQueue
 
 from .schema import IdStatusResponseSchema, NameStatusResponseSchema, QueueSchema
 from .service import QueueNameService, QueueService
@@ -52,7 +52,7 @@ class QueueResource(Resource):
 
     @login_required
     @responds(schema=QueueSchema(many=True), api=api)
-    def get(self) -> list[Queue]:
+    def get(self) -> list[LegacyQueue]:
         """Gets a list of all active queues."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queue", request_type="GET"
@@ -63,7 +63,7 @@ class QueueResource(Resource):
     @login_required
     @accepts(schema=QueueSchema, api=api)
     @responds(schema=QueueSchema, api=api)
-    def post(self) -> Queue:
+    def post(self) -> LegacyQueue:
         """Registers a new queue.
 
         Note that the name of the queue will be slugified and must remain unique after \
@@ -90,14 +90,15 @@ class QueueIdResource(Resource):
 
     @login_required
     @responds(schema=QueueSchema, api=api)
-    def get(self, queueId: int) -> Queue:
+    def get(self, queueId: int) -> LegacyQueue:
         """Gets a queue by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueId", request_type="GET"
         )  # noqa: F841
         log.info("Request received", queue_id=queueId)
         return cast(
-            Queue, self._queue_service.get(queueId, error_if_not_found=True, log=log)
+            LegacyQueue,
+            self._queue_service.get(queueId, error_if_not_found=True, log=log),
         )
 
     @login_required
@@ -113,7 +114,7 @@ class QueueIdResource(Resource):
     @login_required
     @accepts(schema=QueueSchema, api=api)
     @responds(schema=QueueSchema, api=api)
-    def put(self, queueId: int) -> Queue:
+    def put(self, queueId: int) -> LegacyQueue:
         """Modifies a queue by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueId", request_type="PUT"
@@ -165,14 +166,14 @@ class QueueNameResource(Resource):
 
     @login_required
     @responds(schema=QueueSchema, api=api)
-    def get(self, queueName: str) -> Queue:
+    def get(self, queueName: str) -> LegacyQueue:
         """Gets a queue by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="queueName", request_type="GET"
         )  # noqa: F841
         log.info("Request received", queue_name=queueName)
         return cast(
-            Queue,
+            LegacyQueue,
             self._queue_name_service.get(queueName, error_if_not_found=True, log=log),
         )
 

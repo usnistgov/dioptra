@@ -27,7 +27,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db
-from dioptra.restapi.db.legacy_models import User
+from dioptra.restapi.db.legacy_models import LegacyUser
 from dioptra.restapi.v0.user.service import UserNameService, UserPasswordService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -70,7 +70,7 @@ class AuthService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         user = cast(
-            User,
+            LegacyUser,
             self._user_name_service.get(
                 username=username, error_if_not_found=True, log=log
             ),

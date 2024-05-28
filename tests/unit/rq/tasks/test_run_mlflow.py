@@ -14,9 +14,9 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import subprocess
 from pathlib import Path
 
+import mlflow.projects
 import rq
 import structlog
 from _pytest.monkeypatch import MonkeyPatch
@@ -35,20 +35,6 @@ class MockRQJob(object):
         return "4520511d-678b-4966-953e-af2d0edcea32"
 
 
-class MockCompletedProcess(object):
-    def __init__(self, *args, **kwargs) -> None:
-        LOGGER.info(
-            "Mocking subprocess.CompletedProcess instance", args=args, kwargs=kwargs
-        )
-        self.args = kwargs.get("args")
-        self.cwd = kwargs.get("cwd")
-
-    @property
-    def returncode(self) -> int:
-        LOGGER.info("Mocking CompletedProcess.returncode attribute")
-        return 0
-
-
 @freeze_time("2020-08-17T19:46:28.717559")
 def test_run_mlflow_task(
     monkeypatch: MonkeyPatch,
@@ -61,9 +47,23 @@ def test_run_mlflow_task(
         LOGGER.info("Mocking rq.get_current_job() function", args=args, kwargs=kwargs)
         return MockRQJob()
 
-    def mockrun(*args, **kwargs) -> MockCompletedProcess:
-        LOGGER.info("Mocking subprocess.run() function", args=args, kwargs=kwargs)
-        return MockCompletedProcess(*args, **kwargs)
+    def mock_mlproject_run(
+        mlproject_dir, backend, backend_config, entry_point, experiment_id,
+        parameters, env_manager
+    ):
+        mlproject_dir_path = Path(mlproject_dir)
+        assert mlproject_dir_path.is_relative_to(d)
+        assert any(
+            f.name == "MLproject"
+            for f in mlproject_dir_path.iterdir()
+        )
+        assert backend == "dioptra"
+        assert "workflow_filepath" in backend_config
+        assert Path(backend_config["workflow_filepath"]).is_relative_to(d)
+        assert entry_point == "main"
+        assert experiment_id == "0"
+        assert parameters == {"var1": "testing"}
+        assert env_manager == "local"
 
     d: Path = tmp_path / "run_mlflow_task"
     d.mkdir(parents=True)
@@ -77,40 +77,21 @@ def test_run_mlflow_task(
     monkeypatch.setenv("DIOPTRA_CUSTOM_PLUGINS_S3_URI", "s3://plugins/dioptra_custom")
     monkeypatch.setenv("MLFLOW_S3_ENDPOINT_URL", "http://example.org/")
     monkeypatch.setattr(rq, "get_current_job", mockgetcurrentjob)
+    monkeypatch.setattr(mlflow.projects, "run", mock_mlproject_run)
 
     workflow_key = next(iter(bucket_info["workflow"]))
     workflow_s3_uri = f"s3://workflow/{workflow_key}"
 
-    with monkeypatch.context() as m:
-        m.setattr(subprocess, "run", mockrun)
-        p = run_mlflow_task(
-            workflow_uri=workflow_s3_uri,
-            entry_point="main",
-            experiment_id="0",
-            conda_env="base",
-            entry_point_kwargs="-P var1=testing",
-            s3=s3,
-        )
-
-    assert p.returncode == 0
-    assert p.args == [
-        "/usr/local/bin/run-mlflow-job.sh",
-        "--s3-workflow",
-        workflow_s3_uri,
-        "--entry-point",
-        "main",
-        "--conda-env",
-        "base",
-        "--experiment-id",
-        "0",
-        "-P",
-        "var1=testing",
-    ]
-    assert Path(p.cwd).parent == d
+    run_mlflow_task(
+        workflow_uri=workflow_s3_uri,
+        entry_point="main",
+        experiment_id=0,
+        entry_point_kwargs="-P var1=testing",
+        s3=s3,
+    )
 
     # Can't test the downloaded workflow tarball... it is downloaded to a temp
     # directory which is deleted after use.  So it has already disappeared.
-
     for key, value in bucket_info["plugins"].items():
         local_file = tmp_plugins_dir / key
 

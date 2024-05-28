@@ -41,15 +41,12 @@ except ImportError:  # pragma: nocover
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def init_tensorflow(seed: int) -> None:
-    """Initializes Tensorflow to ensure compatibility and reproducibility.
+    """Initializes Tensorflow to ensure reproducibility.
 
-    This task plugin **must** be run before any other features from Tensorflow are used.
-    It disables Tensorflow's eager execution, which is not compatible with Dioptra's
-    entry point structure, and sets Tensorflow's internal seed for its random number
-    generator.
+    This task plugin **must** be run before any other features from Tensorflow are used
+    to ensure reproducibility.
 
     Args:
         seed: The seed to use for Tensorflow's random number generator.
     """
-    tf.compat.v1.disable_eager_execution()
     tf.random.set_seed(seed)

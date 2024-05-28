@@ -21,13 +21,13 @@
 
 # -- Prerequisite: copy files ------------------------------------------------------------------------
 
-FROM ubuntu:focal AS copy-files
+FROM ubuntu:jammy AS copy-files
 
 ARG TARGETARCH
 
 COPY --chown=root:root --chmod=0644 docker/configs/aws-config /files/aws-config
 COPY --chown=root:root --chmod=0644 docker/configs/build.pip.conf /files/build.pip.conf
-COPY --chown=root:root --chmod=0644 docker/requirements/linux-${TARGETARCH}-py3.9-pytorch-cpu-requirements.txt /files/pytorch-cpu-requirements.txt
+COPY --chown=root:root --chmod=0644 docker/requirements/linux-${TARGETARCH}-py3.11-pytorch-cpu-requirements.txt /files/pytorch-cpu-requirements.txt
 
 ######################################################################################################
 # Base images
@@ -35,7 +35,7 @@ COPY --chown=root:root --chmod=0644 docker/requirements/linux-${TARGETARCH}-py3.
 
 # -- Base image --------------------------------------------------------------------------------------
 
-FROM ubuntu:focal AS base
+FROM ubuntu:jammy AS base
 
 USER root
 
@@ -44,13 +44,15 @@ ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 ENV LC_ALL C.UTF-8
 
+# Temporarily set the GNUPGHOME variable for fetching signing key
+ENV GNUPGHOME /tmp/gnupg
+
 RUN apt-get update && \
-    echo "===> Upgrade existing packages...." && \
     apt-get -y upgrade && \
-    echo "===> Installing ca-certificates curl gnupg libbz2-1.0 liblz4-1 liblzma5 libsnappy1v5 libzstd1 netcat postgresql-client python3.9 python3.9-venv python3-pip tzdata unzip wget zlib1g...." && \
     apt-get install -yq --no-install-recommends \
     ca-certificates \
     curl \
+    git \
     gnupg \
     libbz2-1.0 \
     libgl1 \
@@ -60,25 +62,33 @@ RUN apt-get update && \
     libzstd1 \
     netcat \
     postgresql-client \
-    python3.9 \
-    python3.9-venv \
-    python3-pip \
     tzdata \
     unzip \
     wget \
     zlib1g && \
-    echo "===> Fetch official Ubuntu Git Maintainers signing key...." && \
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E1DD270288B4E6030699E45FA1715D88E1DF1F24 && \
-    echo "===> Add Git stable releases repo...." && \
+    # Fetch deadsnakes signing key
+    mkdir -p "${GNUPGHOME}" && \
+    chmod 0700 "${GNUPGHOME}" && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys F23C5A6CF475977595C89F51BA6932366A755776 && \
+    gpg --yes --export F23C5A6CF475977595C89F51BA6932366A755776 > /etc/apt/keyrings/deadsnakes-keyring.gpg && \
+    # Configure third-party deadsnakes/ppa repo
     UBUNTU_CODENAME="$(. /etc/os-release && echo ${UBUNTU_CODENAME})" && \
-    echo "deb http://ppa.launchpadcontent.net/git-core/ppa/ubuntu ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/git-core.list && \
-    echo "deb-src http://ppa.launchpadcontent.net/git-core/ppa/ubuntu ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/git-core.list && \
-    echo "===> Installing git...." && \
+    echo "deb [signed-by=/etc/apt/keyrings/deadsnakes-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/deadsnakes.list && \
+    echo "deb-src [signed-by=/etc/apt/keyrings/deadsnakes-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/deadsnakes.list && \
+    # Install Python 3.11
     apt-get update && \
     apt-get install -yq --no-install-recommends \
-    git && \
+    python3.11 \
+    python3.11-venv \
+    python3-pip && \
+    # Cleanup
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf "${GNUPGHOME}"
+
+# Unset the GNUPGHOME variable
+ENV GNUPGHOME=
 
 # -- Base image (includes extra CA certificates) -----------------------------------------------------
 
@@ -102,7 +112,7 @@ FROM certs-base AS build-base
 
 RUN echo "===> Installing compilers...." && \
     apt-get update && \
-    apt-get install -yq --no-install-recommends autoconf build-essential libpq-dev python3.9-dev swig
+    apt-get install -yq --no-install-recommends autoconf build-essential libpq-dev python3.11-dev swig
 
 # -- Base image (argbash) ----------------------------------------------------------------------------
 
@@ -123,9 +133,9 @@ RUN cd /tmp && \
 FROM build-base AS python-base
 
 RUN echo "===> Installing latest version of pip...." && \
-    python3.9 -m pip install --upgrade pip && \
+    python3.11 -m pip install --upgrade pip && \
     echo "===> Installing build package...." && \
-    python3.9 -m pip install build
+    python3.11 -m pip install build
 
 ######################################################################################################
 # Build
@@ -139,8 +149,6 @@ COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-worker.m4 /te
 COPY --chown=root:root --chmod=0755 docker/shellscripts/fix-permissions.m4 /templates/fix-permissions.m4
 COPY --chown=root:root --chmod=0755 docker/shellscripts/healthcheck-worker.m4 /templates/healthcheck-worker.m4
 COPY --chown=root:root --chmod=0755 docker/shellscripts/parse-uri.m4 /templates/parse-uri.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/run-mlflow-job.m4 /templates/run-mlflow-job.m4
-COPY --chown=root:root --chmod=0755 docker/shellscripts/unpack-archive.m4 /templates/unpack-archive.m4
 
 COPY --chown=root:root --chmod=0755 docker/shellscripts/wait-for-it.sh /shellscripts/wait-for-it.sh
 
@@ -148,9 +156,7 @@ RUN mkdir -p /shellscripts && \
     /usr/local/bin/argbash /templates/entrypoint-worker.m4 -o /shellscripts/entrypoint-worker.sh && \
     /usr/local/bin/argbash /templates/fix-permissions.m4 -o /shellscripts/fix-permissions.sh && \
     /usr/local/bin/argbash /templates/healthcheck-worker.m4 -o /shellscripts/healthcheck-worker.sh && \
-    /usr/local/bin/argbash /templates/parse-uri.m4 -o /shellscripts/parse-uri.sh && \
-    /usr/local/bin/argbash /templates/run-mlflow-job.m4 -o /shellscripts/run-mlflow-job.sh && \
-    /usr/local/bin/argbash /templates/unpack-archive.m4 -o /shellscripts/unpack-archive.sh
+    /usr/local/bin/argbash /templates/parse-uri.m4 -o /shellscripts/parse-uri.sh
 
 # -- Build: create dioptra wheel ---------------------------------------------------------------------
 
@@ -176,7 +182,7 @@ RUN find /code -type d -exec chmod 0755 "{}" "+" && \
     find /code/src -type f -exec chmod 0644 "{}" "+" && \
     find /code/tests -type f -exec chmod 0644 "{}" "+" && \
     echo "===> Building the dioptra wheel...." && \
-    python3.9 -m build -sw
+    python3.11 -m build -sw
 
 # -- Build: create virtual environment ---------------------------------------------------------------
 
@@ -189,8 +195,8 @@ ARG VIRTUAL_ENV=/opt/venv
 
 RUN echo "===> Creating Python virtual environment...." && \
     umask 0002 && \
-    python3.9 -m pip install --no-cache-dir --upgrade pip && \
-    python3.9 -m venv ${VIRTUAL_ENV}
+    python3.11 -m pip install --no-cache-dir --upgrade pip && \
+    python3.11 -m venv ${VIRTUAL_ENV}
 
 ENV PATH ${VIRTUAL_ENV}/bin${PATH:+:${PATH}}
 ENV VIRTUAL_ENV ${VIRTUAL_ENV}
@@ -237,8 +243,6 @@ RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashr
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/entrypoint-worker.sh /usr/local/bin/entrypoint.sh
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/healthcheck-worker.sh /usr/local/bin/healthcheck.sh
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/parse-uri.sh /usr/local/bin/parse-uri.sh
-COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/run-mlflow-job.sh /usr/local/bin/run-mlflow-job.sh
-COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/unpack-archive.sh /usr/local/bin/unpack-archive.sh
 COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
 COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/aws-config /home/${DIOPTRA_USER}/.aws/config/aws-config
 

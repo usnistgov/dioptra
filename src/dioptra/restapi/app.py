@@ -37,7 +37,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.utils import setup_injection
 
-from .__version__ import __version__ as API_VERSION
+from .__version__ import __version__ as DIOPTRA_VERSION
 from .db import db
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -64,7 +64,6 @@ def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -
     from .config import config_by_name
     from .errors import register_error_handlers
     from .routes import register_routes
-    from .v0.user.service import load_user
 
     if env is None:
         env = os.getenv("DIOPTRA_RESTAPI_ENV", "test")
@@ -75,15 +74,25 @@ def create_app(env: Optional[str] = None, injector: Optional[Injector] = None) -
     api: Api = Api(
         app,
         title="Dioptra REST API",
-        version=API_VERSION,
+        version=DIOPTRA_VERSION,
         doc=app.config["DIOPTRA_SWAGGER_PATH"],
         url_scheme=app.config["DIOPTRA_BASE_URL"],
     )
 
-    register_routes(api)
-    register_error_handlers(api)
+    restapi_version = app.config["DIOPTRA_RESTAPI_VERSION"]
 
-    login_manager.user_loader(load_user)
+    register_routes(api, restapi_version=restapi_version)
+    register_error_handlers(api, restapi_version=restapi_version)
+
+    if restapi_version.lower() == "v0":
+        from .v0.user.service import load_user as v0_load_user
+
+        login_manager.user_loader(v0_load_user)
+
+    elif restapi_version.lower() == "v1":
+        from .v1.users.service import load_user as v1_load_user
+
+        login_manager.user_loader(v1_load_user)
 
     db.init_app(app)
     login_manager.init_app(app)

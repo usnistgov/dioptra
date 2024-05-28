@@ -15,15 +15,18 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The data models for the experiment endpoint objects."""
-from __future__ import annotations
-
 import datetime
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
-from dioptra.restapi.db.db import db
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from dioptra.restapi.db.db import db, intpk, text_
+
+if TYPE_CHECKING:
+    from .job import LegacyJob
 
 
-class Experiment(db.Model):
+class LegacyExperiment(db.Model):  # type: ignore[name-defined]
     """The experiments table.
 
     Attributes:
@@ -36,15 +39,16 @@ class Experiment(db.Model):
 
     __tablename__ = "legacy_experiments"
 
-    experiment_id = db.Column(
-        db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True
-    )
-    created_on = db.Column(db.DateTime())
-    last_modified = db.Column(db.DateTime())
-    name = db.Column(db.Text(), index=True, nullable=False, unique=True)
-    is_deleted = db.Column(db.Boolean(), default=False)
+    experiment_id: Mapped[intpk]
+    created_on: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    last_modified: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    name: Mapped[text_] = mapped_column(nullable=False, unique=True, index=True)
+    is_deleted: Mapped[bool] = mapped_column(init=False, nullable=True)
 
-    jobs = db.relationship("Job", back_populates="experiment")
+    jobs: Mapped["LegacyJob"] = relationship(init=False, back_populates="experiment")
+
+    def __post_init__(self) -> None:
+        self.is_deleted = False
 
     def update(self, changes: Dict[str, Any]):
         """Updates the record.

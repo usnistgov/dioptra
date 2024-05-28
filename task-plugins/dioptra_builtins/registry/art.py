@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+import numpy as np
 import structlog
 from structlog.stdlib import BoundLogger
 
@@ -36,7 +37,7 @@ from .mlflow import load_tensorflow_keras_classifier
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from art.estimators.classification import KerasClassifier
+    from art.estimators.classification import TensorFlowV2Classifier
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -46,6 +47,7 @@ except ImportError:  # pragma: nocover
 
 
 try:
+    from tensorflow.keras import losses
     from tensorflow.keras.models import Sequential
 
 except ImportError:  # pragma: nocover
@@ -59,28 +61,45 @@ except ImportError:  # pragma: nocover
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def load_wrapped_tensorflow_keras_classifier(
-    name: str, version: int, classifier_kwargs: Optional[Dict[str, Any]] = None
-) -> KerasClassifier:
+    name: str,
+    version: int,
+    imagenet_preprocessing: bool = False,
+    classifier_kwargs: Optional[Dict[str, Any]] = None,
+) -> TensorFlowV2Classifier:
     """Loads and wraps a registered Keras classifier for compatibility with the |ART|.
 
     Args:
         name: The name of the registered model in the MLFlow model registry.
         version: The version number of the registered model in the MLFlow registry.
         classifier_kwargs: A dictionary mapping argument names to values which will
-            be passed to the KerasClassifier constructor.
+            be passed to the TensorFlowV2Classifier constructor.
     Returns:
-        A trained :py:class:`~art.estimators.classification.KerasClassifier` object.
+        A trained :py:class:`~art.estimators.classification.TensorFlowV2Classifier`
+            object.
 
     See Also:
-        - :py:class:`art.estimators.classification.KerasClassifier`
+        - :py:class:`art.estimators.classification.TensorFlowV2Classifier`
         - :py:func:`.mlflow.load_tensorflow_keras_classifier`
     """
     classifier_kwargs = classifier_kwargs or {}
     keras_classifier: Sequential = load_tensorflow_keras_classifier(
         name=name, version=version
     )
-    wrapped_keras_classifier: KerasClassifier = KerasClassifier(
-        model=keras_classifier, **classifier_kwargs
+    nb_classes = keras_classifier.output_shape[1]
+    input_shape = keras_classifier.input_shape
+    loss_object = losses.get(keras_classifier.loss)
+    preprocessing = (
+        (np.array([103.939, 116.779, 123.680]), np.array([1.0, 1.0, 1.0]))
+        if imagenet_preprocessing
+        else None
+    )
+    wrapped_keras_classifier: TensorFlowV2Classifier = TensorFlowV2Classifier(
+        model=keras_classifier,
+        nb_classes=nb_classes,
+        input_shape=input_shape,
+        loss_object=loss_object,
+        preprocessing=preprocessing,
+        **classifier_kwargs,
     )
     LOGGER.info(
         "Wrap Keras classifier for compatibility with Adversarial Robustness Toolbox"

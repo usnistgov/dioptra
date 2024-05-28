@@ -28,7 +28,7 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db.legacy_models import Experiment
+from dioptra.restapi.db.legacy_models import LegacyExperiment
 
 from .schema import ExperimentSchema, IdStatusResponseSchema, NameStatusResponseSchema
 from .service import ExperimentNameService, ExperimentService
@@ -52,7 +52,7 @@ class ExperimentResource(Resource):
 
     @login_required
     @responds(schema=ExperimentSchema(many=True), api=api)
-    def get(self) -> list[Experiment]:
+    def get(self) -> list[LegacyExperiment]:
         """Gets a list of all registered experiments."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="GET"
@@ -63,7 +63,7 @@ class ExperimentResource(Resource):
     @login_required
     @accepts(schema=ExperimentSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
-    def post(self) -> Experiment:
+    def post(self) -> LegacyExperiment:
         """Creates a new experiment via an experiment registration form."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experiment", request_type="POST"
@@ -85,14 +85,14 @@ class ExperimentIdResource(Resource):
 
     @login_required
     @responds(schema=ExperimentSchema, api=api)
-    def get(self, experimentId: int) -> Experiment:
+    def get(self, experimentId: int) -> LegacyExperiment:
         """Gets an experiment by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentId", request_type="GET"
         )  # noqa: F841
         log.info("Request received", experiment_id=experimentId)
         return cast(
-            Experiment,
+            LegacyExperiment,
             self._experiment_service.get(
                 experimentId, error_if_not_found=True, log=log
             ),
@@ -111,7 +111,7 @@ class ExperimentIdResource(Resource):
     @login_required
     @accepts(schema=ExperimentSchema, api=api)
     @responds(schema=ExperimentSchema, api=api)
-    def put(self, experimentId: int) -> Experiment:
+    def put(self, experimentId: int) -> LegacyExperiment:
         """Modifies an experiment by its unique identifier."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentId", request_type="PUT"
@@ -136,14 +136,14 @@ class ExperimentNameResource(Resource):
 
     @login_required
     @responds(schema=ExperimentSchema, api=api)
-    def get(self, experimentName: str) -> Experiment:
+    def get(self, experimentName: str) -> LegacyExperiment:
         """Gets an experiment by its unique name."""
         log: BoundLogger = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="experimentName", request_type="GET"
         )  # noqa: F841
         log.info("Request received", experiment_name=experimentName)
         return cast(
-            Experiment,
+            LegacyExperiment,
             self._experiment_name_service.get(
                 experimentName, error_if_not_found=True, log=log
             ),

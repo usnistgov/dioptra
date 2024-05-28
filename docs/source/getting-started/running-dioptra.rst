@@ -29,8 +29,8 @@ Prerequisites
 -------------
 
 - `Bash v5 or higher <https://tiswww.case.edu/php/chet/bash/bashtop.html>`__
-- `Python 3.9 or higher <https://www.python.org/>`__
-- `Cookiecutter v2 or higher <https://cookiecutter.readthedocs.io/en/latest/>`__
+- `Python 3.11 or higher <https://www.python.org/>`__
+- `Cruft 2.15.0 or higher <https://cruft.github.io/cruft/>`__
 - `Docker Engine 20.10.13 or higher <https://docs.docker.com/engine/install/>`__
 - `Docker Compose <https://docs.docker.com/compose/install/>`__
 - Dictionary of words at ``/usr/share/dict/words`` (``apt-get install wamerican``)
@@ -49,17 +49,32 @@ This will generate a setup that is appropriate for testing Dioptra on your perso
    mkdir -p /path/to/deployments/folder  # Create it if it doesn't exist
    cd /path/to/deployments/folder
 
-   # Run cookiecutter and set the template's variables
-   cookiecutter gh:usnistgov/dioptra --checkout main \
+   # Create a virtual environment and install cruft
+   python -m venv venv-cruft
+   source venv-cruft/bin/activate
+   python -m pip install --upgrade pip cruft
+
+   # Run cruft and set the template's variables
+   # (If using a different branch, replace "main" with that branch's name)
+   cruft create https://github.com/usnistgov/dioptra --checkout main \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+
+   # Deactivate the virtual environment
+   deactivate
 
    # Move into the new folder created by the template. The new folder's name
    # is based on the deployment_name variable. The default name for the folder
    # is dioptra-deployment.
    cd dioptra-deployment
 
+   # Create a Python virtual environment and install the cruft and Jinja2 packages.
+   python -m venv .venv
+   source .venv/bin/activate
+   python -m pip install --upgrade pip cruft jinja2
+
    # Initialize Dioptra using the init-deployment.sh script
-   ./init-deployment.sh
+   # (If using a different branch, replace "main" with that branch's name)
+   ./init-deployment.sh --branch main
 
    # Start Dioptra
    docker compose up -d
@@ -79,21 +94,22 @@ Applying the template
 ---------------------
 
 Create the folder where you plan to keep the deployment folder and change into it so that it becomes your working directory.
-Next, run cookiecutter and apply the Dioptra Deployment template.
+Next, run cruft and apply the Dioptra Deployment template.
 
 .. code:: sh
 
    # To use the template published on the dev branch, use '--checkout dev' instead
-   cookiecutter gh:usnistgov/dioptra --checkout main --directory cookiecutter-templates/cookiecutter-dioptra-deployment
+   cruft create https://github.com/usnistgov/dioptra --checkout main \
+     --directory cookiecutter-templates/cookiecutter-dioptra-deployment
 
 .. margin::
 
    .. note::
 
-      If you make a mistake, such as accidentally accepting a default or making a typo, it is recommended that you interrupt cookiecutter and start over.
-      To interrupt the cookiecutter prompts at any time, press :kbd:`Ctrl + C`, then check if cookiecutter has created a new folder in your working directory (if present, the folder's name will be a `"slugified" <https://www.stackbit.com/blog/what-is-a-content-slug>`__ version of the **deployment_name** variable).
+      If you make a mistake, such as accidentally accepting a default or making a typo, it is recommended that you interrupt cruft and start over.
+      To interrupt the cruft prompts at any time, press :kbd:`Ctrl + C`, then check if cruft has created a new folder in your working directory (if present, the folder's name will be a `"slugified" <https://www.stackbit.com/blog/what-is-a-content-slug>`__ version of the **deployment_name** variable).
       If it has, remove it.
-      To start over, re-run the ``cookiecutter`` command.
+      To start over, re-run the ``cruft`` command.
 
 You will now be asked to set the variables needed to customize the generated configuration files.
 In most cases you can just use the default value, but there are a few that you may need to customize.
@@ -149,11 +165,17 @@ Below is a full list of the variables, their default values, and explanations of
   Each worker is assigned a dedicated GPU, watches a named queue, and runs one job at a time.
   The combined number of Tensorflow and PyTorch GPU workers cannot be greater than the number of GPUs available on the host machine.
   (default: ``0``)
+- **datasets_directory:** Sets the datasets directory to be mounted into all worker containers in your Dioptra deployment.
+  The provided directory will be mounted to `/dioptra/data` in each worker container.
+  If an empty string is provided, no dataset directory will be mounted.
+  If the provided path is not valid, the `init-deployment.sh` script will fail.
+  More advanced configurations can be achieved by modifying the `docker-compose.override.yml` file.
+  (default: ``""``)
 
 Example
 ~~~~~~~
 
-Below is an example of what it looks like to customize some of the template variables after invoking the template using ``cookiecutter``.
+Below is an example of what it looks like to customize some of the template variables after invoking the template using ``cruft``.
 
 .. margin::
 
@@ -179,6 +201,35 @@ Below is an example of what it looks like to customize some of the template vari
    num_tensorflow_gpu_workers [0]: 0
    num_pytorch_cpu_workers [1]: 1
    num_pytorch_gpu_workers [0]: 0
+   datasets_directory []: /path/to/dioptra/data
+
+Updating the template
+---------------------
+
+The cruft tool makes it easy to fetch the latest updates to the template:
+
+.. code:: sh
+
+   # Activate the virtual environment (if not active)
+   source .venv/bin/activate
+
+   # Fetch the updates
+   # (If using a different branch, replace "main" with that branch's name)
+   cruft update --checkout main
+
+Cookiecutter variables can also be updated via cruft:
+
+.. code:: sh
+
+   # Activate the virtual environment (if not active)
+   source .venv/bin/activate
+
+   # Update the datasets_directory variable
+   # (If using a different branch, replace "main" with that branch's name)
+   cruft update --checkout main \
+     --variables-to-update '{ "datasets_directory": "/path/to/dioptra/data" }'
+
+Be sure to run `init-deployment.sh` again after updating the template.
 
 Folder organization
 -------------------
@@ -190,7 +241,7 @@ Folder organization
       The *dioptra-deployment* prefix prepended to the files in the ``envs/`` and ``secrets/`` folders assumes the default value for the **deployment_name** variable.
       Setting this variable to a different value would alter the filename prefixes.
 
-The following tree-like diagram shows the files created by the cookiecutter template.
+The following tree-like diagram shows the files created by the template.
 The annotations explain the purpose of the configuration files.
 Note that this diagram includes server certificates and private keys for the NGINX and Postgres services, which may or may not apply to your use case.
 
@@ -233,9 +284,15 @@ Note that this diagram includes server certificates and private keys for the NGI
    │   ├── dioptra-deployment-worker-cpu.env                    <- Sets environment variables that customize the CPU-based Dioptra workers. Safe to commit to a git repo.
    │   └── dioptra-deployment-worker.env                        <- Sets environment variables that customize the Dioptra workers. Safe to commit to a git repo.
    ├── scripts
+   │   ├── templates
+   │   │   ├── dioptra.service.j2                               <- A Jinja2 template used to generate the systemd/dioptra.service file.
+   │   │   ├── dot-env.j2                                       <- A Jinja2 template used to generate a .env file containing a list of environment variables and associated passwords.
+   │   │   ├── minio-accounts.env.j2                            <- A Jinja2 template used to generate the secrets/dioptra-deployment-minio-accounts.env file.
+   │   │   └── postgres-passwd.env.j2                           <- A Jinja2 template used to generate the secrets/postgres-passwd.env file.
    │   ├── copy-extra-ca-certificates.m4                        <- Used in the init-deployment.sh and init-named-volumes.m4 scripts to inject the extra CA certificates in the ssl/ca-certificates folder into the services.
    │   ├── file-copy.m4                                         <- Used in the init-named-volumes.m4 script to handle file copying. Emits logging information and sets appropriate access and ownership permissions.
    │   ├── git-clone.m4                                         <- Used in the init-named-volumes.m4 script to handle cloning git repositories. Emits logging information and sets appropriate access and ownership permissions.
+   │   ├── generate_password_templates.py                       <- Used in the init-named-volumes.m4 script to generate random passwords to secure Dioptra's services.
    │   ├── globbed-copy.m4                                      <- Used in the init-named-volumes.m4 script to handle globbed file copying. Emits logging information and sets appropriate access and ownership permissions.
    │   ├── init-minio.sh                                        <- Used in the init-deployment.sh script to set the Minio policies in config/minio.
    │   ├── init-named-volumes.m4                                <- Used in the init-deployment.sh script to prepare the named storage volumes used by each container. Actions include copying in configuration files and setting file access and ownership permissions.
@@ -243,34 +300,27 @@ Note that this diagram includes server certificates and private keys for the NGI
    │   ├── manage-postgres-ssl.m4                               <- Used in the init-deployment.sh script to enable and disable SSL in Postgres.
    │   └── set-permissions.m4                                   <- Used in the init-named-volumes.m4 script to set appropriate access and ownership permissions.
    ├── secrets
-   │   ├── dioptra-deployment-db.env                            <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-dbadmin.env                       <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-minio-accounts.env                <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-minio.env                         <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-mlflow-tracking-database-uri.env  <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-mlflow-tracking.env               <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-restapi-database-uri.env          <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-restapi.env                       <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   ├── dioptra-deployment-worker.env                        <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   └── postgres-passwd.env                                  <- Sets environment variables containing sensitive passwords. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+   │   ├── dioptra-deployment-minio-accounts.env                <- Secrets file containing sensitive passwords generated by the scripts/generate_password_templates.py script. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+   │   └── postgres-passwd.env                                  <- Secrets file containing sensitive passwords generated by the scripts/generate_password_templates.py script. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
    ├── ssl
    │   ├── ca-certificates
-   │   │   └── README.md            <- README file explaining the folder's purpose and which files need to be copied here.
+   │   │   └── README.md                                        <- README file explaining the folder's purpose and which files need to be copied here.
    │   ├── db
-   │   │   ├── server.crt           <- MUST BE COPIED HERE MANUALLY. The server certificate for enabling encrypted traffic to the Postgres database.
-   │   │   ├── server.key           <- MUST BE COPIED HERE MANUALLY. The private key for enabling encrypted traffic to the Postgres database. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │   │   └── README.md            <- README file explaining the folder's purpose and which files need to be copied here.
+   │   │   ├── server.crt                                       <- MUST BE COPIED HERE MANUALLY. The server certificate for enabling encrypted traffic to the Postgres database.
+   │   │   ├── server.key                                       <- MUST BE COPIED HERE MANUALLY. The private key for enabling encrypted traffic to the Postgres database. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+   │   │   └── README.md                                        <- README file explaining the folder's purpose and which files need to be copied here.
    │   └── nginx
-   │       ├── server.crt           <- MUST BE COPIED HERE MANUALLY. The server certificate for enabling HTTPS in the Nginx webserver.
-   │       ├── server.key           <- MUST BE COPIED HERE MANUALLY. The private key for enabling HTTPS in the Nginx webserver. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
-   │       └── README.md            <- README file explaining the folder's purpose and which files need to be copied here.
+   │       ├── server.crt                                       <- MUST BE COPIED HERE MANUALLY. The server certificate for enabling HTTPS in the Nginx webserver.
+   │       ├── server.key                                       <- MUST BE COPIED HERE MANUALLY. The private key for enabling HTTPS in the Nginx webserver. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+   │       └── README.md                                        <- README file explaining the folder's purpose and which files need to be copied here.
    ├── systemd
-   │   └── dioptra.service          <- A systemd service that can be used to manage the full Dioptra application.
-   ├── .gitignore                   <- A list of patterns that configures the files and directories that git should ignore. Used if the deployment configuration is placed under version control with git.
-   ├── docker-compose.init.yml      <- Used in the init-deployment.sh script to initialize the deployment.
-   ├── docker-compose.yml           <- Orchestrates how to start the containers, configure the network, set the environment variables, attach the storage volumes, and publish the NGINX web server ports.
-   ├── init-deployment.sh           <- The deployment initialization script. Used to copy configuration files into named volumes, configure Minio policies, and enable/disable SSL in the NGINX and Postgres services.
-   └── README.md                    <- README file that explains how to initialize and run Dioptra using the provided scripts and configuration files.
+   │   └── dioptra.service                                      <- A systemd service that can be used to manage the full Dioptra application generated by the scripts/generate_password_templates.py script.
+   ├── .env                                                     <- A list of secrets (passwords) mapped to environment variables generated by the scripts/generate_password_templates.py script. NOT SAFE TO SHARE OR COMMIT TO A GIT REPO.
+   ├── .gitignore                                               <- A list of patterns that configures the files and directories that git should ignore. Used if the deployment configuration is placed under version control with git.
+   ├── docker-compose.init.yml                                  <- Used in the init-deployment.sh script to initialize the deployment.
+   ├── docker-compose.override.yml.template                     <- A template for overriding portions of the docker-compose.yml for custom configurations.
+   ├── init-deployment.sh                                       <- The deployment initialization script. Used to generate random passwords, copy configuration files into named volumes, configure Minio policies, and enable/disable SSL in the NGINX and Postgres services.
+   └── README.md                                                <- README file that explains how to initialize and run Dioptra using the provided scripts and configuration files.
 
 Additional configuration
 ------------------------
@@ -282,9 +332,14 @@ The following subsections explain how to:
 - Copy extra CA certificates into the containers
 - Copy the certificate-key pairs that enable SSL/TLS encrypted connections in the NGINX and Postgres services
 - Mount additional folders in the worker containers, for example a folder that contains your datasets
+- Assign GPUs to specific worker containers
+- Integrate custom containers in the Dioptra deployment
 
-In addition to the above, you may want to further customize the ``docker-compose.yml`` file to suit your needs, such as allocating explicit CPUs you want each container to use.
+In addition to the above, you may want to further customize the the Docker Compose configuration via the ``docker-compose.override.yml`` file to suit your needs, such as allocating explicit CPUs you want each container to use.
+An example template file (``docker-compose.override.yml.template``) is provided as part of the deployment as a starting point.
+This can be copied to ``docker-compose.override.yml`` and modified.
 See the `Compose specification documentation <https://docs.docker.com/compose/compose-file/>`__ for the full list of available options.
+See the `Merge and override documentation <https://docs.docker.com/compose/compose-file/13-merge/>`__ for details on using multiple Compose files.
 
 Adding extra CA certificates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -399,7 +454,10 @@ For further information about adding the certificate-key pairs, please see the `
 Mounting folders in the worker containers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``docker-compose.yml`` file generated by the cookiecutter template does not mount any folders from the host machine into worker containers.
+The ``docker-compose.yml`` file generated by the cookiecutter template only supports mounting a single datasets directory from the host machine into worker containers.
+A more advanced configuration can be achieved via the ``docker-compose.override.yml`` file.
+A template is generated by cookiecutter and can be copied from `docker-compose.override.yml.template` to `docker-compose.override.yml` for modification.
+
 Common reasons for mounting additional folders in the worker containers include:
 
 1. Your datasets are stored in a folder on your host machine or in an NFS share
@@ -410,27 +468,25 @@ An example that illustrates how to mount a folder on the host machine and a fold
 Mounting a folder on the host machine
 #####################################
 
-For this example, let's assume the datasets are stored on the host machine under the absolute path ``/home/datasets`` and that we want to make these available in the worker containers under the absolute path ``/datasets``.
+For this example, let's assume the datasets are stored on the host machine under the absolute path ``/home/data`` and that we want to make these available in the worker containers under the absolute path ``/dioptra/data``.
 We also want to make the folders read-only to prevent a job from accidentally modifying or deleting the data.
-To do this, first verify that the folder ``/home/datasets`` and all of its files are world-readable.
+To do this, first verify that the folder ``/home/data`` and all of its files are world-readable.
 If they are not, you can fix this as follows:
 
 .. code:: sh
 
-   find /home/datasets -type d -print0 | xargs -0 chmod o=rx
-   find /home/datasets -type f -print0 | xargs -0 chmod o=r
+   find /home/data -type d -print0 | xargs -0 chmod o=rx
+   find /home/data -type f -print0 | xargs -0 chmod o=r
 
-Next, open ``docker-compose.yml`` with a text editor and find the blocks for the worker containers.
+Next, copy ``docker-compose.override.yml`` to ``docker-compose.override.yml.template``, open it with a text editor and find the blocks for the worker containers.
 The worker container blocks will have **tfcpu**, **tfgpu**, **pytorch-cpu**, or **pytorch-gpu** in their names.
-Append the line ``- /home/datasets:/datasets:ro`` to the ``volumes:`` subsection.
+Append the line ``- "/home/data:/dioptra/data:ro"`` to the ``volumes:`` subsections.
 
 .. code:: yaml
 
    dioptra-deployment-tfcpu-01:
      volumes:
-       - worker-ca-certificates:/usr/local/share/ca-certificates:rw
-       - worker-etc-ssl:/etc/ssl:rw
-       - /home/datasets:/datasets:ro
+       - "/home/data:/dioptra/data:ro"
 
 Mounting a folder on an NFS share
 #################################
@@ -441,19 +497,19 @@ Mounting a folder on an NFS share
 
       If you are mounting an NFS share, don't forget to change the IP address and exported directory to match your setup.
 
-For this example, let's assume the datasets are stored on a NFS version 4 server with IP address 10.0.0.10 and in the exported directory ``/dioptra/datasets`` and that we want to make these available in the worker containers under the absolute path ``/datasets``.
-First, we need to configure a named NFS volume in the ``docker-compose.yml`` file so that Docker knows where the NFS server is and which exported directory to use.
-Open ``docker-compose.yml`` with a text editor and find the **top-level** ``volumes:`` section (this should **not** be nested under the ``services:`` section) near the bottom of the file and add the following:
+For this example, let's assume the datasets are stored on a NFS version 4 server with IP address 10.0.0.10 and in the exported directory ``/dioptra/data`` and that we want to make these available in the worker containers under the absolute path ``/dioptra/data``.
+First, we need to configure a named NFS volume in the ``docker-compose.override.yml`` file so that Docker knows where the NFS server is and which exported directory to use.
+Copy ``docker-compose.override.yml.template`` to ``docker-compose.override.yml``, open it with a text editor and find the **top-level** ``volumes:`` section (this should **not** be nested under the ``services:`` section) near the bottom of the file and add the following:
 
 .. code:: yaml
 
    volumes:
-     dioptra-datasets:
+     dioptra-data:
        driver: local
        driver_opts:
          type: nfs
          o: "addr=10.0.0.10,auto,rw,bg,nfsvers=4,intr,actimeo=1800"
-         device: ":/dioptra/datasets"
+         device: ":/dioptra/data"
 
 .. margin::
 
@@ -461,35 +517,34 @@ Open ``docker-compose.yml`` with a text editor and find the **top-level** ``volu
 
       The NFS share does not need to be mounted on the host machine in order for the worker containers to have access to an exported directory.
 
-Next, verify that the exported directory ``/dioptra/datasets`` and all of its files are world-readable.
+Next, verify that the exported directory ``/dioptra/data`` and all of its files are world-readable.
 If they are not, access the NFS share and update the file access permissions.
-For example, if the NFS share is also mounted on the host machine at ``/dioptra/datasets``, then you would run:
+For example, if the NFS share is also mounted on the host machine at ``/dioptra/data``, then you would run:
 
 .. code:: sh
 
-   find /dioptra/datasets -type d -print0 | xargs -0 chmod o=rx
-   find /dioptra/datasets -type f -print0 | xargs -0 chmod o=r
+   find /dioptra/data -type d -print0 | xargs -0 chmod o=rx
+   find /dioptra/data -type f -print0 | xargs -0 chmod o=r
 
-Next, find the blocks for the worker containers in ``docker-compose.yml``.
+Next, find the blocks for the worker containers in ``docker-compose.override.yml``.
 The worker container blocks will have **tfcpu**, **tfgpu**, **pytorch-cpu**, or **pytorch-gpu** in their names.
-Append the line ``- dioptra-datasets:/datasets:ro`` to the ``volumes:`` subsection.
+Append the line ``- "dioptra-data:/dioptra/data:ro"`` to the ``volumes:`` subsection.
 The ``:ro`` at the end will mount the NFS share as read-only within the worker container to prevent a job from accidentally modifying or deleting the data.
 
 .. code:: yaml
 
    dioptra-deployment-tfcpu-01:
      volumes:
-       - worker-ca-certificates:/usr/local/share/ca-certificates:rw
-       - worker-etc-ssl:/etc/ssl:rw
-       - dioptra-datasets:/datasets:ro
+       - "dioptra-data:/dioptra/data:ro"
 
 Assigning multiple GPUs per worker
 ##################################
 
-To assign multiple GPUs to a worker, modify the ``NVIDIA_VISIBLE_DEVICES`` environment variable that is set in the **tfgpu** and **pytorch-gpu** container blocks:
+To assign multiple GPUs to a worker, edit your ``docker-compose.override.yml`` file to change the ``NVIDIA_VISIBLE_DEVICES`` environment variable in the **tfgpu** and **pytorch-gpu** container blocks:
 
 .. code:: yaml
 
+   dioptra-deployment-tfcpu-01:
      environment:
        NVIDIA_VISIBLE_DEVICES: 0,1
 
@@ -497,8 +552,57 @@ To allow a worker to use all available GPUs, set ``NVIDIA_VISIBLE_DEVICES`` to `
 
 .. code:: yaml
 
+   dioptra-deployment-tfcpu-01:
      environment:
        NVIDIA_VISIBLE_DEVICES: all
+
+Integrating custom containers
+#############################
+
+In some instances, you may want to utilize custom containers in the Dioptra environment.
+For this example, let's assume you have a container named ``custom-container`` that has a ``dev`` tag associated with it.
+To add this container to the deployment, nest the following code block in the ``services:`` section before the **top-level** ``volumes:`` section of the to the ``docker-compose.override.yml`` file:
+
+.. code:: yaml
+
+     custom-container:
+       image: custom-container:dev
+       restart: always
+       hostname: custom-container
+       healthcheck:
+         test:
+           - CMD
+           - /usr/local/bin/healthcheck.sh
+         interval: 30s
+         timeout: 60s
+         retries: 5
+         start_period: 80s
+       environment:
+         AWS_ACCESS_KEY_ID: ${WORKER_AWS_ACCESS_KEY_ID}
+         AWS_SECRET_ACCESS_KEY: ${WORKER_AWS_SECRET_ACCESS_KEY}
+         DIOPTRA_RESTAPI_DATABASE_URI: ${DIOPTRA_RESTAPI_DATABASE_URI}
+       command:
+         - --wait-for
+         - dioptra-deployment-redis:6379
+         - --wait-for
+         - dioptra-deployment-minio:9001
+         - --wait-for
+         - dioptra-deployment-db:5432
+         - --wait-for
+         - dioptra-deployment-mlflow-tracking:5000
+         - --wait-for
+         - dioptra-deployment-restapi:5000
+         - tensorflow_cpu
+       env_file:
+         - ./envs/ca-certificates.env
+         - ./envs/dioptra-deployment-worker.env
+         - ./envs/dioptra-deployment-worker-cpu.env
+       networks:
+         - dioptra
+       volumes:
+         - "worker-ca-certificates:/usr/local/share/ca-certificates:rw"
+         - "worker-etc-ssl:/etc/ssl:rw"
+         - "/local/path/to/data:/dioptra/data:ro"
 
 .. _getting-started-running-dioptra-init-deployment:
 
@@ -507,6 +611,7 @@ Initializing the deployment
 
 The ``init-deployment.sh`` script is the main tool for initializing the deployment and automates the following steps:
 
+- Generates the random passwords used to secure access to Dioptra's services.
 - Copies and bundles the extra CA certificates for the containers
 - Copies the configuration files in ``config/`` folder and the server certificates and private keys into named volumes
 - Sets the appropriate file and folder access permissions in the named volumes
@@ -529,6 +634,9 @@ If you run ``./init-deployment.sh --help``, you will print the script's help mes
                                   image
            --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
                      and the frontend files (default: 'main')
+           --python: Command for invoking the Python interpreter. Must be Python 3.11 or
+                     greater, and the jinja2 package must be installed.
+                     (default: 'python')
            --worker-ssl-service: Image to use when bootstrapping the SSL named volumes for
                                  the worker containers, must be 'tfcpu' or 'pytorchcpu'
                                  (default: 'tfcpu')
@@ -542,7 +650,8 @@ As an example, if you copied a server certificate and private key into both the 
 
 .. code:: sh
 
-   ./init-deployment.sh --enable-nginx-ssl --enable-postgres-ssl
+   # (If using a different branch, replace "main" with that branch's name)
+   ./init-deployment.sh --branch main --enable-nginx-ssl --enable-postgres-ssl
 
 You should see a series of log messages as the initialization scripts run.
 If you do not see any error messages while the script runs, then initialization is complete and you are ready to start the deployment.

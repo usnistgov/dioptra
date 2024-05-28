@@ -40,9 +40,9 @@ maintainers = [
 ]
 description = "Dioptra provides Machine Learning Security researchers with an environment for organizing and running experiments."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
-    "alembic<2.0.0",
+    "alembic>=1.13.0",
     "boto3>=1.16.0",
     "Click>=8.0.0,<9",
     "entrypoints>=0.3",
@@ -57,7 +57,6 @@ dependencies = [
     "jsonschema>=4.17.0",
     "marshmallow>=3.9.0,<4",
     "multimethod>=1.5",
-    "mlflow>=1.12.1,<2",
     "numpy>=1.22.0",
     "pandas>=1.5.0",
     "passlib>=1.7.0",
@@ -68,9 +67,9 @@ dependencies = [
     "rq>=1.5.0",
     "scipy>=1.4.1",
     "structlog>=20.2.0",
-    "SQLAlchemy>=1.4.0,<2",
+    "SQLAlchemy>=2",
     "typing-extensions>=3.7.4.3",
-    "werkzeug>=1.0.0,<=2.1.2",
+    "werkzeug>=3.0.0",
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -78,8 +77,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Security",
 ]
@@ -95,6 +93,7 @@ dioptra-db = "dioptra.restapi.db.alembic.run:cli"
 run-experiment = "dioptra.task_engine.run_experiment:main"
 validate-experiment = "dioptra.task_engine.validate:main"
 s3-download = "dioptra.worker.s3_download_cli:main"
+dioptra-worker = "dioptra.worker.dioptra_worker:main"
 
 [project.entry-points."dioptra.generics.estimator_predict"]
 tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"
@@ -109,6 +108,12 @@ dioptra = "dioptra.mlflow_plugins.dioptra_backend:DioptraProjectBackend"
 cookiecutter = [
     "cookiecutter>=2.0.0,<2.2.0",
 ]
+mlflow-skinny = [
+    "mlflow-skinny>=2",
+]
+mlflow-full = [
+    "mlflow>=2",
+]
 examples = [
     "aiohttp>=3.8.0",
     "kaggle>=1.5.0",
@@ -116,15 +121,25 @@ examples = [
     "rich>=13.3.0",
     "universal_pathlib>=0.0.23",
 ]
-sdk = [
-    "cryptography==3.*",
-    "imgaug>=0.4.0,<1",
-    "prefect>=1.0.0,<2",
+postgres = [
+    "psycopg2-binary>=2.9.0",
 ]
-taskplugins = [
-    "adversarial-robustness-toolbox>=1.9.0,<2",
+worker = [
+    "async_timeout",
+    "adversarial-robustness-toolbox>=1.9.0",
+    "imgaug>=0.4.0",
+    "matplotlib",
+    "nrtk>=0.3.0",
+    "opencv-python",
+    "Pillow>=9.2.0",
+    "prefect>=1.0.0,<2",
     "pyarrow",
-    "scikit-learn>=1.0.0,<1.1.0",
+    "pycocotools",
+    "python-json-logger>=2.0.0",
+    "rich>=13.3.0",
+    "scikit-learn>=1.0.0",
+    "simplejson",
+    "tensorboard",
 ]
 dev = [
     "autopep8",
@@ -132,6 +147,7 @@ dev = [
     "build",
     "entrypoints",
     "esbonio",
+    "Faker>=24.0.0",
     "flake8-bugbear",
     "flake8>=3.8.0",
     "freezegun",
@@ -154,7 +170,7 @@ dev = [
 
 [tool.black]
 line-length = 88
-target-version = ['py39', 'py310']
+target-version = ['py311']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -256,7 +272,7 @@ profile = "black"
 honor_noqa = true
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 platform = "linux"
 mypy_path = "src,task-plugins"
 explicit_package_bases = true
@@ -275,7 +291,7 @@ cache_dir = "/dev/null"
 exclude = [
     'alembic/.*$',  # exclude all files, folders under alembic directory
 ]
-plugins = "numpy.typing.mypy_plugin,sqlalchemy.ext.mypy.plugin"
+plugins = "numpy.typing.mypy_plugin"
 
 [tool.pyright]
 include = ["src"]
