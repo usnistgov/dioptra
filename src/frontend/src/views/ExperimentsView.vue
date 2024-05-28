@@ -7,6 +7,11 @@
     :pagination="{sortBy: 'draft', descending: true}"
     @edit="store.savedExperimentForm = selected[0]; store.editMode = true; router.push('/experiments/create')"
   >
+    <template #body-cell-name="props">
+        <RouterLink :to="`/experiment/${props.row.id}/jobs`">
+          {{props.row.name}}
+        </RouterLink>
+      </template>
     <template #body-cell-draft="props">
       <q-chip v-if="props.row.draft" outline color="red" text-color="white" class="q-ml-none">
         DRAFT

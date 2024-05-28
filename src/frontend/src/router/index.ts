@@ -25,12 +25,24 @@ const router = createRouter({
       component: () => import('../views/EditPluginsView.vue')
     },
     {
+      path: '/plugins/:id/files',
+      component: () => import('../views/PluginFiles.vue')
+    },
+    {
+      path: '/plugins/:id/files/:fileId',
+      component: () => import('../views/CreatePluginFile.vue')
+    },
+    {
       path: '/queues',
       component: () => import('../views/QueuesView.vue')
     },
     {
       path: '/experiments',
       component: () => import('../views/ExperimentsView.vue')
+    },
+    {
+      path: '/experiment/:id/jobs',
+      component: () => import('../views/JobsView.vue')
     },
     {
       path: '/experiments/create',

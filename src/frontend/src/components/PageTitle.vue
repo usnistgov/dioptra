@@ -1,5 +1,5 @@
 <template>
-  <h1 class="text-capitalize q-mb-xs" @click="console.log(route, title)">{{ title }}</h1>
+  <h1 class="text-capitalize q-mb-sm" @click="console.log(route, title)">{{ title }}</h1>
   <nav aria-label="Breadcrumb">
     <q-breadcrumbs class="text-grey text-capitalize">
       <template v-slot:separator>
@@ -13,6 +13,11 @@
         :label="path[0]" 
         :to="path[1] ? `/${path[0]}` : ''" 
         :aria-current="`${path.length === 1 ? 'true' : 'false'}`"
+      />
+      <q-breadcrumbs-el
+        v-if="route.params.id && route.params.fileId"
+        :label="`${getPluginName(route.params.id)} Files`"
+        :to="`/plugins/${route.params.id}/files`"
       />
       <q-breadcrumbs-el
         v-if="path[1]"
@@ -51,9 +56,14 @@
     if(route.path === '/groups/admin') return `${store.editMode ? 'Edit Group ' : 'New Group'}`
     if(path.value[0] === 'entrypoints') return 'Entry Points'
     if(route.path === '/experiments/create') return `${newOrEdit.value} Experiment`
-    if(route.path.startsWith('/plugins/')) return `Edit Plugin`
+    if(path.value[2] === 'files' && !route.params.fileId) return `${getPluginName(route.params.id)} Files`
+    if(path.value[2] === 'files' && route.params.fileId) return `File ${route.params.fileId}`
+    if(path.value[0] === 'plugins' && path.value[1]) return 'Edit Plugin' 
     return path.value[0]
   })
 
+  function getPluginName(id) {
+    return store.plugins.find((plugin) => plugin.id === id).name
+  }
 
 </script>

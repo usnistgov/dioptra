@@ -8,6 +8,7 @@
     separator="cell"
     :filter="filter"
     :rows-per-page-options="[0]"
+    :title="title"
   >
     <template v-slot:body="props">
       <q-tr :props="props">
@@ -55,7 +56,7 @@
 <script setup>
   import { ref } from 'vue'
 
-  defineProps(['columns', 'rows', 'hideSearch', 'hideEditTable', 'hideEditRow'])
+  defineProps(['columns', 'rows', 'hideSearch', 'hideEditTable', 'hideEditRow','title'])
 
   const editMode = ref(false)
 

@@ -88,6 +88,14 @@ xmas-fifth-day:
         { id: '3', name: 'file3', contents: 'print("Hello, World! This is file 3.")', tasks: [] },
       ],
       tags: ['Machine Learning']
+    },
+    {
+      name: 'plugin 2',
+      id: '2',
+      group: 'Group 2',
+      files: [
+      ],
+      tags: ['Machine Learning']
     }
   ])
 

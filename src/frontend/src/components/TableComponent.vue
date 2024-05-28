@@ -47,7 +47,7 @@
       </q-tr>
       <q-tr v-show="props.expand" :props="props">
         <q-td colspan="100%">
-          <div class="text-left ">Additional info for {{ props.row.name }}.</div>
+          <!-- <div class="text-left ">Additional info for {{ props.row.name }}.</div> -->
           <slot name="expandedSlot" :row="props.row" />
         </q-td>
       </q-tr>
