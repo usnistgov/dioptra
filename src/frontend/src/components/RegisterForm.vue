@@ -19,7 +19,7 @@
           outlined
           label="Email Address"
           :rules="[requiredRule, emailRule]"
-          v-model="emailAddress"
+          v-model="email"
           aria-required="true"
         />
         <q-input
@@ -99,13 +99,13 @@
 
   const username = ref('');
   const password = ref('');
-  const emailAddress = ref('');
+  const email = ref('');
   const confirmPassword = ref('');
   const showPassword = ref(false);
 
   async function submit() {
     try {
-      const res = await api.registerUser(username.value, emailAddress.value, password.value, confirmPassword.value);
+      const res = await api.registerUser(username.value, email.value, password.value, confirmPassword.value);
       router.push('/login')
       notify.success(`Successfully created user '${res.data.username}'`);
     } catch (err) {

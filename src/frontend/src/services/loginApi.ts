@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 export async function getLoginStatus() {
-  const res = await axios.get('/api/user/current');
+  const res = await axios.get('/api/users/current');
+  console.log('res = ', res)
   return res;
 }
 
@@ -18,26 +19,27 @@ export async function logout(everywhere: boolean = false) {
   return res;
 }
 
-export async function registerUser(username: string, emailAddress: string, password: string, confirmPassword: string) {
-  const res = await axios.post('/api/user/', {
+export async function registerUser(username: string, email: string, password: string, confirmPassword: string) {
+  const res = await axios.post('/api/users', {
     username: username,
-    emailAddress: emailAddress,
+    email: email,
     password: password,
     confirmPassword: confirmPassword
   });
   return res;
 }
 
-export async function changePassword(currentPassword: string, newPassword: string) {
-  const res = await axios.post('/api/user/current/password', {
-    currentPassword: currentPassword,
-    newPassword: newPassword
+export async function changePassword(oldPassword: string, newPassword: string, confirmNewPassword: string) {
+  const res = await axios.post('/api/users/current/password', {
+    oldPassword: oldPassword,
+    newPassword: newPassword,
+    confirmNewPassword: confirmNewPassword,
   });
   return res;
 }
 
 export async function deleteUser(password: string) {
-  const res = await axios.delete('/api/user/current', {
+  const res = await axios.delete('/api/users/current', {
     data: { password: password }
   });
   return res;

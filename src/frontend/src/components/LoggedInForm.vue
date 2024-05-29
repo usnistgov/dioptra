@@ -2,13 +2,19 @@
   <q-card bordered class="q-pa-lg" style="min-width: 40%;">
     <q-card-section class="text-center">
         <h1 class="form-title" style="margin-top: 0; margin-bottom: 0;">Logged In</h1>
-        <p>You are currently logged in as <span class="text-weight-bold text-primary">{{ loggedInUser }}</span></p>
+        <p>You are currently logged in as <span class="text-weight-bold text-primary">{{ loggedInUser.username }}</span></p>
+        <p>
+          Email: {{ loggedInUser.email }} <br>
+          Password Expires: {{ 
+            new Date(loggedInUser.passwordExpiresOn)
+              .toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) 
+          }}
+        </p>
     </q-card-section>
     <q-form @submit="callLogout()" class="row flex-center">
       <q-checkbox
         label="Log out from all devices"
         v-model="allDevices"
-        class="q-mt-md"
       />
       <q-btn
         color="orange"
@@ -33,7 +39,7 @@
             To change your password, enter your current and new password.
           </p>
           <q-input
-            class="q-py-sm"
+            class="q-mb-sm"
             outlined
             label="Current Password"
             :type="showPassword ? 'text' : 'password'"
@@ -50,12 +56,29 @@
             </template>
           </q-input>
           <q-input
-            class="q-py-lg"
+            class="q-mb-sm"
             outlined
             label="New Password"
             :type="showPassword ? 'text' : 'password'"
             :rules="[requiredRule]"
             v-model="newPassword"
+            aria-required="true"
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="showPassword ? 'visibility' : 'visibility_off'"
+                class="cursor-pointer"
+                @click="showPassword = !showPassword"
+              />
+            </template>
+          </q-input>
+          <q-input
+            class="q-mb-sm"
+            outlined
+            label="Confirm New Password"
+            :type="showPassword ? 'text' : 'password'"
+            :rules="[requiredRule]"
+            v-model="confirmNewPassword"
             aria-required="true"
           >
             <template v-slot:append>
@@ -130,6 +153,7 @@
 
   const password = ref('');
   const newPassword = ref('');
+  const confirmNewPassword = ref('');
   const deleteRequestPassword = ref('');
   const showPassword = ref(false);
   const showDeletePassword = ref(false);
@@ -137,7 +161,7 @@
   const allDevices = ref(false);
 
   async function callLogout() {
-    const previousUser = JSON.parse(JSON.stringify(loggedInUser.value));
+    const previousUser = JSON.parse(JSON.stringify(loggedInUser.value.username));
     try {
       await api.logout(allDevices.value);
       loggedInUser.value = '';
@@ -148,9 +172,9 @@
   }
 
   async function callChangePassword() {
-    const previousUser = JSON.parse(JSON.stringify(loggedInUser.value));
+    const previousUser = JSON.parse(JSON.stringify(loggedInUser.value.username));
     try {
-      const res = await api.changePassword(password.value, newPassword.value);
+      const res = await api.changePassword(password.value, newPassword.value, confirmNewPassword.value);
       loggedInUser.value = '';
       notify.success(`${res.data.status} for user: ${previousUser}`);
     } catch(err) {
@@ -169,6 +193,17 @@
       console.log('delete user err = ', err)
       notify.error(err);
     }
+  }
+
+  const timeOptions = { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric', 
+    hour: 'numeric', 
+    minute: 'numeric', 
+    second: 'numeric', 
+    hour12: true, 
+    timeZoneName: 'short' 
   }
 
 </script>

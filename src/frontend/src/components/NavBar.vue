@@ -92,16 +92,16 @@
         :label="getLabel()" to="/login"
       />
       <div v-else >
-        <q-btn color="primary" icon="person" :label="isMobile ? '' : store.loggedInUser" to="/login" dense class="q-mr-sm" />
-        <q-btn-dropdown style="background-color: #CF5C36;" icon="groups" :label="isMobile ? '' : store.loggedInGroup" dense class="q-pl-md">
+        <q-btn color="primary" icon="person" :label="isMobile ? '' : store.loggedInUser.username" to="/login" dense class="q-mr-sm" />
+        <q-btn-dropdown style="background-color: #CF5C36;" icon="groups" :label="isMobile ? '' : store.loggedInGroup.name" dense class="q-pl-md">
           <q-list>
             <q-item 
               v-for="(group, i) in store.groups" 
               :key="i" 
               clickable 
               v-close-popup 
-              @click="store.loggedInGroup = group.name" 
-              :active="group === store.loggedInGroup"
+              @click="console.log('Selected group = ', group)" 
+              :active="group.id === store.loggedInGroup.id"
               active-class="bg-blue-3 text-bold"
             >
               <q-item-section>
@@ -120,7 +120,6 @@
   import { computed, inject, ref } from 'vue'
   import { useRouter, START_LOCATION } from 'vue-router'
   import { useLoginStore } from '@/stores/LoginStore'
-  import { storeToRefs } from 'pinia'
   import * as api from '@/services/loginApi'
 
   const router = useRouter()
@@ -158,13 +157,12 @@
   async function callGetLoginStatus() {
     try {
       const res = await api.getLoginStatus()
-      store.loggedInUser = res.data.username
+      store.loggedInUser = res.data
+      store.groups = res.data.groups
     } catch(err) {
       store.loggedInUser = ''
     }
   }
-
-
 
 
 </script>

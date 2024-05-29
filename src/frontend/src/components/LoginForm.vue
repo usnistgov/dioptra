@@ -57,11 +57,9 @@
   import { ref } from 'vue';
   import * as api from '@/services/loginApi';
   import { useLoginStore } from '@/stores/LoginStore.ts';
-  import { storeToRefs } from 'pinia';
   import * as notify from '../notify';
 
-  const store = useLoginStore();
-  const { loggedInUser } = storeToRefs(store);
+  const store = useLoginStore()
 
   const requiredRule = (val) => (val && val.length > 0) || "This field is required";
 
@@ -72,10 +70,20 @@
   async function submit() {
     try {
       const res = await api.login(username.value, password.value);
-      loggedInUser.value = JSON.parse(JSON.stringify(username.value));
+      callGetLoginStatus()
       notify.success(`${res.data.status} for ${username.value}`);
     } catch(err) {
       notify.error(err.response.data.message);
+    }
+  }
+
+  async function callGetLoginStatus() {
+    try {
+      const res = await api.getLoginStatus()
+      store.loggedInUser = res.data
+      store.groups = res.data.groups
+    } catch(err) {
+      store.loggedInUser = ''
     }
   }
 

@@ -1,6 +1,6 @@
 <template>
   <TableComponent 
-    :rows="store.groups"
+    :rows="userGroups"
     :columns="columns"
     title="Groups"
     @delete="showDeleteDialog = true"
@@ -26,40 +26,22 @@
       Create a new Group
     </q-tooltip>
   </q-btn>
-  <AddQueueDialog 
-    v-model="showAddDialog"
-    @addQueue="registerQueue"
-    @updateQueue="updateQueue"
-    :editQueue="selected.length && editing ? selected[0] : ''"
-  />
-  <DeleteDialog 
-    v-model="showDeleteDialog"
-    @submit="deleteQueue"
-    type="Queue"
-    :name="selected.length ? selected[0].name : ''"
-  />
 </template>
 
 <script setup>
-  import * as api from '@/services/queuesApi'
-  import { ref, watch } from 'vue'
+  import * as api from '@/services/groupsApi'
+  import { ref, computed } from 'vue'
   import * as notify from '../notify';
   import TableComponent from '@/components/TableComponent.vue'
-  import AddQueueDialog from '@/dialogs/AddQueueDialog.vue'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { useLoginStore } from '@/stores/LoginStore'
   import { useDataStore } from '@/stores/DataStore'
   import { useRouter } from 'vue-router'
+
 
   const router = useRouter()
 
   const store = useLoginStore()
   const dataStore = useDataStore()
-
-  const showAddDialog = ref(false)
-  const showDeleteDialog = ref(false)
-
-  const queues = ref([])
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
@@ -71,61 +53,46 @@
     { name: 'owner', label: 'Owner', align: 'left', field: 'owner', sortable: true },
   ]
 
-  getQueues()
-  async function getQueues() {
-    try {
-      const res = await api.getQueues();
-      queues.value = res.data
-    } catch(err) {
-      notify.error(err.response.data.message)
-    } 
-  }
+  // getGroups()
+  // async function getGroups() {
+  //   try {
+  //     const res = await api.getGroups()
+  //     console.log('getGroups = ', res)
+  //   } catch(err) {
+  //     notify.error(err.response.data.message)
+  //   } 
+  // }
 
-  async function registerQueue(name) {
-    try {
-      await api.registerQueue(name)
-      notify.success(`Sucessfully created '${name}'`)
-      showAddDialog.value = false
-      getQueues()
-    } catch(err) {
-      notify.error(err.response.data.message)
+  const userGroupsIds = computed(() => {
+    if(store.loggedInUser) {
+      return store.loggedInUser.groups.map((group) => group.id)
     }
-  }
+    return []
+  })
 
-  async function updateQueue(name, queueId) {
-    try {
-      await api.upadateQueue(name, queueId)
-      notify.success(`Sucessfully edited '${name}'`)
-      showAddDialog.value = false
-      selected.value = []
-      getQueues()
-    } catch(err) {
-      notify.error(err.response.data.message)
+  const userGroups = ref([])
+
+  getUserGroups()
+
+  async function getUserGroups() {
+    if(userGroupsIds.value.length === 0) {
+      notify.error('Please login to view user groups.')
+      return
     }
-  }
-
-  function formatDate(dateString) {
-    const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
-    return new Date(dateString).toLocaleString('en-US', options);
+    for (const id of userGroupsIds.value) {
+      const res = await api.getGroup(id)
+      console.log('getGroup res = ', res)
+      res.data.members.forEach((member) => {
+        if(member.user.username === store.loggedInUser.username) {
+          userGroups.value.push({
+            name: member.group.name,
+            ...member.permissions
+          })
+        }
+      })
+    }
   }
 
   const selected = ref([])
-  const editing = ref(false)
-
-  watch(showAddDialog, (newVal) => {
-    if(!newVal) editing.value = false
-  })
-
-  async function deleteQueue() {
-    try {
-      await api.deleteQueue(selected.value[0].name)
-      notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      getQueues()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
 
 </script>
