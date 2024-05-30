@@ -47,6 +47,8 @@
   import TableComponent from '@/components/TableComponent.vue'
   import AddQueueDialog from '@/dialogs/AddQueueDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+  import { useLoginStore } from '@/stores/LoginStore'
+  const store = useLoginStore()
 
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)
@@ -55,9 +57,10 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'id', label: 'Queue ID', align: 'left', field: 'queueId', sortable: true },
+    { name: 'id', label: 'Queue ID', align: 'left', field: 'id', sortable: true },
     { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', format: val => `${formatDate(val)}`, sortable: true },
-    { name: 'lastModified', label: 'Last Modified', align: 'left', field: 'lastModified', format: val => `${formatDate(val)}`, sortable: true },
+    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', format: val => `${formatDate(val)}`, sortable: true },
+    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
     // { name: 'chips', label: 'Custom Column Example',align: 'left', sortable: false },
   ]
 
@@ -65,15 +68,15 @@
   async function getQueues() {
     try {
       const res = await api.getQueues();
-      queues.value = res.data
+      queues.value = res.data.data
     } catch(err) {
       notify.error(err.response.data.message)
     } 
   }
 
-  async function registerQueue(name) {
+  async function registerQueue(name, description) {
     try {
-      await api.registerQueue(name)
+      await api.registerQueue(name, store.loggedInGroup.id, description)
       notify.success(`Sucessfully created '${name}'`)
       showAddDialog.value = false
       getQueues()
@@ -82,9 +85,9 @@
     }
   }
 
-  async function updateQueue(name, queueId) {
+  async function updateQueue(name, id, description) {
     try {
-      await api.upadateQueue(name, queueId)
+      await api.upadateQueue(name, id, description)
       notify.success(`Sucessfully edited '${name}'`)
       showAddDialog.value = false
       selected.value = []
@@ -108,7 +111,7 @@
 
   async function deleteQueue() {
     try {
-      await api.deleteQueue(selected.value[0].name)
+      await api.deleteQueue(selected.value[0].id)
       notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []

@@ -13,7 +13,7 @@
         Queue Name:
       </label>
       <q-input 
-        class="col" 
+        class="col q-mb-xs" 
         outlined 
         dense 
         v-model="name" 
@@ -23,12 +23,23 @@
         aria-required="true"
       />
     </div>
-    <div class="row items-center">
+    <!-- <div class="row items-center">
       <label class="col-3" id="locked">
         Locked:
       </label>
       <q-toggle v-model="locked" class="q-mr-sm" aria-labelledby="locked" />
       <q-icon :name="locked ? 'lock' : 'lock_open'" size="sm" />
+    </div> -->
+    <div class="row items-center">
+      <label class="col-3" id="locked">
+        Description:
+      </label>
+      <q-input
+      class="col"
+        v-model="description"
+        outlined
+        type="textarea"
+      />
     </div>
   </DialogComponent>
 </template>
@@ -45,22 +56,25 @@
 
   const name = ref('')
   const locked = ref(true)
+  const description = ref('')
 
   watch(showDialog, (newVal) => {
     if(newVal) {
       name.value = props.editQueue.name
+      description.value = props.editQueue.description
     }
     else {
       name.value = ''
       locked.value = true
+      description.value = ''
     }
   })
 
   function emitAddOrEdit() {
     if(props.editQueue) {
-      emit('updateQueue', name.value, props.editQueue.queueId)
+      emit('updateQueue', name.value, props.editQueue.id, description.value)
     } else {
-      emit('addQueue', name.value)
+      emit('addQueue', name.value, description.value)
     }
   }
 
