@@ -198,6 +198,7 @@ class GroupIdQueryParametersSchema(Schema):
     groupId = fields.Integer(
         attribute="group_id",
         metadata=dict(description="Filter results by the Group ID."),
+        load_default=None,
     )
 
 
