@@ -42,6 +42,10 @@ bigint = Annotated[int, mapped_column(BigInteger().with_variant(Integer, "sqlite
 bigintnovariant = Annotated[int, mapped_column(BigInteger())]
 guid = Annotated[uuid.UUID, mapped_column(GUID())]
 datetimetz = Annotated[datetime.datetime, mapped_column(TZDateTime())]
+optionalbigint = Annotated[
+    Optional[int],
+    mapped_column(BigInteger().with_variant(Integer, "sqlite"), nullable=True),
+]
 optionaldatetimetz = Annotated[Optional[datetime.datetime], mapped_column(TZDateTime())]
 optionaljson_ = Annotated[Optional[dict[str, Any]], mapped_column(JSON)]
 optionalstr = Annotated[Optional[str], mapped_column(Text(), nullable=True)]

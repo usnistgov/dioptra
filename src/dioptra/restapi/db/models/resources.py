@@ -24,6 +24,7 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Index,
     Integer,
+    Nullable,
     Text,
     UniqueConstraint,
     and_,
@@ -39,6 +40,7 @@ from dioptra.restapi.db.db import (
     db,
     intpk,
     json_,
+    optionalbigint,
     optionalstr,
     text_,
 )
@@ -240,6 +242,16 @@ class Resource(db.Model):  # type: ignore[name-defined]
         )
         .correlate_except(ResourceLock)
         .exists()
+    )
+    latest_snapshot_id: Mapped[optionalbigint] = column_property(
+        Nullable(
+            select(ResourceSnapshot.resource_snapshot_id)
+            .where(ResourceSnapshot.resource_id == resource_id)
+            .order_by(ResourceSnapshot.created_on.desc())
+            .limit(1)
+            .correlate_except(ResourceSnapshot)
+            .scalar_subquery()
+        )
     )
 
     # Relationships

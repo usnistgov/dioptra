@@ -100,7 +100,7 @@ def assert_queue_response_contents_matches_expectations(
     """
     expected_keys = {
         "id",
-        "snapshotId",
+        "snapshot",
         "group",
         "user",
         "createdOn",
@@ -114,7 +114,7 @@ def assert_queue_response_contents_matches_expectations(
 
     # Validate the non-Ref fields
     assert isinstance(response["id"], int)
-    assert isinstance(response["snapshotId"], int)
+    assert isinstance(response["snapshot"], int)
     assert isinstance(response["name"], str)
     assert isinstance(response["description"], str)
     assert isinstance(response["createdOn"], str)
@@ -134,9 +134,9 @@ def assert_queue_response_contents_matches_expectations(
     assert response["user"]["id"] == expected_contents["user_id"]
 
     # Validate the GroupRef structure
-    assert isinstance(response["group"][0]["id"], int)
-    assert isinstance(response["group"][0]["name"], str)
-    assert isinstance(response["group"][0]["url"], str)
+    assert isinstance(response["group"]["id"], int)
+    assert isinstance(response["group"]["name"], str)
+    assert isinstance(response["group"]["url"], str)
     assert response["group"]["id"] == expected_contents["group_id"]
 
     # Validate the TagRef structure
@@ -191,11 +191,11 @@ def assert_retrieving_queues_works(
 
     query_string: dict[str, Any] = {}
 
-    if group_id is not None:
-        query_string["groupId"] = group_id
+    # if group_id is not None:
+    query_string["group_id"] = group_id
 
     if search is not None:
-        query_string["query"] = search
+        query_string["search"] = search
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
@@ -221,7 +221,9 @@ def assert_registering_existing_queue_name_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = actions.register_queue(client, name=name, group_id=group_id)
+    response = actions.register_queue(
+        client, name=name, description="", group_id=group_id
+    )
     assert response.status_code == 400
 
 
@@ -294,7 +296,6 @@ def assert_cannot_rename_queue_with_existing_name(
 # -- Tests -----------------------------------------------------------------------------
 
 
-@pytest.mark.v1_test
 def test_create_queue(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -310,7 +311,7 @@ def test_create_queue(
     """
     name = "tensorflow_cpu"
     description = "The first queue."
-    user_id = auth_account["user"]["id"]
+    user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
     queue1_response = actions.register_queue(
         client, name=name, description=description, group_id=group_id
@@ -330,7 +331,6 @@ def test_create_queue(
     )
 
 
-@pytest.mark.v1_test
 def test_queue_get_all(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -346,11 +346,7 @@ def test_queue_get_all(
     - The user is able to retrieve a list of all registered queues.
     - The returned list of queues matches the full list of registered queues.
     """
-    queue1_expected = registered_queues["queue1"]
-    queue2_expected = registered_queues["queue2"]
-    queue3_expected = registered_queues["queue3"]
-    queue_expected_list = [queue1_expected, queue2_expected, queue3_expected]
-
+    queue_expected_list = list(registered_queues.values())
     assert_retrieving_queues_works(client, expected=queue_expected_list)
 
 
@@ -370,10 +366,7 @@ def test_queue_search_query(
       that contains 'queue'.
     - The returned list of queues matches the expected matches from the query.
     """
-    queue1_expected = registered_queues["queue1"]
-    queue2_expected = registered_queues["queue2"]
-    queue_expected_list = [queue1_expected, queue2_expected]
-
+    queue_expected_list = list(registered_queues.values())[:2]
     assert_retrieving_queues_works(
         client,
         expected=queue_expected_list,
@@ -381,7 +374,6 @@ def test_queue_search_query(
     )
 
 
-@pytest.mark.v1_test
 def test_queue_group_query(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -397,19 +389,14 @@ def test_queue_group_query(
       default group.
     - The returned list of queues matches the expected list owned by the default group.
     """
-    queue1_expected = registered_queues["queue1"]
-    queue2_expected = registered_queues["queue2"]
-    queue3_expected = registered_queues["queue3"]
-    queue_expected_list = [queue1_expected, queue2_expected, queue3_expected]
-
+    queue_expected_list = list(registered_queues.values())
     assert_retrieving_queues_works(
         client,
         expected=queue_expected_list,
-        group_id=auth_account["groups"][0]["group_id"],
+        group_id=auth_account["groups"][0]["id"],
     )
 
 
-@pytest.mark.v1_test
 def test_cannot_register_existing_queue_name(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -433,7 +420,6 @@ def test_cannot_register_existing_queue_name(
     )
 
 
-@pytest.mark.v1_test
 def test_rename_queue(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -448,23 +434,43 @@ def test_rename_queue(
     - The user issues a request to change the name of a queue.
     - The user retrieves information about the same queue and it reflects the name
       change.
+    - The user issues a request to change the name of the queue to the existing name.
+    - The user retrieves information about the same queue and verifies the name remains
+      unchanged.
     - The user issues a request to change the name of a queue to an existing queue's
       name.
     - The request fails with an appropriate error message and response code.
     """
-    updated_queue_name = "tensorflow_gpu"
+    updated_queue_name = "tensorflow_tpu"
     queue_to_rename = registered_queues["queue1"]
     existing_queue = registered_queues["queue2"]
 
-    modify_queue(
+    modified_queue = modify_queue(
         client,
         queue_id=queue_to_rename["id"],
         new_name=updated_queue_name,
         new_description=queue_to_rename["description"],
-    )
+    ).get_json()
     assert_queue_name_matches_expected_name(
         client, queue_id=queue_to_rename["id"], expected_name=updated_queue_name
     )
+    queue_expected_list = [
+        modified_queue,
+        registered_queues["queue2"],
+        registered_queues["queue3"],
+    ]
+    assert_retrieving_queues_works(client, expected=queue_expected_list)
+
+    modified_queue = modify_queue(
+        client,
+        queue_id=queue_to_rename["id"],
+        new_name=updated_queue_name,
+        new_description=queue_to_rename["description"],
+    ).get_json()
+    assert_queue_name_matches_expected_name(
+        client, queue_id=queue_to_rename["id"], expected_name=updated_queue_name
+    )
+
     assert_cannot_rename_queue_with_existing_name(
         client,
         queue_id=queue_to_rename["id"],
@@ -473,7 +479,6 @@ def test_rename_queue(
     )
 
 
-@pytest.mark.v1_test
 def test_delete_queue_by_id(
     client: FlaskClient,
     db: SQLAlchemy,
