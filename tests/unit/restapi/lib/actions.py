@@ -26,6 +26,7 @@ from werkzeug.test import TestResponse
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
     V1_PLUGINS_ROUTE,
+    V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     V1_QUEUES_ROUTE,
     V1_ROOT,
     V1_USERS_ROUTE,
@@ -116,7 +117,7 @@ def register_plugin_file(
 
     Args:
         client: The Flask test client.
-        group_id: The group to create the new plugin in.
+        group_id: The group that owns the plugin.
         plugin_id: The plugin resource to create the file in.
         filename: The name of the plugin file.
         contents: The contents of the file containing imports, 
@@ -138,6 +139,69 @@ def register_plugin_file(
 
     return client.post(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def register_plugin_parameter_type(
+    client: FlaskClient,
+    name: str,
+    group_id: int,
+    structure: dict[str, Any] | None = None,
+    description: str | None = None,
+) -> TestResponse:
+    """Create a Plugin Parameter Type using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name of the plugin parameter type to be created.
+        group_id: The group to create the new plugin parameter type in.
+        structure: Optional JSON-type field for further constraining a type's structure.
+
+    Returns:
+        The response from the API.
+    """
+    payload = {"name": name, "group_id": group_id}
+
+    if structure:
+        payload["structure"] = structure
+        
+    if description:
+        payload["description"] = description
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def register_plugin_task(
+    client: FlaskClient,
+    plugin_id: int,
+    plugin_file_id: int,
+    name: str,
+    parameter_type_id: int,
+) -> TestResponse:
+    """Register a plugin task using the API.
+
+    Args:
+        client: The Flask test client.
+        plugin_id: The plugin ID with a file.
+        plugin_file_id: The plugin file ID to append the task.
+        name: The name of the plugin task.
+        parameter_type_id: The ID of the parameter type.
+    Returns:
+        The response from the API.
+    """
+    payload: dict[str, Any] = {
+        "name": name,
+        "parameter_type_id": parameter_type_id,
+    }
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}/tasks",
         json=payload,
         follow_redirects=True,
     )
