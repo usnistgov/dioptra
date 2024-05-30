@@ -14,34 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from . import (
-    artifacts,
-    auth,
-    entrypoints,
-    experiments,
-    groups,
-    jobs,
-    models,
-    plugin_parameter_types,
-    plugins,
-    queues,
-    shared,
-    tags,
-    users,
-)
+from .search_parser import construct_sql_query_filters, parse_search_text
 
-__all__ = [
-    "artifacts",
-    "auth",
-    "entrypoints",
-    "experiments",
-    "groups",
-    "jobs",
-    "models",
-    "plugin_parameter_types",
-    "plugins",
-    "shared",
-    "queues",
-    "tags",
-    "users",
-]
+__all__ = ["construct_sql_query_filters", "parse_search_text"]

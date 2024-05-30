@@ -191,8 +191,8 @@ def assert_retrieving_queues_works(
 
     query_string: dict[str, Any] = {}
 
-    # if group_id is not None:
-    query_string["group_id"] = group_id
+    if group_id is not None:
+        query_string["groupId"] = group_id
 
     if search is not None:
         query_string["search"] = search
@@ -350,7 +350,6 @@ def test_queue_get_all(
     assert_retrieving_queues_works(client, expected=queue_expected_list)
 
 
-@pytest.mark.v1_test
 def test_queue_search_query(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -362,16 +361,18 @@ def test_queue_search_query(
     Given an authenticated user and registered queues, this test validates the following
     sequence of actions:
 
-    - The user is able to retrieve a list of all registered queues with a description
-      that contains 'queue'.
+    - The user is able to retrieve a list of all registered queues with various queries.
     - The returned list of queues matches the expected matches from the query.
     """
     queue_expected_list = list(registered_queues.values())[:2]
     assert_retrieving_queues_works(
-        client,
-        expected=queue_expected_list,
-        search="description:*queue*",
+        client, expected=queue_expected_list, search="description:*queue*"
     )
+    assert_retrieving_queues_works(
+        client, expected=queue_expected_list, search="*queue*, name:tensorflow*"
+    )
+    queue_expected_list = list(registered_queues.values())
+    assert_retrieving_queues_works(client, expected=queue_expected_list, search="*")
 
 
 def test_queue_group_query(

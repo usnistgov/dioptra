@@ -28,9 +28,10 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError, SearchNotImplementedError
+from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v0.shared.password.service import PasswordService
 from dioptra.restapi.v1.groups.service import GroupMemberService, GroupNameService
+from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 from .errors import (
     NoCurrentUserError,
@@ -54,6 +55,10 @@ DEFAULT_GROUP_PERMISSIONS: Final[dict[str, Any]] = {
     "share_write": False,
 }
 DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
+SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+    "username": models.User.username,
+    "email": models.User.email_address,
+}
 
 
 class UserService(object):
@@ -171,18 +176,19 @@ class UserService(object):
             the query.
 
         Raises:
-            SearchNotImplementedError: If a search string is provided.
             BackendDatabaseError: If the database query returns a None when counting
                 the number of users.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get list of users")
 
-        if search_string:
-            log.debug("Searching is not implemented", search_string=search_string)
-            raise SearchNotImplementedError
+        search_filters = construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
 
-        stmt = select(func.count(models.User.user_id)).filter_by(is_deleted=False)
+        stmt = (
+            select(func.count(models.User.user_id))
+            .filter_by(is_deleted=False)
+            .filter(search_filters)
+        )
         total_num_users = db.session.scalars(stmt).first()
 
         if total_num_users is None:
@@ -199,6 +205,7 @@ class UserService(object):
         stmt = (
             select(models.User)  # type: ignore
             .filter_by(is_deleted=False)
+            .filter(search_filters)
             .offset(page_index)
             .limit(page_length)
         )
