@@ -30,7 +30,6 @@ from ..lib import actions
 @pytest.fixture
 def app(dependency_modules: list[Any]) -> Flask:
     from dioptra.restapi import create_app
-
     injector = Injector(dependency_modules)
     app = create_app(env="test_v1", injector=injector)
 
@@ -75,6 +74,35 @@ def auth_account(
     if login_response.status_code != 200:
         raise ValueError("User login failed.")
     return user_info
+
+
+@pytest.fixture
+def registered_plugins(
+    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+) -> dict[str, Any]:
+    plugin1_response = actions.register_plugin(
+        client,
+        name="plugin_one",
+        description="The first plugin.",
+        group_id=auth_account["groups"][0]["id"],
+    ).get_json()
+    plugin2_response = actions.register_plugin(
+        client,
+        name="plugin_two",
+        description="The second plugin.",
+        group_id=auth_account["groups"][0]["id"],
+    ).get_json()
+    plugin3_response = actions.register_plugin(
+        client,
+        name="plugin_three",
+        description="Not retrieved.",
+        group_id=auth_account["groups"][0]["id"],
+    ).get_json()
+    return {
+        "plugin1": plugin1_response,
+        "plugin2": plugin2_response,
+        "plugin3": plugin3_response,
+    }
 
 
 @pytest.fixture

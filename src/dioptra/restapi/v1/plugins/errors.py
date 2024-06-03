@@ -14,7 +14,31 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+"""Error handlers for the plugin endpoints."""
+from __future__ import annotations
 
-from . import errors
+from flask_restx import Api
 
-__all__ = ["errors"]
+
+class PluginAlreadyExistsError(Exception):
+    """The plugin name already exists."""
+
+
+class PluginDoesNotExistError(Exception):
+    """The requested plugin does not exist."""
+
+
+def register_error_handlers(api: Api) -> None:
+    @api.errorhandler(PluginDoesNotExistError)
+    def handle_plugin_does_not_exist_error(error):
+        return {"message": "Not Found - The requested plugin does not exist"}, 404
+
+    @api.errorhandler(PluginAlreadyExistsError)
+    def handle_plugin_already_exists_error(error):
+        return (
+            {
+                "message": "Bad Request - The plugin name on the registration form "
+                "already exists. Please select another and resubmit."
+            },
+            400,
+        )

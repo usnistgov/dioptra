@@ -27,6 +27,7 @@ from werkzeug.test import TestResponse
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
     V1_GROUPS_ROUTE,
+    V1_PLUGINS_ROUTE,
     V1_QUEUES_ROUTE,
     V1_ROOT,
     V1_USERS_ROUTE,
@@ -72,6 +73,32 @@ def register_user(
             "password": password,
             "confirmPassword": password,
         },
+        follow_redirects=True,
+    )
+
+
+def register_plugin(
+    client: FlaskClient,
+    name: str,
+    description: str,
+    group_id: int,
+) -> TestResponse:
+    """Register a plugin using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name to assign to the new plugin.
+        description: The description of the new plugin.
+        group_id: The group to create the new plugin in.
+
+    Returns:
+        The response from the API.
+    """
+    payload = {"name": name, "description": description, "group": group_id}
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/",
+        json=payload,
         follow_redirects=True,
     )
 

@@ -154,7 +154,7 @@ class PluginGetQueryParameters(
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
 ):
-    """The query parameters for the GET method of the /queues endpoint."""
+    """The query parameters for the GET method of the /plugins endpoint."""
 
 
 PluginFileBaseSchema = generate_base_resource_schema("PluginFile", snapshot=True)
@@ -200,4 +200,4 @@ class PluginFilePageSchema(BasePageSchema):
 class PluginFileGetQueryParameters(
     PagingQueryParametersSchema,
 ):
-    """The query parameters for the GET method of the /queues/{id}/files/ endpoint."""
+    """The query parameters for the GET method of the /plugins/{id}/files/ endpoint."""
