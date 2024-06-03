@@ -111,7 +111,8 @@ def register_plugin_file(
     group_id: int,
     filename: str,
     contents: str,
-    description: str | None = None,  
+    description: str | None = None,
+    tasks: dict[str, Any] | None = None,
 ) -> TestResponse:
     """Register a plugin file using the API.
 
@@ -134,8 +135,11 @@ def register_plugin_file(
         "contents": contents,
     }
 
-    if description is not None:
+    if description:
         payload["description"] = description
+
+    if tasks:
+        payload["tasks"] = tasks
 
     return client.post(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files",
@@ -177,34 +181,34 @@ def register_plugin_parameter_type(
     )
 
 
-def register_plugin_task(
-    client: FlaskClient,
-    plugin_id: int,
-    plugin_file_id: int,
-    name: str,
-    parameter_type_id: int,
-) -> TestResponse:
-    """Register a plugin task using the API.
+# def register_plugin_task(
+#     client: FlaskClient,
+#     plugin_id: int,
+#     plugin_file_id: int,
+#     name: str,
+#     parameter_type_id: int,
+# ) -> TestResponse:
+#     """Register a plugin task using the API.
 
-    Args:
-        client: The Flask test client.
-        plugin_id: The plugin ID with a file.
-        plugin_file_id: The plugin file ID to append the task.
-        name: The name of the plugin task.
-        parameter_type_id: The ID of the parameter type.
-    Returns:
-        The response from the API.
-    """
-    payload: dict[str, Any] = {
-        "name": name,
-        "parameter_type_id": parameter_type_id,
-    }
+#     Args:
+#         client: The Flask test client.
+#         plugin_id: The plugin ID with a file.
+#         plugin_file_id: The plugin file ID to append the task.
+#         name: The name of the plugin task.
+#         parameter_type_id: The ID of the parameter type.
+#     Returns:
+#         The response from the API.
+#     """
+#     payload: dict[str, Any] = {
+#         "name": name,
+#         "parameter_type_id": parameter_type_id,
+#     }
 
-    return client.post(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}/tasks",
-        json=payload,
-        follow_redirects=True,
-    )
+#     return client.put(
+#         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
+#         json=payload,
+#         follow_redirects=True,
+#     )
 
 
 def register_queue(
