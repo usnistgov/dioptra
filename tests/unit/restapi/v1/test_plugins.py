@@ -67,6 +67,7 @@ def modify_plugin_file(
     plugin_file_id: int,
     new_name: str,
     new_description: str,
+    new_tasks: dict[str, Any] | None = None,
 ) -> TestResponse:
     """Rename a plugin file using the API.
 
@@ -81,6 +82,9 @@ def modify_plugin_file(
         The response from the API.
     """
     payload: dict[str, Any] = {"name": new_name, "description": new_description}
+
+    if new_tasks:
+        payload["tasks"] = new_tasks
 
     return client.put(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
@@ -1198,7 +1202,7 @@ def test_register_plugin_task(
     registered_plugin_file = registered_plugin_with_files["plugin_file1"]
     registered_plugin_param_type = registered_plugin_with_files["plugin_parameter_type"]
     name = "my_plugin_task"
-    plugin_task_response = actions.register_plugin_task(
+    plugin_task_response = modify_plugin_file(
         client,
         plugin_id=registered_plugin["id"],
         plugin_file_id=registered_plugin_file["id"],
