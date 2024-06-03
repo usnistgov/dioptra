@@ -198,6 +198,23 @@ def build_queue(queue: models.Queue) -> dict[str, Any]:
     }
 
 
+def build_plugin(plugin: models.Plugin) -> dict[str, Any]:
+    return {
+        "id": plugin.resource_id,
+        "snapshot_id": plugin.resource_snapshot_id,
+        "name": plugin.name,
+        "description": plugin.description,
+        "user": build_user_ref(plugin.creator),
+        "group": build_group_ref(plugin.resource.owner),
+        "created_on": plugin.created_on,
+        "last_modified_on": plugin.resource.last_modified_on,
+        "latest_snapshot": plugin.resource.latest_snapshot_id
+        == plugin.resource_snapshot_id,
+        "tags": [build_tag_ref(tag) for tag in plugin.tags],
+        "files": [],
+    }
+
+
 # -- Paging --------------------------------------------------------------------
 
 
