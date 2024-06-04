@@ -21,7 +21,7 @@ functionalities for the plugin entity. The tests ensure that the plugins can be
 registered, renamed, and deleted as expected through the REST API.
 """
 import textwrap
-from typing import Any
+from typing import Any, List
 
 import pytest
 from flask.testing import FlaskClient
@@ -67,7 +67,6 @@ def modify_plugin_file(
     plugin_file_id: int,
     new_name: str,
     new_description: str,
-    new_tasks: dict[str, Any] | None = None,
 ) -> TestResponse:
     """Rename a plugin file using the API.
 
@@ -82,9 +81,6 @@ def modify_plugin_file(
         The response from the API.
     """
     payload: dict[str, Any] = {"name": new_name, "description": new_description}
-
-    if new_tasks:
-        payload["tasks"] = new_tasks
 
     return client.put(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
@@ -164,8 +160,10 @@ def delete_all_plugin_tasks(
     Returns:
         The response from the API.
     """
-    return client.delete(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}/tasks",
+    payload: dict[str, Any] = {}
+    return client.put(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
+        json=payload,
         follow_redirects=True,
     )
 
@@ -663,7 +661,7 @@ def assert_plugin_file_is_not_found(
 
 
 def assert_plugin_task_response_contents_matches_expectations(
-    response: dict[str, Any], expected_contents: dict[str, Any]
+    response: List[dict[str, Any]], expected_contents: dict[str, Any]
 ) -> None:
     """Assert that plugin task response contents is valid.
 
@@ -676,30 +674,31 @@ def assert_plugin_task_response_contents_matches_expectations(
             does not match the expected response or if the response contents is not
             valid.
     """
-    expected_keys = {
-        "name",
-        "input_params",
-        "output_params",
-    }
-    assert set(response.keys()) == expected_keys
+    for task in response:
+        expected_keys = {
+            "name",
+            "input_params",
+            "output_params",
+        }
+        assert set(task.keys()) == expected_keys
 
-    # Validate the non-Ref fields
-    assert isinstance(response["name"], str)
-    assert response["name"] == expected_contents["name"]
+        # Validate the non-Ref fields
+        assert isinstance(task["name"], str)
+        assert task["name"] == expected_contents["name"]
 
-    # Validate PluginTaskParameter Structure for inputs and outputs
-    for param in response["input_params"] + response["output_params"]:
-        assert isinstance(param["number"], int)
-        assert isinstance(param["name"], str)
+        # Validate PluginTaskParameter Structure for inputs and outputs
+        for param in task["input_params"] + task["output_params"]:
+            assert isinstance(param["number"], int)
+            assert isinstance(param["name"], str)
 
-        # Validate PluginParameterTypeRef structure
-        assert isinstance(param["plugin_param_type"]["id"], int)
-        assert isinstance(param["plugin_param_type"]["name"], str)
+            # Validate PluginParameterTypeRef structure
+            assert isinstance(param["plugin_param_type"]["id"], int)
+            assert isinstance(param["plugin_param_type"]["name"], str)
 
-        # Validate the GroupRef structure
-        assert isinstance(param["plugin_param_type"]["group"]["id"], int)
-        assert isinstance(param["plugin_param_type"]["group"]["name"], str)
-        assert isinstance(param["plugin_param_type"]["group"]["url"], str)
+            # Validate the GroupRef structure
+            assert isinstance(param["plugin_param_type"]["group"]["id"], int)
+            assert isinstance(param["plugin_param_type"]["group"]["name"], str)
+            assert isinstance(param["plugin_param_type"]["group"]["url"], str)
 
 
 def assert_retrieving_plugin_tasks_works(
@@ -721,39 +720,10 @@ def assert_retrieving_plugin_tasks_works(
             does not match the expected response.
     """
     response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}/tasks",
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
         follow_redirects=True,
     )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
-
-
-def assert_registering_existing_plugin_task_name_fails(
-    client: FlaskClient,
-    plugin_id: int,
-    plugin_file_id: int,
-    existing_name: str,
-    parameter_type_id: int,
-) -> None:
-    """Assert that registering a plugin task with an existing name fails.
-
-    Args:
-        client: The Flask test client.
-        plugin_id: The ID of the plugin with files.
-        plugin_file_id: The ID of the plugin file to register the task.
-        existing_name: An existing name to assign to the new plugin task name.
-        parameter_type_id: The ID of the plugin parameter type to assign to the new task.
-
-    Raises:
-        AssertionError: If the response status code is not 400.
-    """
-    response = actions.register_plugin_task(
-        client,
-        plugin_id=plugin_id,
-        plugin_file_id=plugin_file_id,
-        name=existing_name, 
-        parameter_type_id=parameter_type_id,
-    )
-    assert response.status_code == 400
+    assert response.status_code == 200 and response.get_json()["data"]["tasks"] == expected
 
 
 # -- Tests Plugins ---------------------------------------------------------------------
@@ -1189,10 +1159,12 @@ def test_register_plugin_task(
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
+    registered_plugin_with_file_and_tasks: dict[str, Any],
 ) -> None:
     """Test that plugin tasks can be correctly registered to a plugin and retrieved using the API.
 
-    Given an authenticated user and a registered plugin with files, this test validates the following sequence of actions:
+    Given an authenticated user, a registered plugin with files, and a registered plugin type parameter
+    this test validates the following sequence of actions:
 
     - The user registers a plugin task named "my_plugin_task".
     - The response is valid matches the expected values given the registration request.
@@ -1200,22 +1172,29 @@ def test_register_plugin_task(
     """
     registered_plugin = registered_plugin_with_files["plugin"]
     registered_plugin_file = registered_plugin_with_files["plugin_file1"]
-    registered_plugin_param_type = registered_plugin_with_files["plugin_parameter_type"]
+    registered_plugin_param_type = registered_plugin_with_file_and_tasks["plugin_parameter_type"]
     name = "my_plugin_task"
-    plugin_task_response = modify_plugin_file(
+    input_params = [registered_plugin_param_type]
+    output_params = [registered_plugin_param_type]
+    task: dict[str, Any] = {
+        "name": name,
+        "input_params": input_params,
+        "output_params": output_params,
+    }
+    plugin_file_response = actions.add_plugin_tasks_to_plugin_file(
         client,
         plugin_id=registered_plugin["id"],
         plugin_file_id=registered_plugin_file["id"],
-        name=name,
-        parameter_type_id=registered_plugin_param_type["id"],
-    )
-    plugin_task_expected = plugin_task_response.get_json()
-    plugin_task_expected_list = [plugin_task_expected]
+        new_task=[task],
+    ).get_json()
+    plugin_task_expected_list = plugin_file_response["tasks"]
 
     assert_plugin_task_response_contents_matches_expectations(
-        response=plugin_task_expected,
+        response=plugin_task_expected_list,
         expected_contents={
             "name": name,
+            "input_params": input_params,
+            "output_params": output_params,
         },
     )
     assert_retrieving_plugin_tasks_works(
@@ -1282,39 +1261,14 @@ def test_plugin_task_delete_all(
     registered_plugin_file = registered_plugin_with_file_and_tasks["plugin_file"]
     plugin_task_expected_list = []
 
-    delete_all_plugin_tasks(client, plugin_id=registered_plugin["id"])
+    delete_all_plugin_tasks(
+        client, 
+        plugin_id=registered_plugin["id"],
+        plugin_file_id=registered_plugin_file["id"],
+    )
     assert_retrieving_plugin_tasks_works(
         client,
         plugin_id=registered_plugin["id"],
         plugin_file_id=registered_plugin_file["id"],
         expected=plugin_task_expected_list,
-    )
-
-
-@pytest.mark.v1
-def test_cannot_register_existing_plugin_task_name(
-    client: FlaskClient,
-    db: SQLAlchemy,
-    auth_account: dict[str, Any],
-    registered_plugin_with_file_and_tasks: dict[str, Any],
-) -> None:
-    """Test that registering a plugin task with an existing name fails.
-
-    Given an authenticated user and a registered plugin with a plugin file and tasks, this 
-    test validates the following sequence of actions:
-
-    - The user attempts to register a second plugin task with the same name.
-    - The request fails with an appropriate error message and response code.
-    """
-    registered_plugin = registered_plugin_with_file_and_tasks["plugin"]
-    registered_plugin_file = registered_plugin_with_file_and_tasks["plugin_file"]
-    registered_plugin_param_type = registered_plugin_with_file_and_tasks["plugin_parameter_type"]
-    existing_plugin_task = registered_plugin_with_file_and_tasks["plugin_task1"]
-
-    assert_registering_existing_plugin_task_name_fails(
-        client,
-        plugin_id=registered_plugin["id"],
-        plugin_file_id=registered_plugin_file["id"],
-        existing_name=existing_plugin_task["name"],
-        parameter_type_id=registered_plugin_param_type["id"],
     )

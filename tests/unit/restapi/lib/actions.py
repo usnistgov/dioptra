@@ -19,7 +19,7 @@
 This module contains shared actions used across test suites for each of the REST
 API endpoints.
 """
-from typing import Any
+from typing import Any, List
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
 
@@ -181,34 +181,29 @@ def register_plugin_parameter_type(
     )
 
 
-# def register_plugin_task(
-#     client: FlaskClient,
-#     plugin_id: int,
-#     plugin_file_id: int,
-#     name: str,
-#     parameter_type_id: int,
-# ) -> TestResponse:
-#     """Register a plugin task using the API.
+def add_plugin_tasks_to_plugin_file(
+    client: FlaskClient,
+    plugin_id: int,
+    plugin_file_id: int,
+    tasks: List[dict[str, Any]],
+) -> TestResponse:
+    """Modify a plugin file to include tasks using the API.
 
-#     Args:
-#         client: The Flask test client.
-#         plugin_id: The plugin ID with a file.
-#         plugin_file_id: The plugin file ID to append the task.
-#         name: The name of the plugin task.
-#         parameter_type_id: The ID of the parameter type.
-#     Returns:
-#         The response from the API.
-#     """
-#     payload: dict[str, Any] = {
-#         "name": name,
-#         "parameter_type_id": parameter_type_id,
-#     }
+    Args:
+        client: The Flask test client.
+        plugin_id: The plugin ID with a file.
+        plugin_file_id: The plugin file ID to append the task.
+        tasks: A list of tasks to add to the file.
+    Returns:
+        The response from the API.
+    """
+    payload: dict[str, Any] = {"tasks": tasks}
 
-#     return client.put(
-#         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
-#         json=payload,
-#         follow_redirects=True,
-#     )
+    return client.put(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
+        json=payload,
+        follow_redirects=True,
+    )
 
 
 def register_queue(

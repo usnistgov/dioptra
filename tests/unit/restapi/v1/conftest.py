@@ -164,7 +164,7 @@ def registered_plugin_with_file_and_tasks(
             return f"Hello, {name}!"
         """
     )
-    plugin_file_response = actions.register_plugin(
+    plugin_file_without_tasks_response = actions.register_plugin_file(
         client,
         plugin_id=plugin_response["id"],
         filename="plugin_file", 
@@ -180,34 +180,37 @@ def registered_plugin_with_file_and_tasks(
         description="The plugin parameter type used for the tasks.",
     ).get_json()
 
-    plugin_task1_response = actions.register_plugin_task(
+    plugin_task1: dict[str, Any] = {
+        "name": "plugin_task_one",
+        "input_params": [plugin_parameter_type_response],
+        "output_params": [plugin_parameter_type_response],
+    }
+    plugin_task2: dict[str, Any] = {
+        "name": "plugin_task_two",
+        "input_params": [plugin_parameter_type_response],
+        "output_params": [plugin_parameter_type_response],
+    }
+    plugin_task3: dict[str, Any] = {
+        "name": "plugin_task_three",
+        "input_params": [plugin_parameter_type_response],
+        "output_params": [plugin_parameter_type_response],
+    }
+    
+    plugin_task_list = [plugin_task1, plugin_task2, plugin_task3]
+    plugin_file_with_tasks_response = actions.add_plugin_tasks_to_plugin_file(
         client,
         plugin_id=plugin_response["id"],
-        plugin_file_id=plugin_file_response["id"],
-        name="plugin_task_one",
-        parameter_type_id=plugin_parameter_type_response["id"],
-    ).get_json()
-    plugin_task2_response = actions.register_plugin_task(
-        client,
-        plugin_id=plugin_response["id"],
-        plugin_file_id=plugin_file_response["id"],
-        name="plugin_task_one",
-        parameter_type_id=plugin_parameter_type_response["id"],
-    ).get_json()
-    plugin_task3_response = actions.register_plugin_task(
-        client,
-        plugin_id=plugin_response["id"],
-        plugin_file_id=plugin_file_response["id"],
-        name="plugin_task_one",
-        parameter_type_id=plugin_parameter_type_response["id"],
+        plugin_file_id=plugin_file_without_tasks_response["id"],
+        tasks=plugin_task_list,
     ).get_json()
     return {
         "plugin": plugin_response,
-        "plugin_file": plugin_file_response,
+        "plugin_file": plugin_file_with_tasks_response,
         "plugin_parameter_type": plugin_parameter_type_response,
-        "plugin_task1": plugin_task1_response,
-        "plugin_task2": plugin_task2_response,
-        "plugin_task3": plugin_task3_response,
+        "plugin_task1": plugin_task1,
+        "plugin_task2": plugin_task2,
+        "plugin_task3": plugin_task3,
+        "plugin_task_list": plugin_task_list,
     }
 
 
