@@ -19,7 +19,7 @@
 This module contains shared actions used across test suites for each of the REST
 API endpoints.
 """
-from typing import Any
+from typing import Any, List
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
 
@@ -178,95 +178,26 @@ def register_plugin_parameter_type(
         follow_redirects=True,
     )
 
-
-# def register_plugin_task(
-#     client: FlaskClient,
-#     plugin_id: int,
-#     plugin_file_id: int,
-#     name: str,
-#     parameter_type_id: int,
-# ) -> TestResponse:
-#     """Register a plugin task using the API.
-
-#     Args:
-#         client: The Flask test client.
-#         plugin_id: The plugin ID with a file.
-#         plugin_file_id: The plugin file ID to append the task.
-#         name: The name of the plugin task.
-#         parameter_type_id: The ID of the parameter type.
-#     Returns:
-#         The response from the API.
-#     """
-#     payload: dict[str, Any] = {
-#         "name": name,
-#         "parameter_type_id": parameter_type_id,
-#     }
-
-#     return client.put(
-#         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
-#         json=payload,
-#         follow_redirects=True,
-#     )
-
-
-def register_queue(
-    client: FlaskClient,
-    name: str,
-    group_id: int,
-    structure: dict[str, Any] | None = None,
-    description: str | None = None,
-) -> TestResponse:
-    """Create a Plugin Parameter Type using the API.
-
-    Args:
-        client: The Flask test client.
-        name: The name of the plugin parameter type to be created.
-        group_id: The group to create the new plugin parameter type in.
-        structure: Optional JSON-type field for further constraining a type's structure.
-
-    Returns:
-        The response from the API.
-    """
-    payload = {"name": name, "group_id": group_id}
-
-    if structure:
-        payload["structure"] = structure
-        
-    if description:
-        payload["description"] = description
-
-    return client.post(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def register_plugin_task(
+def add_plugin_tasks_to_plugin_file(
     client: FlaskClient,
     plugin_id: int,
     plugin_file_id: int,
-    name: str,
-    parameter_type_id: int,
+    tasks: List[dict[str, Any]],
 ) -> TestResponse:
-    """Register a plugin task using the API.
+    """Modify a plugin file to include tasks using the API.
 
     Args:
         client: The Flask test client.
         plugin_id: The plugin ID with a file.
         plugin_file_id: The plugin file ID to append the task.
-        name: The name of the plugin task.
-        parameter_type_id: The ID of the parameter type.
+        tasks: A list of tasks to add to the file.
     Returns:
         The response from the API.
     """
-    payload: dict[str, Any] = {
-        "name": name,
-        "parameter_type_id": parameter_type_id,
-    }
+    payload: dict[str, Any] = {"tasks": tasks}
 
-    return client.post(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}/tasks",
+    return client.put(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
         json=payload,
         follow_redirects=True,
     )
