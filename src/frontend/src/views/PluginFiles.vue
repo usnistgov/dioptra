@@ -1,6 +1,6 @@
 <template>
   <TableComponent 
-    :rows="plugin.files"
+    :rows="files"
     :columns="fileColumns"
     title="Plugin Files"
     v-model="selected"
@@ -28,6 +28,8 @@
   import { useDataStore } from '@/stores/DataStore.ts'
   import { useRoute, useRouter } from 'vue-router'
   import { ref, computed } from 'vue'
+  import * as api from '@/services/pluginsApi'
+  import * as notify from '../notify'
 
   const route = useRoute()
   const router = useRouter()
@@ -42,9 +44,17 @@
     { name: 'tasks', label: 'Number of Tasks', align: 'left', field: 'tasks', sortable: true, },
   ]
 
-  const plugin = computed(() => {
-    return store.plugins.find((plugin) => plugin.id === route.params.id)
-  })
+  const files = ref([])
+
+  getFiles()
+  async function getFiles() {
+    try {
+      const res = await api.getFiles(route.params.id)
+      files.value = res.data
+    } catch(err) {
+      notify.error(err.response.data.message)
+    } 
+  }
 
   
 

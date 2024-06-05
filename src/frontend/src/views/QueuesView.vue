@@ -43,7 +43,7 @@
 <script setup>
   import * as api from '@/services/queuesApi'
   import { ref, watch } from 'vue'
-  import * as notify from '../notify';
+  import * as notify from '../notify'
   import TableComponent from '@/components/TableComponent.vue'
   import AddQueueDialog from '@/dialogs/AddQueueDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'

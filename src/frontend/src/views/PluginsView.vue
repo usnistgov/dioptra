@@ -1,13 +1,17 @@
 <template>
   <TableComponent 
-    :rows="store.plugins"
+    :rows="plugins"
     :columns="columns"
     title="Plugins"
     v-model="selected"
     :pagination="{sortBy: 'draft', descending: true}"
     @edit="store.editMode = true; router.push(`/plugins/${selected[0].id}`)"
+    @delete="showDeleteDialog = true"
     :showExpand="true"
   >
+    <template #body-cell-group="props">
+      <div>{{ props.row.group.name }}</div>
+    </template>
     <template #body-cell-tags="props">
       <q-chip v-for="(tag, i) in props.row.tags" :key="i" color="primary" text-color="white">
         {{ tag }}
@@ -49,6 +53,12 @@
     v-model="showAddDialog"
     @addPlugin="addPlugin"
   />
+  <DeleteDialog 
+    v-model="showDeleteDialog"
+    @submit="deletePlugin"
+    type="Plugin"
+    :name="selected.length ? selected[0].name : ''"
+  />
 </template>
 
 <script setup>
@@ -56,8 +66,11 @@
   import BasicTable from '@/components/BasicTable.vue'
   import { useDataStore } from '@/stores/DataStore.ts'
   import AddPluginDialog from '@/dialogs/AddPluginDialog.vue'
+  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
+  import * as api from '@/services/pluginsApi'
+  import * as notify from '../notify'
 
   const router = useRouter()
 
@@ -67,15 +80,46 @@
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)
 
+  const plugins = ref([])
+
+  getPlugins()
+  async function getPlugins() {
+    try {
+      const res = await api.getPlugins()
+      plugins.value = res.data.data
+    } catch(err) {
+      notify.error(err.response.data.message)
+    } 
+  }
+
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, sort: (a, b) => a - b },
     { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
-    { name: 'files', label: 'Files', align: 'left',sortable: false },
-    { name: 'tags', label: 'Tags', align: 'left',sortable: false },
+    { name: 'files', label: 'Files', align: 'left', sortable: false },
+    { name: 'tags', label: 'Tags', align: 'left', sortable: false },
+    { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
   ]
 
-  function addPlugin(plugin) {
-    store.plugins.push(plugin)
+  async function addPlugin(plugin) {
+    try {
+      const res = await api.addPlugin(plugin.name, plugin.group, plugin.description)
+      notify.success(`Sucessfully created '${res.data.name}'`)
+      getPlugins()
+    } catch(err) {
+      notify.error(err.response.data.message)
+    } 
+  }
+
+  async function deletePlugin() {
+    try {
+      await api.deletePlugin(selected.value[0].id)
+      notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+      showDeleteDialog.value = false
+      selected.value = []
+      getPlugins()
+    } catch(err) {
+      notify.error(err.response.data.message);
+    }
   }
 
   const fileColumns = [

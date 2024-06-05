@@ -6,7 +6,7 @@ export const useLoginStore = defineStore('login', () => {
   const loggedInUser = ref({});
 
   const groups = ref([])
-  const groupsLength = computed(() => groups.value.length)
+
   const loggedInGroup = computed(() => {
     if(groups.value.length === 1) {
       return groups.value[0]
@@ -45,5 +45,5 @@ export const useLoginStore = defineStore('login', () => {
   // function()'s are actions
   
 
-  return { loggedInUser, loggedInGroup, groups, users, groupsLength };
+  return { loggedInUser, loggedInGroup, groups, users, };
 })

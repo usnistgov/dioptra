@@ -23,19 +23,34 @@
         aria-required="true"
       />
     </div>
-    <div class="row items-center">
+    <div class="row items-center q-mb-xs">
       <label class="col-3 q-mb-lg" id="pluginGroup">
         Group:
       </label>
       <q-select
-      class="col"
+        class="col"
         outlined 
         v-model="plugin.group" 
-        :options="store.groups.map((group) => group.name)" 
+        :options="store.groups"
+        option-label="name"
+        option-value="id"
+        emit-value
+        map-options
         dense
         :rules="[requiredRule]"
         aria-labelledby="pluginGroup"
         aria-required="true"
+      />
+    </div>
+    <div class="row items-center">
+      <label class="col-3 q-mb-lg" id="pluginGroup">
+        Description:
+      </label>
+      <q-input
+      	class="col"
+        v-model="plugin.description"
+        outlined
+        type="textarea"
       />
     </div>
   </DialogComponent>
@@ -53,19 +68,19 @@
   const plugin = ref({
     name: '',
     group: '',
+    description: '',
     tags: [],
     files: []
   })
 
   function requiredRule(val) {
-    return (val && val.length > 0) || "This field is required"
+    return (!!val) || "This field is required"
   }
 
   const emit = defineEmits(['addPlugin'])
 
   function emitAdd() {
     const copy = JSON.parse(JSON.stringify(plugin.value))
-    copy.id = String(Math.floor(Math.random()*90000) + 10000)
     emit('addPlugin', copy)
     showDialog.value = false
   }
