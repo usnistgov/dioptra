@@ -482,7 +482,7 @@ torchmetrics==1.3.1
     # via pytorch-lightning
 torchvision==0.11.3 ; python_version == "3.9" and (sys_platform == "darwin" or (sys_platform == "linux" and platform_machine == "aarch64"))
     # via -r requirements-dev-pytorch.in
-tornado==6.4
+tornado==6.4.1
     # via distributed
 tqdm==4.66.2
     # via
