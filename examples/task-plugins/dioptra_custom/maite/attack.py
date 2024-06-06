@@ -19,6 +19,8 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import importlib
+import inspect
 import mlflow
 import numpy as np
 import pandas as pd
@@ -52,50 +54,64 @@ def _wrap_jatic_classifier(model, loss_fn, input_shape, labels, classes):
     model=model, loss=loss_fn, input_shape=input_shape, nb_classes=classes, labels=labels, clip_values=(0, 1)
   )
 
-def _construct_attack(attack_name: str, model, loss_fn, input_shape, labels, classes, batch_size: int, **kwargs) -> JaticAttack:
-    global DECLARED_ATTACKS
-    #classifier = _wrap_jatic_classifier(model, loss_fn, input_shape, labels, classes)
+def _construct_attack(attack_library: str, attack_name: str, model, loss_fn, input_shape, labels, classes, batch_size: int, **kwargs) -> JaticAttack:
     classifier = _wrap_hf_classifier(model, loss_fn, input_shape, classes)
-    attack = DECLARED_ATTACKS[attack_name](classifier, loss_fn, input_shape, classes, batch_size, **kwargs)
+    attack = lookup_class(attack_library, attack_name)
+    model_param_names = check_model_parameter(attack)
+    kwargs = build_parameters(model_param_names, classifier=classifier, estimator=classifier, loss=loss_fn, loss_fn=loss_fn, input_shape=input_shape, nb_classes=classes, batch_size=batch_size, **kwargs)
+    attack = attack(**kwargs)
     attack = JaticAttack(attack)
     return attack
 
-def _fgm(
-    model, loss_fn, input_shape, classes, batch_size: int, **kwargs
-) -> FastGradientMethod:
-    return FastGradientMethod(
-        estimator=model, batch_size=batch_size, **kwargs
-    )
-def _pgd(
-    model, loss_fn, input_shape, classes, batch_size: int, **kwargs
-) -> ProjectedGradientDescentPyTorch:
-    return ProjectedGradientDescentPyTorch(
-        estimator=model, batch_size=batch_size, **kwargs
-    )
-def _hsj(
-    model, loss_fn, input_shape, classes, batch_size: int, **kwargs
-) -> HopSkipJump:
-    return HopSkipJump(
-        classifier=model, batch_size=batch_size, **kwargs
-    )
-def _pt(
-    model, loss_fn, input_shape, classes, batch_size: int, **kwargs
-) -> PixelAttack:
-    return PixelAttack(
-        classifier=model, **kwargs
-    )
+def find_function_parameter(fname):
+    function_loc = fname.split('.')
+    return lookup_class('.'.join(function_loc[:-1]), function_loc[-1])
+def check_model_parameter(f):
+    cs = get_parent_classes(f)
+    parameters = []
+    for c in cs:
+        current_class_params = [i for i in inspect.signature(c).parameters]
+        parameters += current_class_params
+        if 'kwargs' not in current_class_params:
+            break
+    return parameters
+def build_parameters(signature,**kwargs):
+    function_key = '_FUNCTION'
+    # convert things ending in _FUNCTION to actual functions, and remove the _FUNCTION tag
+    pdict = {(m[:-len(function_key)] if m.endswith(function_key) else m):(find_function_parameter(v) if m.endswith(function_key) else v) for (m,v) in kwargs.items()}
+        #TODO: log things which did not get included, for clarity
+    for (m,v) in pdict.items():
+        if m not in signature:
+            LOGGER.warn("Filtering parameter: %s", str(m))
+    pdict = {m:v for (m,v) in pdict.items() if m in signature}
+    return pdict
 
-DECLARED_ATTACKS = {"fgm": _fgm, "pgd": _pgd, "hsj": _hsj, "pt": _pt}
 
-def _adv_gen(attack_name, dataset, adv_data_dir, data_dir, loss_fn, classifier, image_size, save_original, batch_size, target_index, **kwargs):
+def lookup_class(module_name, class_name):
+    # grabs the class by name from the module 
+    try:
+        module_ = importlib.import_module(module_name)
+        try:
+            class_ = getattr(module_, class_name)
+        except AttributeError:
+            LOGGER.error('Class', class_name ,'does not exist')
+    except ImportError:
+        LOGGER.error('Module', module_name ,'does not exist')
+    return class_ or None
+def get_parent_classes(clazz):
+    # gets parent classes 
+    return clazz.__mro__
+  
+def _adv_gen(attack_library, attack_name, dataset, adv_data_dir, data_dir, loss_fn, classifier, image_size, save_original, batch_size, target_index, **kwargs):
     adv_data_dir = Path(adv_data_dir)
     data_dir = Path(data_dir)
-
     num_images = len(dataset)
     class_names_list = sorted(list(set([m["label"] for m in dataset])))
     classes = len(class_names_list)
 
-    attack = _construct_attack(attack_name=attack_name,
+    attack = _construct_attack(
+        attack_library=attack_library,
+        attack_name=attack_name,
         model=classifier,
         loss_fn=loss_fn,
         input_shape=image_size,
@@ -136,22 +152,23 @@ def _adv_gen(attack_name, dataset, adv_data_dir, data_dir, loss_fn, classifier, 
 def attack_by_name(
     dataset,
     attack_name: str,
-    data_dir: Union[str, Path],
     adv_data_dir: Union[str, Path],
+    data_dir: Union[str, Path],
     classifier,
     image_size: Tuple[int, int, int],
+    attack_library: str = 'art.attacks.evasion',
     save_original=False,
     distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
     batch_size: int = 32,
     target_index: int = -1,
     attack_kwargs: Optional[str] = None
 ) -> pd.DataFrame:
-    print("attack_kwargs:",attack_kwargs)
     _adv_gen(
+      attack_library,
       attack_name,
       dataset,
-      data_dir,
       adv_data_dir,
+      data_dir,
       CrossEntropyLoss(), 
       classifier.model,
       image_size,
@@ -160,104 +177,6 @@ def attack_by_name(
       target_index=target_index,
       **attack_kwargs
     )  
-
-
-
-
-@pyplugs.register
-@require_package("art", exc_type=ARTDependencyError)
-def create_fgm_dataset_from_hf_dataset_old(
-    dataset,
-    data_dir: Union[str, Path],
-    adv_data_dir: Union[str, Path],
-    classifier,
-    image_size: Tuple[int, int, int],
-    save_original=False,
-    distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
-    batch_size: int = 32,
-    label_mode: str = "categorical",
-    eps: float = 0.3,
-    eps_step: float = 0.1,
-    minimal: bool = False,
-    norm: float = np.inf,
-    target_index: int = -1,
-    targeted: bool = False,
-) -> pd.DataFrame:
-    distance_metrics_list = distance_metrics_list or []
-    adv_data_dir = Path(adv_data_dir)
-    data_dir = Path(data_dir)
-    classifier = classifier.model
-
-    num_images = len(dataset)
-    class_names_list = sorted(list(set([m["label"] for m in dataset])))
-    classes = len(class_names_list)
-
-    attack = _init_fgm(
-        model=classifier,
-        loss_fn=CrossEntropyLoss(),
-        input_shape=image_size,
-        classes=classes,
-        batch_size=batch_size,
-        eps=eps,
-        eps_step=eps_step,
-        minimal=minimal,
-        norm=norm,
-        targeted=targeted,
-    )
-
-    distance_metrics_: Dict[str, List[List[float]]] = {"image": [], "label": []}
-    for metric_name, _ in distance_metrics_list:
-        distance_metrics_[metric_name] = []
-
-    LOGGER.info(
-        "Generate adversarial images",
-        attack="fgm",
-        num_batches=num_images // batch_size,
-    )
-
-    for batch_num in range(num_images // batch_size):
-        batch_range = range(batch_num * batch_size, (batch_num + 1) * batch_size)
-        batch = [dataset[min(i, len(dataset) - 1)] for i in batch_range]
-        x = np.array([m["image"] for m in batch])
-        y = np.array([m["label"] for m in batch])
-        # y_int = np.argmax(y, axis=0)
-        y_int = y
-        LOGGER.info(
-            "Generate adversarial image batch",
-            attack="fgm",
-            batch_num=batch_num,
-        )
-
-        if target_index >= 0:
-            y_one_hot = np.zeros(classes)
-            y_one_hot[target_index] = 1.0
-            y_target = np.tile(y_one_hot, (x.shape[0], 1))
-
-            adv_batch = attack.generate(x=x, y=y_target)
-        else:
-            adv_batch = attack.generate(x=x)
-        if save_original:
-            _save_batch(batch_range, x, data_dir, y_int, class_names_list, adv=False)
-        _save_batch(
-            batch_range, adv_batch, adv_data_dir, y_int, class_names_list, adv=True
-        )
-
-        _evaluate_distance_metrics(
-            batch_indices=batch_range,
-            batch_classes=y_int,
-            distance_metrics_=distance_metrics_,
-            clean_batch=x,
-            adv_batch=adv_batch,
-            distance_metrics_list=distance_metrics_list,
-        )
-
-    LOGGER.info("Adversarial image generation complete", attack="fgm")
-    _log_distance_metrics(distance_metrics_)
-    df = pd.DataFrame(distance_metrics_)
-    _upload_data_frame_artifact(df, "distance_metrics.csv", "csv.gz")
-    _upload_directory_as_tarball_artifact(adv_data_dir, "fgm.tar.gz")
-    return df
-
 
 def _save_batch(batch_indices, batch, data_dir, y, class_names_list, adv=False) -> None:
     for batch_image_num, image in enumerate(batch):

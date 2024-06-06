@@ -79,6 +79,7 @@ parameters:
   adv_dir: adv_testing
   attack_name: fgm
   attack_kwargs:
+  attack_library: art.attacks.evasion
 tasks:
   get_dataset:
     plugin: dioptra_custom.maite.maite_compat.get_dataset
@@ -121,6 +122,9 @@ tasks:
       - image_size: tuple_integer_integer_integer
       - save_original: boolean
       - distance_metrics_list: union_null_list_tuple_string_any
+      - name: attack_library
+        type: string
+        required: false
       - name: batch_size
         type: integer
         required: false
@@ -174,6 +178,7 @@ graph:
     attack_by_name:
       dataset: $transformed_dataset
       attack_name: $attack_name
+      attack_library: $attack_library
       distance_metrics_list: $distance_metrics
       data_dir: $out_dir
       adv_data_dir: $adv_dir
