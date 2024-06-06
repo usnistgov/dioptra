@@ -1,17 +1,19 @@
 <template>
   <q-table
+    ref="tableRef"
     :rows="props.rows"
     :columns="finalColumns"
     :title="title"
     :filter="filter"
     selection="single"
     v-model:selected="selected"
-    row-key="name"
+    row-key="id"
     :class="`q-mt-lg ${isMobile ? '' : 'q-mx-xl' }`"
     flat
     bordered
     dense
-    :pagination="pagination"
+    v-model:pagination="pagination"
+    @request="onRequest"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
@@ -66,13 +68,13 @@
 </template>
 
 <script setup>
-  import { ref, watch, computed, inject } from 'vue'
+  import { ref, watch, computed, inject, onMounted } from 'vue'
   import { useQuasar } from 'quasar'
   
   const isMobile = inject('isMobile')
 
-  const props = defineProps(['columns', 'rows', 'title', 'pagination', 'showExpand', 'hideButtons'])
-  defineEmits(['edit', 'delete'])
+  const props = defineProps(['columns', 'rows', 'title', 'showExpand', 'hideButtons'])
+  const emit = defineEmits(['edit', 'delete', 'request'])
 
   const finalColumns = computed(() => {
     let defaultColumns = [
@@ -111,6 +113,35 @@
   function getSelectedColor(selected) {
     if(darkMode.value && selected) return 'bg-deep-purple-10'
     else if(selected) return 'bg-blue-grey-1'
+  }
+
+  const pagination = ref({
+    page: 1,
+    rowsPerPage: 3,
+    rowsNumber: 11,
+    sortBy: '',
+    descending: false,
+  })
+
+  const tableRef = ref()
+  onMounted(() => {
+    // get initial data from server (1st page)
+    tableRef.value.requestServerInteraction()
+  })
+
+  defineExpose({ refreshTable })
+  function refreshTable() {
+    tableRef.value.requestServerInteraction()
+  }
+
+  function onRequest(props) {
+    pagination.value = { ...props.pagination }
+    const paginationOptions = props.pagination
+    const { page, rowsPerPage } = props.pagination
+    const index = (page - 1) * rowsPerPage
+    paginationOptions.index = index
+    paginationOptions.search = props.filter
+    emit('request', paginationOptions)
   }
 
 </script>

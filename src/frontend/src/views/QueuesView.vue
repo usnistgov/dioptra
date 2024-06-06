@@ -6,6 +6,8 @@
     @delete="showDeleteDialog = true"
     @edit="editing = true; showAddDialog = true"
     v-model="selected"
+    @request="getQueues"
+    ref="tableRef"
   >
     <!-- <template #body-cell-chips="props">
       <q-chip>
@@ -41,7 +43,7 @@
 </template>
 
 <script setup>
-  import * as api from '@/services/queuesApi'
+  import * as api from '@/services/dataApi'
   import { ref, watch } from 'vue'
   import * as notify from '../notify'
   import TableComponent from '@/components/TableComponent.vue'
@@ -55,6 +57,8 @@
 
   const queues = ref([])
 
+  const tableRef = ref(null)
+
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
     { name: 'id', label: 'Queue ID', align: 'left', field: 'id', sortable: true },
@@ -64,22 +68,26 @@
     // { name: 'chips', label: 'Custom Column Example',align: 'left', sortable: false },
   ]
 
-  getQueues()
-  async function getQueues() {
+  async function getQueues(pagination) {
     try {
-      const res = await api.getQueues();
+      const res = await api.getData('queues', pagination);
       queues.value = res.data.data
     } catch(err) {
+      console.log('err = ', err)
       notify.error(err.response.data.message)
     } 
   }
 
   async function registerQueue(name, description) {
     try {
-      await api.registerQueue(name, store.loggedInGroup.id, description)
+      await api.addItem('queues', {
+        name,
+        description,
+        group: store.loggedInGroup.id
+      })
       notify.success(`Sucessfully created '${name}'`)
       showAddDialog.value = false
-      getQueues()
+      tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message)
     }
@@ -87,11 +95,11 @@
 
   async function updateQueue(name, id, description) {
     try {
-      await api.upadateQueue(name, id, description)
+      await api.updateItem('queues', id, { name, description })
       notify.success(`Sucessfully edited '${name}'`)
       showAddDialog.value = false
       selected.value = []
-      getQueues()
+      tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message)
     }
@@ -111,11 +119,11 @@
 
   async function deleteQueue() {
     try {
-      await api.deleteQueue(selected.value[0].id)
+      await api.deleteItem('queues', selected.value[0].id)
       notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
-      getQueues()
+      tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message);
     }

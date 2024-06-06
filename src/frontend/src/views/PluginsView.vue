@@ -1,13 +1,14 @@
 <template>
-  <TableComponent 
+  <TableComponent
     :rows="plugins"
     :columns="columns"
     title="Plugins"
     v-model="selected"
-    :pagination="{sortBy: 'draft', descending: true}"
     @edit="store.editMode = true; router.push(`/plugins/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     :showExpand="true"
+    @request="getPlugins"
+    ref="tableRef"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -69,7 +70,7 @@
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import * as api from '@/services/pluginsApi'
+  import * as api from '@/services/dataApi'
   import * as notify from '../notify'
 
   const router = useRouter()
@@ -82,12 +83,12 @@
 
   const plugins = ref([])
 
-  getPlugins()
-  async function getPlugins() {
+  async function getPlugins(pagination) {
     try {
-      const res = await api.getPlugins()
+      const res = await api.getData('plugins', pagination)
       plugins.value = res.data.data
     } catch(err) {
+      console.log('err = ', err)
       notify.error(err.response.data.message)
     } 
   }
@@ -102,9 +103,13 @@
 
   async function addPlugin(plugin) {
     try {
-      const res = await api.addPlugin(plugin.name, plugin.group, plugin.description)
+      const res = await api.addItem('plugins', {
+        name: plugin.name,
+        description: plugin.description,
+        group: plugin.group
+      })
       notify.success(`Sucessfully created '${res.data.name}'`)
-      getPlugins()
+      tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message)
     } 
@@ -112,11 +117,11 @@
 
   async function deletePlugin() {
     try {
-      await api.deletePlugin(selected.value[0].id)
+      await api.deleteItem('plugins', selected.value[0].id)
       notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
-      getPlugins()
+      tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message);
     }
@@ -127,5 +132,7 @@
     { name: 'filename', label: 'Filename', align: 'left', field: 'name', sortable: true, },
     { name: 'tasks', label: 'Number of Tasks', align: 'left', field: 'tasks', sortable: true, },
   ]
+
+  const tableRef = ref(null)
 
 </script>

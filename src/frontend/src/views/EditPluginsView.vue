@@ -53,7 +53,7 @@
 
 <script setup>
   import { ref, inject } from 'vue'
-  import * as api from '@/services/pluginsApi'
+  import * as api from '@/services/dataApi'
   import { useRoute, useRouter } from 'vue-router'
   import * as notify from '../notify'
 
@@ -74,7 +74,7 @@
   getPlugin()
   async function getPlugin() {
     try {
-      const res = await api.getPlugin(route.params.id)
+      const res = await api.getItem('plugins' ,route.params.id)
       plugin.value = res.data
     } catch(err) {
       notify.error(err.response.data.message)
@@ -96,7 +96,10 @@
 
   async function updatePlugin() {
     try {
-      const res = await api.updatePlugin(route.params.id, plugin.value)
+      const res = await api.updateItem('plugins', route.params.id, { 
+        name: plugin.value.name,
+        description: plugin.value.description
+      })
       notify.success(`Sucessfully updated ${res.data.name}`)
       router.push('/plugins')
     } catch(err) {

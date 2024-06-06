@@ -28,7 +28,7 @@
   import { useDataStore } from '@/stores/DataStore.ts'
   import { useRoute, useRouter } from 'vue-router'
   import { ref, computed } from 'vue'
-  import * as api from '@/services/pluginsApi'
+  import * as api from '@/services/dataApi'
   import * as notify from '../notify'
 
   const route = useRoute()
