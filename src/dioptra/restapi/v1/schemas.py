@@ -151,6 +151,10 @@ class BasePageSchema(Schema):
         attribute="is_complete",
         metadata=dict(description="Boolean indicating if more data is available."),
     )
+    totalNumResults = fields.Integer(
+        attribute="total_num_results",
+        metadata=dict(description="Total number of results."),
+    )
     first = fields.Url(
         attribute="first",
         metadata=dict(description="URL to first page in results set."),

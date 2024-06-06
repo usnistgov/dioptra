@@ -251,6 +251,7 @@ def build_paging_envelope(
     paged_data = {
         "index": index,
         "is_complete": is_complete,
+        "total_num_results": total_num_elements,
         "first": build_paging_url(resource_type, search=query, index=0, length=length),
         "data": [build_fn(x) for x in data],
     }
