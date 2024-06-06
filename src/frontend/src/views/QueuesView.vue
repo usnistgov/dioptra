@@ -72,6 +72,7 @@
     try {
       const res = await api.getData('queues', pagination);
       queues.value = res.data.data
+      tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
@@ -82,7 +83,7 @@
     try {
       await api.addItem('queues', {
         name,
-        description,
+        description: description || '',
         group: store.loggedInGroup.id
       })
       notify.success(`Sucessfully created '${name}'`)

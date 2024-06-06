@@ -118,7 +118,7 @@
   const pagination = ref({
     page: 1,
     rowsPerPage: 3,
-    rowsNumber: 11,
+    rowsNumber: 10,
     sortBy: '',
     descending: false,
   })
@@ -129,7 +129,7 @@
     tableRef.value.requestServerInteraction()
   })
 
-  defineExpose({ refreshTable })
+  defineExpose({ refreshTable, updateTotalRows })
   function refreshTable() {
     tableRef.value.requestServerInteraction()
   }
@@ -142,6 +142,10 @@
     paginationOptions.index = index
     paginationOptions.search = props.filter
     emit('request', paginationOptions)
+  }
+
+  function updateTotalRows(totalRows) {
+    pagination.value.rowsNumber = totalRows
   }
 
 </script>

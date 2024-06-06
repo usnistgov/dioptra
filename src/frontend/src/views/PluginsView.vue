@@ -87,6 +87,7 @@
     try {
       const res = await api.getData('plugins', pagination)
       plugins.value = res.data.data
+      tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
