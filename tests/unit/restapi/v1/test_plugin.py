@@ -919,7 +919,7 @@ def test_delete_plugin_by_id(
 # -- Tests Plugin Files ----------------------------------------------------------------
 
 
-@pytest.mark.v1
+@pytest.mark.v1_test
 def test_register_plugin_file(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -973,7 +973,7 @@ def test_register_plugin_file(
     )
 
 
-@pytest.mark.v1
+@pytest.mark.v1_test
 def test_plugin_file_get_all(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -1007,7 +1007,7 @@ def test_plugin_file_get_all(
     )
 
 
-@pytest.mark.v1
+@pytest.mark.v1_test
 def test_plugin_file_delete_all(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -1034,7 +1034,7 @@ def test_plugin_file_delete_all(
     )
 
 
-@pytest.mark.v1
+@pytest.mark.v1_test
 def test_cannot_register_existing_plugin_file_name(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -1061,7 +1061,7 @@ def test_cannot_register_existing_plugin_file_name(
     )
 
 
-@pytest.mark.v1
+@pytest.mark.v1_test
 def test_rename_plugin_file(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -1107,7 +1107,7 @@ def test_rename_plugin_file(
     )
 
 
-@pytest.mark.v1
+@pytest.mark.v1_test
 def test_delete_plugin_file_by_id(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -1141,7 +1141,7 @@ def test_delete_plugin_file_by_id(
 # -- Tests Plugin Tasks ----------------------------------------------------------------
 
 
-@pytest.mark.v1
+@pytest.mark.v1_test
 def test_register_plugin_task(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -1193,7 +1193,7 @@ def test_register_plugin_task(
     )
 
 
-@pytest.mark.v1
+@pytest.mark.v1_test
 def test_plugin_task_get_all(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -1229,7 +1229,7 @@ def test_plugin_task_get_all(
     )
 
 
-@pytest.mark.v1
+@pytest.mark.v1_test
 def test_plugin_task_delete_all(
     client: FlaskClient,
     db: SQLAlchemy,
