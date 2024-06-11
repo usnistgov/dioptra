@@ -1,0 +1,150 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+
+######################################################################################################
+# Prerequisites
+######################################################################################################
+
+# -- Prerequisite: copy files ------------------------------------------------------------------------
+
+FROM ubuntu:jammy AS copy-files
+
+COPY --chown=root:root --chmod=0644 docker/configs/nginx.conf /files/nginx.conf
+
+######################################################################################################
+# Base images
+######################################################################################################
+
+# -- Base image --------------------------------------------------------------------------------------
+
+FROM ubuntu:jammy AS base
+
+USER root
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV LANG C.UTF-8
+ENV LANGUAGE C.UTF-8
+ENV LC_ALL C.UTF-8
+
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get install -yq --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    gnupg \
+    netcat \
+    nginx \
+    wget && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# -- Base image (includes extra CA certificates) -----------------------------------------------------
+
+FROM base AS certs-base
+
+COPY --chown=root:root docker/ca-certificates /ca-certificates
+
+RUN chmod 0644 /ca-certificates/* && \
+    cp /ca-certificates/*.crt /usr/local/share/ca-certificates 2>/dev/null || true && \
+    /usr/sbin/update-ca-certificates
+
+ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
+ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates.crt
+
+# -- Base image (includes compiler toolchain) --------------------------------------------------------
+
+FROM certs-base AS build-base
+
+RUN echo "===> Installing compilers...." && \
+    apt-get update && \
+    apt-get install -yq --no-install-recommends autoconf build-essential
+
+# -- Base image (argbash) ----------------------------------------------------------------------------
+
+FROM build-base AS argbash-base
+
+ARG ARGBASH_VERSION=2.10.0
+
+RUN cd /tmp && \
+    curl -L -o "/tmp/argbash.tar.gz" "https://github.com/matejak/argbash/archive/refs/tags/${ARGBASH_VERSION}.tar.gz" && \
+    tar xf /tmp/argbash.tar.gz && \
+    cd /tmp/argbash-${ARGBASH_VERSION}/resources && \
+    make install PREFIX=/usr/local && \
+    cd / && \
+    rm -rf /tmp/argbash.tar.gz /tmp/argbash-${ARGBASH_VERSION}
+
+######################################################################################################
+# Build
+######################################################################################################
+
+# -- Build: render bash script templates ------------------------------------------------------
+
+FROM argbash-base AS shellscripts
+
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-nginx.m4 /templates/entrypoint-nginx.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/healthcheck-nginx.m4 /templates/healthcheck-nginx.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/parse-uri.m4 /templates/parse-uri.m4
+
+COPY --chown=root:root --chmod=0755 docker/shellscripts/wait-for-it.sh /shellscripts/wait-for-it.sh
+
+RUN mkdir -p /shellscripts && \
+    /usr/local/bin/argbash /templates/entrypoint-nginx.m4 -o /shellscripts/entrypoint-nginx.sh && \
+    /usr/local/bin/argbash /templates/healthcheck-nginx.m4 -o /shellscripts/healthcheck-nginx.sh && \
+    /usr/local/bin/argbash /templates/parse-uri.m4 -o /shellscripts/parse-uri.sh
+
+######################################################################################################
+# Final image
+######################################################################################################
+
+FROM base AS final
+
+ARG DIOPTRA_USER=dioptra
+ARG DIOPTRA_UID=39000
+ARG DIOPTRA_GID=100
+
+RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
+    useradd -u ${DIOPTRA_UID} -N -m -s /bin/bash -c "Dioptra user" ${DIOPTRA_USER} && \
+    mkdir -p /etc/nginx/conf.d && \
+    mkdir -p /var/cache/nginx && \
+    mkdir -p /var/lib/nginx && \
+    mkdir -p /var/log/nginx && \
+    chmod 0755 /etc/nginx/conf.d && \
+    chmod 0755 /var/cache/nginx && \
+    chmod 0755 /var/lib/nginx && \
+    chmod 0755 /var/log/nginx && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/nginx/conf.d && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/cache/nginx && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/lib/nginx && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /var/log/nginx
+
+COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/entrypoint-nginx.sh /usr/local/bin/entrypoint.sh
+COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/healthcheck-nginx.sh /usr/local/bin/healthcheck.sh
+COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/parse-uri.sh /usr/local/bin/parse-uri.sh
+COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
+COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/nginx.conf /etc/nginx/nginx.conf
+
+ENV DIOPTRA_USER ${DIOPTRA_USER}
+ENV DIOPTRA_UID ${DIOPTRA_UID}
+ENV DIOPTRA_GID ${DIOPTRA_GID}
+
+USER ${DIOPTRA_UID}
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+VOLUME ["/etc/ssl", "/usr/local/share/ca-certificates"]

@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowUserToGetCustomPlugins",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::plugins/dioptra_custom/*"
+      ]
+    },
+    {
+      "Sid": "AllowListingOfCustomPluginsFolder",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::plugins"
+      ],
+      "Condition": {
+        "StringLike": {
+          "s3:prefix":["dioptra_custom/*"]
+        }
+      }
+    }
+  ]
+}

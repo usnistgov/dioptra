@@ -1,0 +1,420 @@
+# -*- mode: gitignore; -*-
+
+# ---------------------------
+# BEGIN ignore project files
+# ---------------------------
+
+{{ "**/secrets/**/*" }}
+{{ "**/ssl/db/**/*" }}
+{{ "**/ssl/nginx/**/*" }}
+{{ "*.key" }}
+
+# ---------------------------
+# BEGIN ignore basic files
+# ---------------------------
+
+# all files starting with . or ~
+.*
+~*
+
+# os generated files
+*.lnk
+*.stackdump
+[Dd]esktop.ini
+ehthumbs.db
+ehthumbs_vista.db
+Icon
+Network Trash Folder
+Temporary Items
+Thumbs.db
+$RECYCLE.BIN/
+
+# log files and databases
+*.log
+*.sqlite
+
+# compiled files
+*.class
+*.com
+*.dll
+*.exe
+*.o
+*.so
+
+# archived files
+*.7z
+*.bzip
+*.bz2
+*.cab
+*.gz
+*.jar
+*.lzma
+*.rar
+*.tgz
+*.zip
+*.xz
+
+# packing-only formats
+*.iso
+*.tar
+
+# package management formats
+*.dmg
+*.deb
+*.egg
+*.gem
+*.msi
+*.msm
+*.msp
+*.rpm
+*.xpi
+
+# generic project directories
+build/
+dist/
+downloads/
+etc/
+lib/
+lib64/
+out/
+parts/
+sdist/
+var/
+tmp/
+
+# ---------------------------
+# BEGIN ignore editor files
+# ---------------------------
+
+# eclipse
+*~.nib
+local.properties
+
+# emacs
+*~
+\#*\#
+*.elc
+*.rel
+*_flymake.*
+auto-save-list
+flycheck_*.el
+tramp
+auto/
+elpa/
+eshell/
+ltximg/
+
+# jetbrains
+*.iws
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/dataSources.xml
+.idea/**/dynamic.xml
+.idea/**/gradle.xml
+.idea/**/libraries
+.idea/**/mongoSettings.xml
+.idea/**/sqlDataSources.xml
+.idea/**/tasks.xml
+.idea/**/uiDesigner.xml
+.idea/**/workspace.xml
+.idea/replstate.xml
+atlassian-ide-plugin.xml
+com_crashlytics_export_strings.xml
+crashlytics-build.properties
+crashlytics.properties
+fabric.properties
+.idea/dictionaries
+.idea/**/dataSources/
+cmake-build-debug/
+cmake-build-release/
+
+# kile
+*.backup
+
+# komodo
+*.komodoproject
+
+# lyx
+*.lyx~
+*.lyx#
+
+# netbeans
+bproject/private/
+nbbuild/
+nbdist/
+
+# rstudio
+.Rproj.user
+*.knit.md
+*.utf8.md
+rsconnect
+*_cache/
+cache/
+
+# sublime text
+*.sublime-project
+*.sublime-workspace
+*.stTheme.cache
+*.tmlanguage.cache
+*.tmPreferences.cache
+bh_unicode_properties.cache
+GitHub.sublime-settings
+oscrypto-ca-bundle.crt
+Package Control.last-run
+Package Control.ca-list
+Package Control.ca-bundle
+Package Control.system-ca-bundle
+Package Control.merged-ca-bundle
+Package Control.user-ca-bundle
+sftp-config.json
+Package Control.cache/
+Package Control.ca-certs/
+
+# tags
+cscope.files
+cscope.out
+cscope.in.out
+cscope.po.out
+gtags.files
+GPATH
+GRTAGS
+GSYMS
+GTAGS
+tags
+TAGS
+
+# texpad
+.texpadtmp
+
+# textmate
+*.tmproj
+*.tmproject
+tmtags
+
+# vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-v][a-z]
+[._]sw[a-p]
+Session.vim
+tags
+
+# vscode
+*.code-workspace
+.vscode/*
+
+# xcode
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+*.xcscmblueprint
+*.xccheckout
+DerivedData/
+xcuserdata/
+
+# -----------------------------------
+# BEGIN ignore word processing files
+# -----------------------------------
+
+# microsoft office
+*.~vsd*
+*.xlk
+
+# tex/latex
+*-blx.aux
+*-blx.bib
+*-concordance.tex
+*-converted-to.*
+*-gnuplottex-*
+*-tags.tex
+*-tikzDictionary
+*.?end
+*.[1-9]
+*.[1-9]R
+*.[1-9][0-9]
+*.[1-9][0-9]R
+*.[1-9][0-9][0-9]
+*.[1-9][0-9][0-9]R
+*.acn
+*.acr
+*.alg
+*.aux
+*.auxlock
+*.bbl
+*.bcf
+*.blg
+*.brf
+*.cb
+*.cb2
+*.cpt
+*.dpth
+*.dvi
+*.eledsec[1-9]
+*.eledsec[1-9]R
+*.eledsec[1-9][0-9]
+*.eledsec[1-9][0-9]R
+*.eledsec[1-9][0-9][0-9]
+*.eledsec[1-9][0-9][0-9]R
+*.end
+*.ent
+*.fdb_latexmk
+*.fff
+*.fls
+*.fmt
+*.fot
+*.gaux
+*.glg
+*.glo
+*.gls
+*.glsdefs
+*.gtex
+*.idx
+*.ilg
+*.ind
+*.ist
+*.loa
+*.lod
+*.loe
+*.lof
+*.lol
+*.lot
+*.lox
+*.maf
+*.md5
+*.mf
+*.mlf
+*.mlt
+*.mp
+*.mtc[0-9]*
+*.mw
+*.nav
+*.nlo
+*.out
+*.pax
+*.pdfpc
+*.pdfsync
+*.pre
+*.pyg
+*.pytxcode
+*.run.xml
+*.sagetex.py
+*.sagetex.sage
+*.sagetex.scmd
+*.slf[0-9]*
+*.slt[0-9]*
+*.snm
+*.soc
+*.sout
+*.spl
+*.sta
+*.stc[0-9]*
+*.sympy
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.t[1-9]
+*.t[1-9][0-9]
+*.tdo
+*.tfm
+*.thm
+*.tikz
+*.toc
+*.ttt
+*.upa
+*.upb
+*.vrb
+*.wrt
+*.xdv
+*.xdy
+*.xyc
+TSWLatexianTemp*
+_minted*
+acs-*.bib
+pythontex-files-*/
+sympy-plots-for-*.tex/
+
+# ---------------------------
+# BEGIN ignore language files
+# ---------------------------
+
+# cython
+*_cython.html
+
+# java
+java/.classpath
+java/.project
+java/.settings/
+
+# make
+local.make
+
+# python
+*$py.class
+*.cover
+*.manifest
+*.mo
+*.pot
+*.py[cod]
+*.sage.py
+*.spec
+MANIFEST
+celerybeat-schedule
+coverage.xml
+local_settings.py
+nosetests.xml
+pip-log.txt
+pip-delete-this-directory.txt
+.mypy_cache/
+*.egg-info/
+__pycache__/
+develop-eggs/
+docs/_build/
+eggs/
+[eE][nN][vV]/
+env.bak/
+htmlcov/
+instance/
+pip-wheel-metadata/
+site/
+target/
+venv/
+venv.bak/
+wheels/
+
+# R
+.Rhistory
+.RData
+*-Ex.R
+vignettes/*.html
+vignettes/*.pdf
+*.Rcheck/
+
+# ---------------------------
+# BEGIN Whitelisted Files
+# ---------------------------
+
+# track these files, if they exist
+!.github/
+!.gitlab/
+!.clog.toml
+!.cz-config.js
+!.containerignore
+!.dockerignore
+!.editorconfig
+!.env.example
+!.flake8
+!.gitattributes
+!.gitignore
+!.gitlab-ci.yml
+!.gitlint
+!.gitkeep
+!.isort.cfg
+!.markdownlint.json
+!.pre-commit-config.yaml
+!.readthedocs.yml
+!.rstcheck.cfg
+!.style.yapf
+!.travis.yml

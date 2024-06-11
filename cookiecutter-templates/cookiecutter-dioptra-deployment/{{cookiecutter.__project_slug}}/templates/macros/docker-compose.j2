@@ -1,0 +1,427 @@
+{%- macro container_image(container) -%}
+{%- set _container_registry = [container.registry] if container.registry else [] -%}
+{%- set _container_namespace = [container.namespace] if container.namespace else [] -%}
+{%- set _container_image_name_and_tag = [container.image ~ ":" ~ container.tag] -%}
+{%- set _container_image_components = _container_registry + _container_namespace + _container_image_name_and_tag -%}
+{{ _container_image_components|join("/") }}
+{%- endmacro -%}
+
+{% macro service_env_files(env_files) -%}
+env_file:
+  {% for env_file in env_files -%}
+  - {{ "./" ~ env_file }}{{ "
+  " if not loop.last }}
+  {%- endfor -%}
+{%- endmacro -%}
+
+{% macro service_networks(networks) -%}
+networks:
+  {% for network in networks -%}
+  - {{ network }}{{ "
+  " if not loop.last }}
+  {%- endfor -%}
+{%- endmacro -%}
+
+{% macro service_volumes(volumes, datasets_directory=none) -%}
+{%- if datasets_directory is not none and datasets_directory|trim != "" -%}
+{%- set _volumes_list = volumes + [datasets_directory + ":/dioptra/data:ro"] -%}
+{%- else -%}
+{%- set _volumes_list = volumes -%}
+{%- endif -%}
+volumes:
+  {% for volume in _volumes_list -%}
+  - "{{ volume }}"{{ "
+  " if not loop.last }}
+  {%- endfor -%}
+{%- endmacro -%}
+
+{% macro nfs_volume(name, server_address, mount_options, target_dir) -%}
+{{ name }}:
+  driver: local
+  driver_opts:
+    type: nfs
+    o: addr={{ server_address }},{{ mount_options }}
+    device: ":{{ target_dir }}"
+{%- endmacro -%}
+
+{% macro redis_service(cookiecutter) -%}
+{%- set _redis_volumes = ["redis-data:/data:rw"] -%}
+{{ cookiecutter.__project_slug }}-redis:
+  image: {{ container_image(cookiecutter.__containers.redis) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-redis
+  healthcheck:
+    test: ["CMD", "redis-cli", "ping"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+  command:
+    - redis-server
+    - --appendonly
+    - "yes"
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_redis_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro db_service(cookiecutter) -%}
+{%- set _db_env_files = ["envs/" ~ cookiecutter.__project_slug ~ "-db.env"] -%}
+{%- set _db_volumes = ["postgres-data:/var/lib/postgresql/data:rw", "postgres-docker-entrypoint-initdb-d:/docker-entrypoint-initdb.d:rw", "postgres-etc-postgresql:/etc/postgresql:rw", "postgres-var-certs:/var/lib/postgresql/certs:rw"] -%}
+{{ cookiecutter.__project_slug }}-db:
+  image: {{ container_image(cookiecutter.__containers.db) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-db
+  shm_size: 256MB
+  healthcheck:
+    test:
+      [
+        "CMD",
+        "pg_isready",
+        "-U",
+        "dioptra",
+        "-d",
+        "restapi",
+      ]
+    interval: 30s
+    timeout: 60s
+    retries: 3
+    start_period: 30s
+  environment:
+    POSTGRES_USER_DIOPTRA_PASSWORD: "${POSTGRES_USER_DIOPTRA_PASSWORD}"
+  {{ service_env_files(_db_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_db_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro dbadmin_service(cookiecutter) -%}
+{%- set _dbadmin_env_files = ["envs/" ~ cookiecutter.__project_slug ~ "-dbadmin.env"] -%}
+{%- set _dbadmin_volumes = ["dbadmin-ca-certificates:/etc/ssl/certs:rw", "dbadmin-data:/var/lib/pgadmin:rw"] -%}
+{{ cookiecutter.__project_slug }}-dbadmin:
+  image: {{ container_image(cookiecutter.__containers.dbadmin) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-dbadmin
+  healthcheck:
+    test:
+      [
+        "CMD",
+        "wget",
+        "--no-verbose",
+        "--tries=1",
+        "--spider",
+        "http://localhost:35050/misc/ping",
+      ]
+    interval: 30s
+    timeout: 60s
+    retries: 5
+    start_period: 80s
+  environment:
+    PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
+  {{ service_env_files(_dbadmin_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_dbadmin_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro minio_service(cookiecutter) -%}
+{%- set _minio_volumes = ["minio-certs:/root/.minio/certs:rw", "minio-data:/data:rw"] -%}
+{{ cookiecutter.__project_slug }}-minio:
+  image: {{ container_image(cookiecutter.__containers.minio) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-minio
+  healthcheck:
+    test:
+      [
+        "CMD",
+        "curl",
+        "-f",
+        "http://localhost:9000/minio/health/live",
+      ]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+  environment:
+    MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+    MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+    MINIO_KMS_SECRET_KEY: "${MINIO_KMS_SECRET_KEY}"
+  command:
+    - server
+    - /data
+    - --console-address
+    - ":9001"
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_minio_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro nginx_service(cookiecutter) %}
+{%- set _nginx_env_files = ["envs/ca-certificates.env"] -%}
+{%- set _nginx_port_prefix = "127.0.0.1:" if cookiecutter.nginx_expose_ports_on_localhost_only.lower() == "true" else "" -%}
+{%- set _nginx_volumes = ["nginx-ca-certificates:/usr/local/share/ca-certificates:rw", "nginx-conf-d:/etc/nginx/conf.d:rw", "nginx-etc-ssl:/etc/ssl:rw", "nginx-frontend:/frontend:ro"] -%}
+{{ cookiecutter.__project_slug }}-nginx:
+  image: {{ container_image(cookiecutter.__containers.nginx) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-nginx
+  healthcheck:
+    test:
+      [
+        "CMD",
+        "/usr/local/bin/healthcheck.sh",
+        "http://localhost:30080",
+        "http://localhost:35000",
+        "http://localhost:35050/login",
+        "http://localhost:39000",
+        "http://localhost:39001",
+        # "https://localhost:30443",
+        # "https://localhost:35000",
+        # "https://localhost:35050/login",
+        # "https://localhost:39000",
+        # "https://localhost:39001",
+      ]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+  command:
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-minio:9001
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-dbadmin:35050
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-restapi:5000
+  {{ service_env_files(_nginx_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  ports:
+    - {{ _nginx_port_prefix ~ cookiecutter.__restapi_http_port ~ ":30080/tcp" }}
+    # - {{ _nginx_port_prefix ~ cookiecutter.__restapi_https_port ~ ":30443/tcp" }}
+    - {{ _nginx_port_prefix ~ "35432:5432/tcp" }}
+    - {{ _nginx_port_prefix ~ "35000:35000/tcp" }}
+    - {{ _nginx_port_prefix ~ "35050:35050/tcp" }}
+    - {{ _nginx_port_prefix ~ "39000:39000/tcp" }}
+    - {{ _nginx_port_prefix ~ "39001:39001/tcp" }}
+  {{ service_volumes(_nginx_volumes)|indent(2) }}
+{%- endmacro %}
+
+{% macro mlflow_tracking_service(cookiecutter) -%}
+{%- set _mlflow_tracking_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-mlflow-tracking.env"] -%}
+{%- set _mlflow_tracking_volumes = ["mlflow-tracking-ca-certificates:/usr/local/share/ca-certificates:rw", "mlflow-tracking-etc-ssl:/etc/ssl:rw"] -%}
+{{ cookiecutter.__project_slug }}-mlflow-tracking:
+  image: {{ container_image(cookiecutter.__containers.mlflow_tracking) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-mlflow-tracking
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:5000"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 10s
+  environment:
+    AWS_ACCESS_KEY_ID: "${MLFLOW_TRACKING_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${MLFLOW_TRACKING_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_MLFLOW_TRACKING_DATABASE_URI: "${DIOPTRA_MLFLOW_TRACKING_DATABASE_URI}"
+  command:
+    - --host
+    - "0.0.0.0"
+    - --default-artifact-root
+    - "s3://mlflow-tracking/artifacts"
+    - --backend-store-uri
+    - {{ '$${DIOPTRA_MLFLOW_TRACKING_DATABASE_URI}' }}
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-minio:9001
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-db:5432
+  {{ service_env_files(_mlflow_tracking_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_mlflow_tracking_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro restapi_service(cookiecutter) -%}
+{%- set _restapi_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-restapi.env"] -%}
+{%- set _restapi_volumes = ["restapi-ca-certificates:/usr/local/share/ca-certificates:rw", "restapi-etc-ssl:/etc/ssl:rw"] -%}
+{{ cookiecutter.__project_slug }}-restapi:
+  image: {{ container_image(cookiecutter.__containers.restapi) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-restapi
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+  environment:
+    AWS_ACCESS_KEY_ID: "${RESTAPI_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${RESTAPI_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
+  command:
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-redis:6379
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-minio:9001
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-db:5432
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
+  {{ service_env_files(_restapi_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_restapi_volumes)|indent(2) }}
+{%- endmacro -%}
+
+{% macro tensorflow_cpu_service(cookiecutter, worker_id) -%}
+{%- set _tfcpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker-cpu.env"] -%}
+{%- set _tfcpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
+{{ cookiecutter.__project_slug }}-tfcpu-{{ "%02d" | format(worker_id|int) }}:
+  image: {{ container_image(cookiecutter.__containers.tfcpu) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-tfcpu-{{ "%02d" | format(worker_id|int) }}
+  healthcheck:
+    test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+    interval: 30s
+    timeout: 60s
+    retries: 5
+    start_period: 80s
+  environment:
+    AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
+  command:
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-redis:6379
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-minio:9001
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-db:5432
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-restapi:5000
+    - tensorflow_cpu
+  {{ service_env_files(_tfcpu_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_tfcpu_volumes, cookiecutter.datasets_directory)|indent(2) }}
+{%- endmacro -%}
+
+{% macro tensorflow_gpu_service(cookiecutter, worker_id, gpu_device_id) -%}
+{%- set _tfgpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env"] -%}
+{%- set _tfgpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
+{{ cookiecutter.__project_slug }}-tfgpu-{{ "%02d" | format(worker_id|int) }}:
+  image: {{ container_image(cookiecutter.__containers.tfgpu) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-tfgpu-{{ "%02d" | format(worker_id|int) }}
+  runtime: nvidia
+  healthcheck:
+    test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+    interval: 30s
+    timeout: 60s
+    retries: 5
+    start_period: 80s
+  environment:
+    AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
+    NVIDIA_VISIBLE_DEVICES: {{ gpu_device_id }}
+  command:
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-redis:6379
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-minio:9001
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-db:5432
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-restapi:5000
+    - tensorflow_gpu
+  {{ service_env_files(_tfgpu_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_tfgpu_volumes, cookiecutter.datasets_directory)|indent(2) }}
+{%- endmacro -%}
+
+{% macro pytorch_cpu_service(cookiecutter, worker_id) -%}
+{%- set _pytorchcpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker-cpu.env"] -%}
+{%- set _pytorchcpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
+{{ cookiecutter.__project_slug }}-pytorchcpu-{{ "%02d" | format(worker_id|int) }}:
+  image: {{ container_image(cookiecutter.__containers.pytorchcpu) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-pytorchcpu-{{ "%02d" | format(worker_id|int) }}
+  healthcheck:
+    test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+    interval: 30s
+    timeout: 60s
+    retries: 5
+    start_period: 80s
+  environment:
+    AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
+  command:
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-redis:6379
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-minio:9001
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-db:5432
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-restapi:5000
+    - pytorch_cpu
+  {{ service_env_files(_pytorchcpu_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_pytorchcpu_volumes, cookiecutter.datasets_directory)|indent(2) }}
+{%- endmacro -%}
+
+{% macro pytorch_gpu_service(cookiecutter, worker_id, gpu_device_id) -%}
+{%- set _pytorchgpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env"] -%}
+{%- set _pytorchgpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
+{{ cookiecutter.__project_slug }}-pytorchgpu-{{ "%02d" | format(worker_id|int) }}:
+  image: {{ container_image(cookiecutter.__containers.pytorchgpu) }}
+  restart: always
+  hostname: {{ cookiecutter.__project_slug }}-pytorchgpu-{{ "%02d" | format(worker_id|int) }}
+  runtime: nvidia
+  healthcheck:
+    test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+    interval: 30s
+    timeout: 60s
+    retries: 5
+    start_period: 80s
+  environment:
+    AWS_ACCESS_KEY_ID: "${WORKER_AWS_ACCESS_KEY_ID}"
+    AWS_SECRET_ACCESS_KEY: "${WORKER_AWS_SECRET_ACCESS_KEY}"
+    DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
+    NVIDIA_VISIBLE_DEVICES: {{ gpu_device_id }}
+  command:
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-redis:6379
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-minio:9001
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-db:5432
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
+    - --wait-for
+    - {{ cookiecutter.__project_slug }}-restapi:5000
+    - pytorch_gpu
+  {{ service_env_files(_pytorchgpu_env_files)|indent(2) }}
+  {% if cookiecutter.__containers.networks -%}
+  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {% endif -%}
+  {{ service_volumes(_pytorchgpu_volumes, cookiecutter.datasets_directory)|indent(2) }}
+{%- endmacro -%}

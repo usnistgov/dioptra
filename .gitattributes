@@ -1,0 +1,40 @@
+# Enforce Unix-style line endings in the repository
+* text eol=lf
+
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout
+aws-config text
+Dockerfile text
+dot-* text
+LICENSE text
+Makefile text
+MLproject text
+*.bashrc text
+*.cfg text
+*.conf text
+*.in text
+*.ini text
+*.ipynb text
+*.json text
+*.m4 text
+*.md text
+*.mk text
+*.py text
+*.rst text
+*.sh text
+*.yaml text
+*.yml text
+
+# Declare files that will always have CRLF line endings on checkout.
+*.bat text eol=crlf
+
+# Denote all files that are truly binary and should not be modified
+*.gif binary
+*.gz binary
+*.inv binary
+*.png binary
+*.jpeg binary
+*.jpg binary
+*.tar binary
+*.whl binary
+*.zip binary

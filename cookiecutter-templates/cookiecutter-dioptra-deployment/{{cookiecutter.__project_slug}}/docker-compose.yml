@@ -1,0 +1,95 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+{% from "templates/macros/docker-compose.j2" import nfs_volume, db_service, dbadmin_service, minio_service, mlflow_tracking_service, nginx_service, pytorch_cpu_service, pytorch_gpu_service, redis_service, restapi_service, tensorflow_cpu_service, tensorflow_gpu_service -%}
+{% if cookiecutter.__containers.networks -%}
+networks:
+  {% for network in cookiecutter.__containers.networks -%}
+  {{ network }}:
+    name: {{ cookiecutter.__project_slug }}_{{ network }}{{ "
+    " if not loop.last }}
+  {%- endfor %}
+
+{% endif -%}
+services:
+  {{ nginx_service(cookiecutter)|indent(2) }}
+
+  {{ minio_service(cookiecutter)|indent(2) }}
+
+  {{ db_service(cookiecutter)|indent(2) }}
+
+  {{ dbadmin_service(cookiecutter)|indent(2) }}
+
+  {{ redis_service(cookiecutter)|indent(2) }}
+
+  {{ mlflow_tracking_service(cookiecutter)|indent(2) }}
+
+  {{ restapi_service(cookiecutter)|indent(2) }}
+
+  {% for tfcpu_worker_id in range(cookiecutter.num_tensorflow_cpu_workers|int) if cookiecutter.num_tensorflow_cpu_workers|int > 0 -%}
+  {{ tensorflow_cpu_service(cookiecutter, tfcpu_worker_id + 1)|indent(2) }}
+
+  {% endfor -%}
+  {% for tfgpu_worker_id in range(cookiecutter.num_tensorflow_gpu_workers|int) if cookiecutter.num_tensorflow_gpu_workers|int > 0 -%}
+  {{ tensorflow_gpu_service(cookiecutter, tfgpu_worker_id + 1, tfgpu_worker_id)|indent(2) }}
+
+  {% endfor -%}
+  {% for pytorchcpu_worker_id in range(cookiecutter.num_pytorch_cpu_workers|int) if cookiecutter.num_pytorch_cpu_workers|int > 0 -%}
+  {{ pytorch_cpu_service(cookiecutter, pytorchcpu_worker_id + 1)|indent(2) }}
+
+  {% endfor -%}
+  {% for pytorchgpu_worker_id in range(cookiecutter.num_pytorch_gpu_workers|int) if cookiecutter.num_pytorch_gpu_workers|int > 0 -%}
+  {{ pytorch_gpu_service(cookiecutter, pytorchgpu_worker_id + 1, cookiecutter.num_tensorflow_gpu_workers|int + pytorchgpu_worker_id)|indent(2) }}
+
+  {% endfor -%}{{ "\nvolumes:" }}
+  dbadmin-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_dbadmin-ca-certificates
+  dbadmin-data:
+    name: {{ cookiecutter.__project_slug }}_dbadmin-data
+  mlflow-tracking-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_mlflow-tracking-ca-certificates
+  mlflow-tracking-etc-ssl:
+    name: {{ cookiecutter.__project_slug }}_mlflow-tracking-etc-ssl
+  minio-certs:
+    name: {{ cookiecutter.__project_slug }}_minio-certs
+  minio-data:
+    name: {{ cookiecutter.__project_slug }}_minio-data
+  nginx-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_nginx-ca-certificates
+  nginx-conf-d:
+    name: {{ cookiecutter.__project_slug }}_nginx-conf-d
+  nginx-etc-ssl:
+    name: {{ cookiecutter.__project_slug }}_nginx-etc-ssl
+  nginx-frontend:
+    name: {{ cookiecutter.__project_slug }}_nginx-frontend
+  postgres-data:
+    name: {{ cookiecutter.__project_slug }}_postgres-data
+  postgres-docker-entrypoint-initdb-d:
+    name: {{ cookiecutter.__project_slug }}_postgres-docker-entrypoint-initdb-d
+  postgres-etc-postgresql:
+    name: {{ cookiecutter.__project_slug }}_postgres-etc-postgresql
+  postgres-var-certs:
+    name: {{ cookiecutter.__project_slug }}_postgres-var-certs
+  redis-data:
+    name: {{ cookiecutter.__project_slug }}_redis-data
+  restapi-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_restapi-ca-certificates
+  restapi-etc-ssl:
+    name: {{ cookiecutter.__project_slug }}_restapi-etc-ssl
+  worker-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_worker-ca-certificates
+  worker-etc-ssl:
+    name: {{ cookiecutter.__project_slug }}_worker-etc-ssl

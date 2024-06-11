@@ -1,0 +1,231 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: feature_squeeze_mnist
+
+entry_points:
+  jsma:
+    parameters:
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      model_name: {type: string, default: "mnist_le_net"}
+      model_version: {type: string, default: "1"}
+      batch_size: {type: float, default: 32}
+      seed: {type: float, default: -1}
+      theta: {type: float, default:0.1}
+      gamma: {type: float, default:1.0}
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      image_size: { type: string, default: "[28,28,1]" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment jsma.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment jsma.yml
+      -P testing_dir={testing_dir}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P batch_size={batch_size}
+      -P seed={seed}
+      -P theta={theta}
+      -P gamma={gamma}
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P image_size={image_size}
+
+  deepfool:
+    parameters:
+      training_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      model_name: {type: string, default: "mobilenet"}
+      model_version: {type: string, default: "1"}
+      image_size: {type: string, default: "[28,28]"}
+      batch_size: {type: float, default: 40}
+      seed: {type: float, default: -1}
+      max_iter: {type:float, default:10}
+      nb_grads: {type:float, default:10}
+      epsilon: {type:float, default:0.000001}
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment deepfool.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment deepfool.yml
+      -P training_dir={training_dir}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P image_size={image_size}
+      -P batch_size={batch_size}
+      -P seed={seed}
+      -P max_iter={max_iter}
+      -P nb_grads={nb_grads}
+      -P epsilon={epsilon}
+
+  cw_l2:
+    parameters:
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      model_name: {type: string, default: "mnist_le_net"}
+      model_version: {type: string, default: "1"}
+      model_architecture: {type: string, default: "le_net"}
+      batch_size: {type: float, default: 1}
+      seed: {type: float, default: -1}
+      confidence: {type: float, default: 0.0}
+      targeted: {type: string, default: "False"}
+      learning_rate: {type: float, default: 0.01}
+      binary_search_steps: {type: float, default:10.0}
+      max_iter: {type:float, default:10}
+      initial_const: {type: float, default:0.01}
+      verbose: {type: string, default:"True"}
+      image_size: {type: string, default: "[28,28,1]" }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment cw_l2.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment cw_l2.yml
+      -P testing_dir={testing_dir}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P model_architecture={model_architecture}
+      -P batch_size={batch_size}
+      -P seed={seed}
+      -P confidence={confidence}
+      -P targeted={targeted}
+      -P learning_rate={learning_rate}
+      -P binary_search_steps={binary_search_steps}
+      -P max_iter={max_iter}
+      -P initial_const={initial_const}
+      -P image_size={image_size}
+      -P verbose={verbose}
+
+  cw_inf:
+    parameters:
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      model_name: {type: string, default: "mnist_le_net"}
+      model_version: { type: string, default: "1" }
+      model_architecture: {type: string, default: "le_net"}
+      batch_size: {type: float, default: 32}
+      seed: {type: float, default: -1}
+      confidence: {type: float, default: 0.0}
+      targeted: {type: string, default: "False"}
+      learning_rate: {type: float, default: 0.01}
+      max_iter: {type:float, default:10}
+      verbose: {type: string, default:"True"}
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      image_size: { type: string, default: "[28,28,1]" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment cw_inf.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment cw_inf.yml
+      -P testing_dir={testing_dir}
+      -P model_name={model_name}
+      -P model_architecture={model_architecture}
+      -P model_version={model_version}
+      -P batch_size={batch_size}
+      -P seed={seed}
+      -P confidence={confidence}
+      -P targeted={targeted}
+      -P learning_rate={learning_rate}
+      -P max_iter={max_iter}
+      -P verbose={verbose}
+      -P adv_tar_name={adv_tar_name}
+      -P image_size={image_size}
+      -P adv_data_dir={adv_data_dir}
+  fgm:
+    parameters:
+      data_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      image_size: { type: string, default: "[28,28,1]" }
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      model_name: { type: string, default: "mnist_le_net" }
+      model_version: { type: string, default: "1" }
+      batch_size: { type: float, default: 1 }
+      eps: { type: float, default: 0.3 }
+      eps_step: { type: float, default: 0.1 }
+      minimal: { type: float, default: false }
+      norm: { type: string, default: "inf" }
+      seed: { type: float, default: -1 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment fgm.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment fgm.yml
+      -P data_dir={data_dir}
+      -P image_size={image_size}
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P batch_size={batch_size}
+      -P eps={eps}
+      -P eps_step={eps_step}
+      -P minimal={minimal}
+      -P norm={norm}
+      -P seed={seed}
+
+  infer:
+    parameters:
+      run_id: { type: string }
+      image_size: { type: string, default: "[28,28,1]" }
+      model_name: { type: string, default: "mnist_le_net" }
+      model_version: { type: string, default: "1" }
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      seed: { type: float, default: -1 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment infer.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment infer.yml
+      -P run_id={run_id}
+      -P image_size={image_size}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P seed={seed}
+
+  feature_squeeze:
+    parameters:
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      run_id: {type: string}
+      model: {type: string, default: "mnist_le_net"}
+      model_architecture: {type: string, default: "le_net"}
+      batch_size: {type: float, default: 32}
+      seed: {type: float, default: -1}
+      bit_depth: {type: float, default: 8}
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      model_version: { type: string, default: "1" }
+      image_size: { type: string, default: "[28,28,1]" }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment feature_squeeze.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment feature_squeeze.yml
+      -P testing_dir={testing_dir}
+      -P run_id={run_id}
+      -P model={model}
+      -P model_architecture={model_architecture}
+      -P batch_size={batch_size}
+      -P seed={seed}
+      -P bit_depth={bit_depth}
+      -P adv_data_dir={adv_data_dir}
+      -P adv_tar_name={adv_tar_name}
+      -P model_version={model_version}
+      -P image_size={image_size}
+
+  train:
+    parameters:
+      image_size: { type: string, default: "[28,28,1]" }
+      model_architecture: { type: string, default: "le_net" }
+      epochs: { type: float, default: 30 }
+      batch_size: { type: float, default: 32 }
+      register_model_name: { type: string, default: "" }
+      learning_rate: { type: float, default: 0.001 }
+      optimizer: { type: string, default: "Adam" }
+      validation_split: { type: float, default: 0.2 }
+      seed: { type: float, default: -1 }
+      training_dir: { type: string, default :"/dioptra/data/Mnist/training" }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment train.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment train.yml
+      -P image_size={image_size}
+      -P model_architecture={model_architecture}
+      -P epochs={epochs}
+      -P batch_size={batch_size}
+      -P register_model_name={register_model_name}
+      -P learning_rate={learning_rate}
+      -P optimizer={optimizer}
+      -P validation_split={validation_split}
+      -P seed={seed}
+      -P training_dir={training_dir}

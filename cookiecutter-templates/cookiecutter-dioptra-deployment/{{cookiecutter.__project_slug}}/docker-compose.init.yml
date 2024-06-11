@@ -1,0 +1,259 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+{% from "templates/macros/docker-compose.j2" import container_image, db_service, minio_service, mlflow_tracking_service, nfs_volume, restapi_service, service_networks -%}
+{% if cookiecutter.__containers.networks -%}
+networks:
+  {% for network in cookiecutter.__containers.networks -%}
+  {{ network }}:
+    name: {{ cookiecutter.__project_slug }}_{{ network }}{{ "
+    " if not loop.last }}
+  {%- endfor %}
+
+{% endif -%}
+services:
+  minio:
+    image: minio/minio:latest
+    restart: always
+    hostname: {{ cookiecutter.__project_slug }}-minio
+    command:
+      - server
+      - /data
+      - --console-address
+      - ":9001"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+      MINIO_KMS_SECRET_KEY: "${MINIO_KMS_SECRET_KEY}"
+    networks:
+      - dioptra
+    volumes:
+      - "minio-certs:/root/.minio/certs:rw"
+      - "minio-data:/data:rw"
+
+  db:
+    image: postgres:{{ cookiecutter.postgres_container_tag }}
+    restart: always
+    hostname: {{ cookiecutter.__project_slug }}-db
+    shm_size: 256MB
+    environment:
+      POSTGRES_USER_DIOPTRA_PASSWORD: "${POSTGRES_USER_DIOPTRA_PASSWORD}"
+    env_file:
+      - ./envs/{{ cookiecutter.__project_slug }}-db.env
+    networks:
+      - dioptra
+    volumes:
+      - "init-scripts:/scripts:ro"
+      - "postgres-data:/var/lib/postgresql/data:rw"
+      - "postgres-docker-entrypoint-initdb-d:/docker-entrypoint-initdb.d:rw"
+      - "postgres-etc-postgresql:/etc/postgresql:rw"
+      - "postgres-var-certs:/var/lib/postgresql/certs:rw"
+
+  restapi:
+    image: {{ container_image(cookiecutter.__containers.restapi) }}
+    restart: always
+    hostname: {{ cookiecutter.__project_slug }}-restapi
+    command:
+      - --wait-for
+      - {{ cookiecutter.__project_slug }}-db:5432
+    env_file:
+      - ./envs/{{ cookiecutter.__project_slug }}-restapi.env
+    environment:
+      AWS_ACCESS_KEY_ID: "${RESTAPI_AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${RESTAPI_AWS_SECRET_ACCESS_KEY}"
+      DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
+    networks:
+      - dioptra
+    volumes:
+      - "restapi-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "restapi-etc-ssl:/etc/ssl:rw"
+
+  mc:
+    image: {{ container_image(cookiecutter.__containers.mc) }}
+    hostname: {{ cookiecutter.__project_slug }}-mc
+    entrypoint:
+      - "/bin/bash"
+    {% if cookiecutter.__containers.networks -%}
+    {{ service_networks(cookiecutter.__containers.networks)|indent(4) }}
+    {% endif -%}
+    volumes:
+      - "./config/minio:/s3-policy:ro"
+      - "./secrets:/secrets:ro"
+      - "minio-certs:/root/.mc/certs/CAs:ro"
+      - "init-repos:/init-repos:ro"
+      - "init-scripts:/scripts:ro"
+
+  argbash:
+    image: {{ container_image(cookiecutter.__containers.argbash) }}
+    user: root
+    entrypoint:
+      - "/bin/bash"
+    command:
+      - "/templates/init-scripts.sh"
+      - "--output"
+      - "/scripts"
+      - "copy-extra-ca-certificates.m4"
+      - "file-copy.m4"
+      - "git-clone.m4"
+      - "globbed-copy.m4"
+      - "init-minio.sh"
+      - "init-named-volumes.m4"
+      - "init-scripts.m4"
+      - "manage-postgres-ssl.m4"
+      - "set-permissions.m4"
+    volumes:
+      - "./scripts:/scripts-src:ro"
+      - "init-scripts:/scripts:rw"
+
+  named-volumes:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - "/bin/bash"
+    volumes:
+      - "./config:/config:ro"
+      - "./secrets:/secrets:ro"
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "init-repos:/volumes/init-repos:rw"
+      - "dbadmin-ca-certificates:/volumes/dbadmin-ca-certificates:rw"
+      - "dbadmin-data:/volumes/dbadmin-data:rw"
+      - "mc-ca-certificates:/volumes/mc-ca-certificates:rw"
+      - "minio-certs:/volumes/minio-certs:rw"
+      - "minio-data:/volumes/minio-data:rw"
+      - "nginx-conf-d:/volumes/nginx-conf-d:rw"
+      - "nginx-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "nginx-etc-ssl:/volumes/nginx-etc-ssl:rw"
+      - "nginx-etc-ssl:/etc/ssl:rw"
+      - "postgres-docker-entrypoint-initdb-d:/volumes/postgres-docker-entrypoint-initdb-d:rw"
+      - "postgres-etc-postgresql:/volumes/postgres-etc-postgresql:rw"
+      - "postgres-var-certs:/volumes/postgres-var-certs:rw"
+      - "redis-data:/volumes/redis-data:rw"
+
+  nginx-ssl:
+    image: {{ container_image(cookiecutter.__containers.nginx) }}
+    user: root
+    entrypoint:
+      - "/bin/bash"
+    volumes:
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "nginx-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "nginx-etc-ssl:/etc/ssl:rw"
+
+  mlflow-tracking-ssl:
+    image: {{ container_image(cookiecutter.__containers.mlflow_tracking) }}
+    user: root
+    entrypoint:
+      - "/bin/bash"
+    volumes:
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "mlflow-tracking-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "mlflow-tracking-etc-ssl:/etc/ssl:rw"
+
+  restapi-ssl:
+    image: {{ container_image(cookiecutter.__containers.restapi) }}
+    user: root
+    entrypoint:
+      - "/bin/bash"
+    volumes:
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "restapi-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "restapi-etc-ssl:/etc/ssl:rw"
+
+  tfcpu-ssl:
+    image: {{ container_image(cookiecutter.__containers.tfcpu) }}
+    user: root
+    entrypoint:
+      - "/bin/bash"
+    volumes:
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "worker-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "worker-etc-ssl:/etc/ssl:rw"
+
+  pytorchcpu-ssl:
+    image: {{ container_image(cookiecutter.__containers.pytorchcpu) }}
+    user: root
+    entrypoint:
+      - "/bin/bash"
+    volumes:
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "worker-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "worker-etc-ssl:/etc/ssl:rw"
+
+  frontend-build:
+    image: {{ container_image(cookiecutter.__containers.nodejs) }}
+    user: root
+    entrypoint:
+      - "/bin/bash"
+    env_file:
+      - ./envs/ca-certificates.env
+    volumes:
+      - "init-scripts:/scripts:ro"
+      - "init-repos:/repo:rw"
+      - "nginx-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "nginx-etc-ssl:/etc/ssl:rw"
+      - "nginx-frontend:/frontend:rw"
+
+volumes:
+  init-repos:
+    name: {{ cookiecutter.__project_slug }}_init-repos
+  init-scripts:
+    name: {{ cookiecutter.__project_slug }}_init-scripts
+  mc-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_mc-ca-certificates
+  dbadmin-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_dbadmin-ca-certificates
+  dbadmin-data:
+    name: {{ cookiecutter.__project_slug }}_dbadmin-data
+  mlflow-tracking-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_mlflow-tracking-ca-certificates
+  mlflow-tracking-etc-ssl:
+    name: {{ cookiecutter.__project_slug }}_mlflow-tracking-etc-ssl
+  minio-certs:
+    name: {{ cookiecutter.__project_slug }}_minio-certs
+  minio-data:
+    name: {{ cookiecutter.__project_slug }}_minio-data
+  nginx-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_nginx-ca-certificates
+  nginx-conf-d:
+    name: {{ cookiecutter.__project_slug }}_nginx-conf-d
+  nginx-etc-ssl:
+    name: {{ cookiecutter.__project_slug }}_nginx-etc-ssl
+  nginx-frontend:
+    name: {{ cookiecutter.__project_slug }}_nginx-frontend
+  postgres-data:
+    name: {{ cookiecutter.__project_slug }}_postgres-data
+  postgres-docker-entrypoint-initdb-d:
+    name: {{ cookiecutter.__project_slug }}_postgres-docker-entrypoint-initdb-d
+  postgres-etc-postgresql:
+    name: {{ cookiecutter.__project_slug }}_postgres-etc-postgresql
+  postgres-var-certs:
+    name: {{ cookiecutter.__project_slug }}_postgres-var-certs
+  redis-data:
+    name: {{ cookiecutter.__project_slug }}_redis-data
+  restapi-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_restapi-ca-certificates
+  restapi-etc-ssl:
+    name: {{ cookiecutter.__project_slug }}_restapi-etc-ssl
+  worker-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_worker-ca-certificates
+  worker-etc-ssl:
+    name: {{ cookiecutter.__project_slug }}_worker-etc-ssl

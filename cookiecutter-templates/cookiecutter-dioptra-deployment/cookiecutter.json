@@ -1,0 +1,113 @@
+{
+    "deployment_name": "Dioptra deployment",
+    "__project_slug": "{{ cookiecutter.deployment_name.lower().replace(' ', '-').replace('_', '-') }}",
+    "container_registry": "",
+    "__container_namespace": "dioptra",
+    "container_tag": "dev",
+    "docker_compose_path": "/usr/local/bin/docker-compose",
+    "systemd_required_mounts": "",
+    "nginx_server_name": "dioptra.example.org",
+    "nginx_expose_ports_on_localhost_only": ["True", "False"],
+    "postgres_container_tag": "15",
+    "__restapi_http_port": "80",
+    "__restapi_https_port": "443",
+    "__db_admin_username": "postgres",
+    "__db_admin_database": "postgres",
+    "pgadmin_default_email": "dioptra@example.com",
+    "num_tensorflow_cpu_workers": "1",
+    "num_tensorflow_gpu_workers": "0",
+    "num_pytorch_cpu_workers": "1",
+    "num_pytorch_gpu_workers": "0",
+    "datasets_directory": "",
+    "__containers": {
+        "networks": ["dioptra"],
+        "nginx": {
+            "image": "nginx",
+            "namespace": "{{ cookiecutter.__container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "mlflow_tracking": {
+            "image": "mlflow-tracking",
+            "namespace": "{{ cookiecutter.__container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "restapi": {
+            "image": "restapi",
+            "namespace": "{{ cookiecutter.__container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "tfcpu": {
+            "image": "tensorflow2-cpu",
+            "namespace": "{{ cookiecutter.__container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "tfgpu": {
+            "image": "tensorflow2-gpu",
+            "namespace": "{{ cookiecutter.__container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "pytorchcpu": {
+            "image": "pytorch-cpu",
+            "namespace": "{{ cookiecutter.__container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "pytorchgpu": {
+            "image": "pytorch-gpu",
+            "namespace": "{{ cookiecutter.__container_namespace }}",
+            "tag": "{{ cookiecutter.container_tag }}",
+            "registry": "{{ cookiecutter.container_registry }}"
+        },
+        "argbash": {
+            "image": "argbash",
+            "namespace": "matejak",
+            "tag": "latest",
+            "registry": ""
+        },
+        "db": {
+            "image": "postgres",
+            "namespace": "",
+            "tag": "{{ cookiecutter.postgres_container_tag }}",
+            "registry": ""
+        },
+        "dbadmin": {
+            "image": "pgadmin4",
+            "namespace": "dpage",
+            "tag": "latest",
+            "registry": ""
+        },
+        "mc": {
+            "image": "mc",
+            "namespace": "minio",
+            "tag": "RELEASE.2023-10-14T01-57-03Z",
+            "registry": ""
+        },
+        "minio": {
+            "image": "minio",
+            "namespace": "minio",
+            "tag": "latest",
+            "registry": ""
+        },
+        "nodejs": {
+            "image": "node",
+            "namespace": "",
+            "tag": "18",
+            "registry": ""
+        },
+        "redis": {
+            "image": "redis",
+            "namespace": "",
+            "tag": "latest",
+            "registry": ""
+        }
+    },
+    "_copy_without_render": [
+        "templates"
+    ],
+    "_is_pytest": "False"
+}

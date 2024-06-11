@@ -1,0 +1,67 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: pytorch-mnist-membership-inference
+
+entry_points:
+  train:
+    parameters:
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      training_dir: { type: path, default: "/dioptra/data/Mnist/training" }
+      image_size: { type: string, default: "[28,28,1]" }
+      model_architecture: { type: string, default: "le_net" }
+      batch_size: { type: float, default: 32 }
+      register_model_name: { type: string, default: "" }
+      learning_rate: { type: float, default: 0.001 }
+      optimizer: { type: string, default: "Adam" }
+      validation_split: { type: float, default: 0.2 }
+      seed: { type: float, default: -1 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment train_mi.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment train_mi.yml
+      -P testing_dir={testing_dir}
+      -P training_dir={training_dir}
+      -P image_size={image_size}
+      -P model_architecture={model_architecture}
+      -P batch_size={batch_size}
+      -P register_model_name={register_model_name}
+      -P learning_rate={learning_rate}
+      -P optimizer={optimizer}
+      -P validation_split={validation_split}
+      -P seed={seed}  
+  mi:
+    parameters:
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      training_dir: { type: path, default: "/dioptra/data/Mnist/training" }
+      image_size: { type: string, default: "[1,28,28]" }
+      model_name: { type: string, default: "le_net" }
+      model_version: { type: int, default: 1}
+      batch_size: { type: float, default: 32 }
+      attack_model_type: { type: str, default: "nn"}
+      split: {type: float, default: 0.5}
+      balance_sets: {type: bool, default: True}
+      seed: { type: float, default: -1 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment mi.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment mi.yml
+      -P testing_dir={testing_dir}
+      -P training_dir={training_dir}
+      -P image_size={image_size}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P attack_model_type={attack_model_type}
+      -P split={split}
+      -P balance_sets={balance_sets}
+      -P batch_size={batch_size}
+      -P seed={seed}

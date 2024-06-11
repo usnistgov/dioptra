@@ -1,0 +1,343 @@
+// This Software (Dioptra) is being made available as a public service by the
+// National Institute of Standards and Technology (NIST), an Agency of the United
+// States Department of Commerce. This software was developed in part by employees of
+// NIST and in part by NIST contractors. Copyright in portions of this software that
+// were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+// to Title 17 United States Code Section 105, works of NIST employees are not
+// subject to copyright protection in the United States. However, NIST may hold
+// international copyright in software created by its employees and domestic
+// copyright (or licensing rights) in portions of software that were assigned or
+// licensed to NIST. To the extent that NIST holds copyright in this software, it is
+// being made available under the Creative Commons Attribution 4.0 International
+// license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+// of the software developed or licensed by NIST.
+//
+// ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+// https://creativecommons.org/licenses/by/4.0/legalcode
+//
+// Adapted from the work https://github.com/executablebooks/sphinx-book-theme/blob/7b056b8008e758697595a8d8d3224cd557b865e7/src/scss/_page.scss
+// See copyright below.
+//
+// BSD 3-Clause License
+//
+// Copyright (c) 2020, Chris Holdgraf
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without modification, are
+// permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this list
+//    of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice, this
+//    list of conditions and the following disclaimer in the documentation and/or other
+//    materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its contributors may be
+//    used to endorse or promote products derived from this software without specific
+//    prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+// SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+// TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+// BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+// DAMAGE.
+
+/*********************************************
+* Main body *
+*********************************************/
+
+main.bd-content {
+    .topbar {
+        .topbar-contents {
+            .bd-toc {
+                position: relative;
+            }
+        }
+    }
+
+    .topbar-transparent {
+        background-color: unset;
+        box-shadow: unset;
+        transition: down 0.1s;
+    }
+
+    footer.footer {
+        .container {
+            .disclaimer {
+                font-size: 90%;
+                font-style: italic;
+            }
+        }
+    }
+
+    #main-content {
+
+        // auto-doc, see: https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#directive-autoattribute
+        // adapted from https://github.com/readthedocs/readthedocs.org/blob/master/readthedocs/core/static/core/css/theme.css
+        dl.get,
+        dl.put,
+        dl.delete,
+        dl.post {
+            dt {
+                .headerlink {
+                    &:before {
+                        -webkit-font-smoothing: antialiased;
+                        font-family: "FontAwesome";
+                        display: inline-block;
+                        font-style: normal;
+                        font-weight: normal;
+                        line-height: 1;
+                        text-decoration: inherit;
+                    }
+
+                    display: inline-block;
+                    font: normal normal normal 14px/1 FontAwesome;
+                    font-size: inherit;
+                    text-rendering: auto;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
+                    font-family: inherit;
+                    visibility: hidden;
+                    font-size: 14px;
+
+                    &:after {
+                        content: "";
+                        font-family: FontAwesome;
+                    }
+                }
+
+                .fa-pull-left.headerlink {
+                    margin-right: .3em;
+                }
+
+                .fa-pull-right.headerlink {
+                    margin-left: .3em;
+                }
+
+                .pull-left.headerlink {
+                    margin-right: .3em;
+                }
+
+                .pull-right.headerlink {
+                    margin-left: .3em;
+                }
+
+                a {
+                    .headerlink {
+                        display: inline-block;
+                        text-decoration: inherit;
+                    }
+                }
+
+                .btn {
+                    .headerlink {
+                        display: inline;
+                    }
+
+                    .fa-large.headerlink {
+                        line-height: .9em;
+                    }
+
+                    .fa-spin.headerlink {
+                        display: inline-block;
+                    }
+                }
+
+                .nav {
+                    .headerlink {
+                        display: inline;
+                    }
+
+                    .fa-large.headerlink {
+                        line-height: .9em;
+                    }
+
+                    .fa-spin.headerlink {
+                        display: inline-block;
+                    }
+                }
+
+                .btn.headerlink {
+                    &:before {
+                        opacity: .5;
+                        -webkit-transition: opacity .05s ease-in;
+                        -moz-transition: opacity .05s ease-in;
+                        transition: opacity .05s ease-in;
+                    }
+
+                    &:hover {
+                        &:before {
+                            opacity: 1;
+                        }
+                    }
+                }
+
+                .btn-mini {
+                    .headerlink {
+                        &:before {
+                            font-size: 14px;
+                            vertical-align: -15%;
+                        }
+                    }
+                }
+
+                .rst-versions {
+                    .rst-current-version {
+                        .headerlink {
+                            color: #fcfcfc;
+                        }
+                    }
+                }
+
+                &:hover {
+                    .headerlink {
+                        &:after {
+                            visibility: visible;
+                        }
+                    }
+                }
+
+                font-weight: bold;
+            }
+
+            margin-bottom: 24px;
+
+            p {
+                margin-bottom: 12px !important;
+            }
+
+            table {
+                margin-bottom: 12px !important;
+            }
+
+            ul {
+                margin-bottom: 12px !important;
+            }
+
+            ol {
+                margin-bottom: 12px !important;
+            }
+
+            dd {
+                margin: 0 0 12px 24px;
+            }
+
+            &:not(.docutils) {
+                margin-bottom: 24px;
+
+                dt {
+                    display: table;
+                    margin: 6px 0;
+                    font-size: 90%;
+                    line-height: normal;
+                    background: #e7f2fa;
+                    color: #2980B9;
+                    border-top: solid 3px #6ab0de;
+                    padding: 6px;
+                    position: relative;
+
+                    &:before {
+                        color: #6ab0de;
+                    }
+
+                    .headerlink {
+                        color: #404040;
+                        font-size: 100% !important;
+                    }
+
+                    &:first-child {
+                        margin-top: 0;
+                    }
+                }
+
+                dl {
+                    dt {
+                        margin-bottom: 6px;
+                        border: none;
+                        border-left: solid 3px #ccc;
+                        background: #f0f0f0;
+                        color: #555;
+
+                        .headerlink {
+                            color: #404040;
+                            font-size: 100% !important;
+                        }
+                    }
+                }
+
+                tt {
+                    font-weight: bold;
+                    font-weight: bold;
+                }
+
+                code {
+                    font-weight: bold;
+                }
+
+                tt.descname {
+                    background-color: transparent;
+                    background-color: transparent;
+                    border: none;
+                    border: none;
+                    padding: 0;
+                    padding: 0;
+                    font-size: 100% !important;
+                    font-size: 100% !important;
+                    font-weight: bold;
+                    font-weight: bold;
+                }
+
+                tt.descclassname {
+                    background-color: transparent;
+                    background-color: transparent;
+                    border: none;
+                    border: none;
+                    padding: 0;
+                    padding: 0;
+                    font-size: 100% !important;
+                    font-size: 100% !important;
+                }
+
+                code.descname {
+                    background-color: transparent;
+                    border: none;
+                    padding: 0;
+                    font-size: 100% !important;
+                    font-weight: bold;
+                }
+
+                code.descclassname {
+                    background-color: transparent;
+                    border: none;
+                    padding: 0;
+                    font-size: 100% !important;
+                }
+
+                .optional {
+                    display: inline-block;
+                    padding: 0 4px;
+                    color: #000;
+                    font-weight: bold;
+                }
+
+                .property {
+                    display: inline-block;
+                    padding-right: 8px;
+                }
+            }
+
+            .viewcode-link {
+                display: inline-block;
+                color: #27AE60;
+                font-size: 80%;
+                padding-left: 24px;
+            }
+        }
+    }
+}

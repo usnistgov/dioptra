@@ -1,0 +1,70 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: mnist-pixel-threshold
+
+entry_points:
+  pt:
+    parameters:
+      data_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      image_size: { type: string, default: "[28,28,1]" }
+      adv_tar_name: { type: string, default: "testing_adversarial_pt.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      model_name: { type: string, default: "mnist_le_net" }
+      model_version: { type: string, default: "1" }
+      batch_size: { type: float, default: 32 }
+      th: { type: int, default 1 }
+      es: { type: int, default 0 }
+      seed: { type: float, default: -1 }
+      clip_values: { type: string, default: "[0,1]" }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment pt.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment pt.yml
+      -P data_dir={data_dir}
+      -P image_size={image_size}
+      -P adv_tar_name={adv_tar_name}
+      -P adv_data_dir={adv_data_dir}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P batch_size={batch_size}
+      -P th={th}
+      -P es={es}
+      -P seed={seed}
+      -P clip_values={clip_values}
+
+  train:
+    parameters:
+      training_dir: { type: path, default: "/dioptra/data/Mnist/training" }
+      testing_dir: { type: path, default: "/dioptra/data/Mnist/testing" }
+      image_size: { type: string, default: "[28,28,1]" }
+      model_architecture: { type: string, default: "le_net" }
+      epochs: { type: float, default: 30 }
+      batch_size: { type: float, default: 32 }
+      register_model_name: { type: string, default: "" }
+      learning_rate: { type: float, default: 0.001 }
+      validation_split: { type: float, default: 0.2 }
+      seed: { type: float, default: -1 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment train.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment train.yml
+      -P training_dir={training_dir}
+      -P testing_dir={testing_dir}
+      -P image_size={image_size}
+      -P model_architecture={model_architecture}
+      -P epochs={epochs}
+      -P batch_size={batch_size}
+      -P register_model_name={register_model_name}
+      -P learning_rate={learning_rate}
+      -P validation_split={validation_split}
+      -P seed={seed}

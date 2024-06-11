@@ -1,0 +1,241 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: pip-compile runs
+
+on:
+  schedule:
+    - cron: "10 1 * * *" # at 1:10am every day
+
+jobs:
+  pip-compile:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"]
+        python-version: ["3.11"]
+        architecture: ["x86_64", "aarch64"]
+        requirements:
+          - "requirements-dev"
+          - "requirements-dev-pytorch"
+          - "requirements-dev-tensorflow"
+        exclude:
+          - os: "macos-latest"
+            architecture: "x86_64"
+          - os: "ubuntu-22.04"
+            architecture: "aarch64"
+          - os: "macos-13"
+            architecture: "aarch64"
+          - os: "windows-latest"
+            architecture: "aarch64"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: upgrade pip
+        run: |
+          # install pip=>20.1 to use "pip cache dir"
+          python3 -m pip install --upgrade pip
+
+      - name: get pip cache dir
+        if: ${{ matrix.os != 'windows-latest' }}
+        id: pip-cache
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: get pip cache dir (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        id: pip-cache-win
+        run: echo "dir=$(pip cache dir)" >> $env:GITHUB_OUTPUT
+
+      - name: cache dependencies
+        if: ${{ matrix.os != 'windows-latest' }}
+        uses: actions/cache@v4.0.2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini', 'requirements-dev*.in') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: cache dependencies (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: actions/cache@v4.0.2
+        with:
+          path: ${{ steps.pip-cache-win.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini', 'requirements-dev*.in') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: install dependencies
+        run: python3 -m pip install --upgrade tox
+
+      - name: run tox (Linux, Python 3.11)
+        if: ${{ matrix.os == 'ubuntu-22.04' && matrix.python-version == '3.11' }}
+        run: |
+          python3 -m tox run -e py311-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
+
+      - name: run tox (MacOS, Python 3.11)
+        if: ${{ (matrix.os == 'macos-13' || matrix.os == 'macos-latest') && matrix.python-version == '3.11' }}
+        run: |
+          python3 -m tox run -e py311-macos-${{ matrix.architecture }}-${{ matrix.requirements }}
+
+      - name: run tox (Windows, Python 3.11)
+        if: ${{ matrix.os == 'windows-latest' && matrix.python-version == '3.11' }}
+        run: |
+          python3 -m tox run -e py311-win-${{ matrix.architecture }}-${{ matrix.requirements }}
+
+      - name: archive the requirements file
+        uses: actions/upload-artifact@v4
+        with:
+          name: py${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.requirements }}
+          path: venvs
+
+  pip-compile-containers:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ["ubuntu-22.04"]
+        python-version: ["3.11"]
+        architecture: ["x86_64"]
+        requirements:
+          - "mlflow-tracking-requirements"
+          - "restapi-requirements"
+          - "pytorch-cpu-requirements"
+          - "pytorch-gpu-requirements"
+          - "tensorflow2-cpu-requirements"
+          - "tensorflow2-gpu-requirements"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: upgrade pip
+        run: |
+          # install pip=>20.1 to use "pip cache dir"
+          python3 -m pip install --upgrade pip
+
+      - name: get pip cache dir
+        id: pip-cache
+        run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+      - name: cache dependencies
+        uses: actions/cache@v4.0.2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/tox.ini', '**/requirements-dev*.in', '**/docker/pip-tools/*-requirements.in') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: install dependencies
+        run: python3 -m pip install --upgrade tox
+
+      - name: run tox
+        run: |
+          python3 -m tox run -e py311-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
+
+      - name: archive the requirements file
+        uses: actions/upload-artifact@v4
+        with:
+          name: py${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.requirements }}
+          path: venvs
+
+  pip-compile-aarch64:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        tox-testenv:
+          - "py311-linux-aarch64-requirements-dev"
+          - "py311-linux-aarch64-requirements-dev-pytorch"
+          - "py311-linux-aarch64-requirements-dev-tensorflow"
+          - "py311-linux-aarch64-mlflow-tracking-requirements"
+          - "py311-linux-aarch64-restapi-requirements"
+          - "py311-linux-aarch64-pytorch-cpu-requirements"
+          - "py311-linux-aarch64-tensorflow2-cpu-requirements"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up docker qemu
+        uses: docker/setup-qemu-action@v3
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: setup dockerfile and output folder
+        run: |
+          echo 'FROM python:3.11-slim-bullseye' > Dockerfile.aarch64
+          echo 'COPY . /app' >> Dockerfile.aarch64
+          echo 'WORKDIR /app' >> Dockerfile.aarch64
+          echo 'RUN python -m pip install --upgrade pip tox && \' >> Dockerfile.aarch64
+          echo '    python -m tox run -e ${{ matrix.tox-testenv }}' >> Dockerfile.aarch64
+          sudo mkdir -p /image
+          sudo chown $(id -u):$(id -g) /image
+          sudo chmod 0777 /image
+
+      - name: build and save to output folder
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          push: false
+          file: Dockerfile.aarch64
+          tags: ${{ matrix.tox-testenv }}:dev
+          outputs: type=local,dest=/image
+          no-cache: true
+          pull: true
+
+      - name: archive the requirements file
+        uses: actions/upload-artifact@v4
+        with:
+          name: requirements-${{ matrix.tox-testenv }}
+          path: /image/app/venvs
+
+  consolidate-requirements-files:
+    runs-on: ubuntu-22.04
+    needs:
+      - pip-compile
+      - pip-compile-containers
+      - pip-compile-aarch64
+
+    steps:
+      - name: install dos2unix tool
+        run: sudo apt install -y dos2unix
+
+      - name: download all the compiled requirements files
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: standardize and consolidate files into venvs directory
+        run: |
+          find artifacts -type f -name "*requirements*.txt" -exec chmod 0644 {} \;
+          find artifacts -type f -name "*requirements*.txt" -exec dos2unix {} \;
+          mkdir venvs
+          mv artifacts/**/*.txt venvs
+
+      - name: archive the consolidated requirements files
+        uses: actions/upload-artifact@v4
+        with:
+          name: requirements-files
+          path: venvs

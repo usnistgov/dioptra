@@ -1,0 +1,36 @@
+<annotation>
+    <folder>images</folder>
+    <filename>00000_road124.png</filename>
+    <size>
+        <width>332</width>
+        <height>400</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>crosswalk</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>68</xmin>
+            <ymin>125</ymin>
+            <xmax>205</xmax>
+            <ymax>275</ymax>
+        </bndbox>
+    </object>
+    <object>
+        <name>trafficlight</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>229</xmin>
+            <ymin>116</ymin>
+            <xmax>330</xmax>
+            <ymax>296</ymax>
+        </bndbox>
+    </object>
+</annotation>

@@ -1,0 +1,60 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: pytorch-mnist-membership-inference
+
+entry_points:
+  train:
+    parameters:
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
+      image_size: { type: string, default: "28,28,1" }
+      model_architecture: { type: string, default: "le_net" }
+      batch_size: { type: float, default: 32 }
+      register_model_name: { type: string, default: "" }
+      learning_rate: { type: float, default: 0.001 }
+      optimizer: { type: string, default: "Adam" }
+      validation_split: { type: float, default: 0.2 }
+      seed: { type: float, default: -1 }
+    command: >
+      python src/train_mi.py
+      --data-dir {data_dir}
+      --image-size {image_size}
+      --model-architecture {model_architecture}
+      --batch-size {batch_size}
+      --register-model-name {register_model_name}
+      --learning-rate {learning_rate}
+      --optimizer {optimizer}
+      --validation-split {validation_split}
+      --seed {seed}  
+  mi:
+    parameters:
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
+      image_size: { type: string, default: "1,28,28" }
+      model_name: { type: string, default: "le_net" }
+      model_version: { type: int, default: 1}
+      batch_size: { type: float, default: 32 }
+      attack_model_type: { type: str, default: "nn"}
+      split: {type: float, default: 0.5}
+      balance_sets: {type: bool, default: True}
+      seed: { type: float, default: -1 }
+    command: >
+      python src/mi.py
+      --data-dir {data_dir}
+      --image-size {image_size}
+      --model-name {model_name}
+      --model-version {model_version}
+      --batch-size {batch_size}
+      --seed {seed}

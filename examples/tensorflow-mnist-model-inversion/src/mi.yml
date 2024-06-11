@@ -1,0 +1,225 @@
+types:
+  rng:
+  path:
+  path_string:
+    union: [string, path]
+  path_string_null:
+    union: [path_string, "null"]
+  dirs:
+    list: path_string
+  parameters:
+    mapping: [string, number]
+  kwargs:
+    mapping: [string, any]
+  kwargs_null:
+    union: [kwargs, "null"]
+  keras_classifier:
+  distance_metric_request:
+    mapping: [string, string]
+  distance_metrics_requests:
+    list: distance_metric_request
+  distance_metric:
+    tuple: [string, any]
+  distance_metrics:
+    list: distance_metric
+  distance_metrics_null:
+    union: [distance_metrics, "null"]
+  dataframe:
+  image_size:
+    tuple: [integer, integer, integer]
+  norm:
+    union: [integer, number, string]
+
+parameters:
+  adv_tar_name: testing_adversarial_mi.tar.gz
+  adv_data_dir: adv_testing
+  model_name: mnist_le_net
+  model_version: 1
+  batch_size: 32
+  classes: 10
+  max_iter: 1000
+  window_length: 100
+  threshold: .99
+  learning_rate: 0.1
+  seed: -1
+
+tasks:
+  init_rng:
+    plugin: dioptra_builtins.random.rng.init_rng
+    inputs:
+      - name: seed
+        type: integer
+        required: false
+    outputs:
+      - seed: integer
+      - rng: rng
+
+  draw_random:
+    plugin: dioptra_builtins.random.sample.draw_random_integer
+    inputs:
+      - rng: rng
+      - name: low
+        type: integer
+        required: false
+      - name: high
+        type: integer
+        required: false
+    outputs:
+      value: integer
+
+  init_tensorflow:
+    plugin: dioptra_builtins.backend_configs.tensorflow.init_tensorflow
+    inputs:
+      - seed: integer
+
+  make_directories:
+    plugin: dioptra_builtins.artifacts.utils.make_directories
+    inputs:
+      - dirs: dirs
+
+  log_params:
+    plugin: dioptra_builtins.tracking.mlflow.log_parameters
+    inputs:
+      - parameters: parameters
+
+  load_classifier:
+    plugin: dioptra_builtins.registry.art.load_wrapped_tensorflow_keras_classifier
+    inputs:
+      - name: name
+        type: string
+        required: true
+      - version: integer
+      - name: classifier_kwargs
+        type: kwargs
+        required: false
+    outputs:
+      classifier: keras_classifier
+
+  infer_model_inversion:
+    plugin: dioptra_custom.model_inversion.modelinversion.infer_model_inversion
+    inputs:
+      - keras_classifier: keras_classifier
+      - adv_data_dir: path_string
+      - name: batch_size
+        type: integer
+        required: false
+      - name: classes
+        type: integer
+        required: false
+      - name: max_iter
+        type: integer
+        required: false
+      - name: window_length
+        type: integer
+        required: false
+      - name: threshold
+        type: number
+        required: false
+      - name: learning_rate
+        type: number
+        required: false
+
+  create_dataset:
+    plugin: dioptra_builtins.attacks.fgm.create_adversarial_fgm_dataset
+    inputs:
+      - data_dir: string
+      - adv_data_dir: path_string
+      - keras_classifier: keras_classifier
+      - image_size: image_size
+      - name: distance_metrics_list
+        type: distance_metrics_null
+        required: false
+      - name: rescale
+        type: number
+        required: false
+      - name: batch_size
+        type: integer
+        required: false
+      - name: label_mode
+        type: string
+        required: false
+      - name: eps
+        type: number
+        required: false
+      - name: eps_step
+        type: number
+        required: false
+      - name: minimal
+        type: boolean
+        required: false
+      - name: norm
+        type: norm
+        required: false
+    outputs:
+      dataset: dataframe
+
+  upload_artifact_directory:
+    plugin: dioptra_builtins.artifacts.mlflow.upload_directory_as_tarball_artifact
+    inputs:
+      - source_dir: path_string
+      - tarball_filename: string
+      - name: tarball_write_mode
+        type: string
+        required: false
+      - name: working_dir
+        type: path_string
+        required: false
+
+  upload_artifact_dataframe:
+    plugin: dioptra_builtins.artifacts.mlflow.upload_data_frame_artifact
+    inputs:
+      - data_frame: dataframe
+      - file_name: string
+      - file_format: string
+      - name: file_format_kwargs
+        type: kwargs_null
+        required: false
+      - name: working_dir
+        type: path_string_null
+        required: false
+
+graph:
+  init_rng:
+    init_rng: $seed
+
+  tensorflow_global_seed:
+    draw_random: $init_rng.rng
+
+  dataset_seed:
+    draw_random: $init_rng.rng
+
+  init_tensorflow_results:
+    init_tensorflow: $tensorflow_global_seed
+
+  make_directories_results:
+    make_directories: [[$adv_data_dir]]
+
+  log_mlflow_params_result:
+    log_params:
+      - entry_point_seed: $seed
+        tensorflow_global_seed: $tensorflow_global_seed
+        dataset_seed: $dataset_seed
+
+  keras_classifier:
+    load_classifier:
+      name: $model_name
+      version: $model_version
+    dependencies: init_tensorflow_results
+
+  inferred:
+    infer_model_inversion:
+      keras_classifier: $keras_classifier
+      adv_data_dir: $adv_data_dir
+      batch_size: $batch_size
+      classes: $classes
+      max_iter: $max_iter
+      window_length: $window_length
+      threshold: $threshold
+      learning_rate: $learning_rate
+    dependencies: make_directories_results
+
+  upload_directory:
+    upload_artifact_directory:
+      - $adv_data_dir
+      - $adv_tar_name
+    dependencies: inferred

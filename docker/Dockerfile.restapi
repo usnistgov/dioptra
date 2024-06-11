@@ -1,0 +1,267 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+
+######################################################################################################
+# Prerequisites
+######################################################################################################
+
+# -- Prerequisite: copy files ------------------------------------------------------------------------
+
+FROM ubuntu:jammy AS copy-files
+
+ARG TARGETARCH
+
+COPY --chown=root:root --chmod=0644 docker/configs/aws-config /files/aws-config
+COPY --chown=root:root --chmod=0644 docker/configs/build.pip.conf /files/build.pip.conf
+COPY --chown=root:root --chmod=0644 docker/configs/gunicorn.restapi.conf.py /files/gunicorn.restapi.conf.py
+COPY --chown=root:root --chmod=0644 docker/requirements/linux-${TARGETARCH}-py3.11-restapi-requirements.txt /files/restapi-requirements.txt
+COPY --chown=root:root --chmod=0755 wsgi.py /files/wsgi.py
+
+######################################################################################################
+# Base images
+######################################################################################################
+
+# -- Base image --------------------------------------------------------------------------------------
+
+FROM ubuntu:jammy AS base
+
+USER root
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV LANG C.UTF-8
+ENV LANGUAGE C.UTF-8
+ENV LC_ALL C.UTF-8
+
+# Temporarily set the GNUPGHOME variable for fetching signing key
+ENV GNUPGHOME /tmp/gnupg
+
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get install -yq --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    gnupg \
+    libbz2-1.0 \
+    libgl1 \
+    liblz4-1 \
+    liblzma5 \
+    libpq5 \
+    libsnappy1v5 \
+    libzstd1 \
+    netcat \
+    postgresql-client \
+    tzdata \
+    unzip \
+    wget \
+    zlib1g && \
+    # Fetch deadsnakes signing key
+    mkdir -p "${GNUPGHOME}" && \
+    chmod 0700 "${GNUPGHOME}" && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys F23C5A6CF475977595C89F51BA6932366A755776 && \
+    gpg --yes --export F23C5A6CF475977595C89F51BA6932366A755776 > /etc/apt/keyrings/deadsnakes-keyring.gpg && \
+    # Configure third-party deadsnakes/ppa repo
+    UBUNTU_CODENAME="$(. /etc/os-release && echo ${UBUNTU_CODENAME})" && \
+    echo "deb [signed-by=/etc/apt/keyrings/deadsnakes-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/deadsnakes.list && \
+    echo "deb-src [signed-by=/etc/apt/keyrings/deadsnakes-keyring.gpg] http://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu ${UBUNTU_CODENAME} main" >> /etc/apt/sources.list.d/deadsnakes.list && \
+    # Install Python 3.11
+    apt-get update && \
+    apt-get install -yq --no-install-recommends \
+    python3.11 \
+    python3.11-venv \
+    python3-pip && \
+    # Cleanup
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf "${GNUPGHOME}"
+
+# Unset the GNUPGHOME variable
+ENV GNUPGHOME=
+
+# -- Base image (includes extra CA certificates) -----------------------------------------------------
+
+FROM base AS certs-base
+
+COPY --chown=root:root docker/ca-certificates /ca-certificates
+
+RUN chmod 0644 /ca-certificates/* && \
+    cp /ca-certificates/*.crt /usr/local/share/ca-certificates 2>/dev/null || true && \
+    /usr/sbin/update-ca-certificates
+
+ENV AWS_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
+ENV CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
+ENV NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE /etc/ssl/certs/ca-certificates.crt
+
+# -- Base image (includes compiler toolchain) --------------------------------------------------------
+
+FROM certs-base AS build-base
+
+RUN echo "===> Installing compilers...." && \
+    apt-get update && \
+    apt-get install -yq --no-install-recommends autoconf build-essential libpq-dev python3.11-dev
+
+# -- Base image (argbash) ----------------------------------------------------------------------------
+
+FROM build-base AS argbash-base
+
+ARG ARGBASH_VERSION=2.10.0
+
+RUN cd /tmp && \
+    curl -L -o "/tmp/argbash.tar.gz" "https://github.com/matejak/argbash/archive/refs/tags/${ARGBASH_VERSION}.tar.gz" && \
+    tar xf /tmp/argbash.tar.gz && \
+    cd /tmp/argbash-${ARGBASH_VERSION}/resources && \
+    make install PREFIX=/usr/local && \
+    cd / && \
+    rm -rf /tmp/argbash.tar.gz /tmp/argbash-${ARGBASH_VERSION}
+
+# -- Base image (includes system Python with build package) ------------------------------------------
+
+FROM build-base AS python-base
+
+RUN echo "===> Installing latest version of pip...." && \
+    python3.11 -m pip install --upgrade pip && \
+    echo "===> Installing build package...." && \
+    python3.11 -m pip install build
+
+######################################################################################################
+# Build
+######################################################################################################
+
+# -- Build: render bash script templates ------------------------------------------------------
+
+FROM argbash-base AS shellscripts
+
+COPY --chown=root:root --chmod=0755 docker/shellscripts/entrypoint-restapi.m4 /templates/entrypoint-restapi.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/fix-permissions.m4 /templates/fix-permissions.m4
+COPY --chown=root:root --chmod=0755 docker/shellscripts/parse-uri.m4 /templates/parse-uri.m4
+
+COPY --chown=root:root --chmod=0755 docker/shellscripts/wait-for-it.sh /shellscripts/wait-for-it.sh
+
+RUN mkdir -p /shellscripts && \
+    /usr/local/bin/argbash /templates/entrypoint-restapi.m4 -o /shellscripts/entrypoint-restapi.sh && \
+    /usr/local/bin/argbash /templates/fix-permissions.m4 -o /shellscripts/fix-permissions.sh && \
+    /usr/local/bin/argbash /templates/parse-uri.m4 -o /shellscripts/parse-uri.sh
+
+# -- Build: create dioptra wheel ---------------------------------------------------------------------
+
+FROM python-base AS build-dioptra-wheel
+
+WORKDIR /code
+
+COPY --chown=root:root --chmod=0644 LICENSE /code/LICENSE
+COPY --chown=root:root --chmod=0644 MANIFEST.in /code/MANIFEST.in
+COPY --chown=root:root --chmod=0644 pyproject.toml /code/pyproject.toml
+COPY --chown=root:root --chmod=0644 README.md /code/README.md
+COPY --chown=root:root --chmod=0644 tox.ini /code/tox.ini
+COPY --chown=root:root --chmod=0644 docs/make.bat /code/docs/make.bat
+COPY --chown=root:root --chmod=0644 docs/Makefile /code/docs/Makefile
+COPY --chown=root:root docs/assets /code/docs/assets
+COPY --chown=root:root docs/source /code/docs/source
+COPY --chown=root:root src/dioptra /code/src/dioptra
+COPY --chown=root:root tests /code/tests
+
+RUN find /code -type d -exec chmod 0755 "{}" "+" && \
+    find /code/docs/assets -type f -exec chmod 0644 "{}" "+" && \
+    find /code/docs/source -type f -exec chmod 0644 "{}" "+" && \
+    find /code/src -type f -exec chmod 0644 "{}" "+" && \
+    find /code/tests -type f -exec chmod 0644 "{}" "+" && \
+    echo "===> Building the dioptra wheel...." && \
+    python3.11 -m build
+
+# -- Build: create virtual environment ---------------------------------------------------------------
+
+FROM build-base AS build-venv
+
+COPY --from=copy-files --chown=root:root --chmod=0644 /files/restapi-requirements.txt /tmp/requirements.txt
+COPY --from=copy-files --chown=root:root --chmod=0644 /files/build.pip.conf /etc/pip.conf
+
+ARG VIRTUAL_ENV=/opt/venv
+
+RUN echo "===> Creating Python virtual environment...." && \
+    umask 0002 && \
+    python3.11 -m pip install --no-cache-dir --upgrade pip && \
+    python3.11 -m venv ${VIRTUAL_ENV}
+
+ENV PATH ${VIRTUAL_ENV}/bin${PATH:+:${PATH}}
+ENV VIRTUAL_ENV ${VIRTUAL_ENV}
+
+RUN echo "===> Installing dependencies using requirements.txt...." && \
+    umask 0002 && \
+    python -m pip install --no-cache-dir --upgrade pip && \
+    python -m pip install --no-cache-dir -r /tmp/requirements.txt
+
+COPY --from=build-dioptra-wheel --chown=root:root --chmod=0644 /code/dist /code/dist
+
+RUN echo "===> Installing code module...." && \
+    umask 0002 && \
+    find /code/dist -name '*.whl' -type f -exec python -m pip install --no-cache-dir --no-deps "{}" ";"
+
+RUN echo "===> Cleaning/pruning directories...." && \
+    find ${VIRTUAL_ENV} -follow -type f -name '*.a' -delete || true && \
+    find ${VIRTUAL_ENV} -follow -type f -name '*.js.map' -delete || true && \
+    find ${VIRTUAL_ENV} -name "__pycache__" -type d -exec rm -rf "{}" "+" || true
+
+######################################################################################################
+# Final image
+######################################################################################################
+
+FROM base AS final
+
+COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/fix-permissions.sh /usr/local/bin/fix-permissions.sh
+
+ARG DIOPTRA_USER=dioptra
+ARG DIOPTRA_UID=39000
+ARG DIOPTRA_GID=100
+ARG DIOPTRA_WORKDIR=/work
+ARG VIRTUAL_ENV=/opt/venv
+
+RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
+    useradd -u ${DIOPTRA_UID} -N -m -s /bin/bash -c "Dioptra user" ${DIOPTRA_USER} && \
+    mkdir -p /etc/gunicorn && \
+    mkdir -p /home/${DIOPTRA_USER}/.aws/cli && \
+    mkdir -p /home/${DIOPTRA_USER}/.aws/config && \
+    mkdir -p ${DIOPTRA_WORKDIR}/data && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /etc/gunicorn && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} /home/${DIOPTRA_USER} && \
+    chown -R ${DIOPTRA_UID}:${DIOPTRA_GID} ${DIOPTRA_WORKDIR} && \
+    chmod 0755 /etc/gunicorn && \
+    fix-permissions.sh /home/${DIOPTRA_USER} ${DIOPTRA_WORKDIR}
+
+COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/entrypoint-restapi.sh /usr/local/bin/entrypoint.sh
+COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/parse-uri.sh /usr/local/bin/parse-uri.sh
+COPY --from=shellscripts --chown=root:root --chmod=0755 /shellscripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
+COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/gunicorn.restapi.conf.py /etc/gunicorn/gunicorn.conf.py
+COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0644 /files/aws-config /home/${DIOPTRA_USER}/.aws/config/aws-config
+COPY --from=copy-files --chown=${DIOPTRA_UID}:${DIOPTRA_GID} --chmod=0755 /files/wsgi.py ${DIOPTRA_WORKDIR}/wsgi.py
+
+COPY --from=build-venv --chown=${DIOPTRA_UID}:${DIOPTRA_GID} ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+ENV DIOPTRA_USER ${DIOPTRA_USER}
+ENV DIOPTRA_UID ${DIOPTRA_UID}
+ENV DIOPTRA_GID ${DIOPTRA_GID}
+ENV DIOPTRA_RESTAPI_ENV prod
+ENV DIOPTRA_WORKDIR ${DIOPTRA_WORKDIR}
+ENV PATH ${VIRTUAL_ENV}/bin${PATH:+:${PATH}}
+ENV VIRTUAL_ENV ${VIRTUAL_ENV}
+
+USER ${DIOPTRA_UID}
+WORKDIR ${DIOPTRA_WORKDIR}
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+VOLUME ["/etc/ssl", "/usr/local/share/ca-certificates"]

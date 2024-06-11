@@ -1,0 +1,259 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: feature_squeeze_mnist
+
+entry_points:
+
+  jsma:
+    parameters:
+      data_dir: {type: path, default: "/dioptra/data/Mnist"}
+      model_name: {type: string, default: "mnist_le_net"}
+      model_version: {type: string, default: "1"}
+      batch_size: {type: float, default: 32}
+      seed: {type: float, default: -1}
+      theta: {type: float, default:0.1}
+      gamma: {type: float, default:1.0}
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      image_size: { type: string, default: "28,28,1" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+    command: >
+      python jsma.py
+      --data-dir {data_dir}
+      --model-name {model_name}
+      --model-version {model_version}
+      --batch-size {batch_size}
+      --seed {seed}
+      --theta {theta}
+      --gamma {gamma}
+      --adv-tar-name {adv_tar_name}
+      --adv-data-dir {adv_data_dir}
+      --image-size {image_size}
+
+  deepfool:
+    parameters:
+      data_dir: {type: path, default: "/dioptra/data/Mnist"}
+      model_name: {type: string, default: "mobilenet"}
+      model_version: {type: string, default: "1"}
+      image_size: {type: string, default: "28,28"}
+      batch_size: {type: float, default: 40}
+      seed: {type: float, default: -1}
+      max_iter: {type:float, default:10}
+      nb_grads: {type:float, default:10}
+      epsilon: {type:float, default:0.000001}
+      
+    command: >
+      python deepfool.py
+      --data-dir {data_dir}
+      --model-name {model_name}
+      --model-version {model_version}
+      --image-size {image_size}
+      --batch-size {batch_size}
+      --seed {seed}
+      --max-iter {max_iter}
+      --nb-grads {nb_grads}
+      --epsilon {epsilon}
+
+  cw_l2:
+    parameters:
+      data_dir: {type: path, default: "/dioptra/data/Mnist"}
+      model_name: {type: string, default: "mnist_le_net"}
+      model_version: {type: string, default: "1"}
+      model_architecture: {type: string, default: "le_net"}
+      batch_size: {type: float, default: 1}
+      seed: {type: float, default: -1}
+      confidence: {type: float, default: 0.0}
+      targeted: {type: string, default: "False"}
+      learning_rate: {type: float, default: 0.01}
+      binary_search_steps: {type: float, default:10.0}
+      max_iter: {type:float, default:10}
+      initial_const: {type: float, default:0.01}
+      verbose: {type: string, default:"True"}
+      image_size: {type: string, default: "28,28,1" }
+    command: >
+      python cw_l2.py
+      --data-dir {data_dir}
+      --model-name {model_name}
+      --model-version {model_version}
+      --model-architecture {model_architecture}
+      --batch-size {batch_size}
+      --seed {seed}
+      --confidence {confidence}
+      --targeted {targeted}
+      --learning-rate {learning_rate}
+      --binary-search-steps {binary_search_steps}
+      --max-iter {max_iter}
+      --initial-const {initial_const}
+      --image-size {image_size}
+      --verbose {verbose}
+
+  cw_inf:
+    parameters:
+      data_dir: {type: path, default: "/dioptra/data/Mnist"}
+      model_name: {type: string, default: "mnist_le_net"}
+      model_version: { type: string, default: "1" }
+      model_architecture: {type: string, default: "le_net"}
+      batch_size: {type: float, default: 32}
+      seed: {type: float, default: -1}
+      confidence: {type: float, default: 0.0}
+      targeted: {type: string, default: "False"}
+      learning_rate: {type: float, default: 0.01}
+      max_iter: {type:float, default:10}
+      verbose: {type: string, default:"True"}
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      image_size: { type: string, default: "28,28,1" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+    command: >
+      python cw_inf.py
+      --data-dir {data_dir}
+      --model-name {model_name}
+      --model-architecture {model_architecture}
+      --model-version {model_version}
+      --batch-size {batch_size}
+      --seed {seed}
+      --confidence {confidence}
+      --targeted {targeted}
+      --learning-rate {learning_rate}
+      --max-iter {max_iter}
+      --verbose {verbose}
+      --adv-tar-name {adv_tar_name}
+      --image-size {image_size}
+      --adv-data-dir {adv_data_dir}
+  fgm:
+    parameters:
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
+      image_size: { type: string, default: "28,28,1" }
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      model_name: { type: string, default: "mnist_le_net" }
+      model_version: { type: string, default: "1" }
+      batch_size: { type: float, default: 32 }
+      eps: { type: float, default: 0.3 }
+      eps_step: { type: float, default: 0.1 }
+      minimal: { type: float, default: 0 }
+      norm: { type: string, default: "inf" }
+      seed: { type: float, default: -1 }
+    command: >
+      python fgm.py
+      --data-dir {data_dir}
+      --image-size {image_size}
+      --adv-tar-name {adv_tar_name}
+      --adv-data-dir {adv_data_dir}
+      --model-name {model_name}
+      --model-version {model_version}
+      --batch-size {batch_size}
+      --eps {eps}
+      --eps-step {eps_step}
+      --minimal {minimal}
+      --norm {norm}
+      --seed {seed}
+
+  infer:
+    parameters:
+      run_id: { type: string }
+      image_size: { type: string, default: "28,28,1" }
+      model_name: { type: string, default: "mnist_le_net" }
+      model_version: { type: string, default: "1" }
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      seed: { type: float, default: -1 }
+    command: >
+      python infer.py
+      --run-id {run_id}
+      --image-size {image_size}
+      --model-name {model_name}
+      --model-version {model_version}
+      --adv-tar-name {adv_tar_name}
+      --adv-data-dir {adv_data_dir}
+      --seed {seed}
+
+  feature_squeeze:
+    parameters:
+      data_dir: {type: path, default: "/dioptra/data/Mnist"}
+      run_id: {type: string}
+      model: {type: string, default: "mnist_le_net"}
+      model_architecture: {type: string, default: "le_net"}
+      batch_size: {type: float, default: 32}
+      seed: {type: float, default: -1}
+      bit_depth: {type: float, default: 8}
+      adv_tar_name: { type: string, default: "testing_adversarial_fgm.tar.gz" }
+      adv_data_dir: { type: string, default: "adv_testing" }
+      model_version: { type: string, default: "1" }
+      image_size: { type: string, default: "28,28,1" }
+    command: >
+      python feature_squeeze.py
+      --data-dir {data_dir}
+      --run-id {run_id}
+      --model {model}
+      --model-architecture {model_architecture}
+      --batch-size {batch_size}
+      --seed {seed}
+      --bit-depth {bit_depth}
+      --adv-data-dir {adv_data_dir}
+      --adv-tar-name {adv_tar_name}
+      --model-version {model_version}
+      --image-size {image_size}
+
+  init_model:
+    parameters:
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
+      image_size: { type: string, default: "224,224,3" }
+      model_architecture: { type: string, default: "mobilenet" }
+      epochs: { type: float, default: 30 }
+      batch_size: { type: float, default: 32 }
+      register_model_name: { type: string, default: "" }
+      learning_rate: { type: float, default: 0.001 }
+      optimizer: { type: string, default: "Adam" }
+      validation_split: { type: float, default: 0.2 }
+      seed: { type: float, default: -1 }
+    command: >
+      python init_model.py
+      --data-dir {data_dir}
+      --image-size {image_size}
+      --model-architecture {model_architecture}
+      --epochs {epochs}
+      --batch-size {batch_size}
+      --register-model-name {register_model_name}
+      --learning-rate {learning_rate}
+      --optimizer {optimizer}
+      --validation-split {validation_split}
+      --seed {seed}
+
+
+  train:
+    parameters:
+      data_dir: { type: path, default: "/dioptra/data/Mnist" }
+      image_size: { type: string, default: "28,28,1" }
+      model_architecture: { type: string, default: "le_net" }
+      epochs: { type: float, default: 30 }
+      batch_size: { type: float, default: 32 }
+      register_model_name: { type: string, default: "" }
+      learning_rate: { type: float, default: 0.001 }
+      optimizer: { type: string, default: "Adam" }
+      validation_split: { type: float, default: 0.2 }
+      seed: { type: float, default: -1 }
+    command: >
+      python train.py
+      --data-dir {data_dir}
+      --image-size {image_size}
+      --model-architecture {model_architecture}
+      --epochs {epochs}
+      --batch-size {batch_size}
+      --register-model-name {register_model_name}
+      --learning-rate {learning_rate}
+      --optimizer {optimizer}
+      --validation-split {validation_split}
+      --seed {seed}

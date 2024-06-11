@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowUserToGetAllDioptraFiles",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::plugins/dioptra_builtins/*",
+        "arn:aws:s3:::plugins/dioptra_custom/*",
+        "arn:aws:s3:::mlflow-tracking/artifacts/*",
+        "arn:aws:s3:::workflow/*"
+      ]
+    },
+    {
+      "Sid": "AllowListingOfAllDioptraFolders",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::mlflow-tracking",
+        "arn:aws:s3:::plugins",
+        "arn:aws:s3:::workflow"
+      ]
+    }
+  ]
+}

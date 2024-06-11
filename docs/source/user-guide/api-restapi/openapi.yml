@@ -1,0 +1,879 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+basePath: /
+consumes:
+  - application/json
+definitions:
+  Experiment:
+    properties:
+      createdOn:
+        description: The date and time the experiment was created.
+        format: date-time
+        type: string
+      experimentId:
+        description: An integer identifying a registered experiment.
+        type: integer
+      lastModified:
+        description: The date and time the experiment was last modified.
+        format: date-time
+        type: string
+      name:
+        description: The name of the experiment.
+        type: string
+    type: object
+  ExperimentUpdate:
+    properties:
+      name:
+        description: The new name of the experiment. Must be unique.
+        type: string
+    type: object
+  Job:
+    properties:
+      createdOn:
+        description: The date and time the job was created.
+        format: date-time
+        type: string
+      dependsOn:
+        description: A UUID for a previously submitted job to set as a dependency
+          for the current job.
+        type: string
+      entryPoint:
+        description: The name of the entry point in the MLproject file to run.
+        type: string
+      entryPointKwargs:
+        description: 'A string listing parameter values to pass to the entry point
+          for the job. The list of parameters is specified using the following format:
+          "-P param1=value1 -P param2=value2".'
+        type: string
+      experimentId:
+        description: An integer identifying a registered experiment.
+        type: integer
+      jobId:
+        description: A UUID that identifies the job.
+        type: string
+      lastModified:
+        description: The date and time the job was last modified.
+        format: date-time
+        type: string
+      mlflowRunId:
+        description: A UUID that identifies the MLFLow run associated with the job.
+        type: string
+      queueId:
+        description: An integer identifying a registered queue.
+        type: integer
+      status:
+        description: "The current status of the job. The allowed values are: queued,
+          started, deferred, finished, failed."
+        type: string
+      timeout:
+        description: The maximum alloted time for a job before it times out and is
+          stopped.
+        type: string
+      workflowUri:
+        description: The URI pointing to the tarball archive or zip file uploaded
+          with the job.
+        type: string
+    type: object
+  Queue:
+    properties:
+      createdOn:
+        description: The date and time the queue was created.
+        format: date-time
+        type: string
+      lastModified:
+        description: The date and time the queue was last modified.
+        format: date-time
+        type: string
+      name:
+        description: The name of the queue.
+        type: string
+      queueId:
+        description: An integer identifying a registered queue.
+        type: integer
+    type: object
+  QueueNameUpdate:
+    properties:
+      name:
+        description: The new name for the queue. Must be unique.
+        type: string
+    type: object
+  TaskPlugin:
+    properties:
+      collection:
+        description: The collection that contains the task plugin module, for example,
+          the "builtins" collection.
+        type: string
+      modules:
+        description: The available modules (Python files) in the task plugin package.
+        items:
+          type: string
+        type: array
+      taskPluginName:
+        description: A unique string identifying a task plugin package within a collection.
+        type: string
+    type: object
+  User:
+    properties:
+      createdOn:
+        description: The date and time the user account was created.
+        format: date-time
+        type: string
+      emailAddress:
+        description: The email address associated with the user account.
+        type: string
+      lastLoginOn:
+        description: The date and time the user last logged into their account.
+        format: date-time
+        type: string
+      lastModifiedOn:
+        description: The date and time the user account was last modified.
+        format: date-time
+        type: string
+      passwordExpireOn:
+        description: The date and time the user's password is set to expire.
+        format: date-time
+        type: string
+      userExpireOn:
+        description: The date and time the user account is set to expire.
+        format: date-time
+        type: string
+      userId:
+        description: An integer identifying a registered user account.
+        type: integer
+      username:
+        description: The username for logging into the user account.
+        type: string
+    type: object
+info:
+  title: Dioptra REST API
+  version: 0.0.0
+paths:
+  /api/experiment/:
+    get:
+      operationId: get_experiment_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/Experiment"
+            type: array
+      summary: Gets a list of all registered experiments
+      tags:
+        - Experiment
+    post:
+      consumes:
+        - application/x-www-form-urlencoded
+        - multipart/form-data
+      operationId: post_experiment_resource
+      parameters:
+        - description: The name of the experiment. Must be unique.
+          in: formData
+          name: name
+          required: true
+          type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Experiment"
+      summary: Creates a new experiment via an experiment registration form
+      tags:
+        - Experiment
+  /api/experiment/name/{experimentName}:
+    delete:
+      operationId: delete_experiment_name_resource
+      responses:
+        "200":
+          description: Success
+      summary: Deletes an experiment by its unique name
+      tags:
+        - Experiment
+    get:
+      operationId: get_experiment_name_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Experiment"
+      summary: Gets an experiment by its unique name
+      tags:
+        - Experiment
+    parameters:
+      - description: The name of the experiment.
+        in: path
+        name: experimentName
+        required: true
+        type: string
+    put:
+      operationId: put_experiment_name_resource
+      parameters:
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/ExperimentUpdate"
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Experiment"
+      summary: Modifies an experiment by its unique name
+      tags:
+        - Experiment
+  /api/experiment/{experimentId}:
+    delete:
+      operationId: delete_experiment_id_resource
+      responses:
+        "200":
+          description: Success
+      summary: Deletes an experiment by its unique identifier
+      tags:
+        - Experiment
+    get:
+      operationId: get_experiment_id_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Experiment"
+      summary: Gets an experiment by its unique identifier
+      tags:
+        - Experiment
+    parameters:
+      - description: An integer identifying a registered experiment.
+        in: path
+        name: experimentId
+        required: true
+        type: integer
+    put:
+      operationId: put_experiment_id_resource
+      parameters:
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/ExperimentUpdate"
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Experiment"
+      summary: Modifies an experiment by its unique identifier
+      tags:
+        - Experiment
+  /api/job/:
+    get:
+      operationId: get_job_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/Job"
+            type: array
+      summary: Gets a list of all submitted jobs
+      tags:
+        - Job
+    post:
+      consumes:
+        - multipart/form-data
+      operationId: post_job_resource
+      parameters:
+        - description: The name of a registered experiment.
+          in: formData
+          name: experiment_name
+          required: true
+          type: string
+        - description: The name of an active queue.
+          in: formData
+          name: queue
+          required: true
+          type: string
+        - description: The maximum alloted time for a job before it times out and is
+            stopped. If omitted, the job timeout will default to 24 hours.
+          in: formData
+          name: timeout
+          type: string
+        - description: The name of the entry point in the MLproject file to run.
+          in: formData
+          name: entry_point
+          required: true
+          type: string
+        - description: 'A list of entry point parameter values to use for the job. The
+            list is a string with the following format: "-P param1=value1 -P param2=value2".
+            If omitted, the default values in the MLproject file will be used.'
+          in: formData
+          name: entry_point_kwargs
+          type: string
+        - description: A job UUID to set as a dependency for this new job. The new job
+            will not run until this job completes successfully. If omitted, then the
+            new jobwill start as soon as computing resources are available.
+          in: formData
+          name: depends_on
+          type: string
+        - description:
+            A tarball archive or zip file containing, at a minimum, a MLproject
+            file and its associated entry point scripts.
+          in: formData
+          name: workflow
+          required: true
+          type: file
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Job"
+      summary: Creates a new job via a job submission form with an attached file
+      tags:
+        - Job
+  /api/job/{jobId}:
+    get:
+      operationId: get_job_id_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Job"
+      summary: Gets a job by its unique identifier
+      tags:
+        - Job
+    parameters:
+      - description: A string specifying a job's UUID.
+        in: path
+        name: jobId
+        required: true
+        type: string
+  /api/queue/:
+    get:
+      operationId: get_queue_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/Queue"
+            type: array
+      summary: Gets a list of all registered queues
+      tags:
+        - Queue
+    post:
+      consumes:
+        - application/x-www-form-urlencoded
+        - multipart/form-data
+      operationId: post_queue_resource
+      parameters:
+        - description: The name of the queue. Must be unique.
+          in: formData
+          name: name
+          required: true
+          type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Queue"
+      summary: Creates a new queue via a queue registration form
+      tags:
+        - Queue
+  /api/queue/name/{queueName}:
+    delete:
+      operationId: delete_queue_name_resource
+      responses:
+        "200":
+          description: Success
+      summary: Deletes a queue by its unique name
+      tags:
+        - Queue
+    get:
+      operationId: get_queue_name_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Queue"
+      summary: Gets a queue by its unique name
+      tags:
+        - Queue
+    parameters:
+      - description: The name of the queue.
+        in: path
+        name: queueName
+        required: true
+        type: string
+    put:
+      operationId: put_queue_name_resource
+      parameters:
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/QueueNameUpdate"
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Queue"
+      summary: Modifies a queue by its unique name
+      tags:
+        - Queue
+  /api/queue/name/{queueName}/lock:
+    delete:
+      operationId: delete_queue_name_lock_resource
+      responses:
+        "200":
+          description: Success
+      summary: Removes the lock from the queue (name reference) if it exists
+      tags:
+        - Queue
+    parameters:
+      - description: The name of the queue.
+        in: path
+        name: queueName
+        required: true
+        type: string
+    put:
+      operationId: put_queue_name_lock_resource
+      responses:
+        "200":
+          description: Success
+      summary: Locks the queue (name reference) if it is unlocked
+      tags:
+        - Queue
+  /api/queue/{queueId}:
+    delete:
+      operationId: delete_queue_id_resource
+      responses:
+        "200":
+          description: Success
+      summary: Deletes a queue by its unique identifier
+      tags:
+        - Queue
+    get:
+      operationId: get_queue_id_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Queue"
+      summary: Gets a queue by its unique identifier
+      tags:
+        - Queue
+    parameters:
+      - description: An integer identifying a registered queue.
+        in: path
+        name: queueId
+        required: true
+        type: integer
+    put:
+      operationId: put_queue_id_resource
+      parameters:
+        - in: body
+          name: payload
+          required: true
+          schema:
+            $ref: "#/definitions/QueueNameUpdate"
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Queue"
+      summary: Modifies a queue by its unique identifier
+      tags:
+        - Queue
+  /api/queue/{queueId}/lock:
+    delete:
+      operationId: delete_queue_id_lock_resource
+      responses:
+        "200":
+          description: Success
+      summary: Removes the lock from the queue (id reference) if it exists
+      tags:
+        - Queue
+    parameters:
+      - description: An integer identifying a registered queue.
+        in: path
+        name: queueId
+        required: true
+        type: integer
+    put:
+      operationId: put_queue_id_lock_resource
+      responses:
+        "200":
+          description: Success
+      summary: Locks the queue (id reference) if it is unlocked
+      tags:
+        - Queue
+  /api/taskPlugin/:
+    get:
+      operationId: get_task_plugin_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/TaskPlugin"
+            type: array
+      summary: Gets a list of all registered task plugins
+      tags:
+        - TaskPlugin
+    post:
+      consumes:
+        - multipart/form-data
+      operationId: post_task_plugin_resource
+      parameters:
+        - description: A unique string identifying a task plugin package within a collection.
+          in: formData
+          name: task_plugin_name
+          required: true
+          type: string
+        - description: A tarball archive or zip file containing a single task plugin
+            package.
+          in: formData
+          name: task_plugin_file
+          required: true
+          type: file
+        - description: The collection where the task plugin should be stored.
+          in: formData
+          name: collection
+          required: true
+          type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/TaskPlugin"
+      summary: Registers a new task plugin uploaded via the task plugin upload form
+      tags:
+        - TaskPlugin
+  /api/taskPlugin/dioptra_builtins:
+    get:
+      operationId: get_task_plugin_builtins_collection_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/TaskPlugin"
+            type: array
+      summary: Gets a list of all available builtin task plugins
+      tags:
+        - TaskPlugin
+  /api/taskPlugin/dioptra_builtins/{taskPluginName}:
+    get:
+      operationId: get_task_plugin_builtin_collection_name_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/TaskPlugin"
+      summary: Gets a builtin task plugin by its unique name
+      tags:
+        - TaskPlugin
+    parameters:
+      - description:
+          A unique string identifying a task plugin package within dioptra_builtins
+          collection.
+        in: path
+        name: taskPluginName
+        required: true
+        type: string
+  /api/taskPlugin/dioptra_custom:
+    get:
+      operationId: get_task_plugin_custom_collection_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/TaskPlugin"
+            type: array
+      summary: Gets a list of all registered custom task plugins
+      tags:
+        - TaskPlugin
+  /api/taskPlugin/dioptra_custom/{taskPluginName}:
+    delete:
+      operationId: delete_task_plugin_custom_collection_name_resource
+      responses:
+        "200":
+          description: Success
+      summary: Deletes a custom task plugin by its unique name
+      tags:
+        - TaskPlugin
+    get:
+      operationId: get_task_plugin_custom_collection_name_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/TaskPlugin"
+      summary: Gets a custom task plugin by its unique name
+      tags:
+        - TaskPlugin
+    parameters:
+      - description:
+          A unique string identifying a task plugin package within dioptra_custom
+          collection.
+        in: path
+        name: taskPluginName
+        required: true
+        type: string
+  /api/user/:
+    get:
+      operationId: get_user_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            items:
+              $ref: "#/definitions/User"
+            type: array
+      summary: Gets a list of all registered users
+      tags:
+        - User
+    post:
+      consumes:
+        - application/x-www-form-urlencoded
+        - multipart/form-data
+      operationId: post_user_resource
+      parameters:
+        - description: The username for logging into the user account. Must be unique.
+          in: formData
+          name: username
+          required: true
+          type: string
+        - description: The password used for authenticating the user account.
+          in: formData
+          name: password
+          required: true
+          type: string
+        - description: The password confirmation field, this should exactly match the
+            value in password.
+          in: formData
+          name: password_confirm
+          required: true
+          type: string
+        - description: The email address associated with the user account.
+          in: formData
+          name: email_address
+          required: true
+          type: string
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/User"
+      summary: Creates a new user via an user registration form
+      tags:
+        - User
+  /api/user/{userId}:
+    delete:
+      operationId: delete_user_id_resource
+      responses:
+        "200":
+          description: Success
+      summary: Deletes user account by its unique identifier
+      tags:
+        - User
+    get:
+      operationId: get_user_id_resource
+      parameters:
+        - description: An optional fields mask
+          format: mask
+          in: header
+          name: X-Fields
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/User"
+      summary: Gets user account by its unique identifier
+      tags:
+        - User
+    parameters:
+      - description: An integer identifying a registered user account.
+        in: path
+        name: userId
+        required: true
+        type: integer
+produces:
+  - application/json
+responses:
+  ExperimentAlreadyExistsError: {}
+  ExperimentDoesNotExistError: {}
+  ExperimentMLFlowTrackingAlreadyExistsError: {}
+  ExperimentMLFlowTrackingDoesNotExistError: {}
+  ExperimentMLFlowTrackingRegistrationError: {}
+  ExperimentRegistrationError: {}
+  JobDoesNotExistError: {}
+  JobSubmissionError: {}
+  JobWorkflowUploadError: {}
+  MaskError:
+    description: When any error occurs on mask
+  ParseError:
+    description: When a mask can't be parsed
+  QueueAlreadyExistsError: {}
+  QueueDoesNotExistError: {}
+  QueueRegistrationError: {}
+  TaskPluginAlreadyExistsError: {}
+  TaskPluginDoesNotExistError: {}
+  TaskPluginUploadError: {}
+  UserDoesNotExistError: {}
+  UserRegistrationError: {}
+  UsernameNotAvailableError: {}
+swagger: "2.0"
+tags:
+  - description: Experiment registration operations
+    name: Experiment
+  - description: Job submission and management operations
+    name: Job
+  - description: Queue registration operations
+    name: Queue
+  - description: Task plugin registry operations
+    name: TaskPlugin
+  - description: User accounts
+    name: User
