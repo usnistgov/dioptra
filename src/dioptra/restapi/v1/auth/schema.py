@@ -26,11 +26,13 @@ class LoginSchema(Schema):
     username = fields.String(
         attribute="username",
         metadata=dict(description="The account username."),
+        required=True,
     )
     password = fields.String(
         attribute="password",
         metadata=dict(description="The account password."),
         load_only=True,
+        required=True,
     )
     status = fields.String(
         attribute="status",
@@ -46,6 +48,7 @@ class LogoutSchema(Schema):
         attribute="username",
         metadata=dict(description="The account username."),
         dump_only=True,
+        required=True,
     )
     everywhere = fields.Bool(
         attribute="everywhere",

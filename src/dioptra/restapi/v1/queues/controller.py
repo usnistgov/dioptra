@@ -102,9 +102,9 @@ class QueueEndpoint(Resource):
         parsed_obj = request.parsed_obj  # noqa: F841
 
         queue = self._queue_service.create(
-            name=str(parsed_obj["name"]),
-            description=str(parsed_obj["description"]),
-            group_id=int(parsed_obj["group_id"]),
+            name=parsed_obj["name"],
+            description=parsed_obj["description"],
+            group_id=parsed_obj["group_id"],
             log=log,
         )
         return utils.build_queue(queue)
