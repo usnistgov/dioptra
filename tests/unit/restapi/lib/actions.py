@@ -21,12 +21,14 @@ API endpoints.
 """
 
 from typing import Any
+
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
     V1_GROUPS_ROUTE,
+    V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     V1_PLUGINS_ROUTE,
     V1_QUEUES_ROUTE,
     V1_ROOT,
@@ -150,6 +152,40 @@ def register_group(
         follow_redirects=True,
     )
 
+
+def register_plugin_parameter_type(
+    client: FlaskClient,
+    name: str,
+    group_id: int,
+    structure: dict[str, Any] | None = None,
+    description: str | None = None,
+) -> TestResponse:
+    """Create a Plugin Parameter Type using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name of the plugin parameter type to be created.
+        group_id: The group to create the new plugin parameter type in.
+        structure: Optional JSON-type field for further constraining a type's structure.
+
+    Returns:
+        The response from the API.
+    """
+    payload = {"name": name, "group": group_id}
+
+    if structure:
+        payload["structure"] = structure
+
+    if description:
+        payload["description"] = description
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
 def get_public_group(client: FlaskClient) -> TestResponse:
     """Get the public group.
 
@@ -159,6 +195,4 @@ def get_public_group(client: FlaskClient) -> TestResponse:
     Returns:
         The response from the API.
     """
-    return client.get(
-        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True
-    )
+    return client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True)

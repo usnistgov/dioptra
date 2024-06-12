@@ -93,5 +93,6 @@ def register_v1_error_handlers(api: Api) -> None:
     register_base_v1_error_handlers(api)
     v1.groups.errors.register_error_handlers(api)
     v1.plugins.errors.register_error_handlers(api)
+    v1.plugin_parameter_types.errors.register_error_handlers(api)
     v1.queues.errors.register_error_handlers(api)
     v1.users.errors.register_error_handlers(api)
