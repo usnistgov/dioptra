@@ -35,6 +35,19 @@ from dioptra.sdk.exceptions.task_engine import (
 )
 from dioptra.task_engine import util
 
+_stop_requested = False
+
+
+def request_stop() -> None:
+    """
+    Request graceful early termination of an experiment.  This will occur
+    in between experiment steps; it can't interrupt a running step.
+    """
+    global _stop_requested
+    # I don't think we need any concurrency protection for this simple thing,
+    # do we?
+    _stop_requested = True
+
 
 def _get_logger() -> logging.Logger:
     """
@@ -450,6 +463,10 @@ def run_experiment(
         global_parameters: External parameter values to use in the
             experiment, as a dict
     """
+    # An external entity can set this flag to request a graceful shutdown.
+    # See request_stop().
+    global _stop_requested
+    _stop_requested = False
 
     log = _get_logger()
 
@@ -475,6 +492,10 @@ def run_experiment(
     log.debug("Step order:\n  %s", "\n  ".join(step_order))
 
     for step_name in step_order:
+        if _stop_requested:
+            log.warning("Experiment aborted!")
+            break
+
         try:
             log.info("Running step: %s", step_name)
 
