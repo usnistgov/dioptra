@@ -26,7 +26,7 @@ from flask_login import login_required
 from flask_restx import Namespace, Resource
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.v1.jobs.schema import JobSchema
+from dioptra.restapi.v1.jobs.schema import JobSchema, JobStatusSchema
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
 from .schema import (
@@ -85,7 +85,7 @@ class ExperimentEndpoint(Resource):
 
 
 @api.route("/<int:id>")
-@api.param("id", "An integer identifying a registered experiment.")
+@api.param("id", "ID for the Experiment resource.")
 class ExperimentIdEndpoint(Resource):
 
     @login_required
@@ -122,16 +122,70 @@ class ExperimentIdEndpoint(Resource):
 
 
 @api.route("/<int:id>/jobs")
-@api.param("id", "An integer identifying a registered experiment.")
+@api.param("id", "ID for the Experiment resource.")
 class ExperimentIdJobEndpoint(Resource):
 
     @login_required
     @accepts(query_params_schema=ExperimentGetQueryParameters, api=api)
     @responds(schema=JobSchema(many=True), api=api)
     def get(self, id: int):
-        """Returns a list of jobs for a specified experiment."""
+        """Returns a list of jobs for a specified Experiment."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="id", request_type="GET", id=id
         )  # noqa: F841
         log.info("Request received")
         # return self._experiment_service.get_jobs(id, error_if_not_found=True, log=log)
+
+    @login_required
+    @accepts(schema=JobSchema, api=api)
+    @responds(schema=JobSchema, api=api)
+    def post(self):
+        """Creates a Job resource under the specified Experiment."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Job", request_type="POST"
+        )
+        log.debug("Request received")
+        parsed_obj = request.parsed_obj  # noqa: F841
+
+
+@api.route("/<int:id>/jobs/<int:jobId>")
+@api.param("id", "ID for the Experiment resource.")
+@api.param("jobId", "ID for the Job resource.")
+class ExperimentIdJobIdEndpoint(Resource):
+    @login_required
+    @responds(schema=JobSchema, api=api)
+    def get(self, id: int, jobId: int):
+        """Gets a Job resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
+        )
+        log.debug("Request received")
+
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self, id: int, jobId: int):
+        """Deletes a Job resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="Job",
+            request_type="DELETE",
+            id=id,
+        )
+        log.debug("Request received")
+
+
+@api.route("/<int:id>/jobs/<int:jobId>/status")
+@api.param("id", "ID for the Experiment resource.")
+@api.param("jobId", "ID for the Job resource.")
+class ExperimentIdJobIdStatusEndpoint(Resource):
+    @login_required
+    @responds(schema=JobStatusSchema, api=api)
+    def get(self, id: int, jobId: int):
+        """Gets a Job resource's status."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="Job",
+            request_type="GET",
+            id=id,
+        )
+        log.debug("Request received")
