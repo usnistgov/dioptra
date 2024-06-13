@@ -20,12 +20,28 @@ from urllib.parse import urlencode, urlunparse
 
 from dioptra.restapi.db import models
 
+EXPERIMENTS: Final[str] = "experiments"
 USERS: Final[str] = "users"
 GROUPS: Final[str] = "groups"
-QUEUES: Final[str] = "queues"
 TAGS: Final[str] = "tags"
 
 # -- Ref Types -----------------------------------------------------------------
+
+
+def build_experiment_ref(experiment: models.Experiment) -> dict[str, Any]:
+    """Build an ExperimentRef dictionary.
+
+    Args:
+        experiment: The experiment object to convert into an ExperimentRef dictionary.
+
+    Returns:
+        The ExperimentRef dictionary.
+    """
+    return {
+        "id": experiment.resource_id,
+        "name": experiment.name,
+        "url": f"/{EXPERIMENTS}/{experiment.resource_id}",
+    }
 
 
 def build_user_ref(user: models.User) -> dict[str, Any]:
@@ -76,23 +92,40 @@ def build_tag_ref(tag: models.Tag) -> dict[str, Any]:
     }
 
 
-def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
-    """Build a QueueRef dictionary.
+# -- Full Types -----------------------------------------------------------------
+
+
+def build_experiment(experiment: models.Experiment) -> dict[str, Any]:
+    """Build an Experiment response dictionary.
 
     Args:
-        queue: The Queue object to convert into a QueueRef dictionary.
+        experiment: The experiment object to convert into an Experiment response
+            dictionary.
 
     Returns:
-        The QueueRef dictionary.
+        The Experiment response dictionary.
     """
     return {
-        "id": queue.queue_id,
-        "name": queue.name,
-        "url": f"/{QUEUES}/{queue.queue_id}",
+        "id": experiment.resource_id,
+        "snapshot_id": experiment.resource_snapshot_id,
+        "name": experiment.name,
+        "description": experiment.description,
+        """ TODO: Delete placeholder and uncomment when entrypoints and jobs are done
+        "entrypointIds":
+            [build_entrypoint_ref(entrypoint)
+            for entrypoint in experiment.entrypointIds],
+        "jobs": [build_job_ref(job) for job in experiment.experiment_jobs],
+        """
+        "entrypoint_ids": [],
+        "jobs": [],
+        "user": build_user_ref(experiment.creator),
+        "group": build_group_ref(experiment.resource.owner),
+        "created_on": experiment.created_on,
+        "last_modified_on": experiment.resource.last_modified_on,
+        "latest_snapshot": experiment.resource.latest_snapshot_id
+        == experiment.resource_snapshot_id,
+        "tags": [build_tag_ref(tag) for tag in experiment.tags],
     }
-
-
-# -- Full Types ----------------------------------------------------------------
 
 
 def build_user(user: models.User) -> dict[str, Any]:
@@ -174,47 +207,6 @@ def build_group(group: models.Group) -> dict[str, Any]:
     }
 
 
-def build_queue(queue: models.Queue) -> dict[str, Any]:
-    """Build a Queue response dictionary.
-
-    Args:
-        queue: The Queue object to convert into a Queue response dictionary.
-
-    Returns:
-        The Queue response dictionary.
-    """
-    return {
-        "id": queue.resource_id,
-        "snapshot_id": queue.resource_snapshot_id,
-        "name": queue.name,
-        "description": queue.description,
-        "user": build_user_ref(queue.creator),
-        "group": build_group_ref(queue.resource.owner),
-        "created_on": queue.created_on,
-        "last_modified_on": queue.resource.last_modified_on,
-        "latest_snapshot": queue.resource.latest_snapshot_id
-        == queue.resource_snapshot_id,
-        "tags": [build_tag_ref(tag) for tag in queue.tags],
-    }
-
-
-def build_plugin(plugin: models.Plugin) -> dict[str, Any]:
-    return {
-        "id": plugin.resource_id,
-        "snapshot_id": plugin.resource_snapshot_id,
-        "name": plugin.name,
-        "description": plugin.description,
-        "user": build_user_ref(plugin.creator),
-        "group": build_group_ref(plugin.resource.owner),
-        "created_on": plugin.created_on,
-        "last_modified_on": plugin.resource.last_modified_on,
-        "latest_snapshot": plugin.resource.latest_snapshot_id
-        == plugin.resource_snapshot_id,
-        "tags": [build_tag_ref(tag) for tag in plugin.tags],
-        "files": [],
-    }
-
-
 # -- Paging --------------------------------------------------------------------
 
 
@@ -251,7 +243,6 @@ def build_paging_envelope(
     paged_data = {
         "index": index,
         "is_complete": is_complete,
-        "total_num_results": total_num_elements,
         "first": build_paging_url(resource_type, search=query, index=0, length=length),
         "data": [build_fn(x) for x in data],
     }

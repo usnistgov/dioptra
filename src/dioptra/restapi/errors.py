@@ -91,6 +91,7 @@ def register_v1_error_handlers(api: Api) -> None:
     from dioptra.restapi import v1
 
     register_base_v1_error_handlers(api)
+    v1.experiments.errors.register_error_handlers(api)
     v1.groups.errors.register_error_handlers(api)
     v1.plugins.errors.register_error_handlers(api)
     v1.queues.errors.register_error_handlers(api)

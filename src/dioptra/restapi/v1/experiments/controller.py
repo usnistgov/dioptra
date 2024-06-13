@@ -15,17 +15,19 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Experiment resources."""
-from __future__ import annotations
-
 import uuid
+from typing import cast
 
 import structlog
 from flask import request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
+from injector import inject
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.db import models
+from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.jobs.schema import JobSchema
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
@@ -35,6 +37,7 @@ from .schema import (
     ExperimentPageSchema,
     ExperimentSchema,
 )
+from .service import ExperimentIdService, ExperimentService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -43,6 +46,17 @@ api: Namespace = Namespace("Experiments", description="Experiments endpoint")
 
 @api.route("/")
 class ExperimentEndpoint(Resource):
+    @inject
+    def __init__(self, experiment_service: ExperimentService, *args, **kwargs) -> None:
+        """Initialize the experiment resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            experiment_service: An ExperimentService object.
+        """
+        self._experiment_service = experiment_service
+        super().__init__(*args, **kwargs)
 
     @login_required
     @accepts(query_params_schema=ExperimentGetQueryParameters, api=api)
@@ -52,24 +66,30 @@ class ExperimentEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Experiment", request_type="GET"
         )
-        log.debug("Request received")
-        """
-        index = request.args.get("index", 0, type=int)
-        page_length = request.args.get("pageLength", 20, type=int)
+        parsed_query_params = request.parsed_query_params  # noqa: F841
 
-        data = self._experiment_service.get_page(
-            index=index, page_length=page_length, log=log
-        )
+        print(parsed_query_params)  # TEST
+        group_id = parsed_query_params["group_id"]
+        search_string = parsed_query_params["search"]
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
 
-        is_complete = True if Experiment.query.count() <= index + page_length else False
-
-        return Page(
-            data=data,
-            index=index,
-            is_complete=is_complete,
-            endpoint="v0/experiment",
+        experiments, total_num_experiments = self._experiment_service.get(
+            group_id=group_id,
+            search_string=search_string,
+            page_index=page_index,
             page_length=page_length,
-        )"""
+            log=log,
+        )
+        return utils.build_paging_envelope(
+            "experiments",
+            build_fn=utils.build_experiment,
+            data=experiments,
+            query=search_string,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_experiments,
+        )
 
     @login_required
     @accepts(schema=ExperimentSchema, api=api)
@@ -79,34 +99,63 @@ class ExperimentEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Experiment", request_type="POST"
         )
-        log.debug("Request received")
         parsed_obj = request.parsed_obj  # noqa: F841
-        # return self._experiment_service.create(parsed_obj["name"], log=log)
+        log.debug(f"parsed_obj: {parsed_obj}")  # TEST
+        experiment = self._experiment_service.create(
+            name=str(parsed_obj["name"]),
+            description=str(parsed_obj["description"]),
+            group_id=int(parsed_obj["group_id"]),
+            entrypoint_ids=list[int](parsed_obj["entrypoint_ids"]),
+            # tags=list[int](parsed_obj["tag_ids"]),
+            log=log,
+        )
+        return utils.build_experiment(experiment)
 
 
 @api.route("/<int:id>")
 @api.param("id", "An integer identifying a registered experiment.")
 class ExperimentIdEndpoint(Resource):
+    @inject
+    def __init__(
+        self, experiment_id_service: ExperimentIdService, *args, **kwargs
+    ) -> None:
+        """Initialize the experiment resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            experiment_id_service: An ExperimentIdService object.
+        """
+        self._experiment_id_service = experiment_id_service
+        super().__init__(*args, **kwargs)
 
     @login_required
     @responds(schema=ExperimentSchema, api=api)
     def get(self, id: int):
         """Gets an experiment by its unique identifier."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="id", request_type="GET", id=id
-        )  # noqa: F841
-        log.info("Request received")
-        # return self._experiment_service.get(id, error_if_not_found=True, log=log)
+            request_id=str(uuid.uuid4()),
+            resource="Experiment",
+            request_type="GET",
+            id=id,
+        )
+        experiment = cast(
+            models.Experiment,
+            self._experiment_id_service.get(id, error_if_not_found=True, log=log),
+        )
+        return utils.build_experiment(experiment)
 
     @login_required
-    @responds(schema=IdStatusResponseSchema)
+    @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self, id: int):
         """Deletes an experiment by its unique identifier."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="id", request_type="DELETE", id=id
-        )  # noqa: F841
-        log.info("Request received")
-        # return self._experiment_service.delete(id)
+            request_id=str(uuid.uuid4()),
+            resource="Experiment",
+            request_type="DELETE",
+            id=id,
+        )
+        return self._experiment_id_service.delete(experiment_id=id, log=log)
 
     @login_required
     @accepts(schema=ExperimentMutableFieldsSchema, api=api)
@@ -114,11 +163,25 @@ class ExperimentIdEndpoint(Resource):
     def put(self, id: int):
         """Modifies an experiment by its unique identifier."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="id", request_type="PUT", id=id
-        )  # noqa: F841
-        log.debug("Request received")
-        # parsed_obj = request.parsed_obj  # type: ignore
-        # return self._experiment_service.rename(id,new_name=parsed_obj["name"],log=log)
+            request_id=str(uuid.uuid4()),
+            resource="Experiment",
+            request_type="PUT",
+            id=id,
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        experiment = cast(
+            models.Experiment,
+            self._experiment_id_service.modify(
+                id,
+                name=parsed_obj["name"],
+                description=parsed_obj["description"],
+                # entrypoints=parsed_obj["entrypoints"], #TODO add entrypoints
+                # jobs=parsed_obj["jobs"], #TODO add jobs
+                error_if_notfound=True,
+                log=log,
+            ),
+        )
+        return utils.build_experiment(experiment)
 
 
 @api.route("/<int:id>/jobs")
