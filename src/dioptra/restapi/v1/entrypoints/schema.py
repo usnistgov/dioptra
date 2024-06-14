@@ -34,22 +34,27 @@ class EntrypointParameterSchema(Schema):
         attribute="entrypoint_id",
         data_key="entrypoint",
         metadata=dict(description="ID for the associated entrypoint."),
+        required=True,
     )
     parameterNumber = fields.Integer(
         attribute="parameter_number",
         metadata=dict(description="Index of the Entrypoint parameter."),
+        required=True,
     )
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the Entrypoint parameter resource."),
+        required=True,
     )
     defaultValue = fields.String(
         attribute="default_value",
         metadata=dict(description="Default value of the Entrypoint parameter."),
+        load_default=None,
     )
     parameterType = fields.String(
         attribute="parameter_type",
         metadata=dict(description="Data type of the Entrypoint parameter."),
+        required=True,
     )
 
 
@@ -71,14 +76,17 @@ class EntrypointMutableFieldsSchema(Schema):
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the Entrypoint resource."),
+        required=True,
     )
     description = fields.String(
         attribute="description",
         metadata=dict(description="Description of the Entrypoint resource."),
+        load_default=None,
     )
     taskGraph = fields.String(
         attribute="task_graph",
         metadata=dict(description="Task graph of the Entrypoint resource."),
+        required=True,
     )
     parameters = fields.Nested(
         EntrypointParameterSchema,

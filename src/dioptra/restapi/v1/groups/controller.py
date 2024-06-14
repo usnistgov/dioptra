@@ -99,10 +99,7 @@ class GroupEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # noqa: F841
 
-        group = self._group_service.create(
-            name=str(parsed_obj["name"]),
-            log=log,
-        )
+        group = self._group_service.create(name=parsed_obj["name"], log=log)
         return utils.build_group(group)
 
 
@@ -155,7 +152,7 @@ class GroupIdEndpoint(Resource):
         group = cast(
             models.Group,
             self._group_id_service.modify(
-                id, name=str(parsed_obj["name"]), error_if_not_found=True, log=log
+                id, name=parsed_obj["name"], error_if_not_found=True, log=log
             ),
         )
         return utils.build_group(group)

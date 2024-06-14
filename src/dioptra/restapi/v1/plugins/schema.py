@@ -64,6 +64,7 @@ class PluginTaskParameterSchema(Schema):
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the PluginTaskParameter."),
+        required=True,
     )
     parameterTypeId = fields.Int(
         attribute="parameter_type_id",
@@ -72,6 +73,7 @@ class PluginTaskParameterSchema(Schema):
             description="The ID of the assigned PluginParameterType resource"
         ),
         load_only=True,
+        required=True,
     )
     parameterType = fields.Nested(
         PluginParameterTypeRefSchema,
@@ -93,6 +95,7 @@ class PluginTaskSchema(Schema):
         # present in both load and dump usage.
         load_only=True,
         dump_only=True,
+        required=True,
     )
     inputParams = fields.Nested(
         PluginTaskParameterSchema,
@@ -119,11 +122,14 @@ class PluginMutableFieldsSchema(Schema):
     """The schema for the mutable data fields in a Plugin resource."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Plugin resource.")
+        attribute="name",
+        metadata=dict(description="Name of the Plugin resource."),
+        required=True,
     )
     description = fields.String(
         attribute="description",
         metadata=dict(description="Description of the Plugin resource."),
+        load_default=None,
     )
 
 
@@ -164,10 +170,14 @@ class PluginFileMutableFieldsSchema(Schema):
     """The schema for the mutable data fields in a PluginFile resource."""
 
     filename = fields.String(
-        attribute="name", metadata=dict(description="Name of the PluginFile resource.")
+        attribute="name",
+        metadata=dict(description="Name of the PluginFile resource."),
+        required=True,
     )
     contents = fields.String(
-        attribute="contents", metadata=dict(description="Contents of the file.")
+        attribute="contents",
+        metadata=dict(description="Contents of the file."),
+        required=True,
     )
     tasks = fields.Nested(
         PluginTaskSchema,

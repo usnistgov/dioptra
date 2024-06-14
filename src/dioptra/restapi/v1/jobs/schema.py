@@ -57,12 +57,14 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
     description = fields.String(
         attribute="description",
         metadata=dict(description="Description of the Job resource."),
+        load_default=None,
     )
     queueId = fields.Integer(
         attribute="queue_id",
         data_key="queue",
         metadata=dict(description="An integer identifying a registered queue."),
         load_only=True,
+        required=True,
     )
     queue = fields.Nested(
         QueueRefSchema,
@@ -75,6 +77,7 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
         data_key="experiment",
         metadata=dict(description="An integer identifying a registered experiment."),
         load_only=True,
+        required=True,
     )
     experiment = fields.Nested(
         ExperimentRefSchema,
@@ -87,6 +90,7 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
         data_key="entrypoint",
         metadata=dict(description="An integer identifying a registered entry point."),
         load_only=True,
+        required=True,
     )
     entrypoint = fields.Nested(
         EntrypointRefSchema,
