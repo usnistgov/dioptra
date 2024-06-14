@@ -48,17 +48,6 @@ class JobEndpoint(Resource):
         log.debug("Request received")
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
-    @login_required
-    @accepts(schema=JobSchema, api=api)
-    @responds(schema=JobSchema, api=api)
-    def post(self):
-        """Creates a Job resource."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Job", request_type="POST"
-        )
-        log.debug("Request received")
-        parsed_obj = request.parsed_obj  # noqa: F841
-
 
 @api.route("/<int:id>")
 @api.param("id", "ID for the Job resource.")
