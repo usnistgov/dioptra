@@ -31,6 +31,10 @@ class SearchNotImplementedError(Exception):
     """The search functionality has not been implemented."""
 
 
+class SearchParseError(Exception):
+    """The search query could not be parsed."""
+
+
 def register_base_v1_error_handlers(api: Api) -> None:
     @api.errorhandler(BackendDatabaseError)
     def handle_backend_database_error(error):
@@ -40,8 +44,16 @@ def register_base_v1_error_handlers(api: Api) -> None:
         }, 500
 
     @api.errorhandler(SearchNotImplementedError)
-    def handle_no_current_user_error(error):
+    def handle_search_not_implemented_error(error):
         return {"message": "The search functionality has not been implemented"}, 501
+
+    @api.errorhandler(SearchParseError)
+    def handle_search_parse_error(error):
+        return {
+            "message": "The provided search query could not be parsed",
+            "query": error.args[0],
+            "reason": error.args[1],
+        }, 422
 
 
 def register_error_handlers(api: Api, restapi_version: str) -> None:

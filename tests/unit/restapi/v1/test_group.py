@@ -295,7 +295,6 @@ def test_group_get_all(
     assert_retrieving_groups_works(client, expected=group_expected_list)
 
 
-@pytest.mark.v1_test
 def test_group_search_query(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -311,12 +310,15 @@ def test_group_search_query(
       that match the wildcard '*'.
     - The returned list of groups matches the expected matches from the query.
     """
-    group_expected_list = list(registered_groups.values())[:2]
+    group_expected_list = [registered_groups["public"]]
     assert_retrieving_groups_works(
-        client,
-        expected=group_expected_list,
-        search="name:*queue*",
+        client, expected=group_expected_list, search="name:public"
     )
+    assert_retrieving_groups_works(
+        client, expected=group_expected_list, search="public"
+    )
+    assert_retrieving_groups_works(client, expected=group_expected_list, search="pub*")
+    assert_retrieving_groups_works(client, expected=[], search="name:pub")
 
 
 @pytest.mark.v1_test
@@ -335,11 +337,7 @@ def test_cannot_register_existing_group_name(
     - The request fails with an appropriate error message and response code.
     """
     existing_group = registered_groups["group1"]
-
-    assert_registering_existing_group_name_fails(
-        client,
-        name=existing_group["name"],
-    )
+    assert_registering_existing_group_name_fails(client, name=existing_group["name"])
 
 
 @pytest.mark.v1_test
@@ -365,11 +363,7 @@ def test_rename_group(
     group_to_rename = registered_groups["group1"]
     existing_group = registered_groups["group2"]
 
-    modify_group(
-        client,
-        group_id=group_to_rename["id"],
-        new_name=updated_group_name,
-    )
+    modify_group(client, group_id=group_to_rename["id"], new_name=updated_group_name)
     assert_group_name_matches_expected_name(
         client, group_id=group_to_rename["id"], expected_name=updated_group_name
     )

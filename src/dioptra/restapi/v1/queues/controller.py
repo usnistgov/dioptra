@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import uuid
 from typing import cast
+from urllib.parse import unquote
 
 import structlog
 from flask import request
@@ -70,7 +71,7 @@ class QueueEndpoint(Resource):
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
         group_id = parsed_query_params["group_id"]
-        search_string = parsed_query_params["search"]
+        search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
 

@@ -26,14 +26,19 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError, SearchNotImplementedError
+from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v1.groups.service import GroupIdService
+from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 from .errors import QueueAlreadyExistsError, QueueDoesNotExistError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "queue"
+SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": models.Queue.name,
+    "description": models.Queue.description,
+}
 
 
 class QueueService(object):
@@ -125,7 +130,6 @@ class QueueService(object):
             the query.
 
         Raises:
-            SearchNotImplementedError: If a search string is provided.
             BackendDatabaseError: If the database query returns a None when counting
                 the number of queues.
         """
@@ -138,8 +142,9 @@ class QueueService(object):
             filters.append(models.Resource.group_id == group_id)
 
         if search_string:
-            log.debug("Searching is not implemented", search_string=search_string)
-            raise SearchNotImplementedError
+            filters.append(
+                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
+            )
 
         stmt = (
             select(func.count(models.Queue.resource_id))

@@ -43,7 +43,7 @@ def registered_users(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
         client, "user1", "user1@example.org", password
     ).get_json()
     user2_response = actions.register_user(
-        client, "user2", "user2@example.org", password
+        client, "user2", "user2@example.net", password
     ).get_json()
     user3_response = actions.register_user(
         client, "name", "user3@example.org", password
