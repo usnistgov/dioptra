@@ -45,7 +45,8 @@ class MinVersions:
                      'list_cmd': 
                        ["docker","image","ls"], 
                       'title':'Docker containers',
-                      'guide':'From the dioptra repository root Directory run the following command: \n\t make build-<image> \n For every of the missing image'
+                      'guide':('From the dioptra GitHub repo directory run:'
+                               '\tmake build-<image>')
                     }   
     # ??? version of CRUFT is not specified in the docs, or is it ???
     INFO_CRUFT = {'cmd':'cruft', 'ver': (2,0,0), 
@@ -386,12 +387,12 @@ class Prompts:
             dw = Prompts.alert_width - len(msg)
             return (dw//2, math.ceil(dw/2))
             #------------------------------------------
-        if name_todo in ['install_tools', 'update_tools'] :
+        if name_todo in ['install_tools', 'update_tools', 'make_images'] :
             msg = f"{Prompts.start_space}You need to {name_todo.replace('_', ' the following ')}:{Prompts.start_space}"
         elif name_todo in ['make_images', 'missing_image_names']:
-            pass
+            return 
         else:
-            pass
+            return
         color = Prompts.Text.PURPLE
         left, right = get_margins(msg)
         line = (    f"{Prompts.Text.BOLD}{color}"+
@@ -436,7 +437,14 @@ class Prompts:
                             # Something weird in the description dictionary of the tool/check
                             pass
                     elif name_todo == 'make_images':
-                        Prompts.prompt_todo_item(f"")
+                        count = len(items_todo)
+                        for idx, image in enumerate(items_todo):
+                            docker_image_sub = TODO_GUIDE['missing_image_names'][idx].replace('dioptra/','')
+                            msg = image.replace('<image>', docker_image_sub)
+                            Prompts.prompt_todo_item(
+                            f"{prefix}{idx+1}.\t{msg.capitalize()}"
+                            )
+                        print('\n')
     # ---------------------------------------------------------------------------------------------
 # =================================================================================================
 
