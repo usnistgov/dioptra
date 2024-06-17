@@ -30,6 +30,7 @@ from ..lib import actions
 @pytest.fixture
 def app(dependency_modules: list[Any]) -> Flask:
     from dioptra.restapi import create_app
+
     injector = Injector(dependency_modules)
     app = create_app(env="test_v1", injector=injector)
 

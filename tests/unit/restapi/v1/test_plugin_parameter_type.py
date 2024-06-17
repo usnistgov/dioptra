@@ -56,10 +56,11 @@ def modify_plugin_parameter_type(
     json_payload = {"name": new_name}
 
     if new_structure is not None:
-        json_payload["structure"] = new_structure,
+        json_payload["structure"] = new_structure
 
     if new_description is not None:
-        json_payload["description"] = new_description,
+        json_payload["description"] = new_description
+    print("MODIFY", json_payload)
 
     return client.put(
         f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}",
@@ -360,6 +361,7 @@ def assert_plugin_parameter_type_content_matches_expectations(
         "name",
         "structure",
         "description",
+        "tags",
     }
     assert set(response.keys()) == expected_keys
 
@@ -646,19 +648,19 @@ def test_modify_plugin_parameter_type(
     updated_structure = {"key": "value"}
 
     # Modify an Existing Plugin Parameter Type
-    # assert_plugin_parameter_type_name_matches_expected_name(
-        # client, id=plugin_param_type1["id"], expected_name=start_name
-    # )
-    # modify_plugin_parameter_type(
-        # client,
-        # id=plugin_param_type1["id"],
-        # new_name=updated_name,
-        # new_structure=updated_structure,
-        # new_description=plugin_param_type1["description"],
-    # )
-    # assert_plugin_parameter_type_name_matches_expected_name(
-        # client, id=plugin_param_type1["id"], expected_name=updated_name
-    # )
+    assert_plugin_parameter_type_name_matches_expected_name(
+        client, id=plugin_param_type1["id"], expected_name=start_name
+    )
+    modify_plugin_parameter_type(
+        client,
+        id=plugin_param_type1["id"],
+        new_name=updated_name,
+        new_structure=updated_structure,
+        new_description=plugin_param_type1["description"],
+    )
+    assert_plugin_parameter_type_name_matches_expected_name(
+        client, id=plugin_param_type1["id"], expected_name=updated_name
+    )
 
     # Error case (missing parameter)
     assert_cannot_rename_invalid_plugin_parameter_type(

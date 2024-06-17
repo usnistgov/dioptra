@@ -19,6 +19,7 @@ from typing import Any, Callable, Final
 from urllib.parse import urlencode, urlunparse
 
 from dioptra.restapi.db import models
+from dioptra.restapi.routes import V1_ROOT
 
 USERS: Final[str] = "users"
 GROUPS: Final[str] = "groups"
@@ -41,7 +42,7 @@ def build_user_ref(user: models.User) -> dict[str, Any]:
     return {
         "id": user.user_id,
         "username": user.username,
-        "url": f"/{USERS}/{user.user_id}",
+        "url": build_url(f"{USERS}/{user.user_id}"),
     }
 
 
@@ -57,7 +58,7 @@ def build_group_ref(group: models.Group) -> dict[str, Any]:
     return {
         "id": group.group_id,
         "name": group.name,
-        "url": f"/{GROUPS}/{group.group_id}",
+        "url": build_url(f"{GROUPS}/{group.group_id}"),
     }
 
 
@@ -73,7 +74,7 @@ def build_tag_ref(tag: models.Tag) -> dict[str, Any]:
     return {
         "id": tag.tag_id,
         "name": tag.name,
-        "url": f"/{TAGS}/{tag.tag_id}",
+        "url": build_url(f"{TAGS}/{tag.tag_id}"),
     }
 
 
@@ -89,7 +90,7 @@ def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
     return {
         "id": queue.queue_id,
         "name": queue.name,
-        "url": f"/{QUEUES}/{queue.queue_id}",
+        "url": build_url(f"{QUEUES}/{queue.queue_id}"),
     }
 
 
@@ -108,8 +109,9 @@ def build_plugin_parameter_type_ref(
     return {
         "id": plugin_param_type.plugin_parameter_type_id,
         "name": plugin_param_type.name,
-        "url": f"/{PLUGIN_PARAMETER_TYPES}/"
-        f"{plugin_param_type.plugin_parameter_type_id}",
+        "url": build_url(
+            f"{PLUGIN_PARAMETER_TYPES}/{plugin_param_type.plugin_parameter_type_id}"
+        ),
     }
 
 
@@ -260,6 +262,52 @@ def build_plugin_parameter_type(
         "last_modified_on": plugin_parameter_type.resource.last_modified_on,
         "latest_snapshot": plugin_parameter_type.resource.latest_snapshot_id
         == plugin_parameter_type.resource_snapshot_id,
+        "tags": [build_tag_ref(tag) for tag in plugin_parameter_type.tags],
+    }
+
+
+def build_existing_resource_draft(
+    draft: models.DraftResource, num_other_drafts: int
+) -> dict[str, Any]:
+    """Build a Draft response dictionary for a modification of an existing resource.
+
+    Args:
+        queue: The Draft object to convert into a Draft response dictionary.
+
+    Returns:
+        The Draft response dictionary.
+    """
+    return {
+        "id": draft.draft_resource_id,
+        "resource_id": draft.payload["resource_id"],
+        "resource_snapshot_id": draft.payload["resource_snapshot_id"],
+        "payload": draft.payload["resource_data"],
+        "resource_type": draft.resource_type,
+        "user": build_user_ref(draft.creator),
+        "group": build_group_ref(draft.target_owner),
+        "created_on": draft.created_on,
+        "last_modified_on": draft.last_modified_on,
+        "num_other_drafts": num_other_drafts,
+    }
+
+
+def build_new_resource_draft(draft: models.DraftResource) -> dict[str, Any]:
+    """Build a Draft response dictionary for a new resource.
+
+    Args:
+        queue: The Draft object to convert into a Draft response dictionary.
+
+    Returns:
+        The Draft response dictionary.
+    """
+    return {
+        "id": draft.draft_resource_id,
+        "payload": draft.payload["resource_data"],
+        "resource_type": draft.resource_type,
+        "user": build_user_ref(draft.creator),
+        "group": build_group_ref(draft.target_owner),
+        "created_on": draft.created_on,
+        "last_modified_on": draft.last_modified_on,
     }
 
 
@@ -340,4 +388,12 @@ def build_paging_url(
     if search:
         query_params["search"] = search
 
-    return urlunparse(("", "", f"/{resource_type}/", "", urlencode(query_params), ""))
+    return build_url(resource_type, query_params)
+
+
+def build_url(resource_type: str, query_params: dict[str, str] | None = None) -> str:
+    query_params = query_params or {}
+
+    return urlunparse(
+        ("", "", f"/{V1_ROOT}/{resource_type}", "", urlencode(query_params), "")
+    )

@@ -19,7 +19,6 @@
 This module contains shared functionality used across test suites for each of the REST
 API endpoints.
 """
-
 import datetime
 
 
