@@ -63,9 +63,9 @@ class LoginResource(Resource):
             request_id=str(uuid.uuid4()), resource="auth/login", request_type="POST"
         )
         parsed_obj = request.parsed_obj  # type: ignore
-        username = str(parsed_obj["username"])
-        password = str(parsed_obj["password"])
-        return self._auth_service.login(username=username, password=password, log=log)
+        return self._auth_service.login(
+            username=parsed_obj["username"], password=parsed_obj["password"], log=log
+        )
 
 
 @api.route("/logout")
@@ -96,5 +96,6 @@ class LogoutResource(Resource):
             request_id=str(uuid.uuid4()), resource="auth/logout", request_type="POST"
         )
         parsed_query_params = request.parsed_query_params  # type: ignore
-        everywhere = bool(parsed_query_params["everywhere"])
-        return self._auth_service.logout(everywhere=everywhere, log=log)
+        return self._auth_service.logout(
+            everywhere=parsed_query_params["everywhere"], log=log
+        )

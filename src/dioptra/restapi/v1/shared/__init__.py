@@ -14,6 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from . import errors
+from .search_parser import construct_sql_query_filters, parse_search_text
 
-__all__ = ["errors"]
+__all__ = ["construct_sql_query_filters", "parse_search_text"]

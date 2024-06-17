@@ -42,11 +42,14 @@ class QueueMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Queue resource."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Queue resource.")
+        attribute="name",
+        metadata=dict(description="Name of the Queue resource."),
+        required=True,
     )
     description = fields.String(
         attribute="description",
         metadata=dict(description="Description of the Queue resource."),
+        load_default=None,
     )
 
 

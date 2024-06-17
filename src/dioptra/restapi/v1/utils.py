@@ -22,6 +22,7 @@ from dioptra.restapi.db import models
 
 USERS: Final[str] = "users"
 GROUPS: Final[str] = "groups"
+PLUGIN_PARAMETER_TYPES: Final[str] = "pluginParameterTypes"
 QUEUES: Final[str] = "queues"
 TAGS: Final[str] = "tags"
 
@@ -89,6 +90,26 @@ def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
         "id": queue.queue_id,
         "name": queue.name,
         "url": f"/{QUEUES}/{queue.queue_id}",
+    }
+
+
+def build_plugin_parameter_type_ref(
+    plugin_param_type: models.PluginTaskParameterType,
+) -> dict[str, Any]:
+    """Build a PluginParameterTypeRef dictionary.
+
+    Args:
+        plugin_param_type: The Plugin Parameter Type object to convert into a
+            PluginParameterTypeRef dictionary.
+
+    Returns:
+        The PluginParameterTypeRef dictionary.
+    """
+    return {
+        "id": plugin_param_type.plugin_parameter_type_id,
+        "name": plugin_param_type.name,
+        "url": f"/{PLUGIN_PARAMETER_TYPES}/"
+        f"{plugin_param_type.plugin_parameter_type_id}",
     }
 
 
@@ -215,6 +236,33 @@ def build_plugin(plugin: models.Plugin) -> dict[str, Any]:
     }
 
 
+def build_plugin_parameter_type(
+    plugin_parameter_type: models.PluginTaskParameterType,
+) -> dict[str, Any]:
+    """Build a Plugin Parameter Type response dictionary.
+
+    Args:
+        plugin_parameter_type: The Plugin Parameter Type object to convert
+            into a Plugin Parameter Type response dictionary.
+
+    Returns:
+        The Plugin Parameter Type response dictionary.
+    """
+    return {
+        "id": plugin_parameter_type.resource_id,
+        "snapshot_id": plugin_parameter_type.resource_snapshot_id,
+        "name": plugin_parameter_type.name,
+        "structure": plugin_parameter_type.structure,
+        "description": plugin_parameter_type.description,
+        "user": build_user_ref(plugin_parameter_type.creator),
+        "group": build_group_ref(plugin_parameter_type.resource.owner),
+        "created_on": plugin_parameter_type.created_on,
+        "last_modified_on": plugin_parameter_type.resource.last_modified_on,
+        "latest_snapshot": plugin_parameter_type.resource.latest_snapshot_id
+        == plugin_parameter_type.resource_snapshot_id,
+    }
+
+
 # -- Paging --------------------------------------------------------------------
 
 
@@ -290,6 +338,6 @@ def build_paging_url(
     query_params: dict[str, Any] = {"index": index, "pageLength": length}
 
     if search:
-        query_params["query"] = search
+        query_params["search"] = search
 
     return urlunparse(("", "", f"/{resource_type}/", "", urlencode(query_params), ""))

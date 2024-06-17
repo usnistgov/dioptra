@@ -43,7 +43,7 @@ def registered_users(client: FlaskClient, db: SQLAlchemy) -> dict[str, Any]:
         client, "user1", "user1@example.org", password
     ).get_json()
     user2_response = actions.register_user(
-        client, "user2", "user2@example.org", password
+        client, "user2", "user2@example.net", password
     ).get_json()
     user3_response = actions.register_user(
         client, "name", "user3@example.org", password
@@ -156,4 +156,37 @@ def registered_groups(
         # "group1": group1_response,
         # "group2": group2_response,
         # "group3": group3_response,
+    }
+
+
+@pytest.fixture
+def registered_plugin_parameter_types(
+    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+) -> dict[str, Any]:
+    plugin_param_type1_response = actions.register_plugin_parameter_type(
+        client,
+        name="int",
+        group_id=auth_account["groups"][0]["id"],
+        structure=dict(),
+        description="The first parameter type.",
+    ).get_json()
+    plugin_param_type2_response = actions.register_plugin_parameter_type(
+        client,
+        name="integer",
+        group_id=auth_account["groups"][0]["id"],
+        structure=dict(),
+        description="The second parameter type.",
+    ).get_json()
+    # This is intentionally named using a different pattern for search query testing
+    plugin_param_type3_response = actions.register_plugin_parameter_type(
+        client,
+        name="string",
+        group_id=auth_account["groups"][0]["id"],
+        structure=dict(),
+        description="Not retrieved.",
+    ).get_json()
+    return {
+        "plugin_param_type1": plugin_param_type1_response,
+        "plugin_param_type2": plugin_param_type2_response,
+        "plugin_param_type3": plugin_param_type3_response,
     }

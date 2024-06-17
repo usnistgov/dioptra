@@ -125,6 +125,7 @@ class GroupMemberBaseSchema(Schema):
             description="Unique identifier for the User that is a member of the Group."
         ),
         load_only=True,
+        required=True,
     )
     user = fields.Nested(
         UserRefSchema,
@@ -154,7 +155,7 @@ class GroupMutableFieldsSchema(Schema):
     """The schema for the mutable data by GroupMembers in a Group."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Group.")
+        attribute="name", metadata=dict(description="Name of the Group."), required=True
     )
 
 

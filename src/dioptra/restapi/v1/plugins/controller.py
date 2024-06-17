@@ -109,9 +109,9 @@ class PluginEndpoint(Resource):
         parsed_obj = request.parsed_obj  # noqa: F841
 
         plugin = self._plugin_service.create(
-            name=str(parsed_obj["name"]),
-            description=str(parsed_obj["description"]),
-            group_id=int(parsed_obj["group_id"]),
+            name=parsed_obj["name"],
+            description=parsed_obj["description"],
+            group_id=parsed_obj["group_id"],
             log=log,
         )
         return utils.build_plugin(plugin)
@@ -172,8 +172,8 @@ class PluginIdEndpoint(Resource):
             models.Plugin,
             self._plugin_id_service.modify(
                 id,
-                name=str(parsed_obj["name"]),
-                description=str(parsed_obj["description"]),
+                name=parsed_obj["name"],
+                description=parsed_obj["description"],
                 error_if_not_found=True,
                 log=log,
             ),
