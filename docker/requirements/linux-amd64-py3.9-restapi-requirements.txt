@@ -220,7 +220,7 @@ typing-extensions==4.9.0
     # via
     #   alembic
     #   dioptra (pyproject.toml)
-urllib3==1.26.18
+urllib3==1.26.19
     # via
     #   botocore
     #   databricks-cli
