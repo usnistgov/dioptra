@@ -100,6 +100,7 @@ def generate_resource_drafts_endpoint(
                 f"{route_prefix}/drafts",
                 build_fn=utils.build_new_resource_draft,
                 data=drafts,
+                group_id=group_id,
                 query=None,
                 index=page_index,
                 length=page_length,

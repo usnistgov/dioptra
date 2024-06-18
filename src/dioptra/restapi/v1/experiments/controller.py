@@ -86,6 +86,7 @@ class ExperimentEndpoint(Resource):
             "experiments",
             build_fn=utils.build_experiment,
             data=experiments,
+            group_id=group_id,
             query=search_string,
             index=page_index,
             length=page_length,

@@ -91,10 +91,11 @@ class PluginEndpoint(Resource):
             "plugins",
             utils.build_plugin,
             plugins,
-            search_string,
-            page_index,
-            page_length,
-            total_num_plugins,
+            group_id=group_id,
+            query=search_string,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_plugins,
         )
 
     @login_required

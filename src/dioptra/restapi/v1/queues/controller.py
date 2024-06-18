@@ -36,6 +36,10 @@ from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_id_endpoint,
     generate_resource_id_draft_endpoint,
 )
+from dioptra.restapi.v1.shared.snapshots.controller import (
+    generate_resource_snapshots_endpoint,
+    generate_resource_snapshots_id_endpoint,
+)
 
 from .schema import (
     QueueGetQueryParameters,
@@ -43,7 +47,7 @@ from .schema import (
     QueuePageSchema,
     QueueSchema,
 )
-from .service import RESOURCE_TYPE, QueueIdService, QueueService
+from .service import RESOURCE_TYPE, SEARCHABLE_FIELDS, QueueIdService, QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -90,6 +94,7 @@ class QueueEndpoint(Resource):
             V1_QUEUES_ROUTE,
             build_fn=utils.build_queue,
             data=queues,
+            group_id=group_id,
             query=search_string,
             index=page_index,
             length=page_length,
@@ -189,4 +194,21 @@ QueueIdDraftResource = generate_resource_id_draft_endpoint(
     api,
     resource_name=RESOURCE_TYPE,
     request_schema=QueueMutableFieldsSchema,
+)
+
+QueueSnapshotsResource = generate_resource_snapshots_endpoint(
+    api=api,
+    resource_model=models.Queue,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_QUEUES_ROUTE,
+    searchable_fields=SEARCHABLE_FIELDS,
+    page_schema=QueuePageSchema,
+    build_fn=utils.build_queue,
+)
+QueueSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
+    api=api,
+    resource_model=models.Queue,
+    resource_name=RESOURCE_TYPE,
+    response_schema=QueueSchema,
+    build_fn=utils.build_queue,
 )

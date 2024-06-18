@@ -161,7 +161,7 @@ class QueueService(object):
         if total_num_queues is None:
             log.error(
                 "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
+                "queues when it should return a number.",
                 sql=str(stmt),
             )
             raise BackendDatabaseError

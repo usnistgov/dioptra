@@ -84,6 +84,7 @@ class GroupEndpoint(Resource):
             "groups",
             build_fn=utils.build_group,
             data=groups,
+            group_id=None,
             query=search_string,
             index=page_index,
             length=page_length,
