@@ -23,14 +23,13 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 
 from typing import Any
 
-import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import V1_QUEUES_ROUTE, V1_ROOT
 
-from ..lib import actions, helpers
+from ..lib import actions, asserts, helpers
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -499,3 +498,176 @@ def test_delete_queue_by_id(
 
     delete_queue_with_id(client, queue_id=queue_to_delete["id"])
     assert_queue_is_not_found(client, queue_id=queue_to_delete["id"])
+
+
+def test_manage_existing_queue_draft(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    """Test that a draft of an existing queue can be created and managed by the user
+
+    Given an authenticated user and registered queues, this test validates the following
+    sequence of actions:
+
+    - The user creates a draft of an existing queue
+    - The user retrieves information about the draft and gets the expected response
+    - The user attempts to create another draft of the same existing queue
+    - The request fails with an appropriate error message and response code.
+    - The user modifies the name of the queue in the draft
+    - The user retrieves information about the draft and gets the expected response
+    - The user deletes the draft
+    - The user attempts to retrieve information about the deleted draft.
+    - The request fails with an appropriate error message and response code.
+    """
+    queue = registered_queues["queue1"]
+    name = "draft"
+    new_name = "draft2"
+    description = "description"
+
+    # test creation
+    payload = {"name": name, "description": description}
+    expected = {
+        "user_id": auth_account["id"],
+        "group_id": queue["group"]["id"],
+        "resource_id": queue["id"],
+        "resource_snapshot_id": queue["snapshot"],
+        "num_other_drafts": 0,
+        "payload": payload,
+    }
+    response = actions.create_existing_resource_draft(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"], payload=payload
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+    asserts.assert_retrieving_draft_by_resource_id_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue["id"],
+        expected=response,
+    )
+    asserts.assert_creating_another_existing_draft_fails(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+
+    # test modification
+    payload = {"name": new_name, "description": description}
+    expected = {
+        "user_id": auth_account["id"],
+        "group_id": queue["group"]["id"],
+        "resource_id": queue["id"],
+        "resource_snapshot_id": queue["snapshot"],
+        "num_other_drafts": 0,
+        "payload": payload,
+    }
+    response = actions.modify_existing_resource_draft(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue["id"],
+        payload=payload,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+
+    # test deletion
+    actions.delete_existing_resource_draft(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+    asserts.assert_existing_draft_is_not_found(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+
+
+def test_manage_new_queue_drafts(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    """Test that drafts of queue can be created and managed by the user
+
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - The user creates two queue drafts
+    - The user retrieves information about the drafts and gets the expected response
+    - The user modifies the description of the queue in the first draft
+    - The user retrieves information about the draft and gets the expected response
+    - The user deletes the first draft
+    - The user attempts to retrieve information about the deleted draft.
+    - The request fails with an appropriate error message and response code.
+    """
+    group_id = auth_account["groups"][0]["id"]
+    drafts = {
+        "draft1": {"name": "queue1", "description": "new queue"},
+        "draft2": {"name": "queue2", "description": None},
+    }
+
+    # test creation
+    draft1_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": drafts["draft1"],
+    }
+    draft1_response = actions.create_new_resource_draft(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        group_id=group_id,
+        payload=drafts["draft1"],
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        draft1_response, draft1_expected, existing_draft=False
+    )
+    asserts.assert_retrieving_draft_by_id_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        draft_id=draft1_response["id"],
+        expected=draft1_response,
+    )
+    draft2_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": drafts["draft2"],
+    }
+    draft2_response = actions.create_new_resource_draft(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        group_id=group_id,
+        payload=drafts["draft2"],
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        draft2_response, draft2_expected, existing_draft=False
+    )
+    asserts.assert_retrieving_draft_by_id_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        draft_id=draft2_response["id"],
+        expected=draft2_response,
+    )
+    asserts.assert_retrieving_drafts_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        expected=[draft1_response, draft2_response],
+    )
+
+    # test modification
+    draft1_mod = {"name": "draft1", "description": "new description"}
+    draft1_mod_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": draft1_mod,
+    }
+    response = actions.modify_new_resource_draft(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        draft_id=draft1_response["id"],
+        payload=draft1_mod,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        response, draft1_mod_expected, existing_draft=False
+    )
+
+    # test deletion
+    actions.delete_new_resource_draft(
+        client, resource_route=V1_QUEUES_ROUTE, draft_id=draft1_response["id"]
+    )
+    asserts.assert_new_draft_is_not_found(
+        client, resource_route=V1_QUEUES_ROUTE, draft_id=draft1_response["id"]
+    )

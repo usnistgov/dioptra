@@ -593,12 +593,8 @@ def test_user_search_query(
     assert_retrieving_users_works(
         client, expected=user_expected_list, search="username:user?,email:user*"
     )
-    assert_retrieving_users_works(
-        client, expected=[], search=r"username:\*user*"
-    )
-    assert_retrieving_users_works(
-        client, expected=[], search="email:user?"
-    )
+    assert_retrieving_users_works(client, expected=[], search=r"username:\*user*")
+    assert_retrieving_users_works(client, expected=[], search="email:user?")
 
 
 def test_cannot_register_existing_username(

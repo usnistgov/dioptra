@@ -196,3 +196,176 @@ def get_public_group(client: FlaskClient) -> TestResponse:
         The response from the API.
     """
     return client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True)
+
+
+def get_draft(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+) -> TestResponse:
+    """Get the draft of the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+        resource_id: The id of the queue to rename.
+
+    Returns:
+        The response from the API.
+    """
+
+    return client.get(f"/{V1_ROOT}/{resource_route}/{resource_id}/draft")
+
+
+def create_existing_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+    payload: dict[str, Any],
+) -> TestResponse:
+    """Create a draft of the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+        resource_id: The id of the resource to create draft of.
+        payload: The contents of the draft resource.
+
+    Returns:
+        The response from the API.
+    """
+    return client.post(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/draft",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def modify_existing_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+    payload: dict[str, Any],
+) -> TestResponse:
+    """Modify the draft of the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+        resource_id: The id of the resource to modify.
+        payload: The new contents of the draft resource.
+
+    Returns:
+        The response from the API.
+    """
+    return client.put(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/draft",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def delete_existing_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+) -> TestResponse:
+    """Delete the draft of the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+        resource_id: The id of the resource draft to delete.
+
+    Returns:
+        The response from the API.
+    """
+
+    return client.delete(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/draft",
+        follow_redirects=True,
+    )
+
+
+def get_drafts(
+    client: FlaskClient,
+    resource_route: str,
+) -> TestResponse:
+    """Get a list of drafts for the resource type
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+
+    Returns:
+        The response from the API.
+    """
+
+    return client.get(f"/{V1_ROOT}/{resource_route}/drafts")
+
+
+def create_new_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    group_id: int,
+    payload: dict[str, Any],
+) -> TestResponse:
+    """Create a draft resource using the API.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+        payload: The contents of the draft resource.
+
+    Returns:
+        The response from the API.
+    """
+    return client.post(
+        f"/{V1_ROOT}/{resource_route}/drafts",
+        json={**payload, "group": group_id},
+        follow_redirects=True,
+    )
+
+
+def modify_new_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    draft_id: int,
+    payload: dict[str, Any],
+) -> TestResponse:
+    """Modify a draft resource using the API.
+
+    Args:
+        client: The Flask test client.
+        draft_id: The id of the draft to modify.
+        payload: The new contents of the draft resource.
+
+    Returns:
+        The response from the API.
+    """
+    return client.put(
+        f"/{V1_ROOT}/{resource_route}/drafts/{draft_id}",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def delete_new_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    draft_id: int,
+) -> TestResponse:
+    """Delete a draft resource using the API.
+
+    Args:
+        client: The Flask test client.
+        resource_id: The id of the resource to modify.
+        draft_id: The id of the draft to modify.
+
+    Returns:
+        The response from the API.
+    """
+    return client.delete(
+        f"/{V1_ROOT}/{resource_route}/drafts/{draft_id}",
+        follow_redirects=True,
+    )

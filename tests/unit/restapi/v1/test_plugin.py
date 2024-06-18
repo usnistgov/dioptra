@@ -191,7 +191,7 @@ def assert_plugin_file_response_contents_matches_expectations(
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
-    
+
     assert response["filename"] == expected_contents["filename"]
     assert response["description"] == expected_contents["description"]
     assert response["contents"] == expected_contents["contents"]
@@ -228,7 +228,7 @@ def assert_plugin_file_response_contents_matches_expectations(
             assert isinstance(param["plugin_param_type"]["group"]["id"], int)
             assert isinstance(param["plugin_param_type"]["group"]["name"], str)
             assert isinstance(param["plugin_param_type"]["group"]["url"], str)
-    
+
 
 def assert_retrieving_plugin_by_id_works(
     client: FlaskClient,
@@ -328,7 +328,9 @@ def assert_registering_existing_plugin_name_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = actions.register_plugin(client, name=name, description="", group_id=group_id)
+    response = actions.register_plugin(
+        client, name=name, description="", group_id=group_id
+    )
     assert response.status_code == 400
 
 
@@ -421,12 +423,12 @@ def test_create_plugin(
     plugin_response = actions.register_plugin(
         client, name=name, description=description, group_id=group_id
     )
-    plugin_expected = plugin_response.get_json()    
+    plugin_expected = plugin_response.get_json()
     assert_plugin_response_contents_matches_expectations(
         response=plugin_expected,
         expected_contents={
             "name": name,
-            "description": description, 
+            "description": description,
             "user_id": user_id,
             "group_id": group_id,
         },
@@ -565,7 +567,7 @@ def test_rename_plugin(
         client,
         plugin_id=plugin_to_rename["id"],
         new_name=updated_plugin_name,
-        new_description=plugin_to_rename["description"]
+        new_description=plugin_to_rename["description"],
     ).get_json()
     assert_plugin_name_matches_expected_name(
         client, plugin_id=plugin_to_rename["id"], expected_name=updated_plugin_name
