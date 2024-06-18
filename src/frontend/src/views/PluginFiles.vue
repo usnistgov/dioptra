@@ -49,8 +49,8 @@
   getFiles()
   async function getFiles() {
     try {
-      const res = await api.getFiles(route.params.id)
-      files.value = res.data
+      const res = await api.getItem('plugins', route.params.id)
+      files.value = res.data.files
     } catch(err) {
       notify.error(err.response.data.message)
     } 

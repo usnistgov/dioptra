@@ -58,7 +58,7 @@
     <template #top-right v-if="!hideButtons">
       <q-btn color="secondary" icon="edit" label="Edit" class="q-mr-lg" @click="$emit('edit')"  :disabled="!selected.length" />
       <q-btn color="negative" icon="sym_o_delete" label="Delete" class="q-mr-lg"  @click="$emit('delete')" :disabled="!selected.length" />
-      <q-input v-model="filter" dense placeholder="Search" outlined>
+      <q-input v-model="filter" debounce="300" dense placeholder="Search" outlined>
           <template #append>
             <q-icon name="search" />
           </template>

@@ -82,12 +82,26 @@
   const showDeleteDialog = ref(false)
 
   const plugins = ref([])
+  const pluginParameterTypes = ref([])
 
   async function getPlugins(pagination) {
     try {
       const res = await api.getData('plugins', pagination)
       plugins.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
+      getPluginParameterTypes(pagination)
+    } catch(err) {
+      console.log('err = ', err)
+      notify.error(err.response.data.message)
+    } 
+  }
+
+  async function getPluginParameterTypes(pagination) {
+    try {
+      const res = await api.getData('pluginParameterTypes', pagination)
+      pluginParameterTypes.value = res.data.data
+      console.log('pluginParameterTypes = ', pluginParameterTypes.value)
+      // tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
