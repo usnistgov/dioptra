@@ -35,6 +35,18 @@ class SearchParseError(Exception):
     """The search query could not be parsed."""
 
 
+class ResourceDoesNotExistError(Exception):
+    """The resource does not exist."""
+
+
+class DraftDoesNotExistError(Exception):
+    """The requested draft does not exist."""
+
+
+class DraftAlreadyExistsError(Exception):
+    """The draft already exists."""
+
+
 def register_base_v1_error_handlers(api: Api) -> None:
     @api.errorhandler(BackendDatabaseError)
     def handle_backend_database_error(error):
@@ -54,6 +66,21 @@ def register_base_v1_error_handlers(api: Api) -> None:
             "query": error.args[0],
             "reason": error.args[1],
         }, 422
+
+    @api.errorhandler(ResourceDoesNotExistError)
+    def handle_resource_does_not_exist(error):
+        return {"message": "Not Found - The requested resource does not exist"}, 404
+
+    @api.errorhandler(DraftDoesNotExistError)
+    def handle_draft_does_not_exist(error):
+        return {"message": "Not Found - The requested draft does not exist"}, 404
+
+    @api.errorhandler(DraftAlreadyExistsError)
+    def handle_draft_already_exists(error):
+        return (
+            {"message": "Bad Request - The draft for this resource already exists."},
+            400,
+        )
 
 
 def register_error_handlers(api: Api, restapi_version: str) -> None:
@@ -103,6 +130,7 @@ def register_v1_error_handlers(api: Api) -> None:
     from dioptra.restapi import v1
 
     register_base_v1_error_handlers(api)
+    v1.experiments.errors.register_error_handlers(api)
     v1.groups.errors.register_error_handlers(api)
     v1.plugins.errors.register_error_handlers(api)
     v1.plugin_parameter_types.errors.register_error_handlers(api)

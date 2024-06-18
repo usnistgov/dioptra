@@ -27,6 +27,7 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
+    V1_EXPERIMENTS_ROUTE,
     V1_GROUPS_ROUTE,
     V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     V1_PLUGINS_ROUTE,
@@ -50,6 +51,44 @@ def login(client: FlaskClient, username: str, password: str) -> TestResponse:
     return client.post(
         f"/{V1_ROOT}/{V1_AUTH_ROUTE}/login",
         json={"username": username, "password": password},
+    )
+
+
+def register_experiment(
+    client: FlaskClient,
+    name: str,
+    group_id: int,
+    entrypoint_ids: list[int] | None = None,
+    description: str | None = None,
+) -> TestResponse:
+    """Register an experiment using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name to assign to the new experiment.
+        group_id: The group to create the new experiment in.
+        entrypoints: The entrypoint IDs for the new experiment.
+        description: The description of the new experiment.
+
+    Returns:
+        The response from the API.
+    """
+
+    payload = {"name": name, "group": group_id}
+
+    if description is not None:
+        payload["description"] = description
+    else:
+        payload["description"] = ""
+    # if entrypoint_ids is not None:
+    #     payload["entrypoint_ids"] = entrypoint_ids
+    # else:
+    #     payload["entrypoint_ids"] = list()
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/",
+        json=payload,
+        follow_redirects=True,
     )
 
 
@@ -196,3 +235,176 @@ def get_public_group(client: FlaskClient) -> TestResponse:
         The response from the API.
     """
     return client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True)
+
+
+def get_draft(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+) -> TestResponse:
+    """Get the draft of the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+        resource_id: The id of the queue to rename.
+
+    Returns:
+        The response from the API.
+    """
+
+    return client.get(f"/{V1_ROOT}/{resource_route}/{resource_id}/draft")
+
+
+def create_existing_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+    payload: dict[str, Any],
+) -> TestResponse:
+    """Create a draft of the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+        resource_id: The id of the resource to create draft of.
+        payload: The contents of the draft resource.
+
+    Returns:
+        The response from the API.
+    """
+    return client.post(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/draft",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def modify_existing_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+    payload: dict[str, Any],
+) -> TestResponse:
+    """Modify the draft of the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+        resource_id: The id of the resource to modify.
+        payload: The new contents of the draft resource.
+
+    Returns:
+        The response from the API.
+    """
+    return client.put(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/draft",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def delete_existing_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+) -> TestResponse:
+    """Delete the draft of the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+        resource_id: The id of the resource draft to delete.
+
+    Returns:
+        The response from the API.
+    """
+
+    return client.delete(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/draft",
+        follow_redirects=True,
+    )
+
+
+def get_drafts(
+    client: FlaskClient,
+    resource_route: str,
+) -> TestResponse:
+    """Get a list of drafts for the resource type
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+
+    Returns:
+        The response from the API.
+    """
+
+    return client.get(f"/{V1_ROOT}/{resource_route}/drafts")
+
+
+def create_new_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    group_id: int,
+    payload: dict[str, Any],
+) -> TestResponse:
+    """Create a draft resource using the API.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type for the draft.
+        payload: The contents of the draft resource.
+
+    Returns:
+        The response from the API.
+    """
+    return client.post(
+        f"/{V1_ROOT}/{resource_route}/drafts",
+        json={**payload, "group": group_id},
+        follow_redirects=True,
+    )
+
+
+def modify_new_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    draft_id: int,
+    payload: dict[str, Any],
+) -> TestResponse:
+    """Modify a draft resource using the API.
+
+    Args:
+        client: The Flask test client.
+        draft_id: The id of the draft to modify.
+        payload: The new contents of the draft resource.
+
+    Returns:
+        The response from the API.
+    """
+    return client.put(
+        f"/{V1_ROOT}/{resource_route}/drafts/{draft_id}",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def delete_new_resource_draft(
+    client: FlaskClient,
+    resource_route: str,
+    draft_id: int,
+) -> TestResponse:
+    """Delete a draft resource using the API.
+
+    Args:
+        client: The Flask test client.
+        resource_id: The id of the resource to modify.
+        draft_id: The id of the draft to modify.
+
+    Returns:
+        The response from the API.
+    """
+    return client.delete(
+        f"/{V1_ROOT}/{resource_route}/drafts/{draft_id}",
+        follow_redirects=True,
+    )

@@ -15,8 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Queue resources."""
-from __future__ import annotations
-
 import uuid
 from typing import cast
 from urllib.parse import unquote
@@ -30,8 +28,14 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.routes import V1_QUEUES_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.shared.drafts.controller import (
+    generate_resource_drafts_endpoint,
+    generate_resource_drafts_id_endpoint,
+    generate_resource_id_draft_endpoint,
+)
 
 from .schema import (
     QueueGetQueryParameters,
@@ -39,7 +43,7 @@ from .schema import (
     QueuePageSchema,
     QueueSchema,
 )
-from .service import QueueIdService, QueueService
+from .service import RESOURCE_TYPE, QueueIdService, QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -83,7 +87,7 @@ class QueueEndpoint(Resource):
             log=log,
         )
         return utils.build_paging_envelope(
-            "queues",
+            V1_QUEUES_ROUTE,
             build_fn=utils.build_queue,
             data=queues,
             query=search_string,
@@ -156,7 +160,7 @@ class QueueIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Queue", request_type="PUT", id=id
         )
-        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        parsed_obj = request.parsed_obj  # type: ignore
         queue = cast(
             models.Queue,
             self._queue_id_service.modify(
@@ -168,3 +172,21 @@ class QueueIdEndpoint(Resource):
             ),
         )
         return utils.build_queue(queue)
+
+
+QueueDraftResource = generate_resource_drafts_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_QUEUES_ROUTE,
+    request_schema=QueueSchema,
+)
+QueueDraftIdResource = generate_resource_drafts_id_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=QueueMutableFieldsSchema,
+)
+QueueIdDraftResource = generate_resource_id_draft_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=QueueMutableFieldsSchema,
+)

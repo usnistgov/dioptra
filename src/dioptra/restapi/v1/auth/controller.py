@@ -33,10 +33,7 @@ from .service import AuthService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-api: Namespace = Namespace(
-    "Authentication",
-    description="Authentication endpoint",
-)
+api: Namespace = Namespace("Authentication", description="Authentication endpoint")
 
 
 @api.route("/login")

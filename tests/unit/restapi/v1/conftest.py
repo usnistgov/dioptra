@@ -30,6 +30,7 @@ from ..lib import actions
 @pytest.fixture
 def app(dependency_modules: list[Any]) -> Flask:
     from dioptra.restapi import create_app
+
     injector = Injector(dependency_modules)
     app = create_app(env="test_v1", injector=injector)
 
@@ -189,4 +190,36 @@ def registered_plugin_parameter_types(
         "plugin_param_type1": plugin_param_type1_response,
         "plugin_param_type2": plugin_param_type2_response,
         "plugin_param_type3": plugin_param_type3_response,
+    }
+
+
+@pytest.fixture
+def registered_experiments(
+    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+) -> dict[str, Any]:
+    experiment1_response = actions.register_experiment(
+        client,
+        name="experiment1",
+        group_id=auth_account["default_group_id"],
+        description="test description",
+        entrypoint_ids=list(),
+    ).get_json()
+    experiment2_response = actions.register_experiment(
+        client,
+        name="experiment2",
+        group_id=auth_account["default_group_id"],
+        description="test description",
+        entrypoint_ids=list(),
+    ).get_json()
+    experiment3_response = actions.register_experiment(
+        client,
+        name="experiment3",
+        group_id=auth_account["default_group_id"],
+        description="test description",
+        entrypoint_ids=list(),
+    ).get_json()
+    return {
+        "experiment1": experiment1_response,
+        "experiment2": experiment2_response,
+        "experiment3": experiment3_response,
     }

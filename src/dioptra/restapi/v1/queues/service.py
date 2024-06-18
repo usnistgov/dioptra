@@ -83,6 +83,7 @@ class QueueService(object):
 
         Raises:
             QueueAlreadyExistsError: If a queue with the given name already exists.
+            GroupDoesNotExistError: If the group with the provided ID does not exist.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -188,10 +189,7 @@ class QueueIdService(object):
     """The service methods for registering and managing queues by their unique id."""
 
     @inject
-    def __init__(
-        self,
-        queue_name_service: QueueNameService,
-    ) -> None:
+    def __init__(self, queue_name_service: QueueNameService) -> None:
         """Initialize the queue service.
 
         All arguments are provided via dependency injection.
@@ -253,7 +251,7 @@ class QueueIdService(object):
         commit: bool = True,
         **kwargs,
     ) -> models.Queue | None:
-        """Rename a queue.
+        """Modify a queue.
 
         Args:
             queue_id: The unique id of the queue.
