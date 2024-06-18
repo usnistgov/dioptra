@@ -34,9 +34,15 @@ from dioptra import pyplugs
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
+@pyplugs.register
+def get_dataset_in_maite_format(local: bool = False, dataset_kwargs: Dict[str, Any] = {}):
+    if (not local):
+      return get_dataset_from_maite(**dataset_kwargs)
+    else:
+      return get_dataset_from_local(**dataset_kwargs)
 
 @pyplugs.register
-def get_dataset(provider_name: str, dataset_name: str, task: str, split: str) -> Any:
+def get_dataset_from_maite(provider_name: str, dataset_name: str, task: str, split: str) -> Any:
     dataset = load_dataset(
         provider=provider_name, dataset_name=dataset_name, task=task, split=split
     )
@@ -45,7 +51,7 @@ def get_dataset(provider_name: str, dataset_name: str, task: str, split: str) ->
 
 @pyplugs.register
 def transform_tensor(
-    dataset: Any, shape: Tuple[int, int], totensor=False, subset: int = 0
+    dataset: Any, shape: Tuple[int, int], totensor: bool = False, subset: int = 0
 ) -> Any:
     dataset.set_transform(
         lambda x: {
@@ -61,9 +67,15 @@ def transform_tensor(
         dataset = [dataset[i] for i in random.sample(range(0, len(dataset)), subset)]
     return dataset
 
+@pyplugs.register
+def get_model(local: bool = False, model_kwargs: Dict[str, Any] = {}) -> Any:
+    if not local:
+        return get_model_from_maite(**model_kwargs)
+    else:
+        return get_model_from_registry(**model_kwargs)
 
 @pyplugs.register
-def get_model(
+def get_model_from_maite(
     provider_name: str,
     model_name: str,
     task: str,
@@ -73,6 +85,12 @@ def get_model(
     _register_init_model(register_model_name, "model", model)
     return model
 
+
+@pyplugs.register
+def get_model_from_registry(name: str, version: int) -> Sequential:
+    uri: str = f"models:/{name}/{version}"
+    LOGGER.info("Load Pytorch classifier from model registry", uri=uri)
+    return load_pytorch_model(model_uri=uri)
 
 @pyplugs.register
 def get_metric(provider_name: str, metric_name: str, task: str, classes: int) -> Any:
@@ -106,7 +124,7 @@ def _register_init_model(name, model_dir, model) -> Any:
 
 @pyplugs.register
 @pyplugs.task_nout(3)
-def create_image_dataset(
+def get_dataset_from_local(
     data_dir: str,
     image_size,
     new_size: int = 0,

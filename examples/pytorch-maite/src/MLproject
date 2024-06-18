@@ -17,40 +17,7 @@
 name: pytorch-maite
 
 entry_points:
-  full_workflow:
-    parameters:
-      dataset_provider_name: { type: string, default: "huggingface" }
-      dataset_name: { type: string, default: "cifar10" }
-      dataset_task: { type: string, default: "image-classification" }
-      split: { type: string, default: "test" }
-      model_provider_name: { type: string, default: "huggingface" }
-      model_name: { type: string, default: "aaraki/vit-base-patch16-224-in21k-finetuned-cifar10" }
-      model_task: { type: string, default: "image-classification" }
-      metric_provider_name: { type: string, default: "torchmetrics" }
-      metric_name: { type: string, default: "Accuracy" }
-      metric_task: { type: string, default: "multiclass" }
-      classes: { type: int, default: 10 }
-      batch_size: { type: int, default: 32 }
-      shape: { type: string, default: "[224,224]" }
-      subset: { type: int, default: 0 }
-    command: >
-      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment full_workflow.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment full_workflow.yml
-      -P dataset_provider_name={dataset_provider_name}
-      -P dataset_name={dataset_name}
-      -P dataset_task={dataset_task}
-      -P split={split}
-      -P model_provider_name={model_provider_name}
-      -P model_name={model_name}
-      -P model_task={model_task}
-      -P metric_provider_name={metric_provider_name}
-      -P metric_name={metric_name}
-      -P metric_task={metric_task}
-      -P classes={classes}
-      -P batch_size={batch_size}
-      -P shape={shape}
-      -P subset={subset}
-
-  save_model:
+  register_model:
     parameters:
       model_provider_name: { type: string, default: "huggingface" }
       model_name: { type: string, default: "aaraki/vit-base-patch16-224-in21k-finetuned-cifar10" }
@@ -63,15 +30,12 @@ entry_points:
       -P model_task={model_task}
       -P register_model={register_model}
 
-  test_model:
+  infer_from_dataset:    
     parameters:
-      dataset_provider_name: { type: string, default: "huggingface" }
-      dataset_name: { type: string, default: "cifar10" }
-      dataset_task: { type: string, default: "image-classification" }
-      split: { type: string, default: "test" }
-      model_name: { type: string, default: "loaded_model" }
-      model_version: { type: int, default: 1 }
-      model_task: { type: string, default: "image-classification" }
+      local_dataset: { type: bool, default: false }
+      dataset_kwargs: { type: str, default: "{'dataset_provider_name':'huggingface','dataset_name':'cifar10','dataset_task':'image-classification','split':'test'}"}
+      local_model: { type: bool, default: false }
+      model_kwargs: { type: str, default: "{'provider_name':'huggingface','model_name':'aaraki/vit-base-patch16-224-in21k-finetuned-cifar10','task':'image-classification'}"}
       metric_provider_name: { type: string, default: "torchmetrics" }
       metric_name: { type: string, default: "Accuracy" }
       metric_task: { type: string, default: "multiclass" }
@@ -80,14 +44,11 @@ entry_points:
       shape: { type: string, default: "[224,224]" }
       subset: { type: int, default: 0 }
     command: >
-      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment test_model.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment test_model.yml
-      -P dataset_provider_name={dataset_provider_name}
-      -P dataset_name={dataset_name}
-      -P dataset_task={dataset_task}
-      -P split={split}
-      -P model_name={model_name}
-      -P model_version={model_version}
-      -P model_task={model_task}
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment infer_from_dataset.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment infer_from_dataset.yml
+      -P local_dataset={local_dataset}
+      -P dataset_kwargs={dataset_kwargs}
+      -P local_model={local_model}
+      -P model_kwargs={model_kwargs}
       -P metric_provider_name={metric_provider_name}
       -P metric_name={metric_name}
       -P metric_task={metric_task}
@@ -95,143 +56,8 @@ entry_points:
       -P batch_size={batch_size}
       -P shape={shape}
       -P subset={subset}
-  test_model:
-    parameters:
-      dataset_provider_name: { type: string, default: "huggingface" }
-      dataset_name: { type: string, default: "cifar10" }
-      dataset_task: { type: string, default: "image-classification" }
-      split: { type: string, default: "test" }
-      model_name: { type: string, default: "loaded_model" }
-      model_version: { type: int, default: 1 }
-      model_task: { type: string, default: "image-classification" }
-      metric_provider_name: { type: string, default: "torchmetrics" }
-      metric_name: { type: string, default: "Accuracy" }
-      metric_task: { type: string, default: "multiclass" }
-      classes: { type: int, default: 10 }
-      batch_size: { type: int, default: 32 }
-      shape: { type: string, default: "[224,224]" }
-      subset: { type: int, default: 0 }
-    command: >
-      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment test_model.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment test_model.yml
-      -P dataset_provider_name={dataset_provider_name}
-      -P dataset_name={dataset_name}
-      -P dataset_task={dataset_task}
-      -P split={split}
-      -P model_name={model_name}
-      -P model_version={model_version}
-      -P model_task={model_task}
-      -P metric_provider_name={metric_provider_name}
-      -P metric_name={metric_name}
-      -P metric_task={metric_task}
-      -P classes={classes}
-      -P batch_size={batch_size}
-      -P shape={shape}
-      -P subset={subset}
-  test_model:
-    parameters:
-      dataset_provider_name: { type: string, default: "huggingface" }
-      dataset_name: { type: string, default: "cifar10" }
-      dataset_task: { type: string, default: "image-classification" }
-      split: { type: string, default: "test" }
-      model_name: { type: string, default: "loaded_model" }
-      model_version: { type: int, default: 1 }
-      model_task: { type: string, default: "image-classification" }
-      metric_provider_name: { type: string, default: "torchmetrics" }
-      metric_name: { type: string, default: "Accuracy" }
-      metric_task: { type: string, default: "multiclass" }
-      classes: { type: int, default: 10 }
-      batch_size: { type: int, default: 32 }
-      shape: { type: string, default: "[224,224]" }
-      subset: { type: int, default: 0 }
-    command: >
-      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment test_model.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment test_model.yml
-      -P dataset_provider_name={dataset_provider_name}
-      -P dataset_name={dataset_name}
-      -P dataset_task={dataset_task}
-      -P split={split}
-      -P model_name={model_name}
-      -P model_version={model_version}
-      -P model_task={model_task}
-      -P metric_provider_name={metric_provider_name}
-      -P metric_name={metric_name}
-      -P metric_task={metric_task}
-      -P classes={classes}
-      -P batch_size={batch_size}
-      -P shape={shape}
-      -P subset={subset}
-  load_dataset:
-    parameters:
-      testing_dir: { type: string, default: "/dioptra/data/Mnist/testing" }
-      validation_split: { type: int, default: 0.3 }
-      image_size: { type: string, default: "[28,28,3]" }
-      new_size: { type: integer, default: 224 }
-      model_provider_name: { type: string, default: "huggingface" }
-      model_name: { type: string, default: "farleyknight-org-username/vit-base-mnist" }
-      model_task: { type: string, default: "image-classification" }
-      metric_provider_name: { type: string, default: "torchmetrics" }
-      metric_name: { type: string, default: "Accuracy" }
-      metric_task: { type: string, default: "multiclass" }
-      classes: { type: int, default: 10 }
-      batch_size: { type: int, default: 32 }
-      shape: { type: string, default: "[3,224,224]" }
-      subset: { type: int, default: 0 }
-    command: >
-      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment load_dataset.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment load_dataset.yml
-      -P testing_dir={testing_dir}
-      -P validation_split={validation_split}
-      -P image_size={image_size}
-      -P new_size={new_size}
-      -P model_provider_name={model_provider_name}
-      -P model_name={model_name}
-      -P model_task={model_task}
-      -P metric_provider_name={metric_provider_name}
-      -P metric_name={metric_name}
-      -P metric_task={metric_task}
-      -P classes={classes}
-      -P batch_size={batch_size}
-      -P shape={shape}
-      -P subset={subset}
-  gen_fgm:
-    parameters:
-      adv_dir: { type: string, default: "adv_testing" }
-      out_dir: { type: string, default: "/dioptra/data/tmp/cifar/" }
-      image_size: { type: string, default: "[3,224,224]" }
-      dataset_provider_name: { type: string, default: "huggingface" }
-      dataset_name: { type: string, default: "cifar10" }
-      dataset_task: { type: string, default: "image-classification" }
-      split: { type: string, default: "test" }
-      model_provider_name: { type: string, default: "huggingface" }
-      model_name: { type: string, default: "aaraki/vit-base-patch16-224-in21k-finetuned-cifar10" }
-      model_task: { type: string, default: "image-classification" }
-      metric_provider_name: { type: string, default: "torchmetrics" }
-      metric_name: { type: string, default: "Accuracy" }
-      metric_task: { type: string, default: "multiclass" }
-      classes: { type: int, default: 10 }
-      batch_size: { type: int, default: 32 }
-      shape: { type: string, default: "[224,224]" }
-      subset: { type: int, default: 0 }
-      save_original: { type: bool, default: true }
-    command: >
-      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment gen_fgm.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment gen_fgm.yml
-      -P adv_dir={adv_dir}
-      -P out_dir={out_dir}
-      -P split={split}
-      -P image_size={image_size}
-      -P dataset_provider_name={dataset_provider_name}
-      -P dataset_name={dataset_name}
-      -P dataset_task={dataset_task}
-      -P model_provider_name={model_provider_name}
-      -P model_name={model_name}
-      -P model_task={model_task}
-      -P metric_provider_name={metric_provider_name}
-      -P metric_name={metric_name}
-      -P metric_task={metric_task}
-      -P classes={classes}
-      -P batch_size={batch_size}
-      -P shape={shape}
-      -P subset={subset}
-      -P save_original={save_original}
-  infer:
+
+  infer_from_artifact:
     parameters:
       run_id: { type: string, default: "" }
       adv_data_dir: { type: string, default: "adv_testing" }
@@ -249,7 +75,7 @@ entry_points:
       shape: { type: string, default: "[3,224,224]" }
       subset: { type: int, default: 0 }
     command: >
-      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment infer.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment infer.yml
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment infer_from_artifact.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment infer_from_artifact.yml
       -P run_id={run_id}
       -P adv_data_dir={adv_data_dir}
       -P adv_tar_name={adv_tar_name}
@@ -265,7 +91,8 @@ entry_points:
       -P batch_size={batch_size}
       -P shape={shape}
       -P subset={subset}
-  gen:
+
+  attack:
     parameters:
       adv_dir: { type: string, default: "adv_testing" }
       out_dir: { type: string, default: "/dioptra/data/tmp/cifar/" }
@@ -287,7 +114,7 @@ entry_points:
       shape: { type: string, default: "[224,224]" }
       subset: { type: int, default: 0 }
       save_original: { type: bool, default: true }
-      attack_kwargs: { type: string, default: "{eps:\ 0.3}" }
+      attack_kwargs: { type: string, default: "{eps:0.3}" }
     command: >
       PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment attack.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment attack.yml
       -P adv_dir={adv_dir}
