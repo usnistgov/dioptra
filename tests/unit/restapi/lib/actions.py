@@ -27,6 +27,7 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
+    V1_EXPERIMENTS_ROUTE,
     V1_GROUPS_ROUTE,
     V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     V1_PLUGINS_ROUTE,
@@ -50,6 +51,44 @@ def login(client: FlaskClient, username: str, password: str) -> TestResponse:
     return client.post(
         f"/{V1_ROOT}/{V1_AUTH_ROUTE}/login",
         json={"username": username, "password": password},
+    )
+
+
+def register_experiment(
+    client: FlaskClient,
+    name: str,
+    group_id: int,
+    entrypoint_ids: list[int] | None = None,
+    description: str | None = None,
+) -> TestResponse:
+    """Register an experiment using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name to assign to the new experiment.
+        group_id: The group to create the new experiment in.
+        entrypoints: The entrypoint IDs for the new experiment.
+        description: The description of the new experiment.
+
+    Returns:
+        The response from the API.
+    """
+
+    payload = {"name": name, "group": group_id}
+
+    if description is not None:
+        payload["description"] = description
+    else:
+        payload["description"] = ""
+    # if entrypoint_ids is not None:
+    #     payload["entrypoint_ids"] = entrypoint_ids
+    # else:
+    #     payload["entrypoint_ids"] = list()
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/",
+        json=payload,
+        follow_redirects=True,
     )
 
 

@@ -49,18 +49,18 @@ class ExperimentMutableFieldsSchema(Schema):
     description = fields.String(
         attribute="description",
         metadata=dict(description="Description of the Experiment resource."),
-        load_default=True,
+        load_default=None,
     )
     entrypointIds = fields.List(
         fields.Int(),
         attribute="entrypoint_ids",
         data_key="entrypoints",
         allow_none=True,
-        load_default=None,
         metadata=dict(
             description="A list of Entrypoint IDs.",
         ),
         load_only=True,
+        load_default=list,
     )
 
 
@@ -78,11 +78,11 @@ class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # 
         attribute="tag_ids",
         data_key="tags",
         allow_none=True,
-        load_default=None,
         metadata=dict(
             description="A list of Tag IDs.",
         ),
         load_only=True,
+        load_default=list,
     )
     entrypoints = fields.Nested(
         EntrypointRefSchema,
