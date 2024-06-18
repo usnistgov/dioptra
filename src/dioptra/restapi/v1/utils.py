@@ -21,6 +21,7 @@ from urllib.parse import urlencode, urlunparse
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ROOT
 
+EXPERIMENTS: Final[str] = "experiments"
 USERS: Final[str] = "users"
 GROUPS: Final[str] = "groups"
 PLUGIN_PARAMETER_TYPES: Final[str] = "pluginParameterTypes"
@@ -28,6 +29,22 @@ QUEUES: Final[str] = "queues"
 TAGS: Final[str] = "tags"
 
 # -- Ref Types -----------------------------------------------------------------
+
+
+def build_experiment_ref(experiment: models.Experiment) -> dict[str, Any]:
+    """Build an ExperimentRef dictionary.
+
+    Args:
+        experiment: The experiment object to convert into an ExperimentRef dictionary.
+
+    Returns:
+        The ExperimentRef dictionary.
+    """
+    return {
+        "id": experiment.resource_id,
+        "name": experiment.name,
+        "url": f"/{EXPERIMENTS}/{experiment.resource_id}",
+    }
 
 
 def build_user_ref(user: models.User) -> dict[str, Any]:
@@ -194,6 +211,33 @@ def build_group(group: models.Group) -> dict[str, Any]:
         "members": list(members.values()),
         "created_on": group.created_on,
         "last_modified_on": group.last_modified_on,
+    }
+
+
+def build_experiment(experiment: models.Experiment) -> dict[str, Any]:
+    """Build an Experiment response dictionary.
+
+    Args:
+        experiment: The experiment object to convert into an Experiment response
+            dictionary.
+
+    Returns:
+        The Experiment response dictionary.
+    """
+    return {
+        "id": experiment.resource_id,
+        "snapshot_id": experiment.resource_snapshot_id,
+        "name": experiment.name,
+        "description": experiment.description,
+        "entrypoints": [],
+        "jobs": [],
+        "user": build_user_ref(experiment.creator),
+        "group": build_group_ref(experiment.resource.owner),
+        "created_on": experiment.created_on,
+        "last_modified_on": experiment.resource.last_modified_on,
+        "latest_snapshot": experiment.resource.latest_snapshot_id
+        == experiment.resource_snapshot_id,
+        "tags": [build_tag_ref(tag) for tag in experiment.tags],
     }
 
 
