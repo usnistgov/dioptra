@@ -93,6 +93,7 @@ class PluginParameterTypeEndpoint(Resource):
             "pluginParameterTypes",
             build_fn=utils.build_plugin_parameter_type,
             data=plugin_parameter_types,
+            group_id=group_id,
             query=search_string,
             index=page_index,
             length=page_length,

@@ -86,6 +86,7 @@ class UserEndpoint(Resource):
             build_fn=utils.build_user,
             data=users,
             query=search_string,
+            group_id=None,
             index=page_index,
             length=page_length,
             total_num_elements=total_num_users,

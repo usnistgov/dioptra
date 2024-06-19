@@ -671,3 +671,54 @@ def test_manage_new_queue_drafts(
     asserts.assert_new_draft_is_not_found(
         client, resource_route=V1_QUEUES_ROUTE, draft_id=draft1_response["id"]
     )
+
+
+def test_manage_queue_snapshots(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    """Test that different snapshots of a queue can be retrieved by the user.
+
+    Given an authenticated user and registered queues, this test validates the following
+    sequence of actions:
+
+    - The user modifies a queue
+    - The user retrieves information about the original snapshot of the queue and gets
+      the expected response
+    - The user retrieves information about the new snapshot of the queue and gets the
+      expected response
+    - The user retrieves a list of all snapshots of the queue and gets the expected
+      response
+    """
+    queue_to_rename = registered_queues["queue1"]
+    modified_queue = modify_queue(
+        client,
+        queue_id=queue_to_rename["id"],
+        new_name=queue_to_rename["name"] + "modified",
+        new_description=queue_to_rename["description"],
+    ).get_json()
+    queue_to_rename["latestSnapshot"] = False
+    queue_to_rename["lastModifiedOn"] = modified_queue["lastModifiedOn"]
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue_to_rename["id"],
+        snapshot_id=queue_to_rename["snapshot"],
+        expected=queue_to_rename,
+    )
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=modified_queue["id"],
+        snapshot_id=modified_queue["snapshot"],
+        expected=modified_queue,
+    )
+    expected_snapshots = [queue_to_rename, modified_queue]
+    asserts.assert_retrieving_snapshots_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue_to_rename["id"],
+        expected=expected_snapshots,
+    )
