@@ -182,7 +182,7 @@ class ResourceSnapshotsIdService(object):
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Get resource snaphot by id", resource_id=resource_id)
+        log.debug("Get resource snapshot by id", resource_id=resource_id)
 
         stmt = select(models.Resource).filter_by(
             resource_id=resource_id, resource_type=self._resource_type, is_deleted=False

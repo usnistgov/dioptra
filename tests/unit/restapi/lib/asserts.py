@@ -287,3 +287,27 @@ def assert_retrieving_snapshot_by_id_works(
         follow_redirects=True,
     )
     assert response.status_code == 200 and response.get_json() == expected
+
+
+def assert_tags_response_contents_matches_expectations(
+    response: list[dict[str, Any]],
+    expected_contents: list[int],
+) -> None:
+    """Assert that tags response contents is valid and matches the expected values.
+
+    Args:
+        response: The actual response from the API.
+        expected_contents: The expected list of Tag IDs the API.
+
+    Raises:
+        AssertionError: If the API response does not match the expected response
+            or if the response contents is not valid.
+    """
+
+    # Validate the TagRef structure
+    for tag in response:
+        assert isinstance(tag["id"], int)
+        assert isinstance(tag["name"], str)
+        assert isinstance(tag["url"], str)
+
+    assert [tag["id"] for tag in response] == expected_contents

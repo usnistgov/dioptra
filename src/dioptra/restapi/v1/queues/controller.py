@@ -40,6 +40,10 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
     generate_resource_snapshots_id_endpoint,
 )
+from dioptra.restapi.v1.shared.tags.controller import (
+    generate_resource_tags_endpoint,
+    generate_resource_tags_id_endpoint,
+)
 
 from .schema import (
     QueueGetQueryParameters,
@@ -211,4 +215,13 @@ QueueSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     resource_name=RESOURCE_TYPE,
     response_schema=QueueSchema,
     build_fn=utils.build_queue,
+)
+
+QueueTagsResource = generate_resource_tags_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)
+QueueTagsIdResource = generate_resource_tags_id_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
 )

@@ -135,4 +135,5 @@ def register_v1_error_handlers(api: Api) -> None:
     v1.plugins.errors.register_error_handlers(api)
     v1.plugin_parameter_types.errors.register_error_handlers(api)
     v1.queues.errors.register_error_handlers(api)
+    v1.tags.errors.register_error_handlers(api)
     v1.users.errors.register_error_handlers(api)
