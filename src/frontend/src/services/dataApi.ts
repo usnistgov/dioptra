@@ -13,6 +13,13 @@ type CreateParams = {
     description: string,
     group: number
   },
+  experiments: {
+    name: string,
+    description: string,
+    group: number,
+    entrypoints: any,
+    tags: any
+  },
   pluginParameterTypes: {
     name: string,
     description: string,
@@ -29,7 +36,12 @@ type UpdateParams = {
   queues: {
     name: string,
     description: string,
-  }
+  },
+  experiments: {
+    name: string,
+    description: string,
+    entrypoints: any
+  },
 }
 
 interface Pagination {

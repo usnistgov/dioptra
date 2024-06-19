@@ -35,7 +35,7 @@
         Description:
       </label>
       <q-input
-      class="col"
+        class="col"
         v-model="description"
         outlined
         type="textarea"

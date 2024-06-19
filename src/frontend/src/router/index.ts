@@ -49,7 +49,7 @@ const router = createRouter({
       component: () => import('../views/JobsView.vue')
     },
     {
-      path: '/experiments/create',
+      path: '/experiments/:id',
       component: () => import('../views/CreateExperiment.vue')
     },
     {

@@ -21,7 +21,7 @@
         <q-input 
           outlined 
           dense 
-          v-model.trim="name"
+          v-model.trim="experiment.name"
           :rules="[requiredRule]"
           class="q-mb-sm"
           aria-required="true"
@@ -32,16 +32,31 @@
         </q-input>
         <q-select
           outlined 
-          v-model="group" 
-          :options="groupOptions" 
+          v-model="experiment.group" 
+          :options="store.groups"
+          option-label="name"
+          option-value="id"
+          emit-value
+          map-options
           dense
           :rules="[requiredRule]"
           aria-required="true"
+          class="q-mb-sm"
         >
           <template v-slot:before>
             <div class="field-label">Group:</div>
           </template>  
         </q-select>
+        <q-input 
+          outlined 
+          dense 
+          v-model.trim="experiment.description"
+          type="textarea"
+        >
+          <template v-slot:before>
+            <label :class="`field-label`">Description:</label>
+          </template>
+        </q-input>
       </q-form>
 
       <q-banner v-if="nameWarning" dense class="text-white bg-negative absolute-bottom">
@@ -174,14 +189,18 @@
 
 <script setup>
   import { ref, reactive, watch, inject } from 'vue'
-  import { useRouter, onBeforeRouteLeave } from 'vue-router'
+  import { useRouter, onBeforeRouteLeave, useRoute } from 'vue-router'
   import { useDataStore } from '@/stores/DataStore.ts'
   import LeaveExperimentsDialog from '@/dialogs/LeaveExperimentsDialog.vue'
   import ReturnExperimentsDialog from '@/dialogs/ReturnExperimentsDialog.vue'
+  import * as api from '@/services/dataApi'
+  import { useLoginStore } from '@/stores/LoginStore.ts'
+  import * as notify from '../notify'
 
   const router = useRouter()
+  const route = useRoute()
 
-  const store = useDataStore()
+  const store = useLoginStore()
 
   const isMobile = inject('isMobile')
 
@@ -205,32 +224,29 @@
   // form inputs
   const name = ref('')
   const group = ref('')
+  const description = ref('')
   let selectedEntryPoints = ref([])
   let selectedTags = reactive([])
 
-  // function leaveForm() {
-  //   let savedForm = {
-  //     name: name.value,
-  //     group: group.value,
-  //     step2Done: step2Done,
-  //     step3Done: step3Done,
-  //   }
-  //   if(selectedEntryPoints.value.length > 0) {
-  //     savedForm.selectedEntryPoints = selectedEntryPoints.value
-  //   }
-  //   if(selectedTags.length > 0) {
-  //     savedForm.selectedTags = selectedTags
-  //   }
-  //   store.savedExperimentForm = savedForm
-  //   router.push('/entryPoints')
-  // }
+  const experiment = ref({
+    name: '',
+    group: '',
+    description: '',
+    selectedEntryPoints: [],
+    selectedTags: []
+  })
 
-  // let editMode = ref(false)
-
-  if(Object.keys(store.savedExperimentForm).length !== 0) {
-    // showReturnDialog.value = true
-    // editMode.value = true
-    loadForm()
+  getExperiment()
+  async function getExperiment() {
+    if(route.params.id === 'new') return
+    try {
+      const res = await api.getItem('experiments', route.params.id)
+      experiment.value = res.data
+      console.log('experiment = ', experiment.value)
+    } catch(err) {
+      console.log('err = ', err)
+      notify.error(err.response.data.message)
+    } 
   }
 
   function loadForm() {
@@ -245,10 +261,14 @@
       selectedTags = store.savedExperimentForm.tags
       step3Done.value = true
     }
-    // step2Done.value = store.savedExperimentForm.step2Done
-    // step3Done.value = store.savedExperimentForm.step3Done
     showReturnDialog.value = false
   }
+
+  // if(Object.keys(store.savedExperimentForm).length !== 0) {
+  //   // showReturnDialog.value = true
+  //   // editMode.value = true
+  //   loadForm()
+  // }
 
   watch(showReturnDialog, (newVal) => {
     // regardless if user submits, cancels, or clicks outside dialog, clear saved form
@@ -257,13 +277,9 @@
     }
   })
 
-  const groupOptions = ref([
-    'Group 1',
-    'Group 2',
-    'Group 3',
-  ])
-
-  const requiredRule = (val) => (val && val.length > 0) || "This field is required"
+  function requiredRule(val) {
+    return (!!val) || "This field is required"
+  }
 
   function continueStep() {
     if(step.value === 1) {
@@ -291,35 +307,53 @@
   })
 
   function submit(draft = false) {
-    if(name.value.length === 0) {
-      nameWarning.value = true
-      return
-    }
-    const experiment = {
-      name: name.value,
-      group: group.value,
-      entryPoints: selectedEntryPoints.value,
-      tags: selectedTags,
-      draft: draft
-    }
-    if(!store.editMode) {
-      const id = new Date().getTime().toString()
-      experiment.id = id
-      store.experiments.push(experiment)
+    // if(name.value.length === 0) {
+    //   nameWarning.value = true
+    //   return
+    // }
+    if(route.params.id === 'new') {
+      addExperiment()
     } else {
-      experiment.id = store.savedExperimentForm.id
-      const editIndex = store.experiments.findIndex((storedExperiment) => storedExperiment.id === experiment.id)
-      store.experiments[editIndex] = experiment
+      updateExperiment()
     }
     isSubmitting.value = true
     router.push('/experiments')
   }
+
+  async function addExperiment() {
+    try {
+      const res = await api.addItem('experiments', {
+        name: experiment.value.name,
+        description: experiment.value.description,
+        group: experiment.value.group,
+      })
+      notify.success(`Sucessfully created '${res.data.name}'`)
+    } catch(err) {
+      console.log('err = ', err)
+      notify.error(err.response.data.message)
+    } 
+  }
+
+  async function updateExperiment() {
+    try {
+      const res = await api.updateItem('experiments', route.params.id, {
+        name: experiment.value.name,
+        description: experiment.value.description,
+      })
+      notify.success(`Sucessfully updated '${res.data.name}'`)
+    } catch(err) {
+      console.log('err = ', err)
+      notify.error(err.response.data.message)
+    } 
+  }
+
 
   function reset() {
     if(step.value === 1) step1Form.value.reset()
     step.value = 1
     name.value = ''
     group.value = ''
+    description.value = ''
     selectedEntryPoints.value = []
     selectedTags = []
     step2Done.value = false
