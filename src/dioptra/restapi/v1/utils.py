@@ -359,19 +359,19 @@ def build_new_resource_draft(draft: models.DraftResource) -> dict[str, Any]:
 
 
 def build_paging_envelope(
-    resource_type: str,
+    route_prefix: str,
     build_fn: Callable[[Any], dict[str, Any]],
     data: list[Any],
+    group_id: int | None,
     query: str | None,
     index: int,
     length: int,
-    total_num_elements: bool,
+    total_num_elements: int,
 ) -> dict[str, Any]:
     """Build the paging envelope for a response.
 
     Args:
-        resource_type: The type of resource to paginate, forms the URL path in the
-            paging url.
+        route_prefix: The prefix of the route, forms the URL path in the paging url.
         build_fn: The function for converting an ORM object into a response dictionary.
             This dictionary is then wrapped in the paging envelope and set as the "data"
             field.
@@ -392,21 +392,31 @@ def build_paging_envelope(
         "index": index,
         "is_complete": is_complete,
         "total_num_results": total_num_elements,
-        "first": build_paging_url(resource_type, search=query, index=0, length=length),
+        "first": build_paging_url(
+            route_prefix, group_id=group_id, search=query, index=0, length=length
+        ),
         "data": [build_fn(x) for x in data],
     }
 
     if has_prev:
         prev_index = max(index - length, 0)
         prev_url = build_paging_url(
-            resource_type, search=query, index=prev_index, length=length
+            route_prefix,
+            group_id=group_id,
+            search=query,
+            index=prev_index,
+            length=length,
         )
         paged_data["prev"] = prev_url
 
     if has_next:
         next_index = index + length
         next_url = build_paging_url(
-            resource_type, search=query, index=next_index, length=length
+            route_prefix,
+            group_id=group_id,
+            search=query,
+            index=next_index,
+            length=length,
         )
         paged_data["next"] = next_url
 
@@ -414,12 +424,12 @@ def build_paging_envelope(
 
 
 def build_paging_url(
-    resource_type: str, search: str | None, index: int, length: int
+    route_prefix: str, group_id: int | None, search: str | None, index: int, length: int
 ) -> str:
     """Build a URL for a paged resource endpoint.
 
     Args:
-        resource_type: The type of resource to paginate, forms the URL path.
+        resource_type: The prefix of the route to paginate, forms the URL path.
         search: The optional search query string.
         index: The index of the current page.
         length: The number of results to return per page.
@@ -429,15 +439,18 @@ def build_paging_url(
     """
     query_params: dict[str, Any] = {"index": index, "pageLength": length}
 
+    if group_id:
+        query_params["groupId"] = group_id
+
     if search:
         query_params["search"] = search
 
-    return build_url(resource_type, query_params)
+    return build_url(route_prefix, query_params)
 
 
-def build_url(resource_type: str, query_params: dict[str, str] | None = None) -> str:
+def build_url(route_prefix: str, query_params: dict[str, str] | None = None) -> str:
     query_params = query_params or {}
 
     return urlunparse(
-        ("", "", f"/{V1_ROOT}/{resource_type}", "", urlencode(query_params), "")
+        ("", "", f"/{V1_ROOT}/{route_prefix}", "", urlencode(query_params), "")
     )

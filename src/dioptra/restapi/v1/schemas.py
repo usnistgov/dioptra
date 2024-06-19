@@ -216,6 +216,14 @@ class SearchQueryParametersSchema(Schema):
     )
 
 
+class ResourceGetQueryParameters(
+    PagingQueryParametersSchema,
+    GroupIdQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
+    """The query parameters for the GET method of the resource endpoints."""
+
+
 class IdStatusResponseSchema(Schema):
     """A simple response for reporting a status for one or more resources."""
 
