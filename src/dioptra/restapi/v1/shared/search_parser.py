@@ -169,12 +169,10 @@ def construct_sql_query_filters(search_string: str, searchable_fields: dict[str,
         field: str = search_term["field"]
         if field is None:
             value = construct_sql_search_value(search_term["value"], fuzzy=True)
-            filter = or_(
-                col.like(value, escape="/") for col in searchable_fields.values()
-            )
+            filter = or_(filter_fn(value) for filter_fn in searchable_fields.values())
         elif field in searchable_fields:
             value = construct_sql_search_value(search_term["value"])
-            filter = searchable_fields[field].like(value, escape="/")
+            filter = searchable_fields[field](value)
         else:
             raise SearchParseError(search_string, f"'{field}' is not a valid field")
         query_filters.append(filter)

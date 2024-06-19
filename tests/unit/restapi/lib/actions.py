@@ -33,6 +33,7 @@ from dioptra.restapi.routes import (
     V1_PLUGINS_ROUTE,
     V1_QUEUES_ROUTE,
     V1_ROOT,
+    V1_TAGS_ROUTE,
     V1_USERS_ROUTE,
 )
 
@@ -114,6 +115,29 @@ def register_user(
             "password": password,
             "confirmPassword": password,
         },
+        follow_redirects=True,
+    )
+
+
+def register_tag(
+    client: FlaskClient,
+    name: str,
+    group_id: int,
+) -> TestResponse:
+    """Register a tag using the API.
+    Args:
+        client: The Flask test client.
+        name: The name to assign to the new tag.
+        group_id: The group to create the new tag in.
+    Returns:
+        The response from the API.
+    """
+
+    payload = {"name": name, "group": group_id}
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_TAGS_ROUTE}/",
+        json=payload,
         follow_redirects=True,
     )
 
@@ -406,5 +430,120 @@ def delete_new_resource_draft(
     """
     return client.delete(
         f"/{V1_ROOT}/{resource_route}/drafts/{draft_id}",
+        follow_redirects=True,
+    )
+
+
+def get_tags(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+) -> TestResponse:
+    """Get a list of tags for the resource type
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type.
+        resource_id: The id of the resource to append tags to.
+
+    Returns:
+        The response from the API.
+    """
+
+    return client.get(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/tags", follow_redirects=True
+    )
+
+
+def append_tags(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+    tag_ids: list[int],
+) -> TestResponse:
+    """Append tags to the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type.
+        resource_id: The id of the resource to append tags to.
+        payload: The contents of the tags resource.
+
+    Returns:
+        The response from the API.
+    """
+    return client.post(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/tags",
+        json={"ids": tag_ids},
+        follow_redirects=True,
+    )
+
+
+def modify_tags(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+    tag_ids: list[int],
+) -> TestResponse:
+    """Modify the tags of the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type.
+        resource_id: The id of the resource to modify.
+        tag_ids: The new tag_ids for the resource
+
+    Returns:
+        The response from the API.
+    """
+    return client.put(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/tags",
+        json={"ids": tag_ids},
+        follow_redirects=True,
+    )
+
+
+def remove_tags(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+) -> TestResponse:
+    """Remove the tags of the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type.
+        resource_id: The id of the resource to remove tags from.
+
+    Returns:
+        The response from the API.
+    """
+
+    return client.delete(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/tags",
+        follow_redirects=True,
+    )
+
+
+def remove_tag(
+    client: FlaskClient,
+    resource_route: str,
+    resource_id: int,
+    tag_id: int,
+) -> TestResponse:
+    """Remove tag tag from the resource with the provided unique ID.
+
+    Args:
+        client: The Flask test client.
+        resource_route: The route of the resource type.
+        resource_id: The id of the resource to remove a tag from.
+        tag_id: The id of the tag to delete.
+
+    Returns:
+        The response from the API.
+    """
+
+    return client.delete(
+        f"/{V1_ROOT}/{resource_route}/{resource_id}/tags/{tag_id}",
         follow_redirects=True,
     )

@@ -78,6 +78,32 @@ def auth_account(
 
 
 @pytest.fixture
+def registered_tags(
+    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+) -> dict[str, Any]:
+    tag1_response = actions.register_tag(
+        client,
+        name="tag_one",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    tag2_response = actions.register_tag(
+        client,
+        name="tag_two",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    tag3_response = actions.register_tag(
+        client,
+        name="name",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    return {
+        "tag1": tag1_response,
+        "tag2": tag2_response,
+        "tag3": tag3_response,
+    }
+
+
+@pytest.fixture
 def registered_plugins(
     client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
 ) -> dict[str, Any]:

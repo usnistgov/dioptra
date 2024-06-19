@@ -36,8 +36,9 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "queue"
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": models.Queue.name,
-    "description": models.Queue.description,
+    "name": lambda x: models.Queue.name.like(x, escape="/"),
+    "description": lambda x: models.Queue.description.like(x, escape="/"),
+    "tag": lambda x: models.Queue.tags.any(models.Tag.name.like(x, escape="/")),
 }
 
 
@@ -312,6 +313,9 @@ class QueueIdService(object):
 
         Returns:
             A dictionary reporting the status of the request.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
