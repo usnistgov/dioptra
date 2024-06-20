@@ -13,6 +13,7 @@
         <q-separator />
         <q-card-actions align="right" class="text-primary">
           <q-btn
+            v-if="!hideDraftBtn"
             color="secondary"
             label="Save Draft"
             @click="$emit('emitSaveDraft')"
@@ -30,4 +31,5 @@
 <script setup>
   const showDialog = defineModel()
   defineEmits(['emitSubmit', 'emitCancel', 'emitSaveDraft'])
+  defineProps(['hideDraftBtn'])
 </script>

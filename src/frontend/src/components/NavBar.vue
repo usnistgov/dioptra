@@ -30,6 +30,9 @@
           <q-item clickable v-close-popup to="/groups">
             <q-item-section>Groups</q-item-section>
           </q-item>
+          <q-item clickable v-close-popup to="/tags">
+            <q-item-section>Tags</q-item-section>
+          </q-item>
         </q-list>
       </q-menu>
     </q-btn>
@@ -42,6 +45,7 @@
         <q-route-tab label="Experiments" to="/experiments" />
         <q-route-tab label="Jobs" to="/" />
         <q-route-tab label="Groups" to="/groups" />
+        <q-route-tab label="Tags" to="/tags" />
       </q-tabs>
     </nav>
 

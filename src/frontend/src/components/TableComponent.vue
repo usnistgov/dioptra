@@ -90,7 +90,7 @@
 
   const finalColumns = computed(() => {
     let defaultColumns = [
-      { name: 'radio', align: 'center', sortable: false, label: 'Select' },
+      { name: 'radio', align: 'center', sortable: false, label: 'Select', headerStyle: 'width: 100px' },
        ...props.columns,
       ]
     if(props.showExpand) {

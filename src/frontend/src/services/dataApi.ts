@@ -23,8 +23,12 @@ type CreateParams = {
   pluginParameterTypes: {
     name: string,
     description: string,
-    group: string,
+    group: number,
     structure: object
+  },
+  tags: {
+    name: string,
+    group: number
   }
 }
 
@@ -42,6 +46,9 @@ type UpdateParams = {
     description: string,
     entrypoints: any
   },
+  tags: {
+    name: string
+  }
 }
 
 interface Pagination {
@@ -66,7 +73,7 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
     // },
   })
   if(showDrafts && res.data.data) {
-    res.data.data.forEach((obj) => {
+    res.data.data.forEach((obj: any) => {
       Object.assign(obj, obj.payload)
     })
   }
@@ -111,4 +118,8 @@ export async function deleteItem<T extends ItemType>(type: T, id: number) {
 
 export async function getFiles(id: number) {
   return await axios.get(`/api/plugins/${id}/files`)
+}
+
+export async function updateTags<T extends ItemType>(type: T, id: number, tagIDs: Array<number>) {
+  return await axios.put(`/api/${type}/${id}/tags`, { ids: tagIDs })
 }

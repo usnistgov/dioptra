@@ -2,6 +2,7 @@
   <DialogComponent 
     v-model="showDialog"
     @emitSubmit="$emit('submit')"
+    :hideDraftBtn="true"
   >
     <template #title>
       <label id="modalTitle">

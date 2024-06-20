@@ -9,11 +9,22 @@
     @request="getQueues"
     ref="tableRef"
   >
-    <!-- <template #body-cell-chips="props">
-      <q-chip>
-        {{ props.row.name }}
+    <template #body-cell-tags="props">
+      <q-chip
+        v-for="(tag, i) in props.row.tags"
+        :key="i"
+        color="primary" 
+        text-color="white"
+      >
+        {{ tag.name }}
       </q-chip>
-    </template> -->
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="handleTags(props.row)"
+      />
+    </template>
   </TableComponent>
   <q-btn 
     class="fixedButton"
@@ -41,6 +52,11 @@
     type="Queue"
     :name="selected.length ? selected[0].name : ''"
   />
+  <AssignTagsDialog 
+    v-model="showTagsDialog"
+    :editObj="editObjTags"
+    @submitTags="submitTags"
+  />
 </template>
 
 <script setup>
@@ -51,10 +67,13 @@
   import AddQueueDialog from '@/dialogs/AddQueueDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { useLoginStore } from '@/stores/LoginStore'
+  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+
   const store = useLoginStore()
 
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)
+  const showTagsDialog = ref(false)
 
   const queues = ref([])
 
@@ -62,11 +81,11 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'id', label: 'Queue ID', align: 'left', field: 'id', sortable: true },
-    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', format: val => `${formatDate(val)}`, sortable: true },
-    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', format: val => `${formatDate(val)}`, sortable: true },
+    // { name: 'id', label: 'Queue ID', align: 'left', field: 'id', sortable: true },
+    // { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', format: val => `${formatDate(val)}`, sortable: true },
+    // { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', format: val => `${formatDate(val)}`, sortable: true },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
-    // { name: 'chips', label: 'Custom Column Example',align: 'left', sortable: false },
+    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
   ]
 
   async function getQueues(pagination, showDrafts) {
@@ -145,6 +164,25 @@
       selected.value = []
       tableRef.value.refreshTable()
     } catch(err) {
+      notify.error(err.response.data.message);
+    }
+  }
+
+  const editObjTags = ref({})
+
+  function handleTags(obj) {
+    editObjTags.value = obj
+    showTagsDialog.value = true
+  }
+
+  async function submitTags(selectedTagIDs) {
+    showTagsDialog.value = false
+    try {
+      await api.updateTags('queues', editObjTags.value.id, selectedTagIDs)
+      notify.success(`Sucessfully updated Tags for '${editObjTags.value.name}'`)
+      tableRef.value.refreshTable()
+    } catch(err) {
+      console.log('err = ', err)
       notify.error(err.response.data.message);
     }
   }

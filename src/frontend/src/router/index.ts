@@ -61,6 +61,10 @@ const router = createRouter({
       component: () => import('../views/GroupsAdminView.vue')
     },
     {
+      path: '/tags',
+      component: () => import('../views/TagsView.vue')
+    },
+    {
       path: '/login',
       component: () => import('../views/BasicLoginView.vue')
     },
