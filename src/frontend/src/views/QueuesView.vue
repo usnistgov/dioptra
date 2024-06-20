@@ -32,6 +32,7 @@
     v-model="showAddDialog"
     @addQueue="registerQueue"
     @updateQueue="updateQueue"
+    @saveDraft="saveDraft"
     :editQueue="selected.length && editing ? selected[0] : ''"
   />
   <DeleteDialog 
@@ -68,9 +69,9 @@
     // { name: 'chips', label: 'Custom Column Example',align: 'left', sortable: false },
   ]
 
-  async function getQueues(pagination) {
+  async function getQueues(pagination, showDrafts) {
     try {
-      const res = await api.getData('queues', pagination);
+      const res = await api.getData('queues', pagination, showDrafts);
       queues.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {
@@ -87,6 +88,24 @@
         group: store.loggedInGroup.id
       })
       notify.success(`Sucessfully created '${name}'`)
+      showAddDialog.value = false
+      tableRef.value.refreshTable()
+    } catch(err) {
+      notify.error(err.response.data.message)
+    }
+  }
+
+  async function saveDraft(name, description, id) {
+    let params = {
+      name: name,
+      description: description,
+    }
+    if(!id) {
+      params.group = store.loggedInGroup.id
+    }
+    try {
+      await api.addDraft('queues', id, params)
+      notify.success(`Sucessfully created draft '${name}'`)
       showAddDialog.value = false
       tableRef.value.refreshTable()
     } catch(err) {

@@ -64,6 +64,18 @@
           </template>
         </q-input>
     </template>
+    <template #top-left v-if="!hideButtons">
+      <q-btn-toggle
+        v-model="showDrafts"
+        toggle-color="primary"
+        push
+        :options="[
+          {label: title, value: false},
+          {label: 'Drafts', value: true},
+        ]"
+        @click="refreshTable"
+      />
+    </template>
   </q-table>
 </template>
 
@@ -99,6 +111,7 @@
   const filter = ref('')
   const selected = defineModel()
   const radioSelected = ref('')
+  const showDrafts = ref(false)
 
   function handleRadioClick(props) {
     console.log('props = ', props)
@@ -110,6 +123,10 @@
     if(newVal.length === 0) radioSelected.value = ''
   })
 
+  watch(showDrafts, (newVal, oldVal) => {
+    if(newVal !== oldVal) selected.value = []
+  })
+
   function getSelectedColor(selected) {
     if(darkMode.value && selected) return 'bg-deep-purple-10'
     else if(selected) return 'bg-blue-grey-1'
@@ -117,7 +134,7 @@
 
   const pagination = ref({
     page: 1,
-    rowsPerPage: 3,
+    rowsPerPage: 5,
     rowsNumber: 10,
     sortBy: '',
     descending: false,
@@ -141,7 +158,7 @@
     const index = (page - 1) * rowsPerPage
     paginationOptions.index = index
     paginationOptions.search = props.filter
-    emit('request', paginationOptions)
+    emit('request', paginationOptions, showDrafts.value)
   }
 
   function updateTotalRows(totalRows) {

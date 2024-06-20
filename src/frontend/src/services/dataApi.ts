@@ -52,9 +52,8 @@ interface Pagination {
   search: string,
 }
 
-export async function getData<T extends ItemType>(type: T, pagination: Pagination) {
-  console.log('pagination = ', pagination)
-  const res = await axios.get(`/api/${type}/`, {
+export async function getData<T extends ItemType>(type: T, pagination: Pagination, showDrafts: boolean) {
+  const res = await axios.get(`/api/${type}/${showDrafts ? 'drafts/' : ''}`, {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage,
@@ -66,6 +65,11 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
     //   encode: (param) => encodeURIComponent(param).replaceAll("+", "%20"),
     // },
   })
+  if(showDrafts && res.data.data) {
+    res.data.data.forEach((obj) => {
+      Object.assign(obj, obj.payload)
+    })
+  }
   console.log('getData = ', res)
   return res
 }
@@ -82,27 +86,29 @@ function urlEncode(string: string) {
 }
 
 export async function getItem<T extends ItemType>(type: T, id: number) {
-  const res = await axios.get(`/api/${type}/${id}`)
-  return res
+  return await axios.get(`/api/${type}/${id}`)
 }
 
 export async function updateItem<T extends ItemType>(type: T, id: number, params: UpdateParams[T]) {
-  const res = await axios.put(`/api/${type}/${id}`, params)
-  return res
+  return await axios.put(`/api/${type}/${id}`, params)
 }
 
 export async function addItem<T extends ItemType>(type: T, params: CreateParams[T]) {
-  const res = await axios.post(`/api/${type}/`, params)
-  return res
+  return await axios.post(`/api/${type}/`, params)
+}
+
+export async function addDraft<T extends ItemType>(type: T, id: string, params: CreateParams[T]) {
+  if(id) {
+    return await axios.post(`/api/${type}/${id}/draft`, params)
+  } else {
+    return await axios.post(`/api/${type}/drafts/`, params)
+  }
 }
 
 export async function deleteItem<T extends ItemType>(type: T, id: number) {
-  const res = await axios.delete(`/api/${type}/${id}`)
-  return res
+  return await axios.delete(`/api/${type}/${id}`)
 }
 
 export async function getFiles(id: number) {
-  const res = await axios.get(`/api/plugins/${id}/files`)
-  console.log('getFiles = ', res)
-  return res
+  return await axios.get(`/api/plugins/${id}/files`)
 }
