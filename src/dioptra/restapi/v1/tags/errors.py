@@ -14,6 +14,25 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from . import errors
+"""Error handlers for the tag endpoints."""
+from __future__ import annotations
 
-__all__ = ["errors"]
+from flask_restx import Api
+
+
+class TagAlreadyExistsError(Exception):
+    """The tag name already exists."""
+
+
+class TagDoesNotExistError(Exception):
+    """The requested tag does not exist."""
+
+
+def register_error_handlers(api: Api) -> None:
+    @api.errorhandler(TagDoesNotExistError)
+    def handle_tag_does_not_exist_error(error):
+        return {"message": "Not Found - The requested tag does not exist"}, 404
+
+    @api.errorhandler(TagAlreadyExistsError)
+    def handle_tag_already_exists_error(error):
+        return {"message": "Bad Request - The tag name already exists."}, 400

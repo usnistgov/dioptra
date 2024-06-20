@@ -20,7 +20,6 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
-
 from typing import Any
 
 from flask.testing import FlaskClient
@@ -722,3 +721,71 @@ def test_manage_queue_snapshots(
         resource_id=queue_to_rename["id"],
         expected=expected_snapshots,
     )
+
+
+def test_tag_queue(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_tags: dict[str, Any],
+) -> None:
+    """Test that different versions of a queue can be retrieved by the user.
+
+    Given an authenticated user and registered queues, this test validates the following
+    sequence of actions:
+
+    """
+    queue = registered_queues["queue1"]
+    tags = [tag["id"] for tag in registered_tags.values()]
+
+    # test append
+    response = actions.append_tags(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue["id"],
+        tag_ids=[tags[0], tags[1]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[1]]
+    )
+    response = actions.append_tags(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue["id"],
+        tag_ids=[tags[1], tags[2]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[1], tags[2]]
+    )
+
+    # test remove
+    actions.remove_tag(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"], tag_id=tags[1]
+    )
+    response = actions.get_tags(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[2]]
+    )
+
+    # test modify
+    response = actions.modify_tags(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue["id"],
+        tag_ids=[tags[1], tags[2]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[1], tags[2]]
+    )
+
+    # test delete
+    response = actions.remove_tags(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+    response = actions.get_tags(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+    asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])

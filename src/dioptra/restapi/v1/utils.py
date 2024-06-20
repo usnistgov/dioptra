@@ -91,8 +91,21 @@ def build_tag_ref(tag: models.Tag) -> dict[str, Any]:
     return {
         "id": tag.tag_id,
         "name": tag.name,
+        "group": build_group_ref(tag.owner),
         "url": build_url(f"{TAGS}/{tag.tag_id}"),
     }
+
+
+def build_tag_ref_list(tags: list[models.Tag]) -> list[dict[str, Any]]:
+    """Build a TagRef list.
+
+    Args:
+        tag: The list of Tag objects to convert into a TagRef list.
+
+    Returns:
+        The TagRef list.
+    """
+    return [build_tag_ref(tag) for tag in tags]
 
 
 def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
@@ -241,6 +254,25 @@ def build_experiment(experiment: models.Experiment) -> dict[str, Any]:
     }
 
 
+def build_tag(tag: models.Tag) -> dict[str, Any]:
+    """Build a Tag response dictionary.
+
+    Args:
+        queue: The Tag object to convert into a Tag response dictionary.
+
+    Returns:
+        The Tag response dictionary.
+    """
+    return {
+        "id": tag.tag_id,
+        "name": tag.name,
+        "user": build_user_ref(tag.creator),
+        "group": build_group_ref(tag.owner),
+        "created_on": tag.created_on,
+        "last_modified_on": tag.last_modified_on,
+    }
+
+
 def build_queue(queue: models.Queue) -> dict[str, Any]:
     """Build a Queue response dictionary.
 
@@ -353,6 +385,10 @@ def build_new_resource_draft(draft: models.DraftResource) -> dict[str, Any]:
         "created_on": draft.created_on,
         "last_modified_on": draft.last_modified_on,
     }
+
+
+def build_resource_url(resource: models.Resource):
+    return build_url(f"{resource.resource_type}/{resource.resource_id}")
 
 
 # -- Paging --------------------------------------------------------------------

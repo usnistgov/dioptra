@@ -129,17 +129,6 @@ def generate_base_resource_ref_schema(
     return Schema.from_dict(schema, name="f{name}RefBaseSchema")
 
 
-class ResourceUrlsSchema(Schema):
-    """The schema for a list of Resource URLs"""
-
-    urls = fields.List(
-        fields.Url(),
-        attribute="urls",
-        metadata=dict(description="A list of URLs to access Resources."),
-        relative=True,
-    )
-
-
 class BasePageSchema(Schema):
     """The base schema for adding paging to a resource endpoint."""
 
@@ -193,6 +182,7 @@ class ResourceTypeQueryParametersSchema(Schema):
     resourceType = fields.String(
         attribute="resource_type",
         metadata=dict(description="Filter results by the type of resource."),
+        load_default=None,
     )
 
 
@@ -224,6 +214,16 @@ class ResourceGetQueryParameters(
     """The query parameters for the GET method of the resource endpoints."""
 
 
+class IdListSchema(Schema):
+    """The schema for a list of IDs."""
+
+    ids = fields.List(
+        fields.Integer(),
+        attribute="ids",
+        metadata=dict(description="List of identifiers for one or more objects."),
+    )
+
+
 class IdStatusResponseSchema(Schema):
     """A simple response for reporting a status for one or more resources."""
 
@@ -237,4 +237,14 @@ class IdStatusResponseSchema(Schema):
     status = fields.String(
         attribute="status",
         metadata=dict(description="The status of the request."),
+    )
+
+
+class ResourceUrlsPageSchema(BasePageSchema):
+    """The paged schema for the Resource URLs."""
+
+    data = fields.List(
+        fields.String(),
+        many=True,
+        metadata=dict(description="List of Resource URLs in the current page."),
     )

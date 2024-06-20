@@ -54,7 +54,7 @@ GROUP_CREATOR_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
     "admin": True,
 }
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": models.Group.name,
+    "name": lambda x: models.Group.name.like(x, escape="/"),
 }
 
 

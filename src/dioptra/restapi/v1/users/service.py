@@ -56,8 +56,8 @@ DEFAULT_GROUP_PERMISSIONS: Final[dict[str, Any]] = {
 }
 DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "username": models.User.username,
-    "email": models.User.email_address,
+    "username": lambda x: models.User.username.like(x, escape="/"),
+    "email": lambda x: models.User.email_address.like(x, escape="/"),
 }
 
 
