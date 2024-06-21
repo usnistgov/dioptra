@@ -19,8 +19,7 @@
 This module contains shared actions used across test suites for each of the REST
 API endpoints.
 """
-
-from typing import Any
+from typing import Any, List
 
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
@@ -168,6 +167,102 @@ def register_plugin(
     )
 
 
+def register_plugin_file(
+    client: FlaskClient,
+    plugin_id: int,
+    description: str,
+    filename: str,
+    contents: str,
+    # tasks: dict[str, Any] | None = None,
+) -> TestResponse:
+    """Register a plugin file using the API.
+
+    Args:
+        client: The Flask test client.
+        plugin_id: The plugin resource to create the file in.
+        filename: The name of the plugin file.
+        contents: The contents of the file containing imports, functions,
+            structures, etc.
+        tasks: Tasks associated with the plugin file resource.
+        description: The description of the plugin file.
+
+    Returns:
+        The response from the API.
+    """
+    payload: dict[str, Any] = {
+        "filename": filename,
+        "contents": contents,
+        "description": description,
+    }
+
+    # if tasks:
+    #     payload["tasks"] = tasks
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def register_plugin_parameter_type(
+    client: FlaskClient,
+    name: str,
+    group_id: int,
+    structure: dict[str, Any] | None = None,
+    description: str | None = None,
+) -> TestResponse:
+    """Create a Plugin Parameter Type using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name of the plugin parameter type to be created.
+        group_id: The group to create the new plugin parameter type in.
+        structure: Optional JSON-type field for further constraining a type's structure.
+
+    Returns:
+        The response from the API.
+    """
+    payload = {"name": name, "group": group_id}
+
+    if structure:
+        payload["structure"] = structure
+
+    if description:
+        payload["description"] = description
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def add_plugin_tasks_to_plugin_file(
+    client: FlaskClient,
+    plugin_id: int,
+    plugin_file_id: int,
+    tasks: List[dict[str, Any]],
+) -> TestResponse:
+    """Modify a plugin file to include tasks using the API.
+
+    Args:
+        client: The Flask test client.
+        plugin_id: The plugin ID with a file.
+        plugin_file_id: The plugin file ID to append the task.
+        tasks: A list of tasks to add to the file.
+    Returns:
+        The response from the API.
+    """
+    payload: dict[str, Any] = {"tasks": tasks}
+
+    return client.put(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
 def register_queue(
     client: FlaskClient,
     name: str,
@@ -211,39 +306,6 @@ def register_group(
 
     return client.post(
         f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def register_plugin_parameter_type(
-    client: FlaskClient,
-    name: str,
-    group_id: int,
-    structure: dict[str, Any] | None = None,
-    description: str | None = None,
-) -> TestResponse:
-    """Create a Plugin Parameter Type using the API.
-
-    Args:
-        client: The Flask test client.
-        name: The name of the plugin parameter type to be created.
-        group_id: The group to create the new plugin parameter type in.
-        structure: Optional JSON-type field for further constraining a type's structure.
-
-    Returns:
-        The response from the API.
-    """
-    payload = {"name": name, "group": group_id}
-
-    if structure:
-        payload["structure"] = structure
-
-    if description:
-        payload["description"] = description
-
-    return client.post(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
         json=payload,
         follow_redirects=True,
     )

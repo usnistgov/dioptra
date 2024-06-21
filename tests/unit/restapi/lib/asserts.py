@@ -269,7 +269,7 @@ def assert_retrieving_snapshot_by_id_works(
     snapshot_id: int,
     expected: dict[str, Any],
 ) -> None:
-    """Assert that retrieving a queue by id works.
+    """Assert that retrieving a resource snapshot by id works.
 
     Args:
         client: The Flask test client.
@@ -286,6 +286,8 @@ def assert_retrieving_snapshot_by_id_works(
         f"/{V1_ROOT}/{resource_route}/{resource_id}/snapshots/{snapshot_id}",
         follow_redirects=True,
     )
+    print(response.get_json())
+    print(expected)
     assert response.status_code == 200 and response.get_json() == expected
 
 

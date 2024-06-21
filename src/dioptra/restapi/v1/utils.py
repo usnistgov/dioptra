@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Utility functions to help in building responses from ORM models"""
-from typing import Any, Callable, Final
+from typing import Any, Callable, Final, TypedDict
 from urllib.parse import urlencode, urlunparse
 
 from dioptra.restapi.db import models
@@ -25,8 +25,23 @@ EXPERIMENTS: Final[str] = "experiments"
 USERS: Final[str] = "users"
 GROUPS: Final[str] = "groups"
 PLUGIN_PARAMETER_TYPES: Final[str] = "pluginParameterTypes"
+PLUGINS: Final[str] = "plugins"
+PLUGIN_FILES: Final[str] = "files"
 QUEUES: Final[str] = "queues"
 TAGS: Final[str] = "tags"
+
+# -- Typed Dictionaries --------------------------------------------------------
+
+
+class PluginWithFilesDict(TypedDict):
+    plugin: models.Plugin
+    plugin_files: list[models.PluginFile]
+
+
+class PluginFileDict(TypedDict):
+    plugin_file: models.PluginFile
+    plugin: models.Plugin
+
 
 # -- Ref Types -----------------------------------------------------------------
 
@@ -108,6 +123,42 @@ def build_tag_ref_list(tags: list[models.Tag]) -> list[dict[str, Any]]:
     return [build_tag_ref(tag) for tag in tags]
 
 
+def build_plugin_ref(plugin: models.Plugin) -> dict[str, Any]:
+    """Build a PluginFileRef dictionary.
+
+    Args:
+        queue: The PluginFile object to convert into a PluginFileRef dictionary.
+
+    Returns:
+        The PluginFileRef dictionary.
+    """
+    return {
+        "id": plugin.resource_id,
+        "name": plugin.name,
+        "group": build_group_ref(plugin.resource.owner),
+        "url": f"/{PLUGINS}/{plugin.resource_id}",
+    }
+
+
+def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
+    """Build a PluginRef dictionary.
+
+    Args:
+        queue: The Plugin object to convert into a PluginRef dictionary.
+
+    Returns:
+        The PluginRef dictionary.
+    """
+    plugin_id = plugin_file.plugin_id
+    return {
+        "id": plugin_file.resource_id,
+        "plugin": plugin_id,
+        "filename": plugin_file.filename,
+        "group": build_group_ref(plugin_file.resource.owner),
+        "url": f"/{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}",
+    }
+
+
 def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
     """Build a QueueRef dictionary.
 
@@ -118,8 +169,9 @@ def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
         The QueueRef dictionary.
     """
     return {
-        "id": queue.queue_id,
+        "id": queue.resource_id,
         "name": queue.name,
+        "group": build_group_ref(queue.resource.owner),
         "url": build_url(f"{QUEUES}/{queue.queue_id}"),
     }
 
@@ -139,6 +191,7 @@ def build_plugin_parameter_type_ref(
     return {
         "id": plugin_param_type.plugin_parameter_type_id,
         "name": plugin_param_type.name,
+        "group": build_group_ref(plugin_param_type.resource.owner),
         "url": build_url(
             f"{PLUGIN_PARAMETER_TYPES}/{plugin_param_type.plugin_parameter_type_id}"
         ),
@@ -297,7 +350,9 @@ def build_queue(queue: models.Queue) -> dict[str, Any]:
     }
 
 
-def build_plugin(plugin: models.Plugin) -> dict[str, Any]:
+def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
+    plugin = plugin_with_files["plugin"]
+    plugin_files = plugin_with_files["plugin_files"]
     return {
         "id": plugin.resource_id,
         "snapshot_id": plugin.resource_snapshot_id,
@@ -310,7 +365,43 @@ def build_plugin(plugin: models.Plugin) -> dict[str, Any]:
         "latest_snapshot": plugin.resource.latest_snapshot_id
         == plugin.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in plugin.tags],
-        "files": [],
+        "files": [build_plugin_file_ref(plugin_file) for plugin_file in plugin_files],
+    }
+
+
+def build_plugin_snapshot(plugin: models.Plugin) -> dict[str, Any]:
+    return {
+        "id": plugin.resource_id,
+        "snapshot_id": plugin.resource_snapshot_id,
+        "name": plugin.name,
+        "description": plugin.description,
+        "user": build_user_ref(plugin.creator),
+        "group": build_group_ref(plugin.resource.owner),
+        "created_on": plugin.created_on,
+        "last_modified_on": plugin.resource.last_modified_on,
+        "latest_snapshot": plugin.resource.latest_snapshot_id
+        == plugin.resource_snapshot_id,
+        "tags": [build_tag_ref(tag) for tag in plugin.tags],
+    }
+
+
+def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]:
+    plugin = plugin_file_with_plugin["plugin"]
+    plugin_file = plugin_file_with_plugin["plugin_file"]
+    return {
+        "id": plugin_file.resource_id,
+        "snapshot_id": plugin_file.resource_snapshot_id,
+        "filename": plugin_file.filename,
+        "description": plugin_file.description,
+        "user": build_user_ref(plugin_file.creator),
+        "group": build_group_ref(plugin_file.resource.owner),
+        "created_on": plugin_file.created_on,
+        "last_modified_on": plugin_file.resource.last_modified_on,
+        "latest_snapshot": plugin_file.resource.latest_snapshot_id
+        == plugin_file.resource_snapshot_id,
+        "contents": plugin_file.contents,
+        "tasks": [],
+        "plugin": build_plugin_ref(plugin),
     }
 
 
