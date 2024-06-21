@@ -46,10 +46,14 @@ def _define_query_grammar() -> pp.ParserElement:
     # An escaped character is a '\' followed by a character that needs to be escaped
     escape = pp.Literal("\\") + pp.Word("\\?*\"'n", exact=1)
 
-    # Unquoted searches are limited to alphanumeric values and underscores
-    unquoted_words = pp.Combine(
-        (escape | pp.Word(pp.alphanums + "_") + ~pp.Literal(" "))[1, ...]
-    )
+    # Spaces are allowed in unquoted searches, but not when a field is specified
+    space = pp.Literal(" ")
+
+    # Unquoted searches are limited to words containing alphanumerics and underscores
+    unquoted_word = pp.Combine((escape | pp.Word(pp.alphanums + "_") + ~space)[1, ...])
+    unquoted_words = (
+        pp.Combine((escape | pp.Word(pp.alphanums + "_"))[1, ...]) | space
+    )[1, ...]
     # quoted searches can include any printable characters
     sgl_quoted_words = pp.Combine(
         (escape | pp.Word(pp.printables + " ", exclude_chars="\\?*'\n"))[1, ...]
@@ -59,6 +63,7 @@ def _define_query_grammar() -> pp.ParserElement:
     )
 
     # The search strings are a sequence of one ore more valid characters and wildcards
+    unquoted_search_word = (unquoted_word | wildcard)[1, ...]
     unquoted_search_string = (unquoted_words | wildcard)[1, ...]
     sgl_quoted_search_string = (
         pp.Suppress("'") + (sgl_quoted_words | wildcard)[1, ...] + pp.Suppress("'")
@@ -68,13 +73,14 @@ def _define_query_grammar() -> pp.ParserElement:
     )
     quoted_search_string = sgl_quoted_search_string | dbl_quoted_search_string
     search_string = pp.Group(quoted_search_string | unquoted_search_string)
+    field_search_value = pp.Group(quoted_search_string | unquoted_search_word)
 
     # A field name can contain alphabetical characters and underscores.
     field_name = pp.Word(pp.alphas + "_")
     # A colon is used as the separator between search fields and search strings.
     assign = pp.Suppress(pp.Literal(":"))
     # A field search string is a field name and search string separated by a colon.
-    field_search_string = pp.Group(field_name + assign + search_string)
+    field_search_string = pp.Group(field_name + assign + field_search_value)
 
     # A search term is either a single search string or a search field:string pair.
     search_term = field_search_string | search_string
@@ -205,14 +211,18 @@ if __name__ == "__main__":
         name:trial_??
         # search for literal '*'
         \*
+        # multi-word search
+        search all for this
+        # field multi-word search
+        field:"search all for this"
         """,
         full_dump=False,
     )
 
     DIOPTRA_QUERY_GRAMMAR.run_tests(
         r"""
-        # invalid because spaces are used in an unquoted search string
-        search all for this
+        # invalid multi word field search
+        field:search all for this
         # incorrect assignment character used
         bad=assignment
         # invalid characters in field name
