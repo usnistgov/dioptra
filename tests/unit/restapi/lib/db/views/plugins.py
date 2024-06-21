@@ -69,7 +69,7 @@ def get_latest_plugin_files(
     textual_sql = (
         text(LATEST_PLUGIN_FILES_SQL_PATH.read_text())
         .columns(
-            models.Plugin.resource_id.label("plugin_resource_id"),
+            models.PluginFile.plugin_id.label("plugin_resource_id"),
             models.PluginFile.resource_snapshot_id,
             models.PluginFile.resource_id,
             models.PluginFile.resource_type,

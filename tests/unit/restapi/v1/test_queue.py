@@ -730,7 +730,7 @@ def test_tag_queue(
     registered_queues: dict[str, Any],
     registered_tags: dict[str, Any],
 ) -> None:
-    """Test that different versions of a queue can be retrieved by the user.
+    """Test that tags can applied to queues.
 
     Given an authenticated user and registered queues, this test validates the following
     sequence of actions:
