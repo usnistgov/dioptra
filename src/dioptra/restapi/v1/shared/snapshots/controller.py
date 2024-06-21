@@ -113,6 +113,7 @@ def generate_resource_snapshots_endpoint(
                 data=snapshots,
                 group_id=group_id,
                 query=search_string,
+                draft_type=None,
                 index=page_index,
                 length=page_length,
                 total_num_elements=total_num_snapshots,

@@ -104,6 +104,7 @@ def assert_queue_response_contents_matches_expectations(
         "createdOn",
         "lastModifiedOn",
         "latestSnapshot",
+        "hasDraft",
         "name",
         "description",
         "tags",
@@ -118,6 +119,7 @@ def assert_queue_response_contents_matches_expectations(
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
+    assert isinstance(response["hasDraft"], bool)
 
     assert response["name"] == expected_contents["name"]
     assert response["description"] == expected_contents["description"]
@@ -612,7 +614,7 @@ def test_manage_new_queue_drafts(
         payload=drafts["draft1"],
     ).get_json()
     asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected, existing_draft=False
+        draft1_response, draft1_expected
     )
     asserts.assert_retrieving_draft_by_id_works(
         client,
@@ -632,7 +634,7 @@ def test_manage_new_queue_drafts(
         payload=drafts["draft2"],
     ).get_json()
     asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected, existing_draft=False
+        draft2_response, draft2_expected
     )
     asserts.assert_retrieving_draft_by_id_works(
         client,
@@ -660,7 +662,7 @@ def test_manage_new_queue_drafts(
         payload=draft1_mod,
     ).get_json()
     asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected, existing_draft=False
+        response, draft1_mod_expected
     )
 
     # test deletion
@@ -698,6 +700,8 @@ def test_manage_queue_snapshots(
         new_name=queue_to_rename["name"] + "modified",
         new_description=queue_to_rename["description"],
     ).get_json()
+    modified_queue.pop("hasDraft")
+    queue_to_rename.pop("hasDraft")
     queue_to_rename["latestSnapshot"] = False
     queue_to_rename["lastModifiedOn"] = modified_queue["lastModifiedOn"]
     asserts.assert_retrieving_snapshot_by_id_works(

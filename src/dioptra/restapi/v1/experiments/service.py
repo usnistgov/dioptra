@@ -22,11 +22,12 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import func, select
+from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import BackendDatabaseError, SearchNotImplementedError
+from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 
 from .errors import ExperimentAlreadyExistsError, ExperimentDoesNotExistError
@@ -66,7 +67,7 @@ class ExperimentService(object):
         group_id: int,
         commit: bool = True,
         **kwargs,
-    ) -> models.Experiment:
+    ) -> utils.ExperimentDict:
         """Create a new experiment.
 
         Args:
@@ -116,7 +117,9 @@ class ExperimentService(object):
                 name=new_experiment.name,
             )
 
-        return new_experiment
+        return utils.ExperimentDict(
+            experiment=new_experiment, queue=None, has_draft=False
+        )
 
     def get(
         self,
@@ -125,7 +128,7 @@ class ExperimentService(object):
         page_index: int,
         page_length: int,
         **kwargs,
-    ) -> tuple[list[models.Experiment], int]:
+    ) -> tuple[list[utils.ExperimentDict], int]:
         """Fetch a list of experiments, optionally filtering by search string and paging
         parameters.
 
@@ -177,7 +180,7 @@ class ExperimentService(object):
             raise BackendDatabaseError
 
         if total_num_experiments == 0:
-            return cast(list[models.Experiment], []), total_num_experiments
+            return cast(list[utils.ExperimentDict], []), total_num_experiments
 
         experiments_stmt = (
             select(models.Experiment)
@@ -193,7 +196,25 @@ class ExperimentService(object):
         )
         experiments = list(db.session.scalars(experiments_stmt).all())
 
-        return experiments, total_num_experiments
+        drafts_stmt = select(
+            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+        ).where(
+            models.DraftResource.payload["resource_id"]
+            .as_string()
+            .cast(Integer)
+            .in_(tuple(experiment.resource_id for experiment in experiments)),
+            models.DraftResource.user_id == current_user.user_id,
+        )
+        experiments_dict: dict[int, utils.ExperimentDict] = {
+            experiment.resource_id: utils.ExperimentDict(
+                experiment=experiment, queue=None, has_draft=False
+            )
+            for experiment in experiments
+        }
+        for resource_id in db.session.scalars(drafts_stmt):
+            experiments_dict[resource_id]["has_draft"] = True
+
+        return list(experiments_dict.values()), total_num_experiments
 
 
 class ExperimentIdService(object):
@@ -220,7 +241,7 @@ class ExperimentIdService(object):
         experiment_id: int,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> models.Experiment | None:
+    ) -> utils.ExperimentDict | None:
         """Fetch an experiment by its unique id.
 
         Args:
@@ -257,7 +278,21 @@ class ExperimentIdService(object):
 
             return None
 
-        return experiment
+        drafts_stmt = (
+            select(models.DraftResource.draft_resource_id)
+            .where(
+                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+                == experiment.resource_id,
+                models.DraftResource.user_id == current_user.user_id,
+            )
+            .exists()
+            .select()
+        )
+        has_draft = db.session.scalar(drafts_stmt)
+
+        return utils.ExperimentDict(
+            experiment=experiment, queue=None, has_draft=has_draft
+        )
 
     def modify(
         self,
@@ -265,9 +300,10 @@ class ExperimentIdService(object):
         name: str,
         description: str,
         entrypoint_ids: list[int],
+        error_if_not_found: bool = True,
         commit: bool = True,
         **kwargs,
-    ) -> models.Experiment | None:
+    ) -> utils.ExperimentDict | None:
         """Modify an experiment.
 
         Args:
@@ -290,11 +326,14 @@ class ExperimentIdService(object):
 
         # TODO: add association with entrypoints
 
-        experiment = cast(
-            models.Experiment, self.get(experiment_id, error_if_not_found=True, log=log)
+        experiment_dict = self.get(
+            experiment_id, error_if_not_found=error_if_not_found, log=log
         )
-        group_id = experiment.resource.group_id
+        if experiment_dict is None:
+            return None
 
+        experiment = experiment_dict["experiment"]
+        group_id = experiment.resource.group_id
         if (
             name != experiment.name
             and self._experiment_name_service.get(name, group_id=group_id, log=log)
@@ -319,7 +358,9 @@ class ExperimentIdService(object):
                 name=name,
             )
 
-        return new_experiment
+        return utils.ExperimentDict(
+            experiment=new_experiment, queue=None, has_draft=False
+        )
 
     def delete(self, experiment_id: int, **kwargs) -> dict[str, Any]:
         """Delete an experiment.

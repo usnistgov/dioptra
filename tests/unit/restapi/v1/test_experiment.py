@@ -109,6 +109,7 @@ def assert_experiment_response_contents_matches_expectations(
         "createdOn",
         "lastModifiedOn",
         "latestSnapshot",
+        "hasDraft",
         "name",
         "jobs",
         "entrypoints",
@@ -125,6 +126,7 @@ def assert_experiment_response_contents_matches_expectations(
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
+    assert isinstance(response["hasDraft"], bool)
 
     assert response["name"] == expected_contents["name"]
     assert response["description"] == expected_contents["description"]
@@ -329,7 +331,6 @@ def test_create_experiment(
         description=description,
     )
     experiment1_expected = experiment1_response.get_json()
-    print(experiment1_expected)  # TEST
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_expected,
         expected_contents={
@@ -453,7 +454,6 @@ def test_experiment_get_by_id(
     - The response is a single experiment with a matching ID.
     """
     experiment2_expected = registered_experiments["experiment2"]
-    print(experiment2_expected)  # TEST
 
     assert_retrieving_experiment_by_id_works(
         client,

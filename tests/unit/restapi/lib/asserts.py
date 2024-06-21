@@ -137,7 +137,6 @@ def assert_creating_another_existing_draft_fails(
 def assert_draft_response_contents_matches_expectations(
     response: dict[str, Any],
     expected_contents: dict[str, Any],
-    existing_draft: bool = True,
 ) -> None:
     """Assert that draft response contents is valid and matches the expected values.
 
@@ -158,9 +157,12 @@ def assert_draft_response_contents_matches_expectations(
         "lastModifiedOn",
         "resourceType",
         "payload",
+        "resource",
+        "resourceSnapshot",
+        "metadata",
     }
-    if existing_draft:
-        expected_keys.update(["resource", "resourceSnapshot", "numOtherDrafts"])
+    print(expected_keys)
+    print(set(response.keys()))
     assert set(response.keys()) == expected_keys
 
     # Validate the non-Ref fields
@@ -168,13 +170,13 @@ def assert_draft_response_contents_matches_expectations(
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
 
-    if existing_draft:
-        assert isinstance(response["resource"], int)
-        assert isinstance(response["resourceSnapshot"], int)
-        assert isinstance(response["numOtherDrafts"], int)
-        assert response["resource"] == expected_contents["resource_id"]
-        assert response["resourceSnapshot"] == expected_contents["resource_snapshot_id"]
-        assert response["numOtherDrafts"] == expected_contents["num_other_drafts"]
+    assert isinstance(response["resource"], int | None)
+    assert isinstance(response["resourceSnapshot"], int | None)
+    assert isinstance(response["metadata"], dict)
+    assert response["resource"] == expected_contents.get("resource_id", None)
+    assert response["resourceSnapshot"] == expected_contents.get(
+        "resource_snapshot_id", None
+    )
 
     assert helpers.is_iso_format(response["createdOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
@@ -286,8 +288,6 @@ def assert_retrieving_snapshot_by_id_works(
         f"/{V1_ROOT}/{resource_route}/{resource_id}/snapshots/{snapshot_id}",
         follow_redirects=True,
     )
-    print(response.get_json())
-    print(expected)
     assert response.status_code == 200 and response.get_json() == expected
 
 

@@ -31,12 +31,7 @@ from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 
-from .schema import (
-    DraftExistingResourceSchema,
-    DraftGetQueryParameters,
-    DraftNewResourceSchema,
-    DraftPageSchema,
-)
+from .schema import DraftGetQueryParameters, DraftPageSchema, DraftSchema
 from .service import (
     ResourceDraftsIdService,
     ResourceDraftsService,
@@ -86,11 +81,13 @@ def generate_resource_drafts_endpoint(
             )
             parsed_query_params = request.parsed_query_params  # noqa: F841
 
+            draft_type = parsed_query_params["draft_type"].value
             group_id = parsed_query_params["group_id"]
             page_index = parsed_query_params["index"]
             page_length = parsed_query_params["page_length"]
 
             drafts, total_num_drafts = self._draft_service.get(
+                draft_type=draft_type,
                 group_id=group_id,
                 page_index=page_index,
                 page_length=page_length,
@@ -98,10 +95,11 @@ def generate_resource_drafts_endpoint(
             )
             return utils.build_paging_envelope(
                 f"{route_prefix}/drafts",
-                build_fn=utils.build_new_resource_draft,
+                build_fn=utils.build_resource_draft,
                 data=drafts,
                 group_id=group_id,
                 query=None,
+                draft_type=draft_type,
                 index=page_index,
                 length=page_length,
                 total_num_elements=total_num_drafts,
@@ -109,7 +107,7 @@ def generate_resource_drafts_endpoint(
 
         @login_required
         @accepts(schema=request_schema, api=api)
-        @responds(schema=DraftNewResourceSchema, api=api)
+        @responds(schema=DraftSchema, api=api)
         def post(self):
             """Creates a Draft for the resource."""
             log = LOGGER.new(
@@ -117,7 +115,7 @@ def generate_resource_drafts_endpoint(
             )
             parsed_obj = request.parsed_obj  # noqa: F841
             draft = self._draft_service.create(parsed_obj, log=log)
-            return utils.build_new_resource_draft(draft)
+            return utils.build_resource_draft(draft)
 
     return ResourceDraftsEndpoint
 
@@ -151,7 +149,7 @@ def generate_resource_drafts_id_endpoint(
             super().__init__(*args, **kwargs)
 
         @login_required
-        @responds(schema=DraftNewResourceSchema, api=api)
+        @responds(schema=DraftSchema, api=api)
         def get(self, draftId: int):
             """Gets a Draft for the resource."""
             log = LOGGER.new(
@@ -160,11 +158,11 @@ def generate_resource_drafts_id_endpoint(
             draft = self._draft_id_service.get(
                 draftId, error_if_not_found=True, log=log
             )
-            return utils.build_new_resource_draft(cast(models.DraftResource, draft))
+            return utils.build_resource_draft(cast(models.DraftResource, draft))
 
         @login_required
         @accepts(schema=request_schema, api=api)
-        @responds(schema=DraftNewResourceSchema, api=api)
+        @responds(schema=DraftSchema, api=api)
         def put(self, draftId: int):
             """Modifies a Draft for the resource."""
             log = LOGGER.new(
@@ -172,7 +170,7 @@ def generate_resource_drafts_id_endpoint(
             )
             parsed_obj = request.parsed_obj  # type: ignore
             draft = self._draft_id_service.modify(draftId, payload=parsed_obj, log=log)
-            return utils.build_new_resource_draft(cast(models.DraftResource, draft))
+            return utils.build_resource_draft(cast(models.DraftResource, draft))
 
         @login_required
         @responds(schema=IdStatusResponseSchema, api=api)
@@ -215,7 +213,7 @@ def generate_resource_id_draft_endpoint(
             super().__init__(*args, **kwargs)
 
         @login_required
-        @responds(schema=DraftExistingResourceSchema, api=api)
+        @responds(schema=DraftSchema, api=api)
         def get(self, id: int):
             """Gets the Draft for this resource."""
             log = LOGGER.new(
@@ -224,13 +222,13 @@ def generate_resource_id_draft_endpoint(
             draft, num_other_drafts = self._id_draft_service.get(
                 id, error_if_not_found=True, log=log
             )
-            return utils.build_existing_resource_draft(
+            return utils.build_resource_draft(
                 cast(models.DraftResource, draft), num_other_drafts
             )
 
         @login_required
         @accepts(schema=request_schema, api=api)
-        @responds(schema=DraftExistingResourceSchema, api=api)
+        @responds(schema=DraftSchema, api=api)
         def post(self, id: int):
             """Creates a Draft for this resource."""
             log = LOGGER.new(
@@ -240,13 +238,13 @@ def generate_resource_id_draft_endpoint(
             draft, num_other_drafts = self._id_draft_service.create(
                 id, payload=parsed_obj, log=log
             )
-            return utils.build_existing_resource_draft(
+            return utils.build_resource_draft(
                 cast(models.DraftResource, draft), num_other_drafts
             )
 
         @login_required
         @accepts(schema=request_schema, api=api)
-        @responds(schema=DraftExistingResourceSchema, api=api)
+        @responds(schema=DraftSchema, api=api)
         def put(self, id: int):
             """Modifies the Draft for this resource."""
             log = LOGGER.new(
@@ -256,7 +254,7 @@ def generate_resource_id_draft_endpoint(
             draft, num_other_drafts = self._id_draft_service.modify(
                 id, payload=parsed_obj, error_if_not_found=True, log=log
             )
-            return utils.build_existing_resource_draft(
+            return utils.build_resource_draft(
                 cast(models.DraftResource, draft), num_other_drafts
             )
 
