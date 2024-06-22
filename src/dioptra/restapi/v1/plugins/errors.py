@@ -28,6 +28,14 @@ class PluginDoesNotExistError(Exception):
     """The requested plugin does not exist."""
 
 
+class PluginFileAlreadyExistsError(Exception):
+    """The plugin file filename already exists."""
+
+
+class PluginFileDoesNotExistError(Exception):
+    """The requested plugin file does not exist."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(PluginDoesNotExistError)
     def handle_plugin_does_not_exist_error(error):
@@ -39,6 +47,20 @@ def register_error_handlers(api: Api) -> None:
             {
                 "message": "Bad Request - The plugin name on the registration form "
                 "already exists. Please select another and resubmit."
+            },
+            400,
+        )
+
+    @api.errorhandler(PluginFileDoesNotExistError)
+    def handle_plugin_file_does_not_exist_error(error):
+        return {"message": "Not Found - The requested plugin file does not exist"}, 404
+
+    @api.errorhandler(PluginFileAlreadyExistsError)
+    def handle_plugin_file_already_exists_error(error):
+        return (
+            {
+                "message": "Bad Request - The plugin file filename on the "
+                "registration form already exists. Please select another and resubmit."
             },
             400,
         )

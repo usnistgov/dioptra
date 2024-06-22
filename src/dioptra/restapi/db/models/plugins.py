@@ -14,12 +14,12 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index, and_, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from dioptra.restapi.db.db import bigint, db, intpk, optionaljson_, optionalstr, text_
 
-from .resources import ResourceSnapshot
+from .resources import Resource, ResourceSnapshot, resource_dependencies_table
 
 # -- ORM Classes -----------------------------------------------------------------------
 
@@ -56,6 +56,22 @@ class PluginFile(ResourceSnapshot):
     resource_id: Mapped[bigint] = mapped_column(init=False, nullable=False, index=True)
     filename: Mapped[text_] = mapped_column(nullable=False, index=True)
     contents: Mapped[optionalstr]
+
+    # Derived fields (read-only)
+    plugin_id: Mapped[bigint] = column_property(
+        select(Resource.resource_id)
+        .join(
+            resource_dependencies_table,
+            and_(
+                Resource.resource_id
+                == resource_dependencies_table.c.parent_resource_id,
+                resource_dependencies_table.c.child_resource_id == resource_id,
+            ),
+        )
+        .limit(1)
+        .correlate_except(Resource)
+        .scalar_subquery()
+    )
 
     # Relationships
     tasks: Mapped[list["PluginTask"]] = relationship(init=False, back_populates="file")

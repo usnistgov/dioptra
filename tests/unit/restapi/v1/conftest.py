@@ -16,7 +16,9 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
 
-from typing import Any
+import textwrap
+from collections.abc import Iterator
+from typing import Any, cast
 
 import pytest
 from flask import Flask
@@ -28,7 +30,7 @@ from ..lib import actions
 
 
 @pytest.fixture
-def app(dependency_modules: list[Any]) -> Flask:
+def app(dependency_modules: list[Any]) -> Iterator[Flask]:
     from dioptra.restapi import create_app
 
     injector = Injector(dependency_modules)
@@ -68,7 +70,7 @@ def auth_account(
     db: SQLAlchemy,
     registered_users: dict[str, Any],  # noqa: F811
 ) -> dict[str, Any]:
-    user_info = registered_users["user1"]
+    user_info = cast(dict[str, Any], registered_users["user1"])
     login_response = actions.login(
         client, username=user_info["username"], password=user_info["password"]
     )
@@ -129,6 +131,123 @@ def registered_plugins(
         "plugin1": plugin1_response,
         "plugin2": plugin2_response,
         "plugin3": plugin3_response,
+    }
+
+
+@pytest.fixture
+def registered_plugin_with_files(
+    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+) -> dict[str, Any]:
+    plugin_response = actions.register_plugin(
+        client,
+        name="plugin",
+        description="The plugin with files.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    contents = textwrap.dedent(
+        """from dioptra import pyplugs
+
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f"Hello, {name}!"
+        """
+    )
+
+    plugin_file1_response = actions.register_plugin_file(
+        client,
+        plugin_id=plugin_response["id"],
+        filename="plugin_file_one.py",
+        description="The first plugin file.",
+        contents=contents,
+    ).get_json()
+    plugin_file2_response = actions.register_plugin_file(
+        client,
+        plugin_id=plugin_response["id"],
+        filename="plugin_file_two.py",
+        description="The second plugin file.",
+        contents=contents,
+    ).get_json()
+    plugin_file3_response = actions.register_plugin_file(
+        client,
+        plugin_id=plugin_response["id"],
+        filename="plugin_file_three.py",
+        description="Not Retrieved.",
+        contents=contents,
+    ).get_json()
+    return {
+        "plugin": plugin_response,
+        "plugin_file1": plugin_file1_response,
+        "plugin_file2": plugin_file2_response,
+        "plugin_file3": plugin_file3_response,
+    }
+
+
+@pytest.fixture
+def registered_plugin_with_file_and_tasks(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> dict[str, Any]:
+    plugin_response = actions.register_plugin(
+        client,
+        name="plugin",
+        description="The plugin with files.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    contents = textwrap.dedent(
+        """from dioptra import pyplugs
+
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f"Hello, {name}!"
+        """
+    )
+    plugin_file_without_tasks_response = actions.register_plugin_file(
+        client,
+        plugin_id=plugin_response["id"],
+        description="The plugin file with tasks.",
+        filename="plugin_file.py",
+        contents=contents,
+    ).get_json()
+    plugin_parameter_type_response = actions.register_plugin_parameter_type(
+        client,
+        name="plugin_parameter_type",
+        group_id=auth_account["default_group_id"],
+        structure=None,
+        description="The plugin parameter type used for the tasks.",
+    ).get_json()
+
+    plugin_task1: dict[str, Any] = {
+        "name": "plugin_task_one",
+        "input_params": [plugin_parameter_type_response],
+        "output_params": [plugin_parameter_type_response],
+    }
+    plugin_task2: dict[str, Any] = {
+        "name": "plugin_task_two",
+        "input_params": [plugin_parameter_type_response],
+        "output_params": [plugin_parameter_type_response],
+    }
+    plugin_task3: dict[str, Any] = {
+        "name": "plugin_task_three",
+        "input_params": [plugin_parameter_type_response],
+        "output_params": [plugin_parameter_type_response],
+    }
+
+    plugin_task_list = [plugin_task1, plugin_task2, plugin_task3]
+    plugin_file_with_tasks_response = actions.add_plugin_tasks_to_plugin_file(
+        client,
+        plugin_id=plugin_response["id"],
+        plugin_file_id=plugin_file_without_tasks_response["id"],
+        tasks=plugin_task_list,
+    ).get_json()
+    return {
+        "plugin": plugin_response,
+        "plugin_file": plugin_file_with_tasks_response,
+        "plugin_parameter_type": plugin_parameter_type_response,
+        "plugin_task1": plugin_task1,
+        "plugin_task2": plugin_task2,
+        "plugin_task3": plugin_task3,
+        "plugin_task_list": plugin_task_list,
     }
 
 
