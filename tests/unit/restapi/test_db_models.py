@@ -21,17 +21,38 @@ correctly and respect the data integrity constraints defined in the database sch
 These tests are a temporary measure that should eventually be replaced by integration
 tests for the REST API.
 """
+import base64
 import uuid
+from dataclasses import dataclass
 
 import pytest
 from faker import Faker
 from flask_sqlalchemy import SQLAlchemy
+from joserfc.jwk import JWKRegistry, OKPKey
 from sqlalchemy.exc import IntegrityError
 
 from dioptra.restapi.db import models
 
 from .lib import db as libdb
 from .lib.db import views as viewsdb
+
+# -- Data types ------------------------------------------------------------------------
+
+
+@dataclass
+class RegisteredJobWorkerAgent(object):
+    """Dataclass for storing a registered job worker agent's id and associated keys.
+
+    Attributes:
+        id: The resource id for a registered job worker agent.
+        public: The public key associated with the job worker agent.
+        private: The private key associated with the job worker agent.
+    """
+
+    id: int
+    public: str
+    private: str
+
 
 # -- Fixtures --------------------------------------------------------------------------
 
@@ -560,6 +581,32 @@ def registered_ml_model_id(
     return ml_model.resource_id
 
 
+@pytest.fixture
+def registered_job_worker_agent(
+    db: SQLAlchemy,
+    account: libdb.FakeAccount,
+    fake_data: libdb.FakeData,
+    registered_queue_id: int,
+) -> RegisteredJobWorkerAgent:
+    registered_queue = viewsdb.get_latest_queue(db, resource_id=registered_queue_id)
+
+    if registered_queue is None:
+        raise ValueError("Failed to retrieve the latest queue for test.")
+
+    job_worker_agent = fake_data.job_worker_agent(
+        creator=account.user,
+        group=account.group,
+        queues=[registered_queue],
+    )
+    db.session.add(job_worker_agent.agent)
+    db.session.commit()
+    return RegisteredJobWorkerAgent(
+        id=job_worker_agent.agent.resource_id,
+        public=job_worker_agent.public,
+        private=job_worker_agent.private,
+    )
+
+
 # -- Tests -----------------------------------------------------------------------------
 
 
@@ -887,6 +934,30 @@ def test_db_add_ml_model_to_job(
     assert new_ml_model.artifact.creator.user_id == account.user.user_id
     assert new_ml_model.artifact.resource.owner.group_id == account.group.group_id
     assert isinstance(new_ml_model.name, str)
+
+
+def test_db_register_job_worker_agent(
+    db: SQLAlchemy,
+    account: libdb.FakeAccount,
+    registered_job_worker_agent: RegisteredJobWorkerAgent,
+    registered_queue_id: int
+) -> None:
+    new_agent = viewsdb.get_latest_agent(
+        db, resource_id=registered_job_worker_agent.id
+    )
+
+    assert new_agent is not None
+    assert new_agent.settings is not None
+    assert new_agent.creator.user_id == account.user.user_id
+    assert new_agent.resource.owner.group_id == account.group.group_id
+    assert new_agent.agent_type == "job_worker"
+    assert set(new_agent.settings["queue_ids"]) == set([registered_queue_id])
+
+    pub_key = JWKRegistry.import_key(new_agent.public_key)
+    assert isinstance(pub_key, OKPKey)
+
+    public_key_ascii = base64.urlsafe_b64encode(pub_key.as_der(private=False)).decode()
+    assert public_key_ascii == registered_job_worker_agent.public
 
 
 def test_db_invalid_resource_dependency_fails(

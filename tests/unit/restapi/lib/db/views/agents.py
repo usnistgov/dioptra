@@ -14,28 +14,39 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from .agents import get_latest_agent
-from .artifacts import get_latest_artifact
-from .entry_points import get_latest_entry_point, get_latest_entry_point_queues
-from .experiments import get_latest_experiment, get_latest_experiment_entry_points
-from .jobs import get_latest_job, get_latest_job_artifacts
-from .ml_models import get_latest_ml_model
-from .plugin_task_parameter_types import get_latest_plugin_task_parameter_type
-from .plugins import get_latest_plugin, get_latest_plugin_files
-from .queues import get_latest_queue
+from __future__ import annotations
 
-__all__ = [
-    "get_latest_agent",
-    "get_latest_artifact",
-    "get_latest_entry_point_queues",
-    "get_latest_entry_point",
-    "get_latest_experiment_entry_points",
-    "get_latest_experiment",
-    "get_latest_job_artifacts",
-    "get_latest_job",
-    "get_latest_ml_model",
-    "get_latest_plugin_files",
-    "get_latest_plugin_task_parameter_type",
-    "get_latest_plugin",
-    "get_latest_queue",
-]
+from pathlib import Path
+
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select, text
+
+from dioptra.restapi.db import models
+
+# CAUTION!!!
+# Using __file__ to get a filepath within the tests/ directory is necessary, but DO NOT
+# DO THIS in src/dioptra, use importlib.resources instead!
+LATEST_AGENTS_SQL_PATH = Path(__file__).parent / "latest_agents.sql"
+
+
+def get_latest_agent(db: SQLAlchemy, resource_id: int) -> models.Agent | None:
+    """Get the latest agent for a given resource ID.
+
+    Args:
+        db: The SQLAlchemy database session.
+        resource_id: The ID of the resource.
+
+    Returns:
+        The latest agent for the given resource ID, or None if no agent is found.
+    """
+    textual_sql = (
+        text(LATEST_AGENTS_SQL_PATH.read_text())
+        .columns(
+            models.Agent.resource_snapshot_id,
+            models.Agent.resource_id,
+            models.Agent.resource_type,
+        )
+        .bindparams(resource_id=resource_id)
+    )
+    stmt = select(models.Agent).from_statement(textual_sql)
+    return db.session.scalar(stmt)

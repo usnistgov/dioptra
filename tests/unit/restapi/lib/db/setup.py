@@ -21,6 +21,9 @@ from sqlalchemy.orm import Session
 
 from dioptra.restapi.db import legacy_models, models
 
+AGENT_TYPES: Final[list[dict[str, str]]] = [
+    {"agent_type": "job_worker"},
+]
 ENTRY_POINT_PARAMETER_TYPES: Final[list[dict[str, str]]] = [
     {"parameter_type": "string"},
     {"parameter_type": "float"},
@@ -44,6 +47,7 @@ RESOURCE_LOCK_TYPES: Final[list[dict[str, str]]] = [
     {"resource_lock_type": "delete"},
 ]
 RESOURCE_TYPES: Final[list[dict[str, str]]] = [
+    {"resource_type": "agent"},
     {"resource_type": "artifact"},
     {"resource_type": "entry_point"},
     {"resource_type": "experiment"},
@@ -79,6 +83,7 @@ def setup_ontology(session: Session) -> None:
         session: The SQLAlchemy session object.
     """
     stmts = [
+        insert(models.agent_types_table).values(AGENT_TYPES),
         insert(models.entry_point_parameter_types_table).values(
             ENTRY_POINT_PARAMETER_TYPES
         ),

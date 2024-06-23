@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from .agents import Agent, agent_types_table
 from .artifacts import Artifact
 from .entry_points import (
     EntryPoint,
@@ -65,6 +66,7 @@ from .tags import Tag
 from .users import User
 
 __all__ = [
+    "Agent",
     "Artifact",
     "DraftResource",
     "EntryPoint",
@@ -96,6 +98,7 @@ __all__ = [
     "Tag",
     "User",
     "UserLock",
+    "agent_types_table",
     "entry_point_parameter_types_table",
     "group_lock_types_table",
     "job_status_types_table",

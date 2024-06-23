@@ -14,11 +14,14 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import base64
 import textwrap
 import uuid
 from dataclasses import dataclass
+from typing import Any, cast
 
 from faker import Faker
+from joserfc.jwk import JWKRegistry, OKPKey
 from passlib.hash import pbkdf2_sha256
 
 from dioptra.restapi.db import models
@@ -52,6 +55,21 @@ class FakePlugin(object):
     plugin_task: models.PluginTask
     plugin_file: models.PluginFile
     init_plugin_file: models.PluginFile
+
+
+@dataclass
+class FakeAgent(object):
+    """Dataclass for storing a fake agent ORM object and associated keys.
+
+    Attributes:
+        agent: An ORM object representing a fake agent.
+        public: The public key of the group agent in PEM format.
+        private: The private key of the group agent in PEM format.
+    """
+
+    agent: models.Agent
+    public: str
+    private: str
 
 
 class FakeData(object):
@@ -490,3 +508,49 @@ class FakeData(object):
         )
 
         return new_ml_model
+
+    def job_worker_agent(
+        self,
+        creator: models.User,
+        group: models.Group,
+        queues: list[models.Queue],
+        include_description: bool = False,
+    ) -> FakeAgent:
+        """Generate a fake job worker agent.
+
+        Args:
+            creator: The user that created the job worker agent.
+            group: The group that owns the job worker agent.
+            queues: A list of queues that the job worker agent is configured to watch.
+            include_description: Whether to generate a fake description for the job
+                worker agent.
+
+        Returns:
+            A FakeAgent object containing an agent ORM object and associated keys.
+        """
+        key = cast(
+            OKPKey, JWKRegistry.generate_key(key_type="OKP", crv_or_size="Ed25519")
+        )
+        name = self._faker.word()
+        settings: dict[str, Any] = {
+            "queue_ids": [queue.resource_id for queue in queues],
+        }
+        description = self._faker.sentence() if include_description else None
+        public_key_ascii = base64.urlsafe_b64encode(key.as_der(private=False)).decode()
+        private_key_ascii = base64.urlsafe_b64encode(key.as_der(private=True)).decode()
+
+        agent_resource = models.Resource(resource_type="agent", owner=group)
+        agent = models.Agent(
+            name=name,
+            agent_type="job_worker",
+            public_key=key.as_dict(private=False),
+            settings=settings,
+            description=description,
+            resource=agent_resource,
+            creator=creator,
+        )
+        return FakeAgent(
+            agent=agent,
+            public=public_key_ascii,
+            private=private_key_ascii,
+        )

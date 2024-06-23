@@ -664,7 +664,6 @@ def load_user(user_id: str) -> models.User | None:
     needed to support the "logout everywhere" functionality and provides a mechanism for
     expiring sessions.
 
-
     Args:
         user_id: A string containing a UUID that matches the user's alternative ID.
 
@@ -674,4 +673,4 @@ def load_user(user_id: str) -> models.User | None:
     stmt = select(models.User).filter_by(
         alternative_id=uuid.UUID(user_id), is_deleted=False
     )
-    return db.session.scalars(stmt).first()
+    return db.session.scalar(stmt)
