@@ -54,6 +54,7 @@ dependencies = [
     "flask-restx>=0.5.1",
     "Flask-SQLAlchemy>=2.4.0",
     "injector>=0.18.0",
+    "joserfc>=0.12.0",
     "jsonschema>=4.17.0",
     "marshmallow>=3.9.0,<4",
     "multimethod>=1.5",
