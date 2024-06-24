@@ -190,7 +190,7 @@ def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
         "id": queue.resource_id,
         "name": queue.name,
         "group": build_group_ref(queue.resource.owner),
-        "url": build_url(f"{QUEUES}/{queue.queue_id}"),
+        "url": build_url(f"{QUEUES}/{queue.resource_id}"),
     }
 
 
@@ -207,11 +207,11 @@ def build_plugin_parameter_type_ref(
         The PluginParameterTypeRef dictionary.
     """
     return {
-        "id": plugin_param_type.plugin_parameter_type_id,
+        "id": plugin_param_type.resource_id,
         "name": plugin_param_type.name,
         "group": build_group_ref(plugin_param_type.resource.owner),
         "url": build_url(
-            f"{PLUGIN_PARAMETER_TYPES}/{plugin_param_type.plugin_parameter_type_id}"
+            f"{PLUGIN_PARAMETER_TYPES}/{plugin_param_type.resource_id}"
         ),
     }
 
