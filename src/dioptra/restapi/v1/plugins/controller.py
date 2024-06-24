@@ -15,8 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Plugin resources."""
-from __future__ import annotations
-
 import uuid
 from typing import cast
 
@@ -107,11 +105,12 @@ class PluginEndpoint(Resource):
             log=log,
         )
         return utils.build_paging_envelope(
-            "plugins",
-            utils.build_plugin,
-            plugins,
+            V1_PLUGINS_ROUTE,
+            build_fn=utils.build_plugin,
+            data=plugins,
             group_id=group_id,
             query=search_string,
+            draft_type=None,
             index=page_index,
             length=page_length,
             total_num_elements=total_num_plugins,
@@ -246,6 +245,7 @@ class PluginIdFilesEndpoint(Resource):
             plugin_files,
             group_id=None,
             query=search_string,
+            draft_type=None,
             index=page_index,
             length=page_length,
             total_num_elements=total_num_plugin_files,

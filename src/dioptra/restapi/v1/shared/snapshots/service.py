@@ -59,7 +59,7 @@ class ResourceSnapshotsService(object):
         page_length: int,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> tuple[list[models.ResourceSnapshot], int] | None:
+    ) -> tuple[list[dict[str, Any]], int] | None:
         """Fetch a list of snapshots of a resource.
 
         Args:
@@ -138,7 +138,10 @@ class ResourceSnapshotsService(object):
             .offset(page_index)
             .limit(page_length)
         )
-        snapshots = list(db.session.scalars(stmt).all())
+        snapshots = [
+            {self._resource_type: snapshot, "has_draft": None}
+            for snapshot in db.session.scalars(stmt)
+        ]
 
         return snapshots, total_num_snapshots
 
@@ -165,7 +168,7 @@ class ResourceSnapshotsIdService(object):
         snapshot_id: int,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> list[models.ResourceSnapshot] | None:
+    ) -> dict[str, Any] | None:
         """Fetch a specific snapshot of a resource.
 
         Args:
@@ -214,4 +217,4 @@ class ResourceSnapshotsIdService(object):
 
             return None
 
-        return snapshot
+        return {self._resource_type: snapshot, "has_draft": None}

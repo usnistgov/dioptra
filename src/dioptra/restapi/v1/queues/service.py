@@ -22,11 +22,12 @@ from typing import Any, Final
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import func, select
+from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
@@ -69,7 +70,7 @@ class QueueService(object):
         group_id: int,
         commit: bool = True,
         **kwargs,
-    ) -> models.Queue:
+    ) -> utils.QueueDict:
         """Create a new queue.
 
         Args:
@@ -108,7 +109,7 @@ class QueueService(object):
                 name=new_queue.name,
             )
 
-        return new_queue
+        return utils.QueueDict(queue=new_queue, has_draft=False)
 
     def get(
         self,
@@ -117,7 +118,7 @@ class QueueService(object):
         page_index: int,
         page_length: int,
         **kwargs,
-    ) -> Any:
+    ) -> tuple[list[utils.QueueDict], int]:
         """Fetch a list of queues, optionally filtering by search string and paging
         parameters.
 
@@ -170,8 +171,8 @@ class QueueService(object):
         if total_num_queues == 0:
             return [], total_num_queues
 
-        stmt = (
-            select(models.Queue)  # type: ignore
+        queues_stmt = (
+            select(models.Queue)
             .join(models.Resource)
             .where(
                 *filters,
@@ -181,9 +182,25 @@ class QueueService(object):
             .offset(page_index)
             .limit(page_length)
         )
-        queues = db.session.scalars(stmt).all()
+        queues = list(db.session.scalars(queues_stmt).all())
 
-        return queues, total_num_queues
+        drafts_stmt = select(
+            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+        ).where(
+            models.DraftResource.payload["resource_id"]
+            .as_string()
+            .cast(Integer)
+            .in_(tuple(queue.resource_id for queue in queues)),
+            models.DraftResource.user_id == current_user.user_id,
+        )
+        queues_dict: dict[int, utils.QueueDict] = {
+            queue.resource_id: utils.QueueDict(queue=queue, has_draft=False)
+            for queue in queues
+        }
+        for resource_id in db.session.scalars(drafts_stmt):
+            queues_dict[resource_id]["has_draft"] = True
+
+        return list(queues_dict.values()), total_num_queues
 
 
 class QueueIdService(object):
@@ -205,7 +222,7 @@ class QueueIdService(object):
         queue_id: int,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> models.Queue | None:
+    ) -> utils.QueueDict | None:
         """Fetch a queue by its unique id.
 
         Args:
@@ -241,7 +258,19 @@ class QueueIdService(object):
 
             return None
 
-        return queue
+        drafts_stmt = (
+            select(models.DraftResource.draft_resource_id)
+            .where(
+                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+                == queue.resource_id,
+                models.DraftResource.user_id == current_user.user_id,
+            )
+            .exists()
+            .select()
+        )
+        has_draft = db.session.scalar(drafts_stmt)
+
+        return utils.QueueDict(queue=queue, has_draft=has_draft)
 
     def modify(
         self,
@@ -251,7 +280,7 @@ class QueueIdService(object):
         error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
-    ) -> models.Queue | None:
+    ) -> utils.QueueDict | None:
         """Modify a queue.
 
         Args:
@@ -272,11 +301,12 @@ class QueueIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        queue = self.get(queue_id, error_if_not_found=error_if_not_found, log=log)
+        queue_dict = self.get(queue_id, error_if_not_found=error_if_not_found, log=log)
 
-        if queue is None:
+        if queue_dict is None:
             return None
 
+        queue = queue_dict["queue"]
         group_id = queue.resource.group_id
         if (
             name != queue.name
@@ -303,7 +333,7 @@ class QueueIdService(object):
                 description=description,
             )
 
-        return new_queue
+        return utils.QueueDict(queue=new_queue, has_draft=False)
 
     def delete(self, queue_id: int, **kwargs) -> dict[str, Any]:
         """Delete a queue.

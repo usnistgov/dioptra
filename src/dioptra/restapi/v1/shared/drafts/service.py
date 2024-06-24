@@ -59,6 +59,7 @@ class ResourceDraftsService(object):
 
     def get(
         self,
+        draft_type: str,
         group_id: int | None,
         page_index: int,
         page_length: int,
@@ -67,6 +68,7 @@ class ResourceDraftsService(object):
         """Fetch a list of drafts
 
         Args:
+            draft_type: The type of drafts to retrieve (all, existing, or new)
             group_id: A group ID used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of drafts to be returned.
@@ -84,6 +86,17 @@ class ResourceDraftsService(object):
         filters = list()
         if group_id is not None:
             filters.append(models.DraftResource.group_id == group_id)
+
+        if draft_type == "existing":
+            filters.append(
+                models.DraftResource.payload["resource_id"].as_string()
+                != None  # noqa: E711
+            )
+        elif draft_type == "new":
+            filters.append(
+                models.DraftResource.payload["resource_id"].as_string()
+                == None  # noqa: E711
+            )
 
         stmt = select(func.count(models.DraftResource.draft_resource_id)).where(
             *filters,

@@ -80,14 +80,15 @@ class PluginParameterTypeEndpoint(Resource):
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
 
-        plugin_parameter_types, total_num_plugin_param_types = (
-            self._plugin_parameter_type_service.get(
-                group_id=group_id,
-                search_string=search_string,
-                page_index=page_index,
-                page_length=page_length,
-                log=log,
-            )
+        (
+            plugin_parameter_types,
+            total_num_plugin_param_types,
+        ) = self._plugin_parameter_type_service.get(
+            group_id=group_id,
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            log=log,
         )
         return utils.build_paging_envelope(
             "pluginParameterTypes",
@@ -95,6 +96,7 @@ class PluginParameterTypeEndpoint(Resource):
             data=plugin_parameter_types,
             group_id=group_id,
             query=search_string,
+            draft_type=None,
             index=page_index,
             length=page_length,
             total_num_elements=total_num_plugin_param_types,

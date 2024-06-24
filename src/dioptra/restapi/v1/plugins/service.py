@@ -22,7 +22,7 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import func, select
+from sqlalchemy import Integer, func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
@@ -110,7 +110,9 @@ class PluginService(object):
                 name=new_plugin.name,
             )
 
-        plugin_dict = utils.PluginWithFilesDict(plugin=new_plugin, plugin_files=[])
+        plugin_dict = utils.PluginWithFilesDict(
+            plugin=new_plugin, plugin_files=[], has_draft=False
+        )
         return plugin_dict
 
     def get(
@@ -228,12 +230,26 @@ class PluginService(object):
         # build a dictionary structure to re-associate plugins and plugin files
         plugins_dict: dict[int, utils.PluginWithFilesDict] = {
             plugin.resource_id: utils.PluginWithFilesDict(
-                plugin=plugin, plugin_files=[]
+                plugin=plugin, plugin_files=[], has_draft=False
             )
             for plugin in plugins
         }
         for plugin_file in plugin_files:
             plugins_dict[plugin_file.plugin_id]["plugin_files"].append(plugin_file)
+
+        drafts_stmt = select(
+            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+        ).where(
+            models.DraftResource.payload["resource_id"]
+            .as_string()
+            .cast(Integer)
+            .in_(
+                tuple(plugin["plugin"].resource_id for plugin in plugins_dict.values())
+            ),
+            models.DraftResource.user_id == current_user.user_id,
+        )
+        for resource_id in db.session.scalars(drafts_stmt):
+            plugins_dict[resource_id]["has_draft"] = True
 
         return list(plugins_dict.values()), total_num_plugins
 
@@ -309,7 +325,21 @@ class PluginIdService(object):
         )
         plugin_files = list(db.session.scalars(latest_plugin_files_stmt).all())
 
-        return utils.PluginWithFilesDict(plugin=plugin, plugin_files=plugin_files)
+        drafts_stmt = (
+            select(models.DraftResource.draft_resource_id)
+            .where(
+                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+                == plugin.resource_id,
+                models.DraftResource.user_id == current_user.user_id,
+            )
+            .exists()
+            .select()
+        )
+        has_draft = db.session.scalar(drafts_stmt)
+
+        return utils.PluginWithFilesDict(
+            plugin=plugin, plugin_files=plugin_files, has_draft=has_draft
+        )
 
     def modify(
         self,
@@ -376,7 +406,9 @@ class PluginIdService(object):
                 description=description,
             )
 
-        return utils.PluginWithFilesDict(plugin=new_plugin, plugin_files=plugin_files)
+        return utils.PluginWithFilesDict(
+            plugin=new_plugin, plugin_files=plugin_files, has_draft=False
+        )
 
     def delete(self, plugin_id: int, **kwargs) -> dict[str, Any]:
         """Delete a plugin.
@@ -601,7 +633,9 @@ class PluginIdFileService(object):
                 filename=new_plugin_file.filename,
             )
 
-        return utils.PluginFileDict(plugin_file=new_plugin_file, plugin=plugin)
+        return utils.PluginFileDict(
+            plugin_file=new_plugin_file, plugin=plugin, has_draft=False
+        )
 
     def get(
         self,
@@ -700,11 +734,31 @@ class PluginIdFileService(object):
             .offset(page_index)
             .limit(page_length)
         )
-        plugin_files = [
-            utils.PluginFileDict(plugin=plugin, plugin_file=plugin_file)
+        plugin_files_dict: dict[int, utils.PluginFileDict] = {
+            plugin_file.resource_id: utils.PluginFileDict(
+                plugin=plugin, plugin_file=plugin_file, has_draft=False
+            )
             for plugin_file in db.session.scalars(latest_plugin_files_stmt)
-        ]
-        return plugin_files, total_num_plugin_files
+        }
+
+        drafts_stmt = select(
+            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+        ).where(
+            models.DraftResource.payload["resource_id"]
+            .as_string()
+            .cast(Integer)
+            .in_(
+                tuple(
+                    plugin_file["plugin_file"].resource_id
+                    for plugin_file in plugin_files_dict.values()
+                )
+            ),
+            models.DraftResource.user_id == current_user.user_id,
+        )
+        for resource_id in db.session.scalars(drafts_stmt):
+            plugin_files_dict[resource_id]["has_draft"] = True
+
+        return list(plugin_files_dict.values()), total_num_plugin_files
 
     def delete(self, plugin_id: int, **kwargs) -> dict[str, Any]:
         """Deletes all plugin files associated with a plugin.
@@ -831,7 +885,21 @@ class PluginIdFileIdService(object):
 
             return None
 
-        return utils.PluginFileDict(plugin_file=plugin_file, plugin=plugin)
+        drafts_stmt = (
+            select(models.DraftResource.draft_resource_id)
+            .where(
+                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+                == plugin_file.resource_id,
+                models.DraftResource.user_id == current_user.user_id,
+            )
+            .exists()
+            .select()
+        )
+        has_draft = db.session.scalar(drafts_stmt)
+
+        return utils.PluginFileDict(
+            plugin_file=plugin_file, plugin=plugin, has_draft=has_draft
+        )
 
     def modify(
         self,
@@ -890,7 +958,9 @@ class PluginIdFileIdService(object):
                 filename=new_plugin_file.filename,
             )
 
-        return utils.PluginFileDict(plugin_file=new_plugin_file, plugin=plugin)
+        return utils.PluginFileDict(
+            plugin_file=new_plugin_file, plugin=plugin, has_draft=False
+        )
 
     def delete(self, plugin_id: int, plugin_file_id: int, **kwargs) -> dict[str, Any]:
         """Deletes all plugin files associated with a plugin.

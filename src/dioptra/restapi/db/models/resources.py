@@ -153,6 +153,43 @@ shared_resource_tags_table = db.Table(
 # -- ORM Classes -----------------------------------------------------------------------
 
 
+class DraftResource(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "draft_resources"
+
+    # Database fields
+    draft_resource_id: Mapped[intpk] = mapped_column(init=False)
+    group_id: Mapped[bigint] = mapped_column(
+        ForeignKey("groups.group_id"), init=False, nullable=False
+    )
+    resource_type: Mapped[text_] = mapped_column(
+        ForeignKey("resource_types.resource_type"), nullable=False
+    )
+    user_id: Mapped[bigint] = mapped_column(
+        ForeignKey("users.user_id"), init=False, nullable=False, index=True
+    )
+    payload: Mapped[json_] = mapped_column(nullable=False)
+    created_on: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
+    last_modified_on: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
+
+    # Relationships
+    target_owner: Mapped["Group"] = relationship(
+        back_populates="draft_resources", lazy="joined"
+    )
+    creator: Mapped["User"] = relationship(
+        back_populates="created_drafts", lazy="joined"
+    )
+
+    # Additional settings
+    __table_args__ = (Index(None, "group_id", "resource_type", "user_id"),)
+
+    # Initialize default values using dataclass __post_init__ method
+    # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
+    def __post_init__(self) -> None:
+        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+        self.created_on = timestamp
+        self.last_modified_on = timestamp
+
+
 class ResourceSnapshot(db.Model):  # type: ignore[name-defined]
     __tablename__ = "resource_snapshots"
 
@@ -348,38 +385,7 @@ class SharedResource(db.Model):  # type: ignore[name-defined]
         self.created_on = timestamp
 
 
-class DraftResource(db.Model):  # type: ignore[name-defined]
-    __tablename__ = "draft_resources"
-
-    # Database fields
-    draft_resource_id: Mapped[intpk] = mapped_column(init=False)
-    group_id: Mapped[bigint] = mapped_column(
-        ForeignKey("groups.group_id"), init=False, nullable=False
-    )
-    resource_type: Mapped[text_] = mapped_column(
-        ForeignKey("resource_types.resource_type"), nullable=False
-    )
-    user_id: Mapped[bigint] = mapped_column(
-        ForeignKey("users.user_id"), init=False, nullable=False, index=True
-    )
-    payload: Mapped[json_] = mapped_column(nullable=False)
-    created_on: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
-    last_modified_on: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
-
-    # Relationships
-    target_owner: Mapped["Group"] = relationship(
-        back_populates="draft_resources", lazy="joined"
-    )
-    creator: Mapped["User"] = relationship(
-        back_populates="created_drafts", lazy="joined"
-    )
-
-    # Additional settings
-    __table_args__ = (Index(None, "group_id", "resource_type", "user_id"),)
-
-    # Initialize default values using dataclass __post_init__ method
-    # https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__
-    def __post_init__(self) -> None:
-        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        self.created_on = timestamp
-        self.last_modified_on = timestamp
+draft_resource_json_resource_id = Index(
+    "ix_draft_resources_payload_resource_id",
+    DraftResource.payload["resource_id"].as_string().cast(Integer),
+)

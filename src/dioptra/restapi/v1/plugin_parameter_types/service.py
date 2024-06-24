@@ -22,11 +22,12 @@ from typing import Any, Final
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import func, select
+from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import BackendDatabaseError, SearchNotImplementedError
+from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 
 from .errors import (
@@ -68,7 +69,7 @@ class PluginParameterTypeService(object):
         group_id: int,
         commit: bool = True,
         **kwargs,
-    ) -> models.PluginTaskParameterType:
+    ) -> utils.PluginParameterTypeDict:
         """Create a new plugin parameter type.
 
         Args:
@@ -122,7 +123,9 @@ class PluginParameterTypeService(object):
                 name=new_plugin_parameter_type.name,
             )
 
-        return new_plugin_parameter_type
+        return utils.PluginParameterTypeDict(
+            plugin_parameter_type=new_plugin_parameter_type, has_draft=False
+        )
 
     def get(
         self,
@@ -131,7 +134,7 @@ class PluginParameterTypeService(object):
         page_index: int,
         page_length: int,
         **kwargs,
-    ) -> Any:
+    ) -> tuple[list[utils.PluginParameterTypeDict], int]:
         """Fetch a list of plugin parameter types, optionally filtering by
         search string and paging parameters.
 
@@ -186,8 +189,8 @@ class PluginParameterTypeService(object):
         if total_num_plugin_parameter_types == 0:
             return [], total_num_plugin_parameter_types
 
-        stmt = (
-            select(models.PluginTaskParameterType)  # type: ignore
+        plugin_parameter_types_stmt = (
+            select(models.PluginTaskParameterType)
             .join(models.Resource)
             .where(
                 *filters,
@@ -198,9 +201,37 @@ class PluginParameterTypeService(object):
             .offset(page_index)
             .limit(page_length)
         )
-        plugin_parameter_types = db.session.scalars(stmt).all()
+        plugin_parameter_types = list(
+            db.session.scalars(plugin_parameter_types_stmt).all()
+        )
 
-        return plugin_parameter_types, total_num_plugin_parameter_types
+        drafts_stmt = select(
+            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+        ).where(
+            models.DraftResource.payload["resource_id"]
+            .as_string()
+            .cast(Integer)
+            .in_(
+                tuple(
+                    plugin_parameter_type.resource_id
+                    for plugin_parameter_type in plugin_parameter_types
+                )
+            ),
+            models.DraftResource.user_id == current_user.user_id,
+        )
+        plugin_parameter_types_dict: dict[int, utils.PluginParameterTypeDict] = {
+            plugin_parameter_type.resource_id: utils.PluginParameterTypeDict(
+                plugin_parameter_type=plugin_parameter_type, has_draft=False
+            )
+            for plugin_parameter_type in plugin_parameter_types
+        }
+        for resource_id in db.session.scalars(drafts_stmt):
+            plugin_parameter_types_dict[resource_id]["has_draft"] = True
+
+        return (
+            list(plugin_parameter_types_dict.values()),
+            total_num_plugin_parameter_types,
+        )
 
 
 class PluginParameterTypeIdService(object):
@@ -226,7 +257,7 @@ class PluginParameterTypeIdService(object):
         plugin_parameter_type_id: int,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> models.PluginTaskParameterType | None:
+    ) -> utils.PluginParameterTypeDict | None:
         """Fetch a plugin parameter type by its unique id.
 
         Args:
@@ -270,7 +301,21 @@ class PluginParameterTypeIdService(object):
 
             return None
 
-        return plugin_parameter_type
+        drafts_stmt = (
+            select(models.DraftResource.draft_resource_id)
+            .where(
+                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+                == plugin_parameter_type.resource_id,
+                models.DraftResource.user_id == current_user.user_id,
+            )
+            .exists()
+            .select()
+        )
+        has_draft = db.session.scalar(drafts_stmt)
+
+        return utils.PluginParameterTypeDict(
+            plugin_parameter_type=plugin_parameter_type, has_draft=has_draft
+        )
 
     def modify(
         self,
@@ -281,7 +326,7 @@ class PluginParameterTypeIdService(object):
         error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
-    ) -> models.PluginTaskParameterType | None:
+    ) -> utils.PluginParameterTypeDict | None:
         """Rename a plugin parameter type.
 
         Args:
@@ -306,13 +351,14 @@ class PluginParameterTypeIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        plugin_parameter_type = self.get(
+        plugin_parameter_type_dict = self.get(
             plugin_parameter_type_id, error_if_not_found=error_if_not_found, log=log
         )
 
-        if plugin_parameter_type is None:
+        if plugin_parameter_type_dict is None:
             return None
 
+        plugin_parameter_type = plugin_parameter_type_dict["plugin_parameter_type"]
         group_id = plugin_parameter_type.resource.group_id
         if (
             name != plugin_parameter_type.name
@@ -347,7 +393,9 @@ class PluginParameterTypeIdService(object):
                 description=description,
             )
 
-        return new_plugin_parameter_type
+        return utils.PluginParameterTypeDict(
+            plugin_parameter_type=new_plugin_parameter_type, has_draft=False
+        )
 
     def delete(self, plugin_parameter_type_id: int, **kwargs) -> dict[str, Any]:
         """Delete a plugin parameter type.

@@ -88,6 +88,7 @@ class ExperimentEndpoint(Resource):
             data=experiments,
             group_id=group_id,
             query=search_string,
+            draft_type=None,
             index=page_index,
             length=page_length,
             total_num_elements=total_num_experiments,
@@ -173,7 +174,7 @@ class ExperimentIdEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # type: ignore
         experiment = cast(
-            models.Experiment,
+            utils.ExperimentDict,
             self._experiment_id_service.modify(
                 id,
                 name=parsed_obj["name"],
