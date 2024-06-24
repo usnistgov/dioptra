@@ -105,12 +105,6 @@ class PluginTaskSchema(Schema):
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the PluginTask."),
-        # marshmallow does not properly respect dump_only in a nested type if there
-        # are no other dump_only fields in the schema. Setting this field as both
-        # load_only and dump_only fixes the nested type issue while keeping this field
-        # present in both load and dump usage.
-        load_only=True,
-        dump_only=True,
         required=True,
         validate=validate.Regexp(
             ALLOWED_PLUGIN_TASK_REGEX,
