@@ -17,19 +17,108 @@
 """The server-side functions that perform auth endpoint operations."""
 from __future__ import annotations
 
+import base64
 import datetime
 import uuid
-from typing import Any, cast
+from dataclasses import asdict, dataclass
+from typing import Any, Final, cast
 
 import structlog
 from flask_login import current_user, login_user, logout_user
 from injector import inject
+from joserfc import jwk
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.v1.users.service import UserNameService, UserPasswordService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+KEY_TYPE_TO_ALGORITHM_MAPPINGS: Final[dict[str, str]] = {
+    "RSA": "RS256",
+    "EC": "ES256",
+    "OKP": "ES256",
+}
+
+
+@dataclass
+class AsymmetricKey(object):
+    key: jwk.RSAKey | jwk.ECKey | jwk.OKPKey
+
+    @property
+    def key_type(self) -> str:
+        return self.key.key_type
+
+    @classmethod
+    def from_ascii(cls, data: str, key_type: str) -> "AsymmetricKey":
+        key = jwk.JWKRegistry.import_key(
+            base64.urlsafe_b64decode(data), key_type=key_type
+        )
+        cls._validate_key_type(key)
+        return cls(key=cast(jwk.RSAKey | jwk.ECKey | jwk.OKPKey, key))
+
+    @classmethod
+    def from_dict(cls, data: dict[str, str | list[str]]) -> "AsymmetricKey":
+        key = jwk.JWKRegistry.import_key(data)
+        cls._validate_key_type(key)
+        return cls(key=cast(jwk.RSAKey | jwk.ECKey | jwk.OKPKey, key))
+
+    def to_ascii(self, private: bool = False) -> str:
+        return base64.urlsafe_b64encode(self.key.as_der(private=private)).decode()
+
+    def to_dict(self, private: bool = False) -> dict[str, str | list[str]]:
+        return self.key.as_dict(private=private)
+
+    @staticmethod
+    def _validate_key_type(key: jwk.Key) -> None:
+        if not isinstance(key, (jwk.RSAKey, jwk.ECKey, jwk.OKPKey)):
+            raise ValueError(
+                f"Received invalid key type {key.key_type}. Key must be based on an "
+                "asymmetric algorithm. Current allowed algorithms are 'RSA', 'EC', "
+                "and 'OKP'."
+            )
+
+
+@dataclass
+class JwkSettings(object):
+    key_type: str
+    crv_or_size: str | int
+
+
+class JwkService(object):
+    def __init__(self, settings: JwkSettings) -> None:
+        self._settings = settings
+
+    def generate_asymmetric_key(self, **kwargs) -> AsymmetricKey:
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Generating asymmetric key", **asdict(self._settings))
+        key = jwk.JWKRegistry.generate_key(**asdict(self._settings))
+        return AsymmetricKey(key=cast(jwk.RSAKey | jwk.ECKey | jwk.OKPKey, key))
+
+    def import_asymmetric_key(
+        self, data: str | dict[str, str | list[str]], **kwargs
+    ) -> AsymmetricKey:
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        if not isinstance(data, (str, dict)):
+            data_type = type(data)
+            log.error(
+                "Invalid data type for importing asymmetric key", data_type=data_type
+            )
+            raise ValueError(
+                f"Invalid data type {data_type} for importing asymmetric key"
+            )
+
+        if isinstance(data, dict):
+            log.debug("Importing asymmetric key from dict")
+            return AsymmetricKey.from_dict(data)
+
+        if isinstance(data, str):
+            log.debug(
+                "Importing asymmetric key from ascii",
+                key_type=self._settings.key_type,
+            )
+            return AsymmetricKey.from_ascii(data, key_type=self._settings.key_type)
 
 
 class AuthService(object):
