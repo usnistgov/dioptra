@@ -86,7 +86,7 @@ class ExperimentDict(TypedDict):
 
 
 class PluginParameterTypeDict(TypedDict):
-    plugin_parameter_type: models.PluginTaskParameterType
+    plugin_task_parameter_type: models.PluginTaskParameterType
     has_draft: bool | None
 
 
@@ -636,7 +636,7 @@ def build_plugin_parameter_type(
     Returns:
         The Plugin Parameter Type response dictionary.
     """
-    plugin_parameter_type = plugin_parameter_type_dict["plugin_parameter_type"]
+    plugin_parameter_type = plugin_parameter_type_dict["plugin_task_parameter_type"]
     has_draft = plugin_parameter_type_dict["has_draft"]
 
     data = {

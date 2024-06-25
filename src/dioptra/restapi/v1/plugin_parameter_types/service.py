@@ -26,9 +26,10 @@ from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError, SearchNotImplementedError
+from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
+from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 from .errors import (
     PluginParameterTypeAlreadyExistsError,
@@ -38,6 +39,15 @@ from .errors import (
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "plugin_task_parameter_type"
+SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": lambda x: models.PluginTaskParameterType.name.like(x, escape="/"),
+    "description": lambda x: models.PluginTaskParameterType.description.like(
+        x, escape="/"
+    ),
+    "tag": lambda x: models.PluginTaskParameterType.tags.any(
+        models.Tag.name.like(x, escape="/")
+    ),
+}
 
 
 class PluginParameterTypeService(object):
@@ -124,7 +134,7 @@ class PluginParameterTypeService(object):
             )
 
         return utils.PluginParameterTypeDict(
-            plugin_parameter_type=new_plugin_parameter_type, has_draft=False
+            plugin_task_parameter_type=new_plugin_parameter_type, has_draft=False
         )
 
     def get(
@@ -163,8 +173,9 @@ class PluginParameterTypeService(object):
             filters.append(models.Resource.group_id == group_id)
 
         if search_string:
-            log.debug("Searching is not implemented", search_string=search_string)
-            raise SearchNotImplementedError
+            filters.append(
+                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
+            )
 
         stmt = (
             select(func.count(models.PluginTaskParameterType.resource_id))
@@ -221,7 +232,7 @@ class PluginParameterTypeService(object):
         )
         plugin_parameter_types_dict: dict[int, utils.PluginParameterTypeDict] = {
             plugin_parameter_type.resource_id: utils.PluginParameterTypeDict(
-                plugin_parameter_type=plugin_parameter_type, has_draft=False
+                plugin_task_parameter_type=plugin_parameter_type, has_draft=False
             )
             for plugin_parameter_type in plugin_parameter_types
         }
@@ -314,7 +325,7 @@ class PluginParameterTypeIdService(object):
         has_draft = db.session.scalar(drafts_stmt)
 
         return utils.PluginParameterTypeDict(
-            plugin_parameter_type=plugin_parameter_type, has_draft=has_draft
+            plugin_task_parameter_type=plugin_parameter_type, has_draft=has_draft
         )
 
     def modify(
@@ -327,7 +338,7 @@ class PluginParameterTypeIdService(object):
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginParameterTypeDict | None:
-        """Rename a plugin parameter type.
+        """Modify a plugin parameter type.
 
         Args:
             plugin_parameter_type_id: The unique id of the plugin parameter
@@ -358,7 +369,7 @@ class PluginParameterTypeIdService(object):
         if plugin_parameter_type_dict is None:
             return None
 
-        plugin_parameter_type = plugin_parameter_type_dict["plugin_parameter_type"]
+        plugin_parameter_type = plugin_parameter_type_dict["plugin_task_parameter_type"]
         group_id = plugin_parameter_type.resource.group_id
         if (
             name != plugin_parameter_type.name
@@ -394,7 +405,7 @@ class PluginParameterTypeIdService(object):
             )
 
         return utils.PluginParameterTypeDict(
-            plugin_parameter_type=new_plugin_parameter_type, has_draft=False
+            plugin_task_parameter_type=new_plugin_parameter_type, has_draft=False
         )
 
     def delete(self, plugin_parameter_type_id: int, **kwargs) -> dict[str, Any]:
