@@ -89,7 +89,7 @@
       const res = await api.getData('plugins', pagination)
       plugins.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
-      getPluginParameterTypes(pagination)
+      // getPluginParameterTypes(pagination)
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
@@ -144,7 +144,7 @@
 
   const fileColumns = [
     // field must be name or else selection doesn't work, possible quasar bug
-    { name: 'filename', label: 'Filename', align: 'left', field: 'name', sortable: true, },
+    { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
     { name: 'tasks', label: 'Number of Tasks', align: 'left', field: 'tasks', sortable: true, },
   ]
 

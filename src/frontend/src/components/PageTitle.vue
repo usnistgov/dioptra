@@ -16,7 +16,7 @@
       />
       <q-breadcrumbs-el
         v-if="route.params.id && route.params.fileId"
-        :label="`${getPluginName(route.params.id)} Files`"
+        :label="`${route.params.id} Files`"
         :to="`/plugins/${route.params.id}/files`"
       />
       <q-breadcrumbs-el

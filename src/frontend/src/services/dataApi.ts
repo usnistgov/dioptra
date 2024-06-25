@@ -29,6 +29,11 @@ type CreateParams = {
   tags: {
     name: string,
     group: number
+  },
+  files: {
+    filename: string,
+    contents: string,
+    description: string,
   }
 }
 
@@ -116,8 +121,30 @@ export async function deleteItem<T extends ItemType>(type: T, id: number) {
   return await axios.delete(`/api/${type}/${id}`)
 }
 
-export async function getFiles(id: number) {
-  return await axios.get(`/api/plugins/${id}/files`)
+export async function getFiles(id: number, pagination: Pagination) {
+  return await axios.get(`/api/plugins/${id}/files`, {
+    params: {
+      index: pagination.index,
+      pageLength: pagination.rowsPerPage,
+      search: urlEncode(pagination.search)
+    }
+  })
+}
+
+export async function getFile(pluginID: string, fileID: string) {
+  return await axios.get(`/api/plugins/${pluginID}/files/${fileID}`)
+}
+
+export async function addFile(id: number, params: CreateParams['files']){
+  return await axios.post(`/api/plugins/${id}/files`, params)
+}
+
+export async function updateFile(id: number, fileID: string, params: CreateParams['files']){
+  return await axios.put(`/api/plugins/${id}/files/${fileID}`, params)
+}
+
+export async function deleteFile(pluginID: string, fileID: string) {
+  return await axios.delete(`/api/plugins/${pluginID}/files/${fileID}`)
 }
 
 export async function updateTags<T extends ItemType>(type: T, id: number, tagIDs: Array<number>) {

@@ -4,7 +4,6 @@
     :columns="columns"
     title="Experiments"
     v-model="selected"
-    :pagination="{sortBy: 'draft', descending: true}"
     @edit="store.savedExperimentForm = selected[0]; store.editMode = true; router.push(`/experiments/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getExperiments"
@@ -98,7 +97,7 @@
 
   async function getExperiments(pagination) {
     try {
-      const res = await api.getData('experiments', pagination)
+      const res = await api.getData('experiments', pagination, false)
       experiments.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {

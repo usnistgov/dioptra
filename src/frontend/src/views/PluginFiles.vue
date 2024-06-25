@@ -4,9 +4,11 @@
     :columns="fileColumns"
     title="Plugin Files"
     v-model="selected"
-    :pagination="{sortBy: 'draft', descending: true}"
     @edit="store.editMode = true; router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)"
+    @delete="showDeleteDialog = true"
     :showExpand="true"
+    @request="getFiles"
+    ref="tableRef"
   />
   <q-btn 
     class="fixedButton"
@@ -21,6 +23,13 @@
       Create New Plugin File
     </q-tooltip>
   </q-btn>
+
+  <DeleteDialog 
+    v-model="showDeleteDialog"
+    @submit="deleteFile"
+    type="Plugin File"
+    :name="selected.length ? selected[0].filename : ''"
+  />
 </template>
 
 <script setup>
@@ -30,6 +39,7 @@
   import { ref, computed } from 'vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
+    import DeleteDialog from '@/dialogs/DeleteDialog.vue'
 
   const route = useRoute()
   const router = useRouter()
@@ -37,25 +47,41 @@
   const store = useDataStore()
 
   const selected = ref([])
+  const showDeleteDialog = ref(false)
+
+  const tableRef = ref(null)
 
   const fileColumns = [
     // field must be name or else selection doesn't work, possible quasar bug
-    { name: 'filename', label: 'Filename', align: 'left', field: 'name', sortable: true, },
-    { name: 'tasks', label: 'Number of Tasks', align: 'left', field: 'tasks', sortable: true, },
+    { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
+    { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
+    { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: true, },
   ]
 
   const files = ref([])
 
-  getFiles()
-  async function getFiles() {
+  async function getFiles(pagination) {
     try {
-      const res = await api.getItem('plugins', route.params.id)
-      files.value = res.data.files
+      const res = await api.getFiles(route.params.id, pagination)
+      console.log('getFiles = ', res)
+      files.value = res.data.data
+      tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {
       notify.error(err.response.data.message)
     } 
   }
 
+  async function deleteFile() {
+    try {
+      await api.deleteFile(route.params.id, selected.value[0].id)
+      notify.success(`Sucessfully deleted Plugin File '${selected.value[0].filename}'`)
+      showDeleteDialog.value = false
+      selected.value = []
+      tableRef.value.refreshTable()
+    } catch(err) {
+      notify.error(err.response.data.message);
+    }
+  }
   
 
 </script>
