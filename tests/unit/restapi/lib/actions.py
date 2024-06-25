@@ -173,7 +173,7 @@ def register_plugin_file(
     description: str,
     filename: str,
     contents: str,
-    # tasks: dict[str, Any] | None = None,
+    tasks: list[dict[str, Any]] | None = None,
 ) -> TestResponse:
     """Register a plugin file using the API.
 
@@ -193,10 +193,8 @@ def register_plugin_file(
         "filename": filename,
         "contents": contents,
         "description": description,
+        "tasks": tasks or [],
     }
-
-    # if tasks:
-    #     payload["tasks"] = tasks
 
     return client.post(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files",
@@ -233,31 +231,6 @@ def register_plugin_parameter_type(
 
     return client.post(
         f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def add_plugin_tasks_to_plugin_file(
-    client: FlaskClient,
-    plugin_id: int,
-    plugin_file_id: int,
-    tasks: List[dict[str, Any]],
-) -> TestResponse:
-    """Modify a plugin file to include tasks using the API.
-
-    Args:
-        client: The Flask test client.
-        plugin_id: The plugin ID with a file.
-        plugin_file_id: The plugin file ID to append the task.
-        tasks: A list of tasks to add to the file.
-    Returns:
-        The response from the API.
-    """
-    payload: dict[str, Any] = {"tasks": tasks}
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
         json=payload,
         follow_redirects=True,
     )

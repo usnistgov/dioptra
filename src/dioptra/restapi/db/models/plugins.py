@@ -74,7 +74,9 @@ class PluginFile(ResourceSnapshot):
     )
 
     # Relationships
-    tasks: Mapped[list["PluginTask"]] = relationship(init=False, back_populates="file")
+    tasks: Mapped[list["PluginTask"]] = relationship(
+        init=False, back_populates="file", lazy="joined"
+    )
 
     # Additional settings
     __table_args__ = (  # type: ignore[assignment]
@@ -104,10 +106,10 @@ class PluginTask(db.Model):  # type: ignore[name-defined]
     # Relationships
     file: Mapped["PluginFile"] = relationship(back_populates="tasks")
     input_parameters: Mapped[list["PluginTaskInputParameter"]] = relationship(
-        back_populates="task"
+        back_populates="task", lazy="joined"
     )
     output_parameters: Mapped[list["PluginTaskOutputParameter"]] = relationship(
-        back_populates="task"
+        back_populates="task", lazy="joined"
     )
 
 
@@ -164,7 +166,7 @@ class PluginTaskInputParameter(db.Model):  # type: ignore[name-defined]
         init=False, back_populates="input_parameters"
     )
     parameter_type: Mapped["PluginTaskParameterType"] = relationship(
-        back_populates="input_parameters"
+        back_populates="input_parameters", lazy="joined"
     )
 
     # Additional settings
@@ -202,7 +204,7 @@ class PluginTaskOutputParameter(db.Model):  # type: ignore[name-defined]
         init=False, back_populates="output_parameters"
     )
     parameter_type: Mapped["PluginTaskParameterType"] = relationship(
-        back_populates="output_parameters"
+        back_populates="output_parameters", lazy="joined"
     )
 
     # Additional settings
