@@ -15,8 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for PluginParameterType resources."""
-from __future__ import annotations
-
 import uuid
 from typing import cast
 
@@ -29,8 +27,22 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.shared.drafts.controller import (
+    generate_resource_drafts_endpoint,
+    generate_resource_drafts_id_endpoint,
+    generate_resource_id_draft_endpoint,
+)
+from dioptra.restapi.v1.shared.snapshots.controller import (
+    generate_resource_snapshots_endpoint,
+    generate_resource_snapshots_id_endpoint,
+)
+from dioptra.restapi.v1.shared.tags.controller import (
+    generate_resource_tags_endpoint,
+    generate_resource_tags_id_endpoint,
+)
 
 from .schema import (
     PluginParameterTypeGetQueryParameters,
@@ -38,7 +50,12 @@ from .schema import (
     PluginParameterTypePageSchema,
     PluginParameterTypeSchema,
 )
-from .service import PluginParameterTypeIdService, PluginParameterTypeService
+from .service import (
+    RESOURCE_TYPE,
+    SEARCHABLE_FIELDS,
+    PluginParameterTypeIdService,
+    PluginParameterTypeService,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -91,7 +108,7 @@ class PluginParameterTypeEndpoint(Resource):
             log=log,
         )
         return utils.build_paging_envelope(
-            "pluginParameterTypes",
+            V1_PLUGIN_PARAMETER_TYPES_ROUTE,
             build_fn=utils.build_plugin_parameter_type,
             data=plugin_parameter_types,
             group_id=group_id,
@@ -187,7 +204,7 @@ class PluginParameterTypeIdEndpoint(Resource):
             request_type="PUT",
             id=id,
         )
-        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        parsed_obj = request.parsed_obj  # type: ignore
         plugin_parameter_type = cast(
             models.PluginTaskParameterType,
             self._plugin_parameter_type_id_service.modify(
@@ -200,3 +217,49 @@ class PluginParameterTypeIdEndpoint(Resource):
             ),
         )
         return utils.build_plugin_parameter_type(plugin_parameter_type)
+
+
+PluginParameterTypeDraftResource = generate_resource_drafts_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+    request_schema=PluginParameterTypeSchema,
+)
+
+PluginParameterTypeDraftIdResource = generate_resource_drafts_id_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=PluginParameterTypeMutableFieldsSchema,
+)
+
+PluginParameterTypeIdDraftIdResource = generate_resource_id_draft_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=PluginParameterTypeMutableFieldsSchema,
+)
+
+PluginParameterTypeSnapshotsResource = generate_resource_snapshots_endpoint(
+    api=api,
+    resource_model=models.PluginTaskParameterType,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+    searchable_fields=SEARCHABLE_FIELDS,
+    page_schema=PluginParameterTypePageSchema,
+    build_fn=utils.build_plugin_parameter_type,
+)
+PluginParameterTypeSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
+    api=api,
+    resource_model=models.PluginTaskParameterType,
+    resource_name=RESOURCE_TYPE,
+    response_schema=PluginParameterTypeSchema,
+    build_fn=utils.build_plugin_parameter_type,
+)
+
+PluginParameterTypeTagsResource = generate_resource_tags_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)
+PluginParameterTypeTagsIdResource = generate_resource_tags_id_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)
