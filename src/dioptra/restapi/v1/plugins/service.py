@@ -447,6 +447,112 @@ class PluginIdService(object):
         return {"status": "Success", "id": [plugin_id]}
 
 
+class PluginIdsService(object):
+    """The service methods for registering and managing plugins by their unique id."""
+
+    def get(
+        self,
+        plugin_ids: list[int],
+        error_if_not_found: bool = False,
+        **kwargs,
+    ) -> list[utils.PluginWithFilesDict]:
+        """Fetch a plugin by its unique id.
+
+        Args:
+            plugin_ids: The unique ids of the plugins.
+            error_if_not_found: If True, raise an error if the plugin is not found.
+                Defaults to False.
+
+        Returns:
+            A list of  plugin objects.
+
+        Raises:
+            PluginDoesNotExistError: If the plugin is not found and `error_if_not_found`
+                is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        latest_plugins_stmt = (
+            select(models.Plugin)
+            .join(models.Resource)
+            .where(
+                models.Plugin.resource_id.in_(tuple(plugin_ids)),
+                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.latest_snapshot_id
+                == models.Plugin.resource_snapshot_id,
+            )
+        )
+        plugins = db.session.scalars(latest_plugins_stmt).all()
+
+        if len(plugins) != len(plugin_ids) and error_if_not_found:
+            plugin_ids_missing = set(plugin_ids) - set(
+                plugin.resource_id for plugin in plugins
+            )
+            log.debug("Plugin not found", plugin_ids=list(plugin_ids_missing))
+            raise PluginDoesNotExistError
+
+        # extract list of plugin ids
+        plugin_ids = [plugin.resource_id for plugin in plugins]
+
+        # Build CTE that retrieves all snapshot ids for the list of plugin files
+        # associated with retrieved plugins
+        parent_plugin = aliased(models.Plugin)
+        plugin_file_snapshot_ids_cte = (
+            select(models.PluginFile.resource_snapshot_id)
+            .join(
+                models.resource_dependencies_table,
+                models.PluginFile.resource_id
+                == models.resource_dependencies_table.c.child_resource_id,
+            )
+            .join(
+                parent_plugin,
+                parent_plugin.resource_id
+                == models.resource_dependencies_table.c.parent_resource_id,
+            )
+            .where(parent_plugin.resource_id.in_(plugin_ids))
+            .cte()
+        )
+
+        # get the latest plugin file snapshots associated with the retrieved plugins
+        latest_plugin_files_stmt = (
+            select(models.PluginFile)
+            .join(models.Resource)
+            .where(
+                models.Resource.latest_snapshot_id.in_(
+                    select(plugin_file_snapshot_ids_cte)
+                ),
+                models.Resource.is_deleted == False,  # noqa: E712
+            )
+        )
+        plugin_files = db.session.scalars(latest_plugin_files_stmt).unique().all()
+
+        # build a dictionary structure to re-associate plugins and plugin files
+        plugins_dict: dict[int, utils.PluginWithFilesDict] = {
+            plugin.resource_id: utils.PluginWithFilesDict(
+                plugin=plugin, plugin_files=[], has_draft=False
+            )
+            for plugin in plugins
+        }
+        for plugin_file in plugin_files:
+            plugins_dict[plugin_file.plugin_id]["plugin_files"].append(plugin_file)
+
+        drafts_stmt = select(
+            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+        ).where(
+            models.DraftResource.payload["resource_id"]
+            .as_string()
+            .cast(Integer)
+            .in_(
+                tuple(plugin["plugin"].resource_id for plugin in plugins_dict.values())
+            ),
+            models.DraftResource.user_id == current_user.user_id,
+        )
+        for resource_id in db.session.scalars(drafts_stmt):
+            plugins_dict[resource_id]["has_draft"] = True
+
+        return list(plugins_dict.values())
+
+
 class PluginNameService(object):
     """The service methods for managing plugins by their name."""
 

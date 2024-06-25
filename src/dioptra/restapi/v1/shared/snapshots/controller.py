@@ -96,7 +96,7 @@ def generate_resource_snapshots_endpoint(
             page_length = parsed_query_params["page_length"]
 
             snapshots, total_num_snapshots = cast(
-                tuple[list[models.ResourceSnapshot], int],
+                tuple[list[dict[str, Any]], int],
                 self._snapshots_service.get(
                     resource_id=id,
                     group_id=group_id,

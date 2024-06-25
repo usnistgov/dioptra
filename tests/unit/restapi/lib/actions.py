@@ -26,6 +26,7 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
+    V1_ENTRYPOINTS_ROUTE,
     V1_EXPERIMENTS_ROUTE,
     V1_GROUPS_ROUTE,
     V1_PLUGIN_PARAMETER_TYPES_ROUTE,
@@ -51,6 +52,48 @@ def login(client: FlaskClient, username: str, password: str) -> TestResponse:
     return client.post(
         f"/{V1_ROOT}/{V1_AUTH_ROUTE}/login",
         json={"username": username, "password": password},
+    )
+
+
+def register_entrypoint(
+    client: FlaskClient,
+    name: str,
+    description: str,
+    group_id: int,
+    task_graph: str,
+    parameters: list[dict[str, Any]],
+    plugin_ids: list[int],
+    queue_ids: list[int],
+) -> TestResponse:
+    """Register an entrypoint using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name to assign to the new entrypoint.
+        description: The description for the new entrypoint.
+        group_id: The group to create the new entrypoint in.
+        task_graph: A graph of the tasks to perform in a entry point.
+        parameters: A list of entrypoint parameters.
+
+    Returns:
+        The response from the API.
+    """
+    payload: dict[str, Any] = {
+        "name": name,
+        "group": group_id,
+        "taskGraph": task_graph,
+        "parameters": parameters,
+        "plugins": plugin_ids,
+        "queues": queue_ids,
+    }
+
+    if description:
+        payload["description"] = description
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/",
+        json=payload,
+        follow_redirects=True,
     )
 
 
