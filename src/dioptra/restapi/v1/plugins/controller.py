@@ -277,6 +277,7 @@ class PluginIdFilesEndpoint(Resource):
             filename=parsed_obj["filename"],
             contents=parsed_obj["contents"],
             description=parsed_obj["description"],
+            tasks=parsed_obj["tasks"],
             plugin_id=id,
             log=log,
         )
@@ -350,6 +351,7 @@ class PluginIdFileIdEndpoint(Resource):
                 plugin_file_id=fileId,
                 filename=parsed_obj["filename"],
                 contents=parsed_obj["contents"],
+                tasks=parsed_obj["tasks"],
                 description=parsed_obj["description"],
                 error_if_not_found=True,
                 log=log,
