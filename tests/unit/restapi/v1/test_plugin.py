@@ -198,6 +198,7 @@ def assert_plugin_response_contents_matches_expectations(
         "createdOn",
         "lastModifiedOn",
         "latestSnapshot",
+        "hasDraft",
         "name",
         "description",
         "files",
@@ -213,6 +214,7 @@ def assert_plugin_response_contents_matches_expectations(
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
+    assert isinstance(response["hasDraft"], bool)
 
     assert response["name"] == expected_contents["name"]
     assert response["description"] == expected_contents["description"]
@@ -417,6 +419,7 @@ def assert_plugin_file_response_contents_matches_expectations(
         "createdOn",
         "lastModifiedOn",
         "latestSnapshot",
+        "hasDraft",
         "filename",
         "description",
         "contents",
@@ -434,6 +437,7 @@ def assert_plugin_file_response_contents_matches_expectations(
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
+    assert isinstance(response["hasDraft"], bool)
 
     assert response["filename"] == expected_contents["filename"]
     assert response["description"] == expected_contents["description"]
@@ -1385,7 +1389,7 @@ def test_manage_new_plugin_drafts(
         payload=drafts["draft1"],
     ).get_json()
     asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected, existing_draft=False
+        draft1_response, draft1_expected
     )
     asserts.assert_retrieving_draft_by_id_works(
         client,
@@ -1405,7 +1409,7 @@ def test_manage_new_plugin_drafts(
         payload=drafts["draft2"],
     ).get_json()
     asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected, existing_draft=False
+        draft2_response, draft2_expected
     )
     asserts.assert_retrieving_draft_by_id_works(
         client,
@@ -1433,7 +1437,7 @@ def test_manage_new_plugin_drafts(
         payload=draft1_mod,
     ).get_json()
     asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected, existing_draft=False
+        response, draft1_mod_expected
     )
 
     # test deletion

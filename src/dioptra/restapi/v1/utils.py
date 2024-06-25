@@ -36,11 +36,29 @@ TAGS: Final[str] = "tags"
 class PluginWithFilesDict(TypedDict):
     plugin: models.Plugin
     plugin_files: list[models.PluginFile]
+    has_draft: bool | None
 
 
 class PluginFileDict(TypedDict):
     plugin_file: models.PluginFile
     plugin: models.Plugin
+    has_draft: bool | None
+
+
+class ExperimentDict(TypedDict):
+    experiment: models.Experiment
+    queue: models.Queue | None
+    has_draft: bool | None
+
+
+class PluginParameterTypeDict(TypedDict):
+    plugin_parameter_type: models.PluginTaskParameterType
+    has_draft: bool | None
+
+
+class QueueDict(TypedDict):
+    queue: models.Queue
+    has_draft: bool | None
 
 
 # -- Ref Types -----------------------------------------------------------------
@@ -280,7 +298,7 @@ def build_group(group: models.Group) -> dict[str, Any]:
     }
 
 
-def build_experiment(experiment: models.Experiment) -> dict[str, Any]:
+def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
     """Build an Experiment response dictionary.
 
     Args:
@@ -290,7 +308,10 @@ def build_experiment(experiment: models.Experiment) -> dict[str, Any]:
     Returns:
         The Experiment response dictionary.
     """
-    return {
+    experiment = experiment_dict["experiment"]
+    has_draft = experiment_dict["has_draft"]
+
+    data = {
         "id": experiment.resource_id,
         "snapshot_id": experiment.resource_snapshot_id,
         "name": experiment.name,
@@ -305,6 +326,11 @@ def build_experiment(experiment: models.Experiment) -> dict[str, Any]:
         == experiment.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in experiment.tags],
     }
+
+    if has_draft is not None:
+        data["has_draft"] = has_draft
+
+    return data
 
 
 def build_tag(tag: models.Tag) -> dict[str, Any]:
@@ -326,7 +352,7 @@ def build_tag(tag: models.Tag) -> dict[str, Any]:
     }
 
 
-def build_queue(queue: models.Queue) -> dict[str, Any]:
+def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
     """Build a Queue response dictionary.
 
     Args:
@@ -335,7 +361,10 @@ def build_queue(queue: models.Queue) -> dict[str, Any]:
     Returns:
         The Queue response dictionary.
     """
-    return {
+    queue = queue_dict["queue"]
+    has_draft = queue_dict["has_draft"]
+
+    data = {
         "id": queue.resource_id,
         "snapshot_id": queue.resource_snapshot_id,
         "name": queue.name,
@@ -349,11 +378,26 @@ def build_queue(queue: models.Queue) -> dict[str, Any]:
         "tags": [build_tag_ref(tag) for tag in queue.tags],
     }
 
+    if has_draft is not None:
+        data["has_draft"] = has_draft
+
+    return data
+
 
 def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
+    """Build a Plugin response dictionary.
+
+    Args:
+        queue: The Plugin object to convert into a Plugin response dictionary.
+
+    Returns:
+        The Plugin response dictionary.
+    """
     plugin = plugin_with_files["plugin"]
     plugin_files = plugin_with_files["plugin_files"]
-    return {
+    has_draft = plugin_with_files["has_draft"]
+
+    data = {
         "id": plugin.resource_id,
         "snapshot_id": plugin.resource_snapshot_id,
         "name": plugin.name,
@@ -367,6 +411,11 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
         "tags": [build_tag_ref(tag) for tag in plugin.tags],
         "files": [build_plugin_file_ref(plugin_file) for plugin_file in plugin_files],
     }
+
+    if has_draft is not None:
+        data["has_draft"] = has_draft
+
+    return data
 
 
 def build_plugin_snapshot(plugin: models.Plugin) -> dict[str, Any]:
@@ -388,7 +437,9 @@ def build_plugin_snapshot(plugin: models.Plugin) -> dict[str, Any]:
 def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]:
     plugin = plugin_file_with_plugin["plugin"]
     plugin_file = plugin_file_with_plugin["plugin_file"]
-    return {
+    has_draft = plugin_file_with_plugin["has_draft"]
+
+    data = {
         "id": plugin_file.resource_id,
         "snapshot_id": plugin_file.resource_snapshot_id,
         "filename": plugin_file.filename,
@@ -404,9 +455,14 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
         "plugin": build_plugin_ref(plugin),
     }
 
+    if has_draft is not None:
+        data["has_draft"] = has_draft
+
+    return data
+
 
 def build_plugin_parameter_type(
-    plugin_parameter_type: models.PluginTaskParameterType,
+    plugin_parameter_type_dict: PluginParameterTypeDict,
 ) -> dict[str, Any]:
     """Build a Plugin Parameter Type response dictionary.
 
@@ -417,7 +473,10 @@ def build_plugin_parameter_type(
     Returns:
         The Plugin Parameter Type response dictionary.
     """
-    return {
+    plugin_parameter_type = plugin_parameter_type_dict["plugin_parameter_type"]
+    has_draft = plugin_parameter_type_dict["has_draft"]
+
+    data = {
         "id": plugin_parameter_type.resource_id,
         "snapshot_id": plugin_parameter_type.resource_snapshot_id,
         "name": plugin_parameter_type.name,
@@ -432,49 +491,38 @@ def build_plugin_parameter_type(
         "tags": [build_tag_ref(tag) for tag in plugin_parameter_type.tags],
     }
 
+    if has_draft is not None:
+        data["has_draft"] = has_draft
 
-def build_existing_resource_draft(
-    draft: models.DraftResource, num_other_drafts: int
+    return data
+
+
+def build_resource_draft(
+    draft: models.DraftResource, num_other_drafts: int | None = None
 ) -> dict[str, Any]:
-    """Build a Draft response dictionary for a modification of an existing resource.
+    """Build a Draft response dictionary for a resource.
 
     Args:
-        queue: The Draft object to convert into a Draft response dictionary.
+        draft: The Draft object to convert into a Draft response dictionary.
 
     Returns:
         The Draft response dictionary.
     """
+
+    metadata = dict()
+    if num_other_drafts is not None:
+        metadata["num_other_drafts"] = num_other_drafts
     return {
         "id": draft.draft_resource_id,
-        "resource_id": draft.payload["resource_id"],
-        "resource_snapshot_id": draft.payload["resource_snapshot_id"],
-        "payload": draft.payload["resource_data"],
+        "resource_id": draft.payload.get("resource_id", None),
+        "resource_snapshot_id": draft.payload.get("resource_snapshot_id", None),
+        "payload": draft.payload.get("resource_data"),
         "resource_type": draft.resource_type,
         "user": build_user_ref(draft.creator),
         "group": build_group_ref(draft.target_owner),
         "created_on": draft.created_on,
         "last_modified_on": draft.last_modified_on,
-        "num_other_drafts": num_other_drafts,
-    }
-
-
-def build_new_resource_draft(draft: models.DraftResource) -> dict[str, Any]:
-    """Build a Draft response dictionary for a new resource.
-
-    Args:
-        queue: The Draft object to convert into a Draft response dictionary.
-
-    Returns:
-        The Draft response dictionary.
-    """
-    return {
-        "id": draft.draft_resource_id,
-        "payload": draft.payload["resource_data"],
-        "resource_type": draft.resource_type,
-        "user": build_user_ref(draft.creator),
-        "group": build_group_ref(draft.target_owner),
-        "created_on": draft.created_on,
-        "last_modified_on": draft.last_modified_on,
+        "metadata": metadata,
     }
 
 
@@ -487,10 +535,11 @@ def build_resource_url(resource: models.Resource):
 
 def build_paging_envelope(
     route_prefix: str,
-    build_fn: Callable[[Any], dict[str, Any]],
+    build_fn: Callable,
     data: list[Any],
     group_id: int | None,
     query: str | None,
+    draft_type: str | None,
     index: int,
     length: int,
     total_num_elements: int,
@@ -504,6 +553,7 @@ def build_paging_envelope(
             field.
         data: The list of ORM objects to wrap in the paging envelope.
         query: The optional search query string.
+        draft_type: The type of drafts to return.
         index: The index of the current page.
         length: The number of results to return per page.
         total_num_elements: The total number of elements in the collection.
@@ -520,7 +570,12 @@ def build_paging_envelope(
         "is_complete": is_complete,
         "total_num_results": total_num_elements,
         "first": build_paging_url(
-            route_prefix, group_id=group_id, search=query, index=0, length=length
+            route_prefix,
+            group_id=group_id,
+            search=query,
+            draft_type=draft_type,
+            index=0,
+            length=length,
         ),
         "data": [build_fn(x) for x in data],
     }
@@ -531,6 +586,7 @@ def build_paging_envelope(
             route_prefix,
             group_id=group_id,
             search=query,
+            draft_type=draft_type,
             index=prev_index,
             length=length,
         )
@@ -542,6 +598,7 @@ def build_paging_envelope(
             route_prefix,
             group_id=group_id,
             search=query,
+            draft_type=draft_type,
             index=next_index,
             length=length,
         )
@@ -551,13 +608,19 @@ def build_paging_envelope(
 
 
 def build_paging_url(
-    route_prefix: str, group_id: int | None, search: str | None, index: int, length: int
+    route_prefix: str,
+    group_id: int | None,
+    search: str | None,
+    draft_type: str | None,
+    index: int,
+    length: int,
 ) -> str:
     """Build a URL for a paged resource endpoint.
 
     Args:
         resource_type: The prefix of the route to paginate, forms the URL path.
         search: The optional search query string.
+        draft_type: The type of drafts to return.
         index: The index of the current page.
         length: The number of results to return per page.
 
@@ -571,6 +634,9 @@ def build_paging_url(
 
     if search:
         query_params["search"] = search
+
+    if draft_type:
+        query_params["draft_type"] = draft_type
 
     return build_url(route_prefix, query_params)
 

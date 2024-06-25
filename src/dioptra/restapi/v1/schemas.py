@@ -16,6 +16,8 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Common schemas for serializing/deserializing resources."""
 
+import enum
+
 from marshmallow import Schema, fields
 
 
@@ -75,6 +77,13 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
             attribute="latest_snapshot",
             metadata=dict(
                 description=f"Whether or not the {name} resource is the latest version."
+            ),
+            dump_only=True,
+        ),
+        "hasDraft": fields.Bool(
+            attribute="has_draft",
+            metadata=dict(
+                description=f"Whether a draft exists for the {name} resource."
             ),
             dump_only=True,
         ),
@@ -193,6 +202,26 @@ class GroupIdQueryParametersSchema(Schema):
         attribute="group_id",
         metadata=dict(description="Filter results by the Group ID."),
         load_default=None,
+    )
+
+
+class DraftTypes(enum.Enum):
+    ALL = "all"
+    EXISTING = "existing"
+    NEW = "new"
+
+
+class DraftTypeQueryParametersSchema(Schema):
+    """A schema for adding draft_type query parameters to a resource endpoint."""
+
+    draftType = fields.Enum(
+        DraftTypes,
+        attribute="draft_type",
+        metadata=dict(
+            description="The type of drafts to return: all, existing, or new."
+        ),
+        by_value=True,
+        load_default=DraftTypes.ALL,
     )
 
 
