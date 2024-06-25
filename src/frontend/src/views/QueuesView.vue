@@ -25,6 +25,15 @@
         @click.stop="handleTags(props.row)"
       />
     </template>
+    <template #body-cell-hasDraft="props">
+      <q-btn
+        round
+        size="sm"
+        :icon="props.row.hasDraft ? 'edit' : 'add'"
+        :color="props.row.hasDraft ? 'primary' : 'grey-5'"
+        @click.stop="console.log('heyyy')"
+      />
+    </template>
   </TableComponent>
   <q-btn 
     class="fixedButton"
@@ -85,6 +94,7 @@
     // { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', format: val => `${formatDate(val)}`, sortable: true },
     // { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', format: val => `${formatDate(val)}`, sortable: true },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
+    { name: 'hasDraft', label: 'hasDraft', align: 'left', field: 'hasDraft', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
   ]
 
@@ -134,8 +144,12 @@
 
   async function updateQueue(name, id, description) {
     try {
-      await api.updateItem('queues', id, { name, description })
-      notify.success(`Sucessfully edited '${name}'`)
+      if(Object.hasOwn(selected.value[0], 'hasDraft')) {
+        await api.updateItem('queues', id, { name, description })
+      } else {
+        await api.updateDraft('queues', id, { name, description })
+      }
+      notify.success(`Sucessfully updated Queue '${name}'`)
       showAddDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()
@@ -158,8 +172,12 @@
 
   async function deleteQueue() {
     try {
-      await api.deleteItem('queues', selected.value[0].id)
-      notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+      if(Object.hasOwn(selected.value[0], 'hasDraft')) {
+        await api.deleteItem('queues', selected.value[0].id)
+      } else {
+        await api.deleteDraft('queues', selected.value[0].id)
+      }
+      notify.success(`Sucessfully deleted Queue '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

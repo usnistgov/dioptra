@@ -69,9 +69,10 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage,
-      // search: pagination.search
-      search: urlEncode(pagination.search)
+      // search: pagination.search,
+      search: urlEncode(pagination.search),
       //search: pagination.search ? `"${pagination.search}"` : ''
+      draftType: showDrafts ? 'new' : ''
     },
     // paramsSerializer: {
     //   encode: (param) => encodeURIComponent(param).replaceAll("+", "%20"),
@@ -117,8 +118,16 @@ export async function addDraft<T extends ItemType>(type: T, id: string, params: 
   }
 }
 
+export async function updateDraft<T extends ItemType>(type: T, draftId: string, params: UpdateParams[T]) {
+  return await axios.put(`/api/${type}/drafts/${draftId}`, params)
+}
+
 export async function deleteItem<T extends ItemType>(type: T, id: number) {
   return await axios.delete(`/api/${type}/${id}`)
+}
+
+export async function deleteDraft<T extends ItemType>(type: T, draftId: number) {
+  return await axios.delete(`/api/${type}/drafts/${draftId}`)
 }
 
 export async function getFiles(id: number, pagination: Pagination) {
