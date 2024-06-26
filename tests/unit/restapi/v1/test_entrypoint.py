@@ -935,7 +935,6 @@ def test_manage_entrypoint_snapshots(
       response
     """
     entrypoint_to_rename = registered_entrypoints["entrypoint1"]
-    plugin_ids = [plugin["id"] for plugin in entrypoint_to_rename["plugins"]]
     queue_ids = [queue["id"] for queue in entrypoint_to_rename["queues"]]
     modified_entrypoint = modify_entrypoint(
         client,
@@ -948,7 +947,6 @@ def test_manage_entrypoint_snapshots(
     ).get_json()
     entrypoint_to_rename["latestSnapshot"] = False
     entrypoint_to_rename["lastModifiedOn"] = modified_entrypoint["lastModifiedOn"]
-    entrypoint_to_rename.pop("plugins")
     entrypoint_to_rename.pop("queues")
     entrypoint_to_rename.pop("hasDraft")
     asserts.assert_retrieving_snapshot_by_id_works(
@@ -958,7 +956,6 @@ def test_manage_entrypoint_snapshots(
         snapshot_id=entrypoint_to_rename["snapshot"],
         expected=entrypoint_to_rename,
     )
-    modified_entrypoint.pop("plugins")
     modified_entrypoint.pop("queues")
     modified_entrypoint.pop("hasDraft")
     asserts.assert_retrieving_snapshot_by_id_works(

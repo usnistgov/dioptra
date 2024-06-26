@@ -89,7 +89,6 @@ class QueueDict(TypedDict):
 
 class EntrypointDict(TypedDict):
     entry_point: models.EntryPoint
-    plugins: list[PluginWithFilesDict]
     queues: list[models.Queue]
     has_draft: bool | None
 
@@ -438,9 +437,20 @@ def build_tag(tag: models.Tag) -> dict[str, Any]:
 
 def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     entrypoint = entrypoint_dict["entry_point"]
-    plugins = entrypoint_dict.get("plugins", None)
     queues = entrypoint_dict.get("queues", None)
     has_draft = entrypoint_dict.get("has_draft", None)
+
+    plugins_dict = {
+        entry_point_plugin_file.plugin.resource_id: PluginWithFilesDict(
+            plugin=entry_point_plugin_file.plugin, plugin_files=[], has_draft=False
+        )
+        for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+    }
+    for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
+        resource_id = entry_point_plugin_file.plugin.resource_id
+        plugin_file = entry_point_plugin_file.plugin_file
+        plugins_dict[resource_id]["plugin_files"].append(plugin_file)
+    plugins = list(plugins_dict.values())
 
     data = {
         "id": entrypoint.resource_id,
@@ -463,10 +473,8 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
             }
             for param in entrypoint.parameters
         ],
+        "plugins": [build_entrypoint_plugin(plugin) for plugin in plugins],
     }
-
-    if plugins is not None:
-        data["plugins"] = [build_entrypoint_plugin(plugin) for plugin in plugins]
 
     if queues is not None:
         data["queues"] = [build_queue_ref(queue) for queue in queues]

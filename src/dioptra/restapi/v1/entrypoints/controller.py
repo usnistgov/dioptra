@@ -235,7 +235,7 @@ class EntrypointIdPluginsEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
         )
-        plugins = self._entrypoint_id_plugins_service.get(id, log=log)["plugins"]
+        plugins = self._entrypoint_id_plugins_service.get(id, log=log)
         return [utils.build_entrypoint_plugin(plugin) for plugin in plugins]
 
     @login_required
@@ -249,7 +249,7 @@ class EntrypointIdPluginsEndpoint(Resource):
         parsed_obj = request.parsed_obj  # type: ignore
         plugins = self._entrypoint_id_plugins_service.append(
             id, plugin_ids=parsed_obj["plugin_ids"], log=log
-        )["plugins"]
+        )
         return [utils.build_entrypoint_plugin(plugin) for plugin in plugins]
 
 
@@ -281,12 +281,7 @@ class EntrypointIdPluginsIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
         )
-        plugin = cast(
-            utils.PluginWithFilesDict,
-            self._entrypoint_id_plugins_id_service.get(
-                id, plugin_id=pluginId, error_if_not_found=True, log=log
-            ),
-        )
+        plugin = self._entrypoint_id_plugins_id_service.get(id, pluginId, log=log)
         return utils.build_entrypoint_plugin(plugin)
 
     @login_required
@@ -299,10 +294,7 @@ class EntrypointIdPluginsIdEndpoint(Resource):
             request_type="DELETE",
             id=id,
         )
-        plugins = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_plugins_id_service.delete(id, pluginId, log=log),
-        )["plugins"]
+        plugins = self._entrypoint_id_plugins_id_service.delete(id, pluginId, log=log)
         return [utils.build_entrypoint_plugin(plugin) for plugin in plugins]
 
 

@@ -164,7 +164,7 @@ class EntrypointService(object):
             )
 
         return utils.EntrypointDict(
-            entry_point=new_entrypoint, queues=queues, plugins=plugins, has_draft=False
+            entry_point=new_entrypoint, queues=queues, has_draft=False
         )
 
     def get(
@@ -258,14 +258,11 @@ class EntrypointService(object):
 
         entrypoint_dicts = {
             entrypoint.resource_id: utils.EntrypointDict(
-                entry_point=entrypoint, queues=[], plugins=[], has_draft=False
+                entry_point=entrypoint, queues=[], has_draft=False
             )
             for entrypoint in entrypoints
         }
         for entrypoint in entrypoint_dicts.values():
-            entrypoint["plugins"] = _get_entrypoint_plugin_snapshots(
-                entrypoint["entry_point"]
-            )
             for resource in entrypoint["entry_point"].children:
                 if resource.resource_type == "queue":
                     entrypoint["queues"].append(queues[resource.resource_id])
@@ -353,7 +350,6 @@ class EntrypointIdService(object):
             if resource.resource_type == "queue"
         )
         queues = self._queue_ids_service.get(list(queue_ids), error_if_not_found=True)
-        plugins = _get_entrypoint_plugin_snapshots(entrypoint)
 
         drafts_stmt = (
             select(models.DraftResource.draft_resource_id)
@@ -368,7 +364,7 @@ class EntrypointIdService(object):
         has_draft = db.session.scalar(drafts_stmt)
 
         return utils.EntrypointDict(
-            entry_point=entrypoint, queues=queues, plugins=plugins, has_draft=has_draft
+            entry_point=entrypoint, queues=queues, has_draft=has_draft
         )
 
     def modify(
@@ -446,11 +442,21 @@ class EntrypointIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        new_entrypoint.entry_point_plugin_files = entrypoint.entry_point_plugin_files
+        new_entrypoint.entry_point_plugin_files = [
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_plugin_file.plugin,
+                plugin_file=entry_point_plugin_file.plugin_file,
+            )
+            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+        ]
 
-        plugins = _get_entrypoint_plugin_snapshots(new_entrypoint)
-
-        plugin_resources = [plugin["plugin"].resource for plugin in plugins]
+        plugin_resources = list(
+            {
+                plugin.plugin.resource_id: plugin.plugin.resource
+                for plugin in new_entrypoint.entry_point_plugin_files
+            }.values()
+        )
         queue_resources = [queue.resource for queue in queues]
         new_entrypoint.children = plugin_resources + queue_resources
 
@@ -466,7 +472,7 @@ class EntrypointIdService(object):
             )
 
         return utils.EntrypointDict(
-            entry_point=new_entrypoint, queues=queues, plugins=plugins, has_draft=False
+            entry_point=new_entrypoint, queues=queues, has_draft=False
         )
 
     def delete(self, entrypoint_id: int, **kwargs) -> dict[str, Any]:
@@ -526,7 +532,7 @@ class EntrypointIdPluginsService(object):
         self,
         entrypoint_id: int,
         **kwargs,
-    ) -> utils.EntrypointDict:
+    ) -> list[utils.PluginWithFilesDict]:
         """Fetch the plugin snapshots for an entrypoint by its unique id.
 
         Args:
@@ -541,12 +547,14 @@ class EntrypointIdPluginsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
-        return cast(
+        entrypoint = cast(
             utils.EntrypointDict,
             self._entrypoint_id_service.get(
                 entrypoint_id, error_if_not_found=True, log=log
             ),
         )
+
+        return _get_entrypoint_plugin_snapshots(entrypoint["entry_point"])
 
     def append(
         self,
@@ -554,7 +562,7 @@ class EntrypointIdPluginsService(object):
         plugin_ids: list[int],
         commit: bool = True,
         **kwargs,
-    ) -> utils.EntrypointDict:
+    ) -> list[utils.PluginWithFilesDict]:
         """Append plugins to an entrypoint.
 
         Args:
@@ -584,7 +592,7 @@ class EntrypointIdPluginsService(object):
                 name=param.name,
                 default_value=param.default_value,
                 parameter_type=param.parameter_type,
-                parameter_number=param.parameter_number
+                parameter_number=param.parameter_number,
             )
             for param in entrypoint.parameters
         ]
@@ -617,7 +625,12 @@ class EntrypointIdPluginsService(object):
             existing_entry_point_plugin_files + new_entry_point_plugin_files
         )
 
-        plugins = _get_entrypoint_plugin_snapshots(new_entrypoint)
+        plugin_resources = list(
+            {
+                plugin.plugin.resource_id: plugin.plugin.resource
+                for plugin in new_entrypoint.entry_point_plugin_files
+            }.values()
+        )
 
         queue_ids = set(
             resource.resource_id
@@ -625,9 +638,8 @@ class EntrypointIdPluginsService(object):
             if resource.resource_type == "queue"
         )
         queues = self._queue_ids_service.get(list(queue_ids), error_if_not_found=True)
-
-        plugin_resources = [plugin["plugin"].resource for plugin in plugins]
         queue_resources = [queue.resource for queue in queues]
+
         new_entrypoint.children = plugin_resources + queue_resources
 
         db.session.add(new_entrypoint)
@@ -641,9 +653,7 @@ class EntrypointIdPluginsService(object):
                 description=entrypoint.description,
             )
 
-        return utils.EntrypointDict(
-            entry_point=new_entrypoint, queues=queues, plugins=plugins, has_draft=False
-        )
+        return _get_entrypoint_plugin_snapshots(new_entrypoint)
 
 
 class EntrypointIdPluginsIdService(object):
@@ -670,9 +680,8 @@ class EntrypointIdPluginsIdService(object):
         self,
         entrypoint_id: int,
         plugin_id: int,
-        error_if_not_found: bool = True,
         **kwargs,
-    ) -> utils.PluginWithFilesDict | None:
+    ) -> utils.PluginWithFilesDict:
         """Fetch the plugin snapshots for an entrypoint by its unique id.
 
         Args:
@@ -687,18 +696,28 @@ class EntrypointIdPluginsIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
-        plugins_dict = cast(
+        entrypoint = cast(
             utils.EntrypointDict,
             self._entrypoint_id_service.get(
                 entrypoint_id, error_if_not_found=True, log=log
             ),
-        )["plugins"]
-        plugins = {plugin["plugin"].resource_id: plugin for plugin in plugins_dict}
+        )["entry_point"]
 
-        if error_if_not_found and plugin_id not in plugins:
+        plugins = {
+            entry_point_plugin_file.plugin.resource_id: entry_point_plugin_file.plugin
+            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+        }
+        if plugin_id not in plugins:
             raise EntrypointPluginDoesNotExistError
 
-        return plugins.get(plugin_id, None)
+        plugin = utils.PluginWithFilesDict(
+            plugin=plugins[plugin_id], plugin_files=[], has_draft=None
+        )
+        for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
+            if entry_point_plugin_file.plugin.resource_id == plugin_id:
+                plugin["plugin_files"].append(entry_point_plugin_file.plugin_file)
+
+        return plugin
 
     def delete(
         self,
@@ -706,7 +725,7 @@ class EntrypointIdPluginsIdService(object):
         plugin_id: int,
         commit: bool = True,
         **kwargs,
-    ) -> utils.EntrypointDict:
+    ) -> list[utils.PluginWithFilesDict]:
         """Remove a plugin from an entrypoint.
 
         Args:
@@ -719,6 +738,7 @@ class EntrypointIdPluginsIdService(object):
 
         Raises:
             EntrypointDoesNotExistError: If the entrypoint is not found.
+            EntrypointPluginDoesNotExistError: If the plugin is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -728,6 +748,12 @@ class EntrypointIdPluginsIdService(object):
                 entrypoint_id, error_if_not_found=True, log=log
             ),
         )["entry_point"]
+
+        plugin_ids = set(
+            plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugin_files
+        )
+        if plugin_id not in plugin_ids:
+            raise EntrypointPluginDoesNotExistError
 
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
@@ -743,7 +769,12 @@ class EntrypointIdPluginsIdService(object):
             if entry_point_plugin_file.plugin.resource_id != plugin_id
         ]
 
-        plugins = _get_entrypoint_plugin_snapshots(new_entrypoint)
+        plugin_resources = list(
+            {
+                plugin.plugin.resource_id: plugin.plugin.resource
+                for plugin in new_entrypoint.entry_point_plugin_files
+            }.values()
+        )
 
         queue_ids = set(
             resource.resource_id
@@ -751,9 +782,8 @@ class EntrypointIdPluginsIdService(object):
             if resource.resource_type == "queue"
         )
         queues = self._queue_ids_service.get(list(queue_ids), error_if_not_found=True)
-
-        plugin_resources = [plugin["plugin"].resource for plugin in plugins]
         queue_resources = [queue.resource for queue in queues]
+
         new_entrypoint.children = plugin_resources + queue_resources
 
         db.session.add(new_entrypoint)
@@ -767,9 +797,7 @@ class EntrypointIdPluginsIdService(object):
                 description=entrypoint.description,
             )
 
-        return utils.EntrypointDict(
-            entry_point=new_entrypoint, queues=queues, plugins=plugins, has_draft=False
-        )
+        return _get_entrypoint_plugin_snapshots(new_entrypoint)
 
 
 class EntrypointIdsService(object):
