@@ -521,6 +521,8 @@ class PluginIdsService(object):
                 models.Resource.latest_snapshot_id.in_(
                     select(plugin_file_snapshot_ids_cte)
                 ),
+                models.Resource.latest_snapshot_id
+                == models.PluginFile.resource_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
             )
         )
