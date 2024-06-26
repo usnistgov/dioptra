@@ -579,11 +579,20 @@ class EntrypointIdPluginsService(object):
             ),
         )["entry_point"]
 
+        new_entrypoint_parameters = [
+            models.EntryPointParameter(
+                name=param.name,
+                default_value=param.default_value,
+                parameter_type=param.parameter_type,
+                parameter_number=param.parameter_number
+            )
+            for param in entrypoint.parameters
+        ]
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
             description=entrypoint.description,
             task_graph=entrypoint.task_graph,
-            parameters=entrypoint.parameters,
+            parameters=new_entrypoint_parameters,
             resource=entrypoint.resource,
             creator=current_user,
         )
