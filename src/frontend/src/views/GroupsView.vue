@@ -5,7 +5,7 @@
     title="Groups"
     @delete="showDeleteDialog = true"
     @edit="dataStore.editMode = true; router.push('/groups/admin')"
-    v-model="selected"
+    v-model:selected="selected"
   >
     <template #body-cell="props">
       <q-td :props="props">

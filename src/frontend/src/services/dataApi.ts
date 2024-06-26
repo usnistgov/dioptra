@@ -98,8 +98,18 @@ function urlEncode(string: string) {
   }
 }
 
-export async function getItem<T extends ItemType>(type: T, id: number) {
-  return await axios.get(`/api/${type}/${id}`)
+export async function getItem<T extends ItemType>(type: T, id: number, isDraft: boolean = false) {
+  const res =  await axios.get(`/api/${type}/${id}${isDraft ? '/draft' : ''}`)
+  if(isDraft && res.data) {
+    console.log('res = ', res)
+    Object.assign(res.data, res.data.payload)
+  }
+  return res
+}
+
+export async function getDraft<T extends ItemType>(type: T, id: number) {
+  const res = await axios.get(`/api/${type}/${id}/draft`)
+  return res
 }
 
 export async function updateItem<T extends ItemType>(type: T, id: number, params: UpdateParams[T]) {
@@ -110,7 +120,7 @@ export async function addItem<T extends ItemType>(type: T, params: CreateParams[
   return await axios.post(`/api/${type}/`, params)
 }
 
-export async function addDraft<T extends ItemType>(type: T, id: string, params: CreateParams[T]) {
+export async function addDraft<T extends ItemType>(type: T, params: CreateParams[T], id: number) {
   if(id) {
     return await axios.post(`/api/${type}/${id}/draft`, params)
   } else {

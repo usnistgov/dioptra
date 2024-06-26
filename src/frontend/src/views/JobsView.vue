@@ -3,7 +3,7 @@
     :rows="[]"
     :columns="columns"
     title="Jobs"
-    v-model="selected"
+    v-model:selected="selected"
   />
 </template>
 

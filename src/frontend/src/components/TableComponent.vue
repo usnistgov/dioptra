@@ -109,9 +109,10 @@
   })
 
   const filter = ref('')
-  const selected = defineModel()
+  const selected = defineModel('selected')
   const radioSelected = ref('')
-  const showDrafts = ref(false)
+  //const showDrafts = ref(false)
+  const showDrafts = defineModel('showDrafts')
 
   function handleRadioClick(props) {
     console.log('props = ', props)

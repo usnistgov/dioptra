@@ -5,7 +5,7 @@
     title="Tags"
     @delete="showDeleteDialog = true"
     @edit="editing = true; showAddDialog = true"
-    v-model="selected"
+    v-model:selected="selected"
     @request="getTags"
     ref="tableRef"
   >

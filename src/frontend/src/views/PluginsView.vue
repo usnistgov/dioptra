@@ -3,7 +3,7 @@
     :rows="plugins"
     :columns="columns"
     title="Plugins"
-    v-model="selected"
+    v-model:selected="selected"
     @edit="store.editMode = true; router.push(`/plugins/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     :showExpand="true"

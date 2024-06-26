@@ -2,11 +2,11 @@
   <DialogComponent 
     v-model="showDialog"
     @emitSubmit="emitAddOrEdit"
-    @emitSaveDraft="saveDraft"
+    :hideDraftBtn="true"
   >
     <template #title>
       <label id="modalTitle">
-        {{editQueue ? 'Edit Queue' : 'Register Queue'}}
+        {{ queueToDraft.hasDraft ? 'Edit Draft' : `Create Draft for "${queueToDraft.name}"` }}
       </label>
     </template>
     <div class="row items-center">
@@ -24,13 +24,6 @@
         aria-required="true"
       />
     </div>
-    <!-- <div class="row items-center">
-      <label class="col-3" id="locked">
-        Locked:
-      </label>
-      <q-toggle v-model="locked" class="q-mr-sm" aria-labelledby="locked" />
-      <q-icon :name="locked ? 'lock' : 'lock_open'" size="sm" />
-    </div> -->
     <div class="row items-center q-mb-xs">
       <label class="col-3 q-mb-lg" id="pluginGroup">
         Group:
@@ -51,7 +44,7 @@
       />
     </div>
     <div class="row items-center">
-      <label class="col-3" id="locked">
+      <label class="col-3" id="description">
         Description:
       </label>
       <q-input
@@ -59,6 +52,7 @@
         v-model="description"
         outlined
         type="textarea"
+        aria-labelledby="description"
       />
     </div>
   </DialogComponent>
@@ -68,11 +62,13 @@
   import { ref, watch } from 'vue'
   import DialogComponent from './DialogComponent.vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
+  import * as api from '@/services/dataApi'
+  import * as notify from '../notify'
 
   const store = useLoginStore()
 
-  const props = defineProps(['editQueue'])
-  const emit = defineEmits(['addQueue', 'updateQueue', 'saveDraft'])
+  const props = defineProps(['queueToDraft'])
+  const emit = defineEmits(['addQueue', 'updateQueue'])
 
   function requiredRule(val) {
     return (!!val) || "This field is required"
@@ -81,34 +77,40 @@
   const showDialog = defineModel()
 
   const name = ref('')
-  const locked = ref(true)
   const group = ref('')
   const description = ref('')
 
-  watch(showDialog, (newVal) => {
-    if(newVal) {
-      name.value = props.editQueue.name
-      description.value = props.editQueue.description
-      group.value = props.editQueue.group
+  const queue = ref({})
+
+  watch(showDialog, async (newVal) => {
+    if(newVal && props.queueToDraft.hasDraft) {
+      await getDraft()
+      name.value = queue.value.name
+      description.value = queue.value.description
+      group.value = queue.value.group
     }
     else {
       name.value = ''
-      locked.value = true
       description.value = ''
     }
   })
 
-  function emitAddOrEdit() {
-    if(props.editQueue) {
-      emit('updateQueue', name.value, props.editQueue.id, description.value)
-    } else {
-      emit('addQueue', name.value, description.value)
+  async function getDraft() {
+    try {
+      const res = await api.getItem('queues', props.queueToDraft.id, true)
+      queue.value = res.data
+    } catch(err) {
+      console.log('err = ', err)
+      notify.error(err.response.data.message)
     }
   }
 
-  function saveDraft() {
-    emit('saveDraft', name.value, description.value, props.editQueue.id)
+  function emitAddOrEdit() {
+    if(props.queueToDraft.hasDraft) {
+      emit('updateQueue', name.value, props.queueToDraft.id, description.value, true)
+    } else {
+      emit('addQueue', name.value, description.value, props.queueToDraft.id)
+    }
   }
-
 
 </script>

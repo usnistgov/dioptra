@@ -4,7 +4,7 @@
     :columns="columns"
     :showExpand="true"
     title="Entry Points"
-    v-model="selected"
+    v-model:selected="selected"
     :pagination="{sortBy: 'draft', descending: true}"
     @edit="store.editEntryPoint = selected[0]; router.push('/entrypoints/create')"
   >

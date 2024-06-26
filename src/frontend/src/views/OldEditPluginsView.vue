@@ -85,7 +85,7 @@
         :rows="plugin.files"
         :columns="fileColumns"
         title="Plugin Files"
-        v-model="selected"
+        v-model:selected="selected"
         @edit="store.editMode = true; router.push(`/plugins/${selected[0].id}`)"
         :hideButtons="true"
       >

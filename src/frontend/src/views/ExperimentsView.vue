@@ -3,7 +3,7 @@
     :rows="experiments"
     :columns="columns"
     title="Experiments"
-    v-model="selected"
+    v-model:selected="selected"
     @edit="store.savedExperimentForm = selected[0]; store.editMode = true; router.push(`/experiments/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getExperiments"

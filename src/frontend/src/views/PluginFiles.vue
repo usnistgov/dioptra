@@ -3,7 +3,7 @@
     :rows="files"
     :columns="fileColumns"
     title="Plugin Files"
-    v-model="selected"
+    v-model:selected="selected"
     @edit="store.editMode = true; router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     :showExpand="true"
