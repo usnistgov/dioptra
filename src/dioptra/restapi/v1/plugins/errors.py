@@ -36,6 +36,22 @@ class PluginFileDoesNotExistError(Exception):
     """The requested plugin file does not exist."""
 
 
+class PluginTaskParameterTypeNotFoundError(Exception):
+    """One ore more referenced plugin task parameter types were not found."""
+
+
+class PluginTaskNameAlreadyExistsError(Exception):
+    """More than one plugin task is being assigned the same name."""
+
+
+class PluginTaskInputParameterNameAlreadyExistsError(Exception):
+    """More than one plugin task input parameter is being assigned the same name."""
+
+
+class PluginTaskOutputParameterNameAlreadyExistsError(Exception):
+    """More than one plugin task output parameter is being assigned the same name."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(PluginDoesNotExistError)
     def handle_plugin_does_not_exist_error(error):
@@ -64,3 +80,31 @@ def register_error_handlers(api: Api) -> None:
             },
             400,
         )
+
+    @api.errorhandler(PluginTaskParameterTypeNotFoundError)
+    def handle_plugin_task_parameter_type_not_found_error(error):
+        return {
+            "message": "Bad Request - One or more referenced plugin task parameter "
+            "types were not found."
+        }, 400
+
+    @api.errorhandler(PluginTaskNameAlreadyExistsError)
+    def handle_plugin_task_name_already_exists_error(error):
+        return {
+            "message": "Bad Request - More than one plugin task is being assigned the "
+            "same name."
+        }, 400
+
+    @api.errorhandler(PluginTaskInputParameterNameAlreadyExistsError)
+    def handle_plugin_task_input_parameter_name_already_exists_error(error):
+        return {
+            "message": "Bad Request - More than one plugin task input parameter is "
+            "being assigned the same name."
+        }, 400
+
+    @api.errorhandler(PluginTaskOutputParameterNameAlreadyExistsError)
+    def handle_plugin_task_output_parameter_name_already_exists_error(error):
+        return {
+            "message": "Bad Request - More than one plugin task output parameter is "
+            "being assigned the same name."
+        }, 400

@@ -17,6 +17,7 @@
 """The server-side functions that perform plugin endpoint operations."""
 from __future__ import annotations
 
+import itertools
 from typing import Any, Final, cast
 
 import structlog
@@ -37,6 +38,10 @@ from .errors import (
     PluginDoesNotExistError,
     PluginFileAlreadyExistsError,
     PluginFileDoesNotExistError,
+    PluginTaskInputParameterNameAlreadyExistsError,
+    PluginTaskNameAlreadyExistsError,
+    PluginTaskOutputParameterNameAlreadyExistsError,
+    PluginTaskParameterTypeNotFoundError,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -219,13 +224,15 @@ class PluginService(object):
             select(models.PluginFile)
             .join(models.Resource)
             .where(
-                models.Resource.latest_snapshot_id.in_(
+                models.PluginFile.resource_snapshot_id.in_(
                     select(plugin_file_snapshot_ids_cte)
                 ),
+                models.Resource.latest_snapshot_id
+                == models.PluginFile.resource_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
             )
         )
-        plugin_files = db.session.scalars(latest_plugin_files_stmt).all()
+        plugin_files = db.session.scalars(latest_plugin_files_stmt).unique().all()
 
         # build a dictionary structure to re-associate plugins and plugin files
         plugins_dict: dict[int, utils.PluginWithFilesDict] = {
@@ -323,7 +330,7 @@ class PluginIdService(object):
                 == models.PluginFile.resource_snapshot_id,
             )
         )
-        plugin_files = list(db.session.scalars(latest_plugin_files_stmt).all())
+        plugin_files = list(db.session.scalars(latest_plugin_files_stmt).unique().all())
 
         drafts_stmt = (
             select(models.DraftResource.draft_resource_id)
@@ -356,7 +363,7 @@ class PluginIdService(object):
             plugin_id: The unique id of the plugin.
             name: The new name of the plugin.
             description: The new description of the plugin.
-            error_if_not_found: If True, raise an error if the group is not found.
+            error_if_not_found: If True, raise an error if the plugin is not found.
                 Defaults to False.
             commit: If True, commit the transaction. Defaults to True.
 
@@ -424,7 +431,7 @@ class PluginIdService(object):
         stmt = select(models.Resource).filter_by(
             resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
         )
-        plugin_resource = db.session.scalars(stmt).first()
+        plugin_resource = db.session.scalar(stmt)
 
         if plugin_resource is None:
             raise PluginDoesNotExistError
@@ -479,7 +486,7 @@ class PluginNameService(object):
                 == models.Plugin.resource_snapshot_id,
             )
         )
-        plugin = db.session.scalars(stmt).first()
+        plugin = db.session.scalar(stmt)
 
         if plugin is None:
             if error_if_not_found:
@@ -528,7 +535,7 @@ class PluginFileNameService(object):
                 == models.PluginFile.resource_snapshot_id,
             )
         )
-        plugin_file = db.session.scalars(stmt).first()
+        plugin_file = db.session.scalar(stmt)
 
         if plugin_file is None:
             if error_if_not_found:
@@ -566,6 +573,7 @@ class PluginIdFileService(object):
         filename: str,
         contents: str,
         description: str,
+        tasks: list[dict[str, Any]],
         plugin_id: int,
         commit: bool = True,
         **kwargs,
@@ -576,17 +584,19 @@ class PluginIdFileService(object):
         with the PluginFile. The creator will be the current user.
 
         Args:
-            filename: the name of the PluginFile object.
-            contents (str): _description_
-            tasks (Dict[str, List[Dict]]): _description_
-            plugin_id (int): _description_
-            commit (bool, optional): _description_. Defaults to True.
-
-        Raises:
-            PluginFileAlreadyExistsError: _description_
+            filename: The name of the plugin file.
+            contents: The contents of the plugin file.
+            description: The description of the plugin file.
+            tasks: The tasks associated with the plugin file.
+            plugin_id: The unique id of the plugin containing the plugin file.
+            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
-            _type_: _description_
+            The newly created plugin file object.
+
+        Raises:
+            PluginFileAlreadyExistsError: If a plugin file with the given filename
+                already exists.
         """
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -621,9 +631,11 @@ class PluginIdFileService(object):
             resource=resource,
             creator=current_user,
         )
-        new_plugin_file.parents.append(plugin.resource)
 
+        new_plugin_file.parents.append(plugin.resource)
         db.session.add(new_plugin_file)
+
+        _add_plugin_tasks(tasks, plugin_file=new_plugin_file, log=log)
 
         if commit:
             db.session.commit()
@@ -738,7 +750,7 @@ class PluginIdFileService(object):
             plugin_file.resource_id: utils.PluginFileDict(
                 plugin=plugin, plugin_file=plugin_file, has_draft=False
             )
-            for plugin_file in db.session.scalars(latest_plugin_files_stmt)
+            for plugin_file in db.session.scalars(latest_plugin_files_stmt).unique()
         }
 
         drafts_stmt = select(
@@ -775,7 +787,7 @@ class PluginIdFileService(object):
             resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
         )
 
-        plugin_resource = db.session.scalars(stmt).first()
+        plugin_resource = db.session.scalar(stmt)
 
         if plugin_resource is None:
             raise PluginDoesNotExistError
@@ -791,7 +803,7 @@ class PluginIdFileService(object):
             )
         )
 
-        plugin_files = db.session.scalars(latest_plugin_files_stmt).all()
+        plugin_files = db.session.scalars(latest_plugin_files_stmt).unique().all()
         num_plugin_files = len(plugin_files)
 
         plugin_file_ids = []
@@ -831,15 +843,15 @@ class PluginIdFileIdService(object):
         Args:
             plugin_id: The unique id of the plugin containing the plugin file.
             plugin_file_id: The unique id of the plugin file.
-            error_if_not_found: If True, raise an error if the plugin is not found.
-                Defaults to False.
+            error_if_not_found: If True, raise an error if the plugin or plugin file is
+                not found. Defaults to False.
 
         Returns:
             The plugin object if found, otherwise None.
 
         Raises:
-            PluginDoesNotExistError: If the plugin is not found and `error_if_not_found`
-                is True.
+            PluginDoesNotExistError: If the plugin or plugin file is not found and
+                `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
@@ -908,10 +920,31 @@ class PluginIdFileIdService(object):
         filename: str,
         contents: str,
         description: str,
+        tasks: list,
         error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
-    ):
+    ) -> utils.PluginFileDict | None:
+        """Modify a plugin file.
+
+        Args:
+            plugin_id: The unique id of the plugin.
+            plugin_file_id: The unique id of the plugin file.
+            filename: The updated filename of the plugin file.
+            contents: The updated contents of the plugin file.
+            description: The updated description of the plugin file.
+            tasks: The updated tasks associated with the plugin file.
+            error_if_not_found: If True, raise an error if the plugin or plugin file is
+                not found. Defaults to False.
+            commit: If True, commit the transaction. Defaults to True.
+
+        Returns:
+            The updated plugin file object.
+
+        Raises:
+            PluginDoesNotExistError: If the plugin or plugin file is not found and
+                `error_if_not_found` is True.
+        """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         plugin_file_dict = self.get(
@@ -935,38 +968,39 @@ class PluginIdFileIdService(object):
             is not None
         ):
             log.debug(
-                "Plugin file filename already exists",
-                filename=filename,
-                plugin_id=plugin_id,
+                "Plugin filename already exists", filename=filename, plugin_id=plugin_id
             )
             raise PluginFileAlreadyExistsError
 
-        new_plugin_file = models.PluginFile(
+        updated_plugin_file = models.PluginFile(
             filename=filename,
             contents=contents,
             description=description,
             resource=plugin_file.resource,
             creator=current_user,
         )
-        db.session.add(new_plugin_file)
+        db.session.add(updated_plugin_file)
+
+        _add_plugin_tasks(tasks, plugin_file=updated_plugin_file, log=log)
 
         if commit:
             db.session.commit()
             log.debug(
                 "Plugin file modification successful",
-                plugin_file_id=new_plugin_file.resource_id,
-                filename=new_plugin_file.filename,
+                plugin_file_id=updated_plugin_file.resource_id,
+                filename=updated_plugin_file.filename,
             )
 
         return utils.PluginFileDict(
-            plugin_file=new_plugin_file, plugin=plugin, has_draft=False
+            plugin_file=updated_plugin_file, plugin=plugin, has_draft=False
         )
 
     def delete(self, plugin_id: int, plugin_file_id: int, **kwargs) -> dict[str, Any]:
-        """Deletes all plugin files associated with a plugin.
+        """Deletes a plugin file.
 
         Args:
             plugin_id: The unique id of the plugin.
+            plugin_file_id: The unique id of the plugin file.
 
         Returns:
             A dictionary reporting the status of the request.
@@ -977,7 +1011,7 @@ class PluginIdFileIdService(object):
             resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
         )
 
-        plugin_resource = db.session.scalars(stmt).first()
+        plugin_resource = db.session.scalar(stmt)
         if plugin_resource is None:
             raise PluginDoesNotExistError
 
@@ -1011,3 +1045,135 @@ class PluginIdFileIdService(object):
         )
 
         return {"status": "Success", "id": [plugin_file_id_to_return]}
+
+
+def _construct_plugin_task(
+    plugin_file: models.PluginFile,
+    task: dict[str, Any],
+    parameter_types_id_to_orm: dict[int, models.PluginTaskParameterType],
+    log: BoundLogger,
+) -> models.PluginTask:
+    input_param_names = [x["name"] for x in task["input_params"]]
+    unique_input_param_names = set(input_param_names)
+
+    if len(unique_input_param_names) != len(input_param_names):
+        log.error(
+            "One or more input parameters have the same name",
+            plugin_task_name=task["name"],
+            input_param_names=input_param_names,
+        )
+        raise PluginTaskInputParameterNameAlreadyExistsError
+
+    output_param_names = [x["name"] for x in task["output_params"]]
+    unique_output_param_names = set(output_param_names)
+
+    if len(unique_output_param_names) != len(output_param_names):
+        log.error(
+            "One or more output parameters have the same name",
+            plugin_task_name=task["name"],
+            output_param_names=output_param_names,
+        )
+        raise PluginTaskOutputParameterNameAlreadyExistsError
+
+    input_parameters_list = []
+    for parameter_number, input_param in enumerate(task["input_params"]):
+        parameter_type = parameter_types_id_to_orm[input_param["parameter_type_id"]]
+        input_parameters_list.append(
+            models.PluginTaskInputParameter(
+                name=input_param["name"],
+                parameter_number=parameter_number,
+                parameter_type=parameter_type,
+            )
+        )
+
+    output_parameters_list = []
+    for parameter_number, output_param in enumerate(task["output_params"]):
+        parameter_type = parameter_types_id_to_orm[output_param["parameter_type_id"]]
+        output_parameters_list.append(
+            models.PluginTaskOutputParameter(
+                name=output_param["name"],
+                parameter_number=parameter_number,
+                parameter_type=parameter_type,
+            )
+        )
+
+    plugin_task_orm = models.PluginTask(
+        file=plugin_file,
+        plugin_task_name=task["name"],
+        input_parameters=input_parameters_list,
+        output_parameters=output_parameters_list,
+    )
+    return plugin_task_orm
+
+
+def _get_referenced_parameter_types(
+    tasks: list[dict[str, Any]], log: BoundLogger
+) -> dict[int, models.PluginTaskParameterType] | None:
+    parameter_type_ids = set(
+        [
+            param["parameter_type_id"]
+            for task in tasks
+            for param in itertools.chain(task["input_params"], task["output_params"])
+        ]
+    )
+
+    if not len(parameter_type_ids) > 0:
+        return None
+
+    parameter_types_stmt = (
+        select(models.PluginTaskParameterType)
+        .join(models.Resource)
+        .where(
+            models.PluginTaskParameterType.resource_id.in_(tuple(parameter_type_ids)),
+            models.Resource.is_deleted == False,  # noqa: E712
+            models.Resource.latest_snapshot_id
+            == models.PluginTaskParameterType.resource_snapshot_id,
+        )
+    )
+    parameter_types = db.session.scalars(parameter_types_stmt).all()
+
+    if parameter_types is None:
+        log.error(
+            "The database query returned a None when it should return plugin "
+            "parameter types.",
+            sql=str(parameter_types_stmt),
+            num_expected=len(parameter_type_ids),
+        )
+        raise BackendDatabaseError
+
+    if not len(parameter_types) == len(parameter_type_ids):
+        returned_parameter_type_ids = set([x.resource_id for x in parameter_types])
+        ids_not_found = parameter_type_ids - returned_parameter_type_ids
+        log.error(
+            "One or more referenced plugin task parameter types were not found",
+            num_expected=len(parameter_type_ids),
+            num_found=len(parameter_types),
+            ids_not_found=sorted(list(ids_not_found)),
+        )
+        raise PluginTaskParameterTypeNotFoundError
+
+    return {x.resource_id: x for x in parameter_types}
+
+
+def _add_plugin_tasks(
+    tasks: list[dict[str, Any]], plugin_file: models.PluginFile, log: BoundLogger
+) -> None:
+    if not tasks:
+        return None
+
+    task_names = [x["name"] for x in tasks]
+    unique_task_names = set(task_names)
+
+    if len(unique_task_names) != len(tasks):
+        log.error("One or more tasks have the same name", task_names=task_names)
+        raise PluginTaskNameAlreadyExistsError
+
+    parameter_types_id_to_orm = _get_referenced_parameter_types(tasks, log=log) or {}
+    for task in tasks:
+        plugin_task = _construct_plugin_task(
+            plugin_file,
+            task=task,
+            parameter_types_id_to_orm=parameter_types_id_to_orm,
+            log=log,
+        )
+        db.session.add(plugin_task)

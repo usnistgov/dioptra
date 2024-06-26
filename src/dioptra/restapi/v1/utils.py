@@ -33,6 +33,30 @@ TAGS: Final[str] = "tags"
 # -- Typed Dictionaries --------------------------------------------------------
 
 
+class GroupRefDict(TypedDict):
+    id: int
+    name: str
+    url: str
+
+
+class PluginParameterTypeRefDict(TypedDict):
+    id: int
+    group: GroupRefDict
+    url: str
+    name: str
+
+
+class PluginTaskParameterDict(TypedDict):
+    name: str
+    parameter_type: PluginParameterTypeRefDict
+
+
+class PluginTaskDict(TypedDict):
+    name: str
+    input_params: list[PluginTaskParameterDict]
+    output_params: list[PluginTaskParameterDict]
+
+
 class PluginWithFilesDict(TypedDict):
     plugin: models.Plugin
     plugin_files: list[models.PluginFile]
@@ -96,7 +120,7 @@ def build_user_ref(user: models.User) -> dict[str, Any]:
     }
 
 
-def build_group_ref(group: models.Group) -> dict[str, Any]:
+def build_group_ref(group: models.Group) -> GroupRefDict:
     """Build a GroupRef dictionary.
 
     Args:
@@ -190,13 +214,13 @@ def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
         "id": queue.resource_id,
         "name": queue.name,
         "group": build_group_ref(queue.resource.owner),
-        "url": build_url(f"{QUEUES}/{queue.queue_id}"),
+        "url": build_url(f"{QUEUES}/{queue.resource_id}"),
     }
 
 
 def build_plugin_parameter_type_ref(
     plugin_param_type: models.PluginTaskParameterType,
-) -> dict[str, Any]:
+) -> PluginParameterTypeRefDict:
     """Build a PluginParameterTypeRef dictionary.
 
     Args:
@@ -207,12 +231,10 @@ def build_plugin_parameter_type_ref(
         The PluginParameterTypeRef dictionary.
     """
     return {
-        "id": plugin_param_type.plugin_parameter_type_id,
+        "id": plugin_param_type.resource_id,
         "name": plugin_param_type.name,
         "group": build_group_ref(plugin_param_type.resource.owner),
-        "url": build_url(
-            f"{PLUGIN_PARAMETER_TYPES}/{plugin_param_type.plugin_parameter_type_id}"
-        ),
+        "url": build_url(f"{PLUGIN_PARAMETER_TYPES}/{plugin_param_type.resource_id}"),
     }
 
 
@@ -451,7 +473,7 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
         "latest_snapshot": plugin_file.resource.latest_snapshot_id
         == plugin_file.resource_snapshot_id,
         "contents": plugin_file.contents,
-        "tasks": [],
+        "tasks": [build_plugin_task(task) for task in plugin_file.tasks],
         "plugin": build_plugin_ref(plugin),
     }
 
@@ -459,6 +481,36 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
         data["has_draft"] = has_draft
 
     return data
+
+
+def build_plugin_task(plugin_task: models.PluginTask) -> PluginTaskDict:
+    input_params: list[PluginTaskParameterDict] = []
+    for input_parameter in plugin_task.input_parameters:
+        input_params.append(
+            PluginTaskParameterDict(
+                name=input_parameter.name,
+                parameter_type=build_plugin_parameter_type_ref(
+                    input_parameter.parameter_type
+                ),
+            )
+        )
+
+    output_params: list[PluginTaskParameterDict] = []
+    for output_parameter in plugin_task.output_parameters:
+        output_params.append(
+            PluginTaskParameterDict(
+                name=output_parameter.name,
+                parameter_type=build_plugin_parameter_type_ref(
+                    output_parameter.parameter_type
+                ),
+            )
+        )
+
+    return PluginTaskDict(
+        name=plugin_task.plugin_task_name,
+        input_params=input_params,
+        output_params=output_params,
+    )
 
 
 def build_plugin_parameter_type(

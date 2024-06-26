@@ -200,54 +200,66 @@ def registered_plugin_with_file_and_tasks(
         @pyplugs.register
         def hello_world(name: str) -> str:
             return f"Hello, {name}!"
+
+
+        @pyplugs.register
+        def add_one(x: int) -> int:
+            return x + 1
         """
     )
-    plugin_file_without_tasks_response = actions.register_plugin_file(
+    string_type_response = actions.register_plugin_parameter_type(
+        client,
+        name="string",
+        group_id=auth_account["default_group_id"],
+        structure=None,
+        description="The plugin parameter string type.",
+    ).get_json()
+    integer_type_response = actions.register_plugin_parameter_type(
+        client,
+        name="integer",
+        group_id=auth_account["default_group_id"],
+        structure=None,
+        description="The plugin parameter integer type.",
+    ).get_json()
+    hello_world_task = {
+        "name": "hello_world",
+        "inputParams": [
+            {"name": "name", "parameterType": string_type_response["id"]}
+        ],
+        "outputParams": [
+            {
+                "name": "hello_world_message",
+                "parameterType": string_type_response["id"],
+            }
+        ],
+    }
+    add_one_task = {
+        "name": "add_one",
+        "inputParams": [
+            {"name": "x", "parameterType": integer_type_response["id"]}
+        ],
+        "outputParams": [
+            {
+                "name": "value",
+                "parameterType": integer_type_response["id"],
+            }
+        ],
+    }
+    plugin_task_list = [hello_world_task, add_one_task]
+    plugin_file_response = actions.register_plugin_file(
         client,
         plugin_id=plugin_response["id"],
         description="The plugin file with tasks.",
         filename="plugin_file.py",
         contents=contents,
-    ).get_json()
-    plugin_parameter_type_response = actions.register_plugin_parameter_type(
-        client,
-        name="plugin_parameter_type",
-        group_id=auth_account["default_group_id"],
-        structure=None,
-        description="The plugin parameter type used for the tasks.",
-    ).get_json()
-
-    plugin_task1: dict[str, Any] = {
-        "name": "plugin_task_one",
-        "input_params": [plugin_parameter_type_response],
-        "output_params": [plugin_parameter_type_response],
-    }
-    plugin_task2: dict[str, Any] = {
-        "name": "plugin_task_two",
-        "input_params": [plugin_parameter_type_response],
-        "output_params": [plugin_parameter_type_response],
-    }
-    plugin_task3: dict[str, Any] = {
-        "name": "plugin_task_three",
-        "input_params": [plugin_parameter_type_response],
-        "output_params": [plugin_parameter_type_response],
-    }
-
-    plugin_task_list = [plugin_task1, plugin_task2, plugin_task3]
-    plugin_file_with_tasks_response = actions.add_plugin_tasks_to_plugin_file(
-        client,
-        plugin_id=plugin_response["id"],
-        plugin_file_id=plugin_file_without_tasks_response["id"],
         tasks=plugin_task_list,
     ).get_json()
     return {
         "plugin": plugin_response,
-        "plugin_file": plugin_file_with_tasks_response,
-        "plugin_parameter_type": plugin_parameter_type_response,
-        "plugin_task1": plugin_task1,
-        "plugin_task2": plugin_task2,
-        "plugin_task3": plugin_task3,
-        "plugin_task_list": plugin_task_list,
+        "plugin_file": plugin_file_response,
+        "string_parameter_type": string_type_response,
+        "integer_parameter_type": integer_type_response,
+        "tasks": plugin_task_list,
     }
 
 
