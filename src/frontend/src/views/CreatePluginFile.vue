@@ -58,7 +58,7 @@
       </div>
     </fieldset>
     <fieldset :class="`${isMobile ? 'col-12' : 'col q-ml-md'}`">
-      <legend>Plugin Parameter Types</legend>
+      <legend>Tasks</legend>
     </fieldset>
   </div>
 
@@ -85,6 +85,7 @@
   import CodeEditor from '@/components/CodeEditor.vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
+import PluginFiles from './PluginFiles.vue'
   
   const store = useDataStore()
   const route = useRoute()
@@ -127,6 +128,23 @@
         contents: pluginFile.value.contents,
         description: pluginFile.value.description
       }
+    plguinFileSubmit.tasks =  [
+      {
+        "name": "task_name",
+        "inputParams": [
+          {
+            "name": "string",
+            "parameterType": 90
+          }
+        ],
+        "outputParams": [
+          {
+            "name": "string",
+            "parameterType": 90
+          }
+        ]
+      }
+    ]
     try {
       let res
       if(route.params.fileId === 'new') {

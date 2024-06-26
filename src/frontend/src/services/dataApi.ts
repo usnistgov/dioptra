@@ -53,7 +53,12 @@ type UpdateParams = {
   },
   tags: {
     name: string
-  }
+  },
+  pluginParameterTypes: {
+    name: string,
+    description: string,
+    structure: object
+  },
 }
 
 interface Pagination {

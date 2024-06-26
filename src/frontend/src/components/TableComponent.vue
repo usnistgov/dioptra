@@ -64,7 +64,7 @@
           </template>
         </q-input>
     </template>
-    <template #top-left v-if="!hideButtons">
+    <template #top-left v-if="!hideToggleDraft">
       <q-btn-toggle
         v-model="showDrafts"
         toggle-color="primary"
@@ -85,7 +85,7 @@
   
   const isMobile = inject('isMobile')
 
-  const props = defineProps(['columns', 'rows', 'title', 'showExpand', 'hideButtons'])
+  const props = defineProps(['columns', 'rows', 'title', 'showExpand', 'hideButtons', 'hideToggleDraft'])
   const emit = defineEmits(['edit', 'delete', 'request'])
 
   const finalColumns = computed(() => {

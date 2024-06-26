@@ -33,6 +33,9 @@
           <q-item clickable v-close-popup to="/tags">
             <q-item-section>Tags</q-item-section>
           </q-item>
+          <q-item clickable v-close-popup to="/pluginParams">
+            <q-item-section>Plugin-Param-Types</q-item-section>
+          </q-item>
         </q-list>
       </q-menu>
     </q-btn>
@@ -46,6 +49,7 @@
         <q-route-tab label="Jobs" to="/" />
         <q-route-tab label="Groups" to="/groups" />
         <q-route-tab label="Tags" to="/tags" />
+        <q-route-tab label="Plugin-Params" to="/pluginParams" />
       </q-tabs>
     </nav>
 

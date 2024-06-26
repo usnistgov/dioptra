@@ -9,7 +9,11 @@
     :showExpand="true"
     @request="getFiles"
     ref="tableRef"
-  />
+  >
+    <template #body-cell-tasks="props">
+      {{ props.row.tasks.length }}
+    </template>
+  </TableComponent>
   <q-btn 
     class="fixedButton"
     round

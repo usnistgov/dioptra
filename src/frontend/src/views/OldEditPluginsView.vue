@@ -389,6 +389,7 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'input_params', label: 'Input Params', align: 'left', field: 'input_params', sortable: true, },
     { name: 'output_params', label: 'Output Params', align: 'left', field: 'output_params', sortable: true, },
+    { name: 'actions', label: 'Actions', align: 'left', },
   ]
 
   const selected = ref([])
