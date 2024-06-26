@@ -72,6 +72,7 @@ class PluginFileDict(TypedDict):
 
 class ExperimentDict(TypedDict):
     experiment: models.Experiment
+    entrypoints: list[models.EntryPoint]
     queue: models.Queue | None
     has_draft: bool | None
 
@@ -248,7 +249,7 @@ def build_entrypoint_ref(entrypoint: models.EntryPoint) -> dict[str, Any]:
     """Build a EntrypointRef dictionary.
 
     Args:
-        queue: The Entrypoint object to convert into a EntrypointRef dictionary.
+        entrypoint: The Entrypoint object to convert into a EntrypointRef dictionary.
 
     Returns:
         The EntrypointRef dictionary.
@@ -257,7 +258,7 @@ def build_entrypoint_ref(entrypoint: models.EntryPoint) -> dict[str, Any]:
         "id": entrypoint.resource_id,
         "name": entrypoint.name,
         "group": build_group_ref(entrypoint.resource.owner),
-        "url": f"/{ENTRYPOINTS}/{entrypoint.entry_point_id}",
+        "url": f"/{ENTRYPOINTS}/{entrypoint.resource_id}",
     }
 
 
@@ -391,6 +392,7 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         The Experiment response dictionary.
     """
     experiment = experiment_dict["experiment"]
+    entrypoints = experiment_dict["entrypoints"]
     has_draft = experiment_dict.get("has_draft", None)
 
     data = {
@@ -398,7 +400,7 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         "snapshot_id": experiment.resource_snapshot_id,
         "name": experiment.name,
         "description": experiment.description,
-        "entrypoints": [],
+        "entrypoints": [build_entrypoint_ref(entrypoint) for entrypoint in entrypoints],
         "jobs": [],
         "user": build_user_ref(experiment.creator),
         "group": build_group_ref(experiment.resource.owner),

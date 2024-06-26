@@ -763,6 +763,56 @@ class EntrypointIdPluginsIdService(object):
         )
 
 
+class EntrypointIdsService(object):
+    """The service methods for retrieving entrypoints from a list of ids."""
+
+    def get(
+        self,
+        entrypoint_ids: list[int],
+        error_if_not_found: bool = False,
+        **kwargs,
+    ) -> list[models.EntryPoint]:
+        """Fetch a list of entrypoints by their unique ids.
+
+        Args:
+            entrypoint_ids: The unique ids of the entrypoints.
+            error_if_not_found: If True, raise an error if the entrypoint is not found.
+                Defaults to False.
+
+        Returns:
+            The entrypoint object if found, otherwise None.
+
+        Raises:
+            EntrypointDoesNotExistError: If the entrypoint is not found and
+                `error_if_not_found` is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get entrypoint by id", entrypoint_ids=entrypoint_ids)
+
+        stmt = (
+            select(models.EntryPoint)
+            .join(models.Resource)
+            .where(
+                models.EntryPoint.resource_id.in_(tuple(entrypoint_ids)),
+                models.EntryPoint.resource_snapshot_id
+                == models.Resource.latest_snapshot_id,
+                models.Resource.is_deleted == False,  # noqa: E712
+            )
+        )
+        entrypoints = list(db.session.scalars(stmt).all())
+
+        if len(entrypoints) != len(entrypoint_ids) and error_if_not_found:
+            entrypoint_ids_missing = set(entrypoint_ids) - set(
+                entrypoint.resource_id for entrypoint in entrypoints
+            )
+            log.debug(
+                "Entrypoint not found", entrypoint_ids=list(entrypoint_ids_missing)
+            )
+            raise EntrypointDoesNotExistError
+
+        return entrypoints
+
+
 class EntrypointNameService(object):
     """The service methods for managing entrypoints by their name."""
 

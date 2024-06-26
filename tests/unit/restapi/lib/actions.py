@@ -123,10 +123,8 @@ def register_experiment(
         payload["description"] = description
     else:
         payload["description"] = ""
-    # if entrypoint_ids is not None:
-    #     payload["entrypoint_ids"] = entrypoint_ids
-    # else:
-    #     payload["entrypoint_ids"] = list()
+    if entrypoint_ids is not None:
+        payload["entrypoints"] = entrypoint_ids
 
     return client.post(
         f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/",
