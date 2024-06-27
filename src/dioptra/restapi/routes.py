@@ -45,6 +45,7 @@ V1_PLUGINS_ROUTE = "plugins"
 V1_QUEUES_ROUTE = "queues"
 V1_TAGS_ROUTE = "tags"
 V1_USERS_ROUTE = "users"
+V1_WORKFLOWS_ROUTE = "workflows"
 
 
 def register_routes(api: Api, restapi_version: str) -> None:
