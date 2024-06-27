@@ -272,6 +272,7 @@ class FakeData(object):
             name=input_parameter_name,
             parameter_number=1,
             parameter_type=str_parameter_type,
+            required=True,
         )
         output_parameter = models.PluginTaskOutputParameter(
             name=output_parameter_name,

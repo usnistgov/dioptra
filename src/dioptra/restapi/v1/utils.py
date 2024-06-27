@@ -46,15 +46,21 @@ class PluginParameterTypeRefDict(TypedDict):
     name: str
 
 
-class PluginTaskParameterDict(TypedDict):
+class PluginTaskInputParameterDict(TypedDict):
+    name: str
+    required: bool
+    parameter_type: PluginParameterTypeRefDict
+
+
+class PluginTaskOutputParameterDict(TypedDict):
     name: str
     parameter_type: PluginParameterTypeRefDict
 
 
 class PluginTaskDict(TypedDict):
     name: str
-    input_params: list[PluginTaskParameterDict]
-    output_params: list[PluginTaskParameterDict]
+    input_params: list[PluginTaskInputParameterDict]
+    output_params: list[PluginTaskOutputParameterDict]
 
 
 class PluginWithFilesDict(TypedDict):
@@ -484,21 +490,22 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
 
 
 def build_plugin_task(plugin_task: models.PluginTask) -> PluginTaskDict:
-    input_params: list[PluginTaskParameterDict] = []
+    input_params: list[PluginTaskInputParameterDict] = []
     for input_parameter in plugin_task.input_parameters:
         input_params.append(
-            PluginTaskParameterDict(
+            PluginTaskInputParameterDict(
                 name=input_parameter.name,
+                required=input_parameter.required,
                 parameter_type=build_plugin_parameter_type_ref(
                     input_parameter.parameter_type
                 ),
             )
         )
 
-    output_params: list[PluginTaskParameterDict] = []
+    output_params: list[PluginTaskOutputParameterDict] = []
     for output_parameter in plugin_task.output_parameters:
         output_params.append(
-            PluginTaskParameterDict(
+            PluginTaskOutputParameterDict(
                 name=output_parameter.name,
                 parameter_type=build_plugin_parameter_type_ref(
                     output_parameter.parameter_type

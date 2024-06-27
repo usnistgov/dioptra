@@ -1083,6 +1083,7 @@ def _construct_plugin_task(
                 name=input_param["name"],
                 parameter_number=parameter_number,
                 parameter_type=parameter_type,
+                required=input_param["required"],
             )
         )
 
