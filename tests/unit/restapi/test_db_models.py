@@ -24,11 +24,15 @@ tests for the REST API.
 import uuid
 
 import pytest
+import yaml
 from faker import Faker
 from flask_sqlalchemy import SQLAlchemy
+from pathlib import Path
 from sqlalchemy.exc import IntegrityError
 
 from dioptra.restapi.db import models
+from dioptra.task_engine.validation import is_valid
+from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 from .lib import db as libdb
 from .lib.db import views as viewsdb
@@ -311,7 +315,7 @@ def registered_str_parameter_type_id(
     fake_data: libdb.FakeData,
 ) -> int:
     new_plugin_task_parameter_type = fake_data.plugin_task_parameter_type(
-        creator=account.user, group=account.group, name="str"
+        creator=account.user, group=account.group, name="string"
     )
     db.session.add(new_plugin_task_parameter_type)
     db.session.commit()
@@ -907,3 +911,57 @@ def test_db_invalid_resource_dependency_fails(
         except IntegrityError as err:
             db.session.rollback()
             raise err
+
+
+def test_task_engine_yaml_creation_works(
+    db: SQLAlchemy,
+    registered_plugin_id: int,
+    registered_entry_point_id: int,
+) -> None:
+    entrypoint = viewsdb.get_latest_entry_point(
+        db, resource_id=registered_entry_point_id
+    )
+    plugin = viewsdb.get_latest_plugin(db, resource_id=registered_plugin_id)
+    files = viewsdb.get_latest_plugin_files(db, plugin_resource_id=registered_plugin_id)
+
+    types = {
+        param.parameter_type.name: param.parameter_type.structure
+        for file in files
+        for task in file.tasks
+        for param in task.input_parameters + task.output_parameters
+        if param.parameter_type.name not in BUILTIN_TYPES
+    }
+
+    parameters = {param.name: param.default_value for param in entrypoint.parameters}
+
+    tasks = {
+        task.plugin_task_name: {
+            "plugin": ".".join(
+                [plugin.name, Path(file.filename).stem, task.plugin_task_name]
+            ),
+            "inputs": [
+                {"name": param.name, "type": param.parameter_type.name}
+                for param in task.input_parameters
+            ],
+            "outputs": [
+                {param.name: param.parameter_type.name}
+                for param in task.output_parameters
+            ],
+        }
+        for file in files
+        for task in file.tasks
+    }
+
+    graph = yaml.safe_load(entrypoint.task_graph)["graph"]
+
+    task_engine_dict = {
+        "types": types,
+        "parameters": parameters,
+        "tasks": tasks,
+        "graph": graph,
+    }
+
+    with open("data.yaml", "w") as f:
+        yaml.dump(task_engine_dict, f, default_flow_style=False)
+
+    assert is_valid(task_engine_dict)
