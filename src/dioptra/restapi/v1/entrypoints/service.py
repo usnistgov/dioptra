@@ -30,6 +30,7 @@ from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.plugins.service import PluginIdsService
+from dioptra.restapi.v1.queues.errors import QueueDoesNotExistError
 from dioptra.restapi.v1.queues.service import QueueIdsService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
@@ -848,6 +849,270 @@ class EntrypointIdsService(object):
             raise EntrypointDoesNotExistError
 
         return entrypoints
+
+
+class EntrypointIdQueuesService(object):
+    """The service methods for managing queues attached to an entrypoint."""
+
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_service: EntrypointIdService,
+        queue_ids_service: QueueIdsService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_id_service: A EntrypointIdService object.
+            queue_ids_service: A QueueIdsService object.
+        """
+        self._entrypoint_id_service = entrypoint_id_service
+        self._queue_ids_service = queue_ids_service
+
+    def get(
+        self,
+        entrypoint_id: int,
+        **kwargs,
+    ) -> list[models.Queue]:
+        """Fetch the list of queues for an entrypoint.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+            error_if_not_found: If True, raise an error if the entrypoint is not found.
+                Defaults to False.
+
+        Returns:
+            The list of plugins.
+
+        Raises:
+            EntrypointDoesNotExistError: If the entrypoint is not found and
+                `error_if_not_found` is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Get queues for an entrypoint by resource id", resource_id=entrypoint_id
+        )
+
+        entrypoint_dict = cast(
+            utils.EntrypointDict,
+            self._entrypoint_id_service.get(
+                entrypoint_id, error_if_not_found=True, log=log
+            ),
+        )
+        return entrypoint_dict["queues"]
+
+    def append(
+        self,
+        entrypoint_id: int,
+        queue_ids: list[int],
+        error_if_not_found: bool = False,
+        commit: bool = True,
+        **kwargs,
+    ) -> list[models.Queue] | None:
+        """Append one or more Queues to an entrypoint
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+            queue_ids: The list of queue ids to append.
+            error_if_not_found: If True, raise an error if the resource is not found.
+                Defaults to False.
+            commit: If True, commit the transaction. Defaults to True.
+
+        Returns:
+            The updated list of queues resource objects.
+
+        Raises:
+            EntrypointDoesNotExistError: If the resource is not found and
+                `error_if_not_found` is True.
+            QueueDoesNotExistError: If one or more queues are not found.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Append queues to an entrypoint by resource id", resource_id=entrypoint_id
+        )
+
+        entrypoint_dict = cast(
+            utils.EntrypointDict,
+            self._entrypoint_id_service.get(
+                entrypoint_id, error_if_not_found=True, log=log
+            ),
+        )
+        entrypoint = entrypoint_dict["entry_point"]
+        queues = entrypoint_dict["queues"]
+
+        existing_queue_ids = set(
+            resource.resource_id
+            for resource in entrypoint.children
+            if resource.resource_type == "queue"
+        )
+        new_queue_ids = set(queue_ids) - existing_queue_ids
+        new_queues = self._queue_ids_service.get(
+            list(new_queue_ids), error_if_not_found=True, log=log
+        )
+        if error_if_not_found and len(new_queues) != len(new_queue_ids):
+            found_queue_ids = set(queue.resource_id for queue in new_queues)
+            missing_queue_ids = new_queue_ids - found_queue_ids
+            log.debug(queue_ids=list(missing_queue_ids))
+            raise QueueDoesNotExistError
+
+        entrypoint.children.extend([queue.resource for queue in new_queues])
+
+        if commit:
+            db.session.commit()
+            log.debug("Queues appended successfully", queue_ids=queue_ids)
+
+        return queues + new_queues
+
+    def modify(
+        self,
+        entrypoint_id: int,
+        queue_ids: list[int],
+        error_if_not_found: bool = False,
+        commit: bool = True,
+        **kwargs,
+    ) -> list[models.Queue]:
+        """Modify the list of queues for an entrypoint.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+            queue_ids: The list of queue ids to append.
+            error_if_not_found: If True, raise an error if the resource is not found.
+                Defaults to False.
+            commit: If True, commit the transaction. Defaults to True.
+
+        Returns:
+            The updated queue resource object.
+
+        Raises:
+            ResourceDoesNotExistError: If the resource is not found and
+                `error_if_not_found` is True.
+            QueueDoesNotExistError: If one or more queues are not found.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        entrypoint_dict = cast(
+            utils.EntrypointDict,
+            self._entrypoint_id_service.get(
+                entrypoint_id, error_if_not_found=True, log=log
+            ),
+        )
+        entrypoint = entrypoint_dict["entry_point"]
+
+        queues = self._queue_ids_service.get(
+            queue_ids, error_if_not_found=True, log=log
+        )
+
+        plugin_resources = [
+            resource
+            for resource in entrypoint.children
+            if resource.resource_type == "plugin"
+        ]
+        queue_resources = [queue.resource for queue in queues]
+        entrypoint.children = plugin_resources + queue_resources
+
+        if commit:
+            db.session.commit()
+            log.debug("Entrypoint queues updated successfully", queue_ids=queue_ids)
+
+        return queues
+
+    def delete(self, entrypoint_id: int, **kwargs) -> dict[str, Any]:
+        """Remove queues from an entrypoint.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+
+        Returns:
+            A dictionary reporting the status of the request.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        entrypoint_dict = cast(
+            utils.EntrypointDict,
+            self._entrypoint_id_service.get(
+                entrypoint_id, error_if_not_found=True, log=log
+            ),
+        )
+        entrypoint = entrypoint_dict["entry_point"]
+        entrypoint.children = [
+            resource
+            for resource in entrypoint.children
+            if resource.resource_type == "plugin"
+        ]
+
+        queue_ids = [queue.resource_id for queue in entrypoint_dict["queues"]]
+
+        db.session.commit()
+        log.debug(
+            "Queues removed from entrypoint",
+            entrypoint_id=entrypoint_id,
+            queue_ids=queue_ids,
+        )
+
+        return {"status": "Success", "id": queue_ids}
+
+
+class EntrypointIdQueuesIdService(object):
+    """The service methods for removing a queue attached to an entrypoint."""
+
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_service: EntrypointIdService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_id_service: A EntrypointIdService object.
+        """
+        self._entrypoint_id_service = entrypoint_id_service
+
+    def delete(self, entrypoint_id: int, queue_id, **kwargs) -> dict[str, Any]:
+        """Remove a queue from an entrypoint.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+            queue_id: The unique id of the queue.
+
+        Returns:
+            A dictionary reporting the status of the request.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        entrypoint_dict = cast(
+            utils.EntrypointDict,
+            self._entrypoint_id_service.get(
+                entrypoint_id, error_if_not_found=True, log=log
+            ),
+        )
+        entrypoint = entrypoint_dict["entry_point"]
+
+        queue_resources = {
+            resource.resource_id: resource
+            for resource in entrypoint.children
+            if resource.resource_type == "queue"
+        }
+
+        removed_queue = queue_resources.pop(queue_id, None)
+
+        if removed_queue is None:
+            raise QueueDoesNotExistError
+
+        plugin_resources = [
+            resource
+            for resource in entrypoint.children
+            if resource.resource_type == "plugin"
+        ]
+        entrypoint.children = plugin_resources + list(queue_resources.values())
+
+        db.session.commit()
+        log.debug("Queue removed", entrypoint_id=entrypoint_id, queue_id=queue_id)
+
+        return {"status": "Success", "id": [queue_id]}
 
 
 class EntrypointNameService(object):

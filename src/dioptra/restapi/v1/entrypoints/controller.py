@@ -31,7 +31,8 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.queues.schema import QueueRefSchema
+from dioptra.restapi.v1.schemas import IdListSchema, IdStatusResponseSchema
 from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_endpoint,
     generate_resource_drafts_id_endpoint,
@@ -59,6 +60,8 @@ from .service import (
     SEARCHABLE_FIELDS,
     EntrypointIdPluginsIdService,
     EntrypointIdPluginsService,
+    EntrypointIdQueuesIdService,
+    EntrypointIdQueuesService,
     EntrypointIdService,
     EntrypointService,
 )
@@ -296,6 +299,93 @@ class EntrypointIdPluginsIdEndpoint(Resource):
         )
         plugins = self._entrypoint_id_plugins_id_service.delete(id, pluginId, log=log)
         return [utils.build_entrypoint_plugin(plugin) for plugin in plugins]
+
+
+@api.route("/<int:id>/queues")
+@api.param("id", "ID for the Entrypoint resource.")
+class EntrypointIdQueuesEndpoint(Resource):
+    @inject
+    def __init__(
+        self, entrypoint_id_queues_service: EntrypointIdQueuesService, *args, **kwargs
+    ) -> None:
+        self._entrypoint_id_queues_service = entrypoint_id_queues_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=QueueRefSchema(many=True), api=api)
+    def get(self, id: int):
+        """Gets the list of Queues for the resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="GET"
+        )
+        queues = self._entrypoint_id_queues_service.get(id, log=log)
+        return [utils.build_queue_ref(queue) for queue in queues]
+
+    @login_required
+    @accepts(schema=IdListSchema, api=api)
+    @responds(schema=QueueRefSchema(many=True), api=api)
+    def post(self, id: int):
+        """Appends one or more Queues to the resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        queues = cast(
+            list[models.Queue],
+            self._entrypoint_id_queues_service.append(
+                id, queue_ids=parsed_obj["ids"], error_if_not_found=True, log=log
+            ),
+        )
+        return [utils.build_queue_ref(queue) for queue in queues]
+
+    @login_required
+    @accepts(schema=IdListSchema, api=api)
+    @responds(schema=QueueRefSchema(many=True), api=api)
+    def put(self, id: int):
+        """Replaces one or more Queues to the resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        queues = self._entrypoint_id_queues_service.modify(
+            id, queue_ids=parsed_obj["ids"], error_if_not_found=True, log=log
+        )
+        return [utils.build_queue_ref(queue) for queue in queues]
+
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self, id: int):
+        """Removes all Queues from the resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="DELETE"
+        )
+        return self._entrypoint_id_queues_service.delete(
+            id, error_if_not_found=True, log=log
+        )
+
+
+@api.route("/<int:id>/queues/<int:queueId>")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("queueId", "ID for the Queue resource.")
+class EntrypointIdQueuesId(Resource):
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_queues_id_service: EntrypointIdQueuesIdService,
+        *args,
+        **kwargs,
+    ) -> None:
+        self._entrypoint_id_queues_id_service = entrypoint_id_queues_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self, id: int, queueId):
+        """Removes a Queue from the Entrypoint resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="GET"
+        )
+        return self._entrypoint_id_queues_id_service.delete(id, queueId, log=log)
 
 
 EntrypointDraftResource = generate_resource_drafts_endpoint(
