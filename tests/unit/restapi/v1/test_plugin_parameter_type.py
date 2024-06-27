@@ -60,7 +60,6 @@ def modify_plugin_parameter_type(
 
     if new_description is not None:
         json_payload["description"] = new_description
-    print("MODIFY", json_payload)
 
     return client.put(
         f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}",

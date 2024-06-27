@@ -117,7 +117,7 @@ def generate_base_resource_ref_schema(
             metadata=dict(description=f"ID for the {name} resource."),
         ),
         "snapshotId": fields.Integer(
-            attribute="id",
+            attribute="snapshot_id",
             metadata=dict(description=f"Snapshot ID for the {name} resource."),
         ),
         "group": fields.Nested(

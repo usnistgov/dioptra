@@ -150,20 +150,18 @@ def assert_experiment_response_contents_matches_expectations(
     for job in response["jobs"]:
         assert isinstance(job["id"], int)
         assert isinstance(job["url"], str)
-        for group in job["group"]:
-            assert isinstance(group["id"], int)
-            assert isinstance(group["url"], str)
-            assert isinstance(group["name", str])
+        assert isinstance(job["group"]["id"], int)
+        assert isinstance(job["group"]["url"], str)
+        assert isinstance(job["group"]["name"], str)
 
     # Validate the EntryPointRef structure
-    # for entrypoint in response["entrypoints"]:
-    #     assert isinstance(entrypoint["id"], int)
-    #     assert isinstance(entrypoint["url"], str)
-    #     assert isinstance(entrypoint["name"], str)
-    #     for group in entrypoint["group"]:
-    #         assert isinstance(group["id"], int)
-    #         assert isinstance(group["url"], str)
-    #         assert isinstance(group["name", str])
+    for entrypoint in response["entrypoints"]:
+        assert isinstance(entrypoint["id"], int)
+        assert isinstance(entrypoint["url"], str)
+        assert isinstance(entrypoint["name"], str)
+        assert isinstance(entrypoint["group"]["id"], int)
+        assert isinstance(entrypoint["group"]["url"], str)
+        assert isinstance(entrypoint["group"]["name"], str)
 
     # Validate the TagRef structure
     for tag in response["tags"]:
@@ -216,7 +214,10 @@ def assert_experiment_entrypoints_matches_expected_entrypoints(
         follow_redirects=True,
     )
     assert response.status_code == 200
-    assert response.get_json()["entrypoints"] == expected_entrypoints
+    response_entrypoints = [
+        entrypoint["id"] for entrypoint in response.get_json()["entrypoints"]
+    ]
+    assert response_entrypoints == expected_entrypoints
 
 
 def assert_retrieving_all_experiments_works(
@@ -514,9 +515,11 @@ def test_delete_experiment_by_id(
     assert_experiment_is_not_found(client, experiment_id=experiment_to_delete["id"])
 
 
-@pytest.mark.skip(reason="entrypoints not yet implmented")
 def test_experiment_get_entrypoints(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> None:
     """Test that an experiment's associated entrypoints can be retrieved by referencing
     the experiment's id.
@@ -531,7 +534,7 @@ def test_experiment_get_entrypoints(
     user_id = auth_account["id"]
     group_id = auth_account["default_group_id"]
     description = "test description"
-    entrypoints = [1, 2, 3]
+    entrypoints = [registered_entrypoints["entrypoint1"]["id"]]
     registration_response = actions.register_experiment(
         client,
         name=name,
@@ -548,7 +551,7 @@ def test_experiment_get_entrypoints(
             "name": name,
             "user_id": user_id,
             "group_id": group_id,
-            "entrypoints": entrypoints,
+            "entrypoint_ids": entrypoints,
             "description": description,
         },
     )
