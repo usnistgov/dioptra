@@ -431,3 +431,4 @@ package-lock.json
 !docker/**/etc
 !tests/**/lib
 !src/**/tags
+!src/**/lib
