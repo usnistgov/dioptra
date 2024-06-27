@@ -34,6 +34,7 @@ type CreateParams = {
     filename: string,
     contents: string,
     description: string,
+    tasks: []
   }
 }
 
@@ -59,6 +60,12 @@ type UpdateParams = {
     description: string,
     structure: object
   },
+  files: {
+    filename: string,
+    contents: string,
+    description: string,
+    tasks: []
+  }
 }
 
 interface Pagination {
@@ -164,6 +171,7 @@ export async function addFile(id: number, params: CreateParams['files']){
 }
 
 export async function updateFile(id: number, fileID: string, params: CreateParams['files']){
+  console.log('updateFile params = ', params)
   return await axios.put(`/api/plugins/${id}/files/${fileID}`, params)
 }
 

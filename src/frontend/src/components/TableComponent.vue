@@ -55,10 +55,10 @@
       </q-tr>
     </template>
 
-    <template #top-right v-if="!hideButtons">
-      <q-btn color="secondary" icon="edit" label="Edit" class="q-mr-lg" @click="$emit('edit')"  :disabled="!selected.length" />
-      <q-btn color="negative" icon="sym_o_delete" label="Delete" class="q-mr-lg"  @click="$emit('delete')" :disabled="!selected.length" />
-      <q-input v-model="filter" debounce="300" dense placeholder="Search" outlined>
+    <template #top-right>
+      <q-btn v-if="!hideButtons" color="secondary" icon="edit" label="Edit" class="q-mr-lg" @click="$emit('edit')"  :disabled="!selected.length" />
+      <q-btn v-if="!hideButtons" color="negative" icon="sym_o_delete" label="Delete" class="q-mr-lg"  @click="$emit('delete')" :disabled="!selected.length" />
+      <q-input v-if="!hideSearch" v-model="filter" debounce="300" dense placeholder="Search" outlined>
           <template #append>
             <q-icon name="search" />
           </template>
@@ -85,14 +85,14 @@
   
   const isMobile = inject('isMobile')
 
-  const props = defineProps(['columns', 'rows', 'title', 'showExpand', 'hideButtons', 'hideToggleDraft'])
+  const props = defineProps(['columns', 'rows', 'title', 'showExpand', 'hideButtons', 'hideToggleDraft', 'hideSelect', 'hideSearch'])
   const emit = defineEmits(['edit', 'delete', 'request'])
 
   const finalColumns = computed(() => {
-    let defaultColumns = [
-      { name: 'radio', align: 'center', sortable: false, label: 'Select', headerStyle: 'width: 100px' },
-       ...props.columns,
-      ]
+    let defaultColumns = [ ...props.columns ]
+    if(!props.hideSelect) {
+      defaultColumns.unshift({ name: 'radio', align: 'center', sortable: false, label: 'Select', headerStyle: 'width: 100px' })
+    }
     if(props.showExpand) {
       defaultColumns.push({ name: 'expand', align: 'center', sortable: false, label: 'Expand' })
     }

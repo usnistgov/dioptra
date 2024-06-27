@@ -108,7 +108,6 @@
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
-    { name: 'files', label: 'Files', align: 'left', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
     { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
   ]

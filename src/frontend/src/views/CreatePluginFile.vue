@@ -58,7 +58,105 @@
       </div>
     </fieldset>
     <fieldset :class="`${isMobile ? 'col-12' : 'col q-ml-md'}`">
-      <legend>Tasks</legend>
+      <legend>Plugin Tasks</legend>
+      <TableComponent
+        :rows="pluginParameterTypes"
+        :columns="columns"
+        title="Plugin Param Types"
+        @request="getPluginParameterTypes"
+        ref="tableRef"
+        :hideToggleDraft="true"
+        :hideButtons="true"
+        :hideSelect="true"
+      >
+      <template #body-cell-view="props">
+        <q-btn
+          label="View"
+          color="primary"
+          @click.stop="structure = JSON.stringify(props.row.structure, null, 2); displayStructure = true;"
+        />
+      </template>
+      </TableComponent>
+      <TableComponent
+        :rows="tasks"
+        :columns="taskColumns"
+        title="Plugin Tasks"
+        ref="tableRef"
+        :hideToggleDraft="true"
+        :hideButtons="true"
+        :hideSelect="true"
+        :hideSearch="true"
+      >
+        <template #body-cell-inputParams="props">
+          <q-chip
+            v-for="(param, i) in props.row.inputParams.map((param) => param.name)"
+            :key="i"
+            color="purple-5"
+            class="q-mr-sm"
+            text-color="white"
+            dense
+          >
+            {{ param }}
+          </q-chip>
+        </template>
+        <template #body-cell-outputParams="props">
+          <q-chip
+            v-for="(param, i) in props.row.outputParams.map((param) => param.name)"
+            :key="i"
+            color="purple-5"
+            class="q-mr-sm"
+            text-color="white"
+            dense
+          >
+            {{ param }}
+          </q-chip>
+        </template>
+      </TableComponent>
+      <q-form ref="taskForm" greedy @submit.prevent="addTask" class="q-mt-lg q-mx-xl">
+        <q-input 
+          outlined 
+          dense 
+          v-model.trim="task.name"
+          :rules="[requiredRule]"
+          class="q-mb-sm"
+          label="Task Name"
+        />
+        <q-select
+          v-model="selectedInputParams"
+          :options="pluginParameterTypes"
+          multiple
+          use-chips
+          dense
+          outlined
+          option-label="name"
+          label="Input Params"
+          class="q-mb-lg"
+        />
+        <q-select
+          v-model="selectedOutputParams"
+          :options="pluginParameterTypes"
+          multiple
+          use-chips
+          dense
+          outlined
+          option-label="name"
+          label="Output Params"
+          class="q-mb-lg"
+        />
+        <q-card-actions align="right">
+          <q-btn
+            round
+            color="secondary"
+            icon="add"
+            type="submit"
+          >
+            <span class="sr-only">Add Task</span>
+            <q-tooltip>
+              Add Task
+            </q-tooltip>
+          </q-btn>
+        </q-card-actions>
+      </q-form>
     </fieldset>
   </div>
 
@@ -76,18 +174,28 @@
       type="submit"
     />
   </div>
+
+  <InfoPopupDialog
+    v-model="displayStructure"
+  >
+    <template #title>
+      <label id="modalTitle">
+        Plugin Param Structure
+      </label>
+    </template>
+    <CodeEditor v-model="structure" style="" />
+  </InfoPopupDialog>
 </template>
 
 <script setup>
-  import { ref, inject, reactive, computed, watch, onMounted } from 'vue'
+  import { ref, inject, computed, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
-  import { useDataStore } from '@/stores/DataStore.ts'
   import CodeEditor from '@/components/CodeEditor.vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
-import PluginFiles from './PluginFiles.vue'
+  import TableComponent from '@/components/TableComponent.vue'
+  import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
   
-  const store = useDataStore()
   const route = useRoute()
   const router = useRouter()
 
@@ -102,6 +210,12 @@ import PluginFiles from './PluginFiles.vue'
       const res = await api.getFile(route.params.id, route.params.fileId)
       console.log('getFile = ', res)
       pluginFile.value = res.data
+      tasks.value = res.data.tasks
+      tasks.value.forEach((task) => {
+        [...task.inputParams, ... task.outputParams].forEach((param) => {
+          param.parameterType = param.parameterType.id
+        })
+      })
     } catch(err) {
       notify.error(err.response.data.message)
     } 
@@ -128,23 +242,7 @@ import PluginFiles from './PluginFiles.vue'
         contents: pluginFile.value.contents,
         description: pluginFile.value.description
       }
-    plguinFileSubmit.tasks =  [
-      {
-        "name": "task_name",
-        "inputParams": [
-          {
-            "name": "string",
-            "parameterType": 90
-          }
-        ],
-        "outputParams": [
-          {
-            "name": "string",
-            "parameterType": 90
-          }
-        ]
-      }
-    ]
+    plguinFileSubmit.tasks = tasks.value
     try {
       let res
       if(route.params.fileId === 'new') {
@@ -152,7 +250,8 @@ import PluginFiles from './PluginFiles.vue'
       } else {
         res = await api.updateFile(route.params.id, route.params.fileId, plguinFileSubmit)
       }
-      notify.success(`Sucessfully ${route.params.fileId === 'new' ? 'created' : 'updated'} Plugin File '${res.data.name}'`)
+      console.log('ressssssssssssssss = ', res)
+      notify.success(`Sucessfully ${route.params.fileId === 'new' ? 'created' : 'updated'} '${res.data.filename}'`)
       router.push(`/plugins/${route.params.id}/files`)
     } catch(err) {
       console.log('err = ', err)
@@ -176,6 +275,86 @@ import PluginFiles from './PluginFiles.vue'
       console.log('error = ', e)
     }
     reader.readAsText(file); // Reads the file as text
+  }
+
+  const selected = ref([])
+  const tableRef = ref(null)
+  const pluginParameterTypes = ref([])
+  const displayStructure = ref(false)
+  const structure = ref('')
+
+  const columns = [
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
+    { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
+    { name: 'view', label: 'Structure', align: 'left', sortable: false },
+  ]
+
+  const selectedInputParams = ref([])
+  const inputParams = computed(() => {
+    return selectedInputParams.value.map(param => {
+      return {
+        name: param.name,
+        parameterType: param.id
+      }
+    })
+  })
+
+  const selectedOutputParams = ref([])
+  const outputParams = computed(() => {
+    return selectedOutputParams.value.map(param => {
+      return {
+        name: param.name,
+        parameterType: param.id
+      }
+    })
+  })
+
+  const tasks = ref([])
+  const task = ref({
+    name: '',
+    inputParams: inputParams.value,
+    outputParams: outputParams.value
+  })
+  const taskForm = ref(null)
+
+  const taskColumns = [
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
+    { name: 'inputParams', label: 'Input Params', field: 'inputParams', align: 'left', sortable: false },
+    { name: 'outputParams', label: 'Output Params', field: 'outputParams', align: 'left', sortable: false },
+  ]
+
+  async function getPluginParameterTypes(pagination) {
+    try {
+      const res = await api.getData('pluginParameterTypes', pagination)
+      pluginParameterTypes.value = res.data.data
+      tableRef.value.updateTotalRows(res.data.totalNumResults)
+    } catch(err) {
+      console.log('err = ', err)
+      notify.error(err.response.data.message)
+    } 
+  }
+
+  function addTask() {
+    taskForm.value.validate().then(success => {
+      if (success) {
+        tasks.value.push({
+          name: task.value.name,
+          inputParams: inputParams.value,
+          outputParams: outputParams.value
+        })
+        task.value ={
+          // name: '',
+          // selectedInputParams: [],
+          // selectedOutputParams: []
+        }
+        selectedInputParams.value = []
+        selectedOutputParams.value = []
+        taskForm.value.reset()
+      }
+      else {
+        // error
+      }
+    })
   }
 
 </script>

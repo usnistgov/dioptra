@@ -380,9 +380,6 @@
         // error
       }
     })
-
-    
-
   }
 
   const taskColumns = [
