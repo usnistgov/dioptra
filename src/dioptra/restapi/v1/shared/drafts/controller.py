@@ -16,6 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Drafts."""
 import uuid
+from functools import partial
 from typing import Type, cast
 
 import structlog
@@ -95,7 +96,9 @@ def generate_resource_drafts_endpoint(
             )
             return utils.build_paging_envelope(
                 f"{route_prefix}/drafts",
-                build_fn=utils.build_resource_draft,
+                build_fn=partial(
+                    utils.build_resource_draft, draft_schema=request_schema
+                ),
                 data=drafts,
                 group_id=group_id,
                 query=None,
@@ -115,7 +118,7 @@ def generate_resource_drafts_endpoint(
             )
             parsed_obj = request.parsed_obj  # noqa: F841
             draft = self._draft_service.create(parsed_obj, log=log)
-            return utils.build_resource_draft(draft)
+            return utils.build_resource_draft(draft, draft_schema=request_schema)
 
     return ResourceDraftsEndpoint
 
@@ -158,7 +161,9 @@ def generate_resource_drafts_id_endpoint(
             draft = self._draft_id_service.get(
                 draftId, error_if_not_found=True, log=log
             )
-            return utils.build_resource_draft(cast(models.DraftResource, draft))
+            return utils.build_resource_draft(
+                cast(models.DraftResource, draft), request_schema
+            )
 
         @login_required
         @accepts(schema=request_schema, api=api)
@@ -170,7 +175,9 @@ def generate_resource_drafts_id_endpoint(
             )
             parsed_obj = request.parsed_obj  # type: ignore
             draft = self._draft_id_service.modify(draftId, payload=parsed_obj, log=log)
-            return utils.build_resource_draft(cast(models.DraftResource, draft))
+            return utils.build_resource_draft(
+                cast(models.DraftResource, draft), request_schema
+            )
 
         @login_required
         @responds(schema=IdStatusResponseSchema, api=api)
@@ -223,7 +230,7 @@ def generate_resource_id_draft_endpoint(
                 id, error_if_not_found=True, log=log
             )
             return utils.build_resource_draft(
-                cast(models.DraftResource, draft), num_other_drafts
+                cast(models.DraftResource, draft), request_schema, num_other_drafts
             )
 
         @login_required
@@ -239,7 +246,7 @@ def generate_resource_id_draft_endpoint(
                 id, payload=parsed_obj, log=log
             )
             return utils.build_resource_draft(
-                cast(models.DraftResource, draft), num_other_drafts
+                cast(models.DraftResource, draft), request_schema, num_other_drafts
             )
 
         @login_required
@@ -255,7 +262,7 @@ def generate_resource_id_draft_endpoint(
                 id, payload=parsed_obj, error_if_not_found=True, log=log
             )
             return utils.build_resource_draft(
-                cast(models.DraftResource, draft), num_other_drafts
+                cast(models.DraftResource, draft), request_schema, num_other_drafts
             )
 
         @login_required

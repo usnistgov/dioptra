@@ -18,6 +18,8 @@
 from typing import Any, Callable, Final, TypedDict
 from urllib.parse import urlencode, urlunparse
 
+from marshmallow import Schema
+
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ROOT
 
@@ -659,7 +661,9 @@ def build_plugin_parameter_type(
 
 
 def build_resource_draft(
-    draft: models.DraftResource, num_other_drafts: int | None = None
+    draft: models.DraftResource,
+    draft_schema: Schema,
+    num_other_drafts: int | None = None,
 ) -> dict[str, Any]:
     """Build a Draft response dictionary for a resource.
 
@@ -670,6 +674,9 @@ def build_resource_draft(
         The Draft response dictionary.
     """
 
+    schema = draft_schema()
+    payload = schema.dump(draft.payload["resource_data"])
+
     metadata = dict()
     if num_other_drafts is not None:
         metadata["num_other_drafts"] = num_other_drafts
@@ -677,7 +684,7 @@ def build_resource_draft(
         "id": draft.draft_resource_id,
         "resource_id": draft.payload.get("resource_id", None),
         "resource_snapshot_id": draft.payload.get("resource_snapshot_id", None),
-        "payload": draft.payload.get("resource_data"),
+        "payload": payload,
         "resource_type": draft.resource_type,
         "user": build_user_ref(draft.creator),
         "group": build_group_ref(draft.target_owner),
