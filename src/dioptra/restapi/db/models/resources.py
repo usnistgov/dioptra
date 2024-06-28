@@ -281,6 +281,15 @@ class Resource(db.Model):  # type: ignore[name-defined]
         .correlate_except(ResourceLock)
         .exists()
     )
+    is_readonly: Mapped[bool] = column_property(
+        select(ResourceLock.resource_id)
+        .where(
+            ResourceLock.resource_id == resource_id,
+            ResourceLock.resource_lock_type == resource_lock_types.READONLY,
+        )
+        .correlate_except(ResourceLock)
+        .exists()
+    )
     latest_snapshot_id: Mapped[optionalbigint] = column_property(
         Nullable(
             select(ResourceSnapshot.resource_snapshot_id)

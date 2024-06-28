@@ -30,6 +30,7 @@ class GroupLockTypes(object):
 @dataclass(frozen=True)
 class ResourceLockTypes(object):
     DELETE: str = "delete"
+    READONLY: str = "readonly"
 
 
 user_lock_types = UserLockTypes()

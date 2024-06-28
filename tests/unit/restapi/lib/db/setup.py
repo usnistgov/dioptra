@@ -42,6 +42,7 @@ GROUP_LOCK_TYPES: Final[list[dict[str, str]]] = [
 ]
 RESOURCE_LOCK_TYPES: Final[list[dict[str, str]]] = [
     {"resource_lock_type": "delete"},
+    {"resource_lock_type": "readonly"},
 ]
 RESOURCE_TYPES: Final[list[dict[str, str]]] = [
     {"resource_type": "artifact"},
