@@ -48,6 +48,7 @@ from dioptra.restapi.v1.shared.tags.controller import (
 )
 
 from .schema import (
+    EntrypointDraftSchema,
     EntrypointGetQueryParameters,
     EntrypointMutableFieldsSchema,
     EntrypointPageSchema,
@@ -392,17 +393,17 @@ EntrypointDraftResource = generate_resource_drafts_endpoint(
     api,
     resource_name=RESOURCE_TYPE,
     route_prefix=V1_ENTRYPOINTS_ROUTE,
-    request_schema=EntrypointSchema,
+    request_schema=EntrypointDraftSchema,
 )
 EntrypointDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
     resource_name=RESOURCE_TYPE,
-    request_schema=EntrypointSchema,
+    request_schema=EntrypointDraftSchema,
 )
 EntrypointIdDraftResource = generate_resource_id_draft_endpoint(
     api,
     resource_name=RESOURCE_TYPE,
-    request_schema=EntrypointSchema,
+    request_schema=EntrypointDraftSchema,
 )
 
 EntrypointSnapshotsResource = generate_resource_snapshots_endpoint(
