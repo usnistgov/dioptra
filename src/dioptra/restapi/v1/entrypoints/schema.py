@@ -180,6 +180,27 @@ class EntrypointSchema(
     )
 
 
+class EntrypointDraftSchema(
+    EntrypointPluginMutableFieldsSchema,
+    EntrypointMutableFieldsSchema,
+    EntrypointBaseSchema,  # type: ignore
+):
+    """The schema for the data stored in a Entrypoint resource."""
+
+    pluginIds = fields.List(
+        fields.Integer(),
+        attribute="plugin_ids",
+        data_key="plugins",
+        metadata=dict(description="List of plugin files for the entrypoint."),
+    )
+    queueIds = fields.List(
+        fields.Integer(),
+        attribute="queue_ids",
+        data_key="queues",
+        metadata=dict(description="The queue for the entrypoint."),
+    )
+
+
 class EntrypointPageSchema(BasePageSchema):
     """The paged schema for the data stored in a Entrypoint resource."""
 

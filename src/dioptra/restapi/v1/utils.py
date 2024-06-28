@@ -662,7 +662,7 @@ def build_plugin_parameter_type(
 
 def build_resource_draft(
     draft: models.DraftResource,
-    draft_schema: Schema,
+    draft_schema: type[Schema],
     num_other_drafts: int | None = None,
 ) -> dict[str, Any]:
     """Build a Draft response dictionary for a resource.

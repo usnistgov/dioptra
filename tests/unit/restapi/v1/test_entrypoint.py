@@ -729,20 +729,7 @@ def test_manage_existing_entrypoint_draft(
         "resource_id": entrypoint["id"],
         "resource_snapshot_id": entrypoint["snapshot"],
         "num_other_drafts": 0,
-        "payload": {
-            "name": name,
-            "description": description,
-            "task_graph": task_graph,
-            "parameters": [
-                {
-                    "name": "my_entrypoint_param",
-                    "default_value": "my_value",
-                    "parameter_type": "string",
-                }
-            ],
-            "plugin_ids": plugin_ids,
-            "queue_ids": queue_ids,
-        },
+        "payload": payload,
     }
     response = actions.create_existing_resource_draft(
         client,
@@ -769,11 +756,7 @@ def test_manage_existing_entrypoint_draft(
         "resource_id": entrypoint["id"],
         "resource_snapshot_id": entrypoint["snapshot"],
         "num_other_drafts": 0,
-        "payload": {
-            "name": new_name,
-            "description": description,
-            "task_graph": task_graph,
-        },
+        "payload": payload,
     }
     response = actions.modify_existing_resource_draft(
         client,
@@ -818,6 +801,7 @@ def test_manage_new_entrypoint_drafts(
         },
         "draft2": {
             "name": "entrypoint2",
+            "description": "entrypoint",
             "taskGraph": "graph",
             "queues": [1, 3],
             "plugins": [2],
@@ -828,11 +812,7 @@ def test_manage_new_entrypoint_drafts(
     draft1_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
-        "payload": {
-            "name": drafts["draft1"]["name"],
-            "description": drafts["draft1"]["description"],
-            "task_graph": drafts["draft1"]["taskGraph"],
-        },
+        "payload": drafts["draft1"],
     }
     draft1_response = actions.create_new_resource_draft(
         client,
@@ -852,13 +832,7 @@ def test_manage_new_entrypoint_drafts(
     draft2_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
-        "payload": {
-            "name": drafts["draft2"]["name"],
-            "description": None,
-            "task_graph": drafts["draft2"]["taskGraph"],
-            "queue_ids": drafts["draft2"]["queues"],
-            "plugin_ids": drafts["draft2"]["plugins"],
-        },
+        "payload": drafts["draft2"],
     }
     draft2_response = actions.create_new_resource_draft(
         client,
@@ -890,11 +864,7 @@ def test_manage_new_entrypoint_drafts(
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
-        "payload": {
-            "name": draft1_mod["name"],
-            "description": draft1_mod["description"],
-            "task_graph": draft1_mod["taskGraph"],
-        },
+        "payload": draft1_mod,
     }
     response = actions.modify_new_resource_draft(
         client,
