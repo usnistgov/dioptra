@@ -28,6 +28,7 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.models.constants import user_lock_types
 from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v0.shared.password.service import PasswordService
 from dioptra.restapi.v1.groups.service import GroupMemberService, GroupNameService
@@ -441,7 +442,7 @@ class UserCurrentService(object):
         username = current_user.username
 
         deleted_user_lock = models.UserLock(
-            user_lock_type="delete",
+            user_lock_type=user_lock_types.DELETE,
             user=current_user,
         )
         db.session.add(deleted_user_lock)

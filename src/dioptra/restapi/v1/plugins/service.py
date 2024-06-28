@@ -28,6 +28,7 @@ from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
@@ -437,7 +438,7 @@ class PluginIdService(object):
             raise PluginDoesNotExistError
 
         deleted_resource_lock = models.ResourceLock(
-            resource_lock_type="delete",
+            resource_lock_type=resource_lock_types.DELETE,
             resource=plugin_resource,
         )
         db.session.add(deleted_resource_lock)
@@ -918,7 +919,8 @@ class PluginIdFileService(object):
         for plugin_file in plugin_files:
             db.session.add(
                 models.ResourceLock(
-                    resource_lock_type="delete", resource=plugin_file.resource
+                    resource_lock_type=resource_lock_types.DELETE,
+                    resource=plugin_file.resource,
                 )
             )
             plugin_file_ids.append(plugin_file.resource_id)
@@ -1142,7 +1144,8 @@ class PluginIdFileIdService(object):
         plugin_file_id_to_return = plugin_file.resource_id  # to return to user
         db.session.add(
             models.ResourceLock(
-                resource_lock_type="delete", resource=plugin_file.resource
+                resource_lock_type=resource_lock_types.DELETE,
+                resource=plugin_file.resource,
             )
         )
         db.session.commit()

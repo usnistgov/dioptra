@@ -26,6 +26,7 @@ from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
@@ -496,7 +497,7 @@ class EntrypointIdService(object):
             raise EntrypointDoesNotExistError
 
         deleted_resource_lock = models.ResourceLock(
-            resource_lock_type="delete",
+            resource_lock_type=resource_lock_types.DELETE,
             resource=entrypoint_resource,
         )
         db.session.add(deleted_resource_lock)

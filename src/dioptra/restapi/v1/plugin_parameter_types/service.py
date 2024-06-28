@@ -26,8 +26,8 @@ from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.errors import BackendDatabaseError
-from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
@@ -430,7 +430,7 @@ class PluginParameterTypeIdService(object):
             raise PluginParameterTypeDoesNotExistError
 
         deleted_resource_lock = models.ResourceLock(
-            resource_lock_type="delete",
+            resource_lock_type=resource_lock_types.DELETE,
             resource=plugin_parameter_type_resource,
         )
         db.session.add(deleted_resource_lock)

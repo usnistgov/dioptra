@@ -22,6 +22,7 @@ from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from dioptra.restapi.db.db import bigint, datetimetz, db, intpk, text_
 
+from .constants import group_lock_types
 from .locks import GroupLock
 
 if TYPE_CHECKING:
@@ -47,7 +48,10 @@ class Group(db.Model):  # type: ignore[name-defined]
     # Derived fields (read-only)
     is_deleted: Mapped[bool] = column_property(
         select(GroupLock.group_id)
-        .where(GroupLock.group_id == group_id, GroupLock.group_lock_type == "delete")
+        .where(
+            GroupLock.group_id == group_id,
+            GroupLock.group_lock_type == group_lock_types.DELETE,
+        )
         .correlate_except(GroupLock)
         .exists()
     )

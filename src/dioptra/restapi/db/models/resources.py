@@ -45,6 +45,7 @@ from dioptra.restapi.db.db import (
     text_,
 )
 
+from .constants import resource_lock_types
 from .locks import ResourceLock
 
 if TYPE_CHECKING:
@@ -275,7 +276,7 @@ class Resource(db.Model):  # type: ignore[name-defined]
         select(ResourceLock.resource_id)
         .where(
             ResourceLock.resource_id == resource_id,
-            ResourceLock.resource_lock_type == "delete",
+            ResourceLock.resource_lock_type == resource_lock_types.DELETE,
         )
         .correlate_except(ResourceLock)
         .exists()
