@@ -23,15 +23,15 @@ from marshmallow import Schema
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ROOT
 
-USERS: Final[str] = "users"
 ENTRYPOINTS: Final[str] = "entrypoints"
 EXPERIMENTS: Final[str] = "experiments"
 GROUPS: Final[str] = "groups"
-PLUGIN_PARAMETER_TYPES: Final[str] = "pluginParameterTypes"
 PLUGINS: Final[str] = "plugins"
 PLUGIN_FILES: Final[str] = "files"
+PLUGIN_PARAMETER_TYPES: Final[str] = "pluginParameterTypes"
 QUEUES: Final[str] = "queues"
 TAGS: Final[str] = "tags"
+USERS: Final[str] = "users"
 
 # -- Typed Dictionaries --------------------------------------------------------
 
@@ -116,6 +116,7 @@ def build_experiment_ref(experiment: models.Experiment) -> dict[str, Any]:
     return {
         "id": experiment.resource_id,
         "name": experiment.name,
+        "group": build_group_ref(experiment.resource.owner),
         "url": build_url(f"{EXPERIMENTS}/{experiment.resource_id}"),
     }
 
@@ -401,7 +402,7 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         The Experiment response dictionary.
     """
     experiment = experiment_dict["experiment"]
-    entrypoints = experiment_dict["entrypoints"]
+    entrypoints = experiment_dict.get("entrypoints", None)
     has_draft = experiment_dict.get("has_draft", None)
 
     data = {
@@ -409,7 +410,6 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         "snapshot_id": experiment.resource_snapshot_id,
         "name": experiment.name,
         "description": experiment.description,
-        "entrypoints": [build_entrypoint_ref(entrypoint) for entrypoint in entrypoints],
         "jobs": [],
         "user": build_user_ref(experiment.creator),
         "group": build_group_ref(experiment.resource.owner),
@@ -419,6 +419,11 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         == experiment.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in experiment.tags],
     }
+
+    if entrypoints is not None:
+        data["entrypoints"] = [
+            build_entrypoint_ref(entrypoint) for entrypoint in entrypoints
+        ]
 
     if has_draft is not None:
         data["has_draft"] = has_draft

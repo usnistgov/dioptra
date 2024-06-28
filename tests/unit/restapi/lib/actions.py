@@ -121,8 +121,6 @@ def register_experiment(
 
     if description is not None:
         payload["description"] = description
-    else:
-        payload["description"] = ""
     if entrypoint_ids is not None:
         payload["entrypoints"] = entrypoint_ids
 

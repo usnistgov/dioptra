@@ -31,7 +31,7 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE, V1_ROOT
 
-from ..lib import actions, helpers
+from ..lib import actions, asserts, helpers
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -126,7 +126,6 @@ def assert_experiment_response_contents_matches_expectations(
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
-    assert isinstance(response["hasDraft"], bool)
 
     assert response["name"] == expected_contents["name"]
     assert response["description"] == expected_contents["description"]
@@ -332,6 +331,7 @@ def test_create_experiment(
         description=description,
     )
     experiment1_expected = experiment1_response.get_json()
+    print(experiment1_expected)  # TEST
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_expected,
         expected_contents={
@@ -376,7 +376,6 @@ def test_experiment_get_all(
     assert_retrieving_all_experiments_works(client, expected=experiment_expected_list)
 
 
-@pytest.mark.skip(reason="search not yet implmented")
 def test_experiment_search_query(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -404,7 +403,19 @@ def test_experiment_search_query(
     assert_retrieving_all_experiments_works(
         client,
         expected=experiment_expected_list,
+        search="description:*description*",
+    )
+
+    assert_retrieving_all_experiments_works(
+        client,
+        expected=experiment_expected_list,
         search="name:*experiment*",
+    )
+
+    assert_retrieving_all_experiments_works(
+        client,
+        expected=experiment_expected_list,
+        search="*",
     )
 
 
@@ -455,6 +466,7 @@ def test_experiment_get_by_id(
     - The response is a single experiment with a matching ID.
     """
     experiment2_expected = registered_experiments["experiment2"]
+    print(experiment2_expected)  # TEST
 
     assert_retrieving_experiment_by_id_works(
         client,
@@ -765,3 +777,303 @@ def test_experiment_remove_entrypoints(
         experiment_id=experiment_id,
         expected_entrypoints=expected_entrypoints,
     )
+
+
+def test_manage_existing_experiment_draft(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that a draft of an existing experiment can be created and managed by the user
+
+    Given an authenticated user and registered experiments, this test validates the
+    following sequence of actions:
+
+    - The user creates a draft of an existing experiment
+    - The user retrieves information about the draft and gets the expected response
+    - The user attempts to create another draft of the same existing experiment
+    - The request fails with an appropriate error message and response code.
+    - The user modifies the name of the experiment in the draft
+    - The user retrieves information about the draft and gets the expected response
+    - The user deletes the draft
+    - The user attempts to retrieve information about the deleted draft.
+    - The request fails with an appropriate error message and response code.
+    """
+    experiment = registered_experiments["experiment1"]
+    name = "draft"
+    new_name = "draft2"
+    description = "description"
+
+    # test creation
+    payload = {"name": name, "description": description, "entrypoints": [1]}
+    expected = {
+        "user_id": auth_account["id"],
+        "group_id": experiment["group"]["id"],
+        "resource_id": experiment["id"],
+        "resource_snapshot_id": experiment["snapshot"],
+        "num_other_drafts": 0,
+        "payload": payload,
+    }
+    response = actions.create_existing_resource_draft(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        resource_id=experiment["id"],
+        payload=payload,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+    asserts.assert_retrieving_draft_by_resource_id_works(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        resource_id=experiment["id"],
+        expected=response,
+    )
+    asserts.assert_creating_another_existing_draft_fails(
+        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
+    )
+
+    # test modification
+    payload = {"name": new_name, "description": description, "entrypoints": [3, 2]}
+    expected = {
+        "user_id": auth_account["id"],
+        "group_id": experiment["group"]["id"],
+        "resource_id": experiment["id"],
+        "resource_snapshot_id": experiment["snapshot"],
+        "num_other_drafts": 0,
+        "payload": payload,
+    }
+    response = actions.modify_existing_resource_draft(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        resource_id=experiment["id"],
+        payload=payload,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+
+    # test deletion
+    actions.delete_existing_resource_draft(
+        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
+    )
+    asserts.assert_existing_draft_is_not_found(
+        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
+    )
+
+
+def test_manage_new_experiment_drafts(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    """Test that drafts of experiment can be created and managed by the user
+
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - The user creates two experiment drafts
+    - The user retrieves information about the drafts and gets the expected response
+    - The user modifies the description of the experiment in the first draft
+    - The user retrieves information about the draft and gets the expected response
+    - The user deletes the first draft
+    - The user attempts to retrieve information about the deleted draft.
+    - The request fails with an appropriate error message and response code.
+    """
+    group_id = auth_account["groups"][0]["id"]
+    drafts = {
+        "draft1": {
+            "name": "experiment1",
+            "description": "my experiment",
+            "entrypoints": [3],
+        },
+        "draft2": {"name": "experiment2", "description": None, "entrypoints": [3, 4]},
+    }
+
+    # test creation
+    draft1_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": drafts["draft1"],
+    }
+    draft1_response = actions.create_new_resource_draft(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        group_id=group_id,
+        payload=drafts["draft1"],
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        draft1_response, draft1_expected
+    )
+    asserts.assert_retrieving_draft_by_id_works(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        draft_id=draft1_response["id"],
+        expected=draft1_response,
+    )
+    draft2_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": drafts["draft2"],
+    }
+    draft2_response = actions.create_new_resource_draft(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        group_id=group_id,
+        payload=drafts["draft2"],
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        draft2_response, draft2_expected
+    )
+    asserts.assert_retrieving_draft_by_id_works(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        draft_id=draft2_response["id"],
+        expected=draft2_response,
+    )
+    asserts.assert_retrieving_drafts_works(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        expected=[draft1_response, draft2_response],
+    )
+
+    # test modification
+    draft1_mod = {"name": "draft1", "description": "new description", "entrypoints": []}
+    draft1_mod_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": draft1_mod,
+    }
+    response = actions.modify_new_resource_draft(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        draft_id=draft1_response["id"],
+        payload=draft1_mod,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        response, draft1_mod_expected
+    )
+
+    # test deletion
+    actions.delete_new_resource_draft(
+        client, resource_route=V1_EXPERIMENTS_ROUTE, draft_id=draft1_response["id"]
+    )
+    asserts.assert_new_draft_is_not_found(
+        client, resource_route=V1_EXPERIMENTS_ROUTE, draft_id=draft1_response["id"]
+    )
+
+
+def test_manage_experiment_snapshots(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that different snapshots of an experiment can be retrieved by the user.
+
+    Given an authenticated user and registered experiments, this test validates the
+    following sequence of actions:
+
+    - The user modifies an experiment
+    - The user retrieves information about the original snapshot of the experiment and
+      gets the expected response
+    - The user retrieves information about the new snapshot of the experiment and gets
+      the expected response
+    - The user retrieves a list of all snapshots of the experiment and gets the expected
+      response
+    """
+    experiment_to_rename = registered_experiments["experiment1"]
+    modified_experiment = modify_experiment(
+        client,
+        experiment_id=experiment_to_rename["id"],
+        new_name=experiment_to_rename["name"] + "modified",
+        new_description=experiment_to_rename["description"],
+        new_entrypoints=[],  # TODO use existing entrypoints
+    ).get_json()
+    modified_experiment.pop("hasDraft")
+    modified_experiment.pop("entrypoints")
+    experiment_to_rename.pop("hasDraft")
+    experiment_to_rename.pop("entrypoints")
+    experiment_to_rename["latestSnapshot"] = False
+    experiment_to_rename["lastModifiedOn"] = modified_experiment["lastModifiedOn"]
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        resource_id=experiment_to_rename["id"],
+        snapshot_id=experiment_to_rename["snapshot"],
+        expected=experiment_to_rename,
+    )
+    expected_snapshots = [experiment_to_rename, modified_experiment]
+    asserts.assert_retrieving_snapshots_works(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        resource_id=experiment_to_rename["id"],
+        expected=expected_snapshots,
+    )
+
+
+def test_tag_experiment(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    registered_tags: dict[str, Any],
+) -> None:
+    """Test that tags can applied to experiments.
+
+    Given an authenticated user and registered experiments, this test validates the
+    following sequence of actions:
+
+    """
+    experiment = registered_experiments["experiment1"]
+    tags = [tag["id"] for tag in registered_tags.values()]
+
+    # test append
+    response = actions.append_tags(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        resource_id=experiment["id"],
+        tag_ids=[tags[0], tags[1]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[1]]
+    )
+    response = actions.append_tags(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        resource_id=experiment["id"],
+        tag_ids=[tags[1], tags[2]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[1], tags[2]]
+    )
+
+    # test remove
+    actions.remove_tag(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        resource_id=experiment["id"],
+        tag_id=tags[1],
+    )
+    response = actions.get_tags(
+        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[2]]
+    )
+
+    # test modify
+    response = actions.modify_tags(
+        client,
+        resource_route=V1_EXPERIMENTS_ROUTE,
+        resource_id=experiment["id"],
+        tag_ids=[tags[1], tags[2]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[1], tags[2]]
+    )
+
+    # test delete
+    response = actions.remove_tags(
+        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
+    )
+    response = actions.get_tags(
+        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
+    )
+    asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])
