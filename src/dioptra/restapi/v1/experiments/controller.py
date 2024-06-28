@@ -27,17 +27,37 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.jobs.schema import JobSchema, JobStatusSchema
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.shared.drafts.controller import (
+    generate_resource_drafts_endpoint,
+    generate_resource_drafts_id_endpoint,
+    generate_resource_id_draft_endpoint,
+)
+from dioptra.restapi.v1.shared.snapshots.controller import (
+    generate_resource_snapshots_endpoint,
+    generate_resource_snapshots_id_endpoint,
+)
+from dioptra.restapi.v1.shared.tags.controller import (
+    generate_resource_tags_endpoint,
+    generate_resource_tags_id_endpoint,
+)
 
 from .schema import (
+    ExperimentDraftSchema,
     ExperimentGetQueryParameters,
     ExperimentMutableFieldsSchema,
     ExperimentPageSchema,
     ExperimentSchema,
 )
-from .service import ExperimentIdService, ExperimentService
+from .service import (
+    RESOURCE_TYPE,
+    SEARCHABLE_FIELDS,
+    ExperimentIdService,
+    ExperimentService,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -48,7 +68,7 @@ api: Namespace = Namespace("Experiments", description="Experiments endpoint")
 class ExperimentEndpoint(Resource):
     @inject
     def __init__(self, experiment_service: ExperimentService, *args, **kwargs) -> None:
-        """Initialize the ExperimentEndpoint resource.
+        """Initialize the experiment resource.
 
         All arguments are provided via dependency injection.
 
@@ -108,9 +128,8 @@ class ExperimentEndpoint(Resource):
         experiment = self._experiment_service.create(
             name=parsed_obj["name"],
             description=parsed_obj["description"],
-            entrypoint_ids=parsed_obj["entrypoint_ids"],
-            tag_ids=parsed_obj["tag_ids"],
             group_id=parsed_obj["group_id"],
+            entrypoint_ids=parsed_obj["entrypoint_ids"],
             log=log,
         )
         return utils.build_experiment(experiment)
@@ -123,7 +142,7 @@ class ExperimentIdEndpoint(Resource):
     def __init__(
         self, experiment_id_service: ExperimentIdService, *args, **kwargs
     ) -> None:
-        """Initialize the ExperimentIdEndpoint resource.
+        """Initialize the experiment resource.
 
         All arguments are provided via dependency injection.
 
@@ -139,7 +158,7 @@ class ExperimentIdEndpoint(Resource):
         """Gets an experiment by its unique identifier."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="ExperimentIdEndpoint",
+            resource="Experiment",
             request_type="GET",
             id=id,
         )
@@ -155,7 +174,7 @@ class ExperimentIdEndpoint(Resource):
         """Deletes an experiment by its unique identifier."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="ExperimentIdEndpoint",
+            resource="Experiment",
             request_type="DELETE",
             id=id,
         )
@@ -168,7 +187,7 @@ class ExperimentIdEndpoint(Resource):
         """Modifies an experiment by its unique identifier."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="ExperimentIdEndpoint",
+            resource="Experiment",
             request_type="PUT",
             id=id,
         )
@@ -266,3 +285,46 @@ class ExperimentIdJobIdStatusEndpoint(Resource):
             job_id=jobId,
         )
         log.debug("Request received")
+
+
+ExperimentDraftResource = generate_resource_drafts_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_EXPERIMENTS_ROUTE,
+    request_schema=ExperimentDraftSchema,
+)
+ExperimentDraftIdResource = generate_resource_drafts_id_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=ExperimentDraftSchema,
+)
+ExperimentIdDraftResource = generate_resource_id_draft_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=ExperimentDraftSchema,
+)
+
+ExperimentSnapshotsResource = generate_resource_snapshots_endpoint(
+    api=api,
+    resource_model=models.Experiment,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_EXPERIMENTS_ROUTE,
+    searchable_fields=SEARCHABLE_FIELDS,
+    page_schema=ExperimentPageSchema,
+    build_fn=utils.build_experiment,
+)
+ExperimentSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
+    api=api,
+    resource_model=models.Experiment,
+    resource_name=RESOURCE_TYPE,
+    response_schema=ExperimentSchema,
+    build_fn=utils.build_experiment,
+)
+
+ExperimentTagsResource = generate_resource_tags_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)
+ExperimentTagsIdResource = generate_resource_tags_id_endpoint(
+    api=api, resource_name=RESOURCE_TYPE
+)

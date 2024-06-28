@@ -27,16 +27,22 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.errors import BackendDatabaseError, SearchNotImplementedError
+from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entrypoints.service import EntrypointIdsService
 from dioptra.restapi.v1.groups.service import GroupIdService
+from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 from .errors import ExperimentAlreadyExistsError, ExperimentDoesNotExistError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "experiment"
+SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": lambda x: models.Experiment.name.like(x, escape="/"),
+    "description": lambda x: models.Experiment.description.like(x, escape="/"),
+    "tag": lambda x: models.Experiment.tags.any(models.Tag.name.like(x, escape="/")),
+}
 
 
 class ExperimentService(object):
@@ -67,10 +73,9 @@ class ExperimentService(object):
         self,
         name: str,
         description: str,
-        entrypoint_ids: list[int],
-        tag_ids: list[int],
         group_id: int,
         commit: bool = True,
+        entrypoint_ids: list[int] | None = None,
         **kwargs,
     ) -> utils.ExperimentDict:
         """Create a new experiment.
@@ -79,8 +84,7 @@ class ExperimentService(object):
             name: The name of the experiment. The combination of experiment and group_id
                 must be unique.
             description: The description of the experiment.
-            entrypoint_ids: The list of entrypoint_ids to associate with the experiment.
-            tag_ids: The list of tag_ids to associate with the experiment.
+            entrypoints: The list of entrypoints for the experiment.
             group_id: The group that will own the experiment.
             commit: If True, commit the transaction. Defaults to True.
 
@@ -93,8 +97,6 @@ class ExperimentService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        # TODO: apply tags
-
         if (
             self._experiment_name_service.get(name, group_id=group_id, log=log)
             is not None
@@ -103,8 +105,12 @@ class ExperimentService(object):
             raise ExperimentAlreadyExistsError
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
-        entrypoints = self._entrypoint_ids_service.get(
-            entrypoint_ids, error_if_not_found=True, log=log
+        entrypoints = (
+            self._entrypoint_ids_service.get(
+                entrypoint_ids, error_if_not_found=True, log=log
+            )
+            if entrypoint_ids is not None
+            else []
         )
 
         resource = models.Resource(resource_type="experiment", owner=group)
@@ -156,7 +162,6 @@ class ExperimentService(object):
             matching the query.
 
         Raises:
-            SearchNotImplementedError: If a search string is provided.
             BackEndDatabaseError: If the database query returns a None when counting
                 the number of experiments.
         """
@@ -169,10 +174,11 @@ class ExperimentService(object):
             filters.append(models.Resource.group_id == group_id)
 
         if search_string:
-            log.debug("Searching is not implemented", search_string=search_string)
-            raise SearchNotImplementedError
+            filters.append(
+                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
+            )
 
-        experiments_count_stmt = (
+        stmt = (
             select(func.count(models.Experiment.resource_id))
             .join(models.Resource)
             .where(
@@ -182,13 +188,13 @@ class ExperimentService(object):
                 == models.Experiment.resource_snapshot_id,
             )
         )
-        total_num_experiments = db.session.scalars(experiments_count_stmt).first()
+        total_num_experiments = db.session.scalars(stmt).first()
 
         if total_num_experiments is None:
             log.error(
                 "The database query returned a None when counting the number of "
                 "experiments when it should return a number.",
-                sql=str(experiments_count_stmt),
+                sql=str(stmt),
             )
             raise BackendDatabaseError
 
@@ -341,7 +347,7 @@ class ExperimentIdService(object):
         name: str,
         description: str,
         entrypoint_ids: list[int],
-        error_if_not_found: bool = True,
+        error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> utils.ExperimentDict | None:
@@ -351,8 +357,9 @@ class ExperimentIdService(object):
             experiment_id: The unique if of the experiment.
             name: The new name of the experiment.
             description: The new description of the experiment.
-            entrypoint_ids: The new list of entrypoints to associate with the
-                experiment.
+            entrypoint_ids: The new entrypoints of the experiment.
+            error_if_not_found: If True, raise an error if the experiment is not found.
+                Defaults to False.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -368,6 +375,7 @@ class ExperimentIdService(object):
         experiment_dict = self.get(
             experiment_id, error_if_not_found=error_if_not_found, log=log
         )
+
         if experiment_dict is None:
             return None
 
@@ -413,7 +421,7 @@ class ExperimentIdService(object):
         """Delete an experiment.
 
         Args:
-            experiment_id: The unique id of the experiment.
+            experiment_id: The unqiue id of the experiment.
 
         Returns:
             A dictionary reporting the status of the request.
@@ -423,7 +431,7 @@ class ExperimentIdService(object):
         stmt = select(models.Resource).filter_by(
             resource_id=experiment_id, resource_type=RESOURCE_TYPE, is_deleted=False
         )
-        experiment_resource = db.session.scalar(stmt)
+        experiment_resource = db.session.scalars(stmt).first()
 
         if experiment_resource is None:
             raise ExperimentDoesNotExistError
@@ -436,7 +444,7 @@ class ExperimentIdService(object):
         db.session.commit()
         log.debug("Experiment deleted", experiment_id=experiment_id)
 
-        return {"status": "Success", "id": [experiment_id]}
+        return {"status": "Success", "experiment_id": experiment_id}
 
 
 class ExperimentNameService(object):
