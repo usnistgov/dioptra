@@ -89,30 +89,34 @@
       >
         <template #body-cell-inputParams="props">
           <q-chip
-            v-for="(param, i) in props.row.inputParams.map((param) => param.name)"
+            v-for="(param, i) in props.row.inputParams"
             :key="i"
-            color="purple-5"
+            color="indigo"
             class="q-mr-sm"
             text-color="white"
             dense
           >
-            {{ param }}
+            {{ `${param.name}: ${param.parameterType.name || pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}` }}
           </q-chip>
         </template>
         <template #body-cell-outputParams="props">
           <q-chip
-            v-for="(param, i) in props.row.outputParams.map((param) => param.name)"
+            v-for="(param, i) in props.row.outputParams"
             :key="i"
-            color="purple-5"
+            color="purple"
             class="q-mr-sm"
             text-color="white"
             dense
           >
-            {{ param }}
+            {{ `${param.name}: ${param.parameterType.name || pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}` }}
           </q-chip>
         </template>
       </TableComponent>
-      <q-form ref="taskForm" greedy @submit.prevent="addTask" class="q-mt-lg q-mx-xl">
+      <q-card bordered class="q-ma-xl">
+        <q-card-section>
+        <div class="text-h6">Task Form</div>
+      </q-card-section>
+      <q-form ref="taskForm" greedy @submit.prevent="addTask" class="q-mx-xl">
         <q-input 
           outlined 
           dense 
@@ -121,31 +125,103 @@
           class="q-mb-sm"
           label="Task Name"
         />
-        <q-select
-          v-model="selectedInputParams"
-          :options="pluginParameterTypes"
-          multiple
-          use-chips
-          dense
-          outlined
-          option-label="name"
-          label="Input Params"
-          class="q-mb-lg"
+        <label>
+          Input Params:
+        </label>
+        <q-chip
+          v-for="(param, i) in inputParams"
+          :key="i"
+          color="indigo"
+          text-color="white"
+          removable
+          @remove="inputParams.splice(i, 1)"
+          :label="`${param.name}: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0].name}`"
         />
-        <q-select
-          v-model="selectedOutputParams"
-          :options="pluginParameterTypes"
-          multiple
-          use-chips
-          dense
-          outlined
-          option-label="name"
-          label="Output Params"
-          class="q-mb-lg"
+        <q-form ref="inputParamForm" greedy @submit.prevent="addInputParam">
+          <div class="row">
+            <q-input
+              v-model.trim="inputParam.name"
+              label="Input Param Name"
+              :rules="[requiredRule]"
+              dense
+              outlined
+              class="col q-mr-sm"
+            />
+            <q-select 
+              v-model="inputParam.parameterType"
+              emit-value
+              option-value="id"
+              option-label="name"
+              map-options
+              label="Param Type"
+              :options="pluginParameterTypes"
+              class="col q-mr-xl"
+              outlined
+              dense
+              :rules="[requiredRule]"
+            />
+            <q-btn
+              round
+              icon="add"
+              color="indigo"
+              style="height: 10px"
+              class="q-mr-sm"
+              @click="addInputParam()"
+            />
+          </div>
+        </q-form>
+
+        <label>
+          Output Params:
+        </label>
+        <q-chip
+          v-for="(param, i) in outputParams"
+          :key="i"
+          color="purple"
+          text-color="white"
+          removable
+          @remove="outputParams.splice(i, 1)"
+          :label="`${param.name}: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0].name}`"
         />
+        <q-form ref="outputParamForm" greedy @submit.prevent="addOutputParam">
+          <div class="row">
+            <q-input
+              v-model.trim="outputParam.name"
+              label="Output Param Name"
+              :rules="[requiredRule]"
+              dense
+              outlined
+              class="col q-mr-sm"
+            />
+            <q-select 
+              v-model="outputParam.parameterType"
+              emit-value
+              option-value="id"
+              option-label="name"
+              map-options
+              label="Param Type"
+              :options="pluginParameterTypes"
+              class="col q-mr-xl"
+              outlined
+              dense
+              :rules="[requiredRule]"
+            />
+            <q-btn
+              round
+              icon="add"
+              color="purple"
+              style="height: 10px"
+              class="q-mr-sm"
+              @click="addOutputParam()"
+            />
+          </div>
+        </q-form>
+
+
+
         <q-card-actions align="right">
           <q-btn
-            round
+            label="Add Task"
             color="secondary"
             icon="add"
             type="submit"
@@ -157,10 +233,11 @@
           </q-btn>
         </q-card-actions>
       </q-form>
+    </q-card>
     </fieldset>
   </div>
 
-  <div :class="`${isMobile ? '' : ''} float-right`">
+  <div :class="`${isMobile ? '' : ''} float-right q-mb-lg`">
     <q-btn  
       :to="`/plugins/${route.params.id}/files`"
       color="negative" 
@@ -183,7 +260,7 @@
         Plugin Param Structure
       </label>
     </template>
-    <CodeEditor v-model="structure" style="" />
+    <CodeEditor v-model="structure" style="height: auto;"/>
   </InfoPopupDialog>
 </template>
 
@@ -289,33 +366,26 @@
     { name: 'view', label: 'Structure', align: 'left', sortable: false },
   ]
 
-  const selectedInputParams = ref([])
-  const inputParams = computed(() => {
-    return selectedInputParams.value.map(param => {
-      return {
-        name: param.name,
-        parameterType: param.id
-      }
-    })
+  const inputParam = ref({
+    name: '',
+    parameterType: ''
+  })
+  const outputParam = ref({
+    name: '',
+    parameterType: ''
   })
 
-  const selectedOutputParams = ref([])
-  const outputParams = computed(() => {
-    return selectedOutputParams.value.map(param => {
-      return {
-        name: param.name,
-        parameterType: param.id
-      }
-    })
-  })
+  const inputParams = ref([])
+  const outputParams = ref([])
 
   const tasks = ref([])
   const task = ref({
-    name: '',
-    inputParams: inputParams.value,
-    outputParams: outputParams.value
+
+
   })
   const taskForm = ref(null)
+  const inputParamForm = ref(null)
+  const outputParamForm = ref(null)
 
   const taskColumns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
@@ -334,6 +404,32 @@
     } 
   }
 
+  function addInputParam() {
+    inputParamForm.value.validate().then(success => {
+      if (success) {
+        inputParams.value.push(inputParam.value)
+        inputParam.value = {}
+        inputParamForm.value.reset()
+      }
+      else {
+        // error
+      }
+    })
+  }
+
+  function addOutputParam() {
+    outputParamForm.value.validate().then(success => {
+      if (success) {
+        outputParams.value.push(outputParam.value)
+        outputParam.value = {}
+        outputParamForm.value.reset()
+      }
+      else {
+        // error
+      }
+    })
+  }
+
   function addTask() {
     taskForm.value.validate().then(success => {
       if (success) {
@@ -342,13 +438,9 @@
           inputParams: inputParams.value,
           outputParams: outputParams.value
         })
-        task.value ={
-          // name: '',
-          // selectedInputParams: [],
-          // selectedOutputParams: []
-        }
-        selectedInputParams.value = []
-        selectedOutputParams.value = []
+        task.value ={}
+        inputParams.value = []
+        outputParams.value = []
         taskForm.value.reset()
       }
       else {
