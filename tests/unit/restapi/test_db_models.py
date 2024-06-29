@@ -24,8 +24,10 @@ tests for the REST API.
 import uuid
 
 import pytest
+import tarfile
 from faker import Faker
 from flask_sqlalchemy import SQLAlchemy
+from pathlib import Path
 from sqlalchemy.exc import IntegrityError
 
 from dioptra.restapi.db import models
@@ -918,3 +920,18 @@ def test_db_invalid_resource_dependency_fails(
         except IntegrityError as err:
             db.session.rollback()
             raise err
+
+
+def test_build_plugin_file_structure(
+    db: SQLAlchemy, registered_plugin_id: int, tmp_path: Path
+) -> None:
+    plugin = viewsdb.get_latest_plugin(db, resource_id=registered_plugin_id)
+    files = viewsdb.get_latest_plugin_files(db, plugin_resource_id=registered_plugin_id)
+
+    plugin_path = (tmp_path / plugin.name)
+    plugin_path.mkdir(parents=True)
+    for file in files:
+        (plugin_path / file.filename).write_text(file.contents)
+
+    with tarfile.open(plugin_path.with_suffix(".tar.gz"), "w:gz") as tar:
+        tar.add(plugin_path, arcname=plugin.name)
