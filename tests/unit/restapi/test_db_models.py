@@ -928,9 +928,10 @@ def test_build_plugin_file_structure(
     plugin = viewsdb.get_latest_plugin(db, resource_id=registered_plugin_id)
     files = viewsdb.get_latest_plugin_files(db, plugin_resource_id=registered_plugin_id)
 
-    plugin_path = (tmp_path / plugin.name)
+    plugin_path = tmp_path / plugin.name
     plugin_path.mkdir(parents=True)
     for file in files:
+        (plugin_path / file.filename).parent.mkdir(parents=True, exist_ok=True)
         (plugin_path / file.filename).write_text(file.contents)
 
     with tarfile.open(plugin_path.with_suffix(".tar.gz"), "w:gz") as tar:
