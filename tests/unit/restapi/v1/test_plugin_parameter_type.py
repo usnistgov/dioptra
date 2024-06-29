@@ -441,18 +441,18 @@ def test_plugin_parameter_type_search_query(
     - The returned lists of plugin parameter types match the searches provided
       during both submissions.
     """
-    plugin_param_type_expected_list = list(registered_plugin_parameter_types.values())[
-        :2
-    ]
     assert_retrieving_plugin_parameter_types_works(
         client,
-        expected=plugin_param_type_expected_list,
-        search='description:"*parameter type*"',
+        expected=[registered_plugin_parameter_types["string"]],
+        search="name:string",
     )
     assert_retrieving_plugin_parameter_types_works(
         client,
-        expected=plugin_param_type_expected_list,
-        search="*parameter type*, name:*int*",
+        expected=[
+            registered_plugin_parameter_types["plugin_param_type2"],
+            registered_plugin_parameter_types["plugin_param_type3"],
+        ],
+        search="*model*",
     )
     plugin_param_type_expected_list = list(registered_plugin_parameter_types.values())
     assert_retrieving_plugin_parameter_types_works(
