@@ -116,7 +116,7 @@ def build_experiment_ref(experiment: models.Experiment) -> dict[str, Any]:
     return {
         "id": experiment.resource_id,
         "name": experiment.name,
-        "url": f"/{EXPERIMENTS}/{experiment.resource_id}",
+        "url": build_url(f"/{EXPERIMENTS}/{experiment.resource_id}"),
     }
 
 
@@ -248,7 +248,9 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
         "plugin": plugin_id,
         "filename": plugin_file.filename,
         "group": build_group_ref(plugin_file.resource.owner),
-        "url": f"/{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}",
+        "url": build_url(
+            f"/{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}"
+        ),
     }
 
 
@@ -265,7 +267,7 @@ def build_entrypoint_ref(entrypoint: models.EntryPoint) -> dict[str, Any]:
         "id": entrypoint.resource_id,
         "name": entrypoint.name,
         "group": build_group_ref(entrypoint.resource.owner),
-        "url": f"/{ENTRYPOINTS}/{entrypoint.resource_id}",
+        "url": build_url(f"/{ENTRYPOINTS}/{entrypoint.resource_id}"),
     }
 
 
