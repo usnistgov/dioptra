@@ -504,7 +504,7 @@ class EntrypointIdService(object):
         db.session.commit()
         log.debug("Entrypoint deleted", entrypoint_id=entrypoint_id)
 
-        return {"status": "Success", "entrypoint_id": entrypoint_id}
+        return {"status": "Success", "id": [entrypoint_id]}
 
 
 class EntrypointIdPluginsService(object):
@@ -649,10 +649,9 @@ class EntrypointIdPluginsService(object):
         if commit:
             db.session.commit()
             log.debug(
-                "Entrypoint modification successful",
+                "Plugins appended to Entrypoint successfully",
                 entrypoint_id=entrypoint_id,
-                name=entrypoint.name,
-                description=entrypoint.description,
+                plugin_ids=plugin_ids,
             )
 
         return _get_entrypoint_plugin_snapshots(new_entrypoint)
@@ -736,7 +735,7 @@ class EntrypointIdPluginsIdService(object):
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
-            The updated entrypoint object.
+            A dictionary reporting the status of the request.
 
         Raises:
             EntrypointDoesNotExistError: If the entrypoint is not found.
@@ -793,13 +792,12 @@ class EntrypointIdPluginsIdService(object):
         if commit:
             db.session.commit()
             log.debug(
-                "Entrypoint modification successful",
+                "Plugin removed from entrypoint",
                 entrypoint_id=entrypoint_id,
-                name=entrypoint.name,
-                description=entrypoint.description,
+                plugin_id=plugin_id,
             )
 
-        return _get_entrypoint_plugin_snapshots(new_entrypoint)
+        return {"status": "Success", "id": [plugin_id]}
 
 
 class EntrypointIdsService(object):

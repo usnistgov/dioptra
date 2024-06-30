@@ -479,7 +479,7 @@ class PluginParameterTypeIdService(object):
 
         return {
             "status": "Success",
-            "plugin_parameter_type_id": plugin_parameter_type_id,
+            "id": [plugin_parameter_type_id],
         }
 
 

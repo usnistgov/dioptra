@@ -453,6 +453,7 @@ class UserCurrentService(object):
             log=log,
         )
 
+        user_id = current_user.user_id
         username = current_user.username
 
         deleted_user_lock = models.UserLock(
@@ -461,9 +462,9 @@ class UserCurrentService(object):
         )
         db.session.add(deleted_user_lock)
         db.session.commit()
-        log.debug("User account deleted", user_id=current_user.user_id)
+        log.debug("User account deleted", user_id=user_id, username=username)
 
-        return {"status": "Success", "username": username}
+        return {"status": "Success", "id": [user_id]}
 
     def change_password(
         self,

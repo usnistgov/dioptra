@@ -289,7 +289,7 @@ class EntrypointIdPluginsIdEndpoint(Resource):
         return utils.build_entrypoint_plugin(plugin)
 
     @login_required
-    @responds(schema=EntrypointPluginSchema(many=True), api=api)
+    @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self, id: int, pluginId: int):
         """Removes a plugin from an entrypoint by ID."""
         log = LOGGER.new(
@@ -298,8 +298,7 @@ class EntrypointIdPluginsIdEndpoint(Resource):
             request_type="DELETE",
             id=id,
         )
-        plugins = self._entrypoint_id_plugins_id_service.delete(id, pluginId, log=log)
-        return [utils.build_entrypoint_plugin(plugin) for plugin in plugins]
+        return self._entrypoint_id_plugins_id_service.delete(id, pluginId, log=log)
 
 
 @api.route("/<int:id>/queues")

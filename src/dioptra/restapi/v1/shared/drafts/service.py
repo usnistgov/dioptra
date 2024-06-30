@@ -278,7 +278,7 @@ class ResourceDraftsIdService(object):
         """Delete a draft.
 
         Args:
-            resource_id: The unique id of the resource.
+            draft_id: The unique id of the draft.
 
         Returns:
             A dictionary reporting the status of the request.
@@ -290,7 +290,7 @@ class ResourceDraftsIdService(object):
         db.session.commit()
         log.debug("Draft deleted", draft_resource_id=draft_id)
 
-        return {"status": "Success", "draft_resource_id": draft_id}
+        return {"status": "Success", "id": [draft_id]}
 
 
 class ResourceIdDraftService(object):
@@ -464,8 +464,9 @@ class ResourceIdDraftService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         draft, _ = self.get(resource_id, error_if_not_found=True, log=log)
+        draft_id = draft.draft_resource_id
         db.session.delete(draft)
         db.session.commit()
         log.debug("Draft deleted", resource_id=resource_id)
 
-        return {"status": "Success", "resource_id": resource_id}
+        return {"status": "Success", "id": [draft_id]}
