@@ -32,6 +32,9 @@ from dioptra.restapi.db.models.constants import user_lock_types
 from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v0.shared.password.service import PasswordService
 from dioptra.restapi.v1.groups.service import GroupMemberService, GroupNameService
+from dioptra.restapi.v1.plugin_parameter_types.service import (
+    BuiltinPluginParameterTypeService,
+)
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 from .errors import (
@@ -72,6 +75,7 @@ class UserService(object):
         user_name_service: UserNameService,
         group_name_service: GroupNameService,
         group_member_service: GroupMemberService,
+        builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
     ) -> None:
         """Initialize the user service.
 
@@ -82,11 +86,16 @@ class UserService(object):
             user_name_service: A UserNameService object.
             group_name_service: A GroupNameService object.
             group_member_service: A GroupMemberService object.
+            builtin_plugin_parameter_type_service: A BuiltinPluginParameterTypeService
+                object.
         """
         self._user_password_service = user_password_service
         self._user_name_service = user_name_service
         self._group_name_service = group_name_service
         self._group_member_service = group_member_service
+        self._builtin_plugin_parameter_type_service = (
+            builtin_plugin_parameter_type_service
+        )
 
     def create(
         self,
@@ -269,7 +278,12 @@ class UserService(object):
         ) is not None:
             return group
 
-        return models.Group(name=DEFAULT_GROUP_NAME, creator=user)
+        default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user)
+        # Register the built-in plugin parameter types when creating a new group.
+        self._builtin_plugin_parameter_type_service.create_all(
+            user=user, group=default_group, commit=False
+        )
+        return default_group
 
 
 class UserIdService(object):

@@ -337,6 +337,14 @@ def get_public_group(client: FlaskClient) -> TestResponse:
     return client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True)
 
 
+def get_plugin_parameter_types(client: FlaskClient) -> TestResponse:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
+        follow_redirects=True,
+    )
+    return response
+
+
 def get_draft(
     client: FlaskClient,
     resource_route: str,

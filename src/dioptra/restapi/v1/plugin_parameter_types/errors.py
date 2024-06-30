@@ -20,6 +20,10 @@ from __future__ import annotations
 from flask_restx import Api
 
 
+class PluginParameterTypeMatchesBuiltinTypeError(Exception):
+    """The plugin parameter type name cannot match a built-in type."""
+
+
 class PluginParameterTypeAlreadyExistsError(Exception):
     """The plugin parameter type name already exists."""
 
@@ -28,8 +32,8 @@ class PluginParameterTypeDoesNotExistError(Exception):
     """The requested plugin parameter type does not exist."""
 
 
-class PluginParameterTypeLockedError(Exception):
-    """The requested plugin parameter type is locked."""
+class PluginParameterTypeReadOnlyLockError(Exception):
+    """The plugin parameter type has a read-only lock and cannot be modified."""
 
 
 class PluginParameterTypeMissingParameterError(Exception):
@@ -37,6 +41,13 @@ class PluginParameterTypeMissingParameterError(Exception):
 
 
 def register_error_handlers(api: Api) -> None:
+    @api.errorhandler(PluginParameterTypeMatchesBuiltinTypeError)
+    def handle_plugin_parameter_type_matches_builtin_type_error(error):
+        return {
+            "message": "Bad Request - The requested plugin parameter type name "
+            "matches a built-in type. Please select another and resubmit."
+        }, 400
+
     @api.errorhandler(PluginParameterTypeDoesNotExistError)
     def handle_plugin_parameter_type_does_not_exist_error(error):
         return {
@@ -44,10 +55,11 @@ def register_error_handlers(api: Api) -> None:
             "not exist"
         }, 404
 
-    @api.errorhandler(PluginParameterTypeLockedError)
-    def handle_plugin_parameter_type_locked_error(error):
+    @api.errorhandler(PluginParameterTypeReadOnlyLockError)
+    def handle_plugin_parameter_type_read_only_lock_error(error):
         return {
-            "message": "Forbidden - The requested plugin parameter type is locked."
+            "message": "Forbidden - The plugin parameter type has a read-only "
+            "lock and cannot be modified."
         }, 403
 
     @api.errorhandler(PluginParameterTypeMissingParameterError)
