@@ -454,7 +454,7 @@ def get_drafts(
 def create_new_resource_draft(
     client: FlaskClient,
     resource_route: str,
-    group_id: int,
+    group_id: int | None,
     payload: dict[str, Any],
 ) -> TestResponse:
     """Create a draft resource using the API.
@@ -467,9 +467,12 @@ def create_new_resource_draft(
     Returns:
         The response from the API.
     """
+    if group_id is not None:
+        payload = {**payload, "group": group_id}
+
     return client.post(
         f"/{V1_ROOT}/{resource_route}/drafts",
-        json={**payload, "group": group_id},
+        json=payload,
         follow_redirects=True,
     )
 

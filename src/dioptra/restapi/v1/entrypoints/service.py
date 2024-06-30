@@ -726,7 +726,7 @@ class EntrypointIdPluginsIdService(object):
         plugin_id: int,
         commit: bool = True,
         **kwargs,
-    ) -> list[utils.PluginWithFilesDict]:
+    ) -> dict[str, Any]:
         """Remove a plugin from an entrypoint.
 
         Args:

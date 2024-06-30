@@ -147,11 +147,204 @@ def generate_resource_tags_id_endpoint(
 
         @login_required
         @responds(schema=IdStatusResponseSchema, api=api)
-        def delete(self, id: int, tagId):
+        def delete(self, id: int, tagId: int):
             """Removes a Tag from the resource."""
             log = LOGGER.new(
                 request_id=str(uuid.uuid4()), resource="Tag", request_type="GET"
             )
             return self._tag_id_service.delete(id, tagId, log=log)
+
+    return ResourcesTagsIdEndpoint
+
+
+def generate_nested_resource_tags_endpoint(
+    api: Namespace,
+    resource_name: str,
+    resource_route: str,
+    base_resource_name: str,
+) -> Resource:
+    """
+    Generates an Endpoint for managing Tags on Resources
+
+    Args:
+        api: The API namespace
+        resource_name: The name of the nested resource
+        resource_route: The route to the nested resource
+        base_resource_name: The name of the resource
+
+    Returns:
+        The generated Endpoint class
+    """
+
+    route_singular = resource_route[:-1]
+    resource_id = f"{route_singular}Id"
+
+    @api.route(f"/<int:id>/{resource_route}/<int:{resource_id}>/tags/")
+    @api.param("id", f"ID for the {base_resource_name}.")
+    @api.param(f"{resource_id}", f"ID for the {resource_name}.")
+    class ResourcesTagsEndpoint(Resource):
+        @inject
+        def __init__(
+            self,
+            tag_service: ClassAssistedBuilder[ResourceTagsService],
+            *args,
+            **kwargs,
+        ) -> None:
+            self._tag_service = tag_service.build(resource_type=resource_name)
+            super().__init__(*args, **kwargs)
+
+        @login_required
+        @responds(schema=TagRefSchema(many=True), api=api)
+        def get(self, id: int, **kwargs):
+            """Gets the list of Tags for the resource."""
+            log = LOGGER.new(
+                request_id=str(uuid.uuid4()), resource="Tag", request_type="GET"
+            )
+            if set(kwargs.keys()) != set([resource_id]):
+                unexpected_kwargs = {
+                    k: v for k, v in kwargs.items() if resource_id != k
+                }
+                log.error("Unexpected input", kwargs=unexpected_kwargs)
+                raise TypeError(
+                    "delete method received unexpected keyword arguments: "
+                    f"{list(unexpected_kwargs.keys())}"
+                )
+
+            tags = self._tag_service.get(kwargs[resource_id], log=log)
+            return utils.build_tag_ref_list(tags)
+
+        @login_required
+        @accepts(schema=IdListSchema, api=api)
+        @responds(schema=TagRefSchema(many=True), api=api)
+        def post(self, id: int, **kwargs):
+            """Appends one or more Tags to the resource."""
+            log = LOGGER.new(
+                request_id=str(uuid.uuid4()), resource="Tag", request_type="POST"
+            )
+            if set(kwargs.keys()) != set([resource_id]):
+                unexpected_kwargs = {
+                    k: v for k, v in kwargs.items() if resource_id != k
+                }
+                log.error("Unexpected input", kwargs=unexpected_kwargs)
+                raise TypeError(
+                    "delete method received unexpected keyword arguments: "
+                    f"{list(unexpected_kwargs.keys())}"
+                )
+
+            parsed_obj = request.parsed_obj  # type: ignore
+            tags = self._tag_service.append(
+                kwargs[resource_id],
+                tag_ids=parsed_obj["ids"],
+                error_if_not_found=True,
+                log=log,
+            )
+            return utils.build_tag_ref_list(tags)
+
+        @login_required
+        @accepts(schema=IdListSchema, api=api)
+        @responds(schema=TagRefSchema(many=True), api=api)
+        def put(self, id: int, **kwargs):
+            """Replaces one or more Tags to the resource."""
+            log = LOGGER.new(
+                request_id=str(uuid.uuid4()), resource="Tag", request_type="POST"
+            )
+            if set(kwargs.keys()) != set([resource_id]):
+                unexpected_kwargs = {
+                    k: v for k, v in kwargs.items() if resource_id != k
+                }
+                log.error("Unexpected input", kwargs=unexpected_kwargs)
+                raise TypeError(
+                    "delete method received unexpected keyword arguments: "
+                    f"{list(unexpected_kwargs.keys())}"
+                )
+
+            parsed_obj = request.parsed_obj  # type: ignore
+            tags = self._tag_service.modify(
+                kwargs[resource_id],
+                tag_ids=parsed_obj["ids"],
+                error_if_not_found=True,
+                log=log,
+            )
+            return utils.build_tag_ref_list(tags)
+
+        @login_required
+        @responds(schema=IdStatusResponseSchema, api=api)
+        def delete(self, id: int, **kwargs):
+            """Removes all Tags from the resource."""
+            log = LOGGER.new(
+                request_id=str(uuid.uuid4()), resource="Tag", request_type="DELETE"
+            )
+            if set(kwargs.keys()) != set([resource_id]):
+                unexpected_kwargs = {
+                    k: v for k, v in kwargs.items() if resource_id != k
+                }
+                log.error("Unexpected input", kwargs=unexpected_kwargs)
+                raise TypeError(
+                    "delete method received unexpected keyword arguments: "
+                    f"{list(unexpected_kwargs.keys())}"
+                )
+
+            return self._tag_service.delete(
+                kwargs[resource_id], error_if_not_found=True, log=log
+            )
+
+    return ResourcesTagsEndpoint
+
+
+def generate_nested_resource_tags_id_endpoint(
+    api: Namespace,
+    resource_name: str,
+    resource_route: str,
+    base_resource_name: str,
+) -> Resource:
+    """
+    Generates an Endpoint for removing a Tag from a Resource.
+
+    Args:
+        api: The API namespace
+        base_resource_name: The name of the resource
+        resource_name: The name of the nested resource
+        resource_route: The route to the nested resource
+
+    Returns:
+        The generated Endpoint class
+    """
+
+    route_singular = resource_route[:-1]
+    resource_id = f"{route_singular}Id"
+
+    @api.route(f"/<int:id>/{resource_route}/<int:{resource_id}>/tags/<int:tagId>")
+    @api.param("id", f"ID for the {base_resource_name}.")
+    @api.param(f"{resource_id}", f"ID for the {resource_name}.")
+    @api.param("tagId", "ID for the Tag.")
+    class ResourcesTagsIdEndpoint(Resource):
+        @inject
+        def __init__(
+            self,
+            tag_id_service: ClassAssistedBuilder[ResourceTagsIdService],
+            *args,
+            **kwargs,
+        ) -> None:
+            self._tag_id_service = tag_id_service.build(resource_type=resource_name)
+            super().__init__(*args, **kwargs)
+
+        @login_required
+        @responds(schema=IdStatusResponseSchema, api=api)
+        def delete(self, id: int, tagId: int, **kwargs):
+            """Removes a Tag from the resource."""
+            log = LOGGER.new(
+                request_id=str(uuid.uuid4()), resource="Tag", request_type="DELETE"
+            )
+            if set(kwargs.keys()) != set([resource_id]):
+                unexpected_kwargs = {
+                    k: v for k, v in kwargs.items() if resource_id != k
+                }
+                log.error("Unexpected input", kwargs=unexpected_kwargs)
+                raise TypeError(
+                    "delete method received unexpected keyword arguments: "
+                    f"{list(unexpected_kwargs.keys())}"
+                )
+
+            return self._tag_id_service.delete(kwargs[resource_id], tagId, log=log)
 
     return ResourcesTagsIdEndpoint
