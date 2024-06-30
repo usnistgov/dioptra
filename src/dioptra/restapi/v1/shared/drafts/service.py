@@ -33,6 +33,7 @@ from dioptra.restapi.errors import (
     DraftDoesNotExistError,
     ResourceDoesNotExistError,
 )
+from dioptra.restapi.v1.groups.errors import GroupDoesNotExistError
 from dioptra.restapi.v1.groups.service import GroupIdService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -61,6 +62,7 @@ class ResourceDraftsService(object):
         self,
         draft_type: str,
         group_id: int | None,
+        base_resource_id: int | None,
         page_index: int,
         page_length: int,
         **kwargs,
@@ -70,6 +72,7 @@ class ResourceDraftsService(object):
         Args:
             draft_type: The type of drafts to retrieve (all, existing, or new)
             group_id: A group ID used to filter results.
+            base_resource_id: An additional resource ID used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of drafts to be returned.
 
@@ -84,8 +87,17 @@ class ResourceDraftsService(object):
         log.debug("Get full list of drafts")
 
         filters = list()
+
         if group_id is not None:
             filters.append(models.DraftResource.group_id == group_id)
+
+        if base_resource_id is not None:
+            filters.append(
+                models.DraftResource.payload["base_resource_id"]
+                .as_string()
+                .cast(Integer)
+                == base_resource_id
+            )
 
         if draft_type == "existing":
             filters.append(
@@ -132,6 +144,7 @@ class ResourceDraftsService(object):
 
     def create(
         self,
+        base_resource_id: int | None,
         payload: dict[str, Any],
         commit: bool = True,
         **kwargs,
@@ -150,14 +163,24 @@ class ResourceDraftsService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        group_id = payload.pop("group_id")
+        group_id = payload.pop("group_id", None)
 
-        group = self._group_id_service.get(group_id, error_if_not_found=True)
+        if base_resource_id is None:
+            group = self._group_id_service.get(group_id, error_if_not_found=True)
+        else:
+            stmt = select(models.Resource).filter_by(
+                resource_id=base_resource_id, is_deleted=False
+            )
+            resource = db.session.scalar(stmt)
+            if resource is None:
+                raise GroupDoesNotExistError
+            group = resource.owner
 
         draft_payload = {
             "resource_data": payload,
             "resource_id": None,
             "resource_snapshot_id": None,
+            "base_resource_id": base_resource_id,
         }
 
         draft = models.DraftResource(
@@ -358,11 +381,12 @@ class ResourceIdDraftService(object):
     def create(
         self,
         resource_id: int,
+        base_resource_id: int | None,
         payload: dict[str, Any],
         commit: bool = True,
         **kwargs,
     ) -> tuple[models.DraftResource | None, int]:
-        """Create a new draft.
+        """Create a new draft from an existing resource.
 
         Args:
             resource_id: The ID of the resource this draft modifies.
@@ -377,6 +401,9 @@ class ResourceIdDraftService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
+        log.info(
+            "CREATE DRAFT", resource_id=resource_id, resource_type=self._resource_type
+        )
         stmt = select(models.Resource).filter_by(
             resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
         )
@@ -393,6 +420,7 @@ class ResourceIdDraftService(object):
             "resource_data": payload,
             "resource_id": resource_id,
             "resource_snapshot_id": resource.latest_snapshot_id,
+            "base_resource_id": base_resource_id,
         }
 
         draft = models.DraftResource(
@@ -463,7 +491,10 @@ class ResourceIdDraftService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        draft, _ = self.get(resource_id, error_if_not_found=True, log=log)
+        draft, _ = cast(
+            tuple[models.DraftResource, int],
+            self.get(resource_id, error_if_not_found=True, log=log),
+        )
         draft_id = draft.draft_resource_id
         db.session.delete(draft)
         db.session.commit()

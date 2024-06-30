@@ -23,14 +23,14 @@ registered, renamed, and deleted as expected through the REST API.
 import textwrap
 from typing import Any, List
 
-import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import (
-    V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     V1_PLUGINS_ROUTE,
+    V1_PLUGIN_FILES_ROUTE,
+    V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     V1_ROOT,
 )
 
@@ -408,6 +408,7 @@ def assert_plugin_file_response_contents_matches_expectations(
         "description",
         "contents",
         "tasks",
+        "tags",
         "plugin",
     }
     assert set(response.keys()) == expected_keys
@@ -1323,6 +1324,344 @@ def test_manage_new_plugin_drafts(
     )
 
 
+def test_manage_existing_plugin_file_draft(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+) -> None:
+    """Test that a draft of an existing plugin file can be created and managed by the
+    user
+
+    Given an authenticated user and registered plugin files, this test validates the
+    following sequence of actions:
+
+    - The user creates a draft of an existing plugin file
+    - The user retrieves information about the draft and gets the expected response
+    - The user attempts to create another draft of the same existing plugin file
+    - The request fails with an appropriate error message and response code.
+    - The user modifies the name of the plugin file in the draft
+    - The user retrieves information about the draft and gets the expected response
+    - The user deletes the draft
+    - The user attempts to retrieve information about the deleted draft.
+    - The request fails with an appropriate error message and response code.
+    """
+    plugin_id = registered_plugin_with_files["plugin"]["id"]
+    resource_route = f"{V1_PLUGINS_ROUTE}/{plugin_id}/{V1_PLUGIN_FILES_ROUTE}"
+    plugin_file = registered_plugin_with_files["plugin_file1"]
+    filename = "main.py"
+    new_filename = "hello_world.py"
+    description = "hello world plugin"
+    contents = textwrap.dedent(
+        """from dioptra import pyplugs
+
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f"Hello, {name}!"
+        """
+    )
+
+    # test creation
+    payload = {"filename": filename, "description": description, "contents": contents}
+    expected = {
+        "user_id": auth_account["id"],
+        "group_id": plugin_file["group"]["id"],
+        "resource_id": plugin_file["id"],
+        "resource_snapshot_id": plugin_file["snapshot"],
+        "num_other_drafts": 0,
+        "payload": payload,
+    }
+    response = actions.create_existing_resource_draft(
+        client,
+        resource_route=resource_route,
+        resource_id=plugin_file["id"],
+        payload=payload,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+    asserts.assert_retrieving_draft_by_resource_id_works(
+        client,
+        resource_route=resource_route,
+        resource_id=plugin_file["id"],
+        expected=response,
+    )
+    asserts.assert_creating_another_existing_draft_fails(
+        client, resource_route=resource_route, resource_id=plugin_file["id"]
+    )
+
+    # test modification
+    payload = {
+        "filename": new_filename,
+        "description": description,
+        "contents": contents,
+    }
+    expected = {
+        "user_id": auth_account["id"],
+        "group_id": plugin_file["group"]["id"],
+        "resource_id": plugin_file["id"],
+        "resource_snapshot_id": plugin_file["snapshot"],
+        "num_other_drafts": 0,
+        "payload": payload,
+    }
+    response = actions.modify_existing_resource_draft(
+        client,
+        resource_route=resource_route,
+        resource_id=plugin_file["id"],
+        payload=payload,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+
+    # test deletion
+    actions.delete_existing_resource_draft(
+        client, resource_route=resource_route, resource_id=plugin_file["id"]
+    )
+    asserts.assert_existing_draft_is_not_found(
+        client, resource_route=resource_route, resource_id=plugin_file["id"]
+    )
+
+
+def test_manage_new_plugin_file_drafts(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+) -> None:
+    """Test that drafts of plugin_file can be created and managed by the user
+
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - The user creates two plugin_file drafts
+    - The user retrieves information about the drafts and gets the expected response
+    - The user modifies the description of the plugin_file in the first draft
+    - The user retrieves information about the draft and gets the expected response
+    - The user deletes the first draft
+    - The user attempts to retrieve information about the deleted draft.
+    - The request fails with an appropriate error message and response code.
+    """
+    plugin_id = registered_plugins["plugin1"]["id"]
+    resource_route = f"{V1_PLUGINS_ROUTE}/{plugin_id}/{V1_PLUGIN_FILES_ROUTE}"
+
+    group_id = auth_account["groups"][0]["id"]
+    contents = textwrap.dedent(
+        """from dioptra import pyplugs
+
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f"Hello, {name}!"
+        """
+    )
+    drafts: dict[str, Any] = {
+        "draft1": {
+            "filename": "plugin_file1.py",
+            "description": "new plugin_file",
+            "contents": contents,
+        },
+        "draft2": {
+            "filename": "plugin_file2.py",
+            "description": None,
+            "contents": contents,
+        },
+    }
+
+    # test creation
+    draft1_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": drafts["draft1"],
+    }
+    draft1_response = actions.create_new_resource_draft(
+        client,
+        resource_route=resource_route,
+        group_id=None,
+        payload=drafts["draft1"],
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        draft1_response, draft1_expected
+    )
+    asserts.assert_retrieving_draft_by_id_works(
+        client,
+        resource_route=resource_route,
+        draft_id=draft1_response["id"],
+        expected=draft1_response,
+    )
+    draft2_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": drafts["draft2"],
+    }
+    draft2_response = actions.create_new_resource_draft(
+        client,
+        resource_route=resource_route,
+        group_id=None,
+        payload=drafts["draft2"],
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        draft2_response, draft2_expected
+    )
+    asserts.assert_retrieving_draft_by_id_works(
+        client,
+        resource_route=resource_route,
+        draft_id=draft2_response["id"],
+        expected=draft2_response,
+    )
+    asserts.assert_retrieving_drafts_works(
+        client,
+        resource_route=resource_route,
+        expected=[draft1_response, draft2_response],
+    )
+
+    # test modification
+    draft1_mod = {
+        "filename": "draft_plugin.py",
+        "description": "new description",
+        "contents": contents,
+    }
+    draft1_mod_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": draft1_mod,
+    }
+    response = actions.modify_new_resource_draft(
+        client,
+        resource_route=resource_route,
+        draft_id=draft1_response["id"],
+        payload=draft1_mod,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        response, draft1_mod_expected
+    )
+
+    # test deletion
+    actions.delete_new_resource_draft(
+        client, resource_route=resource_route, draft_id=draft1_response["id"]
+    )
+    asserts.assert_new_draft_is_not_found(
+        client, resource_route=resource_route, draft_id=draft1_response["id"]
+    )
+
+
+def test_manage_plugin_snapshots(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+) -> None:
+    """Test that different snapshots of a plugin can be retrieved by the user.
+
+    Given an authenticated user and registered plugins, this test validates the following
+    sequence of actions:
+
+    - The user modifies a plugin
+    - The user retrieves information about the original snapshot of the plugin and gets
+      the expected response
+    - The user retrieves information about the new snapshot of the plugin and gets the
+      expected response
+    - The user retrieves a list of all snapshots of the plugin and gets the expected
+      response
+    """
+    plugin_to_rename = registered_plugins["plugin1"]
+    modified_plugin = modify_plugin(
+        client,
+        plugin_id=plugin_to_rename["id"],
+        new_name=plugin_to_rename["name"] + "modified",
+        new_description=plugin_to_rename["description"],
+    ).get_json()
+    modified_plugin.pop("hasDraft")
+    modified_plugin.pop("files")
+    plugin_to_rename.pop("hasDraft")
+    plugin_to_rename.pop("files")
+    plugin_to_rename["latestSnapshot"] = False
+    plugin_to_rename["lastModifiedOn"] = modified_plugin["lastModifiedOn"]
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=V1_PLUGINS_ROUTE,
+        resource_id=plugin_to_rename["id"],
+        snapshot_id=plugin_to_rename["snapshot"],
+        expected=plugin_to_rename,
+    )
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=V1_PLUGINS_ROUTE,
+        resource_id=modified_plugin["id"],
+        snapshot_id=modified_plugin["snapshot"],
+        expected=modified_plugin,
+    )
+    expected_snapshots = [plugin_to_rename, modified_plugin]
+    asserts.assert_retrieving_snapshots_works(
+        client,
+        resource_route=V1_PLUGINS_ROUTE,
+        resource_id=plugin_to_rename["id"],
+        expected=expected_snapshots,
+    )
+
+
+def test_manage_plugin_file_snapshots(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+) -> None:
+    """Test that different snapshots of a plugin file can be retrieved by the user.
+
+    Given an authenticated user and registered plugin with files, this test validates
+    the following sequence of actions:
+
+    - The user modifies a plugin file
+    - The user retrieves information about the original snapshot of the plugin file and
+      gets the expected response
+    - The user retrieves information about the new snapshot of the plugin file and gets
+       the expected response
+    - The user retrieves a list of all snapshots of the plugin file and gets the
+      expected response
+    """
+    plugin_id = registered_plugin_with_files["plugin"]["id"]
+    resource_route = f"{V1_PLUGINS_ROUTE}/{plugin_id}/{V1_PLUGIN_FILES_ROUTE}"
+    plugin_file_to_rename = registered_plugin_with_files["plugin_file1"]
+    contents = textwrap.dedent(
+        """from dioptra import pyplugs
+
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f"Hello, {name}!"
+        """
+    )
+
+    modified_plugin_file = modify_plugin_file(
+        client,
+        plugin_id=plugin_id,
+        plugin_file_id=plugin_file_to_rename["id"],
+        new_name="modified_" + plugin_file_to_rename["filename"],
+        new_contents=contents,
+        new_description=plugin_file_to_rename["description"],
+    ).get_json()
+    modified_plugin_file.pop("hasDraft")
+    modified_plugin_file.pop("plugin")
+    plugin_file_to_rename.pop("hasDraft")
+    plugin_file_to_rename.pop("plugin")
+    plugin_file_to_rename["latestSnapshot"] = False
+    plugin_file_to_rename["lastModifiedOn"] = modified_plugin_file["lastModifiedOn"]
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=resource_route,
+        resource_id=plugin_file_to_rename["id"],
+        snapshot_id=plugin_file_to_rename["snapshot"],
+        expected=plugin_file_to_rename,
+    )
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=resource_route,
+        resource_id=modified_plugin_file["id"],
+        snapshot_id=modified_plugin_file["snapshot"],
+        expected=modified_plugin_file,
+    )
+    expected_snapshots = [plugin_file_to_rename, modified_plugin_file]
+    asserts.assert_retrieving_snapshots_works(
+        client,
+        resource_route=resource_route,
+        resource_id=plugin_file_to_rename["id"],
+        expected=expected_snapshots,
+    )
+
+
 def test_tag_plugin(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -1390,4 +1729,76 @@ def test_tag_plugin(
     )
     response = actions.get_tags(
         client, resource_route=V1_PLUGINS_ROUTE, resource_id=plugin["id"]
+    )
+
+
+def test_tag_plugin_file(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_tags: dict[str, Any],
+) -> None:
+    """Test that tags can applied to plugin files.
+
+    Given an authenticated user and registered plugin files, this test validates the
+    following sequence of actions:
+
+    """
+    plugin_id = registered_plugin_with_files["plugin"]["id"]
+    plugin_file = registered_plugin_with_files["plugin_file1"]
+    tags = [tag["id"] for tag in registered_tags.values()]
+    resource_route = f"{V1_PLUGINS_ROUTE}/{plugin_id}/{V1_PLUGIN_FILES_ROUTE}"
+
+    # test append
+    response = actions.append_tags(
+        client,
+        resource_route=resource_route,
+        resource_id=plugin_file["id"],
+        tag_ids=[tags[0], tags[1]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[1]]
+    )
+    response = actions.append_tags(
+        client,
+        resource_route=resource_route,
+        resource_id=plugin_file["id"],
+        tag_ids=[tags[1], tags[2]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[1], tags[2]]
+    )
+
+    # test remove
+    actions.remove_tag(
+        client,
+        resource_route=resource_route,
+        resource_id=plugin_file["id"],
+        tag_id=tags[1],
+    )
+    response = actions.get_tags(
+        client, resource_route=resource_route, resource_id=plugin_file["id"]
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[2]]
+    )
+
+    # test modify
+    response = actions.modify_tags(
+        client,
+        resource_route=resource_route,
+        resource_id=plugin_file["id"],
+        tag_ids=[tags[1], tags[2]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[1], tags[2]]
+    )
+
+    # test delete
+    response = actions.remove_tags(
+        client, resource_route=resource_route, resource_id=plugin_file["id"]
+    )
+    response = actions.get_tags(
+        client, resource_route=resource_route, resource_id=plugin_file["id"]
     )

@@ -567,7 +567,7 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
 
 def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]:
     plugin_file = plugin_file_with_plugin["plugin_file"]
-    plugin = plugin_file_with_plugin["plugin"]
+    plugin = plugin_file_with_plugin.get("plugin", None)
     has_draft = plugin_file_with_plugin.get("has_draft", None)
 
     data = {
@@ -583,7 +583,7 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
         == plugin_file.resource_snapshot_id,
         "contents": plugin_file.contents,
         "tasks": [build_plugin_task(task) for task in plugin_file.tasks],
-        "plugin": build_plugin_ref(plugin),
+        "tags": [build_tag_ref(tag) for tag in plugin_file.tags],
     }
 
     if plugin is not None:
@@ -664,7 +664,7 @@ def build_plugin_parameter_type(
 
 def build_resource_draft(
     draft: models.DraftResource,
-    draft_schema: type[Schema],
+    draft_schema: type[Schema] | Schema,
     num_other_drafts: int | None = None,
 ) -> dict[str, Any]:
     """Build a Draft response dictionary for a resource.
@@ -676,7 +676,10 @@ def build_resource_draft(
         The Draft response dictionary.
     """
 
-    schema = draft_schema()
+    if isinstance(draft_schema, Schema):
+        schema = draft_schema
+    else:
+        schema = draft_schema()
     payload = schema.dump(draft.payload["resource_data"])
 
     metadata = dict()

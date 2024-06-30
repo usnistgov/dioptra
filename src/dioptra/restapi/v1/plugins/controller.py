@@ -27,19 +27,26 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
-from dioptra.restapi.routes import V1_PLUGINS_ROUTE
+from dioptra.restapi.routes import V1_PLUGIN_FILES_ROUTE, V1_PLUGINS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 from dioptra.restapi.v1.shared.drafts.controller import (
+    generate_nested_resource_drafts_endpoint,
+    generate_nested_resource_drafts_id_endpoint,
+    generate_nested_resource_id_draft_endpoint,
     generate_resource_drafts_endpoint,
     generate_resource_drafts_id_endpoint,
     generate_resource_id_draft_endpoint,
 )
 from dioptra.restapi.v1.shared.snapshots.controller import (
+    generate_nested_resource_snapshots_endpoint,
+    generate_nested_resource_snapshots_id_endpoint,
     generate_resource_snapshots_endpoint,
     generate_resource_snapshots_id_endpoint,
 )
 from dioptra.restapi.v1.shared.tags.controller import (
+    generate_nested_resource_tags_endpoint,
+    generate_nested_resource_tags_id_endpoint,
     generate_resource_tags_endpoint,
     generate_resource_tags_id_endpoint,
 )
@@ -55,6 +62,8 @@ from .schema import (
     PluginSchema,
 )
 from .service import (
+    PLUGIN_FILE_RESOURCE_TYPE,
+    PLUGIN_FILE_SEARCHABLE_FIELDS,
     PLUGIN_RESOURCE_TYPE,
     PLUGIN_SEARCHABLE_FIELDS,
     PluginIdFileIdService,
@@ -66,6 +75,28 @@ from .service import (
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 api: Namespace = Namespace("Plugins", description="Plugins endpoint")
+
+
+# WARNING: Do not move the PluginFile Snapshots sub-endpoint definitions.
+# They must be declared first because of an issue related interations with the schemas.
+PluginFileSnapshotsResource = generate_nested_resource_snapshots_endpoint(
+    api=api,
+    resource_model=models.PluginFile,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_route=V1_PLUGIN_FILES_ROUTE,
+    base_resource_route=V1_PLUGINS_ROUTE,
+    searchable_fields=PLUGIN_FILE_SEARCHABLE_FIELDS,
+    page_schema=PluginFilePageSchema,
+    build_fn=utils.build_plugin_file,
+)
+PluginFileSnapshotsIdResource = generate_nested_resource_snapshots_id_endpoint(
+    api=api,
+    resource_model=models.PluginFile,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_route=V1_PLUGIN_FILES_ROUTE,
+    response_schema=PluginFileSchema,
+    build_fn=utils.build_plugin_file,
+)
 
 
 @api.route("/")
@@ -377,6 +408,26 @@ PluginIdDraftResource = generate_resource_id_draft_endpoint(
     request_schema=PluginMutableFieldsSchema,
 )
 
+PluginFileDraftResource = generate_nested_resource_drafts_endpoint(
+    api,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_route=V1_PLUGIN_FILES_ROUTE,
+    base_resource_route=V1_PLUGINS_ROUTE,
+    request_schema=PluginFileSchema(exclude=["groupId"]),
+)
+PluginFileDraftIdResource = generate_nested_resource_drafts_id_endpoint(
+    api,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_route=V1_PLUGIN_FILES_ROUTE,
+    request_schema=PluginFileSchema(exclude=["groupId"]),
+)
+PluginFileIdDraftResource = generate_nested_resource_id_draft_endpoint(
+    api,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_route=V1_PLUGIN_FILES_ROUTE,
+    request_schema=PluginFileSchema(exclude=["groupId"]),
+)
+
 PluginSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Plugin,
@@ -401,4 +452,16 @@ PluginTagsResource = generate_resource_tags_endpoint(
 PluginTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
     resource_name=PLUGIN_RESOURCE_TYPE,
+)
+PluginFileTagsIdResource = generate_nested_resource_tags_endpoint(
+    api=api,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_route=V1_PLUGIN_FILES_ROUTE,
+    base_resource_name=PLUGIN_RESOURCE_TYPE,
+)
+PluginFileTagsIdResource = generate_nested_resource_tags_id_endpoint(
+    api=api,
+    resource_name=PLUGIN_FILE_RESOURCE_TYPE,
+    resource_route=V1_PLUGIN_FILES_ROUTE,
+    base_resource_name=PLUGIN_RESOURCE_TYPE,
 )

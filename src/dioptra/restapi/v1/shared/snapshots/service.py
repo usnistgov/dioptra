@@ -113,7 +113,7 @@ class ResourceSnapshotsService(object):
                 models.Resource.is_deleted == False,  # noqa: E712
             )
         )
-        total_num_snapshots = db.session.scalars(stmt).first()
+        total_num_snapshots = db.session.scalars(stmt).unique().first()
 
         if total_num_snapshots is None:
             log.error(
@@ -140,7 +140,7 @@ class ResourceSnapshotsService(object):
         )
         snapshots = [
             {self._resource_type: snapshot, "has_draft": None}
-            for snapshot in db.session.scalars(stmt)
+            for snapshot in db.session.scalars(stmt).unique()
         ]
 
         return snapshots, total_num_snapshots
