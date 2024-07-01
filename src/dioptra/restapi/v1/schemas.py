@@ -46,6 +46,7 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
                 description=f"ID of the Group that will own the {name} resource."
             ),
             load_only=True,
+            required=True,
         ),
         "group": fields.Nested(
             GroupRefSchema,
