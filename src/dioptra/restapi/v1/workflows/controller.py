@@ -16,102 +16,39 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Workflow resources."""
 import uuid
-from typing import cast
-from urllib.parse import unquote
 
 import structlog
 from flask import request
-from flask_accepts import accepts, responds
+from flask_accepts import accepts
 from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import models
-from dioptra.restapi.routes import V1_WORKFLOWS_ROUTE
-from dioptra.restapi.v1 import utils
-
-from .schema import WorkflowGetQueryParameters, WorkflowPageSchema, WorkflowSchema
-from .service import WorkflowIdService, WorkflowService
+from .schema import JobFilesDownloadQueryParametersSchema
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 api: Namespace = Namespace("Workflows", description="Workflows endpoint")
 
 
-@api.route("/")
-class WorkflowEndpoint(Resource):
+@api.route("/jobFilesDownload")
+class JobFilesDownloadEndpoint(Resource):
     @inject
-    def __init__(self, workflow_service: WorkflowService, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         """Initialize the workflow resource.
 
         All arguments are provided via dependency injection.
-
-        Args:
-            workflow_service: A WorkflowService object.
         """
-        self._workflow_service = workflow_service
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(query_params_schema=WorkflowGetQueryParameters, api=api)
-    @responds(schema=WorkflowPageSchema, api=api)
+    @accepts(query_params_schema=JobFilesDownloadQueryParametersSchema, api=api)
     def get(self):
-        """Gets a list of all Workflow resources."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Workflow", request_type="GET"
+        """Download a compressed file archive containing the files needed to execute a submitted job."""  # noqa: B950
+        log = LOGGER.new(  # noqa: F841
+            request_id=str(uuid.uuid4()),
+            resource="JobFilesDownload",
+            request_type="GET",
         )
         parsed_query_params = request.parsed_query_params  # noqa: F841
-
-        group_id = parsed_query_params["group_id"]
-        search_string = unquote(parsed_query_params["search"])
-        page_index = parsed_query_params["index"]
-        page_length = parsed_query_params["page_length"]
-
-        workflows, total_num_workflows = self._workflow_service.get(
-            group_id=group_id,
-            search_string=search_string,
-            page_index=page_index,
-            page_length=page_length,
-            log=log,
-        )
-        return utils.build_paging_envelope(
-            V1_WORKFLOWS_ROUTE,
-            build_fn=utils.build_workflow,
-            data=workflows,
-            group_id=group_id,
-            query=search_string,
-            draft_type=None,
-            index=page_index,
-            length=page_length,
-            total_num_elements=total_num_workflows,
-        )
-
-
-@api.route("/<int:id>")
-@api.param("id", "ID for the Workflow resource.")
-class WorkflowIdEndpoint(Resource):
-    @inject
-    def __init__(self, workflow_id_service: WorkflowIdService, *args, **kwargs) -> None:
-        """Initialize the workflow id resource.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            workflow_id_service: A WorkflowIdService object.
-        """
-        self._workflow_id_service = workflow_id_service
-        super().__init__(*args, **kwargs)
-
-    @login_required
-    @responds(schema=WorkflowSchema, api=api)
-    def get(self, id: int):
-        """Gets a Workflow resource."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Workflow", request_type="GET", id=id
-        )
-        workflow = cast(
-            models.Workflow,
-            self._workflow_id_service.get(id, error_if_not_found=True, log=log),
-        )
-        return utils.build_workflow(workflow)

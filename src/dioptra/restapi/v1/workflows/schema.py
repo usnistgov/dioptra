@@ -15,62 +15,29 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Workflow resources."""
+from enum import Enum
+
 from marshmallow import Schema, fields
 
-from dioptra.restapi.v1.schemas import (
-    BasePageSchema,
-    PagingQueryParametersSchema,
-    SearchQueryParametersSchema,
-    generate_base_resource_ref_schema,
-    generate_base_resource_schema,
-)
 
-WorkflowRefBaseSchema = generate_base_resource_ref_schema("Workflow")
+class FileTypes(Enum):
+    TAR_GZ = "tar_gz"
+    ZIP = "zip"
 
 
-class WorkflowRefSchema(WorkflowRefBaseSchema):  # type: ignore
-    """The reference schema for the data stored in a Workflow resource."""
+class JobFilesDownloadQueryParametersSchema(Schema):  # type: ignore
+    """The query parameters for making a jobFilesDownload workflow request."""
 
-    name = fields.String(
-        attribute="name",
-        metadata=dict(description="Name of the Workflow resource."),
+    jobId = fields.String(
+        attribute="job_id",
+        metadata=dict(description="A job's unique identifier."),
     )
-
-
-class WorkflowMutableFieldsSchema(Schema):
-    """The fields schema for the mutable data in a Workflow resource."""
-
-    name = fields.String(
-        attribute="name",
-        metadata=dict(description="Name of the Workflow resource."),
-        required=True,
+    fileType = fields.Enum(
+        FileTypes,
+        attribute="file_type",
+        metadata=dict(
+            description="The type of file to download: tar_gz or zip.",
+        ),
+        by_value=True,
+        default=FileTypes.TAR_GZ.value,
     )
-    description = fields.String(
-        attribute="description",
-        metadata=dict(description="Description of the Workflow resource."),
-        load_default=None,
-    )
-
-
-WorkflowBaseSchema = generate_base_resource_schema("Workflow", snapshot=True)
-
-
-class WorkflowSchema(WorkflowMutableFieldsSchema, WorkflowBaseSchema):  # type: ignore
-    """The schema for the data stored in a Workflow resource."""
-
-
-class WorkflowPageSchema(BasePageSchema):
-    """The paged schema for the data stored in a Workflow resource."""
-
-    data = fields.Nested(
-        WorkflowSchema,
-        many=True,
-        metadata=dict(description="List of Workflow resources in the current page."),
-    )
-
-
-class WorkflowGetQueryParameters(
-    PagingQueryParametersSchema,
-    SearchQueryParametersSchema,
-):
-    """The query parameters for the GET method of the /workflows endpoint."""
