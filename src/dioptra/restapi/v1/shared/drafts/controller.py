@@ -60,6 +60,13 @@ def generate_resource_drafts_endpoint(
         The generated Resource class
     """
 
+    if isinstance(request_schema, Schema):
+        model_name = "Drafts" + "".join(
+            request_schema.__class__.__name__.rsplit("Schema", 1)
+        )
+    else:
+        model_name = "Drafts" + "".join(request_schema.__name__.rsplit("Schema", 1))
+
     @api.route("/drafts/")
     class ResourceDraftsEndpoint(Resource):
         @inject
@@ -110,7 +117,7 @@ def generate_resource_drafts_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, api=api)
+        @accepts(schema=request_schema, model_name=model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def post(self):
             """Creates a Draft for the resource."""
@@ -138,6 +145,13 @@ def generate_resource_drafts_id_endpoint(
     Returns:
         The generated Resource class
     """
+
+    if isinstance(request_schema, Schema):
+        model_name = "DraftsId" + "".join(
+            request_schema.__class__.__name__.rsplit("Schema", 1)
+        )
+    else:
+        model_name = "DraftsId" + "".join(request_schema.__name__.rsplit("Schema", 1))
 
     @api.route("/drafts/<int:draftId>")
     @api.param("draftId", f"ID for the Draft of the {resource_name} resource.")
@@ -167,7 +181,7 @@ def generate_resource_drafts_id_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, api=api)
+        @accepts(schema=request_schema, model_name=model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def put(self, draftId: int):
             """Modifies a Draft for the resource."""
@@ -207,6 +221,13 @@ def generate_resource_id_draft_endpoint(
         The generated Resource class
     """
 
+    if isinstance(request_schema, Schema):
+        model_name = "Draft" + "".join(
+            request_schema.__class__.__name__.rsplit("Schema", 1)
+        )
+    else:
+        model_name = "Draft" + "".join(request_schema.__name__.rsplit("Schema", 1))
+
     @api.route("/<int:id>/draft")
     @api.param("id", "ID for the resource.")
     class ResourcesIdDraftEndpoint(Resource):
@@ -235,7 +256,7 @@ def generate_resource_id_draft_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, api=api)
+        @accepts(schema=request_schema, model_name=model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def post(self, id: int):
             """Creates a Draft for this resource."""
@@ -251,7 +272,7 @@ def generate_resource_id_draft_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, api=api)
+        @accepts(schema=request_schema, model_name=model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def put(self, id: int):
             """Modifies the Draft for this resource."""
@@ -298,6 +319,15 @@ def generate_nested_resource_drafts_endpoint(
     Returns:
         The generated Resource class
     """
+
+    if isinstance(request_schema, Schema):
+        model_name = "NestedDrafts" + "".join(
+            request_schema.__class__.__name__.rsplit("Schema", 1)
+        )
+    else:
+        model_name = "NestedDrafts" + "".join(
+            request_schema.__name__.rsplit("Schema", 1)
+        )
 
     @api.route(f"/<int:id>/{resource_route}/drafts/")
     class ResourceDraftsEndpoint(Resource):
@@ -349,7 +379,7 @@ def generate_nested_resource_drafts_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, api=api)
+        @accepts(schema=request_schema, model_name=model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def post(self, id: int):
             """Creates a Draft for the resource."""
@@ -382,6 +412,15 @@ def generate_nested_resource_drafts_id_endpoint(
         The generated Resource class
     """
 
+    if isinstance(request_schema, Schema):
+        model_name = "NestedDraftsId" + "".join(
+            request_schema.__class__.__name__.rsplit("Schema", 1)
+        )
+    else:
+        model_name = "NestedDraftsId" + "".join(
+            request_schema.__name__.rsplit("Schema", 1)
+        )
+
     @api.route(f"/<int:id>/{resource_route}/drafts/<int:draftId>")
     @api.param("draftId", f"ID for the Draft of the {resource_name} resource.")
     class ResourcesDraftsIdEndpoint(Resource):
@@ -410,7 +449,7 @@ def generate_nested_resource_drafts_id_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, api=api)
+        @accepts(schema=request_schema, model_name=model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def put(self, id: int, draftId: int):
             """Modifies a Draft for the resource."""
@@ -457,6 +496,15 @@ def generate_nested_resource_id_draft_endpoint(
     route_singular = resource_route[:-1]
     resource_id = f"{route_singular}Id"
 
+    if isinstance(request_schema, Schema):
+        model_name = "NestedDraft" + "".join(
+            request_schema.__class__.__name__.rsplit("Schema", 1)
+        )
+    else:
+        model_name = "NestedDraft" + "".join(
+            request_schema.__name__.rsplit("Schema", 1)
+        )
+
     @api.route(f"/<int:id>/{resource_route}/<int:{resource_id}>/draft")
     @api.param("id", "ID for the resource.")
     class ResourcesIdDraftEndpoint(Resource):
@@ -495,7 +543,7 @@ def generate_nested_resource_id_draft_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, api=api)
+        @accepts(schema=request_schema, model_name=model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def post(self, id: int, **kwargs):
             """Creates a Draft for this resource."""
@@ -521,7 +569,7 @@ def generate_nested_resource_id_draft_endpoint(
             )
 
         @login_required
-        @accepts(schema=request_schema, api=api)
+        @accepts(schema=request_schema, model_name=model_name, api=api)
         @responds(schema=DraftSchema, api=api)
         def put(self, id: int, **kwargs):
             """Modifies the Draft for this resource."""
