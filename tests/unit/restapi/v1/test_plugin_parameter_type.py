@@ -29,7 +29,7 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE, V1_ROOT
 
-from ..lib import actions, helpers
+from ..lib import actions, asserts, helpers
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -60,7 +60,6 @@ def modify_plugin_parameter_type(
 
     if new_description is not None:
         json_payload["description"] = new_description
-    print("MODIFY", json_payload)
 
     return client.put(
         f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}",
@@ -111,8 +110,8 @@ def assert_retrieving_plugin_parameter_types_works(
 
     query_string: dict[str, Any] = {}
 
-    # if group_id:
-    query_string["group_id"] = group_id
+    if group_id is not None:
+        query_string["groupId"] = group_id
 
     if search is not None:
         query_string["search"] = search
@@ -426,7 +425,6 @@ def test_get_all_plugin_parameter_types(
     )
 
 
-@pytest.mark.v1_test
 def test_plugin_parameter_type_search_query(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -443,20 +441,22 @@ def test_plugin_parameter_type_search_query(
     - The returned lists of plugin parameter types match the searches provided
       during both submissions.
     """
-    plugin_param_type_expected_list = list(registered_plugin_parameter_types.values())[
-        :2
-    ]
-    search_parameters = "name:*int*"
     assert_retrieving_plugin_parameter_types_works(
-        client, expected=plugin_param_type_expected_list, search=search_parameters
+        client,
+        expected=[registered_plugin_parameter_types["string"]],
+        search="name:string",
     )
-
-    plugin_param_type_expected_list2 = registered_plugin_parameter_types[
-        "plugin_param_type3"
-    ]
-    search_parameters = "name:*str*"
     assert_retrieving_plugin_parameter_types_works(
-        client, expected=plugin_param_type_expected_list2, search=search_parameters
+        client,
+        expected=[
+            registered_plugin_parameter_types["plugin_param_type2"],
+            registered_plugin_parameter_types["plugin_param_type3"],
+        ],
+        search="*model*",
+    )
+    plugin_param_type_expected_list = list(registered_plugin_parameter_types.values())
+    assert_retrieving_plugin_parameter_types_works(
+        client, expected=plugin_param_type_expected_list, search="*"
     )
 
 
@@ -728,3 +728,330 @@ def test_cannot_retrieve_nonexistent_plugin_parameter_type(
     - This causes a 404 error to be returned.
     """
     assert_plugin_parameter_type_is_not_found(client, id=42)
+
+
+def test_manage_existing_plugin_parameter_type_draft(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that a draft of an existing plugin parameter type can be created
+    and managed by the user
+    Given an authenticated user and registered plugin parameter types, this
+    test validates the following sequence of actions:
+    - The user creates a draft of an existing plugin parameter type
+    - The user retrieves information about the draft and gets the expected response
+    - The user attempts to create another draft of the same existing plugin
+      parameter type
+    - The request fails with an appropriate error message and response code.
+    - The user modifies the name of the plugin parameter type in the draft
+    - The user retrieves information about the draft and gets the expected response
+    - The user deletes the draft
+    - The user attempts to retrieve information about the deleted draft.
+    - The request fails with an appropriate error message and response code.
+    """
+    plugin_param_type = registered_plugin_parameter_types["plugin_param_type1"]
+    name = "draft"
+    new_name = "draft2"
+    description = "description"
+
+    # test creation
+    payload = {"name": name, "description": description, "structure": None}
+    expected = {
+        "user_id": auth_account["id"],
+        "group_id": plugin_param_type["group"]["id"],
+        "resource_id": plugin_param_type["id"],
+        "resource_snapshot_id": plugin_param_type["snapshot"],
+        "num_other_drafts": 0,
+        "payload": payload,
+    }
+    response = actions.create_existing_resource_draft(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+        payload=payload,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+    asserts.assert_retrieving_draft_by_resource_id_works(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+        expected=response,
+    )
+    asserts.assert_creating_another_existing_draft_fails(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+    )
+
+    # test modification
+    payload = {"name": new_name, "description": description, "structure": None}
+    expected = {
+        "user_id": auth_account["id"],
+        "group_id": plugin_param_type["group"]["id"],
+        "resource_id": plugin_param_type["id"],
+        "resource_snapshot_id": plugin_param_type["snapshot"],
+        "num_other_drafts": 0,
+        "payload": payload,
+    }
+    response = actions.modify_existing_resource_draft(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+        payload=payload,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+
+    # test deletion
+    actions.delete_existing_resource_draft(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+    )
+    asserts.assert_existing_draft_is_not_found(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+    )
+
+
+def test_manage_new_plugin_parameter_type_drafts(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    """Test that drafts of plugin parameter type can be created and managed by the user
+    Given an authenticated user, this test validates the following sequence of actions:
+    - The user creates two plugin parameter type drafts
+    - The user retrieves information about the drafts and gets the expected response
+    - The user modifies the description of the plugin parameter type in the first draft
+    - The user retrieves information about the draft and gets the expected response
+    - The user deletes the first draft
+    - The user attempts to retrieve information about the deleted draft.
+    - The request fails with an appropriate error message and response code.
+    """
+    group_id = auth_account["groups"][0]["id"]
+    drafts = {
+        "draft1": {
+            "name": "plugin_parameter_type1",
+            "description": "new plugin parameter type",
+            "structure": None,
+        },
+        "draft2": {
+            "name": "plugin_parameter_type2",
+            "description": None,
+            "structure": None,
+        },
+    }
+
+    # test creation
+    draft1_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": drafts["draft1"],
+    }
+    draft1_response = actions.create_new_resource_draft(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        group_id=group_id,
+        payload=drafts["draft1"],
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        draft1_response, draft1_expected
+    )
+    asserts.assert_retrieving_draft_by_id_works(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        draft_id=draft1_response["id"],
+        expected=draft1_response,
+    )
+    draft2_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": drafts["draft2"],
+    }
+    draft2_response = actions.create_new_resource_draft(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        group_id=group_id,
+        payload=drafts["draft2"],
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        draft2_response, draft2_expected
+    )
+    asserts.assert_retrieving_draft_by_id_works(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        draft_id=draft2_response["id"],
+        expected=draft2_response,
+    )
+    asserts.assert_retrieving_drafts_works(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        expected=[draft1_response, draft2_response],
+    )
+
+    # test modification
+    draft1_mod = {"name": "draft1", "description": "new description", "structure": None}
+    draft1_mod_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": draft1_mod,
+    }
+    response = actions.modify_new_resource_draft(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        draft_id=draft1_response["id"],
+        payload=draft1_mod,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        response, draft1_mod_expected
+    )
+
+    # test deletion
+    actions.delete_new_resource_draft(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        draft_id=draft1_response["id"],
+    )
+    asserts.assert_new_draft_is_not_found(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        draft_id=draft1_response["id"],
+    )
+
+
+def test_manage_plugin_parameter_type_snapshots(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+) -> None:
+    """Test that different snapshots of a plugin parameter type can be retrieved
+    by the user.
+
+    Given an authenticated user and registered plugin parameter types, this test
+    validates the following sequence of actions:
+
+    - The user modifies a plugin parameter type
+    - The user retrieves information about the original snapshot of the plugin
+      parameter type and gets the expected response
+    - The user retrieves information about the new snapshot of the plugin
+      parameter type and gets the expected response
+    - The user retrieves a list of all snapshots of the plugin parameter type
+      and gets the expected response
+    """
+    plugin_param_type_to_rename = registered_plugin_parameter_types[
+        "plugin_param_type1"
+    ]
+    modified_plugin_param_type = modify_plugin_parameter_type(
+        client,
+        id=plugin_param_type_to_rename["id"],
+        new_name=plugin_param_type_to_rename["name"] + "modified",
+        new_description=plugin_param_type_to_rename["description"],
+        new_structure=plugin_param_type_to_rename["structure"],
+    ).get_json()
+    modified_plugin_param_type.pop("hasDraft")
+    plugin_param_type_to_rename.pop("hasDraft")
+    plugin_param_type_to_rename["latestSnapshot"] = False
+    plugin_param_type_to_rename["lastModifiedOn"] = modified_plugin_param_type[
+        "lastModifiedOn"
+    ]
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type_to_rename["id"],
+        snapshot_id=plugin_param_type_to_rename["snapshot"],
+        expected=plugin_param_type_to_rename,
+    )
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=modified_plugin_param_type["id"],
+        snapshot_id=modified_plugin_param_type["snapshot"],
+        expected=modified_plugin_param_type,
+    )
+    expected_snapshots = [plugin_param_type_to_rename, modified_plugin_param_type]
+    asserts.assert_retrieving_snapshots_works(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type_to_rename["id"],
+        expected=expected_snapshots,
+    )
+
+
+def test_tag_plugin_parameter_type(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+    registered_tags: dict[str, Any],
+) -> None:
+    """Test that tags can applied to plugin parameter types.
+
+    Given an authenticated user and registered plugin parameter types, this test
+    validates the following sequence of actions:
+    """
+    plugin_param_type = registered_plugin_parameter_types["plugin_param_type1"]
+    tags = [tag["id"] for tag in registered_tags.values()]
+
+    # test append
+    response = actions.append_tags(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+        tag_ids=[tags[0], tags[1]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[1]]
+    )
+    response = actions.append_tags(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+        tag_ids=[tags[1], tags[2]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[1], tags[2]]
+    )
+
+    # test remove
+    actions.remove_tag(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+        tag_id=tags[1],
+    )
+    response = actions.get_tags(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[2]]
+    )
+
+    # test modify
+    response = actions.modify_tags(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+        tag_ids=[tags[1], tags[2]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[1], tags[2]]
+    )
+
+    # test delete
+    response = actions.remove_tags(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+    )
+    response = actions.get_tags(
+        client,
+        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+        resource_id=plugin_param_type["id"],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])

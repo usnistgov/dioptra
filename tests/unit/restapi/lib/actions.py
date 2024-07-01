@@ -26,6 +26,7 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
+    V1_ENTRYPOINTS_ROUTE,
     V1_EXPERIMENTS_ROUTE,
     V1_GROUPS_ROUTE,
     V1_PLUGIN_PARAMETER_TYPES_ROUTE,
@@ -54,6 +55,48 @@ def login(client: FlaskClient, username: str, password: str) -> TestResponse:
     )
 
 
+def register_entrypoint(
+    client: FlaskClient,
+    name: str,
+    description: str,
+    group_id: int,
+    task_graph: str,
+    parameters: list[dict[str, Any]],
+    plugin_ids: list[int],
+    queue_ids: list[int],
+) -> TestResponse:
+    """Register an entrypoint using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name to assign to the new entrypoint.
+        description: The description for the new entrypoint.
+        group_id: The group to create the new entrypoint in.
+        task_graph: A graph of the tasks to perform in a entry point.
+        parameters: A list of entrypoint parameters.
+
+    Returns:
+        The response from the API.
+    """
+    payload: dict[str, Any] = {
+        "name": name,
+        "group": group_id,
+        "taskGraph": task_graph,
+        "parameters": parameters,
+        "plugins": plugin_ids,
+        "queues": queue_ids,
+    }
+
+    if description:
+        payload["description"] = description
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
 def register_experiment(
     client: FlaskClient,
     name: str,
@@ -78,12 +121,8 @@ def register_experiment(
 
     if description is not None:
         payload["description"] = description
-    else:
-        payload["description"] = ""
-    # if entrypoint_ids is not None:
-    #     payload["entrypoint_ids"] = entrypoint_ids
-    # else:
-    #     payload["entrypoint_ids"] = list()
+    if entrypoint_ids is not None:
+        payload["entrypoints"] = entrypoint_ids
 
     return client.post(
         f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/",
@@ -296,6 +335,14 @@ def get_public_group(client: FlaskClient) -> TestResponse:
     return client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True)
 
 
+def get_plugin_parameter_types(client: FlaskClient) -> TestResponse:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
+        follow_redirects=True,
+    )
+    return response
+
+
 def get_draft(
     client: FlaskClient,
     resource_route: str,
@@ -405,7 +452,7 @@ def get_drafts(
 def create_new_resource_draft(
     client: FlaskClient,
     resource_route: str,
-    group_id: int,
+    group_id: int | None,
     payload: dict[str, Any],
 ) -> TestResponse:
     """Create a draft resource using the API.
@@ -418,9 +465,12 @@ def create_new_resource_draft(
     Returns:
         The response from the API.
     """
+    if group_id is not None:
+        payload = {**payload, "group": group_id}
+
     return client.post(
         f"/{V1_ROOT}/{resource_route}/drafts",
-        json={**payload, "group": group_id},
+        json=payload,
         follow_redirects=True,
     )
 

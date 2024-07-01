@@ -29,6 +29,11 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.models.constants import (
+    group_lock_types,
+    resource_lock_types,
+    user_lock_types,
+)
 
 from .lib import db as libdb
 from .lib.db import views as viewsdb
@@ -68,7 +73,7 @@ def deleted_user_id(
 ) -> int:
     deleted_user_id = account.user.user_id
     deleted_user_lock = models.UserLock(
-        user_lock_type="delete",
+        user_lock_type=user_lock_types.DELETE,
         user=account.user,
     )
     db.session.add(deleted_user_lock)
@@ -83,7 +88,7 @@ def deleted_group_id(
 ) -> int:
     deleted_group_id = account.group.group_id
     deleted_group_lock = models.GroupLock(
-        group_lock_type="delete",
+        group_lock_type=group_lock_types.DELETE,
         group=account.group,
     )
     db.session.add(deleted_group_lock)
@@ -207,7 +212,7 @@ def deleted_queue_id(
         raise ValueError("Failed to retrieve the latest queue for test.")
 
     deleted_resource_lock = models.ResourceLock(
-        resource_lock_type="delete",
+        resource_lock_type=resource_lock_types.DELETE,
         resource=queue.resource,
     )
     db.session.add(deleted_resource_lock)
@@ -565,7 +570,7 @@ def registered_ml_model_id(
 
 def test_db_user_not_deleted(db: SQLAlchemy, account: libdb.FakeAccount) -> None:
     user = db.session.get_one(models.User, account.user.user_id)
-    delete_lock = [x for x in user.locks if x.user_lock_type == "delete"]
+    delete_lock = [x for x in user.locks if x.user_lock_type == user_lock_types.DELETE]
     assert len(delete_lock) == 0
     assert isinstance(user.is_deleted, bool)
     assert not user.is_deleted
@@ -573,7 +578,9 @@ def test_db_user_not_deleted(db: SQLAlchemy, account: libdb.FakeAccount) -> None
 
 def test_db_delete_user(db: SQLAlchemy, deleted_user_id: int) -> None:
     deleted_user = db.session.get_one(models.User, deleted_user_id)
-    delete_lock = [x for x in deleted_user.locks if x.user_lock_type == "delete"]
+    delete_lock = [
+        x for x in deleted_user.locks if x.user_lock_type == user_lock_types.DELETE
+    ]
     assert len(delete_lock) == 1
     assert isinstance(deleted_user.is_deleted, bool)
     assert deleted_user.is_deleted
@@ -581,7 +588,9 @@ def test_db_delete_user(db: SQLAlchemy, deleted_user_id: int) -> None:
 
 def test_db_group_not_deleted(db: SQLAlchemy, account: libdb.FakeAccount) -> None:
     group = db.session.get_one(models.Group, account.group.group_id)
-    delete_lock = [x for x in group.locks if x.group_lock_type == "delete"]
+    delete_lock = [
+        x for x in group.locks if x.group_lock_type == group_lock_types.DELETE
+    ]
     assert len(delete_lock) == 0
     assert isinstance(group.is_deleted, bool)
     assert not group.is_deleted
@@ -589,7 +598,9 @@ def test_db_group_not_deleted(db: SQLAlchemy, account: libdb.FakeAccount) -> Non
 
 def test_db_delete_group(db: SQLAlchemy, deleted_group_id: int) -> None:
     deleted_group = db.session.get_one(models.Group, deleted_group_id)
-    delete_lock = [x for x in deleted_group.locks if x.group_lock_type == "delete"]
+    delete_lock = [
+        x for x in deleted_group.locks if x.group_lock_type == group_lock_types.DELETE
+    ]
     assert len(delete_lock) == 1
     assert isinstance(deleted_group.is_deleted, bool)
     assert deleted_group.is_deleted

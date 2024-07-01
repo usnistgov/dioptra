@@ -26,6 +26,7 @@ from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
@@ -358,7 +359,7 @@ class QueueIdService(object):
             raise QueueDoesNotExistError
 
         deleted_resource_lock = models.ResourceLock(
-            resource_lock_type="delete",
+            resource_lock_type=resource_lock_types.DELETE,
             resource=queue_resource,
         )
         db.session.add(deleted_resource_lock)
@@ -366,6 +367,53 @@ class QueueIdService(object):
         log.debug("Queue deleted", queue_id=queue_id)
 
         return {"status": "Success", "queue_id": queue_id}
+
+
+class QueueIdsService(object):
+    """The service methods for retrieving queues from a list of ids."""
+
+    def get(
+        self,
+        queue_ids: list[int],
+        error_if_not_found: bool = False,
+        **kwargs,
+    ) -> list[models.Queue]:
+        """Fetch a list of queues by their unique ids.
+
+        Args:
+            queue_ids: The unique ids of the queues.
+            error_if_not_found: If True, raise an error if the queue is not found.
+                Defaults to False.
+
+        Returns:
+            The queue object if found, otherwise None.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found and `error_if_not_found`
+                is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get queue by id", queue_ids=queue_ids)
+
+        stmt = (
+            select(models.Queue)
+            .join(models.Resource)
+            .where(
+                models.Queue.resource_id.in_(tuple(queue_ids)),
+                models.Queue.resource_snapshot_id == models.Resource.latest_snapshot_id,
+                models.Resource.is_deleted == False,  # noqa: E712
+            )
+        )
+        queues = list(db.session.scalars(stmt).all())
+
+        if len(queues) != len(queue_ids) and error_if_not_found:
+            queue_ids_missing = set(queue_ids) - set(
+                queue.resource_id for queue in queues
+            )
+            log.debug("Queue not found", queue_ids=list(queue_ids_missing))
+            raise QueueDoesNotExistError
+
+        return queues
 
 
 class QueueNameService(object):

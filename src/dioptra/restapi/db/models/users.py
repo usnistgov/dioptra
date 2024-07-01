@@ -31,6 +31,7 @@ from dioptra.restapi.db.db import (
     text_,
 )
 
+from .constants import user_lock_types
 from .locks import UserLock
 
 if TYPE_CHECKING:
@@ -60,7 +61,10 @@ class User(db.Model):  # type: ignore[name-defined]
     # Derived fields (read-only)
     is_deleted: Mapped[bool] = column_property(
         select(UserLock.user_id)
-        .where(UserLock.user_id == user_id, UserLock.user_lock_type == "delete")
+        .where(
+            UserLock.user_id == user_id,
+            UserLock.user_lock_type == user_lock_types.DELETE,
+        )
         .correlate_except(UserLock)
         .exists()
     )

@@ -74,7 +74,6 @@ def assert_group_response_contents_matches_expectations(
             does not match the expected response or if the response contents is not
             valid.
     """
-    print("RESPONSE FROM API", response)
     expected_keys = {
         "id",
         "name",

@@ -27,17 +27,40 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.jobs.schema import JobSchema, JobStatusSchema
-from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.schemas import IdListSchema, IdStatusResponseSchema
+from dioptra.restapi.v1.shared.drafts.controller import (
+    generate_resource_drafts_endpoint,
+    generate_resource_drafts_id_endpoint,
+    generate_resource_id_draft_endpoint,
+)
+from dioptra.restapi.v1.shared.snapshots.controller import (
+    generate_resource_snapshots_endpoint,
+    generate_resource_snapshots_id_endpoint,
+)
+from dioptra.restapi.v1.shared.tags.controller import (
+    generate_resource_tags_endpoint,
+    generate_resource_tags_id_endpoint,
+)
 
 from .schema import (
+    ExperimentDraftSchema,
     ExperimentGetQueryParameters,
     ExperimentMutableFieldsSchema,
     ExperimentPageSchema,
     ExperimentSchema,
 )
-from .service import ExperimentIdService, ExperimentService
+from .service import (
+    RESOURCE_TYPE,
+    SEARCHABLE_FIELDS,
+    ExperimentIdEntrypointsIdService,
+    ExperimentIdEntrypointsService,
+    ExperimentIdService,
+    ExperimentService,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -48,7 +71,7 @@ api: Namespace = Namespace("Experiments", description="Experiments endpoint")
 class ExperimentEndpoint(Resource):
     @inject
     def __init__(self, experiment_service: ExperimentService, *args, **kwargs) -> None:
-        """Initialize the ExperimentEndpoint resource.
+        """Initialize the experiment resource.
 
         All arguments are provided via dependency injection.
 
@@ -108,9 +131,8 @@ class ExperimentEndpoint(Resource):
         experiment = self._experiment_service.create(
             name=parsed_obj["name"],
             description=parsed_obj["description"],
-            entrypoint_ids=parsed_obj["entrypoint_ids"],
-            tag_ids=parsed_obj["tag_ids"],
             group_id=parsed_obj["group_id"],
+            entrypoint_ids=parsed_obj["entrypoint_ids"],
             log=log,
         )
         return utils.build_experiment(experiment)
@@ -123,7 +145,7 @@ class ExperimentIdEndpoint(Resource):
     def __init__(
         self, experiment_id_service: ExperimentIdService, *args, **kwargs
     ) -> None:
-        """Initialize the ExperimentIdEndpoint resource.
+        """Initialize the experiment resource.
 
         All arguments are provided via dependency injection.
 
@@ -139,7 +161,7 @@ class ExperimentIdEndpoint(Resource):
         """Gets an experiment by its unique identifier."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="ExperimentIdEndpoint",
+            resource="Experiment",
             request_type="GET",
             id=id,
         )
@@ -155,7 +177,7 @@ class ExperimentIdEndpoint(Resource):
         """Deletes an experiment by its unique identifier."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="ExperimentIdEndpoint",
+            resource="Experiment",
             request_type="DELETE",
             id=id,
         )
@@ -168,7 +190,7 @@ class ExperimentIdEndpoint(Resource):
         """Modifies an experiment by its unique identifier."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="ExperimentIdEndpoint",
+            resource="Experiment",
             request_type="PUT",
             id=id,
         )
@@ -190,7 +212,6 @@ class ExperimentIdEndpoint(Resource):
 @api.route("/<int:id>/jobs")
 @api.param("id", "ID for the Experiment resource.")
 class ExperimentIdJobEndpoint(Resource):
-
     @login_required
     @accepts(query_params_schema=ExperimentGetQueryParameters, api=api)
     @responds(schema=JobSchema(many=True), api=api)
@@ -266,3 +287,155 @@ class ExperimentIdJobIdStatusEndpoint(Resource):
             job_id=jobId,
         )
         log.debug("Request received")
+
+
+@api.route("/<int:id>/entrypoints")
+@api.param("id", "ID for the Experiment resource.")
+class ExperimentIdEntrypointsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        experiment_id_entrypoints_service: ExperimentIdEntrypointsService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the experiment resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            experiment_id_entrypoints_service: An ExperimentIdEntrypointsService object.
+        """
+        self._experiment_id_entrypoints = experiment_id_entrypoints_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=EntrypointRefSchema(many=True), api=api)
+    def get(self, id: int):
+        """Gets the list of Entrypoints for the resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Experiment", request_type="GET"
+        )
+        entrypoints = self._experiment_id_entrypoints.get(id, log=log)
+        return [utils.build_entrypoint_ref(entrypoint) for entrypoint in entrypoints]
+
+    @login_required
+    @accepts(schema=IdListSchema, api=api)
+    @responds(schema=EntrypointRefSchema(many=True), api=api)
+    def post(self, id: int):
+        """Appends one or more Entrypoints to the resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Experiment", request_type="POST"
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        entrypoints = cast(
+            list[models.EntryPoint],
+            self._experiment_id_entrypoints.append(
+                id, entrypoint_ids=parsed_obj["ids"], error_if_not_found=True, log=log
+            ),
+        )
+        return [utils.build_entrypoint_ref(entrypoint) for entrypoint in entrypoints]
+
+    @login_required
+    @accepts(schema=IdListSchema, api=api)
+    @responds(schema=EntrypointRefSchema(many=True), api=api)
+    def put(self, id: int):
+        """Replaces one or more Entrypoints to the resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Experiment", request_type="POST"
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        entrypoints = self._experiment_id_entrypoints.modify(
+            id, entrypoint_ids=parsed_obj["ids"], error_if_not_found=True, log=log
+        )
+        return [utils.build_entrypoint_ref(entrypoint) for entrypoint in entrypoints]
+
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self, id: int):
+        """Removes all Entrypoints from the resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Experiment", request_type="DELETE"
+        )
+        return self._experiment_id_entrypoints.delete(
+            id, error_if_not_found=True, log=log
+        )
+
+
+@api.route("/<int:id>/entrypoints/<int:entrypointId>")
+@api.param("id", "ID for the Experiment resource.")
+@api.param("entrypointId", "ID for the Entrypoint resource.")
+class ExperimentIdEntrypointsId(Resource):
+    @inject
+    def __init__(
+        self,
+        experiments_id_entrypoints_id_service: ExperimentIdEntrypointsIdService,
+        *args,
+        **kwargs,
+    ) -> None:
+        self._experiments_id_entrypoints_id_service = (
+            experiments_id_entrypoints_id_service
+        )
+        """Initialize the experiment resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            experiment_id_entrypoints_id_service: An ExperimentIdEntrypointsIdService
+            object.
+        """
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=IdStatusResponseSchema, api=api)
+    def delete(self, id: int, entrypointId):
+        """Removes a Entrypoint from the Experiment resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Experiment", request_type="GET"
+        )
+        return self._experiments_id_entrypoints_id_service.delete(
+            id, entrypointId, log=log
+        )
+
+
+ExperimentDraftResource = generate_resource_drafts_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_EXPERIMENTS_ROUTE,
+    request_schema=ExperimentDraftSchema,
+)
+ExperimentDraftIdResource = generate_resource_drafts_id_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=ExperimentDraftSchema(exclude=["groupId"]),
+)
+ExperimentIdDraftResource = generate_resource_id_draft_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=ExperimentDraftSchema(exclude=["groupId"]),
+)
+
+ExperimentSnapshotsResource = generate_resource_snapshots_endpoint(
+    api=api,
+    resource_model=models.Experiment,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_EXPERIMENTS_ROUTE,
+    searchable_fields=SEARCHABLE_FIELDS,
+    page_schema=ExperimentPageSchema,
+    build_fn=utils.build_experiment,
+)
+ExperimentSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
+    api=api,
+    resource_model=models.Experiment,
+    resource_name=RESOURCE_TYPE,
+    response_schema=ExperimentSchema,
+    build_fn=utils.build_experiment,
+)
+
+ExperimentTagsResource = generate_resource_tags_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)
+ExperimentTagsIdResource = generate_resource_tags_id_endpoint(
+    api=api, resource_name=RESOURCE_TYPE
+)

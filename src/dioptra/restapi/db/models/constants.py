@@ -14,6 +14,25 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from . import errors
+from dataclasses import dataclass
 
-__all__ = ["errors"]
+
+@dataclass(frozen=True)
+class UserLockTypes(object):
+    DELETE: str = "delete"
+
+
+@dataclass(frozen=True)
+class GroupLockTypes(object):
+    DELETE: str = "delete"
+
+
+@dataclass(frozen=True)
+class ResourceLockTypes(object):
+    DELETE: str = "delete"
+    READONLY: str = "readonly"
+
+
+user_lock_types = UserLockTypes()
+group_lock_types = GroupLockTypes()
+resource_lock_types = ResourceLockTypes()

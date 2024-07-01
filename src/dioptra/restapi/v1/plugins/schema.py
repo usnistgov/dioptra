@@ -99,6 +99,26 @@ class PluginTaskParameterSchema(Schema):
     )
 
 
+class PluginTaskInputParameterSchema(PluginTaskParameterSchema):
+    """The schema for the data stored in a PluginTaskInputParameter"""
+
+    required = fields.Boolean(
+        attribute="required",
+        metadata=dict(
+            description=(
+                "Sets whether the input parameter is required (True) or optional "
+                "(False). If True, then this parameter must be assigned a value in "
+                "order to execute the PluginTask."
+            ),
+        ),
+        load_default=True,
+    )
+
+
+class PluginTaskOutputParameterSchema(PluginTaskParameterSchema):
+    """The schema for the data stored in a PluginTaskInputParameter"""
+
+
 class PluginTaskSchema(Schema):
     """The schema for the data stored in a PluginTask."""
 
@@ -117,7 +137,7 @@ class PluginTaskSchema(Schema):
         ),
     )
     inputParams = fields.Nested(
-        PluginTaskParameterSchema,
+        PluginTaskInputParameterSchema,
         attribute="input_params",
         many=True,
         metadata=dict(
@@ -125,7 +145,7 @@ class PluginTaskSchema(Schema):
         ),
     )
     outputParams = fields.Nested(
-        PluginTaskParameterSchema,
+        PluginTaskOutputParameterSchema,
         attribute="output_params",
         many=True,
         metadata=dict(

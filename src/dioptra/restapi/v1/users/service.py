@@ -28,9 +28,13 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.models.constants import user_lock_types
 from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v0.shared.password.service import PasswordService
 from dioptra.restapi.v1.groups.service import GroupMemberService, GroupNameService
+from dioptra.restapi.v1.plugin_parameter_types.service import (
+    BuiltinPluginParameterTypeService,
+)
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 from .errors import (
@@ -71,6 +75,7 @@ class UserService(object):
         user_name_service: UserNameService,
         group_name_service: GroupNameService,
         group_member_service: GroupMemberService,
+        builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
     ) -> None:
         """Initialize the user service.
 
@@ -81,11 +86,16 @@ class UserService(object):
             user_name_service: A UserNameService object.
             group_name_service: A GroupNameService object.
             group_member_service: A GroupMemberService object.
+            builtin_plugin_parameter_type_service: A BuiltinPluginParameterTypeService
+                object.
         """
         self._user_password_service = user_password_service
         self._user_name_service = user_name_service
         self._group_name_service = group_name_service
         self._group_member_service = group_member_service
+        self._builtin_plugin_parameter_type_service = (
+            builtin_plugin_parameter_type_service
+        )
 
     def create(
         self,
@@ -268,7 +278,12 @@ class UserService(object):
         ) is not None:
             return group
 
-        return models.Group(name=DEFAULT_GROUP_NAME, creator=user)
+        default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user)
+        # Register the built-in plugin parameter types when creating a new group.
+        self._builtin_plugin_parameter_type_service.create_all(
+            user=user, group=default_group, commit=False
+        )
+        return default_group
 
 
 class UserIdService(object):
@@ -438,17 +453,18 @@ class UserCurrentService(object):
             log=log,
         )
 
+        user_id = current_user.user_id
         username = current_user.username
 
         deleted_user_lock = models.UserLock(
-            user_lock_type="delete",
+            user_lock_type=user_lock_types.DELETE,
             user=current_user,
         )
         db.session.add(deleted_user_lock)
         db.session.commit()
-        log.debug("User account deleted", user_id=current_user.user_id)
+        log.debug("User account deleted", user_id=user_id, username=username)
 
-        return {"status": "Success", "username": username}
+        return {"status": "Success", "id": [user_id]}
 
     def change_password(
         self,

@@ -18,17 +18,20 @@
 from typing import Any, Callable, Final, TypedDict
 from urllib.parse import urlencode, urlunparse
 
+from marshmallow import Schema
+
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ROOT
 
+ENTRYPOINTS: Final[str] = "entrypoints"
 EXPERIMENTS: Final[str] = "experiments"
-USERS: Final[str] = "users"
 GROUPS: Final[str] = "groups"
-PLUGIN_PARAMETER_TYPES: Final[str] = "pluginParameterTypes"
 PLUGINS: Final[str] = "plugins"
 PLUGIN_FILES: Final[str] = "files"
+PLUGIN_PARAMETER_TYPES: Final[str] = "pluginParameterTypes"
 QUEUES: Final[str] = "queues"
 TAGS: Final[str] = "tags"
+USERS: Final[str] = "users"
 
 # -- Typed Dictionaries --------------------------------------------------------
 
@@ -46,15 +49,21 @@ class PluginParameterTypeRefDict(TypedDict):
     name: str
 
 
-class PluginTaskParameterDict(TypedDict):
+class PluginTaskInputParameterDict(TypedDict):
+    name: str
+    required: bool
+    parameter_type: PluginParameterTypeRefDict
+
+
+class PluginTaskOutputParameterDict(TypedDict):
     name: str
     parameter_type: PluginParameterTypeRefDict
 
 
 class PluginTaskDict(TypedDict):
     name: str
-    input_params: list[PluginTaskParameterDict]
-    output_params: list[PluginTaskParameterDict]
+    input_params: list[PluginTaskInputParameterDict]
+    output_params: list[PluginTaskOutputParameterDict]
 
 
 class PluginWithFilesDict(TypedDict):
@@ -71,17 +80,24 @@ class PluginFileDict(TypedDict):
 
 class ExperimentDict(TypedDict):
     experiment: models.Experiment
+    entrypoints: list[models.EntryPoint]
     queue: models.Queue | None
     has_draft: bool | None
 
 
 class PluginParameterTypeDict(TypedDict):
-    plugin_parameter_type: models.PluginTaskParameterType
+    plugin_task_parameter_type: models.PluginTaskParameterType
     has_draft: bool | None
 
 
 class QueueDict(TypedDict):
     queue: models.Queue
+    has_draft: bool | None
+
+
+class EntrypointDict(TypedDict):
+    entry_point: models.EntryPoint
+    queues: list[models.Queue]
     has_draft: bool | None
 
 
@@ -100,7 +116,8 @@ def build_experiment_ref(experiment: models.Experiment) -> dict[str, Any]:
     return {
         "id": experiment.resource_id,
         "name": experiment.name,
-        "url": f"/{EXPERIMENTS}/{experiment.resource_id}",
+        "group": build_group_ref(experiment.resource.owner),
+        "url": build_url(f"{EXPERIMENTS}/{experiment.resource_id}"),
     }
 
 
@@ -169,7 +186,7 @@ def build_plugin_ref(plugin: models.Plugin) -> dict[str, Any]:
     """Build a PluginFileRef dictionary.
 
     Args:
-        queue: The PluginFile object to convert into a PluginFileRef dictionary.
+        plugin: The Plugin object to convert into a PluginRef dictionary.
 
     Returns:
         The PluginFileRef dictionary.
@@ -178,7 +195,42 @@ def build_plugin_ref(plugin: models.Plugin) -> dict[str, Any]:
         "id": plugin.resource_id,
         "name": plugin.name,
         "group": build_group_ref(plugin.resource.owner),
-        "url": f"/{PLUGINS}/{plugin.resource_id}",
+        "url": build_url(f"{PLUGINS}/{plugin.resource_id}"),
+    }
+
+
+def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
+    """Build a PluginFileRef dictionary.
+
+    Args:
+        entrypoint: The Entrypoint object
+        plugin: The Plugin object to convert into a PluginRef dictionary.
+
+    Returns:
+        The PluginFileRef dictionary.
+    """
+    plugin = plugin_with_files["plugin"]
+    plugin_files = plugin_with_files["plugin_files"]
+
+    return {
+        "id": plugin.resource_id,
+        "snapshot_id": plugin.resource_snapshot_id,
+        "name": plugin.name,
+        "url": build_url(
+            f"{PLUGINS}/{plugin.resource_id}/snapshots/{plugin.resource_snapshot_id}"
+        ),
+        "files": [
+            {
+                "id": plugin_file.resource_id,
+                "snapshot_id": plugin_file.resource_snapshot_id,
+                "filename": plugin_file.filename,
+                "url": build_url(
+                    f"{PLUGINS}/{plugin.resource_id}/{PLUGIN_FILES}/{plugin_file.resource_id}/"
+                    f"snapshots/{plugin_file.resource_snapshot_id}"
+                ),
+            }
+            for plugin_file in plugin_files
+        ],
     }
 
 
@@ -197,7 +249,26 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
         "plugin": plugin_id,
         "filename": plugin_file.filename,
         "group": build_group_ref(plugin_file.resource.owner),
-        "url": f"/{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}",
+        "url": build_url(
+            f"{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}"
+        ),
+    }
+
+
+def build_entrypoint_ref(entrypoint: models.EntryPoint) -> dict[str, Any]:
+    """Build a EntrypointRef dictionary.
+
+    Args:
+        entrypoint: The Entrypoint object to convert into a EntrypointRef dictionary.
+
+    Returns:
+        The EntrypointRef dictionary.
+    """
+    return {
+        "id": entrypoint.resource_id,
+        "name": entrypoint.name,
+        "group": build_group_ref(entrypoint.resource.owner),
+        "url": build_url(f"{ENTRYPOINTS}/{entrypoint.resource_id}"),
     }
 
 
@@ -331,14 +402,14 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         The Experiment response dictionary.
     """
     experiment = experiment_dict["experiment"]
-    has_draft = experiment_dict["has_draft"]
+    entrypoints = experiment_dict.get("entrypoints", None)
+    has_draft = experiment_dict.get("has_draft", None)
 
     data = {
         "id": experiment.resource_id,
         "snapshot_id": experiment.resource_snapshot_id,
         "name": experiment.name,
         "description": experiment.description,
-        "entrypoints": [],
         "jobs": [],
         "user": build_user_ref(experiment.creator),
         "group": build_group_ref(experiment.resource.owner),
@@ -348,6 +419,11 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         == experiment.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in experiment.tags],
     }
+
+    if entrypoints is not None:
+        data["entrypoints"] = [
+            build_entrypoint_ref(entrypoint) for entrypoint in entrypoints
+        ]
 
     if has_draft is not None:
         data["has_draft"] = has_draft
@@ -374,6 +450,56 @@ def build_tag(tag: models.Tag) -> dict[str, Any]:
     }
 
 
+def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
+    entrypoint = entrypoint_dict["entry_point"]
+    queues = entrypoint_dict.get("queues", None)
+    has_draft = entrypoint_dict.get("has_draft", None)
+
+    plugins_dict = {
+        entry_point_plugin_file.plugin.resource_id: PluginWithFilesDict(
+            plugin=entry_point_plugin_file.plugin, plugin_files=[], has_draft=False
+        )
+        for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+    }
+    for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
+        resource_id = entry_point_plugin_file.plugin.resource_id
+        plugin_file = entry_point_plugin_file.plugin_file
+        plugins_dict[resource_id]["plugin_files"].append(plugin_file)
+    plugins = list(plugins_dict.values())
+
+    data = {
+        "id": entrypoint.resource_id,
+        "snapshot_id": entrypoint.resource_snapshot_id,
+        "name": entrypoint.name,
+        "description": entrypoint.description,
+        "task_graph": entrypoint.task_graph,
+        "user": build_user_ref(entrypoint.creator),
+        "group": build_group_ref(entrypoint.resource.owner),
+        "created_on": entrypoint.created_on,
+        "last_modified_on": entrypoint.resource.last_modified_on,
+        "latest_snapshot": entrypoint.resource.latest_snapshot_id
+        == entrypoint.resource_snapshot_id,
+        "tags": [build_tag_ref(tag) for tag in entrypoint.tags],
+        "parameters": [
+            {
+                "name": param.name,
+                "default_value": param.default_value,
+                "parameter_type": param.parameter_type,
+            }
+            for param in entrypoint.parameters
+        ],
+        "plugins": [build_entrypoint_plugin(plugin) for plugin in plugins],
+    }
+
+    if queues is not None:
+        data["queues"] = [build_queue_ref(queue) for queue in queues]
+
+    if has_draft is not None:
+        data["has_draft"] = has_draft
+
+    return data
+
+
 def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
     """Build a Queue response dictionary.
 
@@ -384,7 +510,7 @@ def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
         The Queue response dictionary.
     """
     queue = queue_dict["queue"]
-    has_draft = queue_dict["has_draft"]
+    has_draft = queue_dict.get("has_draft", None)
 
     data = {
         "id": queue.resource_id,
@@ -416,8 +542,8 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
         The Plugin response dictionary.
     """
     plugin = plugin_with_files["plugin"]
-    plugin_files = plugin_with_files["plugin_files"]
-    has_draft = plugin_with_files["has_draft"]
+    plugin_files = plugin_with_files.get("plugin_files", None)
+    has_draft = plugin_with_files.get("has_draft", None)
 
     data = {
         "id": plugin.resource_id,
@@ -431,8 +557,12 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
         "latest_snapshot": plugin.resource.latest_snapshot_id
         == plugin.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in plugin.tags],
-        "files": [build_plugin_file_ref(plugin_file) for plugin_file in plugin_files],
     }
+
+    if plugin_files is not None:
+        data["files"] = [
+            build_plugin_file_ref(plugin_file) for plugin_file in plugin_files
+        ]
 
     if has_draft is not None:
         data["has_draft"] = has_draft
@@ -440,26 +570,10 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
     return data
 
 
-def build_plugin_snapshot(plugin: models.Plugin) -> dict[str, Any]:
-    return {
-        "id": plugin.resource_id,
-        "snapshot_id": plugin.resource_snapshot_id,
-        "name": plugin.name,
-        "description": plugin.description,
-        "user": build_user_ref(plugin.creator),
-        "group": build_group_ref(plugin.resource.owner),
-        "created_on": plugin.created_on,
-        "last_modified_on": plugin.resource.last_modified_on,
-        "latest_snapshot": plugin.resource.latest_snapshot_id
-        == plugin.resource_snapshot_id,
-        "tags": [build_tag_ref(tag) for tag in plugin.tags],
-    }
-
-
 def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]:
-    plugin = plugin_file_with_plugin["plugin"]
     plugin_file = plugin_file_with_plugin["plugin_file"]
-    has_draft = plugin_file_with_plugin["has_draft"]
+    plugin = plugin_file_with_plugin.get("plugin", None)
+    has_draft = plugin_file_with_plugin.get("has_draft", None)
 
     data = {
         "id": plugin_file.resource_id,
@@ -474,8 +588,11 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
         == plugin_file.resource_snapshot_id,
         "contents": plugin_file.contents,
         "tasks": [build_plugin_task(task) for task in plugin_file.tasks],
-        "plugin": build_plugin_ref(plugin),
+        "tags": [build_tag_ref(tag) for tag in plugin_file.tags],
     }
+
+    if plugin is not None:
+        data["plugin"] = build_plugin_ref(plugin)
 
     if has_draft is not None:
         data["has_draft"] = has_draft
@@ -484,21 +601,22 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
 
 
 def build_plugin_task(plugin_task: models.PluginTask) -> PluginTaskDict:
-    input_params: list[PluginTaskParameterDict] = []
+    input_params: list[PluginTaskInputParameterDict] = []
     for input_parameter in plugin_task.input_parameters:
         input_params.append(
-            PluginTaskParameterDict(
+            PluginTaskInputParameterDict(
                 name=input_parameter.name,
+                required=input_parameter.required,
                 parameter_type=build_plugin_parameter_type_ref(
                     input_parameter.parameter_type
                 ),
             )
         )
 
-    output_params: list[PluginTaskParameterDict] = []
+    output_params: list[PluginTaskOutputParameterDict] = []
     for output_parameter in plugin_task.output_parameters:
         output_params.append(
-            PluginTaskParameterDict(
+            PluginTaskOutputParameterDict(
                 name=output_parameter.name,
                 parameter_type=build_plugin_parameter_type_ref(
                     output_parameter.parameter_type
@@ -525,7 +643,7 @@ def build_plugin_parameter_type(
     Returns:
         The Plugin Parameter Type response dictionary.
     """
-    plugin_parameter_type = plugin_parameter_type_dict["plugin_parameter_type"]
+    plugin_parameter_type = plugin_parameter_type_dict["plugin_task_parameter_type"]
     has_draft = plugin_parameter_type_dict["has_draft"]
 
     data = {
@@ -550,7 +668,9 @@ def build_plugin_parameter_type(
 
 
 def build_resource_draft(
-    draft: models.DraftResource, num_other_drafts: int | None = None
+    draft: models.DraftResource,
+    draft_schema: type[Schema] | Schema,
+    num_other_drafts: int | None = None,
 ) -> dict[str, Any]:
     """Build a Draft response dictionary for a resource.
 
@@ -561,6 +681,12 @@ def build_resource_draft(
         The Draft response dictionary.
     """
 
+    if isinstance(draft_schema, Schema):
+        schema = draft_schema
+    else:
+        schema = draft_schema()
+    payload = schema.dump(draft.payload["resource_data"])
+
     metadata = dict()
     if num_other_drafts is not None:
         metadata["num_other_drafts"] = num_other_drafts
@@ -568,7 +694,7 @@ def build_resource_draft(
         "id": draft.draft_resource_id,
         "resource_id": draft.payload.get("resource_id", None),
         "resource_snapshot_id": draft.payload.get("resource_snapshot_id", None),
-        "payload": draft.payload.get("resource_data"),
+        "payload": payload,
         "resource_type": draft.resource_type,
         "user": build_user_ref(draft.creator),
         "group": build_group_ref(draft.target_owner),

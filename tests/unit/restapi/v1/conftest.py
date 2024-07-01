@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
+import textwrap
 
 import textwrap
 from collections.abc import Iterator
@@ -223,9 +224,7 @@ def registered_plugin_with_file_and_tasks(
     ).get_json()
     hello_world_task = {
         "name": "hello_world",
-        "inputParams": [
-            {"name": "name", "parameterType": string_type_response["id"]}
-        ],
+        "inputParams": [{"name": "name", "parameterType": string_type_response["id"]}],
         "outputParams": [
             {
                 "name": "hello_world_message",
@@ -235,9 +234,7 @@ def registered_plugin_with_file_and_tasks(
     }
     add_one_task = {
         "name": "add_one",
-        "inputParams": [
-            {"name": "x", "parameterType": integer_type_response["id"]}
-        ],
+        "inputParams": [{"name": "x", "parameterType": integer_type_response["id"]}],
         "outputParams": [
             {
                 "name": "value",
@@ -321,29 +318,36 @@ def registered_groups(
 def registered_plugin_parameter_types(
     client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
+    built_in_types = {"any", "number", "integer", "string", "boolean", "null"}
+    response = actions.get_plugin_parameter_types(client).get_json()
+    built_in_types_dict = {
+        param_type["name"]: param_type
+        for param_type in response["data"]
+        if param_type["name"] in built_in_types
+    }
     plugin_param_type1_response = actions.register_plugin_parameter_type(
         client,
-        name="int",
+        name="image_shape",
         group_id=auth_account["groups"][0]["id"],
-        structure=dict(),
-        description="The first parameter type.",
+        structure={"list": ["integer"]},
+        description="The dimensions of an image",
     ).get_json()
     plugin_param_type2_response = actions.register_plugin_parameter_type(
         client,
-        name="integer",
+        name="model_output",
         group_id=auth_account["groups"][0]["id"],
-        structure=dict(),
-        description="The second parameter type.",
+        structure=dict({"list": ["float"]}),
+        description="The softmax scores from a model",
     ).get_json()
-    # This is intentionally named using a different pattern for search query testing
     plugin_param_type3_response = actions.register_plugin_parameter_type(
         client,
-        name="string",
+        name="model",
         group_id=auth_account["groups"][0]["id"],
         structure=dict(),
-        description="Not retrieved.",
+        description="Opaque type for an ml model",
     ).get_json()
     return {
+        **built_in_types_dict,
         "plugin_param_type1": plugin_param_type1_response,
         "plugin_param_type2": plugin_param_type2_response,
         "plugin_param_type3": plugin_param_type3_response,
@@ -379,4 +383,65 @@ def registered_experiments(
         "experiment1": experiment1_response,
         "experiment2": experiment2_response,
         "experiment3": experiment3_response,
+    }
+
+
+@pytest.fixture
+def registered_entrypoints(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+) -> dict[str, Any]:
+    task_graph = textwrap.dedent(
+        """# my entrypoint graph
+        graph:
+          message:
+            my_entrypoint: $name
+        """
+    )
+    parameters = [
+        {
+            "name": "my_entrypoint_param",
+            "defaultValue": "my_value",
+            "parameterType": "string",
+        }
+    ]
+    plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+    entrypoint1_response = actions.register_entrypoint(
+        client,
+        name="entrypoint_one",
+        description="The first entrypoint.",
+        group_id=auth_account["groups"][0]["id"],
+        task_graph=task_graph,
+        parameters=parameters,
+        plugin_ids=plugin_ids,
+        queue_ids=queue_ids,
+    ).get_json()
+    entrypoint2_response = actions.register_entrypoint(
+        client,
+        name="entrypoint_two",
+        description="The second entrypoint.",
+        group_id=auth_account["groups"][0]["id"],
+        task_graph=task_graph,
+        parameters=parameters,
+        plugin_ids=plugin_ids,
+        queue_ids=queue_ids,
+    ).get_json()
+    entrypoint3_response = actions.register_entrypoint(
+        client,
+        name="entrypoint_three",
+        description="Not retrieved.",
+        group_id=auth_account["groups"][0]["id"],
+        task_graph=task_graph,
+        parameters=parameters,
+        plugin_ids=plugin_ids,
+        queue_ids=queue_ids,
+    ).get_json()
+    return {
+        "entrypoint1": entrypoint1_response,
+        "entrypoint2": entrypoint2_response,
+        "entrypoint3": entrypoint3_response,
     }

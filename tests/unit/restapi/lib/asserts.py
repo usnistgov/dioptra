@@ -161,8 +161,6 @@ def assert_draft_response_contents_matches_expectations(
         "resourceSnapshot",
         "metadata",
     }
-    print(expected_keys)
-    print(set(response.keys()))
     assert set(response.keys()) == expected_keys
 
     # Validate the non-Ref fields

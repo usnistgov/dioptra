@@ -15,8 +15,9 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Entrypoint resources."""
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
 
+from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -27,20 +28,59 @@ from dioptra.restapi.v1.schemas import (
 )
 
 
+class EntrypointPluginFileSchema(Schema):
+    """The schema for the data stored in a Entrypoint PluginFile snapshot."""
+
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="ID for the PluginFile resource."),
+    )
+    filename = fields.String(
+        attribute="filename",
+        metadata=dict(description="Filename of the PluginFile resource."),
+    )
+    snapshotId = fields.Integer(
+        attribute="snapshot_id",
+        metadata=dict(description="Snapshot ID for the PluginFile resource."),
+    )
+    url = fields.Url(
+        attribute="url",
+        metadata=dict(description="URL for accessing the full PluginFile snapshot."),
+        relative=True,
+    )
+
+
+class EntrypointPluginSchema(Schema):
+    """The schema for the data stored in a Entrypoint Plugin snapshot."""
+
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="ID for the Plugin resource."),
+    )
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Plugin resource."),
+    )
+    snapshotId = fields.Integer(
+        attribute="snapshot_id",
+        metadata=dict(description="Snapshot ID for the Plugin resource."),
+    )
+    url = fields.Url(
+        attribute="url",
+        metadata=dict(description="URL for accessing the full Plugin snapshot."),
+        relative=True,
+    )
+    files = fields.Nested(
+        EntrypointPluginFileSchema,
+        attribute="files",
+        many=True,
+        metadata=dict(description="List of parameters for the entrypoint."),
+    )
+
+
 class EntrypointParameterSchema(Schema):
     """The schema for the data stored in a Entrypoint parameter resource."""
 
-    entrypointId = fields.Integer(
-        attribute="entrypoint_id",
-        data_key="entrypoint",
-        metadata=dict(description="ID for the associated entrypoint."),
-        required=True,
-    )
-    parameterNumber = fields.Integer(
-        attribute="parameter_number",
-        metadata=dict(description="Index of the Entrypoint parameter."),
-        required=True,
-    )
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the Entrypoint parameter resource."),
@@ -55,6 +95,7 @@ class EntrypointParameterSchema(Schema):
         attribute="parameter_type",
         metadata=dict(description="Data type of the Entrypoint parameter."),
         required=True,
+        validate=validate.OneOf(["string", "float", "path", "uri"]),
     )
 
 
@@ -90,16 +131,74 @@ class EntrypointMutableFieldsSchema(Schema):
     )
     parameters = fields.Nested(
         EntrypointParameterSchema,
+        attribute="parameters",
         many=True,
         metadata=dict(description="List of parameters for the entrypoint."),
+    )
+    queueIds = fields.List(
+        fields.Integer(),
+        attribute="queue_ids",
+        data_key="queues",
+        metadata=dict(description="The queue for the entrypoint."),
+        load_only=True,
+    )
+
+
+class EntrypointPluginMutableFieldsSchema(Schema):
+    pluginIds = fields.List(
+        fields.Integer(),
+        attribute="plugin_ids",
+        data_key="plugins",
+        metadata=dict(description="List of plugin files for the entrypoint."),
+        load_only=True,
     )
 
 
 EntrypointBaseSchema = generate_base_resource_schema("Entrypoint", snapshot=True)
 
 
-class EntrypointSchema(EntrypointMutableFieldsSchema, EntrypointBaseSchema):  # type: ignore
+class EntrypointSchema(
+    EntrypointPluginMutableFieldsSchema,
+    EntrypointMutableFieldsSchema,
+    EntrypointBaseSchema,  # type: ignore
+):
     """The schema for the data stored in a Entrypoint resource."""
+
+    plugins = fields.Nested(
+        EntrypointPluginSchema,
+        attribute="plugins",
+        many=True,
+        metadata=dict(description="List of plugin files for the entrypoint."),
+        dump_only=True,
+    )
+    queues = fields.Nested(
+        QueueRefSchema,
+        attribute="queues",
+        many=True,
+        metadata=dict(description="The queue for the entrypoint."),
+        dump_only=True,
+    )
+
+
+class EntrypointDraftSchema(
+    EntrypointPluginMutableFieldsSchema,
+    EntrypointMutableFieldsSchema,
+    EntrypointBaseSchema,  # type: ignore
+):
+    """The schema for the data stored in a Entrypoint resource."""
+
+    pluginIds = fields.List(
+        fields.Integer(),
+        attribute="plugin_ids",
+        data_key="plugins",
+        metadata=dict(description="List of plugin files for the entrypoint."),
+    )
+    queueIds = fields.List(
+        fields.Integer(),
+        attribute="queue_ids",
+        data_key="queues",
+        metadata=dict(description="The queue for the entrypoint."),
+    )
 
 
 class EntrypointPageSchema(BasePageSchema):

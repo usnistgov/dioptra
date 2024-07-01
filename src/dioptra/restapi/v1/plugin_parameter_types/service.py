@@ -15,8 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform plugin parameter type endpoint operations."""
-from __future__ import annotations
-
 from typing import Any, Final
 
 import structlog
@@ -26,18 +24,32 @@ from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError, SearchNotImplementedError
+from dioptra.restapi.db.models.constants import resource_lock_types
+from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
+from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 from .errors import (
     PluginParameterTypeAlreadyExistsError,
     PluginParameterTypeDoesNotExistError,
+    PluginParameterTypeMatchesBuiltinTypeError,
+    PluginParameterTypeReadOnlyLockError,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "plugin_task_parameter_type"
+SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": lambda x: models.PluginTaskParameterType.name.like(x, escape="/"),
+    "description": lambda x: models.PluginTaskParameterType.description.like(
+        x, escape="/"
+    ),
+    "tag": lambda x: models.PluginTaskParameterType.tags.any(
+        models.Tag.name.like(x, escape="/")
+    ),
+}
 
 
 class PluginParameterTypeService(object):
@@ -47,7 +59,7 @@ class PluginParameterTypeService(object):
     @inject
     def __init__(
         self,
-        plugin_parameter_type_name_service: PluginParameterTypeNameService,
+        plugin_parameter_type_name_service: "PluginParameterTypeNameService",
         group_id_service: GroupIdService,
     ) -> None:
         """Initialize the plugin parameter type service.
@@ -74,7 +86,8 @@ class PluginParameterTypeService(object):
 
         Args:
             name: The name of the plugin parameter type. The combination of
-                name and group_id must be unique.
+                name and group_id must be unique. The name also cannot match
+                any built-in types.
             structure: Optional JSON-type field for further constraining a
                 type's structure.
             description: The description of the plugin parameter type.
@@ -85,10 +98,20 @@ class PluginParameterTypeService(object):
             The newly created plugin parameter type object.
 
         Raises:
+            PluginParameterTypeMatchesBuiltinTypeError: If the plugin parameter
+                type name matches a built-in type.
             PluginParameterTypeAlreadyExistsError: If a plugin parameter type
                 with the given name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        if name.strip().lower() in BUILTIN_TYPES:
+            log.debug(
+                "Plugin Parameter Type name matches a built-in type",
+                name=name,
+                normalized_name=name.strip().lower(),
+            )
+            raise PluginParameterTypeMatchesBuiltinTypeError
 
         if (
             self._plugin_parameter_type_name_service.get(
@@ -124,7 +147,7 @@ class PluginParameterTypeService(object):
             )
 
         return utils.PluginParameterTypeDict(
-            plugin_parameter_type=new_plugin_parameter_type, has_draft=False
+            plugin_task_parameter_type=new_plugin_parameter_type, has_draft=False
         )
 
     def get(
@@ -163,8 +186,9 @@ class PluginParameterTypeService(object):
             filters.append(models.Resource.group_id == group_id)
 
         if search_string:
-            log.debug("Searching is not implemented", search_string=search_string)
-            raise SearchNotImplementedError
+            filters.append(
+                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
+            )
 
         stmt = (
             select(func.count(models.PluginTaskParameterType.resource_id))
@@ -221,7 +245,7 @@ class PluginParameterTypeService(object):
         )
         plugin_parameter_types_dict: dict[int, utils.PluginParameterTypeDict] = {
             plugin_parameter_type.resource_id: utils.PluginParameterTypeDict(
-                plugin_parameter_type=plugin_parameter_type, has_draft=False
+                plugin_task_parameter_type=plugin_parameter_type, has_draft=False
             )
             for plugin_parameter_type in plugin_parameter_types
         }
@@ -241,7 +265,7 @@ class PluginParameterTypeIdService(object):
     @inject
     def __init__(
         self,
-        plugin_parameter_type_name_service: PluginParameterTypeNameService,
+        plugin_parameter_type_name_service: "PluginParameterTypeNameService",
     ) -> None:
         """Initialize the plugin parameter type service.
 
@@ -314,7 +338,7 @@ class PluginParameterTypeIdService(object):
         has_draft = db.session.scalar(drafts_stmt)
 
         return utils.PluginParameterTypeDict(
-            plugin_parameter_type=plugin_parameter_type, has_draft=has_draft
+            plugin_task_parameter_type=plugin_parameter_type, has_draft=has_draft
         )
 
     def modify(
@@ -327,7 +351,7 @@ class PluginParameterTypeIdService(object):
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginParameterTypeDict | None:
-        """Rename a plugin parameter type.
+        """Modify a plugin parameter type.
 
         Args:
             plugin_parameter_type_id: The unique id of the plugin parameter
@@ -358,8 +382,25 @@ class PluginParameterTypeIdService(object):
         if plugin_parameter_type_dict is None:
             return None
 
-        plugin_parameter_type = plugin_parameter_type_dict["plugin_parameter_type"]
+        plugin_parameter_type = plugin_parameter_type_dict["plugin_task_parameter_type"]
         group_id = plugin_parameter_type.resource.group_id
+
+        if plugin_parameter_type.resource.is_readonly:
+            log.debug(
+                "The Plugin Parameter Type is read-only and cannot be modified",
+                plugin_parameter_type_id=plugin_parameter_type_id,
+                name=plugin_parameter_type.name,
+            )
+            raise PluginParameterTypeReadOnlyLockError
+
+        if name.strip().lower() in BUILTIN_TYPES:
+            log.debug(
+                "Plugin Parameter Type name matches a built-in type",
+                name=name,
+                normalized_name=name.strip().lower(),
+            )
+            raise PluginParameterTypeMatchesBuiltinTypeError
+
         if (
             name != plugin_parameter_type.name
             and self._plugin_parameter_type_name_service.get(
@@ -394,7 +435,7 @@ class PluginParameterTypeIdService(object):
             )
 
         return utils.PluginParameterTypeDict(
-            plugin_parameter_type=new_plugin_parameter_type, has_draft=False
+            plugin_task_parameter_type=new_plugin_parameter_type, has_draft=False
         )
 
     def delete(self, plugin_parameter_type_id: int, **kwargs) -> dict[str, Any]:
@@ -418,8 +459,15 @@ class PluginParameterTypeIdService(object):
         if plugin_parameter_type_resource is None:
             raise PluginParameterTypeDoesNotExistError
 
+        if plugin_parameter_type_resource.is_readonly:
+            log.debug(
+                "The Plugin Parameter Type is read-only and cannot be deleted",
+                plugin_parameter_type_id=plugin_parameter_type_id,
+            )
+            raise PluginParameterTypeReadOnlyLockError
+
         deleted_resource_lock = models.ResourceLock(
-            resource_lock_type="delete",
+            resource_lock_type=resource_lock_types.DELETE,
             resource=plugin_parameter_type_resource,
         )
         db.session.add(deleted_resource_lock)
@@ -431,7 +479,7 @@ class PluginParameterTypeIdService(object):
 
         return {
             "status": "Success",
-            "plugin_parameter_type_id": plugin_parameter_type_id,
+            "id": [plugin_parameter_type_id],
         }
 
 
@@ -488,3 +536,76 @@ class PluginParameterTypeNameService(object):
             return None
 
         return plugin_parameter_type
+
+
+class BuiltinPluginParameterTypeService(object):
+    """The service methods for registering the built-in plugin parameter types"""
+
+    @inject
+    def __init__(
+        self,
+        group_id_service: GroupIdService,
+    ) -> None:
+        """Initialize the builtin plugin parameter type service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            group_id_service: A GroupIdService object.
+        """
+        self._group_id_service = group_id_service
+
+    def create_all(
+        self,
+        user: models.User,
+        group: models.Group,
+        commit: bool = True,
+        **kwargs,
+    ) -> list[utils.PluginParameterTypeDict]:
+        """Create all built-in plugin parameter types in a given group.
+
+        Args:
+            user: The user that is creating the built-in plugin parameter types.
+            group: The group that will own the registered built-in plugin parameter
+                types.
+            commit: If True, commit the transaction. Defaults to True.
+
+        Returns:
+            A list of the newly registered built-in plugin parameter types.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        builtin_types = list(BUILTIN_TYPES.keys())
+        new_builtin_parameter_types: list[models.PluginTaskParameterType] = []
+        for builtin_type in builtin_types:
+            resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
+            new_plugin_parameter_type = models.PluginTaskParameterType(
+                name=builtin_type,
+                structure=None,
+                description=None,
+                resource=resource,
+                creator=user,
+            )
+            db.session.add(new_plugin_parameter_type)
+            db.session.add(
+                models.ResourceLock(
+                    resource_lock_type=resource_lock_types.READONLY,
+                    resource=resource,
+                )
+            )
+            new_builtin_parameter_types.append(new_plugin_parameter_type)
+
+        if commit:
+            db.session.commit()
+            log.debug(
+                "Built-in Plugin Parameter Types registration successful",
+                builtin_parameter_type_ids=[
+                    x.resource_id for x in new_builtin_parameter_types
+                ],
+            )
+
+        return [
+            utils.PluginParameterTypeDict(
+                plugin_task_parameter_type=new_builtin_parameter_type, has_draft=False
+            )
+            for new_builtin_parameter_type in new_builtin_parameter_types
+        ]
