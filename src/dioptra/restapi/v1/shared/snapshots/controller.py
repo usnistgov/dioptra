@@ -63,6 +63,14 @@ def generate_resource_snapshots_endpoint(
         The parameterized ResourceSnapshotsEndpoint class.
     """
 
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    if isinstance(page_schema, Schema):
+        model_name = "Snapshots" + "".join(
+            page_schema.__class__.__name__.rsplit("Schema", 1)
+        )
+    else:
+        model_name = "Snapshots" + "".join(page_schema.__name__.rsplit("Schema", 1))
+
     @api.route("/<int:id>/snapshots")
     @api.param("id", f"ID for the {resource_name} resource.")
     class ResourceSnapshotsEndpoint(Resource):
@@ -82,7 +90,7 @@ def generate_resource_snapshots_endpoint(
 
         @login_required
         @accepts(query_params_schema=ResourceGetQueryParameters, api=api)
-        @responds(schema=page_schema, api=api)
+        @responds(schema=page_schema, model_name=model_name, api=api)
         def get(self, id: int):
             """Gets the Snapshots for the resource."""
             log = LOGGER.new(
@@ -142,6 +150,16 @@ def generate_resource_snapshots_id_endpoint(
         The parameterized ResourceSnapshotsIdEndpoint class.
     """
 
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    if isinstance(response_schema, Schema):
+        model_name = "SnapshotsId" + "".join(
+            response_schema.__class__.__name__.rsplit("Schema", 1)
+        )
+    else:
+        model_name = "SnapshotsId" + "".join(
+            response_schema.__name__.rsplit("Schema", 1)
+        )
+
     @api.route("/<int:id>/snapshots/<int:snapshotId>")
     @api.param("id", f"ID for the {resource_name} resource.")
     @api.param("snapshotId", f"Snapshot ID for the {resource_name} resource.")
@@ -160,7 +178,7 @@ def generate_resource_snapshots_id_endpoint(
             super().__init__(*args, **kwargs)
 
         @login_required
-        @responds(schema=response_schema, api=api)
+        @responds(schema=response_schema, model_name=model_name, api=api)
         def get(self, id: int, snapshotId: int):
             """Gets a Snapshot for the resource by snapshot id."""
             log = LOGGER.new(
@@ -204,6 +222,16 @@ def generate_nested_resource_snapshots_endpoint(
         The parameterized ResourceSnapshotsEndpoint class.
     """
 
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    if isinstance(page_schema, Schema):
+        model_name = "NestedSnapshots" + "".join(
+            page_schema.__class__.__name__.rsplit("Schema", 1)
+        )
+    else:
+        model_name = "NestedSnapshots" + "".join(
+            page_schema.__name__.rsplit("Schema", 1)
+        )
+
     route_singular = resource_route[:-1]
     resource_id = f"{route_singular}Id"
 
@@ -227,7 +255,7 @@ def generate_nested_resource_snapshots_endpoint(
 
         @login_required
         @accepts(query_params_schema=ResourceGetQueryParameters, api=api)
-        @responds(schema=page_schema, api=api)
+        @responds(schema=page_schema, model_name=model_name, api=api)
         def get(self, id: int, **kwargs):
             """Gets the Snapshots for the resource."""
             log = LOGGER.new(
@@ -301,6 +329,16 @@ def generate_nested_resource_snapshots_id_endpoint(
     route_singular = resource_route[:-1]
     resource_id = f"{route_singular}Id"
 
+    # Based on: https://github.com/apryor6/flask_accepts/blob/05567461c421a534d6fc6e122d5e086b0b0e53aa/flask_accepts/utils.py#L154-L160  # noqa: B950
+    if isinstance(response_schema, Schema):
+        model_name = "NestedSnapshotsId" + "".join(
+            response_schema.__class__.__name__.rsplit("Schema", 1)
+        )
+    else:
+        model_name = "NestedSnapshotsId" + "".join(
+            response_schema.__name__.rsplit("Schema", 1)
+        )
+
     @api.route(
         f"/<int:id>/{resource_route}/<int:{resource_id}>/snapshots/<int:snapshotId>"
     )
@@ -322,7 +360,7 @@ def generate_nested_resource_snapshots_id_endpoint(
             super().__init__(*args, **kwargs)
 
         @login_required
-        @responds(schema=response_schema, api=api)
+        @responds(schema=response_schema, model_name=model_name, api=api)
         def get(self, id: int, snapshotId: int, **kwargs):
             """Gets a Snapshot for the resource by snapshot id."""
             log = LOGGER.new(

@@ -401,9 +401,6 @@ class ResourceIdDraftService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        log.info(
-            "CREATE DRAFT", resource_id=resource_id, resource_type=self._resource_type
-        )
         stmt = select(models.Resource).filter_by(
             resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
         )
