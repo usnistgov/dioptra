@@ -407,12 +407,12 @@ ExperimentDraftResource = generate_resource_drafts_endpoint(
 ExperimentDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
     resource_name=RESOURCE_TYPE,
-    request_schema=ExperimentDraftSchema,
+    request_schema=ExperimentDraftSchema(exclude=["groupId"]),
 )
 ExperimentIdDraftResource = generate_resource_id_draft_endpoint(
     api,
     resource_name=RESOURCE_TYPE,
-    request_schema=ExperimentDraftSchema,
+    request_schema=ExperimentDraftSchema(exclude=["groupId"]),
 )
 
 ExperimentSnapshotsResource = generate_resource_snapshots_endpoint(
