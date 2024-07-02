@@ -36,7 +36,7 @@ Dioptra strives for the following key properties:
 <!-- markdownlint-disable MD007 MD030 -->
 - [User setup](#user-setup)
     - [Build the containers](#build-the-containers)
-    - [Runn Dioptra](#run-dioptra)
+    - [Run Dioptra](#run-dioptra)
 - [User quickstart](#user-quickstart)
 - [Developer quickstart](#developer-quickstart)
     - [Setting up the Python virtual environment](#setting-up-the-python-virtual-environment)
@@ -85,7 +85,7 @@ Developers must use Python 3.11 and create a virtual environment using one of th
 Ensure that you have Python 3.11 installed and that it is available in your PATH, and then identify the requirements file that you want to use:
 
 | Filename | OS | Architecture | Tensorflow | PyTorch |
-| :--- | :---: | :---: | :--- | :--- |
+| :--- | :---: | :---: | :--: | :--: |
 | linux-amd64-py3.11-requirements-dev.txt | Linux | x86-64 | ❌ | ❌ |
 | linux-amd64-py3.11-requirements-dev-tensorflow.txt | Linux | x86-64 | ✅ | ❌ |
 | linux-amd64-py3.11-requirements-dev-pytorch.txt | Linux | x86-64 | ❌ | ✅ |
