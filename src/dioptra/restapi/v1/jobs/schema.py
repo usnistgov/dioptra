@@ -15,6 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Job resources."""
+import re
+
 from marshmallow import Schema, fields, validate
 
 from dioptra.restapi.v1.schemas import (
@@ -25,6 +27,8 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
+
+VALID_TIMEOUT_REGEX = re.compile(r"^[1-9][0-9]*[hms]?$")  # noqa: B950; fmt: skip
 
 JobRefSchema = generate_base_resource_ref_schema("Job")
 JobSnapshotRefSchema = generate_base_resource_ref_schema("Job", keep_snapshot_id=True)
@@ -125,6 +129,15 @@ class JobSchema(JobBaseSchema):  # type: ignore
         metadata=dict(
             description="The maximum alloted time for a job before it times out and "
             "is stopped. If omitted, the job timeout will default to 24 hours.",
+        ),
+        validate=validate.Regexp(
+            VALID_TIMEOUT_REGEX,
+            error=(
+                "'{input}' is not valid timeout value. The proper timeout format is an "
+                "integer denoting the time in seconds. It may optionally be followed "
+                "'h', 'm', or 's' (hours, minutes, seconds) to specify different time "
+                "units. Examples: '3600', '3600s', '60m', '1h'"
+            ),
         ),
     )
     status = fields.String(
