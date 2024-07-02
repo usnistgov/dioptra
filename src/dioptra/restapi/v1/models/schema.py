@@ -20,6 +20,7 @@ from marshmallow import Schema, fields
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
+    GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
     generate_base_resource_ref_schema,
@@ -27,6 +28,73 @@ from dioptra.restapi.v1.schemas import (
 )
 
 ModelBaseRefSchema = generate_base_resource_ref_schema("Model")
+
+
+class ModelRefSchema(ModelBaseRefSchema):  # type: ignore
+    """The reference schema for the data stored in a Model resource."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Model resource."),
+        required=True,
+    )
+
+
+class ModelVersionRefSchema(Schema):
+    """The reference schema for the data stored in a Model Version."""
+
+    versionNumber = fields.Integer(
+        attribute="version_number",
+        metadata=dict(description="The version number of the Model."),
+        dump_only=True,
+    )
+    url = fields.Url(
+        attribute="url",
+        metadata=dict(description="URL for accessing the full Model Version."),
+        relative=True,
+    )
+
+
+class ModelVersionMutableFieldsSchema(Schema):
+    description = fields.String(
+        attribute="description",
+        metadata=dict(description="Description of the Model Version."),
+        load_default=None,
+    )
+
+
+class ModelVersionSchema(ModelVersionMutableFieldsSchema):
+    """The schema for the data stored in a ModelVersion resource."""
+
+    model = fields.Nested(
+        ModelRefSchema,
+        attribute="model",
+        metadata=dict(description="The Model resource."),
+        dump_only=True,
+    )
+    artifactId = fields.Integer(
+        attribute="artifact_id",
+        data_key="artifact",
+        metadata=dict(description="The artifact representing the Model Version."),
+        load_only=True,
+        required=True,
+    )
+    artifact = fields.Nested(
+        ArtifactRefSchema,
+        attribute="artifact",
+        metadata=dict(description="The artifact representing the Model Version."),
+        dump_only=True,
+    )
+    versionNumber = fields.Integer(
+        attribute="version_number",
+        metadata=dict(description="The version number of the Model."),
+        dump_only=True,
+    )
+    createdOn = fields.DateTime(
+        attribute="created_on",
+        metadata=dict(description="Timestamp when the Model Version was created."),
+        dump_only=True,
+    )
 
 
 class ModelMutableFieldsSchema(Schema):
@@ -42,13 +110,6 @@ class ModelMutableFieldsSchema(Schema):
         metadata=dict(description="Description of the Model resource."),
         load_default=None,
     )
-    artifactId = fields.Integer(
-        attribute="artifact_id",
-        data_key="artifact",
-        metadata=dict(description="The artifact representing the Model."),
-        load_only=True,
-        required=True,
-    )
 
 
 ModelBaseSchema = generate_base_resource_schema("Model", snapshot=True)
@@ -57,15 +118,17 @@ ModelBaseSchema = generate_base_resource_schema("Model", snapshot=True)
 class ModelSchema(ModelMutableFieldsSchema, ModelBaseSchema):  # type: ignore
     """The schema for the data stored in a Model resource."""
 
-    artifact = fields.Nested(
-        ArtifactRefSchema,
-        attribute="artifact",
-        metadata=dict(description="The artifact representing the Model."),
+    versions = fields.Nested(
+        ModelVersionRefSchema,
+        many=True,
+        attribute="versions",
+        metadata=dict(description="The details of this model version."),
         dump_only=True,
     )
-    versionNumber = fields.Integer(
-        attribute="version_number",
-        metadata=dict(description="The version number of the Model."),
+    latestVersion = fields.Nested(
+        ModelVersionSchema,
+        attribute="latest_version",
+        metadata=dict(description="The details of latest version of this model."),
         dump_only=True,
     )
 
@@ -80,8 +143,26 @@ class ModelPageSchema(BasePageSchema):
     )
 
 
+class ModelVersionPageSchema(BasePageSchema):
+    """The paged schema for the data stored in a Model resource."""
+
+    data = fields.Nested(
+        ModelVersionSchema,
+        many=True,
+        metadata=dict(description="List of Model resources in the current page."),
+    )
+
+
 class ModelGetQueryParameters(
     PagingQueryParametersSchema,
+    GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /models endpoint."""
+
+
+class ModelVersionGetQueryParameters(
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /models/{id}/versions endpoint."""

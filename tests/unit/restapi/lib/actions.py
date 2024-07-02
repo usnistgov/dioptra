@@ -19,17 +19,19 @@
 This module contains shared actions used across test suites for each of the REST
 API endpoints.
 """
-from typing import Any, List
+from typing import Any
 
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import (
+    V1_ARTIFACTS_ROUTE,
     V1_AUTH_ROUTE,
     V1_ENTRYPOINTS_ROUTE,
     V1_EXPERIMENTS_ROUTE,
     V1_GROUPS_ROUTE,
     V1_JOBS_ROUTE,
+    V1_MODELS_ROUTE,
     V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     V1_PLUGINS_ROUTE,
     V1_QUEUES_ROUTE,
@@ -223,6 +225,89 @@ def register_tag(
     )
 
 
+def register_artifact(
+    client: FlaskClient,
+    uri: int,
+    job_id: int,
+    group_id: int,
+    description: str | None = None,
+) -> TestResponse:
+    """Register an artifact using the API.
+
+    Args:
+        client: The Flask test client.
+        uri: The URI of the artifact
+        job_id: The job to create the new artifact.
+        group_id: The group to create the new artifact in.
+        description: The description of the new artifact.
+
+    Returns:
+        The response from the API.
+    """
+    payload = {"uri": uri, "job": job_id, "group": group_id}
+
+    if description is not None:
+        payload["description"] = description
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}/",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def register_model(
+    client: FlaskClient,
+    name: str,
+    group_id: int,
+    description: str | None = None,
+) -> TestResponse:
+    """Register a model using the API.
+
+    Args:
+        client: The Flask test client.
+        name: The name to assign to the new model.
+        group_id: The group to create the new model in.
+        description: The description of the new model.
+
+    Returns:
+        The response from the API.
+    """
+    payload = {"name": name, "group": group_id, "description": description}
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def register_model_version(
+    client: FlaskClient,
+    model_id: int,
+    artifact_id: int,
+    description: str | None = None,
+) -> TestResponse:
+    """Register a model version using the API.
+
+    Args:
+        client: The Flask test client.
+        model_id: The id of the model to create a new version of.
+        artifact_id: The id of artifact representing the new model version.
+        description: The description of the new model version.
+
+    Returns:
+        The response from the API.
+    """
+    payload = {"artifact": artifact_id, "description": description}
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}/versions",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
 def register_plugin(
     client: FlaskClient,
     name: str,
@@ -376,6 +461,14 @@ def get_public_group(client: FlaskClient) -> TestResponse:
         The response from the API.
     """
     return client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/1", follow_redirects=True)
+
+
+def get_model(client: FlaskClient, model_id: int) -> TestResponse:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}",
+        follow_redirects=True,
+    )
+    return response
 
 
 def get_plugin_parameter_types(client: FlaskClient) -> TestResponse:

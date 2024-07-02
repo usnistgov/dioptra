@@ -55,6 +55,7 @@ RESOURCE_TYPES: Final[list[dict[str, str]]] = [
     {"resource_type": "plugin_task_parameter_type"},
     {"resource_type": "queue"},
     {"resource_type": "resource_snapshot"},
+    {"resource_type": "ml_model_version"},
 ]
 RESOURCE_DEPENDENCY_TYPES: Final[list[dict[str, str]]] = [
     {"parent_resource_type": "experiment", "child_resource_type": "entry_point"},
@@ -63,6 +64,7 @@ RESOURCE_DEPENDENCY_TYPES: Final[list[dict[str, str]]] = [
     {"parent_resource_type": "plugin", "child_resource_type": "plugin_file"},
     {"parent_resource_type": "job", "child_resource_type": "artifact"},
     {"parent_resource_type": "job", "child_resource_type": "job"},
+    {"parent_resource_type": "ml_model", "child_resource_type": "ml_model_version"},
 ]
 LEGACY_JOB_STATUS_TYPES: Final[list[dict[str, str]]] = [
     {"status": "queued"},

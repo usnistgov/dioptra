@@ -106,6 +106,111 @@ def registered_tags(
 
 
 @pytest.fixture
+def registered_artifacts(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    # registered_jobs: dict[str, Any],
+) -> dict[str, Any]:
+    # TODO: get the job ID from a registered jobs once implemented
+    job_id = 0  # registered_jobs["job1"]["id"]
+    group_id = auth_account["groups"][0]["id"]
+    artifact1_response = actions.register_artifact(
+        client,
+        uri="s3://bucket/model_v1.artifact",
+        description="Model artifact.",
+        job_id=job_id,
+        group_id=group_id,
+    ).get_json()
+    artifact2_response = actions.register_artifact(
+        client,
+        uri="s3://bucket/cnn.artifact",
+        description="Trained conv net model artifact.",
+        job_id=job_id,
+        group_id=group_id,
+    ).get_json()
+    artifact3_response = actions.register_artifact(
+        client,
+        uri="s3://bucket/model.artifact",
+        description="Another model",
+        job_id=job_id,
+        group_id=group_id,
+    ).get_json()
+    artifact4_response = actions.register_artifact(
+        client,
+        uri="s3://bucket/model_v2.artifact",
+        description="Fine-tuned model.",
+        job_id=job_id,
+        group_id=group_id,
+    ).get_json()
+
+    return {
+        "artifact1": artifact1_response,
+        "artifact2": artifact2_response,
+        "artifact3": artifact3_response,
+        "artifact4": artifact4_response,
+    }
+
+
+@pytest.fixture
+def registered_models(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_artifacts: dict[str, Any],
+) -> dict[str, Any]:
+    group_id = auth_account["groups"][0]["id"]
+    model1_response = actions.register_model(
+        client,
+        name="my_tensorflow_model",
+        description="Trained model",
+        group_id=group_id,
+    ).get_json()
+    model2_response = actions.register_model(
+        client,
+        name="model2",
+        description="Trained model",
+        group_id=group_id,
+    ).get_json()
+    model3_response = actions.register_model(
+        client,
+        name="model3",
+        description="",
+        group_id=group_id,
+    ).get_json()
+
+    actions.register_model_version(
+        client,
+        model_id=model1_response["id"],
+        artifact_id=registered_artifacts["artifact1"]["id"],
+        description="initial version",
+    ).get_json()
+    actions.register_model_version(
+        client,
+        model_id=model2_response["id"],
+        artifact_id=registered_artifacts["artifact2"]["id"],
+        description="initial version",
+    ).get_json()
+    actions.register_model_version(
+        client,
+        model_id=model3_response["id"],
+        artifact_id=registered_artifacts["artifact3"]["id"],
+    ).get_json()
+    actions.register_model_version(
+        client,
+        model_id=model1_response["id"],
+        artifact_id=registered_artifacts["artifact4"]["id"],
+        description="new version",
+    ).get_json()
+
+    return {
+        "model1": actions.get_model(client, model1_response["id"]).get_json(),
+        "model2": actions.get_model(client, model2_response["id"]).get_json(),
+        "model3": actions.get_model(client, model3_response["id"]).get_json(),
+    }
+
+
+@pytest.fixture
 def registered_plugins(
     client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
