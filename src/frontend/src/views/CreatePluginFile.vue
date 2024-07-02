@@ -67,7 +67,8 @@
         @request="getPluginParameterTypes"
         ref="tableRef"
         :hideToggleDraft="true"
-        :hideButtons="true"
+        :hideEditBtn="true"
+        :hideDeleteBtn="true"
         :hideSelect="true"
       >
       <template #body-cell-view="props">
@@ -84,7 +85,8 @@
         title="Plugin Tasks"
         ref="tableRef"
         :hideToggleDraft="true"
-        :hideButtons="true"
+        :hideEditBtn="true"
+        :hideDeleteBtn="true"
         :hideSelect="true"
         :hideSearch="true"
       >

@@ -48,11 +48,7 @@
           <q-item-section>Create Experiment</q-item-section>
         </q-item>
         <q-separator />
-        <q-item clickable>
-          <q-item-section>Create Job</q-item-section>
-        </q-item>
-        <q-separator />
-        <q-item clickable>
+        <q-item clickable to="/entrypoints/new">
           <q-item-section>Create Entry Point</q-item-section>
         </q-item>
       </q-list>

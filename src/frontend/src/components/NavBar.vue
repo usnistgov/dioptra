@@ -46,7 +46,7 @@
         <q-route-tab label="Plugins" to="/plugins" />
         <q-route-tab label="Queues" to="/queues" />
         <q-route-tab label="Experiments" to="/experiments" />
-        <q-route-tab label="Jobs" to="/" />
+        <q-route-tab label="Jobs" to="/jobs" />
         <q-route-tab label="Groups" to="/groups" />
         <q-route-tab label="Tags" to="/tags" />
         <q-route-tab label="Plugin-Params" to="/pluginParams" />

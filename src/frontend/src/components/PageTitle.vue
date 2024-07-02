@@ -20,8 +20,13 @@
       />
       <q-breadcrumbs-el
         v-if="route.params.id && route.params.fileId"
-        :label="`${pluginName} Files`"
+        :label="`${objName} Files`"
         :to="`/plugins/${route.params.id}/files`"
+      />
+      <q-breadcrumbs-el
+        v-if="route.path === `/experiments/${route.params.id}/jobs/new`"
+        :label="`${objName} jobs`"
+        :to="`/experiments/${route.params.id}/jobs`"
       />
       <q-breadcrumbs-el
         v-if="path[1]"
@@ -47,16 +52,19 @@
   })
 
 
-  const pluginName = ref('')
+  const objName = ref('')
 
   if(route.params.id && route.params.fileId) {
-    getPluginName()
+    getName('plugins')
+  }
+  if(route.params.id && path.value.includes('jobs')) {
+    getName('experiments')
   }
 
-  async function getPluginName() {
+  async function getName(type) {
     try {
-      const res = await api.getItem('plugins', route.params.id)
-      pluginName.value = res.data.name
+      const res = await api.getItem(type, route.params.id)
+      objName.value = res.data.name
     } catch(err) {
       console.log(err)
     } 

@@ -6,41 +6,13 @@
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
         <legend>Basic Info</legend>
-        <div style="padding: 0 5%">
+        <div class="q-ma-lg">
           <q-form ref="basicInfoForm" greedy>
             <q-input 
               outlined 
               dense 
-              v-model.trim="entryPoint.name"
-              :rules="[requiredRule]"
-              class="q-mb-sm q-mt-md"
-              aria-required="true"
-            >
-              <template v-slot:before>
-                <label :class="`field-label`">Name:</label>
-              </template>
-            </q-input>
-            <q-select
-              outlined 
-              v-model="entryPoint.group" 
-              :options="store.groups"
-              option-label="name"
-              option-value="id"
-              emit-value
-              map-options
-              dense
-              :rules="[requiredRule]"
-              aria-required="true"
-            >
-              <template v-slot:before>
-                <div class="field-label">Group:</div>
-              </template>  
-            </q-select>
-            <q-input 
-              outlined 
-              dense 
-              v-model.trim="entryPoint.description"
-              class="q-mb-sm q-mt-sm"
+              v-model.trim="job.description"
+              class="q-mb-lg"
               type="textarea"
               autogrow
             >
@@ -48,47 +20,82 @@
                 <label :class="`field-label`">Description:</label>
               </template>
             </q-input>
+            <q-select
+              outlined
+              dense
+              v-model="job.queue"
+              clearable
+              use-input
+              emit-value
+              map-options
+              option-label="name"
+              option-value="id"
+              input-debounce="100"
+              :options="queues"
+              @filter="getQueues"
+              :rules="[requiredRule]"
+              class="q-mb-sm"
+            >
+              <template v-slot:before>
+                <div class="field-label">Queue:</div>
+              </template>  
+            </q-select>
+            <q-select
+              outlined
+              dense
+              v-model="job.entrypoint"
+              clearable
+              use-input
+              
+              map-options
+              option-label="name"
+              option-value="id"
+              input-debounce="100"
+              :options="queues"
+              @filter="getEndpoint"
+              :rules="[requiredRule]"
+              class="q-mb-sm"
+              hint="Select Entrypoint in order to edit values on the right"
+            >
+              <template v-slot:before>
+                <div class="field-label">Entrypoint:</div>
+              </template>  
+            </q-select>
+            <q-input
+              outlined 
+              v-model="job.timeout" 
+              dense
+              aria-required="true"
+              class="q-mb-lg"
+              :rules="[timeUnitRule]"
+            >
+              <template v-slot:before>
+                <div class="field-label">Timeout:</div>
+              </template>  
+            </q-input>
           </q-form>
         </div>
       </fieldset>
-      <fieldset class="q-mt-lg">
-        <legend>Task Graph</legend>
-        <div 
-          class="row q-mx-md" 
-
-          :style="{ 'border': isTaskGraphValid ? '2px solid black' : '2px solid red' }"
-        >
-          <CodeEditor 
-            v-model="entryPoint.taskGraph"
-            language="yaml"
-            placeholder="# task graph yaml file"
-            style="width: 0; 
-            flex-grow: 1;" 
-          />
-        </div>
-        <caption
-          :class="{ invisible: isTaskGraphValid ? true : false }"
-          class="row text-caption q-ml-md" 
-          style="color: rgb(193, 0, 21); font-size: 12px;"
-        >
-          This field is required
-        </caption>
-      </fieldset>
     </div>
-    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
-      <legend>Parameters</legend>
+    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`" :disabled="job.entrypoint === ''">
+      <legend>Values</legend>
       <div class="q-px-xl">
         <BasicTable
           :columns="columns"
-          :rows="entryPoint.parameters"
+          :rows="parameters"
           :hideSearch="true"
           :hideEditTable="true"
+          :hideDelete="true"
           @edit="(param, i) => {selectedParam = param; selectedParamIndex = i; showEditParamDialog = true}"
           @delete="(param) => {selectedParam = param; showDeleteDialog = true}"
+          :inlineEditFields="['value']"
         >
+        <template #body-cell-value="props">
+          heyyyy
+        </template>
         </BasicTable>
 
-        <q-card
+        <!-- <q-card
           flat
           bordered
           class="q-px-lg q-my-lg"
@@ -97,30 +104,22 @@
             <label class="text-body1">Add Parameter</label>
           </q-card-section>
           <q-form ref="paramForm" greedy @submit.prevent="addParam">
-            <q-input 
-              outlined 
-              dense 
-              v-model.trim="parameter.name"
-              :rules="[requiredRule]"
-              class="q-mb-sm "
-              label="Enter Name"
-            />
             <q-select
               outlined 
-              v-model="parameter.parameterType" 
-              :options="typeOptions" 
+              v-model="parameter.name" 
+              :options="paramNames" 
               dense
               :rules="[requiredRule]"
               aria-required="true"
-              class="q-mb-sm"
-              label="Select Type"
+              class="q-mb-md"
+              label="Select Param Name"
             />
             <q-input 
               outlined 
               dense 
-              v-model.trim="parameter.defaultValue"
-              class="q-mb-sm"
-              label="Enter Default Value"
+              v-model.trim="parameter.value"
+              label="Enter Value"
+              :rules="[requiredRule]"
             />
             <q-card-actions align="right">
               <q-btn
@@ -136,56 +135,14 @@
               </q-btn>
             </q-card-actions>
           </q-form>
-        </q-card>
-
-        <q-select
-          outlined
-          dense
-          v-model="entryPoint.queues"
-          use-input
-          use-chips
-          multiple
-          emit-value
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="100"
-          :options="queues"
-          @filter="getQueues"
-          class="q-mb-md"
-        >
-          <template v-slot:before>
-            <div class="field-label">Queues:</div>
-          </template>  
-        </q-select>
-
-        <q-select
-          v-if="route.params.id === 'new'"
-          outlined
-          dense
-          v-model="entryPoint.plugins"
-          use-input
-          use-chips
-          multiple
-          emit-value
-          map-options
-          option-label="name"
-          option-value="id"
-          input-debounce="100"
-          :options="queues"
-          @filter="getPlugins"
-        >
-          <template v-slot:before>
-            <div class="field-label">Plugins:</div>
-          </template>  
-        </q-select>
+        </q-card> -->
       </div>
     </fieldset>
   </div>
 
   <div :class="`${isMobile ? '' : 'q-mx-xl'} float-right q-mb-lg`">
       <q-btn  
-        to="/entrypoints"
+        :to="`/experiments/${route.params.id}/jobs`"
         color="negative" 
         label="Cancel"
         class="q-mr-lg"
@@ -193,7 +150,7 @@
       <q-btn  
         @click="submit()" 
         color="primary" 
-        label="Submit Entry Point"
+        label="Submit Job"
 
       />
     </div>
@@ -205,7 +162,7 @@
     :name="selectedParam.name"
   />
 
-  <EditParamDialog 
+  <EditJobParamDialog 
     v-model="showEditParamDialog"
     :editParam="selectedParam"
     @updateParam="updateParam"
@@ -213,12 +170,11 @@
 </template>
 
 <script setup>
-  import { ref, inject, reactive, watch } from 'vue'
+  import { ref, inject, reactive, watch, computed } from 'vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
   import { useRouter } from 'vue-router'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import CodeEditor from '@/components/CodeEditor.vue'
-  import EditParamDialog from '@/dialogs/EditParamDialog.vue'
+  import EditJobParamDialog from '@/dialogs/EditJobParamDialog.vue'
   import BasicTable from '@/components/BasicTable.vue'
   import { useRoute } from 'vue-router'
   import * as api from '@/services/dataApi'
@@ -237,6 +193,23 @@
     return (!!val) || "This field is required"
   }
 
+  function timeUnitRule(val) {
+    return (/^\d+[hms]$/.test(val)) || "Value must be an integer followed by 'h', 'm', or 's'";
+  }
+
+
+  const job = ref({
+    description: '',
+    timeout: '24h',
+    queue: '',
+    entrypoint: '',
+  })
+
+  const paramNames = computed(() => {
+    if(!job.value.entrypoint) return []
+    return job.value.entrypoint.parameters.map((obj) => obj.name)
+  })
+
   let entryPoint = ref({
     name: '',
     group: '',
@@ -249,16 +222,32 @@
 
   const parameter = reactive({
     name: '',
-    parameterType: '',
-    defaultValue: '',
+    value: '',
   })
 
-  const typeOptions = ref([
-    'string',
-    'float',
-    'path',
-    'uri',
-  ])
+  const parameters = ref([])
+  const computedValue = computed(() => {
+    let output = {}
+    if(parameters.value.legnth === 0) return output
+    parameters.value.forEach((param) => {
+      output[param.name] = param.value
+    })
+    return output
+  })
+
+  watch(() => job.value.entrypoint, (newVal) => {
+    parameters.value = []
+    console.log('entrypoint = ', newVal)
+    if(Array.isArray(newVal?.parameters)) {
+      newVal.parameters.forEach((param) => {
+        parameters.value.push({
+          name: param.name,
+          value: param.defaultValue,
+          type: param.parameterType
+        })
+      })
+    }
+  })
 
   const basicInfoForm = ref(null)
   const paramForm = ref(null)
@@ -266,16 +255,16 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'type', label: 'Type', align: 'left', field: 'parameterType', sortable: true, },
-    { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'defaultValue', sortable: true, },
-    { name: 'actions', label: 'Actions', align: 'center',  },
+    { name: 'value', label: 'Value', align: 'left', field: 'value', sortable: true, },
+    { name: 'parameterType', label: 'Type', align: 'left', field: 'type', sortable: true, },
+    // { name: 'actions', label: 'Actions', align: 'center',  },
   ]
 
   const title = ref('')
-  getEntrypoint()
-  async function getEntrypoint() {
-    if(route.params.id === 'new') {
-      title.value = 'Create Entry Point'
+  getJob()
+  async function getJob() {
+    if(route.params.jobId === 'new') {
+      title.value = 'Create Job'
       return
     }
     try {
@@ -291,23 +280,16 @@
 
 
   function addParam() {
-    entryPoint.value.parameters.push({
-      name: parameter.name,
-      parameterType: parameter.parameterType,
-      defaultValue: parameter.defaultValue,
-    })
+    parameters.value.push(JSON.parse(JSON.stringify(parameter)))
     parameter.name = ''
-    parameter.parameterType = ''
-    parameter.defaultValue = ''
+    parameter.value = ''
     paramForm.value.reset()
   }
 
-  const isTaskGraphValid = ref(true)
 
   function submit() {
     basicInfoForm.value.validate().then(success => {
-      isTaskGraphValid.value = entryPoint.value.taskGraph.length > 0
-      if (success && isTaskGraphValid) {
+      if (success) {
         addOrModifyEntrypoint()
       }
       else {
@@ -317,21 +299,18 @@
   }
 
   async function addOrModifyEntrypoint() {
-    entryPoint.value.queues.forEach((queue, index, array) => {
-      if(typeof queue === 'object') {
-        array[index] = queue.id
-      }
-    })
+    job.value.entrypoint = job.value.entrypoint.id
+    job.value.values = computedValue.value
     try {
-      if (route.params.id === 'new') {
-        await api.addItem('entrypoints', entryPoint.value)
+      if (route.params.jobId === 'new') {
+        await api.addJob(route.params.id, job.value)
         notify.success(`Sucessfully created '${entryPoint.value.name}'`)
       } else {
         await api.updateItem('entrypoints', route.params.id, {
           name: entryPoint.value.name,
           description: entryPoint.value.description,
           taskGraph: entryPoint.value.taskGraph,
-          parameters: entryPoint.value.parameters,
+          parameters: parameters.value,
           queues: entryPoint.value.queues,
         })
         notify.success(`Sucessfully updated '${entryPoint.value.name}'`)
@@ -339,27 +318,23 @@
     } catch(err) {
       notify.error(err.response.data.message)
     } finally {
-      router.push('/entrypoints')
+      router.push(`/experiments/${route.params.id}/jobs`)
     }
   }
-
-  watch(() => entryPoint.value.taskGraph, (newVal) => {
-    if(newVal.length > 0) isTaskGraphValid.value = true
-  })
 
   const showDeleteDialog = ref(false)
   const selectedParam = ref({})
   const selectedParamIndex = ref('')
 
   function deleteParam() {
-    entryPoint.value.parameters = entryPoint.value.parameters.filter((param) => param.name !== selectedParam.value.name)
+    parameters.value = parameters.value.filter((param) => param.name !== selectedParam.value.name)
     showDeleteDialog.value = false
   }
 
   const showEditParamDialog = ref(false)
 
   function updateParam(parameter) {
-    entryPoint.value.parameters[selectedParamIndex.value] = { ...parameter }
+    parameters.value[selectedParamIndex.value] = { ...parameter }
     showEditParamDialog.value = false
   }
 
@@ -373,7 +348,6 @@
           rowsPerPage: 100,
           index: 0
         })
-        console.log('ressss = ', res)
         queues.value = res.data.data
       } catch(err) {
         notify.error(err.response.data.message)
@@ -381,17 +355,14 @@
     })
   }
 
-  const plugins = ref([])
-
-  async function getPlugins(val = '', update) {
+  async function getEndpoint(val = '', update) {
     update(async () => {
       try {
-        const res = await api.getData('plugins', {
+        const res = await api.getData('entrypoints', {
           search: val,
           rowsPerPage: 100,
           index: 0
         })
-        console.log('ressss = ', res)
         queues.value = res.data.data
       } catch(err) {
         notify.error(err.response.data.message)

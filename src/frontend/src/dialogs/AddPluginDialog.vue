@@ -89,6 +89,7 @@
     if(!newVal) {
       plugin.value.name = ''
       plugin.value.group = ''
+      plugin.value.description = ''
     }
   })
 

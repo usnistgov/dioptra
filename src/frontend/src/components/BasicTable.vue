@@ -15,7 +15,7 @@
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           <div v-if="col.name === 'actions'">
             <q-btn icon="edit" round size="sm" color="primary" flat @click="$emit('edit', props.row, props.rowIndex)" v-if="!hideEditRow" />
-            <q-btn icon="sym_o_delete" round size="sm" color="negative" flat @click="$emit('delete', props.row)" />
+            <q-btn icon="sym_o_delete" round size="sm" color="negative" flat @click="$emit('delete', props.row)" v-if="!hideDelete" />
           </div>
           <div v-if="typeof(col.value) === 'boolean' && editMode" class="text-body1" >
             <q-checkbox
@@ -27,6 +27,13 @@
           </div>
           <div v-else-if="typeof(col.value) === 'boolean'" class="text-body1">
             {{ col.value ? '✅' : 	'❌'}}
+          </div>
+          <div v-else-if="inlineEditFields && inlineEditFields.includes(col.name)" class="text-body1">
+            {{ props.row.value }}
+            <q-btn icon="edit" round size="sm" color="primary" flat />
+            <q-popup-edit v-model="props.row.value" v-slot="scope">
+              <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+            </q-popup-edit>
           </div>
           <div v-else>
             {{ col.value }}
@@ -56,7 +63,7 @@
 <script setup>
   import { ref } from 'vue'
 
-  defineProps(['columns', 'rows', 'hideSearch', 'hideEditTable', 'hideEditRow','title'])
+  defineProps(['columns', 'rows', 'hideSearch', 'hideEditTable', 'hideEditRow', 'hideDelete', 'title', 'inlineEditFields'])
 
   const editMode = ref(false)
 

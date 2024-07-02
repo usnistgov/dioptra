@@ -16,34 +16,23 @@
       :rules="[requiredRule]"
       class="q-mb-sm"
       aria-required="true"
+      disable
+      aria-disabled="true"
     >
       <template v-slot:before>
-        <label :class="`field-label`">Name:</label>
+        <label :class="`field-label`">Param Name:</label>
       </template>
     </q-input>
-    <q-select
-      outlined 
-      v-model="parameter.parameterType" 
-      :options="typeOptions" 
-      dense
-      :rules="[requiredRule]"
-      aria-required="true"
-      class="q-mb-sm"
-    >
-    <template v-slot:before>
-      <label :class="`field-label`">Type:</label>
-    </template>
-    </q-select>
     <q-input 
       outlined 
       dense 
-      v-model.trim="parameter.defaultValue"
+      v-model.trim="parameter.value"
       class="q-mb-sm"
       aria-required="false"
-      hint="Optional"
+      :rules="[requiredRule]"
     >
       <template v-slot:before>
-        <label :class="`field-label`">Default Value:</label>
+        <label :class="`field-label`">Param Value:</label>
       </template>
     </q-input>
   </DialogComponent>
@@ -62,28 +51,18 @@
 
   let parameter = reactive({
     name: '',
-    parameterType: '',
-    defaultValue: '',
+    value: '',
   })
-
-  const typeOptions = reactive([
-    'string',
-    'float',
-    'path',
-    'url',
-  ])
 
   watch(showDialog, (newVal) => {
     if(newVal) {
       parameter.name = props.editParam.name
-      parameter.parameterType = props.editParam.parameterType
-      parameter.defaultValue = props.editParam.defaultValue
+      parameter.value = props.editParam.value
 
     }
     else {
       parameter.name = ''
-      parameter.parameterType = ''
-      parameter.defaultValue = ''
+      parameter.value = ''
     }
   })
 

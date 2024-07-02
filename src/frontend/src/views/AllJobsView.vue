@@ -1,12 +1,13 @@
 <template>
-  <PageTitle :title="title" />
+  <PageTitle title="Jobs" />
   <TableComponent 
-    :rows="jobs"
+    :rows="experiments"
     :columns="columns"
-    title="Jobs"
+    title="Experiments"
     v-model:selected="selected"
-    @request="getJobs"
+    @edit="store.savedExperimentForm = selected[0]; store.editMode = true; router.push(`/experiments/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
+    @request="getJobs"
     ref="tableRef"
     :hideEditBtn="true"
   >
@@ -16,40 +17,37 @@
     <template #body-cell-queue="props">
       {{ props.row.queue.name }}
     </template>
+    <template #body-cell-group="props">
+      {{ props.row.group.name }}
+    </template>
   </TableComponent>
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-    :to="`/experiments/${route.params.id}/jobs/new`"
-  >
-    <span class="sr-only">Create a new Job</span>
-    <q-tooltip>
-      Create a new Job
-    </q-tooltip>
-  </q-btn>
 
   <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="deleteJob"
-    type="Job"
+    type="Experiment"
     :name="selected.length ? selected[0].description : ''"
   />
-
 </template>
 
 <script setup>
+
   import TableComponent from '@/components/TableComponent.vue'
   import { ref } from 'vue'
-  import { useRoute } from 'vue-router'
-  import PageTitle from '@/components/PageTitle.vue'
+  import { useDataStore } from '@/stores/DataStore.ts'
+  import { useRouter } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+  import PageTitle from '@/components/PageTitle.vue'
+  
+  const router = useRouter()
 
-  const route = useRoute()
+  const store = useDataStore()
+
+  const showDeleteDialog = ref(false)
+
+  const experiments = ref([])
 
   const columns = [
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
@@ -60,26 +58,10 @@
 
   const selected = ref([])
 
-  const title = ref('')
-  getExperiment()
-  async function getExperiment() {
+  async function getJobs(pagination) {
     try {
-      const res = await api.getItem('experiments', route.params.id)
-      title.value = `${res.data.name} Jobs`
-    } catch(err) {
-      console.log('err = ', err)
-    } 
-  }
-
-  const jobs = ref([])
-
-  const tableRef = ref(null)
-
-  async function getJobs(pagination, showDrafts) {
-    try {
-      const res = await api.getJobs(route.params.id, pagination, showDrafts)
-      console.log('jobs res = ', res)
-      jobs.value = res.data.data
+      const res = await api.getData('jobs', pagination, false)
+      experiments.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {
       console.log('err = ', err)
@@ -87,7 +69,7 @@
     } 
   }
 
-  const showDeleteDialog = ref(false)
+  const tableRef = ref(null)
 
   async function deleteJob() {
     try {
@@ -104,5 +86,6 @@
       notify.error(err.response.data.message);
     }
   }
+
 
 </script>

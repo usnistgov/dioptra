@@ -80,7 +80,8 @@ type UpdateParams = {
     taskGraph: string,
     parameters: EntrypointParameters[],
     queues: number[]
-  }
+  },
+  jobs: {}
 }
 
 interface EntrypointParameters {
@@ -156,6 +157,22 @@ export async function updateItem<T extends ItemType>(type: T, id: number, params
 
 export async function addItem<T extends ItemType>(type: T, params: CreateParams[T]) {
   return await axios.post(`/api/${type}/`, params)
+}
+
+interface JobParams {
+  description: string,
+  queue: number,
+  entrypoint: number,
+  values: object,
+  timeout: string
+}
+
+export async function addJob(id: number, params: JobParams) {
+  return await axios.post(`/api/experiments/${id}/jobs`, params)
+}
+
+export async function deleteJob(id: number, jobId: number) {
+  return await axios.delete(`/api/experiments/${id}/jobs/${jobId}`)
 }
 
 export async function addDraft<T extends ItemType>(type: T, params: CreateParams[T], id: number) {
