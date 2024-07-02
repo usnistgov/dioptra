@@ -101,6 +101,12 @@ class EntrypointDict(TypedDict):
     has_draft: bool | None
 
 
+class JobDict(TypedDict):
+    job: models.Job
+    artifacts: list[models.Artifact] | None
+    has_draft: bool | None
+
+
 # -- Ref Types -----------------------------------------------------------------
 
 
@@ -118,6 +124,27 @@ def build_experiment_ref(experiment: models.Experiment) -> dict[str, Any]:
         "name": experiment.name,
         "group": build_group_ref(experiment.resource.owner),
         "url": build_url(f"{EXPERIMENTS}/{experiment.resource_id}"),
+    }
+
+
+def build_experiment_snapshot_ref(experiment: models.Experiment) -> dict[str, Any]:
+    """Build an ExperimentSnapshotRef dictionary.
+
+    Args:
+        experiment: The experiment object to convert into an ExperimentSnapshotRef
+            dictionary.
+
+    Returns:
+        The ExperimentSnapshotRef dictionary.
+    """
+    return {
+        "snapshot_id": experiment.resource_snapshot_id,
+        "name": experiment.name,
+        "group": build_group_ref(experiment.resource.owner),
+        "url": build_url(
+            f"{EXPERIMENTS}/{experiment.resource_id}/snapshots/"
+            f"{experiment.resource_snapshot_id}"
+        ),
     }
 
 
@@ -183,13 +210,13 @@ def build_tag_ref_list(tags: list[models.Tag]) -> list[dict[str, Any]]:
 
 
 def build_plugin_ref(plugin: models.Plugin) -> dict[str, Any]:
-    """Build a PluginFileRef dictionary.
+    """Build a PluginRef dictionary.
 
     Args:
         plugin: The Plugin object to convert into a PluginRef dictionary.
 
     Returns:
-        The PluginFileRef dictionary.
+        The PluginRef dictionary.
     """
     return {
         "id": plugin.resource_id,
@@ -234,6 +261,25 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
     }
 
 
+def build_plugin_snapshot_ref(plugin: models.Plugin) -> dict[str, Any]:
+    """Build a PluginSnapshotRef dictionary.
+
+    Args:
+        plugin: The PluginFile object to convert into a PluginSnapshotRef dictionary.
+
+    Returns:
+        The PluginSnapshotRef dictionary.
+    """
+    return {
+        "snapshot_id": plugin.resource_snapshot_id,
+        "name": plugin.name,
+        "group": build_group_ref(plugin.resource.owner),
+        "url": build_url(
+            f"{PLUGINS}/{plugin.resource_id}/snapshots/{plugin.resource_snapshot_id}"
+        ),
+    }
+
+
 def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
     """Build a PluginRef dictionary.
 
@@ -272,6 +318,26 @@ def build_entrypoint_ref(entrypoint: models.EntryPoint) -> dict[str, Any]:
     }
 
 
+def build_entrypoint_snapshot_ref(entrypoint: models.EntryPoint) -> dict[str, Any]:
+    """Build a EntrypointSnapshotRef dictionary.
+
+    Args:
+        queue: The Entrypoint object to convert into a EntrypointSnapshotRef dictionary.
+
+    Returns:
+        The EntrypointSnapshotRef dictionary.
+    """
+    return {
+        "snapshot_id": entrypoint.resource_snapshot_id,
+        "name": entrypoint.name,
+        "group": build_group_ref(entrypoint.resource.owner),
+        "url": build_url(
+            f"{ENTRYPOINTS}/{entrypoint.resource_id}"
+            f"/snapshots/{entrypoint.resource_snapshot_id}"
+        ),
+    }
+
+
 def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
     """Build a QueueRef dictionary.
 
@@ -286,6 +352,25 @@ def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
         "name": queue.name,
         "group": build_group_ref(queue.resource.owner),
         "url": build_url(f"{QUEUES}/{queue.resource_id}"),
+    }
+
+
+def build_queue_snapshot_ref(queue: models.Queue) -> dict[str, Any]:
+    """Build a QueueSnapshotRef dictionary.
+
+    Args:
+        queue: The Queue object to convert into a QueueSnapshotRef dictionary.
+
+    Returns:
+        The QueueSnapshotRef dictionary.
+    """
+    return {
+        "snapshot_id": queue.resource_snapshot_id,
+        "name": queue.name,
+        "group": build_group_ref(queue.resource.owner),
+        "url": build_url(
+            f"{QUEUES}/{queue.resource_id}/snapshots/{queue.resource_snapshot_id}"
+        ),
     }
 
 
@@ -493,6 +578,45 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
 
     if queues is not None:
         data["queues"] = [build_queue_ref(queue) for queue in queues]
+
+    if has_draft is not None:
+        data["has_draft"] = has_draft
+
+    return data
+
+
+def build_job(job_dict: JobDict) -> dict[str, Any]:
+    """Build a Job response dictionary.
+
+    Args:
+        job: The Job object to convert into a job response dictionary.
+
+    Returns:
+        The Job response dictionary.
+    """
+    job = job_dict["job"]
+    has_draft = job_dict.get("has_draft", None)
+
+    data = {
+        "id": job.resource_id,
+        "snapshot_id": job.resource_snapshot_id,
+        "description": job.description,
+        "status": job.status,
+        "values": {
+            param.parameter.name: param.value
+            for param in job.entry_point_job.entry_point_parameter_values
+        },
+        "timeout": job.timeout,
+        "user": build_user_ref(job.creator),
+        "group": build_group_ref(job.resource.owner),
+        "queue": build_queue_snapshot_ref(job.queue_job.queue),
+        "experiment": build_experiment_snapshot_ref(job.experiment_job.experiment),
+        "entrypoint": build_entrypoint_snapshot_ref(job.entry_point_job.entry_point),
+        "created_on": job.created_on,
+        "last_modified_on": job.resource.last_modified_on,
+        "latest_snapshot": job.resource.latest_snapshot_id == job.resource_snapshot_id,
+        "tags": [build_tag_ref(tag) for tag in job.tags],
+    }
 
     if has_draft is not None:
         data["has_draft"] = has_draft

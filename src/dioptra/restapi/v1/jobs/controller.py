@@ -18,25 +18,58 @@
 from __future__ import annotations
 
 import uuid
+from typing import cast
+from urllib.parse import unquote
 
 import structlog
 from flask import request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
+from injector import inject
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.db import models
+from dioptra.restapi.routes import V1_JOBS_ROUTE
+from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.shared.snapshots.controller import (
+    generate_resource_snapshots_endpoint,
+    generate_resource_snapshots_id_endpoint,
+)
+from dioptra.restapi.v1.shared.tags.controller import (
+    generate_resource_tags_endpoint,
+    generate_resource_tags_id_endpoint,
+)
 
 from .schema import JobGetQueryParameters, JobPageSchema, JobSchema, JobStatusSchema
+from .service import (
+    RESOURCE_TYPE,
+    SEARCHABLE_FIELDS,
+    JobIdService,
+    JobIdStatusService,
+    JobService,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-api: Namespace = Namespace("Jobs", description="Jobs endpoint")
+api: Namespace = Namespace("Job", description="Job endpoint")
 
 
 @api.route("/")
 class JobEndpoint(Resource):
+    @inject
+    def __init__(self, job_service: JobService, *args, **kwargs) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_service: A JobService object.
+        """
+        self._job_service = job_service
+        super().__init__(*args, **kwargs)
+
     @login_required
     @accepts(query_params_schema=JobGetQueryParameters, api=api)
     @responds(schema=JobPageSchema, api=api)
@@ -48,10 +81,46 @@ class JobEndpoint(Resource):
         log.debug("Request received")
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
+        group_id = parsed_query_params["group_id"]
+        search_string = unquote(parsed_query_params["search"])
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+
+        jobs, total_num_jobs = self._job_service.get(
+            group_id=group_id,
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            log=log,
+        )
+        return utils.build_paging_envelope(
+            "jobs",
+            build_fn=utils.build_job,
+            data=jobs,
+            group_id=group_id,
+            query=search_string,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_jobs,
+        )
+
 
 @api.route("/<int:id>")
 @api.param("id", "ID for the Job resource.")
 class JobIdEndpoint(Resource):
+    @inject
+    def __init__(self, job_id_service: JobIdService, *args, **kwargs) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdService object.
+        """
+        self._job_id_service = job_id_service
+        super().__init__(*args, **kwargs)
+
     @login_required
     @responds(schema=JobSchema, api=api)
     def get(self, id: int):
@@ -59,32 +128,73 @@ class JobIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
         )
-        log.debug("Request received")
+        job = cast(
+            models.Job,
+            self._job_id_service.get(id, error_if_not_found=True, log=log),
+        )
+        return utils.build_job(job)
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
     def delete(self, id: int):
         """Deletes a Job resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="Job",
-            request_type="DELETE",
-            id=id,
+            request_id=str(uuid.uuid4()), resource="Job", request_type="DELETE", id=id
         )
-        log.debug("Request received")
+        return self._job_id_service.delete(job_id=id, log=log)
 
 
 @api.route("/<int:id>/status")
 @api.param("id", "ID for the Job resource.")
 class JobIdStatusEndpoint(Resource):
+    @inject
+    def __init__(
+        self, job_id_status_service: JobIdStatusService, *args, **kwargs
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdStatusService object.
+        """
+        self._job_id_status_service = job_id_status_service
+        super().__init__(*args, **kwargs)
+
     @login_required
     @responds(schema=JobStatusSchema, api=api)
     def get(self, id: int):
         """Gets a Job resource's status."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="JobStatus",
-            request_type="GET",
-            id=id,
+            request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
         )
-        log.debug("Request received")
+        return self._job_id_status_service.get(
+            job_id=id, error_if_not_found=True, log=log
+        )
+
+
+JobSnapshotsResource = generate_resource_snapshots_endpoint(
+    api=api,
+    resource_model=models.Job,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_JOBS_ROUTE,
+    searchable_fields=SEARCHABLE_FIELDS,
+    page_schema=JobPageSchema,
+    build_fn=utils.build_job,
+)
+JobSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
+    api=api,
+    resource_model=models.Job,
+    resource_name=RESOURCE_TYPE,
+    response_schema=JobSchema,
+    build_fn=utils.build_job,
+)
+
+JobTagsResource = generate_resource_tags_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)
+JobTagsIdResource = generate_resource_tags_id_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)

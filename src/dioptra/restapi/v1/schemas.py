@@ -91,7 +91,7 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
         "tags": fields.Nested(
             TagRefSchema,
             attribute="tags",
-            metadata=dict(description="Tags associated with the {name} resource."),
+            metadata=dict(description=f"Tags associated with the {name} resource."),
             many=True,
             dump_only=True,
         ),
@@ -133,10 +133,12 @@ def generate_base_resource_ref_schema(
         ),
     }
 
-    if not keep_snapshot_id:
+    if keep_snapshot_id:
+        schema.pop("id")
+        return Schema.from_dict(schema, name=f"{name}SnapshotRefBaseSchema")
+    else:
         schema.pop("snapshotId")
-
-    return Schema.from_dict(schema, name="f{name}RefBaseSchema")
+        return Schema.from_dict(schema, name=f"{name}RefBaseSchema")
 
 
 class BasePageSchema(Schema):
@@ -238,7 +240,6 @@ class SearchQueryParametersSchema(Schema):
 
 class ResourceGetQueryParameters(
     PagingQueryParametersSchema,
-    GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
 ):
     """The query parameters for the GET method of the resource endpoints."""

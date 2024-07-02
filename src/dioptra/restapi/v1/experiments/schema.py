@@ -27,10 +27,22 @@ from dioptra.restapi.v1.schemas import (
 )
 
 ExperimentRefBaseSchema = generate_base_resource_ref_schema("Experiment")
+ExperimentSnapshotRefBaseSchema = generate_base_resource_ref_schema(
+    "Experiment", keep_snapshot_id=True
+)
 
 
 class ExperimentRefSchema(ExperimentRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a Experiment resource."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Experiment resource."),
+    )
+
+
+class ExperimentSnapshotRefSchema(ExperimentSnapshotRefBaseSchema):  # type: ignore
+    """The snapshot reference schema for the data stored in a Experiment resource."""
 
     name = fields.String(
         attribute="name",

@@ -395,19 +395,19 @@ class FakeData(object):
             description=description,
             resource=job_resource,
             creator=creator,
-            entry_point_job=models.EntryPointJob(
-                job_resource=job_resource,
-                entry_point=entry_point,
-                entry_point_parameter_values=entry_point_parameter_values,
-            ),
-            experiment_job=models.ExperimentJob(
-                job_resource=job_resource,
-                experiment=experiment,
-            ),
-            queue_job=models.QueueJob(
-                job_resource=job_resource,
-                queue=queue,
-            ),
+        )
+        job.entry_point_job = models.EntryPointJob(
+            job_resource=job_resource,
+            entry_point=entry_point,
+            entry_point_parameter_values=entry_point_parameter_values,
+        )
+        job.experiment_job = models.ExperimentJob(
+            job_resource=job_resource,
+            experiment=experiment,
+        )
+        job.queue_job = models.QueueJob(
+            job_resource=job_resource,
+            queue=queue,
         )
 
         return job

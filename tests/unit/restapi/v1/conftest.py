@@ -16,9 +16,8 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
 import textwrap
-
-import textwrap
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any, cast
 
 import pytest
@@ -356,28 +355,34 @@ def registered_plugin_parameter_types(
 
 @pytest.fixture
 def registered_experiments(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> dict[str, Any]:
+    entrypoint_ids = [
+        entrypoint["id"] for entrypoint in registered_entrypoints.values()
+    ]
     experiment1_response = actions.register_experiment(
         client,
         name="experiment1",
         group_id=auth_account["default_group_id"],
         description="test description",
-        entrypoint_ids=list(),
+        entrypoint_ids=entrypoint_ids,
     ).get_json()
     experiment2_response = actions.register_experiment(
         client,
         name="experiment2",
         group_id=auth_account["default_group_id"],
         description="test description",
-        entrypoint_ids=list(),
+        entrypoint_ids=entrypoint_ids,
     ).get_json()
     experiment3_response = actions.register_experiment(
         client,
         name="experiment3",
         group_id=auth_account["default_group_id"],
         description="test description",
-        entrypoint_ids=list(),
+        entrypoint_ids=entrypoint_ids,
     ).get_json()
     return {
         "experiment1": experiment1_response,
@@ -403,10 +408,20 @@ def registered_entrypoints(
     )
     parameters = [
         {
-            "name": "my_entrypoint_param",
-            "defaultValue": "my_value",
+            "name": "entrypoint_param_1",
+            "defaultValue": "default",
             "parameterType": "string",
-        }
+        },
+        {
+            "name": "entrypoint_param_2",
+            "defaultValue": "1.0",
+            "parameterType": "float",
+        },
+        {
+            "name": "entrypoint_param_3",
+            "defaultValue": "/path",
+            "parameterType": "path",
+        },
     ]
     plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
     queue_ids = [queue["id"] for queue in list(registered_queues.values())]
@@ -444,4 +459,54 @@ def registered_entrypoints(
         "entrypoint1": entrypoint1_response,
         "entrypoint2": entrypoint2_response,
         "entrypoint3": entrypoint3_response,
+    }
+
+
+@pytest.fixture
+def registered_jobs(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> dict[str, Any]:
+    queue_id = registered_queues["queue1"]["snapshot"]
+    experiment_id = registered_experiments["experiment1"]["snapshot"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["snapshot"]
+    values = {
+        registered_entrypoints["entrypoint1"]["parameters"][0]["name"]: "new_value",
+    }
+    timeout = "24h"
+    job1_response = actions.register_job(
+        client=client,
+        queue_id=queue_id,
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        description="The first job.",
+        values=values,
+        timeout=timeout,
+    ).get_json()
+    job2_response = actions.register_job(
+        client=client,
+        queue_id=queue_id,
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        description="The second job.",
+        values=values,
+        timeout=timeout,
+    ).get_json()
+    job3_response = actions.register_job(
+        client=client,
+        queue_id=queue_id,
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_id,
+        description="Not retrieved.",
+        values=values,
+        timeout=timeout,
+    ).get_json()
+    return {
+        "job1": job1_response,
+        "job2": job2_response,
+        "job3": job3_response,
     }

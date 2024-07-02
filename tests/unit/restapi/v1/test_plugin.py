@@ -28,9 +28,9 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import (
-    V1_PLUGINS_ROUTE,
     V1_PLUGIN_FILES_ROUTE,
     V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+    V1_PLUGINS_ROUTE,
     V1_ROOT,
 )
 

@@ -243,7 +243,7 @@ class EntrypointService(object):
             .offset(page_index)
             .limit(page_length)
         )
-        entrypoints = list(db.session.scalars(entrypoints_stmt).all())
+        entrypoints = list(db.session.scalars(entrypoints_stmt).unique().all())
 
         queue_ids = set(
             resource.resource_id

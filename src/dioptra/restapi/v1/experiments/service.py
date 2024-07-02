@@ -445,7 +445,7 @@ class ExperimentIdService(object):
         db.session.commit()
         log.debug("Experiment deleted", experiment_id=experiment_id)
 
-        return {"status": "Success", "experiment_id": experiment_id}
+        return {"status": "Success", "id": [experiment_id]}
 
 
 class ExperimentIdEntrypointsService(object):

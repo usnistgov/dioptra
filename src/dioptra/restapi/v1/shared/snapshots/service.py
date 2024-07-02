@@ -53,7 +53,6 @@ class ResourceSnapshotsService(object):
     def get(
         self,
         resource_id: int,
-        group_id: int | None,
         search_string: str,
         page_index: int,
         page_length: int,
@@ -64,7 +63,6 @@ class ResourceSnapshotsService(object):
 
         Args:
             resource_id: The unique id of the resource.
-            group_id: A group ID used to filter results.
             search_string: A search string used to filter results.
             page_index: The index of the first snapshot to be returned.
             page_length: The maximum number of snapshots to be returned.
@@ -95,9 +93,6 @@ class ResourceSnapshotsService(object):
             return None
 
         filters = list()
-
-        if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
 
         if search_string:
             filters.append(
