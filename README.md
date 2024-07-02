@@ -1,12 +1,41 @@
 # Dioptra: Test Software for the Characterization of AI Technologies
 
-The code is currently in a _pre-release_ status.
-There is enough functionality to demonstrate the direction of the project, but the software is currently missing functionality that would provide a robust security model for deployment within an enterprise.
+Dioptra is a software test bed for assessing the trustworthy characteristics of artificial intelligence (AI).
+Trustworthy AI is: valid and reliable, safe, fair and bias is managed, secure and resilient, accountable and transparent, explainable and interpretable, and privacy-enhanced. [1](https:// [1](https:/st.gov/system/files/documents/2022/08/18/AI_RMF_2nd_draft.pdf)
+Dioptra supports the Measure function of the [NIST AI Risk Management Framework](https:/https:/st.gov/itl/ai-risk-management-framework/) by providing functionality to assess, analyze, and track identified AI risks.
 
-The project documentation is available at https://pages.nist.gov/dioptra/.
+Dioptra provides a REST API, which can be controlled via an intuitive web interface or python client, for designing, managing, executing, and tracking experiments.
+Details are available in the project documentation available at https://pages.nist.gov/dioptra/.
+
+## Use Cases
+We envision the following primary use cases for Dioptra:
+- Model Testing
+    - 1st party - Assess AI models throughout the development lifecycle
+    - 2nd party - Assess AI models during acquisition or in an evaluation lab environment
+    - 3rd party - Assess AI models during auditing or compliance activities
+- Research - Aid trustworthy AI researchers in tracking experiments
+- Evaluations and Challenges - Provide a common platform and resources for participants
+- Red-Teaming - Expose models and resources to a red team in a controlled environment
+
+## Key Properties
+Dioptra strives for the following key properties:
+- Reproducible - Dioptra automatically creates snapshots of resources so experiments and be reproduced and validated
+- Traceable - The full history of experiments and their inputs are tracked
+- Extensible - Support for expanding functionality and importing existing Python packages via a plugin system
+- Interoperable - A type system promotes interoperability between plugins
+- Modular - New experiments can be composed from modular components in a simple yaml file
+- Secure - Dioptra provides user authentication with access controls coming soon
+- Interactive - Users can interact with Dioptra via an intuitive web interface or the python client
+- Shareable and Reusable - Dioptra provides a multi-tenant environment so users can share and reuse components
+
+
+## Instructions
 
 <!-- markdownlint-disable MD007 MD030 -->
 - [User setup](#user-setup)
+    - [Build the containers](#build-the-containers)
+    - [Runn Dioptra](#run-dioptra)
+- [User quickstart](#user-quickstart)
 - [Developer quickstart](#developer-quickstart)
     - [Setting up the Python virtual environment](#setting-up-the-python-virtual-environment)
     - [Frontend development setup](#frontend-development-setup)
@@ -19,13 +48,37 @@ The project documentation is available at https://pages.nist.gov/dioptra/.
 - [License](#license)
 <!-- markdownlint-enable MD007 MD030 -->
 
-## User setup
+### User setup
 
-For instructions on how to build and run a fresh instance of Dioptra, see [cookiecutter-templates/cookiecutter-dioptra-deployment/README.md](cookiecutter-templates/cookiecutter-dioptra-deployment/README.md) and the [Building the containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) and [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) sections of the published documentation.
+If you are have been provided with an existing Dioptra deployment, skip ahead to the [User quickstart](#user-quickstart) section.
 
-## Developer quickstart
+#### Build the Containers
 
-### Setting up the Python virtual environment
+The first step in setting up Dioptra is to clone the repository and build the docker containers for the various services that are part of a deployment.
+See the [Building the Containers](https://pages.nist.gov/dioptra/getting-started/building-the-containers.html) section of the documentation for instructions.
+
+#### Run Dioptra
+
+Once the containers have been built, the next step is to configure the deployment with cruft and run Dioptra.
+See the [Running Dioptra](https://pages.nist.gov/dioptra/getting-started/running-dioptra.html) section of the documentation for instructions
+
+Additionally, you may want to add datasets and configure some of the provided examples in your deployment. See...
+
+
+### User quickstart
+
+
+Read through the user guide starting with [the basics](https://pages.nist.gov/dioptra/user-guide/the-basics.html) to become familiar with the core concepts of Dioptra.
+
+Register a user account with your Dioptra instance via either the web interface or python client.
+
+Consider exploring the example
+https://github.com/usnistgov/dioptra/tree/main/examples
+
+
+### Developer quickstart
+
+#### Setting up the Python virtual environment
 
 Developers must use Python 3.11 and create a virtual environment using one of the requirements.txt files in the `requirements/` directory in order to make contributions to this project.
 Ensure that you have Python 3.11 installed and that it is available in your PATH, and then identify the requirements file that you want to use:
@@ -91,11 +144,11 @@ pip-sync requirements\win-amd64-py3.11-requirements-dev.txt
 If the requirements file you used is updated, or if you want to switch to another requirements file (you need access to the Tensorflow library, for example), just run `pip-sync` again using the appropriate filename.
 It will install, upgrade, and uninstall all packages accordingly and ensure that you have a consistent environment.
 
-### Frontend development setup
+#### Frontend development setup
 
 For instructions on how to prepare the frontend development environment, [see the src/frontend/README.md file](src/frontend/README.md)
 
-### Building the documentation
+#### Building the documentation
 
 This project uses Sphinx to generate the documentation published at <https://pages.nist.gov/dioptra>.
 To build the documentation locally, activate your virtual environment if you haven't already and run:
@@ -110,7 +163,7 @@ Alternatively, you can also use `make` to do this:
 make docs
 ```
 
-### Reformatting code with black and isort
+#### Reformatting code with black and isort
 
 This project uses `black` and `isort` to automatically format Python code:
 Developers are expected to run `black` and `isort` over their contributions before opening a Pull Request.
@@ -130,7 +183,7 @@ Alternatively, you can also use `make` to do this:
 make beautify
 ```
 
-### Checking your code with flake8 and mypy
+#### Checking your code with flake8 and mypy
 
 This project uses `flake8` as a code linter and `mypy` to perform static type checking.
 Developers are expected to run `flake8` and `mypy` and resolve all issues before opening a Pull Request.
@@ -150,7 +203,7 @@ Alternatively, you can also use `make` to do this:
 make code-check
 ```
 
-### Checking your commit message with gitlint
+#### Checking your commit message with gitlint
 
 This project has a [commit style guide](./COMMIT_STYLE_GUIDE.md) that is enforced using the `gitlint` tool.
 Developers are expected to run `gitlint` and validate their commit message before opening a Pull Request.
@@ -166,7 +219,7 @@ Alternatively, you can also use `make` to do this:
 make commit-check
 ```
 
-### Running unit tests with pytest
+#### Running unit tests with pytest
 
 This project stores its unit tests in the `tests/` folder and runs them using pytest.
 Developers are expected to create new unit tests to validate any new features or behavior that they contribute and to verify that all unit tests pass before opening a Pull Request.
@@ -183,7 +236,7 @@ Alternatively, you can also use `make` to do this:
 make tests-unit
 ```
 
-### Cleanup
+#### Cleanup
 
 Run the following to clear away the project's temporary files, which includes the sentinel dotfiles that are created in `build/` when using `make`:
 
@@ -191,7 +244,7 @@ Run the following to clear away the project's temporary files, which includes th
 make clean
 ```
 
-## License
+### License
 
 [![Creative Commons License](https://i.creativecommons.org/l/by/4.0/88x31.png)](http://creativecommons.org/licenses/by/4.0/)
 
