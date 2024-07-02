@@ -17,6 +17,7 @@
 """The schemas for serializing/deserializing Job resources."""
 from marshmallow import Schema, fields, validate
 
+from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -47,17 +48,6 @@ class JobStatusSchema(Schema):
             description="The current status of the job. The allowed values are: "
             "queued, started, deferred, finished, failed.",
         ),
-    )
-
-
-class JobParameterValueSchema(Schema):
-    name = fields.String(
-        attribute="name",
-        metadata=dict(description="The name of the parameter."),
-    )
-    value = fields.String(
-        attribute="value",
-        metadata=dict(description="The value of the parameter."),
     )
 
 
@@ -133,6 +123,13 @@ class JobSchema(JobBaseSchema):  # type: ignore
             description="The current status of the job. The allowed values are: "
             "queued, started, deferred, finished, failed.",
         ),
+        dump_only=True,
+    )
+    artifacts = fields.Nested(
+        ArtifactRefSchema,
+        attribute="artifacts",
+        many=True,
+        metadata=dict(description="Artifacts created by the Job resource."),
         dump_only=True,
     )
 

@@ -180,7 +180,7 @@ class EntrypointSchema(
         EntrypointPluginSchema,
         attribute="plugins",
         many=True,
-        metadata=dict(description="List of plugin files for the entrypoint."),
+        metadata=dict(description="List of plugins for the entrypoint."),
         dump_only=True,
     )
     queues = fields.Nested(

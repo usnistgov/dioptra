@@ -40,7 +40,7 @@ from .locks import (
     resource_lock_types_table,
     user_lock_types_table,
 )
-from .ml_models import MlModel
+from .ml_models import MlModel, MlModelVersion
 from .plugins import (
     Plugin,
     PluginFile,
@@ -81,6 +81,7 @@ __all__ = [
     "Job",
     "JobMlflowRun",
     "MlModel",
+    "MlModelVersion",
     "Plugin",
     "PluginFile",
     "PluginTask",

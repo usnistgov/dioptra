@@ -131,6 +131,7 @@ def assert_job_response_contents_matches_expectations(
         "queue",
         "experiment",
         "entrypoint",
+        "artifacts",
     }
     assert set(response.keys()) == expected_keys
 
@@ -140,14 +141,13 @@ def assert_job_response_contents_matches_expectations(
     # Check basic response types for job
     assert isinstance(response["description"], str)
     assert isinstance(response["timeout"], str)
+    assert isinstance(response["values"], dict)
 
     assert response["description"] == expected_contents["description"]
     assert response["timeout"] == expected_contents["timeout"]
+    assert response["values"] == expected_contents["values"]
 
     assert helpers.is_timeout_format(response["timeout"])
-
-    assert isinstance(response["values"], dict)
-    assert response["values"] == expected_contents["values"]
 
     # Check Refs for base resources
     asserts.assert_user_ref_contents_matches_expectations(
@@ -520,7 +520,9 @@ def test_manage_job_snapshots(
     )
     modified_job = get_job(client, job_id=job_id).get_json()
     modified_job.pop("hasDraft")
+    modified_job.pop("artifacts")
     job_to_change_status.pop("hasDraft")
+    job_to_change_status.pop("artifacts")
     job_to_change_status["latestSnapshot"] = False
     job_to_change_status["lastModifiedOn"] = modified_job["lastModifiedOn"]
     asserts.assert_retrieving_snapshot_by_id_works(

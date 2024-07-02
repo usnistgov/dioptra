@@ -83,20 +83,12 @@ class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # 
     """The schema for the data stored in a Experiment resource."""
 
     from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
-    from dioptra.restapi.v1.jobs.schema import JobRefSchema
 
     entrypoints = fields.Nested(
         EntrypointRefSchema,
         attribute="entrypoints",
         many=True,
         metadata=dict(description="List of associated Entrypoint resources."),
-        dump_only=True,
-    )
-    jobs = fields.Nested(
-        JobRefSchema,
-        attribute="jobs",
-        many=True,
-        metadata=dict(description="List of associated Jobs resources."),
         dump_only=True,
     )
 

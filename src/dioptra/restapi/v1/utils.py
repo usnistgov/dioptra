@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Utility functions to help in building responses from ORM models"""
-from typing import Any, Callable, Final, TypedDict
+from typing import Any, Callable, Final, TypedDict, cast
 from urllib.parse import urlencode, urlunparse
 
 from marshmallow import Schema
@@ -23,9 +23,11 @@ from marshmallow import Schema
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ROOT
 
+ARTIFACTS: Final[str] = "artifacts"
 ENTRYPOINTS: Final[str] = "entrypoints"
 EXPERIMENTS: Final[str] = "experiments"
 GROUPS: Final[str] = "groups"
+MODELS: Final[str] = "models"
 PLUGINS: Final[str] = "plugins"
 PLUGIN_FILES: Final[str] = "files"
 PLUGIN_PARAMETER_TYPES: Final[str] = "pluginParameterTypes"
@@ -90,6 +92,11 @@ class PluginParameterTypeDict(TypedDict):
     has_draft: bool | None
 
 
+class ArtifactDict(TypedDict):
+    artifact: models.Artifact
+    has_draft: bool | None
+
+
 class QueueDict(TypedDict):
     queue: models.Queue
     has_draft: bool | None
@@ -103,7 +110,13 @@ class EntrypointDict(TypedDict):
 
 class JobDict(TypedDict):
     job: models.Job
-    artifacts: list[models.Artifact] | None
+    artifacts: list[models.Artifact]
+    has_draft: bool | None
+
+
+class ModelWithVersionDict(TypedDict):
+    ml_model: models.MlModel
+    version: models.MlModelVersion | None
     has_draft: bool | None
 
 
@@ -338,6 +351,23 @@ def build_entrypoint_snapshot_ref(entrypoint: models.EntryPoint) -> dict[str, An
     }
 
 
+def build_model_ref(model: models.MlModel) -> dict[str, Any]:
+    """Build a MlModel dictionary.
+
+    Args:
+        model: The Model object to convert into a MlModel dictionary.
+
+    Returns:
+        The MlModel dictionary.
+    """
+    return {
+        "id": model.resource_id,
+        "name": model.name,
+        "group": build_group_ref(model.resource.owner),
+        "url": f"{MODELS}/{model.resource_id}",
+    }
+
+
 def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
     """Build a QueueRef dictionary.
 
@@ -391,6 +421,23 @@ def build_plugin_parameter_type_ref(
         "name": plugin_param_type.name,
         "group": build_group_ref(plugin_param_type.resource.owner),
         "url": build_url(f"{PLUGIN_PARAMETER_TYPES}/{plugin_param_type.resource_id}"),
+    }
+
+
+def build_artifact_ref(artifact: models.Artifact) -> dict[str, Any]:
+    """Build a ArtifactRef dictionary.
+
+    Args:
+        artifact: The Artifact object to convert into a ArtifactRef dictionary.
+
+    Returns:
+        The ArtifactRef dictionary.
+    """
+    return {
+        "id": artifact.resource_id,
+        "artifact_uri": artifact.uri,
+        "group": build_group_ref(artifact.resource.owner),
+        "url": build_url(f"{ARTIFACTS}/{artifact.resource_id}"),
     }
 
 
@@ -495,7 +542,6 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         "snapshot_id": experiment.resource_snapshot_id,
         "name": experiment.name,
         "description": experiment.description,
-        "jobs": [],
         "user": build_user_ref(experiment.creator),
         "group": build_group_ref(experiment.resource.owner),
         "created_on": experiment.created_on,
@@ -595,6 +641,7 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
         The Job response dictionary.
     """
     job = job_dict["job"]
+    artifacts = job_dict.get("artifacts", None)
     has_draft = job_dict.get("has_draft", None)
 
     data = {
@@ -616,6 +663,104 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
         "last_modified_on": job.resource.last_modified_on,
         "latest_snapshot": job.resource.latest_snapshot_id == job.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in job.tags],
+    }
+
+    if artifacts is not None:
+        data["artifacts"] = [build_artifact_ref(artifact) for artifact in artifacts]
+
+    if has_draft is not None:
+        data["has_draft"] = has_draft
+
+    return data
+
+
+def build_model(model_dict: ModelWithVersionDict) -> dict[str, Any]:
+    """Build a Model response dictionary for the latest version.
+
+    Args:
+        model: The Model object to convert into a Model response dictionary.
+
+    Returns:
+        The Model response dictionary.
+    """
+    model = model_dict["ml_model"]
+    version = model_dict.get("version", None)
+    has_draft = model_dict.get("has_draft", None)
+
+    latest_version = build_model_version(model_dict) if version is not None else None
+    latest_version_number = version.version_number if version is not None else 0
+
+    # WARNING: this assumes versions cannot be deleted and that no details of
+    # the version # are needed in constructing the ref type. If either of these
+    # assumptions change, the service and controller layers will need to be
+    # updated to return the MlModelVersion # ORM objects.
+    versions = [
+        {
+            "version_number": version_number,
+            "url": build_url(f"{MODELS}/{model.resource_id}/versions/{version_number}"),
+        }
+        for version_number in range(1, latest_version_number + 1)
+    ]
+
+    data = {
+        "id": model.resource_id,
+        "snapshot_id": model.resource_snapshot_id,
+        "name": model.name,
+        "description": model.description,
+        "user": build_user_ref(model.creator),
+        "group": build_group_ref(model.resource.owner),
+        "created_on": model.created_on,
+        "last_modified_on": model.resource.last_modified_on,
+        "latest_snapshot": model.resource.latest_snapshot_id
+        == model.resource_snapshot_id,
+        "tags": [build_tag_ref(tag) for tag in model.tags],
+        "latest_version": latest_version,
+        "versions": versions,
+    }
+
+    if has_draft is not None:
+        data["has_draft"] = has_draft
+
+    return data
+
+
+def build_model_version(model_dict: ModelWithVersionDict) -> dict[str, Any]:
+    """Build a ModelVersion response dictionary.
+
+    Args:
+        model: The ModelVersion object to convert into a ModelVersion response
+            dictionary.
+
+    Returns:
+        The ModelVersion response dictionary.
+    """
+    model = model_dict["ml_model"]
+    version = cast(models.MlModelVersion, model_dict["version"])
+    return {
+        "model": build_model_ref(model),
+        "description": version.description,
+        "version_number": version.version_number,
+        "artifact": build_artifact_ref(version.artifact),
+        "created_on": version.created_on,
+    }
+
+
+def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
+    artifact = artifact_dict["artifact"]
+    has_draft = artifact_dict.get("has_draft")
+
+    data = {
+        "id": artifact.resource_id,
+        "snapshot_id": artifact.resource_snapshot_id,
+        "uri": artifact.uri,
+        "description": artifact.description,
+        "user": build_user_ref(artifact.creator),
+        "group": build_group_ref(artifact.resource.owner),
+        "created_on": artifact.created_on,
+        "last_modified_on": artifact.resource.last_modified_on,
+        "latest_snapshot": artifact.resource.latest_snapshot_id
+        == artifact.resource_snapshot_id,
+        "tags": [build_tag_ref(tag) for tag in artifact.tags],
     }
 
     if has_draft is not None:

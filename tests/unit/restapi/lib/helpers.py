@@ -20,7 +20,6 @@ This module contains shared functionality used across test suites for each of th
 API endpoints.
 """
 import datetime
-
 from typing import Any
 
 

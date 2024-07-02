@@ -14,6 +14,31 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from . import errors
+"""Error handlers for the artifact endpoints."""
+from __future__ import annotations
 
-__all__ = ["errors"]
+from flask_restx import Api
+
+
+class ArtifactAlreadyExistsError(Exception):
+    """The queue name already exists."""
+
+
+class ArtifactDoesNotExistError(Exception):
+    """The requested artifact does not exist."""
+
+
+def register_error_handlers(api: Api) -> None:
+    @api.errorhandler(ArtifactDoesNotExistError)
+    def handle_artifact_does_not_exist_error(error):
+        return {"message": "Not Found - The requested artifact does not exist"}, 404
+
+    @api.errorhandler(ArtifactAlreadyExistsError)
+    def handle_artifact_already_exists_error(error):
+        return (
+            {
+                "message": "Bad Request - The artifact uri on the registration form "
+                "already exists. Please select another and resubmit."
+            },
+            400,
+        )

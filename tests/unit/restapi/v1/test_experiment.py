@@ -111,7 +111,6 @@ def assert_experiment_response_contents_matches_expectations(
         "latestSnapshot",
         "hasDraft",
         "name",
-        "jobs",
         "entrypoints",
         "description",
         "tags",
@@ -144,14 +143,6 @@ def assert_experiment_response_contents_matches_expectations(
     assert isinstance(response["group"]["name"], str)
     assert isinstance(response["group"]["url"], str)
     assert response["group"]["id"] == expected_contents["group_id"]
-
-    # Validate the JobRef structure
-    for job in response["jobs"]:
-        assert isinstance(job["id"], int)
-        assert isinstance(job["url"], str)
-        assert isinstance(job["group"]["id"], int)
-        assert isinstance(job["group"]["url"], str)
-        assert isinstance(job["group"]["name"], str)
 
     # Validate the EntryPointRef structure
     for entrypoint in response["entrypoints"]:
@@ -331,7 +322,6 @@ def test_create_experiment(
         description=description,
     )
     experiment1_expected = experiment1_response.get_json()
-    print(experiment1_expected)  # TEST
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_expected,
         expected_contents={
@@ -490,7 +480,6 @@ def test_experiment_get_by_id(
     - The response is a single experiment with a matching ID.
     """
     experiment2_expected = registered_experiments["experiment2"]
-    print(experiment2_expected)  # TEST
 
     assert_retrieving_experiment_by_id_works(
         client,
