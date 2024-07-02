@@ -27,12 +27,19 @@ from dioptra.restapi.v1.schemas import (
 )
 
 JobRefSchema = generate_base_resource_ref_schema("Job")
+JobSnapshotRefSchema = generate_base_resource_ref_schema("Job", keep_snapshot_id=True)
 
 
 class JobStatusSchema(Schema):
     """The fields schema for the data in a Job status resource."""
 
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="ID for the Job resource."),
+        dump_only=True,
+    )
     status = fields.String(
+        attribute="status",
         validate=validate.OneOf(
             ["queued", "started", "deferred", "finished", "failed"],
         ),
@@ -40,19 +47,29 @@ class JobStatusSchema(Schema):
             description="The current status of the job. The allowed values are: "
             "queued, started, deferred, finished, failed.",
         ),
-        dump_only=True,
+    )
+
+
+class JobParameterValueSchema(Schema):
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="The name of the parameter."),
+    )
+    value = fields.String(
+        attribute="value",
+        metadata=dict(description="The value of the parameter."),
     )
 
 
 JobBaseSchema = generate_base_resource_schema("Job", snapshot=True)
 
 
-class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
+class JobSchema(JobBaseSchema):  # type: ignore
     """The schema for the data stored in a Job resource."""
 
-    from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
-    from dioptra.restapi.v1.experiments.schema import ExperimentRefSchema
-    from dioptra.restapi.v1.queues.schema import QueueRefSchema
+    from dioptra.restapi.v1.entrypoints.schema import EntrypointSnapshotRefSchema
+    from dioptra.restapi.v1.experiments.schema import ExperimentSnapshotRefSchema
+    from dioptra.restapi.v1.queues.schema import QueueSnapshotRefSchema
 
     description = fields.String(
         attribute="description",
@@ -67,20 +84,13 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
         required=True,
     )
     queue = fields.Nested(
-        QueueRefSchema,
+        QueueSnapshotRefSchema,
         attribute="queue",
         metadata=dict(description="The active queue used to run the Job."),
         dump_only=True,
     )
-    experimentId = fields.Integer(
-        attribute="experiment_id",
-        data_key="experiment",
-        metadata=dict(description="An integer identifying a registered experiment."),
-        load_only=True,
-        required=True,
-    )
     experiment = fields.Nested(
-        ExperimentRefSchema,
+        ExperimentSnapshotRefSchema,
         attribute="experiment",
         metadata=dict(description="The registered experiment associated with the Job."),
         dump_only=True,
@@ -93,18 +103,20 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
         required=True,
     )
     entrypoint = fields.Nested(
-        EntrypointRefSchema,
+        EntrypointSnapshotRefSchema,
         attribute="entrypoint",
         metadata=dict(description="The entry point associated with the Job."),
         dump_only=True,
     )
-    values = fields.List(
-        fields.String(),
+    values = fields.Dict(
+        keys=fields.String(),
+        values=fields.String(),
         attribute="values",
         allow_none=True,
-        load_default=None,
         metadata=dict(
-            description="A list of parameter values to pass to the Job's Entrypoint.",
+            description=(
+                "A dictionary of keyword arguments to pass to the Job's Entrypoint."
+            ),
         ),
     )
     timeout = fields.String(
@@ -113,6 +125,13 @@ class JobSchema(JobStatusSchema, JobBaseSchema):  # type: ignore
         metadata=dict(
             description="The maximum alloted time for a job before it times out and "
             "is stopped. If omitted, the job timeout will default to 24 hours.",
+        ),
+    )
+    status = fields.String(
+        attribute="status",
+        metadata=dict(
+            description="The current status of the job. The allowed values are: "
+            "queued, started, deferred, finished, failed.",
         ),
         dump_only=True,
     )
@@ -134,3 +153,11 @@ class JobGetQueryParameters(
     SearchQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /jobs endpoint."""
+
+
+class ExperimentJobGetQueryParameters(
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /experiments/{id}/jobs
+    endpoint."""

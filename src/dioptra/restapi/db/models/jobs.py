@@ -16,17 +16,18 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Index, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Index, Text, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from dioptra.restapi.db.db import bigint, db, guid, intpk, text_
 
+from .entry_points import EntryPoint
+from .experiments import Experiment
+from .queues import Queue
 from .resources import ResourceSnapshot
 
 if TYPE_CHECKING:
-    from .entry_points import EntryPoint, EntryPointParameterValue
-    from .experiments import Experiment
-    from .queues import Queue
+    from .entry_points import EntryPointParameterValue
     from .resources import Resource
 
 # -- Tables (no ORM) -------------------------------------------------------------------
@@ -48,6 +49,14 @@ class EntryPointJob(db.Model):  # type: ignore[name-defined]
     )
     job_resource_id: Mapped[intpk] = mapped_column(
         ForeignKey("resources.resource_id"), init=False
+    )
+
+    # Derived fields (read-only)
+    entry_point_id: Mapped[bigint] = column_property(
+        select(EntryPoint.resource_id)
+        .where(EntryPoint.resource_snapshot_id == entry_point_resource_snapshot_id)
+        .correlate_except(EntryPoint)
+        .scalar_subquery()
     )
 
     # Relationships
@@ -79,6 +88,14 @@ class ExperimentJob(db.Model):  # type: ignore[name-defined]
         ForeignKey("resources.resource_id"), init=False
     )
 
+    # Derived fields (read-only)
+    experiment_id: Mapped[bigint] = column_property(
+        select(Experiment.resource_id)
+        .where(Experiment.resource_snapshot_id == experiment_resource_snapshot_id)
+        .correlate_except(Experiment)
+        .scalar_subquery()
+    )
+
     # Relationships
     job_resource: Mapped["Resource"] = relationship()
     experiment: Mapped["Experiment"] = relationship(
@@ -101,6 +118,14 @@ class QueueJob(db.Model):  # type: ignore[name-defined]
     )
     job_resource_id: Mapped[intpk] = mapped_column(
         ForeignKey("resources.resource_id"), init=False
+    )
+
+    # Derived fields (read-only)
+    queue_id: Mapped[bigint] = column_property(
+        select(Queue.resource_id)
+        .where(Queue.resource_snapshot_id == queue_resource_snapshot_id)
+        .correlate_except(Queue)
+        .scalar_subquery()
     )
 
     # Relationships
@@ -154,10 +179,10 @@ class Job(ResourceSnapshot):
 
     # Relationships
     entry_point_job: Mapped["EntryPointJob"] = relationship(
-        back_populates="jobs", overlaps="jobs"
+        init=False, back_populates="jobs", overlaps="jobs"
     )
     experiment_job: Mapped["ExperimentJob"] = relationship(
-        back_populates="jobs", overlaps="entry_point_job,jobs"
+        init=False, back_populates="jobs", overlaps="entry_point_job,jobs"
     )
     mlflow_run: Mapped["JobMlflowRun"] = relationship(
         init=False,
@@ -166,7 +191,9 @@ class Job(ResourceSnapshot):
         overlaps="entry_point_job,experiment_job,jobs",
     )
     queue_job: Mapped["QueueJob"] = relationship(
-        back_populates="jobs", overlaps="entry_point_job,experiment_job,mlflow_run,jobs"
+        init=False,
+        back_populates="jobs",
+        overlaps="entry_point_job,experiment_job,mlflow_run,jobs",
     )
 
     # Additional settings

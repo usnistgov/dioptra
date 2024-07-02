@@ -98,7 +98,6 @@ def generate_resource_snapshots_endpoint(
             )
 
             parsed_query_params = request.parsed_query_params  # type: ignore
-            group_id = parsed_query_params["group_id"]
             search_string = unquote(parsed_query_params["search"])
             page_index = parsed_query_params["index"]
             page_length = parsed_query_params["page_length"]
@@ -107,7 +106,6 @@ def generate_resource_snapshots_endpoint(
                 tuple[list[dict[str, Any]], int],
                 self._snapshots_service.get(
                     resource_id=id,
-                    group_id=group_id,
                     search_string=search_string,
                     page_index=page_index,
                     page_length=page_length,
@@ -119,7 +117,7 @@ def generate_resource_snapshots_endpoint(
                 f"{route_prefix}/{id}/snapshots",
                 build_fn=build_fn,
                 data=snapshots,
-                group_id=group_id,
+                group_id=None,
                 query=search_string,
                 draft_type=None,
                 index=page_index,
@@ -272,7 +270,6 @@ def generate_nested_resource_snapshots_endpoint(
                 )
 
             parsed_query_params = request.parsed_query_params  # type: ignore
-            group_id = parsed_query_params["group_id"]
             search_string = unquote(parsed_query_params["search"])
             page_index = parsed_query_params["index"]
             page_length = parsed_query_params["page_length"]
@@ -281,7 +278,6 @@ def generate_nested_resource_snapshots_endpoint(
                 tuple[list[models.ResourceSnapshot], int],
                 self._snapshots_service.get(
                     resource_id=kwargs[resource_id],
-                    group_id=group_id,
                     search_string=search_string,
                     page_index=page_index,
                     page_length=page_length,
@@ -294,9 +290,9 @@ def generate_nested_resource_snapshots_endpoint(
                 f"{resource_route}/{kwargs[resource_id]}/snapshots",
                 build_fn=build_fn,
                 data=snapshots,
-                group_id=group_id,
-                draft_type=None,
+                group_id=None,
                 query=search_string,
+                draft_type=None,
                 index=page_index,
                 length=page_length,
                 total_num_elements=total_num_snapshots,

@@ -100,10 +100,22 @@ class EntrypointParameterSchema(Schema):
 
 
 EntrypointRefBaseSchema = generate_base_resource_ref_schema("Entrypoint")
+EntrypointSnapshotRefBaseSchema = generate_base_resource_ref_schema(
+    "Entrypoint", keep_snapshot_id=True
+)
 
 
 class EntrypointRefSchema(EntrypointRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a Entrypoint resource."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Entrypoint resource."),
+    )
+
+
+class EntrypointSnapshotRefSchema(EntrypointSnapshotRefBaseSchema):  # type: ignore
+    """The snapshot reference schema for the data stored in a Entrypoint resource."""
 
     name = fields.String(
         attribute="name",

@@ -160,6 +160,22 @@ class EntrypointIdEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
+    @responds(schema=EntrypointSchema, api=api)
+    def get(self, id: int):
+        """Gets an Entrypoint resource by its unique ID."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="Entrypoint",
+            request_type="GET",
+            id=id,
+        )
+        entrypoint = cast(
+            models.EntryPoint,
+            self._entrypoint_id_service.get(id, error_if_not_found=True, log=log),
+        )
+        return utils.build_entrypoint(entrypoint)
+
+    @login_required
     @accepts(schema=EntrypointMutableFieldsSchema, api=api)
     @responds(schema=EntrypointSchema, api=api)
     def put(self, id: int):
@@ -183,22 +199,6 @@ class EntrypointIdEndpoint(Resource):
                 error_if_not_found=True,
                 log=log,
             ),
-        )
-        return utils.build_entrypoint(entrypoint)
-
-    @login_required
-    @responds(schema=EntrypointSchema, api=api)
-    def get(self, id: int):
-        """Gets an Entrypoint resource by its unique ID."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="Entrypoint",
-            request_type="GET",
-            id=id,
-        )
-        entrypoint = cast(
-            models.EntryPoint,
-            self._entrypoint_id_service.get(id, error_if_not_found=True, log=log),
         )
         return utils.build_entrypoint(entrypoint)
 
