@@ -74,19 +74,40 @@
       :done="step2Done"
       :header-nav="step2Done"
     >
-      <div v-for="(item, i) in store.entryPoints" :key="i">
+      <!-- <div v-for="(item, i) in store.entryPoints" :key="i">
         <q-checkbox
           :label="item.name"
           v-model="selectedEntryPoints"
           :val="item.name"
         />
-      </div>
+      </div> -->
+
+      <q-select
+          outlined
+          dense
+          v-model="experiment.entrypoints"
+          use-input
+          use-chips
+          multiple
+          emit-value
+          map-options
+          option-label="name"
+          option-value="id"
+          input-debounce="300"
+          :options="entryPoints"
+          @filter="getEntryPoints"
+          class="q-mb-md"
+        >
+          <template v-slot:before>
+            <div class="field-label">Entry Points:</div>
+          </template>  
+        </q-select>
       <q-btn 
         color="primary"
         icon="add"
         label="Create new Entry Point"
         class="q-mt-lg"
-        @click="router.push('/entryPoints/create')" 
+        @click="router.push('/entrypoints/new')" 
       />
     </q-step>
 
@@ -98,7 +119,7 @@
       :header-nav="step3Done"
     >
       <div :class="`${isMobile ? '' : 'q-mx-xl'}`">
-        <q-btn 
+        <!-- <q-btn 
           v-for="(tag, i) in store.tags"
           :key="i" 
           :label="tag"
@@ -106,7 +127,7 @@
           class="q-ma-sm"
           @click="toggleTag(tag)"
           :color="selectedTags.includes(tag) ? 'primary' : 'grey-6'"
-        />
+        /> -->
 
         <q-input 
           v-model="newTag" 
@@ -126,7 +147,7 @@
         </q-input>
       </div>
 
-      <p :class="`${isMobile ? '' : 'q-mx-xl'} q-mt-lg`">
+      <!-- <p :class="`${isMobile ? '' : 'q-mx-xl'} q-mt-lg`">
         Selected Tags: <br>
         <q-chip 
           v-for="(tag, i) in selectedTags"
@@ -135,7 +156,7 @@
           color="primary"
           class="text-white"
         />
-      </p>
+      </p> -->
 
 
     </q-step>
@@ -222,18 +243,18 @@
   let isStep1FormValid = ref(true)
 
   // form inputs
-  const name = ref('')
-  const group = ref('')
-  const description = ref('')
-  let selectedEntryPoints = ref([])
-  let selectedTags = reactive([])
+  // const name = ref('')
+  // const group = ref('')
+  // const description = ref('')
+  // let selectedEntryPoints = ref([])
+  // let selectedTags = reactive([])
 
   const experiment = ref({
     name: '',
     group: '',
     description: '',
-    selectedEntryPoints: [],
-    selectedTags: []
+    entrypoints: [],
+    // selectedTags: []
   })
 
   getExperiment()
@@ -254,7 +275,7 @@
     name.value = store.savedExperimentForm.name
     group.value = store.savedExperimentForm.group
     if(store.savedExperimentForm.entryPoints?.length) {
-      selectedEntryPoints.value = store.savedExperimentForm.entryPoints
+      experiment.value.entryPoints = store.savedExperimentForm.entryPoints
       step2Done.value = true
     }
     if(store.savedExperimentForm.tags?.length) {
@@ -300,62 +321,70 @@
 
   let nameWarning = ref(false)
 
-  watch(name, newVal => {
-    if(newVal.length > 0) {
-      nameWarning.value = false
-    }
-  })
+  // watch(name, newVal => {
+  //   if(newVal.length > 0) {
+  //     nameWarning.value = false
+  //   }
+  // })
 
   function submit(draft = false) {
     // if(name.value.length === 0) {
     //   nameWarning.value = true
     //   return
     // }
-    if(route.params.id === 'new') {
-      addExperiment()
-    } else {
-      updateExperiment()
-    }
+    addorModifyExperiment()
     isSubmitting.value = true
-    router.push('/experiments')
   }
 
-  async function addExperiment() {
+  async function addorModifyExperiment() {
     try {
-      const res = await api.addItem('experiments', {
+      if(route.params.id === 'new') {
+        await api.addItem('experiments', experiment.value)
+        notify.success(`Sucessfully created '${experiment.value.name}'`)
+      } else {
+        experiment.value.entrypoints.forEach((entrypoint, index, array) => {
+          if(typeof entrypoint === 'object') {
+            array[index] = entrypoint.id
+          }
+        })
+        await api.updateItem('experiments', route.params.id, {
         name: experiment.value.name,
         description: experiment.value.description,
-        group: experiment.value.group,
+        entrypoints: experiment.value.entrypoints
       })
-      notify.success(`Sucessfully created '${res.data.name}'`)
+        notify.success(`Sucessfully updated '${experiment.value.name}'`)
+      }
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
-    } 
+    } finally {
+      router.push('/experiments')
+    }
   }
 
-  async function updateExperiment() {
-    try {
-      const res = await api.updateItem('experiments', route.params.id, {
-        name: experiment.value.name,
-        description: experiment.value.description,
-      })
-      notify.success(`Sucessfully updated '${res.data.name}'`)
-    } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
-  }
+  // async function updateExperiment() {
+  //   try {
+  //     const res = await api.updateItem('experiments', route.params.id, {
+  //       name: experiment.value.name,
+  //       description: experiment.value.description,
+  //       entrypoints: experiment.value.entrypoints
+  //     })
+  //     notify.success(`Sucessfully updated '${res.data.name}'`)
+  //   } catch(err) {
+  //     console.log('err = ', err)
+  //     notify.error(err.response.data.message)
+  //   } 
+  // }
 
 
   function reset() {
     if(step.value === 1) step1Form.value.reset()
     step.value = 1
-    name.value = ''
-    group.value = ''
-    description.value = ''
-    selectedEntryPoints.value = []
-    selectedTags = []
+    // name.value = ''
+    // group.value = ''
+    // description.value = ''
+    // selectedEntryPoints.value = []
+    // selectedTags = []
     step2Done.value = false
     step3Done.value = false
   }
@@ -395,6 +424,24 @@
       next(false)
     }
   })
+
+  const entryPoints = ref([])
+
+  async function getEntryPoints(val = '', update) {
+    update(async () => {
+      try {
+        const res = await api.getData('entrypoints', {
+          search: val,
+          rowsPerPage: 100,
+          index: 0
+        })
+        console.log('ressss = ', res)
+        entryPoints.value = res.data.data
+      } catch(err) {
+        notify.error(err.response.data.message)
+      } 
+    })
+  }
 
 </script>
 

@@ -96,7 +96,7 @@
 
   const showDialog = defineModel()
 
-  const jsonString = ref('{}')
+  const jsonString = ref('')
 
   const plugin = ref({
     name: '',
@@ -111,7 +111,7 @@
   const emit = defineEmits(['addPluginParamType', 'updatePluginParamType'])
 
   function emitAddOrEdit() {
-    plugin.value.structure = JSON.parse(jsonString.value)
+    plugin.value.structure = jsonString.value ? JSON.parse(jsonString.value) : {}
     if(props.editPluginParamType) {
       emit('updatePluginParamType', props.editPluginParamType.id, plugin.value.name, plugin.value.description, plugin.value.structure)
     } else {
@@ -132,6 +132,7 @@
       plugin.value.description = ''
       plugin.value.structure = {}
       jsonString.value = '{}'
+      uploadedFile.value = null
     }
   })
 

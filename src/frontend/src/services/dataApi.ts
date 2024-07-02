@@ -58,7 +58,7 @@ type UpdateParams = {
   experiments: {
     name: string,
     description: string,
-    entrypoints: any
+    entrypoints: number[]
   },
   tags: {
     name: string

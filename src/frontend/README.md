@@ -25,6 +25,8 @@ The following steps will be necessary:
     ```sh
     export DIOPTRA_RESTAPI_DEV_DATABASE_URI=sqlite:///$(pwd)/dioptra-dev.db
     export DIOPTRA_RESTAPI_ENV=dev
+    export DIOPTRA_RESTAPI_VERSION=v1
+    export DIOPTRA_SESSION_PROTECTION=none
     dioptra-db autoupgrade
     ```
 
@@ -33,6 +35,8 @@ The following steps will be necessary:
     ```
     $env:DIOPTRA_RESTAPI_DEV_DATABASE_URI="sqlite:///$pwd\dioptra-dev.db"
     $env:DIOPTRA_RESTAPI_ENV="dev"
+    $env:DIOPTRA_RESTAPI_VERSION="v1"
+    $env:DIOPTRA_SESSION_PROTECTION="none"
     dioptra-db autoupgrade
     ```
 
