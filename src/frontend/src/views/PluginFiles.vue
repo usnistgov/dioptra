@@ -1,4 +1,5 @@
 <template>
+  <PageTitle :title="`${title} Files`" />
   <TableComponent 
     :rows="files"
     :columns="fileColumns"
@@ -43,7 +44,8 @@
   import { ref, computed } from 'vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
-    import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+  import PageTitle from '@/components/PageTitle.vue'
 
   const route = useRoute()
   const router = useRouter()
@@ -63,6 +65,19 @@
   ]
 
   const files = ref([])
+
+  const title = ref('')
+
+  getPluginName()
+  async function getPluginName() {
+    try {
+      const res = await api.getItem('plugins', route.params.id)
+      title.value = res.data.name
+    } catch(err) {
+      console.log(err)
+    } 
+  }
+
 
   async function getFiles(pagination) {
     try {

@@ -1,4 +1,5 @@
 <template>
+  <PageTitle title="Plugin Params" />
   <TableComponent
     :rows="pluginParameterTypes"
     :columns="columns"
@@ -75,6 +76,7 @@
   import { useRouter } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
+  import PageTitle from '@/components/PageTitle.vue'
 
   const router = useRouter()
 

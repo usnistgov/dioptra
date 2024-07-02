@@ -1,4 +1,5 @@
 <template>
+  <PageTitle title="Plugins" />
   <TableComponent
     :rows="plugins"
     :columns="columns"
@@ -72,6 +73,7 @@
   import { useRouter } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
+  import PageTitle from '@/components/PageTitle.vue'
 
   const router = useRouter()
 

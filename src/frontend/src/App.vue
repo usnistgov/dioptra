@@ -1,7 +1,6 @@
 <template>
   <NavBar class="fixed-top" style="z-index: 999;" />
   <main :class="isMobile ? 'q-ma-md' : 'q-ma-xl'" style="margin-top: 75px;">
-    <PageTitle v-if="!hidePageTitle" />
     <RouterView />
   </main>
   <!-- <AccessibilityTest /> -->
@@ -13,21 +12,13 @@
   import AccessibilityTest from '@/components/AccessibilityTest.vue'
   import { useQuasar } from 'quasar'
   import { computed, provide } from 'vue'
-  import PageTitle from '@/components/PageTitle.vue'
-
+  
   const route = useRoute()
 
   const $q = useQuasar()
 
   const isMobile = computed(() => {
     return $q.screen.sm || $q.screen.xs
-  })
-
-  const hidePageTitle = computed(() => {
-    if(route.path === '/' || route.path === '/login' || route.path === '/register') {
-      return true
-    }
-    return false
   })
   
   provide('isMobile', isMobile)

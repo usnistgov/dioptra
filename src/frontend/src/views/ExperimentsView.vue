@@ -1,4 +1,5 @@
 <template>
+  <PageTitle title="Experiments" />
   <TableComponent 
     :rows="experiments"
     :columns="columns"
@@ -10,7 +11,7 @@
     ref="tableRef"
   >
     <template #body-cell-name="props">
-        <RouterLink :to="`/experiment/${props.row.id}/jobs`">
+        <RouterLink :to="`/experiments/${props.row.id}/jobs`">
           {{props.row.name}}
         </RouterLink>
       </template>
@@ -75,6 +76,7 @@
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+  import PageTitle from '@/components/PageTitle.vue'
   
   const router = useRouter()
 

@@ -1,4 +1,7 @@
 <template>
+  <PageTitle 
+    title="Entry Points"
+  />
   <TableComponent 
     :rows="entrypoints"
     :columns="columns"
@@ -87,6 +90,9 @@
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+  import PageTitle from '@/components/PageTitle.vue'
+
+
   
   const router = useRouter()
 

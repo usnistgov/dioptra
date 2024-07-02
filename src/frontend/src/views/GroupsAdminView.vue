@@ -1,4 +1,5 @@
 <template>
+  <PageTitle title="Groups Admin" />
   <div :class="`row q-mt-lg ${isMobile ? '' : 'q-mx-xl'} q-mb-lg `">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset class="q-pa-lg">
@@ -123,6 +124,8 @@
   import BasicTable from '@/components/BasicTable.vue'
   import { useLoginStore } from '@/stores/LoginStore'
   import { useDataStore } from '@/stores/DataStore.ts'
+  import PageTitle from '@/components/PageTitle.vue'
+  
   const dataStore = useDataStore()
 
   const isMobile = inject('isMobile')

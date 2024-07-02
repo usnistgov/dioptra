@@ -1,4 +1,5 @@
 <template>
+  <PageTitle title="Groups" />
   <TableComponent 
     :rows="userGroups"
     :columns="columns"
@@ -36,6 +37,7 @@
   import { useLoginStore } from '@/stores/LoginStore'
   import { useDataStore } from '@/stores/DataStore'
   import { useRouter } from 'vue-router'
+  import PageTitle from '@/components/PageTitle.vue'
 
 
   const router = useRouter()

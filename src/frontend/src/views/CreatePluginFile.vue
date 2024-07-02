@@ -1,4 +1,5 @@
 <template>
+  <PageTitle :title="title" />
   <div class="row q-my-lg">
     <fieldset :class="`${isMobile ? 'col-12 q-mb-lg' : 'col q-mr-md'}`">
       <legend>Basic Info</legend>
@@ -272,6 +273,7 @@
   import * as notify from '../notify'
   import TableComponent from '@/components/TableComponent.vue'
   import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
+  import PageTitle from '@/components/PageTitle.vue'
   
   const route = useRoute()
   const router = useRouter()
@@ -281,12 +283,18 @@
   const pluginFile = ref({})
   const uploadedFile = ref(null)
 
+  const title = ref('')
+
   onMounted(async () => {
-    if(route.params.fileId === 'new') return
+    if(route.params.fileId === 'new') {
+      title.value = 'Create File'
+      return
+    }
     try {
       const res = await api.getFile(route.params.id, route.params.fileId)
       console.log('getFile = ', res)
       pluginFile.value = res.data
+      title.value = `Edit ${res.data.filename}`
       tasks.value = res.data.tasks
       tasks.value.forEach((task) => {
         [...task.inputParams, ... task.outputParams].forEach((param) => {

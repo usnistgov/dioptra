@@ -1,5 +1,9 @@
 <template>
-  <h1 class="text-capitalize q-mb-sm" @click="console.log(route, title)">{{ title }}</h1>
+  <h1 class="text-capitalize q-mb-sm" 
+    :class="{ invisible: title ? false : true }"
+  >
+    {{ title || 'Loading...' }}
+  </h1>
   <nav aria-label="Breadcrumb">
     <q-breadcrumbs class="text-grey text-capitalize">
       <template v-slot:separator>
@@ -16,7 +20,7 @@
       />
       <q-breadcrumbs-el
         v-if="route.params.id && route.params.fileId"
-        :label="`${route.params.id} Files`"
+        :label="`${pluginName} Files`"
         :to="`/plugins/${route.params.id}/files`"
       />
       <q-breadcrumbs-el
@@ -31,9 +35,10 @@
 
 <script setup>
   import { useRoute } from 'vue-router'
-  import { computed, watch } from 'vue'
-  import { useDataStore } from '@/stores/DataStore.ts'
-  const store = useDataStore()
+  import { ref, computed, watch } from 'vue'
+  import * as api from '@/services/dataApi'
+
+  defineProps(['title'])
 
   const route = useRoute()
 
@@ -41,26 +46,32 @@
     return route.path.split('/').slice(1)
   })
 
-  const newOrEdit = computed(() => {
-    return store.editMode ? 'Edit' : 'New'
-  })
 
-  watch(() => route.path, (newVal) => {
-    if(newVal !== '/entrypoints/create' && newVal !== '/experiments/create' && newVal !== '/groups/admin') {
-      store.editMode = false
-    }
-  })
+  const pluginName = ref('')
 
-  const title = computed(() => {
-    if(route.path === '/entrypoints/create') return `${newOrEdit.value} Entry Point`
-    if(route.path === '/groups/admin') return `${store.editMode ? 'Edit Group ' : 'New Group'}`
-    if(path.value[0] === 'entrypoints') return 'Entry Points'
-    if(route.path === '/experiments/create') return `${newOrEdit.value} Experiment`
-    if(path.value[2] === 'files' && !route.params.fileId) return ` Files`
-    if(path.value[2] === 'files' && route.params.fileId) return `File ${route.params.fileId}`
-    if(path.value[0] === 'plugins' && path.value[1]) return 'Edit Plugin' 
-    return path.value[0]
-  })
+  if(route.params.id && route.params.fileId) {
+    getPluginName()
+  }
+
+  async function getPluginName() {
+    try {
+      const res = await api.getItem('plugins', route.params.id)
+      pluginName.value = res.data.name
+    } catch(err) {
+      console.log(err)
+    } 
+  }
+
+  // const title = computed(() => {
+  //   if(route.path === '/entrypoints/create') return `${newOrEdit.value} Entry Point`
+  //   if(route.path === '/groups/admin') return `${store.editMode ? 'Edit Group ' : 'New Group'}`
+  //   if(path.value[0] === 'entrypoints') return 'Entry Points'
+  //   if(route.path === '/experiments/create') return `${newOrEdit.value} Experiment`
+  //   if(path.value[2] === 'files' && !route.params.fileId) return ` Files`
+  //   if(path.value[2] === 'files' && route.params.fileId) return `File ${route.params.fileId}`
+  //   if(path.value[0] === 'plugins' && path.value[1]) return 'Edit Plugin' 
+  //   return path.value[0]
+  // })
 
 
 </script>

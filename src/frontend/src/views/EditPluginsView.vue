@@ -1,4 +1,5 @@
 <template>
+  <PageTitle :title="title" />
   <div :class="`${isMobile ? '' : 'q-mx-xl'} q-mt-lg`">
     <div :class="`${isMobile ? '' : 'q-gutter-x-xl row'}`">
       <fieldset :class="`${isMobile ? 'col-12' : 'col'} `">
@@ -56,6 +57,7 @@
   import * as api from '@/services/dataApi'
   import { useRoute, useRouter } from 'vue-router'
   import * as notify from '../notify'
+  import PageTitle from '@/components/PageTitle.vue'
 
   const route = useRoute()
   const router = useRouter()
@@ -71,11 +73,13 @@
     description: '',
   })
 
+  const title = ref('')
   getPlugin()
   async function getPlugin() {
     try {
       const res = await api.getItem('plugins' ,route.params.id)
       plugin.value = res.data
+      title.value = `Edit ${res.data.name}`
     } catch(err) {
       notify.error(err.response.data.message)
     } 

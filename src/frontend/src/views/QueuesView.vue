@@ -1,4 +1,5 @@
 <template>
+  <PageTitle title="Queues" />
   <TableComponent 
     :rows="queues"
     :columns="showDrafts ? columns.slice(0, -2) : columns"
@@ -85,6 +86,7 @@
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { useLoginStore } from '@/stores/LoginStore'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import PageTitle from '@/components/PageTitle.vue'
 
   const store = useLoginStore()
 

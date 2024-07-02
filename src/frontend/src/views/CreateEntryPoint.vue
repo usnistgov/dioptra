@@ -1,4 +1,7 @@
 <template>
+  <PageTitle 
+    :title="title"
+  />
   <div :class="`row ${isMobile ? '' : 'q-mx-xl'} q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
@@ -220,6 +223,7 @@
   import { useRoute } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
+  import PageTitle from '@/components/PageTitle.vue'
 
   const route = useRoute()
   
@@ -267,12 +271,17 @@
     { name: 'actions', label: 'Actions', align: 'center',  },
   ]
 
+  const title = ref('')
   getEntrypoint()
   async function getEntrypoint() {
-    if(route.params.id === 'new') return
+    if(route.params.id === 'new') {
+      title.value = 'Create Entry Point'
+      return
+    }
     try {
       const res = await api.getItem('entrypoints', route.params.id)
       entryPoint.value = res.data
+      title.value = `Edit ${res.data.name}`
       console.log('entryPoint = ', entryPoint.value)
     } catch(err) {
       console.log('err = ', err)

@@ -1,4 +1,5 @@
 <template>
+  <PageTitle title="Tags" />
   <TableComponent 
     :rows="tags"
     :columns="columns"
@@ -50,6 +51,8 @@
   import AddTagsDialog from '@/dialogs/AddTagsDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { useLoginStore } from '@/stores/LoginStore'
+  import PageTitle from '@/components/PageTitle.vue'
+
   const store = useLoginStore()
 
   const showAddDialog = ref(false)

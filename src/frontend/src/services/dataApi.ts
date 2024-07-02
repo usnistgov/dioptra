@@ -102,14 +102,9 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage,
-      // search: pagination.search,
       search: urlEncode(pagination.search),
-      //search: pagination.search ? `"${pagination.search}"` : ''
       draftType: showDrafts ? 'new' : ''
     },
-    // paramsSerializer: {
-    //   encode: (param) => encodeURIComponent(param).replaceAll("+", "%20"),
-    // },
   })
   if(showDrafts && res.data.data) {
     res.data.data.forEach((obj: any) => {
@@ -118,6 +113,16 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
   }
   console.log('getData = ', res)
   return res
+}
+
+export async function getJobs(id: number, pagination: Pagination) {
+  return await axios.get(`/api/experiments/${id}/jobs`, {
+    params: {
+      index: pagination.index,
+      pageLength: pagination.rowsPerPage,
+      search: urlEncode(pagination.search),
+    }
+  })
 }
 
 function urlEncode(string: string) {

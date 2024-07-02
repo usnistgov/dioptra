@@ -1,4 +1,5 @@
 <template>
+  <PageTitle :title="title" />
   <q-stepper
     v-model="step"
     header-nav
@@ -217,6 +218,7 @@
   import * as api from '@/services/dataApi'
   import { useLoginStore } from '@/stores/LoginStore.ts'
   import * as notify from '../notify'
+  import PageTitle from '@/components/PageTitle.vue'
 
   const router = useRouter()
   const route = useRoute()
@@ -257,12 +259,17 @@
     // selectedTags: []
   })
 
+  const title = ref('')
   getExperiment()
   async function getExperiment() {
-    if(route.params.id === 'new') return
+    if(route.params.id === 'new') {
+      title.value = 'Create Experiment'
+      return
+    }
     try {
       const res = await api.getItem('experiments', route.params.id)
       experiment.value = res.data
+      title.value = `Edit ${res.data.name}`
       console.log('experiment = ', experiment.value)
     } catch(err) {
       console.log('err = ', err)
