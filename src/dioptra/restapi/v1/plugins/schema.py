@@ -36,11 +36,24 @@ ALLOWED_PLUGIN_FILENAME_REGEX = re.compile(r"^([A-Za-z]|[A-Za-z_][A-Za-z0-9_]+)\
 ALLOWED_PLUGIN_TASK_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
 ALLOWED_PLUGIN_TASK_PARAMETER_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
 
+
 PluginRefBaseSchema = generate_base_resource_ref_schema("Plugin")
+PluginSnapshotRefBaseSchema = generate_base_resource_ref_schema(
+    "Plugin", keep_snapshot_id=True
+)
 
 
 class PluginRefSchema(PluginRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a Plugin resource."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Plugin resource."),
+    )
+
+
+class PluginSnapshotRefSchema(PluginSnapshotRefBaseSchema):  # type: ignore
+    """The snapshot reference schema for the data stored in a Plugin resource."""
 
     name = fields.String(
         attribute="name",

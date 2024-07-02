@@ -24,6 +24,91 @@ from dioptra.restapi.routes import V1_ROOT
 from . import actions, helpers
 
 
+def assert_base_resource_contents_match_expectations(
+    response: dict[str, Any]
+) -> None:
+    assert isinstance(response["id"], int)
+    assert isinstance(response["snapshot"], int)
+    assert isinstance(response["createdOn"], str)
+    assert isinstance(response["lastModifiedOn"], str)
+    assert isinstance(response["latestSnapshot"], bool)
+    assert isinstance(response["hasDraft"], bool)
+
+    assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["lastModifiedOn"])
+
+
+def assert_user_ref_contents_matches_expectations(
+    user: dict[str, Any], expected_user_id: int
+) -> None:
+    assert isinstance(user["id"], int)
+    assert isinstance(user["username"], str)
+    assert isinstance(user["url"], str)
+    assert user["id"] == expected_user_id
+
+
+def assert_group_ref_contents_matches_expectations(
+    group: dict[str, Any], expected_group_id: int
+) -> None:
+    assert isinstance(group["id"], int)
+    assert isinstance(group["name"], str)
+    assert isinstance(group["url"], str)
+    assert group["id"] == expected_group_id
+
+
+def assert_tag_ref_contents_matches_expectations(tags: dict[str, Any]) -> None:
+    for tag in tags:
+        assert isinstance(tag["id"], int)
+        assert isinstance(tag["name"], str)
+        assert isinstance(tag["url"], str)
+
+
+def assert_base_resource_ref_contents_matches_expectations(
+    resource: dict[str, Any], expected_group_id: int
+) -> None:
+    assert isinstance(resource["snapshotId"], int)
+    assert isinstance(resource["url"], str)
+    assert_group_ref_contents_matches_expectations(
+        group=resource["group"], expected_group_id=expected_group_id
+    )
+
+
+def assert_queue_ref_contents_matches_expectations(
+    queue: dict[str, Any],
+    expected_queue_id: int,
+    expected_group_id: int,
+) -> None:
+    assert isinstance(queue["name"], str)
+    assert_base_resource_ref_contents_matches_expectations(
+        resource=queue, expected_group_id=expected_group_id
+    )
+    assert queue["snapshotId"] == expected_queue_id
+
+
+def assert_experiment_ref_contents_matches_expectations(
+    experiment: dict[str, Any],
+    expected_experiment_id: int,
+    expected_group_id: int,
+) -> None:
+    assert isinstance(experiment["name"], str)
+    assert_base_resource_ref_contents_matches_expectations(
+        resource=experiment, expected_group_id=expected_group_id
+    )
+    assert experiment["snapshotId"] == expected_experiment_id
+
+
+def assert_entrypoint_ref_contents_matches_expectations(
+    entrypoint: dict[str, Any],
+    expected_entrypoint_id: int,
+    expected_group_id: int,
+) -> None:
+    assert isinstance(entrypoint["name"], str)
+    assert_base_resource_ref_contents_matches_expectations(
+        resource=entrypoint, expected_group_id=expected_group_id
+    )
+    assert entrypoint["snapshotId"] == expected_entrypoint_id
+
+
 def assert_retrieving_draft_by_resource_id_works(
     client: FlaskClient,
     resource_route: str,
@@ -286,6 +371,8 @@ def assert_retrieving_snapshot_by_id_works(
         f"/{V1_ROOT}/{resource_route}/{resource_id}/snapshots/{snapshot_id}",
         follow_redirects=True,
     )
+    print('exp',expected)
+    print('res',response.get_json())
     assert response.status_code == 200 and response.get_json() == expected
 
 

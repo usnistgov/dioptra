@@ -29,6 +29,7 @@ from dioptra.restapi.routes import (
     V1_ENTRYPOINTS_ROUTE,
     V1_EXPERIMENTS_ROUTE,
     V1_GROUPS_ROUTE,
+    V1_JOBS_ROUTE,
     V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     V1_PLUGINS_ROUTE,
     V1_QUEUES_ROUTE,
@@ -126,6 +127,48 @@ def register_experiment(
 
     return client.post(
         f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
+def register_job(
+    client: FlaskClient,
+    queue_id: int,
+    experiment_id: int,
+    entrypoint_id: int,
+    values: dict[str, str],
+    description: str | None = None,
+    timeout: str | None = None,
+) -> TestResponse:
+    """Register a job using the API.
+
+    Args:
+        client:
+        queue_id:
+        experiment_id:
+        entrypoint_id:
+        description:
+        values:
+        timeout:
+
+    Returns:
+        The response from the API.
+    """
+    payload: dict[str, Any] = {
+        "queue": queue_id,
+        "entrypoint": entrypoint_id,
+        "values": values,
+    }
+
+    if description:
+        payload["description"] = description
+
+    if timeout:
+        payload["timeout"] = timeout
+
+    return client.post(
+        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}/{V1_JOBS_ROUTE}",
         json=payload,
         follow_redirects=True,
     )

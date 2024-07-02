@@ -17,6 +17,7 @@
 """The module defining the endpoints for Experiment resources."""
 import uuid
 from typing import cast
+from urllib.parse import unquote
 
 import structlog
 from flask import request
@@ -30,7 +31,17 @@ from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
-from dioptra.restapi.v1.jobs.schema import JobSchema, JobStatusSchema
+from dioptra.restapi.v1.jobs.schema import (
+    ExperimentJobGetQueryParameters,
+    JobPageSchema,
+    JobSchema,
+    JobStatusSchema,
+)
+from dioptra.restapi.v1.jobs.service import (
+    ExperimentJobIdService,
+    ExperimentJobIdStatusService,
+    ExperimentJobService,
+)
 from dioptra.restapi.v1.schemas import IdListSchema, IdStatusResponseSchema
 from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_endpoint,
@@ -212,9 +223,26 @@ class ExperimentIdEndpoint(Resource):
 @api.route("/<int:id>/jobs")
 @api.param("id", "ID for the Experiment resource.")
 class ExperimentIdJobEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        experiment_job_service: ExperimentJobService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the Job resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            experiment_id_job_service: An ExperimentIdJobService object.
+        """
+        self._experiment_job_service = experiment_job_service
+        super().__init__(*args, **kwargs)
+
     @login_required
-    @accepts(query_params_schema=ExperimentGetQueryParameters, api=api)
-    @responds(schema=JobSchema(many=True), api=api)
+    @accepts(query_params_schema=ExperimentJobGetQueryParameters, api=api)
+    @responds(schema=JobPageSchema, api=api)
     def get(self, id: int):
         """Returns a list of jobs for a specified Experiment."""
         log = LOGGER.new(
@@ -222,28 +250,74 @@ class ExperimentIdJobEndpoint(Resource):
             resource="ExperimentIdJobEndpoint",
             request_type="GET",
             id=id,
-        )  # noqa: F841
-        log.debug("Request received")
-        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+        )
+        parsed_query_params = request.parsed_query_params  # type: ignore
+
+        search_string = unquote(parsed_query_params["search"])
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+
+        jobs, total_num_jobs = self._experiment_job_service.get(
+            experiment_id=id,
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            log=log,
+        )
+        return utils.build_paging_envelope(
+            f"experiments/{id}/jobs",
+            build_fn=utils.build_job,
+            data=jobs,
+            group_id=None,
+            query=search_string,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_jobs,
+        )
 
     @login_required
-    @accepts(schema=JobSchema, api=api)
+    @accepts(schema=JobSchema(exclude=["groupId"]), api=api)
     @responds(schema=JobSchema, api=api)
-    def post(self):
+    def post(self, id: int):
         """Creates a Job resource under the specified Experiment."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="ExperimentIdJobEndpoint",
             request_type="POST",
         )
-        log.debug("Request received")
-        parsed_obj = request.parsed_obj  # noqa: F841
+        parsed_obj = request.parsed_obj  # type: ignore
+
+        job = self._experiment_job_service.create(
+            experiment_id=id,
+            queue_id=parsed_obj["queue_id"],
+            entrypoint_id=parsed_obj["entrypoint_id"],
+            values=parsed_obj["values"],
+            description=parsed_obj["description"],
+            timeout=parsed_obj["timeout"],
+            log=log,
+        )
+        return utils.build_job(job)
 
 
 @api.route("/<int:id>/jobs/<int:jobId>")
 @api.param("id", "ID for the Experiment resource.")
 @api.param("jobId", "ID for the Job resource.")
 class ExperimentIdJobIdEndpoint(Resource):
+    @inject
+    def __init__(
+        self, experiment_job_id_service: ExperimentJobIdService, *args, **kwargs
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdService object.
+        """
+        self._experiment_job_id_service = experiment_job_id_service
+        super().__init__(*args, **kwargs)
+
     @login_required
     @responds(schema=JobSchema, api=api)
     def get(self, id: int, jobId: int):
@@ -255,7 +329,8 @@ class ExperimentIdJobIdEndpoint(Resource):
             id=id,
             job_id=jobId,
         )
-        log.debug("Request received")
+        job = self._experiment_job_id_service.get(id, job_id=jobId, log=log)
+        return utils.build_job(job)
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
@@ -268,13 +343,30 @@ class ExperimentIdJobIdEndpoint(Resource):
             id=id,
             job_id=jobId,
         )
-        log.debug("Request received")
+        return self._experiment_job_id_service.delete(id, job_id=jobId, log=log)
 
 
 @api.route("/<int:id>/jobs/<int:jobId>/status")
 @api.param("id", "ID for the Experiment resource.")
 @api.param("jobId", "ID for the Job resource.")
 class ExperimentIdJobIdStatusEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        experiment_job_id_status_service: ExperimentJobIdStatusService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdStatusService object.
+        """
+        self._experiment_job_id_status_service = experiment_job_id_status_service
+        super().__init__(*args, **kwargs)
+
     @login_required
     @responds(schema=JobStatusSchema, api=api)
     def get(self, id: int, jobId: int):
@@ -283,10 +375,33 @@ class ExperimentIdJobIdStatusEndpoint(Resource):
             request_id=str(uuid.uuid4()),
             resource="ExperimentIdJobIdStatusEndpoint",
             request_type="GET",
-            id=id,
+            experiment_id=id,
             job_id=jobId,
         )
-        log.debug("Request received")
+        return self._experiment_job_id_status_service.get(
+            experiment_id=id, job_id=jobId, error_if_not_found=True, log=log
+        )
+
+    @login_required
+    @accepts(schema=JobStatusSchema, api=api)
+    @responds(schema=JobStatusSchema, api=api)
+    def put(self, id: int, jobId: int):
+        """Modifies a Job resource's status."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="ExperimentIdJobIdStatusEndpoint",
+            request_type="PUT",
+            experiment_id=id,
+            job_id=jobId,
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        return self._experiment_job_id_status_service.modify(
+            experiment_id=id,
+            job_id=jobId,
+            status=parsed_obj["status"],
+            error_if_not_found=True,
+            log=log,
+        )
 
 
 @api.route("/<int:id>/entrypoints")
