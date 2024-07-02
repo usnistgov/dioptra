@@ -35,6 +35,14 @@ type CreateParams = {
     contents: string,
     description: string,
     tasks: []
+  },
+  entrypoints: {
+    name: string,
+    description: string,
+    taskGraph: string,
+    parameters: EntrypointParameters[],
+    queues: number[],
+    plugins: number[]
   }
 }
 
@@ -65,7 +73,20 @@ type UpdateParams = {
     contents: string,
     description: string,
     tasks: []
+  },
+  entrypoints: {
+    name: string,
+    description: string,
+    taskGraph: string,
+    parameters: EntrypointParameters[],
+    queues: number[]
   }
+}
+
+interface EntrypointParameters {
+  name: string,
+  defaultValue: string,
+  parameterType: string
 }
 
 interface Pagination {
@@ -76,7 +97,7 @@ interface Pagination {
   search: string,
 }
 
-export async function getData<T extends ItemType>(type: T, pagination: Pagination, showDrafts: boolean) {
+export async function getData<T extends ItemType>(type: T, pagination: Pagination, showDrafts: boolean = false) {
   const res = await axios.get(`/api/${type}/${showDrafts ? 'drafts/' : ''}`, {
     params: {
       index: pagination.index,

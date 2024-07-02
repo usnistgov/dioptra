@@ -20,7 +20,11 @@
             <q-select
               outlined 
               v-model="entryPoint.group" 
-              :options="groupOptions" 
+              :options="store.groups"
+              option-label="name"
+              option-value="id"
+              emit-value
+              map-options
               dense
               :rules="[requiredRule]"
               aria-required="true"
@@ -29,25 +33,48 @@
                 <div class="field-label">Group:</div>
               </template>  
             </q-select>
+            <q-input 
+              outlined 
+              dense 
+              v-model.trim="entryPoint.description"
+              class="q-mb-sm q-mt-sm"
+              type="textarea"
+              autogrow
+            >
+              <template v-slot:before>
+                <label :class="`field-label`">Description:</label>
+              </template>
+            </q-input>
           </q-form>
         </div>
       </fieldset>
       <fieldset class="q-mt-lg">
         <legend>Task Graph</legend>
-        <div style="padding: 0 2%" class="row">
+        <div 
+          class="row q-mx-md" 
+
+          :style="{ 'border': isTaskGraphValid ? '2px solid black' : '2px solid red' }"
+        >
           <CodeEditor 
-            v-model="entryPoint.task_graph"
+            v-model="entryPoint.taskGraph"
             language="yaml"
             placeholder="# task graph yaml file"
             style="width: 0; 
             flex-grow: 1;" 
           />
         </div>
+        <caption
+          :class="{ invisible: isTaskGraphValid ? true : false }"
+          class="row text-caption q-ml-md" 
+          style="color: rgb(193, 0, 21); font-size: 12px;"
+        >
+          This field is required
+        </caption>
       </fieldset>
     </div>
     <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
       <legend>Parameters</legend>
-      <div style="padding: 0 5%">
+      <div class="q-px-xl">
         <BasicTable
           :columns="columns"
           :rows="entryPoint.parameters"
@@ -77,7 +104,7 @@
             />
             <q-select
               outlined 
-              v-model="parameter.parameter_type" 
+              v-model="parameter.parameterType" 
               :options="typeOptions" 
               dense
               :rules="[requiredRule]"
@@ -88,7 +115,7 @@
             <q-input 
               outlined 
               dense 
-              v-model.trim="parameter.default_value"
+              v-model.trim="parameter.defaultValue"
               class="q-mb-sm"
               label="Enter Default Value"
             />
@@ -107,6 +134,48 @@
             </q-card-actions>
           </q-form>
         </q-card>
+
+        <q-select
+          outlined
+          dense
+          v-model="entryPoint.queues"
+          use-input
+          use-chips
+          multiple
+          emit-value
+          map-options
+          option-label="name"
+          option-value="id"
+          input-debounce="100"
+          :options="queues"
+          @filter="getQueues"
+          class="q-mb-md"
+        >
+          <template v-slot:before>
+            <div class="field-label">Queues:</div>
+          </template>  
+        </q-select>
+
+        <q-select
+          v-if="route.params.id === 'new'"
+          outlined
+          dense
+          v-model="entryPoint.plugins"
+          use-input
+          use-chips
+          multiple
+          emit-value
+          map-options
+          option-label="name"
+          option-value="id"
+          input-debounce="100"
+          :options="queues"
+          @filter="getPlugins"
+        >
+          <template v-slot:before>
+            <div class="field-label">Plugins:</div>
+          </template>  
+        </q-select>
       </div>
     </fieldset>
   </div>
@@ -141,46 +210,50 @@
 </template>
 
 <script setup>
-  import { ref, inject, reactive } from 'vue'
-  import { useDataStore } from '@/stores/DataStore.ts'
+  import { ref, inject, reactive, watch } from 'vue'
+  import { useLoginStore } from '@/stores/LoginStore.ts'
   import { useRouter } from 'vue-router'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import CodeEditor from '@/components/CodeEditor.vue'
   import EditParamDialog from '@/dialogs/EditParamDialog.vue'
   import BasicTable from '@/components/BasicTable.vue'
+  import { useRoute } from 'vue-router'
+  import * as api from '@/services/dataApi'
+  import * as notify from '../notify'
+
+  const route = useRoute()
   
   const router = useRouter()
 
-  const store = useDataStore()
+  const store = useLoginStore()
 
   const isMobile = inject('isMobile')
 
-  const requiredRule = (val) => (val && val.length > 0) || "This field is required"
+  function requiredRule(val) {
+    return (!!val) || "This field is required"
+  }
 
-  let entryPoint = reactive({
+  let entryPoint = ref({
     name: '',
     group: '',
+    description: '',
     parameters: [],
-    task_graph: ''
+    taskGraph: '',
+    queues: [],
+    plugins: []
   })
 
   const parameter = reactive({
     name: '',
-    parameter_type: '',
-    default_value: '',
+    parameterType: '',
+    defaultValue: '',
   })
 
-  const groupOptions = ref([
-    'Group 1',
-    'Group 2',
-    'Group 3',
-  ])
-
   const typeOptions = ref([
-    'String',
-    'Float',
-    'Path',
-    'URI',
+    'string',
+    'float',
+    'path',
+    'url',
   ])
 
   const basicInfoForm = ref(null)
@@ -189,42 +262,44 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'type', label: 'Type', align: 'left', field: 'parameter_type', sortable: true, },
-    { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'default_value', sortable: true, },
+    { name: 'type', label: 'Type', align: 'left', field: 'parameterType', sortable: true, },
+    { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'defaultValue', sortable: true, },
     { name: 'actions', label: 'Actions', align: 'center',  },
   ]
 
-  if(Object.keys(store.editEntryPoint).length !== 0) {
-    // entryPoint = JSON.parse(JSON.stringify(store.editEntryPoint))
-    entryPoint = Object.assign(entryPoint, JSON.parse(JSON.stringify(store.editEntryPoint)))
-    store.editMode = true
-    store.editEntryPoint = {}
+  getEntrypoint()
+  async function getEntrypoint() {
+    if(route.params.id === 'new') return
+    try {
+      const res = await api.getItem('entrypoints', route.params.id)
+      entryPoint.value = res.data
+      console.log('entryPoint = ', entryPoint.value)
+    } catch(err) {
+      console.log('err = ', err)
+      notify.error(err.response.data.message)
+    } 
   }
 
 
   function addParam() {
-    entryPoint.parameters.push({
+    entryPoint.value.parameters.push({
       name: parameter.name,
-      parameter_type: parameter.parameter_type,
-      default_value: parameter.default_value,
+      parameterType: parameter.parameterType,
+      defaultValue: parameter.defaultValue,
     })
     parameter.name = ''
-    parameter.parameter_type = ''
-    parameter.default_value = ''
+    parameter.parameterType = ''
+    parameter.defaultValue = ''
     paramForm.value.reset()
   }
 
+  const isTaskGraphValid = ref(true)
+
   function submit() {
     basicInfoForm.value.validate().then(success => {
-      if (success) {
-        if(!store.editMode) {
-          entryPoint.id = new Date().getTime().toString()
-          store.entryPoints.push(entryPoint)
-        } else {
-          const editIndex = store.entryPoints.findIndex((storedentryPoint) => storedentryPoint.id === entryPoint.id)
-          store.entryPoints[editIndex] = entryPoint
-        }
-        router.push('/entrypoints')
+      isTaskGraphValid.value = entryPoint.value.taskGraph.length > 0
+      if (success && isTaskGraphValid) {
+        addOrModifyEntrypoint()
       }
       else {
         // error
@@ -232,20 +307,87 @@
     })
   }
 
+  async function addOrModifyEntrypoint() {
+    entryPoint.value.queues.forEach((queue, index, array) => {
+      if(typeof queue === 'object') {
+        array[index] = queue.id
+      }
+    })
+    try {
+      if (route.params.id === 'new') {
+        await api.addItem('entrypoints', entryPoint.value)
+        notify.success(`Sucessfully created '${entryPoint.value.name}'`)
+      } else {
+        await api.updateItem('entrypoints', route.params.id, {
+          name: entryPoint.value.name,
+          description: entryPoint.value.description,
+          taskGraph: entryPoint.value.taskGraph,
+          parameters: entryPoint.value.parameters,
+          queues: entryPoint.value.queues,
+        })
+        notify.success(`Sucessfully updated '${entryPoint.value.name}'`)
+      }
+    } catch(err) {
+      notify.error(err.response.data.message)
+    } finally {
+      router.push('/entrypoints')
+    }
+  }
+
+  watch(() => entryPoint.value.taskGraph, (newVal) => {
+    if(newVal.length > 0) isTaskGraphValid.value = true
+  })
+
   const showDeleteDialog = ref(false)
   const selectedParam = ref({})
   const selectedParamIndex = ref('')
 
   function deleteParam() {
-    entryPoint.parameters = entryPoint.parameters.filter((param) => param.name !== selectedParam.value.name)
+    entryPoint.value.parameters = entryPoint.value.parameters.filter((param) => param.name !== selectedParam.value.name)
     showDeleteDialog.value = false
   }
 
   const showEditParamDialog = ref(false)
 
   function updateParam(parameter) {
-    entryPoint.parameters[selectedParamIndex.value] = { ...parameter }
+    entryPoint.value.parameters[selectedParamIndex.value] = { ...parameter }
     showEditParamDialog.value = false
+  }
+
+  const queues = ref([])
+
+  async function getQueues(val = '', update) {
+    update(async () => {
+      try {
+        const res = await api.getData('queues', {
+          search: val,
+          rowsPerPage: 100,
+          index: 0
+        })
+        console.log('ressss = ', res)
+        queues.value = res.data.data
+      } catch(err) {
+        notify.error(err.response.data.message)
+      } 
+    })
+  }
+
+  const plugins = ref([])
+
+  async function getPlugins(val = '', update) {
+    update(async () => {
+      try {
+        const res = await api.getData('plugins', {
+          search: val,
+          rowsPerPage: 100,
+          index: 0
+        })
+        console.log('ressss = ', res)
+        queues.value = res.data.data
+      } catch(err) {
+        notify.error(err.response.data.message)
+      } 
+    })
   }
 
 </script>

@@ -22,7 +22,7 @@
     </q-input>
     <q-select
       outlined 
-      v-model="parameter.parameter_type" 
+      v-model="parameter.parameterType" 
       :options="typeOptions" 
       dense
       :rules="[requiredRule]"
@@ -36,13 +36,13 @@
     <q-input 
       outlined 
       dense 
-      v-model.trim="parameter.default_value"
+      v-model.trim="parameter.defaultValue"
       class="q-mb-sm"
       aria-required="false"
       hint="Optional"
     >
       <template v-slot:before>
-        <label :class="`field-label`">Default Value :</label>
+        <label :class="`field-label`">Default Value:</label>
       </template>
     </q-input>
   </DialogComponent>
@@ -61,28 +61,28 @@
 
   let parameter = reactive({
     name: '',
-    parameter_type: '',
-    default_value: '',
+    parameterType: '',
+    defaultValue: '',
   })
 
   const typeOptions = reactive([
-    'String',
-    'Float',
-    'Path',
-    'URI',
+    'string',
+    'float',
+    'path',
+    'url',
   ])
 
   watch(showDialog, (newVal) => {
     if(newVal) {
       parameter.name = props.editParam.name
-      parameter.parameter_type = props.editParam.parameter_type
-      parameter.default_value = props.editParam.default_value
+      parameter.parameterType = props.editParam.parameterType
+      parameter.defaultValue = props.editParam.defaultValue
 
     }
     else {
       parameter.name = ''
-      parameter.parameter_type = ''
-      parameter.default_value = ''
+      parameter.parameterType = ''
+      parameter.defaultValue = ''
     }
   })
 
