@@ -53,7 +53,7 @@ PyTest allows for the creation of fixtures to address any pre-conditions or vari
 Tests can be using the following command:
 
 ```sh
-python -m tox run -e py39-pytest-cov
+python -m tox run -e py311-pytest-cov
 ```
 
 This will give you a code coverage report and run the test to determine if it is successful.

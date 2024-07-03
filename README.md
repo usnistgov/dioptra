@@ -227,8 +227,8 @@ Developers are expected to create new unit tests to validate any new features or
 To run the unit tests, activate your virtual environment if you haven't already and run:
 
 ```sh
-python -m tox run -e py39-pytest -- tests/unit
-python -m tox run -e py39-cookiecutter
+python -m tox run -e py311-pytest -- tests/unit
+python -m tox run -e py311-cookiecutter
 ```
 
 Alternatively, you can also use `make` to do this:
