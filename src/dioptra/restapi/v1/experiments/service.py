@@ -245,7 +245,9 @@ class ExperimentService(object):
             )
 
             for entrypoint in entrypoints:
-                experiments_dict[experiment.resource_id]["entrypoints"].append(entrypoint)
+                experiments_dict[experiment.resource_id]["entrypoints"].append(
+                    entrypoint
+                )
 
         return list(experiments_dict.values()), total_num_experiments
 
