@@ -216,15 +216,15 @@ class ExperimentService(object):
         )
         experiments = list(db.session.scalars(experiments_stmt).all())
 
-        entrypoint_ids = {
-            resource.resource_id: experiment.resource_id
-            for experiment in experiments
-            for resource in experiment.children
-            if resource.resource_type == "entry_point"
-        }
-        entrypoints = self._entrypoint_ids_service.get(
-            list(entrypoint_ids.keys()), error_if_not_found=True, log=log
-        )
+        # entrypoint_ids = {
+        #     resource.resource_id: experiment.resource_id
+        #     for experiment in experiments
+        #     for resource in experiment.children
+        #     if resource.resource_type == "entry_point"
+        # }
+        # entrypoints = self._entrypoint_ids_service.get(
+        #     list(entrypoint_ids.keys()), error_if_not_found=True, log=log
+        # )
 
         drafts_stmt = select(
             models.DraftResource.payload["resource_id"].as_string().cast(Integer)
@@ -241,11 +241,24 @@ class ExperimentService(object):
             )
             for experiment in experiments
         }
-        for resource_id in db.session.scalars(drafts_stmt):
-            experiments_dict[resource_id]["has_draft"] = True
-        for entrypoint in entrypoints:
-            experiment_id = entrypoint_ids[entrypoint.resource_id]
-            experiments_dict[experiment_id]["entrypoints"].append(entrypoint)
+        # for resource_id in db.session.scalars(drafts_stmt):
+        #     experiments_dict[resource_id]["has_draft"] = True
+        # for entrypoint in entrypoints:
+        #     experiment_id = entrypoint_ids[entrypoint.resource_id]
+        #     experiments_dict[experiment_id]["entrypoints"].append(entrypoint)
+
+        for experiment in experiments:
+            entrypoint_ids = [
+                resource.resource_id
+                for resource in experiment.children
+                if resource.resource_type == "entry_point"
+            ]
+            entrypoints = self._entrypoint_ids_service.get(
+                entrypoint_ids, error_if_not_found=True, log=log
+            )
+
+            for entrypoint in entrypoints:
+                experiments_dict[experiment.resource_id]["entrypoints"].append(entrypoint)
 
         return list(experiments_dict.values()), total_num_experiments
 
