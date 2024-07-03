@@ -45,6 +45,7 @@ V1_PLUGINS_ROUTE = "plugins"
 V1_QUEUES_ROUTE = "queues"
 V1_TAGS_ROUTE = "tags"
 V1_USERS_ROUTE = "users"
+V1_WORKFLOWS_ROUTE = "workflows"
 
 
 def register_routes(api: Api, restapi_version: str) -> None:
@@ -98,6 +99,7 @@ def register_v1_routes(api: Api) -> None:
     from .v1.queues.controller import api as queues_api
     from .v1.tags.controller import api as tags_api
     from .v1.users.controller import api as users_api
+    from .v1.workflows.controller import api as workflows_api
 
     api.add_namespace(auth_api, path=f"/{V1_ROOT}/{V1_AUTH_ROUTE}")
     api.add_namespace(artifacts_api, path=f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}")
@@ -113,3 +115,4 @@ def register_v1_routes(api: Api) -> None:
     api.add_namespace(queues_api, path=f"/{V1_ROOT}/{V1_QUEUES_ROUTE}")
     api.add_namespace(tags_api, path=f"/{V1_ROOT}/{V1_TAGS_ROUTE}")
     api.add_namespace(users_api, path=f"/{V1_ROOT}/{V1_USERS_ROUTE}")
+    api.add_namespace(workflows_api, path=f"/{V1_ROOT}/{V1_WORKFLOWS_ROUTE}")
