@@ -3,7 +3,7 @@
   <TableComponent 
     :rows="experiments"
     :columns="columns"
-    title="Experiments"
+    title="Jobs"
     v-model:selected="selected"
     @edit="store.savedExperimentForm = selected[0]; store.editMode = true; router.push(`/experiments/${selected[0].id}`)"
     @delete="showDeleteDialog = true"

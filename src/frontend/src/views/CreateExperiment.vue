@@ -129,8 +129,8 @@
           @click="toggleTag(tag)"
           :color="selectedTags.includes(tag) ? 'primary' : 'grey-6'"
         /> -->
-
-        <q-input 
+        <p>Adding tags functionality will be added here.</p>
+        <!-- <q-input 
           v-model="newTag" 
           outlined 
           dense 
@@ -145,7 +145,7 @@
           <template v-slot:append>
             <q-btn round dense size="sm" icon="add" color="primary" @click="addNewTag()" />
           </template>
-        </q-input>
+        </q-input> -->
       </div>
 
       <!-- <p :class="`${isMobile ? '' : 'q-mx-xl'} q-mt-lg`">

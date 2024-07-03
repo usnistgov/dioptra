@@ -10,6 +10,7 @@
     v-model:showDrafts="showDrafts"
     @request="getQueues"
     ref="tableRef"
+    :showToggleDraft="true"
   >
     <template #body-cell-tags="props">
       <q-chip
