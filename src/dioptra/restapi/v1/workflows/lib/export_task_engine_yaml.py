@@ -137,11 +137,12 @@ def extract_tasks(
             input_parameters = task.input_parameters
             output_parameters = task.output_parameters
 
+            # TODO: Handle case where user puts a plugin task in an __init__.py file.
             tasks[task.plugin_task_name] = {
                 "plugin": ".".join(
                     [
                         plugin.name,
-                        Path(plugin_file.filename).stem,
+                        *[Path(x).stem for x in Path(plugin_file.filename).parts],
                         task.plugin_task_name,
                     ]
                 ),
@@ -149,6 +150,7 @@ def extract_tasks(
                     {
                         "name": input_param.name,
                         "type": input_param.parameter_type.name,
+                        "required": input_param.required,
                     }
                     for input_param in input_parameters
                 ],
