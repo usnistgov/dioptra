@@ -231,6 +231,8 @@ class ExperimentService(object):
             )
             for experiment in experiments
         }
+        for resource_id in db.session.scalars(drafts_stmt):
+            experiments_dict[resource_id]["has_draft"] = True
 
         for experiment in experiments:
             entrypoint_ids = [
@@ -241,6 +243,7 @@ class ExperimentService(object):
             entrypoints = self._entrypoint_ids_service.get(
                 entrypoint_ids, error_if_not_found=True, log=log
             )
+
             for entrypoint in entrypoints:
                 experiments_dict[experiment.resource_id]["entrypoints"].append(entrypoint)
 
