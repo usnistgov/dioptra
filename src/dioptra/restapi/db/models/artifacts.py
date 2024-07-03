@@ -14,12 +14,12 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from sqlalchemy import ForeignKeyConstraint, Index
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKeyConstraint, Index, and_, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column
 
 from dioptra.restapi.db.db import bigint, intpk, text_
 
-from .resources import ResourceSnapshot
+from .resources import Resource, ResourceSnapshot, resource_dependencies_table
 
 # -- ORM Classes -----------------------------------------------------------------------
 
@@ -31,6 +31,22 @@ class Artifact(ResourceSnapshot):
     resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
     resource_id: Mapped[bigint] = mapped_column(init=False, nullable=False, index=True)
     uri: Mapped[text_] = mapped_column(nullable=False)
+
+    # Derived fields (read-only)
+    job_id: Mapped[bigint] = column_property(
+        select(Resource.resource_id)
+        .join(
+            resource_dependencies_table,
+            and_(
+                Resource.resource_id
+                == resource_dependencies_table.c.parent_resource_id,
+                resource_dependencies_table.c.child_resource_id == resource_id,
+            ),
+        )
+        .limit(1)
+        .correlate_except(Resource)
+        .scalar_subquery()
+    )
 
     # Additional settings
     __table_args__ = (  # type: ignore[assignment]

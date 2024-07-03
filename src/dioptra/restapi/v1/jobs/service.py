@@ -255,7 +255,7 @@ class JobService(object):
 
         return utils.JobDict(
             job=new_job,
-            artifacts=None,
+            artifacts=[],
             has_draft=False,
         )
 
@@ -335,11 +335,23 @@ class JobService(object):
         job_dicts: dict[int, utils.JobDict] = {
             job.resource_id: utils.JobDict(
                 job=job,
-                artifacts=None,
+                artifacts=[],
                 has_draft=False,
             )
             for job in jobs
         }
+
+        job_ids = [job.resource_id for job in jobs]
+        artifacts_stmt = (
+            select(models.Artifact)
+            .join(models.Resource)
+            .where(
+                models.Artifact.job_id.in_(job_ids),
+                models.Resource.is_deleted == False,  # noqa: E712
+            )
+        )
+        for artifact in db.session.scalars(artifacts_stmt).all():
+            job_dicts[artifact.job_id]["artifacts"].append(artifact)
 
         return list(job_dicts.values()), total_num_jobs
 
@@ -388,9 +400,19 @@ class JobIdService(object):
 
             return None
 
+        artifacts_stmt = (
+            select(models.Artifact)
+            .join(models.Resource)
+            .where(
+                models.Artifact.job_id == job_id,
+                models.Resource.is_deleted == False,  # noqa: E712
+            )
+        )
+        artifacts = list(db.session.scalars(artifacts_stmt).all())
+
         return utils.JobDict(
             job=job,
-            artifacts=None,
+            artifacts=artifacts,
             has_draft=False,
         )
 
@@ -616,7 +638,7 @@ class ExperimentJobService(object):
         job_dicts: dict[int, utils.JobDict] = {
             job.resource_id: utils.JobDict(
                 job=job,
-                artifacts=None,
+                artifacts=[],
                 has_draft=False,
             )
             for job in jobs
