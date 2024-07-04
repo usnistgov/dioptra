@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import datetime
 import functools
+from importlib.resources import as_file, files
 from typing import Any, Callable, List, Protocol, Type, cast
 
 from flask.views import View
@@ -180,6 +181,24 @@ def slugify(text: str) -> str:
     """
 
     return text.lower().strip().replace(" ", "-")
+
+
+def read_text_file(package: str, filename: str) -> str:
+    """Read a text file from a specified package into a string.
+
+    Args:
+        package: The name of the Python package containing the text file. This should
+            be a string representing the package's import path, for example
+            "my_package.subpackage".
+        filename: The base name of the text file, including its extension. For
+            example, "data.txt".
+
+    Returns:
+        A string with the contents of the text file.
+    """
+    traversable = files(package).joinpath(filename)
+    with as_file(traversable) as fp:
+        return fp.read_text()
 
 
 class _ClassBasedViewFunction(Protocol):

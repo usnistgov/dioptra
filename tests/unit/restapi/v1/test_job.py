@@ -24,11 +24,12 @@ from typing import Any
 
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
+from pytest import MonkeyPatch
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE, V1_JOBS_ROUTE, V1_ROOT
 
-from ..lib import actions, asserts, helpers
+from ..lib import actions, asserts, helpers, mock_rq
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -274,6 +275,7 @@ def test_create_job(
     registered_queues: dict[str, Any],
     registered_experiments: dict[str, Any],
     registered_entrypoints: dict[str, Any],
+    monkeypatch: MonkeyPatch,
 ) -> None:
     """Test that jobs can be correctly registered and retrieved using the API.
 
@@ -301,6 +303,10 @@ def test_create_job(
           - values: The values the job supplies to the entrypoint
           - timeout: The timeout value for the job to terminate if not completed by.
     """
+    # Inline import necessary to prevent circular import
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
     description = "The new job."
     queue_id = registered_queues["queue1"]["snapshot"]
     experiment_id = registered_experiments["experiment1"]["snapshot"]

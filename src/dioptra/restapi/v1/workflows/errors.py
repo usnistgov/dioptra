@@ -24,7 +24,18 @@ class JobEntryPointDoesNotExistError(Exception):
     """The job's entry point does not exist."""
 
 
+class JobExperimentDoesNotExistError(Exception):
+    """The experiment associated with the job does not exist."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(JobEntryPointDoesNotExistError)
     def handle_experiment_job_does_not_exist_error(error):
         return {"message": "Not Found - The job's entry point does not exist"}, 404
+
+    @api.errorhandler(JobExperimentDoesNotExistError)
+    def handle_experiment_does_not_exist_error(error):
+        return {
+            "message": "Not Found - The experiment associated with the job does not "
+            "exist"
+        }, 404

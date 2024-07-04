@@ -123,6 +123,7 @@ def dependency_modules() -> List[Any]:
         PasswordServiceModule,
         RQServiceConfiguration,
         RQServiceModule,
+        RQServiceV1Module,
         _bind_password_service_configuration,
     )
 
@@ -153,8 +154,9 @@ def dependency_modules() -> List[Any]:
 
     return [
         configure,
-        PasswordServiceModule(),
-        RQServiceModule(),
+        PasswordServiceModule,
+        RQServiceModule,
+        RQServiceV1Module,
     ]
 
 

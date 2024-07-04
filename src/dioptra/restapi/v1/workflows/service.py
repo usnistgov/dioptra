@@ -45,13 +45,18 @@ class JobFilesDownloadService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job files download", job_id=job_id, file_type=file_type)
 
+        experiment = views.get_experiment(job_id=job_id, logger=log)
         entry_point = views.get_entry_point(job_id=job_id, logger=log)
         entry_point_plugin_files = views.get_entry_point_plugin_files(
             job_id=job_id, logger=log
         )
+        job_parameter_values = views.get_job_parameter_values(job_id=job_id, logger=log)
         return package_job_files(
+            job_id=job_id,
+            experiment=experiment,
             entry_point=entry_point,
             entry_point_plugin_files=entry_point_plugin_files,
+            job_parameter_values=job_parameter_values,
             file_type=file_type,
             logger=log,
         )

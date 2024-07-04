@@ -32,6 +32,7 @@ from dioptra.restapi.v0.queue.service import QueueNameService
 from dioptra.restapi.v0.shared.password.service import PasswordService
 from dioptra.restapi.v0.shared.request_scope import request
 from dioptra.restapi.v0.shared.rq.service import RQService
+from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 
 
 class MLFlowClientModule(Module):
@@ -61,6 +62,15 @@ class RQServiceModule(Module):
             run_mlflow=configuration.run_mlflow,
             run_task_engine=configuration.run_task_engine,
         )
+
+
+class RQServiceV1Module(Module):
+    @request
+    @provider
+    def provide_rq_service_module(
+        self, configuration: RQServiceConfiguration
+    ) -> RQServiceV1:
+        return RQServiceV1(redis=configuration.redis)
 
 
 class QueueNameServiceModule(Module):
@@ -139,5 +149,6 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
 
     modules.append(MLFlowClientModule)
     modules.append(RQServiceModule)
+    modules.append(RQServiceV1Module)
     modules.append(QueueNameServiceModule)
     modules.append(PasswordServiceModule)

@@ -57,6 +57,36 @@ def get_entry_point(
     return entry_point
 
 
+def get_experiment(job_id: int, logger: BoundLogger | None = None) -> models.Experiment:
+    """Run a query to get the experiment containing the job.
+
+    Args:
+        job_id: The ID of the job to get the experiment of.
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The experiment containing the job.
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    experiment_stmt = (
+        select(models.Experiment)
+        .join(models.ExperimentJob)
+        .where(models.ExperimentJob.job_resource_id == job_id)
+    )
+    experiment = db.session.scalar(experiment_stmt)
+
+    if experiment is None:
+        log.debug(
+            "The experiment associated with the job does not exist",
+            job_id=job_id,
+        )
+        raise JobEntryPointDoesNotExistError
+
+    return experiment
+
+
 def get_entry_point_plugin_files(
     job_id: int, logger: BoundLogger | None = None
 ) -> list[models.EntryPointPluginFile]:
@@ -84,3 +114,24 @@ def get_entry_point_plugin_files(
         == entry_point_resource_snapshot_id_stmt.scalar_subquery(),
     )
     return list(db.session.scalars(entry_point_plugin_files_stmt).unique().all())
+
+
+def get_job_parameter_values(
+    job_id: int, logger: BoundLogger | None = None
+) -> list[models.EntryPointParameterValue]:
+    """Run a query to get the parameter values for the job.
+
+    Args:
+        job_id: The ID of the job to get the parameter values for.
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The parameter values for the job.
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    entry_point_param_values_stmt = select(models.EntryPointParameterValue).where(
+        models.EntryPointParameterValue.job_resource_id == job_id,
+    )
+    return list(db.session.scalars(entry_point_param_values_stmt).unique().all())

@@ -127,8 +127,8 @@ def extract_tasks(
     """
     log = logger or LOGGER.new()  # noqa: F841
 
-    tasks = {}
-    parameter_types = {}
+    tasks: dict[str, Any] = {}
+    parameter_types: dict[str, Any] = {}
     for entry_point_plugin_file in entry_point_plugin_files:
         plugin = entry_point_plugin_file.plugin
         plugin_file = entry_point_plugin_file.plugin_file
@@ -137,28 +137,18 @@ def extract_tasks(
             input_parameters = task.input_parameters
             output_parameters = task.output_parameters
 
-            # TODO: Handle case where user puts a plugin task in an __init__.py file.
             tasks[task.plugin_task_name] = {
-                "plugin": ".".join(
-                    [
-                        plugin.name,
-                        *[Path(x).stem for x in Path(plugin_file.filename).parts],
-                        task.plugin_task_name,
-                    ]
-                ),
-                "inputs": [
-                    {
-                        "name": input_param.name,
-                        "type": input_param.parameter_type.name,
-                        "required": input_param.required,
-                    }
-                    for input_param in input_parameters
-                ],
-                "outputs": [
-                    {output_param.name: output_param.parameter_type.name}
-                    for output_param in output_parameters
-                ],
+                "plugin": _build_plugin_field(plugin, plugin_file, task),
             }
+            if input_parameters:
+                tasks[task.plugin_task_name]["inputs"] = _build_task_inputs(
+                    input_parameters
+                )
+
+            if output_parameters:
+                tasks[task.plugin_task_name]["outputs"] = _build_task_outputs(
+                    output_parameters
+                )
 
             for param in input_parameters + output_parameters:
                 name = param.parameter_type.name
@@ -184,3 +174,41 @@ def extract_graph(
     """
     log = logger or LOGGER.new()  # noqa: F841
     return cast(dict[str, Any], yaml.safe_load(entrypoint.task_graph))
+
+
+def _build_plugin_field(
+    plugin: models.Plugin, plugin_file: models.PluginFile, task: models.PluginTask
+) -> str:
+    if plugin_file.filename == "__init__.py":
+        # Omit filename from plugin import path if it is an __init__.py file.
+        module_parts = [Path(x).stem for x in Path(plugin_file.filename).parts[:-1]]
+
+    else:
+        module_parts = [Path(x).stem for x in Path(plugin_file.filename).parts]
+
+    return ".".join([plugin.name, *module_parts, task.plugin_task_name])
+
+
+def _build_task_inputs(
+    input_parameters: list[models.PluginTaskInputParameter],
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "name": input_param.name,
+            "type": input_param.parameter_type.name,
+            "required": input_param.required,
+        }
+        for input_param in input_parameters
+    ]
+
+
+def _build_task_outputs(
+    output_parameters: list[models.PluginTaskOutputParameter],
+) -> list[dict[str, Any]] | dict[str, Any]:
+    if len(output_parameters) == 1:
+        return {output_parameters[0].name: output_parameters[0].parameter_type.name}
+
+    return [
+        {output_param.name: output_param.parameter_type.name}
+        for output_param in output_parameters
+    ]
