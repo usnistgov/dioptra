@@ -16,5 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from .run_mlflow import run_mlflow_task
 from .run_task_engine import run_task_engine_task
+from .run_v1_dioptra_job import run_v1_dioptra_job
 
-__all__ = ["run_mlflow_task", "run_task_engine_task"]
+__all__ = ["run_mlflow_task", "run_task_engine_task", "run_v1_dioptra_job"]

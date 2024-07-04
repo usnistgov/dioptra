@@ -33,6 +33,7 @@ from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
 from dioptra.restapi.v1.experiments.service import ExperimentIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.queues.service import QueueIdService
+from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 from .errors import (
@@ -72,18 +73,24 @@ class JobService(object):
         queue_id_service: QueueIdService,
         entrypoint_id_service: EntrypointIdService,
         group_id_service: GroupIdService,
+        rq_service: RQServiceV1,
     ) -> None:
         """Initialize the job service.
 
         All arguments are provided via dependency injection.
 
         Args:
+            experiment_id_service: An ExperimentIdService object.
+            queue_id_service: A QueueIdService object.
+            entrypoint_id_service: An EntrypointIdService object.
             group_id_service: A GroupIdService object.
+            rq_service: An RQServiceV1 object.
         """
         self._experiment_id_service = experiment_id_service
         self._queue_id_service = queue_id_service
         self._entrypoint_id_service = entrypoint_id_service
         self._group_id_service = group_id_service
+        self._rq_service = rq_service
 
     def create(
         self,
@@ -93,7 +100,6 @@ class JobService(object):
         values: dict[str, str],
         description: str,
         timeout: str,
-        commit: bool = True,
         **kwargs,
     ) -> utils.JobDict:
         """Create a new job.
@@ -106,7 +112,6 @@ class JobService(object):
             description: The description of the job.
             timeout: The length of time the job will run before timing out.
             group_id: The group that will own the job.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The newly created job object.
@@ -245,14 +250,17 @@ class JobService(object):
             queue=queue,
         )
         db.session.add(new_job)
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Job registration successful",
-                job_id=new_job.resource_id,
-            )
-
+        db.session.commit()
+        self._rq_service.submit(
+            job_id=new_job.resource_id,
+            experiment_id=experiment_id,
+            queue=queue.name,
+            timeout=timeout,
+        )
+        log.debug(
+            "Job registration successful",
+            job_id=new_job.resource_id,
+        )
         return utils.JobDict(
             job=new_job,
             artifacts=[],
@@ -525,7 +533,6 @@ class ExperimentJobService(object):
         values: dict[str, str],
         description: str,
         timeout: str,
-        commit: bool = True,
         **kwargs,
     ) -> utils.JobDict:
         """Create a new job within an experiment.
@@ -538,7 +545,6 @@ class ExperimentJobService(object):
             description: The description of the job.
             timeout: The length of time the job will run before timing out.
             group_id: The group that will own the job.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The newly created job object.
@@ -551,7 +557,6 @@ class ExperimentJobService(object):
             values=values,
             description=description,
             timeout=timeout,
-            commit=commit,
             log=log,
         )
 

@@ -25,8 +25,9 @@ from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from injector import Injector
+from pytest import MonkeyPatch
 
-from ..lib import actions
+from ..lib import actions, mock_rq
 
 
 @pytest.fixture
@@ -627,7 +628,12 @@ def registered_jobs(
     registered_queues: dict[str, Any],
     registered_experiments: dict[str, Any],
     registered_entrypoints: dict[str, Any],
+    monkeypatch: MonkeyPatch,
 ) -> dict[str, Any]:
+    # Inline import necessary to prevent circular import
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+    monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
+
     queue_id = registered_queues["queue1"]["snapshot"]
     experiment_id = registered_experiments["experiment1"]["snapshot"]
     entrypoint_id = registered_entrypoints["entrypoint1"]["snapshot"]

@@ -117,7 +117,9 @@ class EntryPointParameterValue(db.Model):  # type: ignore[name-defined]
 
     # Relationships
     job_resource: Mapped["Resource"] = relationship()
-    parameter: Mapped["EntryPointParameter"] = relationship(back_populates="values")
+    parameter: Mapped["EntryPointParameter"] = relationship(
+        back_populates="values", lazy="joined"
+    )
     entry_point_job: Mapped["EntryPointJob"] = relationship(
         init=False,
         back_populates="entry_point_parameter_values",

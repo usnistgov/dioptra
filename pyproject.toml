@@ -94,6 +94,7 @@ run-experiment = "dioptra.task_engine.run_experiment:main"
 validate-experiment = "dioptra.task_engine.validate:main"
 s3-download = "dioptra.worker.s3_download_cli:main"
 dioptra-worker = "dioptra.worker.dioptra_worker:main"
+dioptra-worker-v1 = "dioptra.worker.dioptra_worker_v1:main"
 
 [project.entry-points."dioptra.generics.estimator_predict"]
 tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"

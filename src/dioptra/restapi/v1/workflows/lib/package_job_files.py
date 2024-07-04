@@ -26,23 +26,31 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 
 from ..schema import FileTypes
+from .export_job_parameters import export_job_parameters
 from .export_plugin_files import export_plugin_files
+from .export_run_dioptra_job_script import export_run_dioptra_job_script
 from .export_task_engine_yaml import export_task_engine_yaml
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 def package_job_files(
+    job_id: int,
+    experiment: models.Experiment,
     entry_point: models.EntryPoint,
     entry_point_plugin_files: list[models.EntryPointPluginFile],
+    job_parameter_values: list[models.EntryPointParameterValue],
     file_type: FileTypes,
     logger: BoundLogger | None = None,
 ) -> IO[bytes]:
     """Package the job files into a named temporary file.
 
     Args:
+        job_id: The ID of the job to package the files for.
+        experiment: The experiment the job is associated with.
         entry_point: The job's entrypoint.
         entry_point_plugin_files: The job's entrypoint plugin files.
+        job_parameter_values: The job's assigned parameter values.
         file_type: The type of file to package the job files into.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
@@ -67,11 +75,24 @@ def package_job_files(
             base_dir=base_dir,
             logger=log,
         )
+        job_params_json_path = export_job_parameters(
+            job_param_values=job_parameter_values, base_dir=base_dir, logger=log
+        )
+        run_dioptra_job_script = export_run_dioptra_job_script(
+            job_id=job_id,
+            experiment_id=experiment.resource_id,
+            task_engine_yaml_path=task_engine_yaml_path.name,
+            job_params_json_path=job_params_json_path.name,
+            base_dir=base_dir,
+            logger=log,
+        )
 
         if file_type == FileTypes.TAR_GZ:
             return _package_as_tarfile(
                 plugin_base_dir=plugin_base_dir,
                 task_engine_yaml_path=task_engine_yaml_path,
+                job_params_json_path=job_params_json_path,
+                script_path=run_dioptra_job_script,
                 logger=log,
             )
 
@@ -79,6 +100,8 @@ def package_job_files(
             return _package_as_zipfile(
                 plugin_base_dir=plugin_base_dir,
                 task_engine_yaml_path=task_engine_yaml_path,
+                job_params_json_path=job_params_json_path,
+                script_path=run_dioptra_job_script,
                 logger=log,
             )
 
@@ -86,6 +109,8 @@ def package_job_files(
 def _package_as_tarfile(
     plugin_base_dir: Path,
     task_engine_yaml_path: Path,
+    job_params_json_path: Path,
+    script_path: Path,
     logger: BoundLogger | None = None,
 ) -> IO[bytes]:
     log = logger or LOGGER.new()  # noqa: F841
@@ -94,6 +119,8 @@ def _package_as_tarfile(
     with tarfile.open(fileobj=package_file, mode="w:gz") as tar:
         tar.add(str(plugin_base_dir), plugin_base_dir.name, recursive=True)
         tar.add(str(task_engine_yaml_path), task_engine_yaml_path.name, recursive=False)
+        tar.add(str(job_params_json_path), job_params_json_path.name, recursive=False)
+        tar.add(str(script_path), script_path.name, recursive=False)
 
     package_file.seek(0)
     return package_file
@@ -102,6 +129,8 @@ def _package_as_tarfile(
 def _package_as_zipfile(
     plugin_base_dir: Path,
     task_engine_yaml_path: Path,
+    job_params_json_path: Path,
+    script_path: Path,
     logger: BoundLogger | None = None,
 ) -> IO[bytes]:
     log = logger or LOGGER.new()  # noqa: F841
@@ -112,6 +141,8 @@ def _package_as_zipfile(
             zipf.write(file, file.relative_to(plugin_base_dir))
 
         zipf.write(task_engine_yaml_path, task_engine_yaml_path.name)
+        zipf.write(job_params_json_path, job_params_json_path.name)
+        zipf.write(script_path, script_path.name)
 
     package_file.seek(0)
     return package_file
