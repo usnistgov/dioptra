@@ -225,6 +225,9 @@ class ExperimentService(object):
         entrypoints = self._entrypoint_ids_service.get(
             list(entrypoint_ids.keys()), error_if_not_found=True, log=log
         )
+        entrypoints_dict = {
+            entrypoint.resource_id: entrypoint for entrypoint in entrypoints
+        }
 
         drafts_stmt = select(
             models.DraftResource.payload["resource_id"].as_string().cast(Integer)
@@ -243,9 +246,11 @@ class ExperimentService(object):
         }
         for resource_id in db.session.scalars(drafts_stmt):
             experiments_dict[resource_id]["has_draft"] = True
-        for entrypoint in entrypoints:
-            experiment_id = entrypoint_ids[entrypoint.resource_id]
-            experiments_dict[experiment_id]["entrypoints"].append(entrypoint)
+        for experiment_dict in experiments_dict.values():
+            for resource in experiment_dict["experiment"].children:
+                if resource.resource_type == "entry_point":
+                    entrypoint = entrypoints_dict[resource.resource_id]
+                    experiment_dict["entrypoints"].append(entrypoint)
 
         return list(experiments_dict.values()), total_num_experiments
 

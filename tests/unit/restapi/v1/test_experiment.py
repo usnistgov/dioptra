@@ -338,14 +338,6 @@ def test_create_experiment(
     )
 
 
-@pytest.mark.skip(
-    reason=(
-        "Flask testing client isn't working correctly with GET /experiments/:id. "
-        "Entrypoints are being dropped in the test response. However, the full Flask "
-        "app returns the expected list. Disabling until a workaround can be figured "
-        "out."
-    )
-)
 def test_experiment_get_all(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -374,14 +366,6 @@ def test_experiment_get_all(
     assert_retrieving_all_experiments_works(client, expected=experiment_expected_list)
 
 
-@pytest.mark.skip(
-    reason=(
-        "Flask testing client isn't working correctly with GET /experiments/:id. "
-        "Entrypoints are being dropped in the test response. However, the full Flask "
-        "app returns the expected list. Disabling until a workaround can be figured "
-        "out."
-    )
-)
 def test_experiment_search_query(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -425,14 +409,6 @@ def test_experiment_search_query(
     )
 
 
-@pytest.mark.skip(
-    reason=(
-        "Flask testing client isn't working correctly with GET /experiments/:id. "
-        "Entrypoints are being dropped in the test response. However, the full Flask "
-        "app returns the expected list. Disabling until a workaround can be figured "
-        "out."
-    )
-)
 def test_experiment_group_query(
     client: FlaskClient,
     db: SQLAlchemy,
