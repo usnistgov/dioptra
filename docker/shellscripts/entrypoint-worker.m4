@@ -78,14 +78,14 @@ wait_for_services() {
 
 start_rq() {
   echo "${logname}: starting Dioptra worker"
-  echo "${logname}: dioptra-worker --url ${rq_redis_uri} --results-ttl ${rq_results_ttl} \
+  echo "${logname}: dioptra-worker-v1 --url ${rq_redis_uri} --results-ttl ${rq_results_ttl} \
   ${job_queues}"
 
   cd ${dioptra_workdir}
-  PYTHONPATH="${DIOPTRA_PLUGIN_DIR}" dioptra-worker \
+  dioptra-worker-v1 \
     --url ${rq_redis_uri}\
     --results-ttl ${rq_results_ttl}\
-    ${job_queues}
+    "${job_queues}"
 }
 
 ###########################################################################################
