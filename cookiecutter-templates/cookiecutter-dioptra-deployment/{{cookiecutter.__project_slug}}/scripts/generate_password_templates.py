@@ -30,6 +30,7 @@ PASSWORD_FILES: list[tuple[Path, Path]] = [
         Path("systemd", "dioptra.service"),
     ),
 ]
+
 JINJA_ENV = Environment(loader=FileSystemLoader([str(BASE_DIRECTORY)]))
 
 
@@ -81,6 +82,11 @@ def generate_random_passwords(words_file: str | Path) -> dict[str, Any]:
             min_length=20,
             capitalize=False,
             delimiter="_",
+        ),
+        dioptra_worker_password=_generate_random_password(
+            words,
+            min_words=3,
+            min_length=20,
         ),
     )
 

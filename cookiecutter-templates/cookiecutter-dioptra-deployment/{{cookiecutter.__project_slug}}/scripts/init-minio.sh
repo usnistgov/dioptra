@@ -362,24 +362,6 @@ attach_minio_policies() {
 }
 
 ###########################################################################################
-# Synchronize built-in plugins to plugins bucket
-#
-# Globals:
-#   INIT_REPOS_DIR
-#   MINIO_ENDPOINT_ALIAS
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-sync_builtin_plugins() {
-  mc mirror --overwrite --remove \
-    "${INIT_REPOS_DIR}/dioptra/task-plugins/dioptra_builtins" \
-    "${MINIO_ENDPOINT_ALIAS}/plugins/dioptra_builtins"
-}
-
-###########################################################################################
 # The top-level function in the script
 #
 # Globals:
@@ -398,7 +380,6 @@ main() {
   create_minio_accounts
   create_minio_policies
   attach_minio_policies
-  sync_builtin_plugins
 }
 
 ###########################################################################################

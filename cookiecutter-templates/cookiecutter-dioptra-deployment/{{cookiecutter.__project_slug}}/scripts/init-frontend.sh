@@ -289,7 +289,10 @@ prepare_build_dir() {
     "public"
     "index.html"
     "package.json"
-    "vite.config.js"
+    "tsconfig.json"
+    "tsconfig.app.json"
+    "tsconfig.node.json"
+    "vite.config.ts"
   )
 
   log_info "Creating the build directory ${BUILD_DIR}"
