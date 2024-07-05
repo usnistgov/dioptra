@@ -155,7 +155,7 @@ export async function updateItem<T extends ItemType>(type: T, id: number, params
   return await axios.put(`/api/${type}/${id}`, params)
 }
 
-export async function addItem<T extends ItemType>(type: T, params: CreateParams[T]) {
+export async function addItem<T extends keyof CreateParams>(type: T, params: CreateParams[T]) {
   return await axios.post(`/api/${type}/`, params)
 }
 
@@ -175,7 +175,7 @@ export async function deleteJob(id: number, jobId: number) {
   return await axios.delete(`/api/experiments/${id}/jobs/${jobId}`)
 }
 
-export async function addDraft<T extends ItemType>(type: T, params: CreateParams[T], id: number) {
+export async function addDraft<T extends keyof CreateParams>(type: T, params: CreateParams[T], id: number) {
   if(id) {
     return await axios.post(`/api/${type}/${id}/draft`, params)
   } else {
