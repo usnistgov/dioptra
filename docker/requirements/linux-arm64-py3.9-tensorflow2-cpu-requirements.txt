@@ -539,7 +539,7 @@ wrapt==1.14.1
     # via tensorflow-cpu-aws
 zict==3.0.0
     # via distributed
-zipp==3.17.0
+zipp==3.19.1
     # via
     #   importlib-metadata
     #   importlib-resources

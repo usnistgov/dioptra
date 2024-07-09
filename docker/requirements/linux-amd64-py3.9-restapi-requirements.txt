@@ -235,7 +235,7 @@ werkzeug==2.1.2
     #   flask-accepts
     #   flask-login
     #   flask-restx
-zipp==3.17.0
+zipp==3.19.1
     # via
     #   importlib-metadata
     #   importlib-resources
