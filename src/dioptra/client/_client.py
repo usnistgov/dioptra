@@ -19,8 +19,8 @@ from __future__ import annotations
 import os
 from posixpath import join as urljoin
 from urllib.parse import urlparse, urlunparse
-import requests
 
+import requests
 import structlog
 from structlog.stdlib import BoundLogger
 
