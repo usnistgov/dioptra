@@ -26,7 +26,8 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.constants import group_lock_types
+from dioptra.restapi.db.repository.utils import DeletionPolicy
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
     BackendDatabaseError,
     EntityDoesNotExistError,
@@ -46,16 +47,6 @@ DEFAULT_GROUP_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
     "owner": False,
     "admin": True,
 }
-GROUP_CREATOR_MEMBER_PERMISSIONS: Final[dict[str, bool]] = {
-    "read": True,
-    "write": True,
-    "share_read": True,
-    "share_write": True,
-}
-GROUP_CREATOR_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
-    "owner": True,
-    "admin": True,
-}
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.Group.name.like(x, escape="/"),
 }
@@ -72,6 +63,7 @@ class GroupService(object):
         group_name_service: GroupNameService,
         group_member_service: GroupMemberService,
         group_manager_service: GroupManagerService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the group service.
 
@@ -85,6 +77,7 @@ class GroupService(object):
         self._group_name_service = group_name_service
         self._group_member_service = group_member_service
         self._group_manager_service = group_manager_service
+        self._uow = uow
 
     def create(
         self,
@@ -108,30 +101,11 @@ class GroupService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        duplicate = self._group_name_service.get(name)
-        if duplicate is not None:
-            raise EntityExistsError("group", duplicate.group_id, name=name)
-
         new_group = models.Group(name=name, creator=creator)
-        self._group_member_service.create(
-            group=new_group,
-            user=creator,
-            permissions=GROUP_CREATOR_MEMBER_PERMISSIONS,
-            commit=False,
-            log=log,
-        )
-        self._group_manager_service.create(
-            group=new_group,
-            user=creator,
-            permissions=GROUP_CREATOR_MANAGER_PERMISSIONS,
-            commit=False,
-            log=log,
-        )
-
-        db.session.add(new_group)
+        self._uow.group_repo.create(new_group)
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
             log.debug("Group creation successful", group_id=new_group.group_id)
 
         return new_group
@@ -199,7 +173,10 @@ class GroupIdService(object):
 
     @inject
     def __init__(
-        self, group_service: GroupService, group_name_service: GroupNameService
+        self,
+        group_service: GroupService,
+        group_name_service: GroupNameService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the group ID service.
 
@@ -211,6 +188,7 @@ class GroupIdService(object):
         """
         self._group_service = group_service
         self._group_name_service = group_name_service
+        self._uow = uow
 
     def get(
         self, group_id: int, error_if_not_found: bool = False, **kwargs
@@ -232,8 +210,7 @@ class GroupIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup group by unique id", group_id=group_id)
 
-        stmt = select(models.Group).filter_by(group_id=group_id, is_deleted=False)
-        group: models.Group | None = db.session.scalars(stmt).first()
+        group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
 
         if group is None:
             if error_if_not_found:
@@ -270,8 +247,7 @@ class GroupIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Modify group", group_id=group_id)
 
-        stmt = select(models.Group).filter_by(group_id=group_id, is_deleted=False)
-        group = db.session.scalars(stmt).first()
+        group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
 
         if group is None:
             if error_if_not_found:
@@ -288,7 +264,7 @@ class GroupIdService(object):
         group.name = name
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
 
         return group
 
@@ -305,27 +281,25 @@ class GroupIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Delete group", group_id=group_id)
 
-        stmt = select(models.Group).filter_by(group_id=group_id, is_deleted=False)
-        group = db.session.scalars(stmt).first()
+        group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
 
         if group is None:
             raise EntityDoesNotExistError(GROUP_TYPE, group_id=group_id)
 
-        name = group.name
+        with self._uow:
+            self._uow.group_repo.delete(group)
 
-        deleted_group_lock = models.GroupLock(
-            group_lock_type=group_lock_types.DELETE,
-            group=group,
-        )
-        db.session.add(deleted_group_lock)
-        db.session.commit()
         log.debug("Group deleted", group_id=group.group_id)
 
-        return {"status": "Success", "group": name}
+        return {"status": "Success", "group": group.name}
 
 
 class GroupNameService(object):
     """The service methods used to manage a group by name."""
+
+    @inject
+    def __init__(self, uow: UnitOfWork):
+        self._uow = uow
 
     def get(
         self, name: str, error_if_not_found: bool = False, **kwargs
@@ -347,8 +321,7 @@ class GroupNameService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup group by name", name=name)
 
-        stmt = select(models.Group).filter_by(name=name)
-        group = db.session.scalars(stmt).first()
+        group = self._uow.group_repo.get_by_name(name, DeletionPolicy.NOT_DELETED)
 
         if group is None:
             if error_if_not_found:
@@ -361,6 +334,10 @@ class GroupNameService(object):
 
 class GroupMemberService(object):
     """The service methods used to manage a group's members."""
+
+    @inject
+    def __init__(self, uow: UnitOfWork):
+        self._uow = uow
 
     def create(
         self,
@@ -393,23 +370,21 @@ class GroupMemberService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         permissions = permissions or DEFAULT_GROUP_MEMBER_PERMISSIONS
         log.debug("Add group member", group_id=group.group_id, user_id=user.user_id)
-        group_member = models.GroupMember(
-            user=user,
-            read=permissions["read"],
-            write=permissions["write"],
-            share_read=permissions["share_read"],
-            share_write=permissions["share_write"],
-        )
-        group.members.append(group_member)
+
+        group_member = self._uow.group_repo.add_member(group, user, **permissions)
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
 
         return group_member
 
 
 class GroupManagerService(object):
     """The service methods used to manage a group's managers."""
+
+    @inject
+    def __init__(self, uow: UnitOfWork):
+        self._uow = uow
 
     def create(
         self,
@@ -441,14 +416,10 @@ class GroupManagerService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         permissions = permissions or DEFAULT_GROUP_MANAGER_PERMISSIONS
         log.debug("Add group manager", group_id=group.group_id, user_id=user.user_id)
-        group_manager = models.GroupManager(
-            user=user,
-            owner=permissions["owner"],
-            admin=permissions["admin"],
-        )
-        group.managers.append(group_manager)
+
+        group_manager = self._uow.group_repo.add_manager(group, user, **permissions)
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
 
         return group_manager

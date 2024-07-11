@@ -28,11 +28,11 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.constants import user_lock_types
+from dioptra.restapi.db.repository.utils import DeletionPolicy
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
     BackendDatabaseError,
     EntityDoesNotExistError,
-    EntityExistsError,
     NoCurrentUserError,
     QueryParameterValidationError,
     UserPasswordChangeError,
@@ -72,6 +72,7 @@ class UserService(object):
         group_name_service: GroupNameService,
         group_member_service: GroupMemberService,
         builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the user service.
 
@@ -84,6 +85,7 @@ class UserService(object):
             group_member_service: A GroupMemberService object.
             builtin_plugin_parameter_type_service: A BuiltinPluginParameterTypeService
                 object.
+            uow: A UnitOfWork instance
         """
         self._user_password_service = user_password_service
         self._user_name_service = user_name_service
@@ -92,6 +94,7 @@ class UserService(object):
         self._builtin_plugin_parameter_type_service = (
             builtin_plugin_parameter_type_service
         )
+        self._uow = uow
 
     def create(
         self,
@@ -128,16 +131,6 @@ class UserService(object):
                 "password", "equivalence", password="***", confirmation="***"
             )
 
-        duplicate = self._user_name_service.get(username, log=log)
-        if duplicate is not None:
-            raise EntityExistsError("User", duplicate.user_id, username=username)
-
-        duplicate = self._get_user_by_email(email_address, log=log)
-        if duplicate is not None:
-            raise EntityExistsError(
-                "User", duplicate.user_id, email_address=email_address
-            )
-
         hashed_password = self._user_password_service.hash(password, log=log)
         new_user: models.User = models.User(
             username=username, password=hashed_password, email_address=email_address
@@ -147,16 +140,12 @@ class UserService(object):
             user=new_user,
             log=log,
         )
-        self._group_member_service.create(
-            default_group,
-            user=new_user,
-            permissions=DEFAULT_GROUP_PERMISSIONS,
-            commit=False,
-            log=log,
-        )
-
-        db.session.add(new_user)
-        db.session.add(default_group)
+        # If this user was created at the same time as the group, i.e. as the
+        # creator/initial member, we need not create the user separately.
+        if new_user != default_group.creator:
+            self._uow.user_repo.create(
+                new_user, default_group, **DEFAULT_GROUP_PERMISSIONS
+            )
 
         if commit:
             db.session.commit()
@@ -241,10 +230,7 @@ class UserService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup user account by email", email_address=email_address)
 
-        stmt = select(models.User).filter_by(
-            email_address=email_address, is_deleted=False
-        )
-        user: models.User | None = db.session.scalars(stmt).first()
+        user = self._uow.user_repo.get_by_email(email_address, DeletionPolicy.ANY)
 
         if user is None:
             if error_if_not_found:
@@ -268,14 +254,12 @@ class UserService(object):
         Returns:
             The group object if found, otherwise None.
         """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        if (
-            group := self._group_name_service.get(DEFAULT_GROUP_NAME, log=log)
-        ) is not None:
+        if (group := self._uow.group_repo.get_by_name(DEFAULT_GROUP_NAME)) is not None:
             return group
 
         default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user)
+        with self._uow:
+            self._uow.group_repo.create(default_group)
         # Register the built-in plugin parameter types when creating a new group.
         self._builtin_plugin_parameter_type_service.create_all(
             user=user, group=default_group, commit=False
@@ -288,8 +272,7 @@ class UserIdService(object):
 
     @inject
     def __init__(
-        self,
-        user_password_service: UserPasswordService,
+        self, user_password_service: UserPasswordService, uow: UnitOfWork
     ) -> None:
         """Initialize the current user service.
 
@@ -299,6 +282,7 @@ class UserIdService(object):
             user_password_service: A UserPasswordService object.
         """
         self._user_password_service = user_password_service
+        self._uow = uow
 
     def get(
         self, user_id: int, error_if_not_found: bool = False, **kwargs
@@ -320,8 +304,7 @@ class UserIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup user account by unique id", user_id=user_id)
 
-        stmt = select(models.User).filter_by(user_id=user_id, is_deleted=False)
-        user = db.session.scalars(stmt).first()
+        user = self._uow.user_repo.get(user_id, DeletionPolicy.NOT_DELETED)
 
         if user is None:
             if error_if_not_found:
@@ -374,6 +357,7 @@ class UserCurrentService(object):
         self,
         user_id_service: UserIdService,
         user_password_service: UserPasswordService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the current user service.
 
@@ -385,6 +369,7 @@ class UserCurrentService(object):
         """
         self._user_id_service = user_id_service
         self._user_password_service = user_password_service
+        self._uow = uow
 
     def get(self, **kwargs) -> models.User:
         """Fetch information about the current user.
@@ -424,7 +409,7 @@ class UserCurrentService(object):
         current_user.last_modified_on = current_timestamp
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
 
         return cast(models.User, current_user)
 
@@ -451,12 +436,9 @@ class UserCurrentService(object):
         user_id = current_user.user_id
         username = current_user.username
 
-        deleted_user_lock = models.UserLock(
-            user_lock_type=user_lock_types.DELETE,
-            user=current_user,
-        )
-        db.session.add(deleted_user_lock)
-        db.session.commit()
+        with self._uow:
+            self._uow.user_repo.delete(current_user)
+
         log.debug("User account deleted", user_id=user_id, username=username)
 
         return {"status": "Success", "id": [user_id]}
@@ -498,6 +480,7 @@ class UserNameService(object):
     def __init__(
         self,
         user_password_service: UserPasswordService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the user name service.
 
@@ -507,6 +490,7 @@ class UserNameService(object):
             user_password_service: A UserPasswordService object.
         """
         self._user_password_service = user_password_service
+        self._uow = uow
 
     def get(
         self, username: str, error_if_not_found: bool = False, **kwargs
@@ -528,8 +512,7 @@ class UserNameService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup user account by unique username", username=username)
 
-        stmt = select(models.User).filter_by(username=username, is_deleted=False)
-        user = db.session.scalars(stmt).first()
+        user = self._uow.user_repo.get_by_name(username, DeletionPolicy.NOT_DELETED)
 
         if user is None:
             if error_if_not_found:
@@ -547,6 +530,7 @@ class UserPasswordService(object):
     def __init__(
         self,
         password_service: PasswordService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the user password service.
 
@@ -556,6 +540,7 @@ class UserPasswordService(object):
             password_service: A PasswordService object.
         """
         self._password_service = password_service
+        self._uow = uow
 
     def authenticate(
         self,
@@ -650,7 +635,7 @@ class UserPasswordService(object):
         )
 
         if commit:
-            db.session.commit()
+            self._uow.commit()
 
         return {"status": "Password Change Success", "username": user.username}
 
@@ -681,7 +666,8 @@ def load_user(user_id: str) -> models.User | None:
     Returns:
         A user object if the user is found, otherwise None.
     """
-    stmt = select(models.User).filter_by(
-        alternative_id=uuid.UUID(user_id), is_deleted=False
-    )
-    return db.session.scalars(stmt).first()
+    # Should injection be used for UnitOfWork here?
+    uow = UnitOfWork()
+    user = uow.user_repo.get_by_alternative_id(uuid.UUID(user_id))
+
+    return user
