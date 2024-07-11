@@ -101,7 +101,7 @@ def handle_error(session, url, method, data, response, error):
         LOGGER.error(message, url=url, method=method, data=data, response=response.text)
         raise StatusCodeError(message)
     if type(error) is requests.JSONDecodeError:
-        message = f"JSON response could not be decoded."
+        message = "JSON response could not be decoded."
         LOGGER.error(message, url=url, method=method, data=data, response=response.text)
         raise JSONDecodeError(message)
 
@@ -202,6 +202,7 @@ class Endpoint(object):
             (self._scheme, self._netloc, urljoin(self._path, name + "/"), "", "", "")
         )
 
+
 class HasTagsProvider(object):
     def __init__(self, url, session):
         self._tags = TagsProvider(url, session)
@@ -234,6 +235,7 @@ class TagsProvider(object):
     def delete(self, parent_id, tag_id):
         d = None
         return delete(self.session, self.url, d, str(parent_id), "tags", str(tag_id))
+
 
 class UsersClient(Endpoint):
     def get_all(self):
@@ -995,13 +997,15 @@ class PluginTask(object):
         self.client = client
 
     def convert_params_to_ids(self, mappings):
-        """this converts parameters to registered ids using a mapping from register_unregistered_types"""
+        """this converts parameters to registered ids using a
+        mapping from register_unregistered_types"""
         return [(i[0], mappings[i[1]]) for i in self.inputs], [
             (o[0], mappings[o[1]]) for o in self.outputs
         ]
 
     def register_unregistered_types(self, group=1):
-        """checks all the types in inputs/outputs and register things that aren't registered"""
+        """checks all the types in inputs/outputs and
+        register things that aren't registered"""
         registered_types = (
             self.client.pluginParameterTypes.get_all()
         )  # get all registered types
@@ -1036,5 +1040,3 @@ class PluginTask(object):
                 {"name": param[0], "parameterType": param[1]} for param in outs
             ],
         }
-
-
