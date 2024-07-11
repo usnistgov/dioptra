@@ -107,7 +107,7 @@ def handle_error(session, url, method, data, response, error):
 
 
 class DioptraClient(object):
-    def __init__(self, session, address=None, api_version="v1") -> None:
+    def __init__(self, session, address=None, api_version="v1"):
         self._session = session
         self._users = UsersClient(session, "users", address, api_version)
         self._auth = AuthClient(session, "auth", address, api_version)
@@ -174,7 +174,7 @@ class DioptraClient(object):
 
 
 class Endpoint(object):
-    def __init__(self, session, ep_name, address, api_version) -> None:
+    def __init__(self, session, ep_name, address, api_version):
         address = (
             f"{address}/api/{api_version}"
             if address
@@ -412,7 +412,7 @@ class TagsClient(Endpoint):
 
 
 class EntrypointsClient(Endpoint, HasTagsProvider):
-    def __init__(self, session, ep_name, address, api_version) -> None:
+    def __init__(self, session, ep_name, address, api_version):
         Endpoint.__init__(self, session, ep_name, address, api_version)
         HasTagsProvider.__init__(self, self.url, self.session)
 
@@ -568,7 +568,7 @@ class EntrypointsClient(Endpoint, HasTagsProvider):
 
 
 class ExperimentsClient(Endpoint, HasTagsProvider):
-    def __init__(self, session, ep_name, address, api_version) -> None:
+    def __init__(self, session, ep_name, address, api_version):
         Endpoint.__init__(self, session, ep_name, address, api_version)
         HasTagsProvider.__init__(self, self.url, self.session)
 
@@ -710,7 +710,7 @@ class ExperimentsClient(Endpoint, HasTagsProvider):
 
 
 class JobsClient(Endpoint, HasTagsProvider):
-    def __init__(self, session, ep_name, address, api_version) -> None:
+    def __init__(self, session, ep_name, address, api_version):
         Endpoint.__init__(self, session, ep_name, address, api_version)
         HasTagsProvider.__init__(self, self.url, self.session)
 
@@ -735,7 +735,7 @@ class JobsClient(Endpoint, HasTagsProvider):
 
 
 class PluginsClient(Endpoint, HasTagsProvider):
-    def __init__(self, session, ep_name, address, api_version) -> None:
+    def __init__(self, session, ep_name, address, api_version):
         Endpoint.__init__(self, session, ep_name, address, api_version)
         HasTagsProvider.__init__(self, self.url, self.session)
 
