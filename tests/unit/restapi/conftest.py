@@ -26,6 +26,7 @@ import pytest
 import requests
 from boto3.session import Session
 from botocore.client import BaseClient
+from faker import Faker
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
@@ -36,6 +37,9 @@ from requests import ConnectionError
 from requests import Session as RequestsSession
 
 from dioptra.restapi.db import db as restapi_db
+from dioptra.restapi.db.repository.groups import GroupRepository
+from dioptra.restapi.db.repository.users import UserRepository
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.v1.shared.request_scope import request
 
 from .lib import db as libdb
@@ -218,3 +222,36 @@ def wait_for_healthcheck_success(client: RequestsSession, timeout: int = 10) -> 
             healthcheck = StubResponse()
 
         time_elapsed = time.time() - time_start
+
+
+@pytest.fixture
+def fake_data(faker: Faker) -> libdb.FakeData:
+    return libdb.FakeData(faker)
+
+
+@pytest.fixture
+def account(db: SQLAlchemy, fake_data: libdb.FakeData) -> libdb.FakeAccount:
+    new_account = fake_data.account()
+    db.session.add(new_account.user)
+    db.session.add(new_account.group)
+    db.session.commit()
+    return new_account
+
+
+@pytest.fixture
+def group_repo(db: SQLAlchemy) -> GroupRepository:
+    repo = GroupRepository(db.session)
+
+    return repo
+
+
+@pytest.fixture
+def user_repo(db: SQLAlchemy) -> UserRepository:
+    repo = UserRepository(db.session)
+
+    return repo
+
+
+@pytest.fixture
+def uow() -> UnitOfWork:
+    return UnitOfWork()

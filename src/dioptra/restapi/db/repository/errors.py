@@ -14,26 +14,16 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Error handlers for the group endpoints."""
-from __future__ import annotations
-
-from flask_restx import Api
-
-from dioptra.restapi.db.repository.errors import GroupNameNotAvailableError
+"""Exceptions thrown from repositories"""
 
 
-class GroupDoesNotExistError(Exception):
-    """The requested group does not exist."""
+class GroupNameNotAvailableError(Exception):
+    """The group name is not available."""
 
 
-def register_error_handlers(api: Api) -> None:
-    @api.errorhandler(GroupDoesNotExistError)
-    def handle_user_does_not_exist_error(error):
-        return {"message": "Not Found - The requested group does not exist"}, 404
+class UsernameNotAvailableError(Exception):
+    """The username is not available."""
 
-    @api.errorhandler(GroupNameNotAvailableError)
-    def handle_no_current_user_error(error):
-        return (
-            {"message": "Bad Request - The group name is not available"},
-            400,
-        )
+
+class UserEmailNotAvailableError(Exception):
+    """The email address is not available."""
