@@ -1,0 +1,157 @@
+types:
+  callback:
+  dataset:
+  directoryiterator:
+  functiontype:
+  kerasclassifier:
+  metric:
+  mlflowrun:
+  tuple:
+  model:
+  modelversion:
+  np.ndarray:
+  optimizer:
+  path:
+  dataframe:
+  rngenerator:
+  sequential:
+  tarfile:
+  list_tuple_string_any:
+    list: tuple_string_any
+  list_union_metric_functiontype:
+    list: union_metric_functiontype
+  list_union_string_path:
+    list: union_string_path
+  list_mapping_string_string:
+    list: mapping_string_string
+  mapping_string_any:
+    mapping: [string, any]
+  mapping_string_number:
+    mapping: [string, number]
+  mapping_string_string:
+    mapping: [string, string]
+  tuple_integer_integer:
+    tuple: [integer, integer]
+  tuple_integer_integer_integer:
+    tuple: [integer, integer, integer]
+  tuple_string_any:
+    tuple: [string, any]
+  union_integer_number_string:
+    union: [integer, number, string]
+  union_integer_any:
+    union: [integer, any]
+  union_metric_functiontype:
+    union: [metric, functiontype]
+  union_null_list_tuple_string_any:
+    union: [list_tuple_string_any , "null"]
+  union_null_mapping_string_any:
+    union: [mapping_string_any, "null"]
+  union_null_modelversion:
+    union: [modelversion, "null"]
+  union_null_number:
+    union: [number, "null"]
+  union_null_string:
+    union: [string, "null"]
+  union_null_union_integer_any:
+    union: [union_integer_any, "null"]
+  union_string_path:
+    union: [string, path]
+  union_null_union_string_path:
+    union: [union_string_path, "null"]
+parameters:
+  dataset_provider_name: huggingface
+  dataset_name: cifar10
+  dataset_task: image-classification
+  split: test
+  model_provider_name: huggingface
+  model_name: aaraki/vit-base-patch16-224-in21k-finetuned-cifar10
+  model_task: image-classification
+  metric_provider_name: torchmetrics
+  metric_name: Accuracy
+  metric_task: multiclass
+  classes: 10
+  batch_size: 32
+  shape: [224, 224]
+  subset: 0
+tasks:
+  get_dataset:
+    plugin: dioptra_custom.maite.maite.get_dataset
+    inputs:
+      - provider_name: string
+      - dataset_name: string
+      - task: string
+      - split: string
+    outputs:
+      dataset: dataset
+  get_model:
+    plugin: dioptra_custom.maite.maite.get_model
+    inputs:
+      - provider_name: string
+      - model_name: string
+      - task: string
+    outputs:
+      model: model
+  get_metric:
+    plugin: dioptra_custom.maite.maite.get_metric
+    inputs:
+      - provider_name: string
+      - metric_name: string
+      - task: string
+      - classes: integer
+    outputs:
+      metric: metric
+  transform_tensor:
+    plugin: dioptra_custom.maite.maite.transform_tensor
+    inputs:
+      - dataset: dataset
+      - shape: any
+      - name: totensor
+        type: boolean
+        required: false
+      - name: subset
+        type: integer
+        required: false
+    outputs:
+      dataset: dataset
+  compute_metric:
+    plugin: dioptra_custom.maite.maite.compute_metric
+    inputs:
+      - dataset: dataset
+      - model: model
+      - metric: metric
+      - task: string
+      - batch_size: integer
+    outputs:
+      computed: mapping_string_number
+graph:
+  dataset:
+    get_dataset: 
+      provider_name: $dataset_provider_name
+      dataset_name: $dataset_name
+      task: $dataset_task
+      split: $split
+  model:
+    get_model: 
+      provider_name: $model_provider_name
+      model_name: $model_name
+      task: $model_task
+  metric:
+    get_metric: 
+      provider_name: $metric_provider_name
+      metric_name: $metric_name
+      task: $metric_task
+      classes: $classes
+  transformed_dataset:
+    transform_tensor: 
+      dataset: $dataset
+      shape: $shape
+      subset: $subset
+      totensor: true
+  metric_results:
+    compute_metric:
+      dataset: $transformed_dataset.dataset
+      model: $model
+      metric: $metric
+      task: $model_task
+      batch_size: $batch_size
+    dependencies: [transformed_dataset, model, metric]

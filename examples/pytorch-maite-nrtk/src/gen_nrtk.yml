@@ -1,0 +1,115 @@
+types:
+  callback:
+  dataset:
+  directoryiterator:
+  functiontype:
+  kerasclassifier:
+  metric:
+  mlflowrun:
+  tuple:
+  model:
+  modelversion:
+  np.ndarray:
+  optimizer:
+  path:
+  dataframe:
+  rngenerator:
+  sequential:
+  tarfile:
+  list_tuple_string_any:
+    list: tuple_string_any
+  list_union_metric_functiontype:
+    list: union_metric_functiontype
+  list_union_string_path:
+    list: union_string_path
+  list_mapping_string_string:
+    list: mapping_string_string
+  mapping_string_any:
+    mapping: [string, any]
+  mapping_string_number:
+    mapping: [string, number]
+  mapping_string_string:
+    mapping: [string, string]
+  tuple_integer_integer:
+    tuple: [integer, integer]
+  tuple_integer_integer_integer:
+    tuple: [integer, integer, integer]
+  tuple_string_any:
+    tuple: [string, any]
+  union_integer_number_string:
+    union: [integer, number, string]
+  union_integer_any:
+    union: [integer, any]
+  union_metric_functiontype:
+    union: [metric, functiontype]
+  union_null_list_tuple_string_any:
+    union: [list_tuple_string_any , "null"]
+  union_null_mapping_string_any:
+    union: [mapping_string_any, "null"]
+  union_null_modelversion:
+    union: [modelversion, "null"]
+  union_null_number:
+    union: [number, "null"]
+  union_null_string:
+    union: [string, "null"]
+  union_null_union_integer_any:
+    union: [union_integer_any, "null"]
+  union_string_path:
+    union: [string, path]
+  union_null_union_string_path:
+    union: [union_string_path, "null"]
+parameters:
+  dataset_provider_name: huggingface
+  dataset_name: detection-datasets/coco
+  dataset_task: object-detection
+  split: val
+  perturbation: SaltNoisePerturber
+  seed: 42
+  amount: 0.25
+  salt_vs_pepper: 0.5
+  var: 0.05
+  mean: 0
+  ksize: 7
+  factor: 0.25
+tasks:
+  get_dataset:
+    plugin: dioptra_custom.maite.maite.get_dataset
+    inputs:
+      - provider_name: string
+      - dataset_name: string
+      - task: string
+      - split: string
+    outputs:
+      dataset: dataset
+  perturb_images:
+    plugin: dioptra_custom.nrtk.nrtk.perturb_images
+    inputs:
+      - dataset: dataset
+      - perturbation: string
+      - seed: integer
+      - amount: number
+      - salt_vs_pepper: number
+      - var: number
+      - mean: integer
+      - ksize: integer
+      - factor: number
+    outputs:
+      dataset: dataset
+graph:
+  dataset:
+    get_dataset: 
+      provider_name: $dataset_provider_name
+      dataset_name: $dataset_name
+      task: $dataset_task
+      split: $split
+  create_nrtk_dataset_from_hf_dataset:
+    perturb_images: 
+      dataset: $dataset
+      perturbation: $perturbation
+      seed: $seed
+      amount: $amount
+      salt_vs_pepper: $salt_vs_pepper
+      var: $var
+      mean: $mean
+      ksize: $ksize
+      factor: $factor
