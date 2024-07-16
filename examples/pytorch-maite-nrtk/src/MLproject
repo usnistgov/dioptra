@@ -1,0 +1,187 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+name: pytorch-obj-detect-nrtk
+
+entry_points:
+  full_workflow:
+    parameters:
+      dataset_provider_name: { type: string, default: "huggingface" }
+      dataset_name: { type: string, default: "detection-datasets/coco" }
+      dataset_task: { type: string, default: "object-detection" }
+      split: { type: string, default: "test" }
+      model_provider_name: { type: string, default: "torchvision" }
+      model_name: { type: string, default: "fasterrcnn_resnet50_fpn" }
+      model_task: { type: string, default: "object-detection" }
+      metric_provider_name: { type: string, default: "torchmetrics" }
+      metric_name: { type: string, default: "Accuracy" }
+      metric_task: { type: string, default: "multiclass" }
+      classes: { type: int, default: 80 }
+      batch_size: { type: int, default: 32 }
+      shape: { type: string, default: "[800,800]" }
+      subset: { type: int, default: 0 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment full_workflow.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment full_workflow.yml
+      -P dataset_provider_name={dataset_provider_name}
+      -P dataset_name={dataset_name}
+      -P dataset_task={dataset_task}
+      -P split={split}
+      -P model_provider_name={model_provider_name}
+      -P model_name={model_name}
+      -P model_task={model_task}
+      -P metric_provider_name={metric_provider_name}
+      -P metric_name={metric_name}
+      -P metric_task={metric_task}
+      -P classes={classes}
+      -P batch_size={batch_size}
+      -P shape={shape}
+      -P subset={subset}
+  save_model:
+    parameters:
+      model_provider_name: { type: string, default: "huggingface" }
+      model_name: { type: string, default: "fasterrcnn_resnet50_fpn"}
+      model_task: { type: string, default: "object-detection" }
+      register_model: { type: string, default: "loaded_model" }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment save_model.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment save_model.yml
+      -P model_provider_name={model_provider_name}
+      -P model_name={model_name}
+      -P model_task={model_task}
+      -P register_model={register_model}
+  scan_model:
+    parameters:
+      mlflow_run_id: { type: string}
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment scan_model.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment scan_model.yml
+      -P mlflow_run_id={mlflow_run_id}
+  test_model:
+    parameters:
+      dataset_provider_name: { type: string, default: "huggingface" }
+      dataset_name: { type: string, default: "detection-datasets/coco" }
+      dataset_task: { type: string, default: "object-detection" }
+      split: { type: string, default: "test" }
+      model_name: { type: string, default: "loaded_model" }
+      model_version: { type: int, default: 1 }
+      model_task: { type: string, default: "object-detection" }
+      metric_provider_name: { type: string, default: "torchmetrics" }
+      metric_name: { type: string, default: "MeanAveragePrecision" }
+      metric_task: { type: string, default: "detection" }
+      classes: { type: int, default: 80 }
+      batch_size: { type: int, default: 8 }
+      shape: { type: string, default: "[800,800]" }
+      subset: { type: int, default: 0 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment test_model.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment test_model.yml
+      -P dataset_provider_name={dataset_provider_name}
+      -P dataset_name={dataset_name}
+      -P dataset_task={dataset_task}
+      -P split={split}
+      -P model_name={model_name}
+      -P model_version={model_version}
+      -P model_task={model_task}
+      -P metric_provider_name={metric_provider_name}
+      -P metric_name={metric_name}
+      -P metric_task={metric_task}
+      -P classes={classes}
+      -P batch_size={batch_size}
+      -P shape={shape}
+      -P subset={subset}
+  load_dataset:
+    parameters:
+      testing_dir: { type: string, default: "/dioptra/data/Mnist/testing" }
+      validation_split: { type: int, default: 0.3 }
+      image_size: { type: string, default: "[28,28,3]" }
+      new_size: { type: integer, default: 224 }
+      model_provider_name: { type: string, default: "huggingface" }
+      model_name: { type: string, default: "farleyknight-org-username/vit-base-mnist" }
+      model_task: { type: string, default: "object-detection" }
+      metric_provider_name: { type: string, default: "torchmetrics" }
+      metric_name: { type: string, default: "Accuracy" }
+      metric_task: { type: string, default: "multiclass" }
+      classes: { type: int, default: 10 }
+      batch_size: { type: int, default: 32 }
+      shape: { type: string, default: "[3,224,224]" }
+      subset: { type: int, default: 0 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment load_dataset.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment load_dataset.yml
+      -P testing_dir={testing_dir}
+      -P validation_split={validation_split}
+      -P image_size={image_size}
+      -P new_size={new_size}
+      -P model_provider_name={model_provider_name}
+      -P model_name={model_name}
+      -P model_task={model_task}
+      -P metric_provider_name={metric_provider_name}
+      -P metric_name={metric_name}
+      -P metric_task={metric_task}
+      -P classes={classes}
+      -P batch_size={batch_size}
+      -P shape={shape}
+      -P subset={subset}
+  gen_nrtk:
+    parameters:
+      dataset_provider_name: { type: string, default: "huggingface" }
+      dataset_name: { type: string, default: "detection-datasets/coco" }
+      dataset_task: { type: string, default: "object-detection" }
+      split: { type: string, default: "test" }
+      perturbation: { type: string, default: "SaltNoisePerturber" }
+      seed: { type: int, default: 42 }
+      amount: { type: float, default: 0.25 }
+      salt_vs_pepper: { type: float, default: 0.5 }
+      var: { type: float, default: 0.05 }
+      mean: { type: int, default: 0 }
+      ksize: { type: int, default: 7 }
+      factor: { type: float, default: 0.25 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment gen_nrtk.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment gen_nrtk.yml
+      -P split={split}
+      -P dataset_provider_name={dataset_provider_name}
+      -P dataset_name={dataset_name}
+      -P dataset_task={dataset_task}
+      -P perturbation={perturbation}
+      -P seed={seed}
+      -P amount={amount}
+      -P salt_vs_pepper={salt_vs_pepper}
+      -P var={var}
+      -P mean={mean}
+      -P ksize={ksize}
+      -P factor={amount}
+  infer_nrtk:
+    parameters:
+      mlflow_run_id: { type: string }
+      model_provider_name: { type: string, default: "torchvision" }
+      model_name: { type: string, default: "fasterrcnn_resnet50_fpn"}
+      model_task: { type: string, default: "object-detection" }
+      metric_provider_name: { type: string, default: "torchmetrics" }
+      metric_name: { type: string, default: "MeanAveragePrecision" }
+      metric_task: { type: string, default: "detection" }
+      classes: { type: int, default: 46 }
+      batch_size: { type: int, default: 4 }
+      shape: { type: string, default: "[800,800]" }
+      subset: { type: int, default: 0 }
+    command: >
+      PYTHONPATH=$DIOPTRA_PLUGIN_DIR validate-experiment infer_nrtk.yml && PYTHONPATH=$DIOPTRA_PLUGIN_DIR run-experiment infer_nrtk.yml
+      -P mlflow_run_id={mlflow_run_id}
+      -P model_provider_name={model_provider_name}
+      -P model_name={model_name}
+      -P model_task={model_task}
+      -P metric_provider_name={metric_provider_name}
+      -P metric_name={metric_name}
+      -P metric_task={metric_task}
+      -P classes={classes}
+      -P batch_size={batch_size}
+      -P shape={shape}
+      -P subset={subset}
