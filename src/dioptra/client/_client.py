@@ -211,7 +211,7 @@ class HasTagsProvider(object):
     @property
     def tags(self):
         return self.get_endpoint(self._tags)
-        
+
     def get_endpoint(self, ep):
         ep.session = self._session
         return ep
