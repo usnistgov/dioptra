@@ -107,8 +107,14 @@ def handle_error(session, url, method, data, response, error):
 
 
 class DioptraClient(object):
-    def __init__(self, session, address=None, api_version="v1"):
-        self._session = session
+    def __init__(self, session=None, address=None, api_version="v1"):
+        address = (
+            f"{address}/api/{api_version}"
+            if address
+            else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api/{api_version}"
+        )
+
+        self._session = session if session is not None else requests.Session()
         self._users = UsersClient(session, "users", address, api_version)
         self._auth = AuthClient(session, "auth", address, api_version)
         self._queues = QueuesClient(session, "queues", address, api_version)
@@ -175,11 +181,6 @@ class DioptraClient(object):
 
 class Endpoint(object):
     def __init__(self, session, ep_name, address, api_version):
-        address = (
-            f"{address}/api/{api_version}"
-            if address
-            else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api/{api_version}"
-        )
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
         self._ep_name = ep_name
         self._session = session
@@ -209,7 +210,11 @@ class HasTagsProvider(object):
 
     @property
     def tags(self):
-        return self._tags
+        return self.get_endpoint(self._tags)
+        
+    def get_endpoint(self, ep):
+        ep.session = self._session
+        return ep
 
 
 class TagsProvider(object):
