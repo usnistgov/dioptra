@@ -18,6 +18,7 @@ import importlib
 import os
 import tarfile
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Final, cast
 from urllib.parse import urlencode, urlparse, urlunparse
@@ -29,6 +30,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.routes import (
     V1_AUTH_ROUTE,
     V1_EXPERIMENTS_ROUTE,
+    V1_JOBS_ROUTE,
     V1_ROOT,
     V1_WORKFLOWS_ROUTE,
 )
@@ -93,6 +95,20 @@ class SimpleDioptraClient(object):
             f"{V1_EXPERIMENTS_ROUTE}/{experiment_id}/jobs/{job_id}/status"
         )
         response = self.session.put(url, json={"status": status})
+        response.raise_for_status()
+
+    def set_job_mlflow_run_id(
+        self, job_id: int, mlflow_run_id: str | uuid.UUID
+    ) -> None:
+        url = self._build_url(f"{V1_JOBS_ROUTE}/{job_id}/mlflowRun")
+        payload = {
+            "mlflowRunId": (
+                mlflow_run_id.hex
+                if isinstance(mlflow_run_id, uuid.UUID)
+                else mlflow_run_id
+            )
+        }
+        response = self.session.post(url, json=payload)
         response.raise_for_status()
 
     def _build_url(
@@ -179,7 +195,10 @@ def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:
         # Execute the main function in the included script file.
         try:
             run_dioptra_job.main(
-                plugins_dir=plugins_dir, enable_mlflow_tracking=True, logger=log
+                plugins_dir=plugins_dir,
+                enable_mlflow_tracking=True,
+                dioptra_client=client,
+                logger=log,
             )
             client.set_job_status(
                 job_id=job_id, experiment_id=experiment_id, status="finished"
