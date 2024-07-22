@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from abc import ABC, abstractmethod
 from posixpath import join as urljoin
 from urllib.parse import urlparse, urlunparse
 
@@ -35,82 +36,104 @@ def debug_response(json):
     LOGGER.debug("Response received.", json=json)
 
 
-def get(session, endpoint, *features):
-    debug_request(urljoin(endpoint, *features), "GET")
-    return make_request(session, "get", endpoint, None, *features)
-
-
-def post(session, endpoint, data, *features):
-    debug_request(urljoin(endpoint, *features), "POST", data)
-    return make_request(session, "post", endpoint, data, *features)
-
-
-def delete(session, endpoint, data, *features):
-    debug_request(urljoin(endpoint, *features), "DELETE", data)
-    return make_request(session, "delete", endpoint, data, *features)
-
-
-def put(session, endpoint, data, *features):
-    debug_request(urljoin(endpoint, *features), "PUT", data)
-    return make_request(session, "put", endpoint, data, *features)
-
-
-def make_request(session, method_name, endpoint, data, *features):
-    url = urljoin(endpoint, *features)
-    method = getattr(session, method_name)
-    try:
-        if data:
-            response = method(url, json=data)
-        else:
-            response = method(url)
-        if response.status_code != 200:
-            raise StatusCodeError()
-        json = response.json()
-    except (requests.ConnectionError, StatusCodeError, requests.JSONDecodeError) as e:
-        handle_error(session, url, method_name.upper(), data, response, e)
-    debug_response(json=json)
-    return json
-
-
-def handle_error(session, url, method, data, response, error):
-    if type(error) is requests.ConnectionError:
-        restapi = os.environ["DIOPTRA_RESTAPI_URI"]
-        message = (
-            f"Could not connect to the REST API. Is the server running at {restapi}?"
-        )
-        LOGGER.error(message, url=url, method=method, data=data, response=response.text)
-        raise APIConnectionError(message)
-    if type(error) is StatusCodeError:
-        message = f"Error code {response.status_code} returned."
-        LOGGER.error(message, url=url, method=method, data=data, response=response.text)
-        raise StatusCodeError(message)
-    if type(error) is requests.JSONDecodeError:
-        message = "JSON response could not be decoded."
-        LOGGER.error(message, url=url, method=method, data=data, response=response.text)
-        raise JSONDecodeError(message)
-
-
-class DioptraClient(object):
-    def __init__(self, session=None, address=None, api_version="v1"):
+class DioptraSession(ABC):
+    def __init__(self, address=None, api_version="v1"):
         address = (
             f"{address}/api/{api_version}"
             if address
             else f"{os.environ['DIOPTRA_RESTAPI_URI']}/api/{api_version}"
         )
+        self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
 
-        self._session = session if session is not None else requests.Session()
-        self._users = UsersClient(session, "users", address)
-        self._auth = AuthClient(session, "auth", address)
-        self._queues = QueuesClient(session, "queues", address)
-        self._groups = GroupsClient(session, "groups", address)
-        self._tags = TagsClient(session, "tags", address)
-        self._plugins = PluginsClient(session, "plugins", address)
+    @abstractmethod
+    def get_session(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def make_request(self, method_name, endpoint, data, *features):
+        raise NotImplementedError
+
+    @abstractmethod
+    def handle_error(self, url, method, data, response, error):
+        raise NotImplementedError
+
+    def get(self, endpoint, *features):
+        debug_request(urljoin(endpoint, *features), "GET")
+        return self.make_request("get", endpoint, None, *features)
+
+    def post(self, endpoint, data, *features):
+        debug_request(urljoin(endpoint, *features), "POST", data)
+        return self.make_request("post", endpoint, data, *features)
+
+    def delete(self, endpoint, data, *features):
+        debug_request(urljoin(endpoint, *features), "DELETE", data)
+        return self.make_request("delete", endpoint, data, *features)
+
+    def put(self, endpoint, data, *features):
+        debug_request(urljoin(endpoint, *features), "PUT", data)
+        return self.make_request("put", endpoint, data, *features)
+
+
+class DioptraRequestsSession(DioptraSession):
+    def __init__(self, address=None, api_version="v1"):
+        super().__init__(address=address, api_version=api_version)
+        self._session = None
+
+    def get_session(self):
+        if self._session is None:
+            self._session = requests.Session()
+        return self._session
+
+    def make_request(self, method_name, endpoint, data, *features):
+        session = self.get_session()
+        url = urljoin(endpoint, *features)
+        method = getattr(session, method_name)
+        try:
+            if data:
+                response = method(url, json=data)
+            else:
+                response = method(url)
+            if response.status_code != 200:
+                raise StatusCodeError()
+            json = response.json()
+        except (requests.ConnectionError, StatusCodeError, requests.JSONDecodeError) as e:
+            self.handle_error(session, url, method_name.upper(), data, response, e)
+        debug_response(json=json)
+        return json
+
+    def handle_error(self, url, method, data, response, error):
+        if type(error) is requests.ConnectionError:
+            restapi = os.environ["DIOPTRA_RESTAPI_URI"]
+            message = (
+                f"Could not connect to the REST API. Is the server running at {restapi}?"
+            )
+            LOGGER.error(message, url=url, method=method, data=data, response=response.text)
+            raise APIConnectionError(message)
+        if type(error) is StatusCodeError:
+            message = f"Error code {response.status_code} returned."
+            LOGGER.error(message, url=url, method=method, data=data, response=response.text)
+            raise StatusCodeError(message)
+        if type(error) is requests.JSONDecodeError:
+            message = "JSON response could not be decoded."
+            LOGGER.error(message, url=url, method=method, data=data, response=response.text)
+            raise JSONDecodeError(message)
+
+
+class DioptraClient(object):
+    def __init__(self, session):
+        self._session = session
+        self._users = UsersClient(session, "users")
+        self._auth = AuthClient(session, "auth")
+        self._queues = QueuesClient(session, "queues")
+        self._groups = GroupsClient(session, "groups")
+        self._tags = TagsClient(session, "tags")
+        self._plugins = PluginsClient(session, "plugins")
         self._pluginParameterTypes = PluginParameterTypesClient(
-            session, "pluginParameterTypes", address
+            session, "pluginParameterTypes"
         )
-        self._experiments = ExperimentsClient(session, "experiments", address)
-        self._jobs = JobsClient(session, "jobs", address)
-        self._entrypoints = EntrypointsClient(session, "entrypoints", address)
+        self._experiments = ExperimentsClient(session, "experiments")
+        self._jobs = JobsClient(session, "jobs")
+        self._entrypoints = EntrypointsClient(session, "entrypoints")
         self._models = ModelsClient(session, "models", address)
         self._artifacts = ArtifactsClient(session, "artifacts", address)
         # models
@@ -206,8 +229,7 @@ class HasSubEndpointProvider(object):
 
 
 class Endpoint(object):
-    def __init__(self, session, ep_name, address):
-        self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
+    def __init__(self, session, ep_name):
         self._ep_name = ep_name
         self._session = session
 
@@ -230,7 +252,7 @@ class Endpoint(object):
     def def_endpoint(self, name):
         """creates base url for an endpoint by name"""
         return urlunparse(
-            (self._scheme, self._netloc, urljoin(self._path, name + "/"), "", "", "")
+            (self._session._scheme, self._session._netloc, urljoin(self._session._path, name + "/"), "", "", "")
         )
 
 
