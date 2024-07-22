@@ -32,6 +32,10 @@ class JobInvalidParameterNameError(Exception):
     """The requested job parameter name is invalid."""
 
 
+class JobMlflowRunAlreadySetError(Exception):
+    """The requested job already has an mlflow run id set."""
+
+
 class ExperimentJobDoesNotExistError(Exception):
     """The requested experiment job does not exist."""
 
@@ -60,6 +64,13 @@ def register_error_handlers(api: Api) -> None:
         return {
             "message": "Bad Request - A provided job parameter name does not match any "
             "entrypoint parameters"
+        }, 400
+
+    @api.errorhandler(JobMlflowRunAlreadySetError)
+    def handle_job_mlflow_run_already_set_error(error):
+        return {
+            "message": "Bad Request - The requested job already has an mlflow run id "
+            "set. It may not be changed."
         }, 400
 
     @api.errorhandler(ExperimentJobDoesNotExistError)

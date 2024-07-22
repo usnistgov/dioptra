@@ -31,6 +31,15 @@ JobRefSchema = generate_base_resource_ref_schema("Job")
 JobSnapshotRefSchema = generate_base_resource_ref_schema("Job", keep_snapshot_id=True)
 
 
+class JobMlflowRunSchema(Schema):
+    """The schema for the data in a mlflowRun resource."""
+
+    mlflowRunId = fields.UUID(
+        attribute="mlflow_run_id",
+        metadata=dict(description="UUID for the associated Mlflow Run."),
+    )
+
+
 class JobStatusSchema(Schema):
     """The fields schema for the data in a Job status resource."""
 
