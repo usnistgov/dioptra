@@ -249,7 +249,7 @@ class EntrypointService(object):
             resource.resource_id
             for entrypoint in entrypoints
             for resource in entrypoint.children
-            if resource.resource_type == "queue"
+            if resource.resource_type == "queue" and not resource.is_deleted
         )
         queues = {
             queue.resource_id: queue
@@ -266,7 +266,7 @@ class EntrypointService(object):
         }
         for entrypoint in entrypoint_dicts.values():
             for resource in entrypoint["entry_point"].children:
-                if resource.resource_type == "queue":
+                if resource.resource_type == "queue" and not resource.is_deleted:
                     entrypoint["queues"].append(queues[resource.resource_id])
 
         drafts_stmt = select(
@@ -349,7 +349,7 @@ class EntrypointIdService(object):
         queue_ids = set(
             resource.resource_id
             for resource in entrypoint.children
-            if resource.resource_type == "queue"
+            if resource.resource_type == "queue" and not resource.is_deleted
         )
         queues = self._queue_ids_service.get(list(queue_ids), error_if_not_found=True)
 
@@ -633,15 +633,11 @@ class EntrypointIdPluginsService(object):
                 for plugin in new_entrypoint.entry_point_plugin_files
             }.values()
         )
-
-        queue_ids = set(
-            resource.resource_id
+        queue_resources = [
+            resource
             for resource in entrypoint.children
             if resource.resource_type == "queue"
-        )
-        queues = self._queue_ids_service.get(list(queue_ids), error_if_not_found=True)
-        queue_resources = [queue.resource for queue in queues]
-
+        ]
         new_entrypoint.children = plugin_resources + queue_resources
 
         db.session.add(new_entrypoint)
@@ -756,6 +752,7 @@ class EntrypointIdPluginsIdService(object):
         if plugin_id not in plugin_ids:
             raise EntrypointPluginDoesNotExistError
 
+        # create a new snapshot with the plugin removed
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
             description=entrypoint.description,
@@ -770,22 +767,12 @@ class EntrypointIdPluginsIdService(object):
             if entry_point_plugin_file.plugin.resource_id != plugin_id
         ]
 
-        plugin_resources = list(
-            {
-                plugin.plugin.resource_id: plugin.plugin.resource
-                for plugin in new_entrypoint.entry_point_plugin_files
-            }.values()
-        )
-
-        queue_ids = set(
-            resource.resource_id
+        # remove the plugin resource dependency association
+        new_entrypoint.children = [
+            resource
             for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        )
-        queues = self._queue_ids_service.get(list(queue_ids), error_if_not_found=True)
-        queue_resources = [queue.resource for queue in queues]
-
-        new_entrypoint.children = plugin_resources + queue_resources
+            if resource.resource_id != plugin_id
+        ]
 
         db.session.add(new_entrypoint)
 

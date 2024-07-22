@@ -26,7 +26,7 @@ from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_QUEUES_ROUTE, V1_ROOT
+from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE, V1_QUEUES_ROUTE, V1_ROOT
 
 from ..lib import actions, asserts, helpers
 
@@ -268,6 +268,32 @@ def assert_queue_is_not_found(
     assert response.status_code == 404
 
 
+def assert_queue_is_not_associated_with_entrypoint(
+    client: FlaskClient,
+    entrypoint_id: int,
+    queue_id: int,
+) -> None:
+    """Assert that a queue is associated with an entrypoint
+
+    Args:
+        client: The Flask test client.
+        entrypoint_id: The id of the entrypoint to retrieve.
+        queue_id: The id of the queue to check for association.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the queue id
+            is in the list of queues associated with the entrypoint.
+    """
+    response = client.get(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}",
+        follow_redirects=True,
+    )
+    entrypoint = response.get_json()
+    queue_ids = set(queue["id"] for queue in entrypoint["queues"])
+
+    assert response.status_code == 200 and queue_id not in queue_ids
+
+
 def assert_cannot_rename_queue_with_existing_name(
     client: FlaskClient,
     queue_id: int,
@@ -485,6 +511,7 @@ def test_delete_queue_by_id(
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> None:
     """Test that a queue can be deleted by referencing its id.
 
@@ -494,11 +521,16 @@ def test_delete_queue_by_id(
     - The user deletes a queue by referencing its id.
     - The user attempts to retrieve information about the deleted queue.
     - The request fails with an appropriate error message and response code.
+    - The queue is no longer associated with the entrypoint.
     """
-    queue_to_delete = registered_queues["queue1"]
+    entrypoint = registered_entrypoints["entrypoint1"]
+    queue_to_delete = entrypoint["queues"][0]
 
     delete_queue_with_id(client, queue_id=queue_to_delete["id"])
     assert_queue_is_not_found(client, queue_id=queue_to_delete["id"])
+    assert_queue_is_not_associated_with_entrypoint(
+        client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
+    )
 
 
 def test_manage_existing_queue_draft(
