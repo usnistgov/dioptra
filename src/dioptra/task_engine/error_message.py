@@ -259,7 +259,7 @@ def _is_valid_for_sub_schema(
         resolver=jsonschema.validators.RefResolver.from_schema(full_schema),
     )
 
-    return validator.is_valid(sub_instance)
+    return cast(bool, validator.is_valid(sub_instance))
 
 
 def _one_of_too_many_alternatives_satisfied_message_lines(
