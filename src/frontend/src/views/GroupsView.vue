@@ -5,8 +5,12 @@
     :columns="columns"
     title="Groups"
     @delete="showDeleteDialog = true"
-    @edit="dataStore.editMode = true; router.push('/groups/admin')"
+    @edit="router.push('/groups/admin')"
     v-model:selected="selected"
+    :hideEditBtn="true"
+    :hideDeleteBtn="true"
+    @request="getUserGroups"
+    ref="tableRef"
   >
     <template #body-cell="props">
       <q-td :props="props">
@@ -14,7 +18,7 @@
       </q-td>
     </template>
   </TableComponent>
-  <q-btn 
+  <!-- <q-btn 
     class="fixedButton"
     round
     color="primary"
@@ -26,24 +30,23 @@
     <q-tooltip>
       Create a new Group
     </q-tooltip>
-  </q-btn>
+  </q-btn> -->
 </template>
 
 <script setup>
-  import * as api from '@/services/groupsApi'
+  import * as api from '@/services/dataApi'
   import { ref, computed } from 'vue'
   import * as notify from '../notify';
   import TableComponent from '@/components/TableComponent.vue'
   import { useLoginStore } from '@/stores/LoginStore'
-  import { useDataStore } from '@/stores/DataStore'
   import { useRouter } from 'vue-router'
   import PageTitle from '@/components/PageTitle.vue'
-
 
   const router = useRouter()
 
   const store = useLoginStore()
-  const dataStore = useDataStore()
+
+  const tableRef = ref(null)
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
@@ -55,16 +58,6 @@
     { name: 'owner', label: 'Owner', align: 'left', field: 'owner', sortable: true },
   ]
 
-  // getGroups()
-  // async function getGroups() {
-  //   try {
-  //     const res = await api.getGroups()
-  //     console.log('getGroups = ', res)
-  //   } catch(err) {
-  //     notify.error(err.response.data.message)
-  //   } 
-  // }
-
   const userGroupsIds = computed(() => {
     if(store.loggedInUser) {
       return store.loggedInUser.groups.map((group) => group.id)
@@ -74,25 +67,23 @@
 
   const userGroups = ref([])
 
-  getUserGroups()
-
-  async function getUserGroups() {
+  async function getUserGroups(pagination) {
     if(userGroupsIds.value.length === 0) {
       notify.error('Please login to view user groups.')
       return
     }
-    for (const id of userGroupsIds.value) {
-      const res = await api.getGroup(id)
-      console.log('getGroup res = ', res)
-      res.data.members.forEach((member) => {
-        if(member.user.username === store.loggedInUser.username) {
-          userGroups.value.push({
-            name: member.group.name,
-            ...member.permissions
-          })
-        }
+    const res = await api.getData('groups', pagination)
+      const groups = res.data.data
+      groups.forEach((group) => {
+        group.members.forEach((member) => {
+          if(member.user.id === store.loggedInUser.id) {
+            userGroups.value.push({
+              name: member.group.name,
+              ...member.permissions
+            })
+          }
+        })
       })
-    }
   }
 
   const selected = ref([])

@@ -53,26 +53,16 @@
       </fieldset>
       <fieldset class="q-mt-lg">
         <legend>Task Graph</legend>
-        <div 
-          class="row q-mx-md" 
-
-          :style="{ 'border': isTaskGraphValid ? '2px solid black' : '2px solid red' }"
-        >
+        <div class="row q-mx-md">
           <CodeEditor 
             v-model="entryPoint.taskGraph"
             language="yaml"
             placeholder="# task graph yaml file"
-            style="width: 0; 
-            flex-grow: 1;" 
+            style="width: 0; flex-grow: 1;"
+            :showError="taskGraphError"
           />
         </div>
-        <caption
-          :class="{ invisible: isTaskGraphValid ? true : false }"
-          class="row text-caption q-ml-md" 
-          style="color: rgb(193, 0, 21); font-size: 12px;"
-        >
-          This field is required
-        </caption>
+
       </fieldset>
     </div>
     <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
@@ -172,7 +162,7 @@
           option-label="name"
           option-value="id"
           input-debounce="100"
-          :options="queues"
+          :options="plugins"
           @filter="getPlugins"
         >
           <template v-slot:before>
@@ -193,7 +183,7 @@
       <q-btn  
         @click="submit()" 
         color="primary" 
-        label="Submit Entry Point"
+        label="Submit EntryPoint"
 
       />
     </div>
@@ -275,7 +265,7 @@
   getEntrypoint()
   async function getEntrypoint() {
     if(route.params.id === 'new') {
-      title.value = 'Create Entry Point'
+      title.value = 'Create Entrypoint'
       return
     }
     try {
@@ -302,12 +292,12 @@
     paramForm.value.reset()
   }
 
-  const isTaskGraphValid = ref(true)
+  const taskGraphError = ref('')
 
   function submit() {
     basicInfoForm.value.validate().then(success => {
-      isTaskGraphValid.value = entryPoint.value.taskGraph.length > 0
-      if (success && isTaskGraphValid) {
+      taskGraphError.value = entryPoint.value.taskGraph.length > 0 ? '' : 'This field is required'
+      if (success && taskGraphError.value === '') {
         addOrModifyEntrypoint()
       }
       else {
@@ -344,7 +334,7 @@
   }
 
   watch(() => entryPoint.value.taskGraph, (newVal) => {
-    if(newVal.length > 0) isTaskGraphValid.value = true
+    taskGraphError.value = newVal.length > 0 ? '' : 'This field is required'
   })
 
   const showDeleteDialog = ref(false)
@@ -364,6 +354,7 @@
   }
 
   const queues = ref([])
+  const plugins = ref([])
 
   async function getQueues(val = '', update) {
     update(async () => {
@@ -381,8 +372,6 @@
     })
   }
 
-  const plugins = ref([])
-
   async function getPlugins(val = '', update) {
     update(async () => {
       try {
@@ -392,7 +381,7 @@
           index: 0
         })
         console.log('ressss = ', res)
-        queues.value = res.data.data
+        plugins.value = res.data.data
       } catch(err) {
         notify.error(err.response.data.message)
       } 

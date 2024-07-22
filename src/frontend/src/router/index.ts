@@ -77,6 +77,14 @@ const router = createRouter({
       component: () => import('../views/PluginParamsView.vue')
     },
     {
+      path: '/models',
+      component: () => import('../views/ModelsView.vue')
+    },
+    {
+      path: '/artifacts',
+      component: () => import('../views/ArtifactsView.vue')
+    },
+    {
       path: '/login',
       component: () => import('../views/BasicLoginView.vue')
     },

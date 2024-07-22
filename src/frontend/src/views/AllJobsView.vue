@@ -5,7 +5,7 @@
     :columns="columns"
     title="Jobs"
     v-model:selected="selected"
-    @edit="store.savedExperimentForm = selected[0]; store.editMode = true; router.push(`/experiments/${selected[0].id}`)"
+    @edit="router.push(`/experiments/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getJobs"
     ref="tableRef"
@@ -20,13 +20,36 @@
     <template #body-cell-group="props">
       {{ props.row.group.name }}
     </template>
+    <template #body-cell-tags="props">
+      <q-chip
+        v-for="(tag, i) in props.row.tags"
+        :key="i"
+        color="primary" 
+        text-color="white"
+      >
+        {{ tag.name }}
+      </q-chip>
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="editObjTags = props.row; showTagsDialog = true"
+      />
+    </template>
   </TableComponent>
 
   <DeleteDialog 
     v-model="showDeleteDialog"
     @submit="deleteJob"
-    type="Experiment"
+    type="Job"
     :name="selected.length ? selected[0].description : ''"
+  />
+
+  <AssignTagsDialog 
+    v-model="showTagsDialog"
+    :editObj="editObjTags"
+    type="jobs"
+    @refreshTable="tableRef.refreshTable()"
   />
 </template>
 
@@ -34,26 +57,28 @@
 
   import TableComponent from '@/components/TableComponent.vue'
   import { ref } from 'vue'
-  import { useDataStore } from '@/stores/DataStore.ts'
   import { useRouter } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
+  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   
   const router = useRouter()
 
-  const store = useDataStore()
-
   const showDeleteDialog = ref(false)
+  const showTagsDialog = ref(false)
+  const editObjTags = ref({})
 
   const experiments = ref([])
 
   const columns = [
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
+    { name: 'id', label: 'Job ID', align: 'left', field: 'id', sortable: true, },
     { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: true, },
     { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: true, },
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
+    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
   ]
 
   const selected = ref([])

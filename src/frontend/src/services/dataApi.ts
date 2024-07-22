@@ -1,5 +1,14 @@
 import axios from 'axios'
 
+export const API_VERSION = 'v1'
+
+axios.interceptors.request.use(function (config) {
+  if (config.url) {
+    config.url = config.url.replace('/api/', `/api/${API_VERSION}/`)
+  }
+  return config
+})
+
 type ItemType = keyof UpdateParams
 
 type CreateParams = {
@@ -43,7 +52,18 @@ type CreateParams = {
     parameters: EntrypointParameters[],
     queues: number[],
     plugins: number[]
-  }
+  },
+  models: {
+    name: string,
+    description: string,
+    group: number,
+  },
+  artifacts: {
+    description: string,
+    group: number,
+    job: number,
+    uri: string,
+  },
 }
 
 type UpdateParams = {
@@ -81,7 +101,13 @@ type UpdateParams = {
     parameters: EntrypointParameters[],
     queues: number[]
   },
-  jobs: {}
+  models: {
+    name: string,
+    description: string,
+  },
+  artifacts: {
+    description: string,
+  },
 }
 
 interface EntrypointParameters {
@@ -187,6 +213,10 @@ export async function updateDraft<T extends ItemType>(type: T, draftId: string, 
   return await axios.put(`/api/${type}/drafts/${draftId}`, params)
 }
 
+export async function updateDraftLinkedtoQueue(queueId: number, name: string, description: string) {
+  return await axios.put(`/api/queues/${queueId}/draft`, { name, description })
+}
+
 export async function deleteItem<T extends ItemType>(type: T, id: number) {
   return await axios.delete(`/api/${type}/${id}`)
 }
@@ -222,6 +252,69 @@ export async function deleteFile(pluginID: string, fileID: string) {
   return await axios.delete(`/api/plugins/${pluginID}/files/${fileID}`)
 }
 
-export async function updateTags<T extends ItemType>(type: T, id: number, tagIDs: Array<number>) {
+export async function updateTags<T extends ItemType>(type: T, id: number, tagIDs: Array<number>, fileId?: number) {
+  if(type === 'files') {
+    return await axios.put(`/api/plugins/${id}/files/${fileId}/tags/`, { ids: tagIDs })
+  }
   return await axios.put(`/api/${type}/${id}/tags`, { ids: tagIDs })
+}
+
+interface ArtifactParams {
+  description: string,
+  uri: string,
+}
+
+export async function addArtifact(expId: string, jobId: string, params: ArtifactParams) {
+  return await axios.post(`/api/experiments/${expId}/jobs/${jobId}/artifacts`, params)
+}
+
+export async function addPluginsToEntrypoint(id: string, plugins: number[]) {
+  return await axios.post(`/api/entrypoints/${id}/plugins`, {plugins})
+}
+
+export async function removePluginFromEntrypoint(entrypointId: string, pluginId: number) {
+  return await axios.delete(`/api/entrypoints/${entrypointId}/plugins/${pluginId}`)
+}
+
+export async function getVersions(id: string,) {
+  return await axios.get(`/api/models/${id}/versions`)
+}
+
+
+export async function getLoginStatus() {
+  return await axios.get(`/api/users/current`)
+}
+
+export async function login(username: string, password: string) {
+  return await axios.post(`/api/auth/login`, {
+    username: username,
+    password: password
+  })
+}
+
+export async function logout(everywhere: boolean = false) {
+  return await axios.post(`/api/auth/logout?everywhere=${everywhere}`);
+}
+
+export async function registerUser(username: string, email: string, password: string, confirmPassword: string) {
+  return await axios.post(`/api/users`, {
+    username: username,
+    email: email,
+    password: password,
+    confirmPassword: confirmPassword
+  })
+}
+
+export async function changePassword(oldPassword: string, newPassword: string, confirmNewPassword: string) {
+  return await axios.post(`/api/users/current/password`, {
+    oldPassword: oldPassword,
+    newPassword: newPassword,
+    confirmNewPassword: confirmNewPassword,
+  })
+}
+
+export async function deleteUser(password: string) {
+  return await axios.delete(`/api/users/current`, {
+    data: { password: password }
+  })
 }

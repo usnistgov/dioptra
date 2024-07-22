@@ -83,7 +83,7 @@
 <script setup>
   import { ref, inject } from 'vue';
   import * as notify from '../notify';
-  import * as api from '@/services/loginApi';
+  import * as api from '@/services/dataApi';
   import { useRouter } from 'vue-router'
   
   const router = useRouter()

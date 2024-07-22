@@ -5,7 +5,7 @@
     :columns="columns"
     title="Plugins"
     v-model:selected="selected"
-    @edit="store.editMode = true; router.push(`/plugins/${selected[0].id}`)"
+    @edit="router.push(`/plugins/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     :showExpand="true"
     @request="getPlugins"
@@ -15,9 +15,20 @@
       <div>{{ props.row.group.name }}</div>
     </template>
     <template #body-cell-tags="props">
-      <q-chip v-for="(tag, i) in props.row.tags" :key="i" color="primary" text-color="white">
-        {{ tag }}
+      <q-chip
+        v-for="(tag, i) in props.row.tags"
+        :key="i"
+        color="primary" 
+        text-color="white"
+      >
+        {{ tag.name }}
       </q-chip>
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="editObjTags = props.row; showTagsDialog = true"
+      />
     </template>
     <template #expandedSlot="{ row }">
       <q-btn 
@@ -61,12 +72,17 @@
     type="Plugin"
     :name="selected.length ? selected[0].name : ''"
   />
+  <AssignTagsDialog 
+    v-model="showTagsDialog"
+    :editObj="editObjTags"
+    type="plugins"
+    @refreshTable="tableRef.refreshTable()"
+  />
 </template>
 
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
   import BasicTable from '@/components/BasicTable.vue'
-  import { useDataStore } from '@/stores/DataStore.ts'
   import AddPluginDialog from '@/dialogs/AddPluginDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { ref } from 'vue'
@@ -74,36 +90,23 @@
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
+  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 
   const router = useRouter()
-
-  const store = useDataStore()
 
   const selected = ref([])
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)
+  const showTagsDialog = ref(false)
+  const editObjTags = ref({})
 
   const plugins = ref([])
-  const pluginParameterTypes = ref([])
 
   async function getPlugins(pagination) {
     try {
       const res = await api.getData('plugins', pagination)
       plugins.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
-      // getPluginParameterTypes(pagination)
-    } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
-  }
-
-  async function getPluginParameterTypes(pagination) {
-    try {
-      const res = await api.getData('pluginParameterTypes', pagination)
-      pluginParameterTypes.value = res.data.data
-      console.log('pluginParameterTypes = ', pluginParameterTypes.value)
-      // tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
@@ -114,8 +117,8 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, sort: (a, b) => a - b },
     { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
     { name: 'files', label: 'Files', align: 'left', sortable: false },
-    { name: 'tags', label: 'Tags', align: 'left', sortable: false },
     { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
+    { name: 'tags', label: 'Tags', align: 'left', sortable: false },
   ]
 
   async function addPlugin(plugin) {

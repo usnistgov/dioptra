@@ -25,7 +25,7 @@
         round
         size="sm"
         icon="add"
-        @click.stop="handleTags(props.row)"
+        @click.stop="editObjTags = props.row; showTagsDialog = true"
       />
     </template>
     <template #body-cell-hasDraft="props">
@@ -61,7 +61,7 @@
   <QueueDraftDialog 
     v-model="showDraftDialog"
     @addQueue="addQueue"
-    @updateQueue="updateQueue"
+    @updateDraftLinkedToQueue="updateDraftLinkedToQueue"
     :queueToDraft="queueToDraft"
   />
   <DeleteDialog 
@@ -73,7 +73,8 @@
   <AssignTagsDialog 
     v-model="showTagsDialog"
     :editObj="editObjTags"
-    @submitTags="submitTags"
+    type="queues"
+    @refreshTable="tableRef.refreshTable()"
   />
 </template>
 
@@ -181,9 +182,19 @@
     }
   }
 
+  async function updateDraftLinkedToQueue(queueId, name, description) {
+    try {
+      await api.updateDraftLinkedtoQueue(queueId, name, description)
+      notify.success(`Sucessfully updated '${name}'`)
+      showDraftDialog.value = false
+    } catch(err) {
+      notify.error(err.response.data.message)
+    }
+  }
+
   function formatDate(dateString) {
-    const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
-    return new Date(dateString).toLocaleString('en-US', options);
+    const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
+    return new Date(dateString).toLocaleString('en-US', options)
   }
 
 
@@ -211,22 +222,5 @@
   }
 
   const editObjTags = ref({})
-
-  function handleTags(obj) {
-    editObjTags.value = obj
-    showTagsDialog.value = true
-  }
-
-  async function submitTags(selectedTagIDs) {
-    showTagsDialog.value = false
-    try {
-      await api.updateTags('queues', editObjTags.value.id, selectedTagIDs)
-      notify.success(`Sucessfully updated Tags for '${editObjTags.value.name}'`)
-      tableRef.value.refreshTable()
-    } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message);
-    }
-  }
 
 </script>

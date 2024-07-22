@@ -55,7 +55,7 @@
 
 <script setup>
   import { ref } from 'vue';
-  import * as api from '@/services/loginApi';
+  import * as api from '@/services/dataApi';
   import { useLoginStore } from '@/stores/LoginStore.ts';
   import * as notify from '../notify';
 

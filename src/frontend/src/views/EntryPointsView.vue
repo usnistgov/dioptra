@@ -1,15 +1,15 @@
 <template>
   <PageTitle 
-    title="Entry Points"
+    title="Entrypoints"
   />
   <TableComponent 
     :rows="entrypoints"
     :columns="columns"
     :showExpand="true"
-    title="Entry Points"
+    title="Entrypoints"
     v-model:selected="selected"
     :pagination="{sortBy: 'draft', descending: true}"
-    @edit="store.editEntryPoint = selected[0]; router.push(`/entrypoints/${selected[0].id}`)"
+    @edit="router.push(`/entrypoints/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getEntrypoints"
     ref="tableRef"
@@ -46,6 +46,38 @@
     <template #expandedSlot="{ row }">
       <CodeEditor v-model="row.taskGraph" language="yaml" />
     </template>
+    <template #body-cell-tags="props">
+      <q-chip
+        v-for="(tag, i) in props.row.tags"
+        :key="i"
+        color="primary" 
+        text-color="white"
+      >
+        {{ tag.name }}
+      </q-chip>
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="editObjTags = props.row; showTagsDialog = true"
+      />
+    </template>
+    <template #body-cell-plugins="props">
+      <q-chip
+        v-for="(plugin, i) in props.row.plugins"
+        :key="i"
+        color="secondary" 
+        text-color="white"
+      >
+        {{ plugin.name }}
+      </q-chip>
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="editEntrypoint = props.row; showAssignPluginsDialog = true"
+      />
+    </template>
   </TableComponent>
 
   <q-btn 
@@ -56,9 +88,9 @@
     size="lg"
     to="/entrypoints/new"
   >
-    <span class="sr-only">Register new Entry Point</span>
+    <span class="sr-only">Register new Entrypoint</span>
     <q-tooltip>
-      Register new Entry Point
+      Register new Entrypoint
     </q-tooltip>
   </q-btn>
 
@@ -70,7 +102,7 @@
         Task Graph YAML
       </label>
     </template>
-    <CodeEditor v-model="displayYaml" style="height: auto;" />
+    <CodeEditor v-model="displayYaml" style="height: auto;" :readOnly="true" />
   </InfoPopupDialog>
   <DeleteDialog 
     v-model="showDeleteDialog"
@@ -78,12 +110,22 @@
     type="Entry Point"
     :name="selected.length ? selected[0].name : ''"
   />
+  <AssignTagsDialog 
+    v-model="showTagsDialog"
+    :editObj="editObjTags"
+    type="entrypoints"
+    @refreshTable="tableRef.refreshTable()"
+  />
+  <AssignPluginsDialog 
+    v-model="showAssignPluginsDialog"
+    :editObj="editEntrypoint"
+    @refreshTable="tableRef.refreshTable()"
+  />
 </template>
 
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
   import { ref } from 'vue'
-  import { useDataStore } from '@/stores/DataStore.ts'
   import { useRouter } from 'vue-router'
   import CodeEditor from '@/components/CodeEditor.vue'
   import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
@@ -91,12 +133,10 @@
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
+  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import AssignPluginsDialog from '@/dialogs/AssignPluginsDialog.vue'
 
-
-  
   const router = useRouter()
-
-  const store = useDataStore()
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
@@ -105,6 +145,8 @@
     { name: 'parameterNames', label: 'Parameter Name(s)', align: 'left', sortable: true },
     { name: 'parameterTypes', label: 'Parameter Type(s)', align: 'left', field: 'parameterTypes', sortable: true },
     { name: 'defaultValues', label: 'Default Values', align: 'left', field: 'defaultValues', sortable: true },
+    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: true },
+    { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: true },
   ]
 
   const selected = ref([])
@@ -117,6 +159,8 @@
   const entrypoints = ref([])
 
   const showDeleteDialog = ref(false)
+  const showAssignPluginsDialog = ref(false)
+  const editEntrypoint = ref('')
 
   async function getEntrypoints(pagination, showDrafts) {
     try {
@@ -140,5 +184,8 @@
       notify.error(err.response.data.message);
     }
   }
+
+  const editObjTags = ref({})
+  const showTagsDialog = ref(false)
 
 </script>

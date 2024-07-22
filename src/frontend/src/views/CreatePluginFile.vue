@@ -4,7 +4,7 @@
     <fieldset :class="`${isMobile ? 'col-12 q-mb-lg' : 'col q-mr-md'}`">
       <legend>Basic Info</legend>
       <div style="padding: 0 5%">
-        <q-form @submit.prevent="submit" ref="form" greedy>
+        <q-form @submit.prevent="submit" ref="basicInfoForm" greedy>
           <q-input 
             outlined 
             dense 
@@ -55,6 +55,7 @@
           language="python"
           :placeholder="'#Enter plugin file code here...'"
           style="max-height: 50vh; margin-bottom: 15px;"
+          :showError="contentsError"
         />
       </div>
     </fieldset>
@@ -69,7 +70,7 @@
         :hideToggleDraft="true"
         :hideEditBtn="true"
         :hideDeleteBtn="true"
-        :hideSelect="true"
+        :disableSelect="true"
       >
       <template #body-cell-view="props">
         <q-btn
@@ -87,9 +88,17 @@
         :hideToggleDraft="true"
         :hideEditBtn="true"
         :hideDeleteBtn="true"
-        :hideSelect="true"
         :hideSearch="true"
+        :disableSelect="true"
+        rightCaption="*Click param to edit, or X to delete"
       >
+        <template #body-cell-name="props">
+          {{ props.row.name }}
+          <q-btn icon="edit" round size="sm" color="primary" flat />
+          <q-popup-edit v-model="props.row.name" v-slot="scope">
+            <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+          </q-popup-edit>
+        </template>
         <template #body-cell-inputParams="props">
           <q-chip
             v-for="(param, i) in props.row.inputParams"
@@ -98,21 +107,45 @@
             class="q-mr-sm"
             text-color="white"
             dense
+            clickable
+            removable
+            @remove="tasks[props.rowIndex].inputParams.splice(i, 1)"
+            @click="handleSelectedParam('edit', props, i, 'inputParams'); showEditParamDialog = true"
           >
-            {{ `${param.name}: ${param.parameterType.name || pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}` }}
+            {{ `${param.name}` }}
+            <span v-if="param.required" class="text-red">*</span>
+            {{ `: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}` }}
           </q-chip>
+          <q-btn
+            round
+            size="xs"
+            icon="add"
+            @click="handleSelectedParam('create', props, i, 'inputParams'); showEditParamDialog = true"
+          />
         </template>
         <template #body-cell-outputParams="props">
           <q-chip
-            v-for="(param, i) in props.row.outputParams"
-            :key="i"
-            color="purple"
-            class="q-mr-sm"
-            text-color="white"
-            dense
-          >
-            {{ `${param.name}: ${param.parameterType.name || pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}` }}
-          </q-chip>
+              v-for="(param, i) in props.row.outputParams"
+              :key="i"
+              color="purple"
+              class="q-mr-sm"
+              text-color="white"
+              dense
+              clickable
+              removable
+              @click="handleSelectedParam('edit', props, i, 'outputParams'); showEditParamDialog = true"
+              @remove="tasks[props.rowIndex].outputParams.splice(i, 1)"
+              :label="`${param.name}: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}`"
+            />
+            <q-btn
+              round
+              size="xs"
+              icon="add"
+              @click="handleSelectedParam('create', props, i, 'outputParams'); showEditParamDialog = true"
+            />
+        </template>
+        <template #body-cell-actions="props">
+          <q-btn icon="sym_o_delete" round size="sm" color="negative" flat @click="selectedTaskProps = props; showDeleteDialog = true" />
         </template>
       </TableComponent>
       <q-card bordered class="q-ma-xl">
@@ -138,8 +171,11 @@
           text-color="white"
           removable
           @remove="inputParams.splice(i, 1)"
-          :label="`${param.name}: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0].name}`"
-        />
+        >
+          {{ `${param.name}` }}
+          <span v-if="param.required" class="text-red">*</span>
+          {{ `: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}` }}
+        </q-chip>
         <q-form ref="inputParamForm" greedy @submit.prevent="addInputParam">
           <div class="row">
             <q-input
@@ -163,6 +199,13 @@
               dense
               :rules="[requiredRule]"
             />
+            <div class="col">
+              <q-checkbox
+                label="Required"
+                left-label
+                v-model="inputParam.required"
+              />
+            </div>
             <q-btn
               round
               icon="add"
@@ -209,6 +252,7 @@
               dense
               :rules="[requiredRule]"
             />
+            <div class="col"></div>
             <q-btn
               round
               icon="add"
@@ -263,12 +307,30 @@
         Plugin Param Structure
       </label>
     </template>
-    <CodeEditor v-model="structure" style="height: auto;"/>
+    <CodeEditor 
+      v-model="structure"
+      style="height: auto;"
+      :readOnly="true"
+    />
   </InfoPopupDialog>
+  <DeleteDialog 
+    v-model="showDeleteDialog"
+    @submit="tasks.splice(selectedTaskProps.rowIndex, 1); showDeleteDialog = false"
+    type="Plugin Task"
+    :name="selectedTaskProps?.row?.name"
+  />
+  <EditPluginTaskParamDialog 
+    v-model="showEditParamDialog"
+    :editParam="selectedParam"
+    :pluginParameterTypes="pluginParameterTypes"
+    :paramType="selectedTaskProps?.type"
+    @updateParam="updateParam"
+    @addParam="addParam"
+  />
 </template>
 
 <script setup>
-  import { ref, inject, computed, onMounted } from 'vue'
+  import { ref, inject, watch, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import CodeEditor from '@/components/CodeEditor.vue'
   import * as api from '@/services/dataApi'
@@ -276,6 +338,8 @@
   import TableComponent from '@/components/TableComponent.vue'
   import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
+  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+  import EditPluginTaskParamDialog from '@/dialogs/EditPluginTaskParamDialog.vue'
   
   const route = useRoute()
   const router = useRouter()
@@ -284,6 +348,10 @@
 
   const pluginFile = ref({})
   const uploadedFile = ref(null)
+
+  const selectedTaskProps = ref()
+  const showDeleteDialog = ref(false)
+  const showEditParamDialog = ref(false)
 
   const title = ref('')
 
@@ -313,23 +381,41 @@
   }
 
   function pythonFilenameRule(val) {
-  const regex = /^[a-zA-Z_][a-zA-Z0-9_]*\.py$/
-  if (!regex.test(val)) {
-    return "Invalid Python filename"
+    const regex = /^[a-zA-Z_][a-zA-Z0-9_]*\.py$/
+    if (!regex.test(val)) {
+      return "Invalid Python filename"
+    }
+    if (val === '_.py') {
+      return "_.py is not a valid Python filename"
+    }
+    return true
   }
-  if (val === '_.py') {
-    return "_.py is not a valid Python filename"
-  }
-  return true
-}
+
+  const contentsError = ref('')
+
+  watch(() => pluginFile.value.contents, (newVal) => {
+    contentsError.value = newVal.length > 0 ? '' : 'This field is required'
+  })
 
   async function submit() {
+    basicInfoForm.value.validate().then(success => {
+      contentsError.value = pluginFile.value.contents?.length > 0 ? '' : 'This field is required'
+      if (success && contentsError.value === '') {
+        addOrModifyFile()
+      }
+      else {
+        // error
+      }
+    })
+  }
+
+  async function addOrModifyFile() {
     const plguinFileSubmit = {
         filename: pluginFile.value.filename,
         contents: pluginFile.value.contents,
-        description: pluginFile.value.description
+        description: pluginFile.value.description,
+        tasks: tasks.value
       }
-    plguinFileSubmit.tasks = tasks.value
     try {
       let res
       if(route.params.fileId === 'new') {
@@ -337,7 +423,6 @@
       } else {
         res = await api.updateFile(route.params.id, route.params.fileId, plguinFileSubmit)
       }
-      console.log('ressssssssssssssss = ', res)
       notify.success(`Sucessfully ${route.params.fileId === 'new' ? 'created' : 'updated'} '${res.data.filename}'`)
       router.push(`/plugins/${route.params.id}/files`)
     } catch(err) {
@@ -378,7 +463,8 @@
 
   const inputParam = ref({
     name: '',
-    parameterType: ''
+    parameterType: '',
+    required: true
   })
   const outputParam = ref({
     name: '',
@@ -390,9 +476,9 @@
 
   const tasks = ref([])
   const task = ref({
-
-
   })
+
+  const basicInfoForm = ref(null)
   const taskForm = ref(null)
   const inputParamForm = ref(null)
   const outputParamForm = ref(null)
@@ -401,9 +487,11 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'inputParams', label: 'Input Params', field: 'inputParams', align: 'left', sortable: false },
     { name: 'outputParams', label: 'Output Params', field: 'outputParams', align: 'left', sortable: false },
+    { name: 'actions', label: 'Actions', align: 'center', },
   ]
 
   async function getPluginParameterTypes(pagination) {
+    console.log('pagination = ', pagination)
     try {
       const res = await api.getData('pluginParameterTypes', pagination)
       pluginParameterTypes.value = res.data.data
@@ -419,6 +507,7 @@
       if (success) {
         inputParams.value.push(inputParam.value)
         inputParam.value = {}
+        inputParam.value.required = true
         inputParamForm.value.reset()
       }
       else {
@@ -457,6 +546,27 @@
         // error
       }
     })
+  }
+
+  const selectedParam = ref()
+
+  function handleSelectedParam(action, paramProps, paramIndex, type) {
+    selectedTaskProps.value = paramProps
+    selectedTaskProps.value.paramIndex = paramIndex
+    selectedTaskProps.value.type = type
+    if(action === 'create') {
+      selectedParam.value = ''
+      return
+    }
+    selectedParam.value = selectedTaskProps.value.row[selectedTaskProps.value.type][selectedTaskProps.value.paramIndex]
+  }
+
+  function updateParam(updatedParam) {
+    tasks.value[selectedTaskProps.value.rowIndex][selectedTaskProps.value.type][selectedTaskProps.value.paramIndex] = updatedParam
+  }
+
+  function addParam(newParam) {
+    tasks.value[selectedTaskProps.value.rowIndex][selectedTaskProps.value.type].push(newParam)
   }
 
 </script>

@@ -1,7 +1,7 @@
 <template>
   <q-toolbar class="bg-primary text-white">
     <q-btn
-      v-if="isMobile"
+      class="lt-lg"
       icon="menu"
       flat
       :ripple="false"
@@ -12,8 +12,11 @@
           <q-item clickable v-close-popup to="/">
             <q-item-section>Home</q-item-section>
           </q-item>
+          <q-item clickable v-close-popup to="/experiments">
+            <q-item-section>Experiments</q-item-section>
+          </q-item>
           <q-item clickable v-close-popup to="/entryPoints">
-            <q-item-section>Entry-Points</q-item-section>
+            <q-item-section>Entrypoints</q-item-section>
           </q-item>
           <q-item clickable v-close-popup to="/plugins">
             <q-item-section>Plugins</q-item-section>
@@ -21,35 +24,39 @@
           <q-item clickable v-close-popup to="/queues">
             <q-item-section>Queues</q-item-section>
           </q-item>
-          <q-item clickable v-close-popup to="/experiments">
-            <q-item-section>Experiments</q-item-section>
-          </q-item>
           <q-item clickable v-close-popup to="/jobs">
             <q-item-section>Jobs</q-item-section>
           </q-item>
-          <q-item clickable v-close-popup to="/groups">
-            <q-item-section>Groups</q-item-section>
+          <q-item clickable v-close-popup to="/pluginParams">
+            <q-item-section>Plugin-Params</q-item-section>
           </q-item>
           <q-item clickable v-close-popup to="/tags">
             <q-item-section>Tags</q-item-section>
           </q-item>
-          <q-item clickable v-close-popup to="/pluginParams">
-            <q-item-section>Plugin-Param-Types</q-item-section>
+          <q-item clickable v-close-popup to="/models">
+            <q-item-section>Models</q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup to="/artifacts">
+            <q-item-section>Artifacts</q-item-section>
+          </q-item>
+          <q-item clickable v-close-popup to="/groups">
+            <q-item-section>Groups</q-item-section>
           </q-item>
         </q-list>
       </q-menu>
     </q-btn>
-    <nav v-if="!isMobile">
-      <q-tabs shrink no-caps class="header">
+    <nav class="gt-md">
+      <q-tabs shrink no-caps>
         <q-route-tab label="Home" to="/" />
-        <q-route-tab label="Entry-Points" to="/entrypoints" />
+        <q-route-tab label="Experiments" to="/experiments" />
+        <q-route-tab label="Entrypoints" to="/entrypoints" />
         <q-route-tab label="Plugins" to="/plugins" />
         <q-route-tab label="Queues" to="/queues" />
-        <q-route-tab label="Experiments" to="/experiments" />
         <q-route-tab label="Jobs" to="/jobs" />
-        <q-route-tab label="Groups" to="/groups" />
-        <q-route-tab label="Tags" to="/tags" />
         <q-route-tab label="Plugin-Params" to="/pluginParams" />
+        <q-route-tab label="Tags" to="/tags" />
+        <q-route-tab label="Models" to="/models" />
+        <q-route-tab label="Artifacts" to="/artifacts" />
       </q-tabs>
     </nav>
 
@@ -100,24 +107,29 @@
         :label="getLabel()" to="/login"
       />
       <div v-else >
-        <q-btn color="primary" icon="person" :label="isMobile ? '' : store.loggedInUser.username" to="/login" dense class="q-mr-sm" />
-        <q-btn-dropdown style="background-color: #CF5C36;" icon="groups" :label="isMobile ? '' : store.loggedInGroup.name" dense class="q-pl-md">
-          <q-list>
-            <q-item 
-              v-for="(group, i) in store.groups" 
-              :key="i" 
-              clickable 
-              v-close-popup 
-              @click="console.log('Selected group = ', group)" 
-              :active="group.id === store.loggedInGroup.id"
-              active-class="bg-blue-3 text-bold"
-            >
-              <q-item-section>
-                <q-item-label>{{ group.name }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-btn-dropdown>
+        <div class="row">
+          <q-tabs shrink no-caps inline-label>
+            <q-route-tab class="gt-md" label="Groups" to="/groups" />
+            <q-route-tab :label="isMobile ? '' : store.loggedInUser.username" to="/login" icon="person" />
+          </q-tabs>
+          <q-btn-dropdown style="background-color: #CF5C36;" icon="groups" :label="isMobile ? '' : store.loggedInGroup.name" dense class="q-pl-md q-my-xs">
+            <q-list>
+              <q-item 
+                v-for="(group, i) in store.groups" 
+                :key="i" 
+                clickable 
+                v-close-popup 
+                @click="console.log('Selected group = ', group)" 
+                :active="group.id === store.loggedInGroup.id"
+                active-class="bg-blue-3 text-bold"
+              >
+                <q-item-section>
+                  <q-item-label>{{ group.name }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+        </div>
       </div>
     </q-tabs>
   </q-toolbar>
@@ -128,7 +140,7 @@
   import { computed, inject, ref } from 'vue'
   import { useRouter, START_LOCATION } from 'vue-router'
   import { useLoginStore } from '@/stores/LoginStore'
-  import * as api from '@/services/loginApi'
+  import * as api from '@/services/dataApi'
 
   const router = useRouter()
 

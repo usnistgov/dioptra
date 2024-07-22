@@ -16,26 +16,19 @@
       <div>{{ props.row.group.name }}</div>
     </template>
     <template #body-cell-tags="props">
-      <q-chip v-for="(tag, i) in props.row.tags" :key="i" color="primary" text-color="white">
-        {{ tag }}
-      </q-chip>
-    </template>
-    <template #expandedSlot="{ row }">
-      <q-btn 
+      <q-chip
+        v-for="(tag, i) in props.row.tags"
+        :key="i"
         color="primary" 
-        icon="folder" 
-        :label="`Manage ${row.name} files`" 
-        class="q-ma-md" 
-        @click="router.push(`/plugins/${row.id}/files`)" 
-      />
-      <BasicTable
-        :columns="fileColumns"
-        :rows="row.files"
-        :hideSearch="true"
-        :hideEditTable="true"
-        id="fileTable"
-        class="q-mx-md"
-        :title="`${row.name} Files`"
+        text-color="white"
+      >
+        {{ tag.name }}
+      </q-chip>
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="editObjTags = props.row; showTagsDialog = true"
       />
     </template>
   </TableComponent>
@@ -47,9 +40,9 @@
     size="lg"
     @click="showAddDialog = true"
   >
-    <span class="sr-only">Register a new Plugin</span>
+    <span class="sr-only">Register a new Plugin Param Type</span>
     <q-tooltip>
-      Register a new Plugin
+      Register a new Plugin Param Type
     </q-tooltip>
   </q-btn>
   <PluginParamsDialog 
@@ -64,29 +57,31 @@
     type="Plugin Parameter Type"
     :name="selected.length ? selected[0].name : ''"
   />
+  <AssignTagsDialog 
+    v-model="showTagsDialog"
+    :editObj="editObjTags"
+    type="pluginParameterTypes"
+    @refreshTable="tableRef.refreshTable()"
+  />
 </template>
 
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
-  import BasicTable from '@/components/BasicTable.vue'
-  import { useDataStore } from '@/stores/DataStore.ts'
   import PluginParamsDialog from '@/dialogs/PluginParamsDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import { ref, watch } from 'vue'
-  import { useRouter } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
-
-  const router = useRouter()
-
-  const store = useDataStore()
+  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 
   const editPluginParamType = ref({})
 
   const selected = ref([])
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)
+  const showTagsDialog = ref(false)
+  const editObjTags = ref({})
 
   const pluginParameterTypes = ref([])
 
@@ -110,8 +105,8 @@
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
+    { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
-    { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
   ]
 
   async function addPluginParamType(plugin) {
@@ -149,7 +144,6 @@
   }
 
   const fileColumns = [
-    // field must be name or else selection doesn't work, possible quasar bug
     { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
     { name: 'tasks', label: 'Number of Tasks', align: 'left', field: 'tasks', sortable: true, },
   ]
