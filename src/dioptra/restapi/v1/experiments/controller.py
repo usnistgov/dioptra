@@ -35,11 +35,13 @@ from dioptra.restapi.v1.artifacts.service import JobArtifactService
 from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.jobs.schema import (
     ExperimentJobGetQueryParameters,
+    JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
     JobStatusSchema,
 )
 from dioptra.restapi.v1.jobs.service import (
+    ExperimentJobIdMlflowrunService,
     ExperimentJobIdService,
     ExperimentJobIdStatusService,
     ExperimentJobService,
@@ -401,6 +403,64 @@ class ExperimentIdJobIdStatusEndpoint(Resource):
             experiment_id=id,
             job_id=jobId,
             status=parsed_obj["status"],
+            error_if_not_found=True,
+            log=log,
+        )
+
+
+@api.route("/<int:id>/jobs/<int:jobId>/mlflowRun")
+@api.param("id", "ID for the Experiment resource.")
+@api.param("jobId", "ID for the Job resource.")
+class ExperimentIdJobIdMlflowrunEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        experiment_job_id_mlflowrun_service: ExperimentJobIdMlflowrunService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdStatusService object.
+        """
+        self._experiment_job_id_mlflowrun_service = experiment_job_id_mlflowrun_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=JobMlflowRunSchema, api=api)
+    def get(self, id: int, jobId: int):
+        """Gets a Job resource's mlflow run id."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="ExperimentIdJobIdMlflowrunEndpoint",
+            request_type="GET",
+            experiment_id=id,
+            job_id=jobId,
+        )
+        return self._experiment_job_id_mlflowrun_service.get(
+            experiment_id=id, job_id=jobId, error_if_not_found=True, log=log
+        )
+
+    @login_required
+    @accepts(schema=JobMlflowRunSchema, api=api)
+    @responds(schema=JobMlflowRunSchema, api=api)
+    def post(self, id: int, jobId: int):
+        """Sets the mlflow run id for a Job"""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="ExperimentIdJobIdMlflowrunEndpoint",
+            request_type="POST",
+            experiment_id=id,
+            job_id=jobId,
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        return self._experiment_job_id_mlflowrun_service.create(
+            experiment_id=id,
+            job_id=jobId,
+            mlflow_run_id=parsed_obj["mlflow_run_id"],
             error_if_not_found=True,
             log=log,
         )

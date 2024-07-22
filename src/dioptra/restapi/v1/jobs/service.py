@@ -42,6 +42,7 @@ from .errors import (
     JobDoesNotExistError,
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
+    JobMlflowRunAlreadySetError,
     QueueNotRegisteredToEntryPointError,
 )
 
@@ -468,7 +469,6 @@ class JobIdStatusService(object):
 
         Args:
             job_id_service: A JobIdService object.
-            ...
         """
         self._job_id_service = job_id_service
 
@@ -756,7 +756,6 @@ class ExperimentJobIdStatusService(object):
 
         Args:
             experiment_job_id_service: An ExperimentJobIdService object.
-            ...
         """
         self._experiment_job_id_service = experiment_job_id_service
 
@@ -769,6 +768,7 @@ class ExperimentJobIdStatusService(object):
         """Fetch a job's status by its unique id.
 
         Args:
+            experiment_id: The unique id of the experiment.
             job_id: The unique id of the job.
 
         Returns:
@@ -798,6 +798,7 @@ class ExperimentJobIdStatusService(object):
         """Modify a Job's status by unique id
 
         Args:
+            experiment_id: The unique id of the experiment.
             job_id: The unique id of the job.
             status: The new status of the job.
             commit: If True, commit the transaction. Defaults to True.
@@ -837,3 +838,190 @@ class ExperimentJobIdStatusService(object):
             )
 
         return {"status": new_job.status, "id": job.resource_id}
+
+
+class ExperimentJobIdMlflowrunService(object):
+    """The service methods for managing the mlflow run id of a job by unique id."""
+
+    @inject
+    def __init__(
+        self,
+        experiment_job_id_service: ExperimentJobIdService,
+    ) -> None:
+        """Initialize the job status service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            experiment_job_id_service: An ExperimentJobIdService object.
+        """
+        self._experiment_job_id_service = experiment_job_id_service
+
+    def get(
+        self,
+        experiment_id: int,
+        job_id: int,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Fetch a job's mlflow run id by its unique id.
+
+        Args:
+            experiment_id: The unique id of the experiment.
+            job_id: The unique id of the job.
+
+        Returns:
+            The status message job object if found, otherwise an error message.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get job status by id", job_id=job_id)
+
+        job_dict = cast(
+            utils.JobDict,
+            self._experiment_job_id_service.get(
+                experiment_id, job_id, error_if_not_found=True, log=log
+            ),
+        )
+        job = job_dict["job"]
+
+        mlflow_run_id = (
+            job.mlflow_run.mlflow_run_id if job.mlflow_run is not None else None
+        )
+        return {"mlflow_run_id": mlflow_run_id}
+
+    def create(
+        self,
+        experiment_id: int,
+        job_id: int,
+        mlflow_run_id: str,
+        commit: bool = True,
+        **kwargs,
+    ) -> dict[str, Any] | None:
+        """Set a Job's mlflow run id by unique id
+
+        Args:
+            experiment_id: The unique id of the experiment.
+            job_id: The unique id of the job.
+            mlflow_run_id: The unique id of the mlflow run.
+            commit: If True, commit the transaction. Defaults to True.
+
+        Returns:
+            The status message job object if found, otherwise an error message.
+        """
+
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Set the job's mlflow run id", job_id=job_id, mlflow_run_id=mlflow_run_id
+        )
+
+        job_dict = self._experiment_job_id_service.get(experiment_id, job_id, log=log)
+        job = job_dict["job"]
+
+        if job.mlflow_run is not None:
+            raise JobMlflowRunAlreadySetError
+
+        job.mlflow_run = models.JobMlflowRun(
+            job_resource_id=job.resource_id,
+            mlflow_run_id=mlflow_run_id,
+        )
+
+        if commit:
+            db.session.commit()
+            log.debug(
+                "Setting Job mlflow run id successful",
+                job_id=job_id,
+                mlflow_run_id=mlflow_run_id,
+            )
+
+        return {"mlflow_run_id": job.mlflow_run.mlflow_run_id}
+
+
+class JobIdMlflowrunService(object):
+    """The service methods for managing the mlflow run id of a job by unique id."""
+
+    @inject
+    def __init__(
+        self,
+        job_id_service: JobIdService,
+    ) -> None:
+        """Initialize the job status service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: An JobIdService object.
+        """
+        self._job_id_service = job_id_service
+
+    def get(
+        self,
+        job_id: int,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Fetch a job's mlflow run id by its unique id.
+
+        Args:
+            job_id: The unique id of the job.
+
+        Returns:
+            The status message job object if found, otherwise an error message.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get job status by id", job_id=job_id)
+
+        job_dict = cast(
+            utils.JobDict,
+            self._job_id_service.get(job_id, error_if_not_found=True, log=log),
+        )
+        job = job_dict["job"]
+
+        mlflow_run_id = (
+            job.mlflow_run.mlflow_run_id if job.mlflow_run is not None else None
+        )
+        return {"mlflow_run_id": mlflow_run_id}
+
+    def create(
+        self,
+        job_id: int,
+        mlflow_run_id: str,
+        commit: bool = True,
+        **kwargs,
+    ) -> dict[str, Any] | None:
+        """Set a Job's mlflow run id by unique id
+
+        Args:
+            job_id: The unique id of the job.
+            mlflow_run_id: The unique id of the mlflow run.
+            commit: If True, commit the transaction. Defaults to True.
+
+        Returns:
+            The status message job object if found, otherwise an error message.
+        """
+
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Set the job's mlflow run id", job_id=job_id, mlflow_run_id=mlflow_run_id
+        )
+
+        job_dict = cast(
+            utils.JobDict,
+            self._job_id_service.get(job_id, error_if_not_found=True, log=log),
+        )
+        job = job_dict["job"]
+
+        if job.mlflow_run is not None:
+            raise JobMlflowRunAlreadySetError
+
+        job.mlflow_run = models.JobMlflowRun(
+            job_resource_id=job.resource_id,
+            mlflow_run_id=mlflow_run_id,
+        )
+
+        if commit:
+            db.session.commit()
+            log.debug(
+                "Setting Job mlflow run id successful",
+                job_id=job_id,
+                mlflow_run_id=mlflow_run_id,
+            )
+
+        return {"mlflow_run_id": job.mlflow_run.mlflow_run_id}

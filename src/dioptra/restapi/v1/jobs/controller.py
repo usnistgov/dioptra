@@ -42,10 +42,17 @@ from dioptra.restapi.v1.shared.tags.controller import (
     generate_resource_tags_id_endpoint,
 )
 
-from .schema import JobGetQueryParameters, JobPageSchema, JobSchema, JobStatusSchema
+from .schema import (
+    JobGetQueryParameters,
+    JobMlflowRunSchema,
+    JobPageSchema,
+    JobSchema,
+    JobStatusSchema,
+)
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    JobIdMlflowrunService,
     JobIdService,
     JobIdStatusService,
     JobService,
@@ -170,6 +177,60 @@ class JobIdStatusEndpoint(Resource):
         )
         return self._job_id_status_service.get(
             job_id=id, error_if_not_found=True, log=log
+        )
+
+
+@api.route("/<int:id>/mlflowRun")
+@api.param("id", "ID for the Job resource.")
+class JobIdMlflowrunEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        job_id_mlflowrun_service: JobIdMlflowrunService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_service: A JobIdStatusService object.
+        """
+        self._job_id_mlflowrun_service = job_id_mlflowrun_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=JobMlflowRunSchema, api=api)
+    def get(self, id: int):
+        """Gets a Job resource's mlflow run id."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMlflowrunEndpoint",
+            request_type="GET",
+            job_id=id,
+        )
+        return self._job_id_mlflowrun_service.get(
+            job_id=id, error_if_not_found=True, log=log
+        )
+
+    @login_required
+    @accepts(schema=JobMlflowRunSchema, api=api)
+    @responds(schema=JobMlflowRunSchema, api=api)
+    def post(self, id: int):
+        """Sets the mlflow run id for a Job"""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMlflowrunEndpoint",
+            request_type="POST",
+            job_id=id,
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        return self._job_id_mlflowrun_service.create(
+            job_id=id,
+            mlflow_run_id=parsed_obj["mlflow_run_id"],
+            error_if_not_found=True,
+            log=log,
         )
 
 
