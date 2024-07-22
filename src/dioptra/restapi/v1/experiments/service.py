@@ -220,7 +220,7 @@ class ExperimentService(object):
             resource.resource_id: experiment.resource_id
             for experiment in experiments
             for resource in experiment.children
-            if resource.resource_type == "entry_point"
+            if resource.resource_type == "entry_point" and not resource.is_deleted
         }
         entrypoints = self._entrypoint_ids_service.get(
             list(entrypoint_ids.keys()), error_if_not_found=True, log=log
@@ -248,7 +248,7 @@ class ExperimentService(object):
             experiments_dict[resource_id]["has_draft"] = True
         for experiment_dict in experiments_dict.values():
             for resource in experiment_dict["experiment"].children:
-                if resource.resource_type == "entry_point":
+                if resource.resource_type == "entry_point" and not resource.is_deleted:
                     entrypoint = entrypoints_dict[resource.resource_id]
                     experiment_dict["entrypoints"].append(entrypoint)
 
@@ -322,7 +322,7 @@ class ExperimentIdService(object):
         entrypoint_ids = [
             resource.resource_id
             for resource in experiment.children
-            if resource.resource_type == "entry_point"
+            if resource.resource_type == "entry_point" and not resource.is_deleted
         ]
         entrypoints = self._entrypoint_ids_service.get(
             entrypoint_ids, error_if_not_found=True, log=log
