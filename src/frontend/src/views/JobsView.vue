@@ -9,12 +9,45 @@
     @delete="showDeleteDialog = true"
     ref="tableRef"
     :hideEditBtn="true"
+    :showExpand="true"
   >
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}
     </template>
     <template #body-cell-queue="props">
       {{ props.row.queue.name }}
+    </template>
+    <template #expandedSlot="{ row }">
+      <q-btn
+        label="Create Artifact"
+        color="primary"
+        class="q-ml-md q-my-sm"
+        @click="jobId = row.id; showArtifactsDialog = true"
+      />
+      <BasicTable
+        :columns="artifactColumns"
+        :rows="row.artifacts"
+        :hideSearch="true"
+        :hideEditTable="true"
+        class="q-mx-md"
+        :title="`Job Artifacts`"
+      />
+    </template>
+    <template #body-cell-tags="props">
+      <q-chip
+        v-for="(tag, i) in props.row.tags"
+        :key="i"
+        color="primary" 
+        text-color="white"
+      >
+        {{ tag.name }}
+      </q-chip>
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="editObjTags = props.row; showTagsDialog = true"
+      />
     </template>
   </TableComponent>
   <q-btn 
@@ -38,6 +71,20 @@
     :name="selected.length ? selected[0].description : ''"
   />
 
+  <ArtifactsDialog 
+    v-model="showArtifactsDialog"
+    :editArtifact="''"
+    :expId="route.params.id"
+    :jobId="jobId"
+  />
+
+  <AssignTagsDialog 
+    v-model="showTagsDialog"
+    :editObj="editObjTags"
+    type="jobs"
+    @refreshTable="tableRef.refreshTable()"
+  />
+
 </template>
 
 <script setup>
@@ -48,14 +95,24 @@
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
+  import BasicTable from '@/components/BasicTable.vue'
+  import ArtifactsDialog from '@/dialogs/ArtifactsDialog.vue'
+  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 
   const route = useRoute()
 
   const columns = [
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
+    { name: 'id', label: 'Job ID', align: 'left', field: 'id', sortable: true, },
     { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: true, },
     { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: true, },
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
+    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+  ]
+
+  const artifactColumns = [
+    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
+    { name: 'uri', label: 'uri', align: 'left', field: 'uri', sortable: true, },
   ]
 
   const selected = ref([])
@@ -88,6 +145,11 @@
   }
 
   const showDeleteDialog = ref(false)
+  const showArtifactsDialog = ref(false)
+  const showTagsDialog = ref(false)
+  const editObjTags = ref({})
+
+  const jobId = ref('')
 
   async function deleteJob() {
     try {

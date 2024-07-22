@@ -1,12 +1,12 @@
 <template>
   <DialogComponent 
     v-model="showDialog"
-    @emitSubmit="$emit('submitTags', selectedTagIDs)"
+    @emitSubmit="submitTags"
     :hideDraftBtn="true"
   >
     <template #title>
       <label id="modalTitle">
-        Assign Tags for {{ editObj.name }}
+        Assign Tags for '{{ editObj.name || editObj.description }}'
       </label>
     </template>
     <q-chip 
@@ -49,8 +49,8 @@
 
   const store = useLoginStore()
 
-  const props = defineProps(['editObj'])
-  const emit = defineEmits(['submitTags'])
+  const props = defineProps(['editObj', 'type', ])
+  const emit = defineEmits(['refreshTable'])
 
   const showDialog = defineModel()
 
@@ -105,6 +105,21 @@
       getTags()
     } catch(err) {
       notify.error(err.response.data.message)
+    }
+  }
+
+  async function submitTags() {
+    showDialog.value = false
+    try {
+      if(props.type ===  'files') {
+        await api.updateTags(props.type, props.editObj.plugin.id, selectedTagIDs.value, props.editObj.id)
+      } else {
+        await api.updateTags(props.type, props.editObj.id, selectedTagIDs.value)
+      }
+      notify.success(`Sucessfully updated Tags for '${props.editObj.name || props.editObj.description}'`)
+      emit('refreshTable')
+    } catch(err) {
+      notify.error(err.response.data.message);
     }
   }
 

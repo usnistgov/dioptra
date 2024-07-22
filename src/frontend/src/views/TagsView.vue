@@ -50,10 +50,7 @@
   import TableComponent from '@/components/TableComponent.vue'
   import AddTagsDialog from '@/dialogs/AddTagsDialog.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import { useLoginStore } from '@/stores/LoginStore'
   import PageTitle from '@/components/PageTitle.vue'
-
-  const store = useLoginStore()
 
   const showAddDialog = ref(false)
   const showDeleteDialog = ref(false)

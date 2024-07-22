@@ -143,7 +143,7 @@
   import { ref } from 'vue';
   import { useLoginStore } from '@/stores/LoginStore';
   import { storeToRefs } from 'pinia';
-  import * as api from '@/services/loginApi';
+  import * as api from '@/services/dataApi';
   import * as notify from '../notify';
 
   const store = useLoginStore();

@@ -6,12 +6,12 @@
   >
     <template #title>
       <label id="modalTitle">
-        {{ queueToDraft.hasDraft ? 'Edit Draft' : `Create Draft for "${queueToDraft.name}"` }}
+        {{editModel ? 'Edit Model' : 'Register Model'}}
       </label>
     </template>
     <div class="row items-center">
-      <label class="col-3 q-mb-lg" id="queueName">
-        Queue Name:
+      <label class="col-3 q-mb-lg" id="modelName">
+        Model Name:
       </label>
       <q-input 
         class="col q-mb-xs" 
@@ -20,7 +20,7 @@
         v-model="name" 
         autofocus 
         :rules="[requiredRule]" 
-        aria-labelledby="queueName"
+        aria-labelledby="modelName"
         aria-required="true"
       />
     </div>
@@ -62,13 +62,11 @@
   import { ref, watch } from 'vue'
   import DialogComponent from './DialogComponent.vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
 
   const store = useLoginStore()
 
-  const props = defineProps(['queueToDraft'])
-  const emit = defineEmits(['addQueue', 'updateQueue', 'updateDraftLinkedToQueue'])
+  const props = defineProps(['editModel'])
+  const emit = defineEmits(['addModel', 'updateModel'])
 
   function requiredRule(val) {
     return (!!val) || "This field is required"
@@ -80,14 +78,11 @@
   const group = ref('')
   const description = ref('')
 
-  const queue = ref({})
-
-  watch(showDialog, async (newVal) => {
-    if(newVal && props.queueToDraft.hasDraft) {
-      await getDraft()
-      name.value = queue.value.name
-      description.value = queue.value.description
-      group.value = queue.value.group
+  watch(showDialog, (newVal) => {
+    if(newVal) {
+      name.value = props.editModel.name
+      description.value = props.editModel.description
+      group.value = props.editModel.group
     }
     else {
       name.value = ''
@@ -95,22 +90,18 @@
     }
   })
 
-  async function getDraft() {
-    try {
-      const res = await api.getItem('queues', props.queueToDraft.id, true)
-      queue.value = res.data
-    } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
+  function emitAddOrEdit() {
+    if(props.editModel) {
+      emit(
+        'updateModel', 
+        name.value, 
+        props.editModel.id, 
+        description.value
+      )
+    } else {
+      emit('addModel', name.value, group.value, description.value)
     }
   }
 
-  function emitAddOrEdit() {
-    if(props.queueToDraft.hasDraft) {
-      emit('updateDraftLinkedToQueue', props.queueToDraft.id, name.value, description.value)
-    } else {
-      emit('addQueue', name.value, description.value, props.queueToDraft.id)
-    }
-  }
 
 </script>

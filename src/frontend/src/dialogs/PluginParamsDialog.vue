@@ -77,8 +77,8 @@
         v-model="jsonString"
         language="yaml"
         placeholder="Enter Plugin Parameter Type JSON structure..."
-        style="width: 0; 
-        flex-grow: 1;" 
+        style="width: 0; flex-grow: 1;"
+        :showError="jsonError"
       />
     </div>
   </DialogComponent>
@@ -98,6 +98,10 @@
 
   const jsonString = ref('')
 
+  watch(() => jsonString.value, (newVal) => {
+    validJsonRule(newVal)
+  })
+
   const plugin = ref({
     name: '',
     group: '',
@@ -108,10 +112,30 @@
     return (!!val) || "This field is required"
   }
 
+  const jsonError = ref('')
+
+  function validJsonRule(val) {
+    if(val.length === 0) {
+      jsonError.value = ''
+      return
+    }
+    try {
+      JSON.parse(val)
+      jsonError.value = ''
+    } catch (e) {
+      jsonError.value = 'Invalid JSON format'
+    }
+  }
+
   const emit = defineEmits(['addPluginParamType', 'updatePluginParamType'])
 
   function emitAddOrEdit() {
-    plugin.value.structure = jsonString.value ? JSON.parse(jsonString.value) : {}
+    if(jsonError.value !== '') return
+    if(jsonString.value.length > 0) {
+      plugin.value.structure = JSON.parse(jsonString.value)
+    } else {
+      plugin.value.structure = {}
+    }
     if(props.editPluginParamType) {
       emit('updatePluginParamType', props.editPluginParamType.id, plugin.value.name, plugin.value.description, plugin.value.structure)
     } else {
@@ -124,14 +148,15 @@
     if(newVal) {
       plugin.value.name = props.editPluginParamType.name
       plugin.value.description = props.editPluginParamType.description
-      jsonString.value = JSON.stringify(props.editPluginParamType.structure, null, 2)
+      if(props.editPluginParamType.structure && Object.keys(props.editPluginParamType.structure).length > 0) {
+        jsonString.value = JSON.stringify(props.editPluginParamType.structure, null, 2)
+      }
     }
     else {
       plugin.value.name = ''
       plugin.value.group = ''
       plugin.value.description = ''
-      plugin.value.structure = {}
-      jsonString.value = '{}'
+      jsonString.value = ''
       uploadedFile.value = null
     }
   })
@@ -151,7 +176,7 @@
     reader.onerror = (e) => {
       console.log('error = ', e)
     }
-    reader.readAsText(file); // Reads the file as text
+    reader.readAsText(file) // Reads the file as text
   }
 
 </script>

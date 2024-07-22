@@ -6,25 +6,25 @@
   >
     <template #title>
       <label id="modalTitle">
-        {{ queueToDraft.hasDraft ? 'Edit Draft' : `Create Draft for "${queueToDraft.name}"` }}
+        {{editArtifact ? 'Edit Artifact' : 'Register Artifact'}}
       </label>
     </template>
-    <div class="row items-center">
-      <label class="col-3 q-mb-lg" id="queueName">
-        Queue Name:
+    <div v-if="!editArtifact" class="row items-center">
+      <label class="col-3 q-mb-lg" id="uri">
+        URI:
       </label>
       <q-input 
         class="col q-mb-xs" 
         outlined 
         dense 
-        v-model="name" 
+        v-model="uri" 
         autofocus 
         :rules="[requiredRule]" 
-        aria-labelledby="queueName"
+        aria-labelledby="uri"
         aria-required="true"
       />
     </div>
-    <div class="row items-center q-mb-xs">
+    <!-- <div class="row items-center q-mb-xs">
       <label class="col-3 q-mb-lg" id="pluginGroup">
         Group:
       </label>
@@ -42,7 +42,7 @@
         aria-labelledby="pluginGroup"
         aria-required="true"
       />
-    </div>
+    </div> -->
     <div class="row items-center">
       <label class="col-3" id="description">
         Description:
@@ -53,6 +53,8 @@
         outlined
         type="textarea"
         aria-labelledby="description"
+        autogrow
+        dense
       />
     </div>
   </DialogComponent>
@@ -61,14 +63,11 @@
 <script setup>
   import { ref, watch } from 'vue'
   import DialogComponent from './DialogComponent.vue'
-  import { useLoginStore } from '@/stores/LoginStore.ts'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
 
-  const store = useLoginStore()
-
-  const props = defineProps(['queueToDraft'])
-  const emit = defineEmits(['addQueue', 'updateQueue', 'updateDraftLinkedToQueue'])
+  const props = defineProps(['editArtifact', 'expId', 'jobId'])
+  const emit = defineEmits(['addArtifact', 'updateArtifact'])
 
   function requiredRule(val) {
     return (!!val) || "This field is required"
@@ -76,41 +75,47 @@
 
   const showDialog = defineModel()
 
-  const name = ref('')
+  const uri = ref('')
   const group = ref('')
   const description = ref('')
+  const job = ref('')
 
-  const queue = ref({})
-
-  watch(showDialog, async (newVal) => {
-    if(newVal && props.queueToDraft.hasDraft) {
-      await getDraft()
-      name.value = queue.value.name
-      description.value = queue.value.description
-      group.value = queue.value.group
+  watch(showDialog, (newVal) => {
+    if(newVal) {
+      uri.value = props.editArtifact.uri
+      description.value = props.editArtifact.description
+      // group.value = props.editArtifact.group
     }
     else {
-      name.value = ''
+      uri.value = ''
       description.value = ''
     }
   })
 
-  async function getDraft() {
-    try {
-      const res = await api.getItem('queues', props.queueToDraft.id, true)
-      queue.value = res.data
-    } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
+  function emitAddOrEdit() {
+    if(props.editArtifact) {
+      emit(
+        'updateArtifact', 
+        props.editArtifact.id, 
+        description.value
+      )
+    } else {
+      addArtifact()
     }
   }
 
-  function emitAddOrEdit() {
-    if(props.queueToDraft.hasDraft) {
-      emit('updateDraftLinkedToQueue', props.queueToDraft.id, name.value, description.value)
-    } else {
-      emit('addQueue', name.value, description.value, props.queueToDraft.id)
-    }
+  async function addArtifact() {
+    try {
+      await api.addArtifact(props.expId, props.jobId, {
+        uri: uri.value,
+        description: description.value,
+      })
+      showDialog.value = false
+      notify.success(`Sucessfully created artifact for Job ID: ${props.jobId}`)
+    } catch(err) {
+      notify.error(err.response.data.message)
+    } 
   }
+
 
 </script>

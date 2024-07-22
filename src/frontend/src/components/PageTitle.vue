@@ -70,16 +70,5 @@
     } 
   }
 
-  // const title = computed(() => {
-  //   if(route.path === '/entrypoints/create') return `${newOrEdit.value} Entry Point`
-  //   if(route.path === '/groups/admin') return `${store.editMode ? 'Edit Group ' : 'New Group'}`
-  //   if(path.value[0] === 'entrypoints') return 'Entry Points'
-  //   if(route.path === '/experiments/create') return `${newOrEdit.value} Experiment`
-  //   if(path.value[2] === 'files' && !route.params.fileId) return ` Files`
-  //   if(path.value[2] === 'files' && route.params.fileId) return `File ${route.params.fileId}`
-  //   if(path.value[0] === 'plugins' && path.value[1]) return 'Edit Plugin' 
-  //   return path.value[0]
-  // })
-
 
 </script>

@@ -2,6 +2,7 @@
   <DialogComponent 
     v-model="showDialog"
     @emitSubmit="$emit('leaveForm')"
+    :hideDraftBtn="true"
   >
     <template #title>Leave New Experiment Form?</template>
     <q-card-section class="q-pt-none">

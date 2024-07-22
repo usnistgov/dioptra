@@ -2,6 +2,7 @@
   <DialogComponent 
     v-model="showDialog"
     @emitSubmit="emitAdd"
+    :hideDraftBtn="true"
   >
     <template #title>
       <label id="modalTitle">
@@ -18,7 +19,7 @@
         dense 
         v-model="plugin.name" 
         autofocus 
-        :rules="[requiredRule]" 
+        :rules="[requiredRule, pythonModuleNameRule]" 
         aria-labelledby="pluginName"
         aria-required="true"
       />
@@ -76,6 +77,23 @@
   function requiredRule(val) {
     return (!!val) || "This field is required"
   }
+
+  function pythonModuleNameRule(val) {
+    if (/\s/.test(val)) {
+      return "A Python module name cannot contain spaces."
+    }
+    if (!/^[A-Za-z_]/.test(val)) {
+      return "A Python module name must start with a letter or underscore."
+    }
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(val)) {
+      return "A Python module name can only contain letters, numbers, and underscores."
+    }
+    if (val === "_") {
+      return "A Python module name cannot be '_' with no other characters."
+    }
+    return true
+  }
+
 
   const emit = defineEmits(['addPlugin'])
 

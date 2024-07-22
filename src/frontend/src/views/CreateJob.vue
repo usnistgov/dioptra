@@ -1,6 +1,6 @@
 <template>
   <PageTitle 
-    :title="title"
+    title="Create Job"
   />
   <div :class="`row ${isMobile ? '' : 'q-mx-xl'} q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
@@ -43,16 +43,15 @@
             <q-select
               outlined
               dense
-              v-model="job.entrypoint"
+              v-model="selectedEntrypoint"
               clearable
               use-input
-              
               map-options
               option-label="name"
               option-value="id"
               input-debounce="100"
-              :options="queues"
-              @filter="getEndpoint"
+              :options="entrypoints"
+              @filter="getEntrypoints"
               :rules="[requiredRule]"
               class="q-mb-sm"
               hint="Select Entrypoint in order to edit values on the right"
@@ -77,7 +76,7 @@
         </div>
       </fieldset>
     </div>
-    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`" :disabled="job.entrypoint === ''">
+    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`" :disabled="selectedEntrypoint === ''">
       <legend>Values</legend>
       <div class="q-px-xl">
         <BasicTable
@@ -89,53 +88,7 @@
           @edit="(param, i) => {selectedParam = param; selectedParamIndex = i; showEditParamDialog = true}"
           @delete="(param) => {selectedParam = param; showDeleteDialog = true}"
           :inlineEditFields="['value']"
-        >
-        <template #body-cell-value="props">
-          heyyyy
-        </template>
-        </BasicTable>
-
-        <!-- <q-card
-          flat
-          bordered
-          class="q-px-lg q-my-lg"
-        >
-          <q-card-section class="q-px-none">
-            <label class="text-body1">Add Parameter</label>
-          </q-card-section>
-          <q-form ref="paramForm" greedy @submit.prevent="addParam">
-            <q-select
-              outlined 
-              v-model="parameter.name" 
-              :options="paramNames" 
-              dense
-              :rules="[requiredRule]"
-              aria-required="true"
-              class="q-mb-md"
-              label="Select Param Name"
-            />
-            <q-input 
-              outlined 
-              dense 
-              v-model.trim="parameter.value"
-              label="Enter Value"
-              :rules="[requiredRule]"
-            />
-            <q-card-actions align="right">
-              <q-btn
-                round
-                color="secondary"
-                icon="add"
-                type="submit"
-              >
-                <span class="sr-only">Add Parameter</span>
-                <q-tooltip>
-                  Add Parameter
-                </q-tooltip>
-              </q-btn>
-            </q-card-actions>
-          </q-form>
-        </q-card> -->
+        />
       </div>
     </fieldset>
   </div>
@@ -170,8 +123,7 @@
 </template>
 
 <script setup>
-  import { ref, inject, reactive, watch, computed } from 'vue'
-  import { useLoginStore } from '@/stores/LoginStore.ts'
+  import { ref, inject, watch, computed } from 'vue'
   import { useRouter } from 'vue-router'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import EditJobParamDialog from '@/dialogs/EditJobParamDialog.vue'
@@ -184,8 +136,6 @@
   const route = useRoute()
   
   const router = useRouter()
-
-  const store = useLoginStore()
 
   const isMobile = inject('isMobile')
 
@@ -205,25 +155,7 @@
     entrypoint: '',
   })
 
-  const paramNames = computed(() => {
-    if(!job.value.entrypoint) return []
-    return job.value.entrypoint.parameters.map((obj) => obj.name)
-  })
-
-  let entryPoint = ref({
-    name: '',
-    group: '',
-    description: '',
-    parameters: [],
-    taskGraph: '',
-    queues: [],
-    plugins: []
-  })
-
-  const parameter = reactive({
-    name: '',
-    value: '',
-  })
+  const selectedEntrypoint = ref('')
 
   const parameters = ref([])
   const computedValue = computed(() => {
@@ -235,9 +167,8 @@
     return output
   })
 
-  watch(() => job.value.entrypoint, (newVal) => {
+  watch(() => selectedEntrypoint.value, (newVal) => {
     parameters.value = []
-    console.log('entrypoint = ', newVal)
     if(Array.isArray(newVal?.parameters)) {
       newVal.parameters.forEach((param) => {
         parameters.value.push({
@@ -250,8 +181,6 @@
   })
 
   const basicInfoForm = ref(null)
-  const paramForm = ref(null)
-
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
@@ -260,37 +189,10 @@
     // { name: 'actions', label: 'Actions', align: 'center',  },
   ]
 
-  const title = ref('')
-  getJob()
-  async function getJob() {
-    if(route.params.jobId === 'new') {
-      title.value = 'Create Job'
-      return
-    }
-    try {
-      const res = await api.getItem('entrypoints', route.params.id)
-      entryPoint.value = res.data
-      title.value = `Edit ${res.data.name}`
-      console.log('entryPoint = ', entryPoint.value)
-    } catch(err) {
-      console.log('err = ', err)
-      notify.error(err.response.data.message)
-    } 
-  }
-
-
-  function addParam() {
-    parameters.value.push(JSON.parse(JSON.stringify(parameter)))
-    parameter.name = ''
-    parameter.value = ''
-    paramForm.value.reset()
-  }
-
-
   function submit() {
     basicInfoForm.value.validate().then(success => {
       if (success) {
-        addOrModifyEntrypoint()
+        createJob()
       }
       else {
         // error
@@ -298,23 +200,13 @@
     })
   }
 
-  async function addOrModifyEntrypoint() {
-    job.value.entrypoint = job.value.entrypoint.id
+  async function createJob() {
+    job.value.entrypoint = selectedEntrypoint.value.id
     job.value.values = computedValue.value
+    console.log('submitting job = ', JSON.parse(JSON.stringify(job.value)))
     try {
-      if (route.params.jobId === 'new') {
-        await api.addJob(route.params.id, job.value)
-        notify.success(`Sucessfully created '${entryPoint.value.name}'`)
-      } else {
-        await api.updateItem('entrypoints', route.params.id, {
-          name: entryPoint.value.name,
-          description: entryPoint.value.description,
-          taskGraph: entryPoint.value.taskGraph,
-          parameters: parameters.value,
-          queues: entryPoint.value.queues,
-        })
-        notify.success(`Sucessfully updated '${entryPoint.value.name}'`)
-      }
+      await api.addJob(route.params.id, job.value)
+      notify.success(`Sucessfully created ''`)
     } catch(err) {
       notify.error(err.response.data.message)
     } finally {
@@ -339,6 +231,7 @@
   }
 
   const queues = ref([])
+  const entrypoints = ref([])
 
   async function getQueues(val = '', update) {
     update(async () => {
@@ -355,7 +248,7 @@
     })
   }
 
-  async function getEndpoint(val = '', update) {
+  async function getEntrypoints(val = '', update) {
     update(async () => {
       try {
         const res = await api.getData('entrypoints', {
@@ -363,7 +256,7 @@
           rowsPerPage: 100,
           index: 0
         })
-        queues.value = res.data.data
+        entrypoints.value = res.data.data
       } catch(err) {
         notify.error(err.response.data.message)
       } 

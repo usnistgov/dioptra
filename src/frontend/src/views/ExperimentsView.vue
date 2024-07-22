@@ -25,9 +25,20 @@
       <div>{{ props.row.group.name }}</div>
     </template>
     <template #body-cell-tags="props">
-      <q-chip v-for="(tag, i) in props.row.tags" :key="i" color="primary" text-color="white">
-        {{ tag }}
+      <q-chip
+        v-for="(tag, i) in props.row.tags"
+        :key="i"
+        color="primary" 
+        text-color="white"
+      >
+        {{ tag.name }}
       </q-chip>
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="editObjTags = props.row; showTagsDialog = true"
+      />
     </template>
   </TableComponent>
 
@@ -42,8 +53,8 @@
     <q-tooltip>
       Create a new Experiment
     </q-tooltip>
-    <q-menu>
-      <q-list>
+    <q-menu anchor="top middle" self="bottom middle">
+      <q-list >
         <q-item clickable to="/experiments/new">
           <q-item-section>Create Experiment</q-item-section>
         </q-item>
@@ -61,6 +72,12 @@
     type="Experiment"
     :name="selected.length ? selected[0].name : ''"
   />
+  <AssignTagsDialog 
+    v-model="showTagsDialog"
+    :editObj="editObjTags"
+    type="experiments"
+    @refreshTable="tableRef.refreshTable()"
+  />
 </template>
 
 <script setup>
@@ -73,12 +90,15 @@
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
+  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   
   const router = useRouter()
 
   const store = useDataStore()
 
   const showDeleteDialog = ref(false)
+  const showTagsDialog = ref(false)
+  const editObjTags = ref({})
 
   const experiments = ref([])
 
@@ -87,8 +107,8 @@
     { name: 'draft', label: 'Draft', align: 'left', field: 'draft', sortable: true },
     { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
     { name: 'entryPoints', label: 'Entry Points', align: 'left', field: 'entryPoints', sortable: true },
-    { name: 'tags', label: 'Tags', align: 'left', sortable: false },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: false },
+    { name: 'tags', label: 'Tags', align: 'left', sortable: false },
   ]
 
   const selected = ref([])

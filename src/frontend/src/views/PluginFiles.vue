@@ -5,7 +5,7 @@
     :columns="fileColumns"
     title="Plugin Files"
     v-model:selected="selected"
-    @edit="store.editMode = true; router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)"
+    @edit="router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     :showExpand="true"
     @request="getFiles"
@@ -13,6 +13,22 @@
   >
     <template #body-cell-tasks="props">
       {{ props.row.tasks.length }}
+    </template>
+    <template #body-cell-tags="props">
+      <q-chip
+        v-for="(tag, i) in props.row.tags"
+        :key="i"
+        color="primary" 
+        text-color="white"
+      >
+        {{ tag.name }}
+      </q-chip>
+      <q-btn
+        round
+        size="sm"
+        icon="add"
+        @click.stop="editObjTags = props.row; showTagsDialog = true"
+      />
     </template>
   </TableComponent>
   <q-btn 
@@ -35,33 +51,40 @@
     type="Plugin File"
     :name="selected.length ? selected[0].filename : ''"
   />
+
+  <AssignTagsDialog 
+    v-model="showTagsDialog"
+    :editObj="editObjTags"
+    type="files"
+    @refreshTable="tableRef.refreshTable()"
+  />
 </template>
 
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
-  import { useDataStore } from '@/stores/DataStore.ts'
   import { useRoute, useRouter } from 'vue-router'
   import { ref, computed } from 'vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
+  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 
   const route = useRoute()
   const router = useRouter()
 
-  const store = useDataStore()
-
   const selected = ref([])
   const showDeleteDialog = ref(false)
+  const showTagsDialog = ref(false)
+  const editObjTags = ref({})
 
   const tableRef = ref(null)
 
   const fileColumns = [
-    // field must be name or else selection doesn't work, possible quasar bug
     { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
-    { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
+    { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: false },
     { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: true, },
+    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
   ]
 
   const files = ref([])
