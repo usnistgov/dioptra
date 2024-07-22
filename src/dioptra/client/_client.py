@@ -1,19 +1,3 @@
-# This Software (Dioptra) is being made available as a public service by the
-# National Institute of Standards and Technology (NIST), an Agency of the United
-# States Department of Commerce. This software was developed in part by employees of
-# NIST and in part by NIST contractors. Copyright in portions of this software that
-# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
-# to Title 17 United States Code Section 105, works of NIST employees are not
-# subject to copyright protection in the United States. However, NIST may hold
-# international copyright in software created by its employees and domestic
-# copyright (or licensing rights) in portions of software that were assigned or
-# licensed to NIST. To the extent that NIST holds copyright in this software, it is
-# being made available under the Creative Commons Attribution 4.0 International
-# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
-# of the software developed or licensed by NIST.
-#
-# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
-# https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
 import os
@@ -115,22 +99,20 @@ class DioptraClient(object):
         )
 
         self._session = session if session is not None else requests.Session()
-        self._users = UsersClient(session, "users", address, api_version)
-        self._auth = AuthClient(session, "auth", address, api_version)
-        self._queues = QueuesClient(session, "queues", address, api_version)
-        self._groups = GroupsClient(session, "groups", address, api_version)
-        self._tags = TagsClient(session, "tags", address, api_version)
-        self._plugins = PluginsClient(session, "plugins", address, api_version)
+        self._users = UsersClient(session, "users", address)
+        self._auth = AuthClient(session, "auth", address)
+        self._queues = QueuesClient(session, "queues", address)
+        self._groups = GroupsClient(session, "groups", address)
+        self._tags = TagsClient(session, "tags", address)
+        self._plugins = PluginsClient(session, "plugins", address)
         self._pluginParameterTypes = PluginParameterTypesClient(
-            session, "pluginParameterTypes", address, api_version
+            session, "pluginParameterTypes", address
         )
-        self._experiments = ExperimentsClient(
-            session, "experiments", address, api_version
-        )
-        self._jobs = JobsClient(session, "jobs", address, api_version)
-        self._entrypoints = EntrypointsClient(
-            session, "entrypoints", address, api_version
-        )
+        self._experiments = ExperimentsClient(session, "experiments", address)
+        self._jobs = JobsClient(session, "jobs", address)
+        self._entrypoints = EntrypointsClient(session, "entrypoints", address)
+        self._models = ModelsClient(session, "models", address)
+        self._artifacts = ArtifactsClient(session, "artifacts", address)
         # models
         # artifacts
 
@@ -174,13 +156,57 @@ class DioptraClient(object):
     def entrypoints(self):
         return self.get_endpoint(self._entrypoints)
 
+    @property
+    def models(self):
+        return self.get_endpoint(self._models)
+
+    @property
+    def artifacts(self):
+        return self.get_endpoint(self._artifacts)
+
     def get_endpoint(self, ep):
         ep.session = self._session
         return ep
 
 
+class HasTagsProvider(object):
+    def __init__(self, url, session):
+        self._tags = TagsProvider(url, session)
+
+    @property
+    def tags(self):
+        return self.get_endpoint(self._tags)
+
+    def get_endpoint(self, ep):
+        ep.session = self._session
+        return ep
+
+
+class HasDraftsEndpoint(object):
+    def __init__(self, url, session, address, fields, put_fields=None):
+        self.draft_fields = fields
+        self.put_fields = put_fields if put_fields is not None else fields
+        self._drafts = DraftsEndpoint(url, self, session, "draft", address)
+
+    @property
+    def drafts(self):
+        return self.get_endpoint(self._drafts)
+
+    def get_endpoint(self, ep):
+        ep.session = self._session
+        return ep
+
+
+class HasSubEndpointProvider(object):
+    def __init__(self, url):
+        self._url = url
+
+    def idurl(self, ep_id):
+        return urljoin(self._url, ep_id)
+
+
 class Endpoint(object):
-    def __init__(self, session, ep_name, address, api_version):
+    def __init__(self, session, ep_name, address):
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
         self._ep_name = ep_name
         self._session = session
@@ -197,6 +223,10 @@ class Endpoint(object):
     def url(self):
         return self.def_endpoint(self._ep_name)
 
+    @property
+    def ep_name(self):
+        return self._ep_name
+
     def def_endpoint(self, name):
         """creates base url for an endpoint by name"""
         return urlunparse(
@@ -204,42 +234,13 @@ class Endpoint(object):
         )
 
 
-class HasTagsProvider(object):
-    def __init__(self, url, session):
-        self._tags = TagsProvider(url, session)
+class SubEndpoint(Endpoint):
+    def __init__(self, parent, session, ep_name, address):
+        Endpoint.__init__(self, session, ep_name, address)
+        self._parent = parent  # parent should extend HasSubEndpointProvider
 
-    @property
-    def tags(self):
-        return self.get_endpoint(self._tags)
-
-    def get_endpoint(self, ep):
-        ep.session = self._session
-        return ep
-
-
-class TagsProvider(object):
-    def __init__(self, base_url, session):
-        self.url = base_url
-        self.session = session
-
-    def get(self, parent_id):
-        return get(self.session, self.url, str(parent_id), "tags")
-
-    def modify(self, parent_id, ids):
-        d = {"ids": ids}
-        return put(self.session, self.url, d, str(parent_id), "tags")
-
-    def delete_all(self, parent_id):
-        d = None
-        return delete(self.session, self.url, d, str(parent_id), "tags")
-
-    def add(self, parent_id, ids):
-        d = {"ids": ids}
-        return post(self.session, self.url, d, str(parent_id), "tags")
-
-    def delete(self, parent_id, tag_id):
-        d = None
-        return delete(self.session, self.url, d, str(parent_id), "tags", str(tag_id))
+    def suburl(self, ep_id):
+        return urljoin(self._parent.idurl(str(ep_id)), self.ep_name)
 
 
 class UsersClient(Endpoint):
@@ -326,7 +327,14 @@ class GroupsClient(Endpoint):
         return get(self.session, self.url, str(gid))
 
 
-class QueuesClient(Endpoint):
+class QueuesClient(Endpoint, HasDraftsEndpoint, HasSubEndpointProvider):
+    def __init__(self, session, ep_name, address):
+        Endpoint.__init__(self, session, ep_name, address)
+        HasDraftsEndpoint.__init__(
+            self, self.url, self.session, address, ["name", "description"]
+        )
+        HasSubEndpointProvider.__init__(self, self.url)
+
     def get_all(self):
         """gets all queues"""
         return get(self.session, self.url)
@@ -335,29 +343,6 @@ class QueuesClient(Endpoint):
         """create a queue"""
         d = {"group": group, "name": name, "description": description}
         return post(self.session, self.url, d)
-
-    def get_drafts(self):
-        """gets all queue drafts"""
-        return get(self.session, self.url, "drafts")
-
-    def create_draft(self, group, name, description):
-        """create a draft"""
-        d = {"group": group, "name": name, "description": description}
-        return post(self.session, self.url, d, "drafts")
-
-    def modify_draft_by_draft_id(self, draft_id, name, description):
-        """modify a draft by id"""
-        d = {"name": name, "description": description}
-        return put(self.session, self.url, d, "drafts", str(draft_id))
-
-    def delete_draft_by_draft_id(self, draft_id):
-        """delete a draft by id"""
-        d = None
-        return delete(self.session, self.url, d, "drafts", str(draft_id))
-
-    def get_draft_by_draft_id(self, draft_id):
-        """get a draft by id"""
-        return get(self.session, self.url, "drafts", str(draft_id))
 
     def modify_by_id(self, queue_id, name, description):
         """modify a queue by id"""
@@ -373,31 +358,12 @@ class QueuesClient(Endpoint):
         """get a queue by id"""
         return get(self.session, self.url, str(queue_id))
 
-    def modify_draft_by_queue_id(self, queue_id, name, description):
-        """modify a draft by queue id"""
-        d = {"name": name, "description": description}
-        return put(self.session, self.url, d, str(queue_id), "draft")
-
-    def create_draft_by_queue_id(self, queue_id, name, description):
-        """create a draft by queue id"""
-        d = {"name": name, "description": description}
-        return post(self.session, self.url, d, str(queue_id), "draft")
-
-    def delete_draft_by_queue_id(self, queue_id):
-        """delete a draft by queue id"""
-        d = None
-        return delete(self.session, self.url, d, str(queue_id), "draft")
-
-    def get_draft_by_queue_id(self, queue_id):
-        """get a draft by queue id"""
-        return get(self.session, self.url, str(queue_id), "draft")
-
 
 class TagsClient(Endpoint):
     def get_all(self):
         return get(self.session, self.url)
 
-    def create(self, name, group):
+    def create(self, group, name):
         d = {"name": name, "group": group}
         return post(self.session, self.url, d)
 
@@ -416,10 +382,20 @@ class TagsClient(Endpoint):
         return get(self.session, self.url, str(tag_id), "resources")
 
 
-class EntrypointsClient(Endpoint, HasTagsProvider):
-    def __init__(self, session, ep_name, address, api_version):
-        Endpoint.__init__(self, session, ep_name, address, api_version)
+class EntrypointsClient(
+    Endpoint, HasTagsProvider, HasDraftsEndpoint, HasSubEndpointProvider
+):
+    def __init__(self, session, ep_name, address):
+        Endpoint.__init__(self, session, ep_name, address)
         HasTagsProvider.__init__(self, self.url, self.session)
+        HasDraftsEndpoint.__init__(
+            self,
+            self.url,
+            self.session,
+            address,
+            ["name", "description", "taskGraph", "parameters", "queues", "plugins"],
+        )
+        HasSubEndpointProvider.__init__(self, self.url)
 
     def get_all(self):
         return get(self.session, self.url)
@@ -435,42 +411,6 @@ class EntrypointsClient(Endpoint, HasTagsProvider):
             "plugins": plugins,
         }
         return post(self.session, self.url, d)
-
-    def create_draft(
-        self, group, name, description, taskGraph, parameters, queues, plugins
-    ):
-        d = {
-            "group": group,
-            "name": name,
-            "description": description,
-            "taskGraph": taskGraph,
-            "parameters": parameters,
-            "queues": queues,
-            "plugins": plugins,
-        }
-        return post(self.session, self.url, d, "drafts")
-
-    def get_drafts(self):
-        return get(self.session, self.url, "drafts")
-
-    def modify_draft_by_draft_id(
-        self, draft_id, name, description, taskGraph, parameters, queues
-    ):
-        d = {
-            "name": name,
-            "description": description,
-            "taskGraph": taskGraph,
-            "parameters": parameters,
-            "queues": queues,
-        }
-        return put(self.session, self.url, d, "drafts", str(draft_id))
-
-    def get_draft_by_draft_id(self, draft_id):
-        return get(self.session, self.url, "drafts", str(draft_id))
-
-    def delete_draft_by_draft_id(self, draft_id):
-        d = None
-        return delete(self.session, self.url, d, "drafts", str(draft_id))
 
     def modify_by_id(
         self, entrypoint_id, name, description, taskGraph, parameters, queues
@@ -490,39 +430,6 @@ class EntrypointsClient(Endpoint, HasTagsProvider):
     def delete_by_id(self, entrypoint_id):
         d = None
         return delete(self.session, self.url, d, str(entrypoint_id))
-
-    def modify_draft_by_entrypoint_id(
-        self, entrypoint_id, name, description, taskGraph, parameters, queues, plugins
-    ):
-        d = {
-            "name": name,
-            "description": description,
-            "taskGraph": taskGraph,
-            "parameters": parameters,
-            "queues": queues,
-            "plugins": plugins,
-        }
-        return put(self.session, self.url, d, str(entrypoint_id), "draft")
-
-    def create_draft_by_entrypoint_id(
-        self, entrypoint_id, name, description, taskGraph, parameters, queues, plugins
-    ):
-        d = {
-            "name": name,
-            "description": description,
-            "taskGraph": taskGraph,
-            "parameters": parameters,
-            "queues": queues,
-            "plugins": plugins,
-        }
-        return post(self.session, self.url, d, str(entrypoint_id), "draft")
-
-    def get_draft_by_entrypoint_id(self, entrypoint_id):
-        return get(self.session, self.url, str(entrypoint_id), "draft")
-
-    def delete_draft_by_entrypoint_id(self, entrypoint_id):
-        d = None
-        return delete(self.session, self.url, d, str(entrypoint_id), "draft")
 
     def get_plugins_by_entrypoint_id(self, entrypoint_id):
         return get(self.session, self.url, str(entrypoint_id), "plugins")
@@ -572,10 +479,20 @@ class EntrypointsClient(Endpoint, HasTagsProvider):
         )
 
 
-class ExperimentsClient(Endpoint, HasTagsProvider):
-    def __init__(self, session, ep_name, address, api_version):
-        Endpoint.__init__(self, session, ep_name, address, api_version)
+class ExperimentsClient(
+    Endpoint, HasTagsProvider, HasDraftsEndpoint, HasSubEndpointProvider
+):
+    def __init__(self, session, ep_name, address):
+        Endpoint.__init__(self, session, ep_name, address)
         HasTagsProvider.__init__(self, self.url, self.session)
+        HasDraftsEndpoint.__init__(
+            self,
+            self.url,
+            self.session,
+            address,
+            ["name", "description", "entrypoints"],
+        )
+        HasSubEndpointProvider.__init__(self, self.url)
 
     def get_all(self):
         return get(self.session, self.url)
@@ -592,26 +509,6 @@ class ExperimentsClient(Endpoint, HasTagsProvider):
     def get_drafts(self):
         return get(self.session, self.url, "drafts")
 
-    def create_draft(self, group, name, description, entrypoints):
-        d = {
-            "group": group,
-            "name": name,
-            "description": description,
-            "entrypoints": entrypoints,
-        }
-        return post(self.session, self.url, d, "drafts")
-
-    def get_drafts_by_draft_id(self, draft_id):
-        return get(self.session, self.url, "drafts", str(draft_id))
-
-    def modify_drafts_by_draft_id(self, draft_id, name, description, entrypoints):
-        d = {"name": name, "description": description, "entrypoints": entrypoints}
-        return put(self.session, self.url, d, "drafts", str(draft_id))
-
-    def delete_drafts_by_draft_id(self, draft_id):
-        d = None
-        return delete(self.session, self.url, d, "drafts", str(draft_id))
-
     def get_by_id(self, experiment_id):
         return get(self.session, self.url, str(experiment_id))
 
@@ -622,25 +519,6 @@ class ExperimentsClient(Endpoint, HasTagsProvider):
     def delete_by_id(self, experiment_id):
         d = None
         return delete(self.session, self.url, d, str(experiment_id))
-
-    def get_draft_by_experiment_id(self, experiment_id):
-        return get(self.session, self.url, str(experiment_id), "draft")
-
-    def modify_draft_by_experiment_id(
-        self, experiment_id, name, description, entrypoints
-    ):
-        d = {"name": name, "description": description, "entrypoints": entrypoints}
-        return put(self.session, self.url, d, str(experiment_id), "draft")
-
-    def create_draft_by_experiment_id(
-        self, experiment_id, name, description, entrypoints
-    ):
-        d = {"name": name, "description": description, "entrypoints": entrypoints}
-        return post(self.session, self.url, d, str(experiment_id), "draft")
-
-    def delete_draft_by_experiment_id(self, experiment_id):
-        d = None
-        return delete(self.session, self.url, d, str(experiment_id), "draft")
 
     def get_entrypoints_by_experiment_id(self, experiment_id):
         return get(self.session, self.url, str(experiment_id), "entrypoints")
@@ -715,8 +593,8 @@ class ExperimentsClient(Endpoint, HasTagsProvider):
 
 
 class JobsClient(Endpoint, HasTagsProvider):
-    def __init__(self, session, ep_name, address, api_version):
-        Endpoint.__init__(self, session, ep_name, address, api_version)
+    def __init__(self, session, ep_name, address):
+        Endpoint.__init__(self, session, ep_name, address)
         HasTagsProvider.__init__(self, self.url, self.session)
 
     def get_all(self):
@@ -739,10 +617,21 @@ class JobsClient(Endpoint, HasTagsProvider):
         return get(self.session, self.url, str(job_id), "status")
 
 
-class PluginsClient(Endpoint, HasTagsProvider):
-    def __init__(self, session, ep_name, address, api_version):
-        Endpoint.__init__(self, session, ep_name, address, api_version)
+class PluginsClient(
+    Endpoint, HasDraftsEndpoint, HasSubEndpointProvider, HasTagsProvider
+):
+    def __init__(self, session, ep_name, address):
+        Endpoint.__init__(self, session, ep_name, address)
         HasTagsProvider.__init__(self, self.url, self.session)
+        HasDraftsEndpoint.__init__(
+            self, self.url, self.session, address, ["name", "description"]
+        )
+        HasSubEndpointProvider.__init__(self, self.url)
+        self._files = PluginFilesClient(self, session, "files", address)
+
+    @property
+    def files(self):
+        return self._files
 
     def get_all(self):
         return get(self.session, self.url)
@@ -750,24 +639,6 @@ class PluginsClient(Endpoint, HasTagsProvider):
     def create(self, group, name, description):
         d = {"group": group, "name": name, "description": description}
         return post(self.session, self.url, d)
-
-    def get_all_drafts(self):
-        return get(self.session, self.url, "drafts")
-
-    def create_draft(self, group, name, description):
-        d = {"group": group, "name": name, "description": description}
-        return post(self.session, self.url, d, "drafts")
-
-    def get_draft_by_draft_id(self, plugin_id):
-        return get(self.session, self.url, "drafts", str(plugin_id))
-
-    def modify_draft_by_draft_id(self, plugin_id, name, description):
-        d = {"name": name, "description": description}
-        return put(self.session, self.url, d, "drafts", str(plugin_id))
-
-    def delete_draft_by_draft_id(self, plugin_id):
-        d = None
-        return delete(self.session, self.url, d, "drafts", str(plugin_id))
 
     def get_by_id(self, plugin_id):
         return get(self.session, self.url, str(plugin_id))
@@ -780,23 +651,26 @@ class PluginsClient(Endpoint, HasTagsProvider):
         d = None
         return delete(self.session, self.url, d, str(plugin_id))
 
-    def get_draft_by_plugin_id(self, plugin_id):
-        return get(self.session, self.url, str(plugin_id), "draft")
+    def get_snapshots_by_plugin_id(self, plugin_id):
+        return get(self.session, self.url, str(plugin_id), "snapshots")
 
-    def modify_draft_by_plugin_id(self, plugin_id, name, description):
-        d = {"name": name, "description": description}
-        return put(self.session, self.url, d, str(plugin_id), "draft")
+    def get_snapshot_by_plugin_id_snapshot_id(self, plugin_id, snapshot_id):
+        return get(
+            self.session, self.url, str(plugin_id), "snapshots", str(snapshot_id)
+        )
 
-    def create_draft_by_plugin_id(self, plugin_id, name, description):
-        d = {"name": name, "description": description}
-        return post(self.session, self.url, d, str(plugin_id), "draft")
 
-    def delete_draft_by_plugin_id(self, plugin_id):
-        d = None
-        return delete(self.session, self.url, d, str(plugin_id), "draft")
+class PluginFilesClient(SubEndpoint):
+    def __init__(self, parent, session, ep_name, address):
+        SubEndpoint.__init__(self, parent, session, ep_name, address)
+        # HasTagsProvider.__init__(self, self.url, self.session)
+        # HasDraftsEndpoint.__init__(self, self.url, self.session, address,
+        #                              ["filename", "description"]
+        #                          )
+        # HasSubEndpointProvider.__init__(self, self.url)
 
     def get_files_by_plugin_id(self, plugin_id):
-        return get(self.session, self.url, str(plugin_id), "files")
+        return get(self.session, self.suburl(plugin_id))
 
     def create_files_by_plugin_id(
         self, plugin_id, filename, contents, description, *plugins
@@ -807,14 +681,14 @@ class PluginsClient(Endpoint, HasTagsProvider):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return post(self.session, self.url, d, str(plugin_id), "files")
+        return post(self.session, self.suburl(plugin_id), d)
 
     def delete_files_by_plugin_id(self, plugin_id):
         d = None
-        return delete(self.session, self.url, d, str(plugin_id), "files")
+        return delete(self.session, self.suburl(plugin_id), d)
 
     def get_files_drafts_by_plugin_id(self, plugin_id):
-        return get(self.session, self.url, str(plugin_id), "files", "drafts")
+        return get(self.session, self.suburl(plugin_id), "drafts")
 
     def create_files_drafts_by_plugin_id(
         self, plugin_id, filename, contents, description, *plugins
@@ -825,12 +699,10 @@ class PluginsClient(Endpoint, HasTagsProvider):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return post(self.session, self.url, d, str(plugin_id), "files", "drafts")
+        return post(self.session, self.suburl(plugin_id), d, "drafts")
 
     def get_files_drafts_by_plugin_id_draft_id(self, plugin_id, drafts_id):
-        return get(
-            self.session, self.url, str(plugin_id), "files", "drafts", str(drafts_id)
-        )
+        return get(self.session, self.suburl(plugin_id), "drafts", str(drafts_id))
 
     def modify_files_drafts_by_plugin_id_draft_id(
         self, plugin_id, drafts_id, filename, contents, description, *plugins
@@ -841,18 +713,14 @@ class PluginsClient(Endpoint, HasTagsProvider):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return put(
-            self.session, self.url, d, str(plugin_id), "files", "drafts", str(drafts_id)
-        )
+        return put(self.session, self.suburl(plugin_id), d, "drafts", str(drafts_id))
 
     def delete_files_drafts_by_plugin_id_draft_id(self, plugin_id, drafts_id):
         d = None
-        return delete(
-            self.session, self.url, d, str(plugin_id), "files", "drafts", str(drafts_id)
-        )
+        return delete(self.session, self.suburl(plugin_id), d, "drafts", str(drafts_id))
 
     def get_files_by_plugin_id_file_id(self, plugin_id, file_id):
-        return get(self.session, self.url, str(plugin_id), "files", str(file_id))
+        return get(self.session, self.suburl(plugin_id), str(file_id))
 
     def modify_files_by_plugin_id_file_id(
         self, plugin_id, file_id, filename, contents, description, *plugins
@@ -863,16 +731,14 @@ class PluginsClient(Endpoint, HasTagsProvider):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return put(self.session, self.url, d, str(plugin_id), "files", str(file_id))
+        return put(self.session, self.suburl(plugin_id), d, str(file_id))
 
     def delete_files_by_plugin_id_file_id(self, plugin_id, file_id):
         d = None
-        return delete(self.session, self.url, d, str(plugin_id), "files", str(file_id))
+        return delete(self.session, self.suburl(plugin_id), d, str(file_id))
 
     def get_files_draft_by_plugin_id_file_id(self, plugin_id, file_id):
-        return get(
-            self.session, self.url, str(plugin_id), "files", str(file_id), "draft"
-        )
+        return get(self.session, self.suburl(plugin_id), str(file_id), "draft")
 
     def modify_files_draft_by_plugin_id_file_id(
         self, plugin_id, file_id, filename, contents, description, *plugins
@@ -883,15 +749,11 @@ class PluginsClient(Endpoint, HasTagsProvider):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return put(
-            self.session, self.url, d, str(plugin_id), "files", str(file_id), "draft"
-        )
+        return put(self.session, self.suburl(plugin_id), d, str(file_id), "draft")
 
     def delete_files_draft_by_plugin_id_file_id(self, plugin_id, file_id):
         d = None
-        return delete(
-            self.session, self.url, d, str(plugin_id), "files", str(file_id), "draft"
-        )
+        return delete(self.session, self.suburl(plugin_id), d, str(file_id), "draft")
 
     def create_files_draft_by_plugin_id_file_id(
         self, plugin_id, file_id, filename, contents, description, *plugins
@@ -902,70 +764,41 @@ class PluginsClient(Endpoint, HasTagsProvider):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return post(
-            self.session, self.url, d, str(plugin_id), "files", str(file_id), "draft"
-        )
+        return post(self.session, self.suburl(plugin_id), d, str(file_id), "draft")
 
     def get_snapshots_by_plugin_id_file_id(self, plugin_id, file_id):
-        return get(
-            self.session, self.url, str(plugin_id), "files", str(file_id), "snapshots"
-        )
+        return get(self.session, self.suburl(plugin_id), str(file_id), "snapshots")
 
     def get_snapshots_by_plugin_id_file_id_snapshot_id(
         self, plugin_id, file_id, snapshot_id
     ):
         return get(
             self.session,
-            self.url,
-            str(plugin_id),
-            "files",
+            self.suburl(plugin_id),
             str(file_id),
             "snapshots",
             str(snapshot_id),
         )
 
     def get_tags_by_plugin_id_file_id(self, plugin_id, file_id):
-        return get(
-            self.session, self.url, str(plugin_id), "files", str(file_id), "tags"
-        )
+        return get(self.session, self.suburl(plugin_id), str(file_id), "tags")
 
     def modify_tags_by_plugin_id_file_id(self, plugin_id, file_id, ids):
         d = {"ids": ids}
-        return put(
-            self.session, self.url, d, str(plugin_id), "files", str(file_id), "tags"
-        )
+        return put(self.session, self.suburl(plugin_id), d, str(file_id), "tags")
 
     def delete_tags_by_plugin_id_file_id(self, plugin_id, file_id):
         d = None
-        return delete(
-            self.session, self.url, d, str(plugin_id), "files", str(file_id), "tags"
-        )
+        return delete(self.session, self.suburl(plugin_id), d, str(file_id), "tags")
 
     def add_tags_by_plugin_id_file_id(self, plugin_id, file_id, ids):
         d = {"ids": ids}
-        return post(
-            self.session, self.url, d, str(plugin_id), "files", str(file_id), "tags"
-        )
+        return post(self.session, self.suburl(plugin_id), d, str(file_id), "tags")
 
     def delete_tags_by_plugin_id_file_id_tag_id(self, plugin_id, file_id, tag_id):
         d = None
         return delete(
-            self.session,
-            self.url,
-            d,
-            str(plugin_id),
-            "files",
-            str(file_id),
-            "tags",
-            str(tag_id),
-        )
-
-    def get_snapshots_by_plugin_id(self, plugin_id):
-        return get(self.session, self.url, str(plugin_id), "snapshots")
-
-    def get_snapshot_by_plugin_id_snapshot_id(self, plugin_id, snapshot_id):
-        return get(
-            self.session, self.url, str(plugin_id), "snapshots", str(snapshot_id)
+            self.session, self.suburl(plugin_id), d, str(file_id), "tags", str(tag_id)
         )
 
 
@@ -1002,15 +835,15 @@ class PluginTask(object):
         self.client = client
 
     def convert_params_to_ids(self, mappings):
-        """this converts parameters to registered ids using a
-        mapping from register_unregistered_types"""
+        """this converts parameters to registered ids using a mapping
+        from register_unregistered_types"""
         return [(i[0], mappings[i[1]]) for i in self.inputs], [
             (o[0], mappings[o[1]]) for o in self.outputs
         ]
 
     def register_unregistered_types(self, group=1):
-        """checks all the types in inputs/outputs and
-        register things that aren't registered"""
+        """checks all the types in inputs/outputs and register things that
+        aren't registered"""
         registered_types = (
             self.client.pluginParameterTypes.get_all()
         )  # get all registered types
@@ -1045,3 +878,164 @@ class PluginTask(object):
                 {"name": param[0], "parameterType": param[1]} for param in outs
             ],
         }
+
+
+class ArtifactsClient(Endpoint):
+    def get_all(self):
+        return get(self.session, self.url)
+
+    def create(self, group, description, job, uri):
+        d = {"group": group, "description": description, "job": job, "uri": uri}
+        return post(self.session, self.url, d)
+
+    def get_by_id(self, artifact_id):
+        return get(self.session, self.url, str(artifact_id))
+
+    def modify_by_id(self, artifact_id, description):
+        d = {"description": description}
+        return put(self.session, self.url, d, str(artifact_id))
+
+    def get_snapshots(self, artifact_id):
+        return get(self.session, self.url, str(artifact_id), "snapshots")
+
+    def get_snapshots_by_artifact_id_snapshot_id(self, artifact_id, snapshot_id):
+        return get(
+            self.session, self.url, str(artifact_id), "snapshots", str(snapshot_id)
+        )
+
+
+class ModelsClient(
+    Endpoint, HasTagsProvider, HasDraftsEndpoint, HasSubEndpointProvider
+):
+    def __init__(self, session, ep_name, address):
+        Endpoint.__init__(self, session, ep_name, address)
+        HasSubEndpointProvider.__init__(self, self.url)
+        HasTagsProvider.__init__(self, self.url, self.session)
+        HasDraftsEndpoint.__init__(
+            self, self.url, self.session, address, ["name", "description"]
+        )
+
+    def get_all(self):
+        return get(self.session, self.url)
+
+    def create(self, group, name, description):
+        d = {"group": group, "name": name, "description": description}
+        return post(self.session, self.url, d)
+
+    def get_by_id(self, model_id):
+        return get(self.session, self.url, str(model_id))
+
+    def modify_by_id(self, model_id, name, description):
+        d = {"name": name, "description": description}
+        return put(self.session, self.url, d, str(model_id))
+
+    def delete_by_id(self, model_id):
+        d = None
+        return delete(self.session, self.url, d, str(model_id))
+
+    def get_snapshots_by_model_id(self, model_id):
+        return get(self.session, self.url, str(model_id), "snapshots")
+
+    def get_snapshot_by_plugin_id_model_id(self, model_id, snapshot_id):
+        return get(self.session, self.url, str(model_id), "snapshots", str(snapshot_id))
+
+    def get_versions_by_model_id(self, model_id):
+        return get(self.session, self.url, str(model_id), "versions")
+
+    def create_version_by_model_id(self, model_id, description, artifact):
+        d = {"description": description, "artifact": artifact}
+        return post(self.session, self.url, d, str(model_id), "versions")
+
+    def modify_version_by_model_id_version_id(self, model_id, version_id, description):
+        d = {"description": description}
+        return put(
+            self.session, self.url, d, str(model_id), "versions", str(version_id)
+        )
+
+    def get_version_by_model_id_version_id(self, model_id, version_id):
+        return get(self.session, self.url, str(model_id), "versions", str(version_id))
+
+
+class DraftsEndpoint(SubEndpoint):
+    def __init__(self, base_url, parent, session, ep_name, address):
+        SubEndpoint.__init__(self, parent, session, ep_name, address)
+        self.base_url = base_url
+        self.fields = parent.draft_fields  # array of field names
+        self.put_fields = parent.put_fields  # used when PUT method differs from create
+
+    @property
+    def drafts_url(self):
+        return urljoin(self.base_url, "drafts")
+
+    # /something/id/draft
+
+    def create_draft_for_resource(
+        self, parent_id, *fields
+    ):  # TODO: what to do about these parameters? they can be different
+        d = {}
+        for f in zip(self.fields, fields):
+            d[f[0]] = f[1]
+        return post(self.session, self.suburl(parent_id), d)
+
+    def get_draft_for_resource(self, parent_id):
+        return get(self.session, self.suburl(parent_id))
+
+    def modify_draft_for_resource(self, parent_id, *fields):
+        d = {}
+        for f in zip(self.put_fields, fields):
+            d[f[0]] = f[1]
+        return put(self.session, self.suburl(parent_id), d)
+
+    def delete_draft_for_resource(self, parent_id):
+        d = None
+        return delete(self.session, self.suburl(parent_id), d)
+
+    # /something/drafts/
+
+    def get_all(self):
+        return get(self.session, self.drafts_url)
+
+    def create(self, group_id, *fields):
+        d = {"group": group_id}
+        for f in zip(self.fields, fields):
+            d[f[0]] = f[1]
+        return post(self.session, self.drafts_url, d)
+
+    def modify_by_draft_id(self, draft_id, *fields):
+        d = {}
+        for f in zip(self.put_fields, fields):
+            d[f[0]] = f[1]
+        return put(self.session, self.drafts_url, d, str(draft_id))
+
+    def delete_by_draft_id(self, draft_id):
+        d = None
+        return delete(self.session, self.drafts_url, d, str(draft_id))
+
+    def get_by_draft_id(self, draft_id):
+        return get(self.session, self.drafts_url, str(draft_id))
+
+
+class TagsProvider(object):
+    def __init__(self, base_url, session):
+        # SubEndpoint.__init__(self, session)
+        self.url = base_url
+        self.session = session
+
+    def get(self, parent_id):
+        return get(self.session, self.url, str(parent_id), "tags")
+
+    def modify(self, parent_id, ids):
+        d = {"ids": ids}
+        return put(self.session, self.url, d, str(parent_id), "tags")
+
+    def delete_all(self, parent_id):
+        d = None
+        return delete(self.session, self.url, d, str(parent_id), "tags")
+
+    def add(self, parent_id, ids):
+        d = {"ids": ids}
+        return post(self.session, self.url, d, str(parent_id), "tags")
+
+    def delete(self, parent_id, tag_id):
+        d = None
+        return delete(self.session, self.url, d, str(parent_id), "tags", str(tag_id))
