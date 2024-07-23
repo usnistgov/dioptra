@@ -60,7 +60,6 @@ class GroupService(object):
     @inject
     def __init__(
         self,
-        group_name_service: GroupNameService,
         group_member_service: GroupMemberService,
         group_manager_service: GroupManagerService,
         uow: UnitOfWork,
@@ -70,11 +69,10 @@ class GroupService(object):
         All arguments are provided via dependency injection.
 
         Args:
-            group_name_service: A GroupNameService object.
             group_member_service: A GroupMemberService object.
             group_manager_service: A GroupManagerService object.
+            uow: A UnitOfWork instance
         """
-        self._group_name_service = group_name_service
         self._group_member_service = group_member_service
         self._group_manager_service = group_manager_service
         self._uow = uow
@@ -174,8 +172,6 @@ class GroupIdService(object):
     @inject
     def __init__(
         self,
-        group_service: GroupService,
-        group_name_service: GroupNameService,
         uow: UnitOfWork,
     ) -> None:
         """Initialize the group ID service.
@@ -183,11 +179,8 @@ class GroupIdService(object):
         All arguments are provided via dependency injection.
 
         Args:
-            group_service: A GroupService object.
-            group_name_service: A GroupNameService object.
+            uow: A UnitOfWork instance
         """
-        self._group_service = group_service
-        self._group_name_service = group_name_service
         self._uow = uow
 
     def get(
@@ -255,7 +248,7 @@ class GroupIdService(object):
 
             return None
 
-        duplicate = self._group_name_service.get(name, log=log)
+        duplicate = self._uow.group_repo.get_by_name(name, DeletionPolicy.ANY)
         if duplicate is not None:
             raise EntityExistsError(GROUP_TYPE, duplicate.group_id, name=name)
 
@@ -292,44 +285,6 @@ class GroupIdService(object):
         log.debug("Group deleted", group_id=group.group_id)
 
         return {"status": "Success", "group": group.name}
-
-
-class GroupNameService(object):
-    """The service methods used to manage a group by name."""
-
-    @inject
-    def __init__(self, uow: UnitOfWork):
-        self._uow = uow
-
-    def get(
-        self, name: str, error_if_not_found: bool = False, **kwargs
-    ) -> models.Group | None:
-        """Fetch a group by its name.
-
-        Args:
-            name: The name of the group.
-            error_if_not_found: If True, raise an error if the group is not found.
-                Defaults to False.
-
-        Returns:
-            The group object if found, otherwise None.
-
-        Raises:
-            EntityDoesNotExistError: If the group is not found and `error_if_not_found`
-                is True.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Lookup group by name", name=name)
-
-        group = self._uow.group_repo.get_by_name(name, DeletionPolicy.NOT_DELETED)
-
-        if group is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(GROUP_TYPE, name=name)
-
-            return None
-
-        return group
 
 
 class GroupMemberService(object):
