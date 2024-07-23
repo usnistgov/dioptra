@@ -11,23 +11,8 @@
     @request="getQueues"
     ref="tableRef"
     :showToggleDraft="true"
+    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
   >
-    <template #body-cell-tags="props">
-      <q-chip
-        v-for="(tag, i) in props.row.tags"
-        :key="i"
-        color="primary" 
-        text-color="white"
-      >
-        {{ tag.name }}
-      </q-chip>
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editObjTags = props.row; showTagsDialog = true"
-      />
-    </template>
     <template #body-cell-hasDraft="props">
       <q-btn
         round

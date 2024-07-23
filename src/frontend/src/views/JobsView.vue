@@ -10,6 +10,7 @@
     ref="tableRef"
     :hideEditBtn="true"
     :showExpand="true"
+    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
   >
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}
@@ -31,22 +32,6 @@
         :hideEditTable="true"
         class="q-mx-md"
         :title="`Job Artifacts`"
-      />
-    </template>
-    <template #body-cell-tags="props">
-      <q-chip
-        v-for="(tag, i) in props.row.tags"
-        :key="i"
-        color="primary" 
-        text-color="white"
-      >
-        {{ tag.name }}
-      </q-chip>
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editObjTags = props.row; showTagsDialog = true"
       />
     </template>
   </TableComponent>

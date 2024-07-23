@@ -11,25 +11,10 @@
     @request="getPluginParameterTypes"
     ref="tableRef"
     :hideToggleDraft="true"
+    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
-    </template>
-    <template #body-cell-tags="props">
-      <q-chip
-        v-for="(tag, i) in props.row.tags"
-        :key="i"
-        color="primary" 
-        text-color="white"
-      >
-        {{ tag.name }}
-      </q-chip>
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editObjTags = props.row; showTagsDialog = true"
-      />
     </template>
   </TableComponent>
   <q-btn 

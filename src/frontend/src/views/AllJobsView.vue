@@ -10,6 +10,7 @@
     @request="getJobs"
     ref="tableRef"
     :hideEditBtn="true"
+    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
   >
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}
@@ -19,22 +20,6 @@
     </template>
     <template #body-cell-group="props">
       {{ props.row.group.name }}
-    </template>
-    <template #body-cell-tags="props">
-      <q-chip
-        v-for="(tag, i) in props.row.tags"
-        :key="i"
-        color="primary" 
-        text-color="white"
-      >
-        {{ tag.name }}
-      </q-chip>
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editObjTags = props.row; showTagsDialog = true"
-      />
     </template>
   </TableComponent>
 

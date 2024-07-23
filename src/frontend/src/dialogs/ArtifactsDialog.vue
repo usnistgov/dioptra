@@ -49,7 +49,7 @@
       </label>
       <q-input
         class="col"
-        v-model="description"
+        v-model.trim="description"
         outlined
         type="textarea"
         aria-labelledby="description"
