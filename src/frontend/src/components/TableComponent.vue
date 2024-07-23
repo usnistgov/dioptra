@@ -41,6 +41,39 @@
             <div v-if="typeof(col.value) === 'boolean'" class="text-body1">
               {{ col.value ? '✅' : 	'❌'}}
             </div>
+            <div v-else-if="col.name === 'name'">
+              {{ props.row.name?.length < 18 ? props.row.name : props.row.name?.replace(/(.{18})..+/, "$1…") }}
+              <q-tooltip v-if="props.row.name.length > 18" max-width="30vw">
+                {{ props.row.name }}
+              </q-tooltip>
+            </div>
+            <div v-else-if="col.name === 'description'">
+              {{ props.row.description?.length < 40 ? props.row.description : props.row.description?.replace(/(.{40})..+/, "$1…") }}
+              <q-tooltip v-if="props.row.description?.length > 40" max-width="30vw">
+                {{ props.row.description }}
+              </q-tooltip>
+            </div>
+            <div v-else-if="col.name === 'tags'">
+              <q-chip
+                v-for="(tag, i) in props.row.tags"
+                :key="i"
+                color="primary" 
+                text-color="white"
+                clickable
+                @click.stop
+              >
+                {{ tag.name.length < 18 ? tag.name : tag.name.replace(/(.{18})..+/, "$1…") }}
+                <q-tooltip v-if="tag.name.length > 18">
+                  {{ tag.name }}
+                </q-tooltip>
+              </q-chip>
+              <q-btn
+                round
+                size="sm"
+                icon="add"
+                @click.stop="$emit('editTags', props.row)"
+              />
+            </div>
             <div v-else>
               {{ col.value }}
             </div>
@@ -96,7 +129,7 @@
   const isMobile = inject('isMobile')
 
   const props = defineProps(['columns', 'rows', 'title', 'showExpand', 'hideEditBtn', 'hideDeleteBtn', 'showToggleDraft', 'hideSearch', 'disableSelect', 'rightCaption'])
-  const emit = defineEmits(['edit', 'delete', 'request', 'expand'])
+  const emit = defineEmits(['edit', 'delete', 'request', 'expand', 'editTags'])
 
   const finalColumns = computed(() => {
     let defaultColumns = [ ...props.columns ]

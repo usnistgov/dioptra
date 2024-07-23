@@ -9,12 +9,16 @@
     @delete="showDeleteDialog = true"
     @request="getExperiments"
     ref="tableRef"
+    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
   >
     <template #body-cell-name="props">
-        <RouterLink :to="`/experiments/${props.row.id}/jobs`">
-          {{props.row.name}}
-        </RouterLink>
-      </template>
+      <RouterLink :to="`/experiments/${props.row.id}/jobs`">
+        {{ props.row.name.length < 18 ? props.row.name : props.row.name.replace(/(.{18})..+/, "$1…") }}
+        <q-tooltip v-if="props.row.name.length > 18" max-width="30vw">
+          {{ props.row.name }}
+        </q-tooltip>
+      </RouterLink>
+    </template>
     <template #body-cell-draft="props">
       <q-chip v-if="props.row.draft" outline color="red" text-color="white" class="q-ml-none">
         DRAFT
@@ -23,22 +27,6 @@
     </template>
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
-    </template>
-    <template #body-cell-tags="props">
-      <q-chip
-        v-for="(tag, i) in props.row.tags"
-        :key="i"
-        color="primary" 
-        text-color="white"
-      >
-        {{ tag.name }}
-      </q-chip>
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editObjTags = props.row; showTagsDialog = true"
-      />
     </template>
   </TableComponent>
 
