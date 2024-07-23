@@ -42,13 +42,13 @@
               {{ col.value ? '✅' : 	'❌'}}
             </div>
             <div v-else-if="col.name === 'name'">
-              {{ props.row.name?.length < 18 ? props.row.name : props.row.name?.replace(/(.{18})..+/, "$1…") }}
+              {{ props.row.name?.length <= 18 ? props.row.name : props.row.name?.replace(/(.{17})..+/, "$1…") }}
               <q-tooltip v-if="props.row.name.length > 18" max-width="30vw">
                 {{ props.row.name }}
               </q-tooltip>
             </div>
             <div v-else-if="col.name === 'description'">
-              {{ props.row.description?.length < 40 ? props.row.description : props.row.description?.replace(/(.{40})..+/, "$1…") }}
+              {{ props.row.description?.length <= 40 ? props.row.description : props.row.description?.replace(/(.{39})..+/, "$1…") }}
               <q-tooltip v-if="props.row.description?.length > 40" max-width="30vw">
                 {{ props.row.description }}
               </q-tooltip>
@@ -62,8 +62,8 @@
                 clickable
                 @click.stop
               >
-                {{ tag.name.length < 18 ? tag.name : tag.name.replace(/(.{18})..+/, "$1…") }}
-                <q-tooltip v-if="tag.name.length > 18">
+                {{ tag.name.length <= 18 ? tag.name : tag.name.replace(/(.{17})..+/, "$1…") }}
+                <q-tooltip v-if="tag.name.length > 18" max-width="30vw">
                   {{ tag.name }}
                 </q-tooltip>
               </q-chip>
