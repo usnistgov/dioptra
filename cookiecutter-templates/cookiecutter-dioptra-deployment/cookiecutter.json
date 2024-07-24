@@ -4,7 +4,7 @@
     "container_registry": "",
     "__container_namespace": "dioptra",
     "container_tag": "dev",
-    "docker_compose_path": "/usr/local/bin/docker-compose",
+    "docker_compose_path": "docker compose",
     "systemd_required_mounts": "",
     "nginx_server_name": "dioptra.example.org",
     "nginx_expose_ports_on_localhost_only": ["True", "False"],
