@@ -13,7 +13,7 @@ const router = createRouter({
       component: () => import('../views/EntryPointsView.vue')
     },
     {
-      path: '/entrypoints/:id',
+      path: '/entrypoints/:id/:draftType?/:resourceDraftParentId?',
       component: () => import('../views/CreateEntryPoint.vue')
     },
     {

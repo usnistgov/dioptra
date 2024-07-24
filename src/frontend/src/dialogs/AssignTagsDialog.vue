@@ -61,7 +61,7 @@
     try {
       const res = await api.getData('tags', {index: 0, rowsPerPage: 50, search: ''})
       tags.value = res.data.data
-      if(props.editObj.tags.length > 0) {
+      if(props.editObj.tags?.length > 0) {
         props.editObj.tags.forEach((tag) => {
           selectedTagIDs.value.push(tag.id)
         })

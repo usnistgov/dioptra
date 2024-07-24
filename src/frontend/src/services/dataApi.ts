@@ -172,17 +172,33 @@ export async function getItem<T extends ItemType>(type: T, id: number, isDraft: 
   return res
 }
 
-export async function getDraft<T extends ItemType>(type: T, id: number) {
-  const res = await axios.get(`/api/${type}/${id}/draft`)
+export async function getNewDraft<T extends ItemType>(type: T, draftId: number) {
+  const res = await axios.get(`/api/${type}/drafts/${draftId}`)
+  if(res.data) {
+    console.log('res = ', res)
+    Object.assign(res.data, res.data.payload)
+  }
   return res
 }
 
-export async function updateItem<T extends ItemType>(type: T, id: number, params: UpdateParams[T]) {
-  return await axios.put(`/api/${type}/${id}`, params)
+export async function getResourceDraft<T extends ItemType>(type: T, parentResourceId: number) {
+  console.log('parentResourceId = ', parentResourceId)
+  const res = await axios.get(`/api/${type}/${parentResourceId}/draft`)
+  if(res.data) {
+    console.log('res = ', res)
+    Object.assign(res.data, res.data.payload)
+  }
+  return res
 }
 
-export async function addItem<T extends keyof CreateParams>(type: T, params: CreateParams[T]) {
-  return await axios.post(`/api/${type}/`, params)
+// update item or NEW draft
+export async function updateItem<T extends ItemType>(type: T, id: number, params: UpdateParams[T], isDraft?: boolean) {
+  return await axios.put(`/api/${type}/${isDraft ? 'drafts/' : ''}${id}`, params)
+}
+
+// add item or NEW draft
+export async function addItem<T extends keyof CreateParams>(type: T, params: CreateParams[T], isDraft?: boolean) {
+  return await axios.post(`/api/${type}/${isDraft ? 'drafts/' : ''}`, params)
 }
 
 interface JobParams {
@@ -203,10 +219,24 @@ export async function deleteJob(id: number, jobId: number) {
 
 export async function addDraft<T extends keyof CreateParams>(type: T, params: CreateParams[T], id: number) {
   if(id) {
+    // add RESOURCE draft
     return await axios.post(`/api/${type}/${id}/draft`, params)
   } else {
+    // add NEW draft
     return await axios.post(`/api/${type}/drafts/`, params)
   }
+}
+
+export async function addNewDraft<T extends keyof CreateParams>(type: T, params: CreateParams[T]) {
+  return await axios.post(`/api/${type}/drafts/`, params)
+}
+
+export async function addResourceDraft<T extends keyof CreateParams>(type: T, params: CreateParams[T], id: number) {
+  return await axios.post(`/api/${type}/${id}/draft`, params)
+}
+
+export async function updateResourceDraft<T extends keyof CreateParams>(type: T, params: CreateParams[T], id: number) {
+  return await axios.put(`/api/${type}/${id}/draft`, params)
 }
 
 export async function updateDraft<T extends ItemType>(type: T, draftId: string, params: UpdateParams[T]) {

@@ -121,7 +121,6 @@
   const filter = ref('')
   const selected = defineModel('selected')
   const radioSelected = ref('')
-  //const showDrafts = ref(false)
   const showDrafts = defineModel('showDrafts')
 
   function handleClick(tableProps) {
