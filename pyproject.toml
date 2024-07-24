@@ -198,7 +198,7 @@ exclude = '''
 
 [tool.bumpver]
 current_version = "0.0.0"
-version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
+version_pattern = "MAJOR.MINOR.PATCH[-TAG]"
 commit_message = "release {old_version} → {new_version}"
 commit = true
 tag = true
@@ -206,28 +206,29 @@ push = false
 
 [tool.bumpver.file_patterns]
 "pyproject.toml" = [
-    "{version}",
-]
-"version-vars.mk" = [
-    "CODE_PKG_VERSION = {version}"
-]
-".github/workflows/env/version-vars.env" = [
-    "CODE_PKG_VERSION={version}"
+    'current_version = "{version}"',
+    'version = "{pep440_version}"',
 ]
 "docs/source/conf.py" = [
-    'release = "{version}"'
+    'release = "{version}"',
+]
+"src/dioptra/client/__version__.py" = [
+    "{pep440_version}",
 ]
 "src/dioptra/mlflow_plugins/__version__.py" = [
-    "{version}",
+    "{pep440_version}",
 ]
 "src/dioptra/pyplugs/__version__.py" = [
-    "{version}",
+    "{pep440_version}",
 ]
 "src/dioptra/restapi/__version__.py" = [
-    "{version}",
+    "{pep440_version}",
 ]
 "src/dioptra/rq/__version__.py" = [
-    "{version}",
+    "{pep440_version}",
+]
+"src/dioptra/sdk/__version__.py" = [
+    "{pep440_version}",
 ]
 
 [tool.commitizen]
