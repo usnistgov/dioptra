@@ -8,8 +8,8 @@
           <q-input 
             outlined 
             dense 
-            v-model.trim="plugin.name"
-            :rules="[requiredRule]"
+            v-model="plugin.name"
+            :rules="[requiredRule, pythonModuleNameRule]"
             class="q-mb-sm q-mt-md"
             aria-required="true"
           >
@@ -109,6 +109,22 @@
     } catch(err) {
       notify.error(err.response.data.message)
     } 
+  }
+
+  function pythonModuleNameRule(val) {
+    if (/\s/.test(val)) {
+      return "A Python module name cannot contain spaces."
+    }
+    if (!/^[A-Za-z_]/.test(val)) {
+      return "A Python module name must start with a letter or underscore."
+    }
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(val)) {
+      return "A Python module name can only contain letters, numbers, and underscores."
+    }
+    if (val === "_") {
+      return "A Python module name cannot be '_' with no other characters."
+    }
+    return true
   }
 
 </script>

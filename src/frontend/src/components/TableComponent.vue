@@ -43,13 +43,13 @@
             </div>
             <div v-else-if="col.name === 'name'">
               {{ props.row.name?.length <= 18 ? props.row.name : props.row.name?.replace(/(.{17})..+/, "$1…") }}
-              <q-tooltip v-if="props.row.name.length > 18" max-width="30vw">
+              <q-tooltip v-if="props.row.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.name }}
               </q-tooltip>
             </div>
             <div v-else-if="col.name === 'description'">
               {{ props.row.description?.length <= 40 ? props.row.description : props.row.description?.replace(/(.{39})..+/, "$1…") }}
-              <q-tooltip v-if="props.row.description?.length > 40" max-width="30vw">
+              <q-tooltip v-if="props.row.description?.length > 40" max-width="30vw" style="overflow-wrap: break-word">
                 {{ props.row.description }}
               </q-tooltip>
             </div>
@@ -63,7 +63,7 @@
                 @click.stop
               >
                 {{ tag.name.length <= 18 ? tag.name : tag.name.replace(/(.{17})..+/, "$1…") }}
-                <q-tooltip v-if="tag.name.length > 18" max-width="30vw">
+                <q-tooltip v-if="tag.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
                   {{ tag.name }}
                 </q-tooltip>
               </q-chip>
