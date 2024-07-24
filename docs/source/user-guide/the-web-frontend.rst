@@ -15,64 +15,15 @@
 .. ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 .. https://creativecommons.org/licenses/by/4.0/legalcode
 
-What is Dioptra?
+.. _user-guide-the-web-frontend:
+
+The Web Frontend
 ================
 
 .. include:: /_glossary_note.rst
 
-.. include:: overview/executive-summary.rst
+Dioptra provides a web-based user interface for running, tracking, and organizing of machine learning security experiments using the open-source technologies and architectures found in real-world AI applications.
 
-Points of Contact
------------------
-
-Email us: dioptra@nist.gov
-
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-
-   glossary
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: Getting Started
-
-   getting-started/building-the-containers
-   getting-started/running-dioptra
-   getting-started/acquiring-datasets
-.. getting-started/examples-setup
-   getting-started/installation
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: User Guide
-
-   user-guide/the-web-frontend
-.. user-guide/the-basics
-   user-guide/entry-points
-   user-guide/task-plugins
-   user-guide/custom-entry-points
-   user-guide/custom-task-plugins
-   user-guide/generics-plugin-system
-   user-guide/task-plugins-collection
-
-.. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: Reference
-
-   reference/task-engine-reference
-   reference/api-reference-restapi
-.. reference/api-reference-sdk
-   reference/api-reference-client
-
-.. .. toctree::
-   :hidden:
-   :maxdepth: -1
-   :caption: Deployment Guide
-
-   deployment-guide/system-requirements
-   deployment-guide/docker-images-list-and-settings
+.. figure:: ../images/frontend.png
+   :figwidth: 100%
+   :alt: An image of the Dioptra web frontend showing the Experiments page

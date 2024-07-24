@@ -26,21 +26,22 @@ A collection of scripts, configuration files, and Docker Compose files for initi
 Open a terminal and run the following to start Dioptra.
 
 ```sh
+# Activate the virtual environment you created before running cruft (if not active)
+# NOTE: you may need to navigate to the correct directory first
+source venv-deploy/bin/activate
+
 # Move into the new folder created by the cookiecutter template.
 cd {{ cookiecutter.__project_slug }}
 
-# Create a Python virtual environment and install the cruft and Jinja2 packages.
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip cruft jinja2
+# Set the Dioptra branch to use for your deployment
+# (If using a different branch, replace "main" with that branch's name)
+export DIOPTRA_BRANCH=main
 
 # Use cruft to fetch updates to the cookiecutter template.
-# (If using a different branch, replace "main" with that branch's name)
-cruft update --checkout main
+cruft update --checkout $DIOPTRA_BRANCH
 
 # Initialize Dioptra using the init-deployment.sh script.
-# (If using a different branch, replace "main" with that branch's name)
-./init-deployment.sh --branch main
+./init-deployment.sh --branch $DIOPTRA_BRANCH
 
 # Start Dioptra
 {{ cookiecutter.docker_compose_path }} up -d
@@ -59,7 +60,7 @@ The cruft tool makes it easy to fetch the latest updates to the template:
 
 ```sh
 # Activate the virtual environment (if not active)
-source .venv/bin/activate
+source venv-deploy/bin/activate
 
 # Fetch the updates
 # (If using a different branch, replace "main" with that branch's name)
@@ -70,7 +71,7 @@ Cookiecutter variables can also be updated via cruft:
 
 ```sh
 # Activate the virtual environment (if not active)
-source .venv/bin/activate
+source venv-deploy/bin/activate
 
 # Update the datasets_directory variable
 # (If using a different branch, replace "main" with that branch's name)
