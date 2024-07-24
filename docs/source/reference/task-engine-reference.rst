@@ -1,10 +1,10 @@
-.. contents::
-
 ====================================
  Declarative Experiment Description
 ====================================
 
 This document describes the data structure used to represent an experiment.
+
+.. contents::
 
 Goals
 =====

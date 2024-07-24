@@ -44,37 +44,39 @@ This will generate a setup that is appropriate for testing Dioptra on your perso
 
 .. code:: sh
 
+   # Set the Dioptra branch to use for your deployment
+   # (If using a different branch, replace "main" with that branch's name)
+   export DIOPTRA_BRANCH=main
+
    # Move to the base directory where you plan to store your Dioptra
    # configuration folder
    mkdir -p /path/to/deployments/folder  # Create it if it doesn't exist
    cd /path/to/deployments/folder
 
-   # Create a virtual environment and install cruft
-   python -m venv venv-cruft
-   source venv-cruft/bin/activate
-   python -m pip install --upgrade pip cruft
+   # Create a virtual environment and install cruft and Jinja2
+   python -m venv venv-deploy
+   source venv-deploy/bin/activate
+   python -m pip install --upgrade pip cruft jinja2
 
    # Run cruft and set the template's variables
-   # (If using a different branch, replace "main" with that branch's name)
-   cruft create https://github.com/usnistgov/dioptra --checkout main \
+   cruft create https://github.com/usnistgov/dioptra --checkout $DIOPTRA_BRANCH \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment
 
-   # Deactivate the virtual environment
-   deactivate
+Cruft will now run and prompt you to configure the deployment. See the :ref:`Applying the template <getting-started-running-dioptra-applying-the-template>` section for detailed description of each prompt.
+
+We recommend identifying a location to store datasets you will want to use with Dioptra at this point and setting the ``datasets_directory`` variable accordingly. See the :ref:`Downloading the datasets <getting-started-acquiring-datasets>` section for more details.
+
+Once you have configured your deployment, continue following the instructions for initialzing and starting your deployment below.
+
+.. code:: sh
 
    # Move into the new folder created by the template. The new folder's name
    # is based on the deployment_name variable. The default name for the folder
    # is dioptra-deployment.
    cd dioptra-deployment
 
-   # Create a Python virtual environment and install the cruft and Jinja2 packages.
-   python -m venv .venv
-   source .venv/bin/activate
-   python -m pip install --upgrade pip cruft jinja2
-
    # Initialize Dioptra using the init-deployment.sh script
-   # (If using a different branch, replace "main" with that branch's name)
-   ./init-deployment.sh --branch main
+   ./init-deployment.sh --branch $DIOPTRA_BRANCH
 
    # Start Dioptra
    docker compose up -d
@@ -127,9 +129,9 @@ Below is a full list of the variables, their default values, and explanations of
   If you built the images manually, the images will have the ``dev`` tag.
   (default: ``dev``)
 - **docker_compose_path:** This should match the way you invoke Docker Compose on the host machine.
-  If you are running an up-to-date version of Docker and have Docker Compose v2 or higher installed, then you should answer ``docker compose``.
-  If instead you are using the Python-based Docker Compose v1, or `you installed Docker Compose v2 in a standalone manner <https://docs.docker.com/compose/install/other/>`__, then this should be the absolute path to the ``docker-compose`` binary, for example ``/usr/local/bin/docker-compose``.
-  (default: ``/usr/local/bin/docker-compose``)
+  If you are running an up-to-date version of Docker with the Compose plugin, then you should answer ``docker compose``.
+  If instead `you installed Docker Compose v2 in a standalone manner <https://docs.docker.com/compose/install/other/>`__, then this should be the absolute path to the ``docker-compose`` binary, for example ``/usr/local/bin/docker-compose``.
+  (default: ``docker compose``)
 - **systemd_required_mounts:** This applies only if you are deploying Dioptra on a Linux distribution that uses systemd, such as Ubuntu, Fedora, or Red Hat Enterprise Linux, otherwise leave this blank.
   The "required mounts" would be the storage devices mounted on the host machine, which may include NFS volumes or block storage volumes, that must be accessible before the Dioptra application containers can start.
   This list should include all the devices that store the container images, runtime files, and volume data for Dioptra.
@@ -188,7 +190,7 @@ Below is an example of what it looks like to customize some of the template vari
    deployment_name [Dioptra deployment]: Dioptra deployment
    container_registry []:
    container_tag [dev]: dev
-   docker_compose_path [/usr/local/bin/docker-compose]: docker compose
+   docker_compose_path [docker compose]: docker compose
    systemd_required_mounts []:
    nginx_server_name [dioptra.example.org]: _
    Select nginx_expose_ports_on_localhost_only:
@@ -672,10 +674,6 @@ Run the following in the generated folder to start the deployment using Docker C
 
 .. code:: sh
 
-   # Using Docker Compose v1
-   docker-compose up -d
-
-   # Using Docker Compose v2
    docker compose up -d
 
 Using systemd
@@ -710,20 +708,12 @@ Run the following in the generated folder to check the status of the deployment.
 
 .. code:: sh
 
-   # Using Docker Compose v1
-   docker-compose ps
-
-   # Using Docker Compose v2
    docker compose ps
 
 Run the following in the generated folder to check the status of the application logs.
 
 .. code:: sh
 
-   # Using Docker Compose v1
-   docker-compose logs -f
-
-   # Using Docker Compose v2
    docker compose logs -f
 
 Use :kbd:`Ctrl + C` to stop following the logs.
@@ -735,9 +725,6 @@ Run the following in the generated folder to restart the deployment.
    .. tab-item:: Docker Compose
 
       .. code:: sh
-
-         # Using Docker Compose v1
-         docker-compose restart
 
          # Using Docker Compose v2
          docker compose restart
@@ -756,10 +743,6 @@ Run the following in the generated folder to stop the deployment.
 
       .. code:: sh
 
-         # Using Docker Compose v1
-         docker-compose down
-
-         # Using Docker Compose v2
          docker compose down
 
    .. tab-item:: systemd

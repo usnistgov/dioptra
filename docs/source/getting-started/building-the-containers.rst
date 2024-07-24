@@ -22,10 +22,6 @@ Building the Containers
 
 .. include:: /_glossary_note.rst
 
-.. important::
-
-   At present, the Dioptra Dockerfiles only support the x86-64 CPU architecture.
-
 You will need to build several container images using the Dockerfiles in the Dioptra GitHub repository before you can run Dioptra for the first time.
 This guide will walk you through the steps for building these images.
 
@@ -60,6 +56,8 @@ Next, use the Makefile to build the container images.
 
 .. code:: sh
 
+   # NOTE: if make cannot find your python executable, you can specify it manually by
+   #       prepending PY=/path/to/python3 to the command below
    # NOTE: the PyTorch and Tensorflow images may take a while to build
    make build-nginx build-mlflow-tracking build-restapi build-pytorch-cpu build-tensorflow-cpu
 
