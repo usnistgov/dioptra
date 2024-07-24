@@ -23,19 +23,26 @@ name = "dioptra"
 version = "0.0.0"
 authors = [
     { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
-    { name="Julian Sexton", email="jtsexton@mitre.org" },
-    { name="Howard Huang", email="hhuang@mitre.org" },
-    { name="Michael Chisholm", email="chisholm@mitre.org" },
-    { name="Andrew Hand", email="ahand@mitre.org" },
-    { name="Alexander Byrne", email="alexanderbyrne@mitre.org" },
-    { name="Luke Barber", email="lbarber@mitre.org" },
-    { name="Cory Miniter" },
-    { name="Paul Rowe", email="prowe@mitre.org" },
     { name="Harold Booth", email="harold.booth@nist.gov" },
+    { name="Keith Manville", email="kmanville@mitre.org" },
+    { name="Julian Sexton", email="jtsexton@mitre.org" },
+    { name="Michael Andy Chisholm", email="chisholm@mitre.org" },
+    { name="Henry Choy", email="hchoy@mitre.org" },
+    { name="Andrew Hand", email="ahand@mitre.org" },
+    { name="Bronwyn Hodges", email="bhodges@mitre.org" },
+    { name="Paul Scemama" },
+    { name="Dmitry Cousin", email="dmitry.cousin@nist.gov" },
+    { name="Eric Trapnell", email="eric.trapnell@nist.gov" },
+    { name="Mark Trapnell", email="mark.trapnell@nist.gov" },
+    { name="Howard Huang", email="hhuang@mitre.org" },
+    { name="Paul Rowe" },
+    { name="Alexander Byrne", email="alexanderbyrne@mitre.org" },
+    { name="Luke Barber" },
+    { name="Cory Miniter" },
 ]
 maintainers = [
     { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
-    { name="Paul Rowe", email="prowe@mitre.org" },
+    { name="Keith Manville", email="kmanville@mitre.org" },
     { name="Harold Booth", email="harold.booth@nist.gov" },
 ]
 description = "Dioptra provides Machine Learning Security researchers with an environment for organizing and running experiments."
