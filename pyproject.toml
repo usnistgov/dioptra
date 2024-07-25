@@ -80,7 +80,7 @@ dependencies = [
     "werkzeug>=3.0.0",
 ]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Framework :: Flask",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
@@ -101,7 +101,6 @@ dioptra-db = "dioptra.restapi.db.alembic.run:cli"
 run-experiment = "dioptra.task_engine.run_experiment:main"
 validate-experiment = "dioptra.task_engine.validate:main"
 s3-download = "dioptra.worker.s3_download_cli:main"
-dioptra-worker = "dioptra.worker.dioptra_worker:main"
 dioptra-worker-v1 = "dioptra.worker.dioptra_worker_v1:main"
 
 [project.entry-points."dioptra.generics.estimator_predict"]
@@ -109,9 +108,6 @@ tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"
 
 [project.entry-points."dioptra.generics.fit_estimator"]
 tf_keras_model = "dioptra.generics_plugins.fit_estimator.tf_keras_model"
-
-[project.entry-points."mlflow.project_backend"]
-dioptra = "dioptra.mlflow_plugins.dioptra_backend:DioptraProjectBackend"
 
 [project.optional-dependencies]
 cookiecutter = [
@@ -216,9 +212,6 @@ push = false
     'release = "{version}"',
 ]
 "src/dioptra/client/__version__.py" = [
-    "{pep440_version}",
-]
-"src/dioptra/mlflow_plugins/__version__.py" = [
     "{pep440_version}",
 ]
 "src/dioptra/pyplugs/__version__.py" = [
