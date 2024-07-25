@@ -45,7 +45,7 @@
       </label>
     </template>
     <template #expandedSlot="{ row }">
-      <CodeEditor v-model="row.taskGraph" language="yaml" />
+      <CodeEditor v-model="row.taskGraph" language="yaml" :readOnly="true" />
     </template>
     <template #body-cell-plugins="props">
       <q-chip
@@ -87,7 +87,7 @@
         Task Graph YAML
       </label>
     </template>
-    <CodeEditor v-model="displayYaml" style="height: auto;" :readOnly="true" />
+    <CodeEditor v-model="displayYaml" language="yaml" style="height: auto;" :readOnly="true" />
   </InfoPopupDialog>
   <DeleteDialog 
     v-model="showDeleteDialog"

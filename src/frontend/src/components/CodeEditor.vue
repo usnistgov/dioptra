@@ -14,6 +14,7 @@
       :style="{ 'min-height': '250px', 'max-height': '70vh',
         'border': `${showError ? '2px solid red' : '2px solid black'}`
       }"
+      :disabled="readOnly"
     />
     <caption
       :class="{ invisible: showError?.length === 0 ? true : false }"
@@ -76,7 +77,7 @@
       oneDark,
       yamlLinter,
       lintGutter(),
-      EditorState.readOnly.of(props.readOnly)
+      EditorState.readOnly.of(props.readOnly) // not working, using disabled prop instead
     ]
   })
 </script>
