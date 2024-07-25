@@ -37,7 +37,7 @@ sys.path.insert(0, os.path.abspath("../../src"))
 # -- Project information -----------------------------------------------------
 
 project = "Dioptra"
-release = "0.0.0"
+release = "1.0.0-dev"
 version = ".".join(release.split(".")[:2])
 
 # -- General configuration ---------------------------------------------------
