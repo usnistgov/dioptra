@@ -208,16 +208,6 @@ def upgrade():
         sa.UniqueConstraint(
             "resource_snapshot_id",
             "resource_id",
-            "artifact_resource_snapshot_id",
-            "version_number",
-            name=op.f(
-                "uq_ml_model_versions_resource_snapshot_id_artifact_resource_snapshot"
-                "_id_version_number"
-            ),
-        ),
-        sa.UniqueConstraint(
-            "resource_snapshot_id",
-            "resource_id",
             name=op.f("uq_ml_model_versions_resource_snapshot_id"),
         ),
     )
