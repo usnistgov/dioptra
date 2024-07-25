@@ -1,11 +1,11 @@
 <template>
-  <h1 class="text-capitalize q-mb-sm" 
+  <h1 class="q-mb-sm" 
     :class="{ invisible: title ? false : true }"
   >
     {{ title || 'Loading...' }}
   </h1>
   <nav aria-label="Breadcrumb">
-    <q-breadcrumbs class="text-grey text-capitalize">
+    <q-breadcrumbs class="text-grey">
       <template v-slot:separator>
         <q-icon
           size="1.2em"
@@ -17,6 +17,7 @@
         :label="path[0]" 
         :to="path[1] ? `/${path[0]}` : ''" 
         :aria-current="`${path.length === 1 ? 'true' : 'false'}`"
+        class="text-capitalize"
       />
       <q-breadcrumbs-el
         v-if="route.params.id && route.params.fileId"
