@@ -96,7 +96,11 @@ class DioptraRequestsSession(DioptraSession):
             if response.status_code != 200:
                 raise StatusCodeError()
             json = response.json()
-        except (requests.ConnectionError, StatusCodeError, requests.JSONDecodeError) as e:
+        except (
+            requests.ConnectionError,
+            StatusCodeError,
+            requests.JSONDecodeError,
+        ) as e:
             self.handle_error(session, url, method_name.upper(), data, response, e)
         debug_response(json=json)
         return json
@@ -104,92 +108,88 @@ class DioptraRequestsSession(DioptraSession):
     def handle_error(self, url, method, data, response, error):
         if type(error) is requests.ConnectionError:
             restapi = os.environ["DIOPTRA_RESTAPI_URI"]
-            message = (
-                f"Could not connect to the REST API. Is the server running at {restapi}?"
+            message = f"Could not connect to the REST API. Is the server running at {restapi}?"
+            LOGGER.error(
+                message, url=url, method=method, data=data, response=response.text
             )
-            LOGGER.error(message, url=url, method=method, data=data, response=response.text)
             raise APIConnectionError(message)
         if type(error) is StatusCodeError:
             message = f"Error code {response.status_code} returned."
-            LOGGER.error(message, url=url, method=method, data=data, response=response.text)
+            LOGGER.error(
+                message, url=url, method=method, data=data, response=response.text
+            )
             raise StatusCodeError(message)
         if type(error) is requests.JSONDecodeError:
             message = "JSON response could not be decoded."
-            LOGGER.error(message, url=url, method=method, data=data, response=response.text)
+            LOGGER.error(
+                message, url=url, method=method, data=data, response=response.text
+            )
             raise JSONDecodeError(message)
 
 
 class DioptraClient(object):
     def __init__(self, session):
         self._session = session
-        self._users = UsersClient(session, "users")
-        self._auth = AuthClient(session, "auth")
-        self._queues = QueuesClient(session, "queues")
-        self._groups = GroupsClient(session, "groups")
-        self._tags = TagsClient(session, "tags")
-        self._plugins = PluginsClient(session, "plugins")
-        self._pluginParameterTypes = PluginParameterTypesClient(
-            session, "pluginParameterTypes"
-        )
-        self._experiments = ExperimentsClient(session, "experiments")
-        self._jobs = JobsClient(session, "jobs")
-        self._entrypoints = EntrypointsClient(session, "entrypoints")
-        self._models = ModelsClient(session, "models", address)
-        self._artifacts = ArtifactsClient(session, "artifacts", address)
-        # models
-        # artifacts
+        self._users = UsersClient(session)
+        self._auth = AuthClient(session)
+        self._queues = QueuesClient(session)
+        self._groups = GroupsClient(session)
+        self._tags = TagsClient(session)
+        self._plugins = PluginsClient(session)
+        self._pluginParameterTypes = PluginParameterTypesClient(session)
+        self._experiments = ExperimentsClient(session)
+        self._jobs = JobsClient(session)
+        self._entrypoints = EntrypointsClient(session)
+        self._models = ModelsClient(session)
+        self._artifacts = ArtifactsClient(session)
 
     @property
     def users(self):
-        return self.get_endpoint(self._users)
+        return self._users
 
     @property
     def auth(self):
-        return self.get_endpoint(self._auth)
+        return self._auth
 
     @property
     def queues(self):
-        return self.get_endpoint(self._queues)
+        return self._queues
 
     @property
     def groups(self):
-        return self.get_endpoint(self._groups)
+        return self._groups
 
     @property
     def tags(self):
-        return self.get_endpoint(self._tags)
+        return self._tags
 
     @property
     def plugins(self):
-        return self.get_endpoint(self._plugins)
+        return self._plugins
 
     @property
     def pluginParameterTypes(self):
-        return self.get_endpoint(self._pluginParameterTypes)
+        return self._pluginParameterTypes
 
     @property
     def experiments(self):
-        return self.get_endpoint(self._experiments)
+        return self._experiments
 
     @property
     def jobs(self):
-        return self.get_endpoint(self._jobs)
+        return self._jobs
 
     @property
     def entrypoints(self):
-        return self.get_endpoint(self._entrypoints)
+        return self._entrypoints
 
     @property
     def models(self):
-        return self.get_endpoint(self._models)
+        return self._models
 
     @property
     def artifacts(self):
-        return self.get_endpoint(self._artifacts)
-
-    def get_endpoint(self, ep):
-        ep.session = self._session
-        return ep
+        return self._artifacts
 
 
 class HasTagsProvider(object):
@@ -229,8 +229,10 @@ class HasSubEndpointProvider(object):
 
 
 class Endpoint(object):
-    def __init__(self, session, ep_name):
-        self._ep_name = ep_name
+
+    _ep_name = ""
+
+    def __init__(self, session):
         self._session = session
 
     @property
@@ -243,16 +245,15 @@ class Endpoint(object):
 
     @property
     def url(self):
-        return self.def_endpoint(self._ep_name)
-
-    @property
-    def ep_name(self):
-        return self._ep_name
-
-    def def_endpoint(self, name):
-        """creates base url for an endpoint by name"""
         return urlunparse(
-            (self._session._scheme, self._session._netloc, urljoin(self._session._path, name + "/"), "", "", "")
+            (
+                self._session._scheme,
+                self._session._netloc,
+                urljoin(self._session._path, self._ep_name + "/"),
+                "",
+                "",
+                "",
+            )
         )
 
 
@@ -266,9 +267,12 @@ class SubEndpoint(Endpoint):
 
 
 class UsersClient(Endpoint):
+
+    _ep_name = "users"
+
     def get_all(self):
         """gets all users"""
-        return get(self.session, self.url)
+        return self.session.get(self.url)
 
     def create(self, username, email, password, confirm_password):
         """creates a user"""
@@ -278,11 +282,11 @@ class UsersClient(Endpoint):
             "password": password,
             "confirmPassword": confirm_password,
         }
-        return post(self.session, self.url, d)
+        return self.session.post(self.url, d)
 
     def get_by_id(self, user_id):
         """get a user by id"""
-        return get(self.session, self.url, str(user_id))
+        return self.session.get(self.url, str(user_id))
 
     def update_password_by_id(
         self, user_id, old_password, new_password, confirm_new_password
@@ -293,21 +297,21 @@ class UsersClient(Endpoint):
             "newPassword": new_password,
             "confirmNewPassword": confirm_new_password,
         }
-        return post(self.session, self.url, d, str(user_id), "password")
+        return self.session.post(self.url, d, str(user_id), "password")
 
     def current(self):
         """get the current user"""
-        return get(self.session, self.url, "current")
+        return self.session.get(self.url, "current")
 
     def delete_current(self, password):
         """delete the current user"""
         d = {"password": password}
-        return delete(self.session, self.url, d, "current")
+        return self.session.delete(self.url, d, "current")
 
     def modify_current(self, username, email):
         """modify the current user"""
         d = {"username": username, "email": email}
-        return put(self.session, self.url, d, "current")
+        return self.session.put(self.url, d, "current")
 
     def modify_current_password(self, old_password, new_password, confirm_new_password):
         """modify the current user's password"""
@@ -316,40 +320,41 @@ class UsersClient(Endpoint):
             "newPassword": new_password,
             "confirmNewPassword": confirm_new_password,
         }
-        return post(self.session, self.url, d, "current", "password")
-
-    def failed_user_post(self):
-        """create a post request with an invalid schema, for testing"""
-        return post(self.session, self.url, {"a": "doesnotexist"})
-
-    def failed_user_get(self):
-        """create a get request to an invalid url, for testing"""
-        return get(self.session, self.url, "doesnotexist")
+        return self.session.post(self.url, d, "current", "password")
 
 
 class AuthClient(Endpoint):
+
+    _ep_name = "auth"
+
     def login(self, username, password):
         """login as the given user"""
         d = {"username": username, "password": password}
-        return post(self.session, self.url, d, "login")
+        return self.session.post(self.url, d, "login")
 
     def logout(self, everywhere):
         """logout as the current user"""
         d = {"everywhere": everywhere}
-        return post(self.session, self.url, d, "logout")
+        return self.session.post(self.url, d, "logout")
 
 
 class GroupsClient(Endpoint):
+
+    _ep_name = "groups"
+
     def get_all(self):
         """get all groups"""
-        return get(self.session, self.url)
+        return self.session.get(self.url)
 
     def get_by_id(self, gid):
         """get a group by id"""
-        return get(self.session, self.url, str(gid))
+        return self.session.get(self.url, str(gid))
 
 
 class QueuesClient(Endpoint, HasDraftsEndpoint, HasSubEndpointProvider):
+
+    _ep_name = "queues"
+
     def __init__(self, session, ep_name, address):
         Endpoint.__init__(self, session, ep_name, address)
         HasDraftsEndpoint.__init__(
@@ -359,54 +364,60 @@ class QueuesClient(Endpoint, HasDraftsEndpoint, HasSubEndpointProvider):
 
     def get_all(self):
         """gets all queues"""
-        return get(self.session, self.url)
+        return self.session.get(self.url)
 
     def create(self, group, name, description):
         """create a queue"""
         d = {"group": group, "name": name, "description": description}
-        return post(self.session, self.url, d)
+        return self.session.post(self.url, d)
 
     def modify_by_id(self, queue_id, name, description):
         """modify a queue by id"""
         d = {"name": name, "description": description}
-        return put(self.session, self.url, d, str(queue_id))
+        return self.session.put(self.url, d, str(queue_id))
 
     def delete_by_id(self, queue_id):
         """delete a queue by id"""
         d = None
-        return delete(self.session, self.url, d, str(queue_id))
+        return self.session.delete(self.url, d, str(queue_id))
 
     def get_by_id(self, queue_id):
         """get a queue by id"""
-        return get(self.session, self.url, str(queue_id))
+        return self.session.get(self.url, str(queue_id))
 
 
 class TagsClient(Endpoint):
+
+    _ep_name = "tags"
+
     def get_all(self):
-        return get(self.session, self.url)
+        return self.session.get(self.url)
 
     def create(self, group, name):
         d = {"name": name, "group": group}
-        return post(self.session, self.url, d)
+        return self.session.post(self.url, d)
 
     def delete_by_id(self, tag_id):
         d = None
-        return delete(self.session, self.url, d, str(tag_id))
+        return self.session.delete(self.url, d, str(tag_id))
 
     def get_by_id(self, tag_id):
-        return get(self.session, self.url, str(tag_id))
+        return self.session.get(self.url, str(tag_id))
 
     def modify_by_id(self, tag_id, name):
         d = {"name": name}
-        return put(self.session, self.url, d, str(tag_id))
+        return self.session.put(self.url, d, str(tag_id))
 
     def get_resources_by_id(self, tag_id):
-        return get(self.session, self.url, str(tag_id), "resources")
+        return self.session.get(self.url, str(tag_id), "resources")
 
 
 class EntrypointsClient(
     Endpoint, HasTagsProvider, HasDraftsEndpoint, HasSubEndpointProvider
 ):
+
+    _ep_name = "entrypoints"
+
     def __init__(self, session, ep_name, address):
         Endpoint.__init__(self, session, ep_name, address)
         HasTagsProvider.__init__(self, self.url, self.session)
@@ -420,7 +431,7 @@ class EntrypointsClient(
         HasSubEndpointProvider.__init__(self, self.url)
 
     def get_all(self):
-        return get(self.session, self.url)
+        return self.session.get(self.session, self.url)
 
     def create(self, group, name, description, taskGraph, parameters, queues, plugins):
         d = {
@@ -432,7 +443,7 @@ class EntrypointsClient(
             "queues": queues,
             "plugins": plugins,
         }
-        return post(self.session, self.url, d)
+        return self.session.post(self.session, self.url, d)
 
     def modify_by_id(
         self, entrypoint_id, name, description, taskGraph, parameters, queues
@@ -444,66 +455,67 @@ class EntrypointsClient(
             "parameters": parameters,
             "queues": queues,
         }
-        return put(self.session, self.url, d, str(entrypoint_id))
+        return self.session.put(self.url, d, str(entrypoint_id))
 
     def get_by_id(self, entrypoint_id):
-        return get(self.session, self.url, str(entrypoint_id))
+        return self.session.get(self.url, str(entrypoint_id))
 
     def delete_by_id(self, entrypoint_id):
         d = None
-        return delete(self.session, self.url, d, str(entrypoint_id))
+        return self.session.delete(self.url, d, str(entrypoint_id))
 
     def get_plugins_by_entrypoint_id(self, entrypoint_id):
-        return get(self.session, self.url, str(entrypoint_id), "plugins")
+        return self.session.get(self.url, str(entrypoint_id), "plugins")
 
     def add_plugins_by_entrypoint_id(self, entrypoint_id, plugins):
         d = {"plugins": plugins}
-        return post(self.session, self.url, d, str(entrypoint_id), "plugins")
+        return self.session.post(self.url, d, str(entrypoint_id), "plugins")
 
     def get_plugins_by_entrypoint_id_plugin_id(self, entrypoint_id, plugin_id):
-        return get(
-            self.session, self.url, str(entrypoint_id), "plugins", str(plugin_id)
-        )
+        return self.session.get(self.url, str(entrypoint_id), "plugins", str(plugin_id))
 
     def delete_plugins_by_entrypoint_id_plugin_id(self, entrypoint_id, plugin_id):
         d = None
-        return delete(
-            self.session, self.url, d, str(entrypoint_id), "plugins", str(plugin_id)
+        return self.session.delete(
+            self.url, d, str(entrypoint_id), "plugins", str(plugin_id)
         )
 
     def modify_queues_by_entrypoint_id(self, entrypoint_id, ids):
         d = {"ids": ids}
-        return put(self.session, self.url, d, str(entrypoint_id), "queues")
+        return self.session.put(self.url, d, str(entrypoint_id), "queues")
 
     def add_queues_by_entrypoint_id(self, entrypoint_id, ids):
         d = {"ids": ids}
-        return post(self.session, self.url, d, str(entrypoint_id), "queues")
+        return self.session.post(self.url, d, str(entrypoint_id), "queues")
 
     def get_queues_by_entrypoint_id(self, entrypoint_id):
-        return get(self.session, self.url, str(entrypoint_id), "queues")
+        return self.session.get(self.url, str(entrypoint_id), "queues")
 
     def delete_queues_by_entrypoint_id(self, entrypoint_id):
         d = None
-        return delete(self.session, self.url, d, str(entrypoint_id), "queues")
+        return self.session.delete(self.url, d, str(entrypoint_id), "queues")
 
     def delete_queues_by_entrypoint_id_queue_id(self, entrypoint_id, queue_id):
         d = None
-        return delete(
-            self.session, self.url, d, str(entrypoint_id), "queues", str(queue_id)
+        return self.session.delete(
+            self.url, d, str(entrypoint_id), "queues", str(queue_id)
         )
 
     def get_snapshots_by_entrypoint_id(self, entrypoint_id):
-        return get(self.session, self.url, str(entrypoint_id), "snapshots")
+        return self.session.get(self.url, str(entrypoint_id), "snapshots")
 
     def get_snapshots_by_entrypoint_id_snapshot_id(self, entrypoint_id, snapshot_id):
-        return get(
-            self.session, self.url, str(entrypoint_id), "snapshots", str(snapshot_id)
+        return self.session.get(
+            self.url, str(entrypoint_id), "snapshots", str(snapshot_id)
         )
 
 
 class ExperimentsClient(
     Endpoint, HasTagsProvider, HasDraftsEndpoint, HasSubEndpointProvider
 ):
+
+    _ep_name = "experiments"
+
     def __init__(self, session, ep_name, address):
         Endpoint.__init__(self, session, ep_name, address)
         HasTagsProvider.__init__(self, self.url, self.session)
@@ -517,7 +529,7 @@ class ExperimentsClient(
         HasSubEndpointProvider.__init__(self, self.url)
 
     def get_all(self):
-        return get(self.session, self.url)
+        return self.session.get(self.url)
 
     def create(self, group, name, description, entrypoints):
         d = {
@@ -526,43 +538,42 @@ class ExperimentsClient(
             "description": description,
             "entrypoints": entrypoints,
         }
-        return post(self.session, self.url, d)
+        return self.session.post(self.url, d)
 
     def get_drafts(self):
-        return get(self.session, self.url, "drafts")
+        return self.session.get(self.url, "drafts")
 
     def get_by_id(self, experiment_id):
-        return get(self.session, self.url, str(experiment_id))
+        return self.session.get(self.url, str(experiment_id))
 
     def modify_by_id(self, experiment_id, name, description, entrypoints):
         d = {"name": name, "description": description, "entrypoints": entrypoints}
-        return put(self.session, self.url, d, str(experiment_id))
+        return self.session.put(self.url, d, str(experiment_id))
 
     def delete_by_id(self, experiment_id):
         d = None
-        return delete(self.session, self.url, d, str(experiment_id))
+        return self.session.delete(self.url, d, str(experiment_id))
 
     def get_entrypoints_by_experiment_id(self, experiment_id):
-        return get(self.session, self.url, str(experiment_id), "entrypoints")
+        return self.session.get(self.url, str(experiment_id), "entrypoints")
 
     def modify_entrypoints_by_experiment_id(self, experiment_id, ids):
         d = {"ids": ids}
-        return put(self.session, self.url, d, str(experiment_id), "entrypoints")
+        return self.session.put(self.url, d, str(experiment_id), "entrypoints")
 
     def add_entrypoints_by_experiment_id(self, experiment_id, ids):
         d = {"ids": ids}
-        return post(self.session, self.url, d, str(experiment_id), "entrypoints")
+        return self.session.post(self.url, d, str(experiment_id), "entrypoints")
 
     def delete_entrypoints_by_experiment_id(self, experiment_id):
         d = None
-        return delete(self.session, self.url, d, str(experiment_id), "entrypoints")
+        return self.session.delete(self.url, d, str(experiment_id), "entrypoints")
 
     def delete_entrypoints_by_experiment_id_entrypoint_id(
         self, experiment_id, entrypoint_id
     ):
         d = None
-        return delete(
-            self.session,
+        return self.session.delete(
             self.url,
             d,
             str(experiment_id),
@@ -571,7 +582,7 @@ class ExperimentsClient(
         )
 
     def get_jobs_by_experiment_id(self, experiment_id):
-        return get(self.session, self.url, str(experiment_id), "jobs")
+        return self.session.get(self.url, str(experiment_id), "jobs")
 
     def create_jobs_by_experiment_id(
         self, experiment_id, description, queue, entrypoint, values, timeout
@@ -583,65 +594,71 @@ class ExperimentsClient(
             "values": values,
             "timeout": timeout,
         }
-        return post(self.session, self.url, d, str(experiment_id), "jobs")
+        return self.session.post(self.url, d, str(experiment_id), "jobs")
 
     def get_jobs_by_experiment_id_job_id(self, experiment_id, job_id):
-        return get(self.session, self.url, str(experiment_id), "jobs", str(job_id))
+        return self.session.get(self.url, str(experiment_id), "jobs", str(job_id))
 
     def delete_jobs_by_experiment_id_job_id(self, experiment_id, job_id):
         d = None
-        return delete(
-            self.session, self.url, d, str(experiment_id), "jobs", str(job_id)
+        return self.session.delete(
+            self.url, d, str(experiment_id), "jobs", str(job_id)
         )
 
     def get_jobs_status_by_experiment_id_job_id(self, experiment_id, job_id):
-        return get(
-            self.session, self.url, str(experiment_id), "jobs", str(job_id), "status"
+        return self.session.get(
+            self.url, str(experiment_id), "jobs", str(job_id), "status"
         )
 
     def modify_jobs_status_by_experiment_id_job_id(self, experiment_id, job_id, status):
         d = {"status": status}
-        return put(
-            self.session, self.url, d, str(experiment_id), "jobs", str(job_id), "status"
+        return self.session.put(
+            self.url, d, str(experiment_id), "jobs", str(job_id), "status"
         )
 
     def get_snapshots_by_experiment_id(self, experiment_id):
-        return get(self.session, self.url, str(experiment_id), "snapshots")
+        return self.session.get(self.url, str(experiment_id), "snapshots")
 
     def get_snapshots_by_experiment_id_snapshot_id(self, experiment_id, snapshot_id):
-        return get(
-            self.session, self.url, str(experiment_id), "snapshots", str(snapshot_id)
+        return self.session.get(
+            self.url, str(experiment_id), "snapshots", str(snapshot_id)
         )
 
 
 class JobsClient(Endpoint, HasTagsProvider):
+
+    _ep_name = "jobs"
+
     def __init__(self, session, ep_name, address):
         Endpoint.__init__(self, session, ep_name, address)
         HasTagsProvider.__init__(self, self.url, self.session)
 
     def get_all(self):
-        return get(self.session, self.url)
+        return self.session.get(self.url)
 
     def delete_by_id(self, job_id):
         d = None
-        return delete(self.session, self.url, d, str(job_id))
+        return self.session.delete(self.url, d, str(job_id))
 
     def get_by_id(self, job_id):
-        return get(self.session, self.url, str(job_id))
+        return self.session.get(self.url, str(job_id))
 
     def get_snapshots_by_job_id(self, job_id):
-        return get(self.session, self.url, str(job_id), "snapshots")
+        return self.session.get(self.url, str(job_id), "snapshots")
 
     def get_snapshots_by_job_id_snapshot_id(self, job_id, snapshot_id):
-        return get(self.session, self.url, str(job_id), "snapshots", str(snapshot_id))
+        return self.session.get(self.url, str(job_id), "snapshots", str(snapshot_id))
 
     def get_status_by_job_id(self, job_id):
-        return get(self.session, self.url, str(job_id), "status")
+        return self.session.get(self.url, str(job_id), "status")
 
 
 class PluginsClient(
     Endpoint, HasDraftsEndpoint, HasSubEndpointProvider, HasTagsProvider
 ):
+
+    _ep_name = "plugins"
+
     def __init__(self, session, ep_name, address):
         Endpoint.__init__(self, session, ep_name, address)
         HasTagsProvider.__init__(self, self.url, self.session)
@@ -656,29 +673,29 @@ class PluginsClient(
         return self._files
 
     def get_all(self):
-        return get(self.session, self.url)
+        return self.session.get(self.url)
 
     def create(self, group, name, description):
         d = {"group": group, "name": name, "description": description}
-        return post(self.session, self.url, d)
+        return self.session.post(self.url, d)
 
     def get_by_id(self, plugin_id):
-        return get(self.session, self.url, str(plugin_id))
+        return self.session.get(self.url, str(plugin_id))
 
     def modify_by_id(self, plugin_id, name, description):
         d = {"name": name, "description": description}
-        return put(self.session, self.url, d, str(plugin_id))
+        return self.session.put(self.url, d, str(plugin_id))
 
     def delete_by_id(self, plugin_id):
         d = None
-        return delete(self.session, self.url, d, str(plugin_id))
+        return self.session.delete(self.url, d, str(plugin_id))
 
     def get_snapshots_by_plugin_id(self, plugin_id):
-        return get(self.session, self.url, str(plugin_id), "snapshots")
+        return self.session.get(self.url, str(plugin_id), "snapshots")
 
     def get_snapshot_by_plugin_id_snapshot_id(self, plugin_id, snapshot_id):
-        return get(
-            self.session, self.url, str(plugin_id), "snapshots", str(snapshot_id)
+        return self.session.get(
+            self.url, str(plugin_id), "snapshots", str(snapshot_id)
         )
 
 
@@ -692,7 +709,7 @@ class PluginFilesClient(SubEndpoint):
         # HasSubEndpointProvider.__init__(self, self.url)
 
     def get_files_by_plugin_id(self, plugin_id):
-        return get(self.session, self.suburl(plugin_id))
+        return self.session.get(self.suburl(plugin_id))
 
     def create_files_by_plugin_id(
         self, plugin_id, filename, contents, description, *plugins
@@ -703,14 +720,14 @@ class PluginFilesClient(SubEndpoint):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return post(self.session, self.suburl(plugin_id), d)
+        return self.session.post(self.suburl(plugin_id), d)
 
     def delete_files_by_plugin_id(self, plugin_id):
         d = None
-        return delete(self.session, self.suburl(plugin_id), d)
+        return self.session.delete(self.suburl(plugin_id), d)
 
     def get_files_drafts_by_plugin_id(self, plugin_id):
-        return get(self.session, self.suburl(plugin_id), "drafts")
+        return self.session.get(self.suburl(plugin_id), "drafts")
 
     def create_files_drafts_by_plugin_id(
         self, plugin_id, filename, contents, description, *plugins
@@ -721,10 +738,10 @@ class PluginFilesClient(SubEndpoint):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return post(self.session, self.suburl(plugin_id), d, "drafts")
+        return self.session.post(self.suburl(plugin_id), d, "drafts")
 
     def get_files_drafts_by_plugin_id_draft_id(self, plugin_id, drafts_id):
-        return get(self.session, self.suburl(plugin_id), "drafts", str(drafts_id))
+        return self.session.get(self.suburl(plugin_id), "drafts", str(drafts_id))
 
     def modify_files_drafts_by_plugin_id_draft_id(
         self, plugin_id, drafts_id, filename, contents, description, *plugins
@@ -735,14 +752,14 @@ class PluginFilesClient(SubEndpoint):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return put(self.session, self.suburl(plugin_id), d, "drafts", str(drafts_id))
+        return self.session.put(self.suburl(plugin_id), d, "drafts", str(drafts_id))
 
     def delete_files_drafts_by_plugin_id_draft_id(self, plugin_id, drafts_id):
         d = None
-        return delete(self.session, self.suburl(plugin_id), d, "drafts", str(drafts_id))
+        return self.session.delete(self.suburl(plugin_id), d, "drafts", str(drafts_id))
 
     def get_files_by_plugin_id_file_id(self, plugin_id, file_id):
-        return get(self.session, self.suburl(plugin_id), str(file_id))
+        return self.session.get(self.suburl(plugin_id), str(file_id))
 
     def modify_files_by_plugin_id_file_id(
         self, plugin_id, file_id, filename, contents, description, *plugins
@@ -753,14 +770,14 @@ class PluginFilesClient(SubEndpoint):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return put(self.session, self.suburl(plugin_id), d, str(file_id))
+        return self.session.put(self.suburl(plugin_id), d, str(file_id))
 
     def delete_files_by_plugin_id_file_id(self, plugin_id, file_id):
         d = None
-        return delete(self.session, self.suburl(plugin_id), d, str(file_id))
+        return self.session.delete(self.suburl(plugin_id), d, str(file_id))
 
     def get_files_draft_by_plugin_id_file_id(self, plugin_id, file_id):
-        return get(self.session, self.suburl(plugin_id), str(file_id), "draft")
+        return self.session.get(self.suburl(plugin_id), str(file_id), "draft")
 
     def modify_files_draft_by_plugin_id_file_id(
         self, plugin_id, file_id, filename, contents, description, *plugins
@@ -771,11 +788,11 @@ class PluginFilesClient(SubEndpoint):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return put(self.session, self.suburl(plugin_id), d, str(file_id), "draft")
+        return self.session.put(self.suburl(plugin_id), d, str(file_id), "draft")
 
     def delete_files_draft_by_plugin_id_file_id(self, plugin_id, file_id):
         d = None
-        return delete(self.session, self.suburl(plugin_id), d, str(file_id), "draft")
+        return self.session.delete(self.suburl(plugin_id), d, str(file_id), "draft")
 
     def create_files_draft_by_plugin_id_file_id(
         self, plugin_id, file_id, filename, contents, description, *plugins
@@ -786,16 +803,15 @@ class PluginFilesClient(SubEndpoint):
             "description": description,
             "tasks": [plugin.as_dict() for plugin in plugins],
         }
-        return post(self.session, self.suburl(plugin_id), d, str(file_id), "draft")
+        return self.session.post(self.suburl(plugin_id), d, str(file_id), "draft")
 
     def get_snapshots_by_plugin_id_file_id(self, plugin_id, file_id):
-        return get(self.session, self.suburl(plugin_id), str(file_id), "snapshots")
+        return self.session.get(self.suburl(plugin_id), str(file_id), "snapshots")
 
     def get_snapshots_by_plugin_id_file_id_snapshot_id(
         self, plugin_id, file_id, snapshot_id
     ):
-        return get(
-            self.session,
+        return self.session.get(
             self.suburl(plugin_id),
             str(file_id),
             "snapshots",
@@ -803,30 +819,33 @@ class PluginFilesClient(SubEndpoint):
         )
 
     def get_tags_by_plugin_id_file_id(self, plugin_id, file_id):
-        return get(self.session, self.suburl(plugin_id), str(file_id), "tags")
+        return self.session.get(self.suburl(plugin_id), str(file_id), "tags")
 
     def modify_tags_by_plugin_id_file_id(self, plugin_id, file_id, ids):
         d = {"ids": ids}
-        return put(self.session, self.suburl(plugin_id), d, str(file_id), "tags")
+        return self.session.put(self.suburl(plugin_id), d, str(file_id), "tags")
 
     def delete_tags_by_plugin_id_file_id(self, plugin_id, file_id):
         d = None
-        return delete(self.session, self.suburl(plugin_id), d, str(file_id), "tags")
+        return self.session.delete(self.suburl(plugin_id), d, str(file_id), "tags")
 
     def add_tags_by_plugin_id_file_id(self, plugin_id, file_id, ids):
         d = {"ids": ids}
-        return post(self.session, self.suburl(plugin_id), d, str(file_id), "tags")
+        return self.session.post(self.suburl(plugin_id), d, str(file_id), "tags")
 
     def delete_tags_by_plugin_id_file_id_tag_id(self, plugin_id, file_id, tag_id):
         d = None
-        return delete(
-            self.session, self.suburl(plugin_id), d, str(file_id), "tags", str(tag_id)
+        return self.session.delete(
+            self.suburl(plugin_id), d, str(file_id), "tags", str(tag_id)
         )
 
 
 class PluginParameterTypesClient(Endpoint):
+
+    _ep_name = "pluginParameterTypes"
+
     def get_all(self):
-        return get(self.session, self.url)
+        return self.session.get(self.url)
 
     def create(self, group, name, description, structure):
         d = {
@@ -835,18 +854,18 @@ class PluginParameterTypesClient(Endpoint):
             "description": description,
             "structure": structure,
         }
-        return post(self.session, self.url, d)
+        return self.session.post(self.url, d)
 
     def get_by_id(self, type_id):
-        return get(self.session, self.url, str(type_id))
+        return self.session.get(self.url, str(type_id))
 
     def modify_by_id(self, type_id, name, description, structure):
         d = {"name": name, "description": description, "structure": structure}
-        return put(self.session, self.url, d, str(type_id))
+        return self.session.put(self.url, d, str(type_id))
 
     def delete_by_id(self, type_id):
         d = None
-        return delete(self.session, self.url, d, str(type_id))
+        return self.session.delete(self.url, d, str(type_id))
 
 
 class PluginTask(object):
@@ -903,32 +922,38 @@ class PluginTask(object):
 
 
 class ArtifactsClient(Endpoint):
+
+    _ep_name = "artifacts"
+
     def get_all(self):
-        return get(self.session, self.url)
+        return self.session.get(self.url)
 
     def create(self, group, description, job, uri):
         d = {"group": group, "description": description, "job": job, "uri": uri}
-        return post(self.session, self.url, d)
+        return self.session.post(self.url, d)
 
     def get_by_id(self, artifact_id):
-        return get(self.session, self.url, str(artifact_id))
+        return self.session.get(self.url, str(artifact_id))
 
     def modify_by_id(self, artifact_id, description):
         d = {"description": description}
-        return put(self.session, self.url, d, str(artifact_id))
+        return self.session.put(self.url, d, str(artifact_id))
 
     def get_snapshots(self, artifact_id):
-        return get(self.session, self.url, str(artifact_id), "snapshots")
+        return self.session.get(self.url, str(artifact_id), "snapshots")
 
     def get_snapshots_by_artifact_id_snapshot_id(self, artifact_id, snapshot_id):
-        return get(
-            self.session, self.url, str(artifact_id), "snapshots", str(snapshot_id)
+        return self.session.get(
+            self.url, str(artifact_id), "snapshots", str(snapshot_id)
         )
 
 
 class ModelsClient(
     Endpoint, HasTagsProvider, HasDraftsEndpoint, HasSubEndpointProvider
 ):
+
+    _ep_name = "models"
+
     def __init__(self, session, ep_name, address):
         Endpoint.__init__(self, session, ep_name, address)
         HasSubEndpointProvider.__init__(self, self.url)
@@ -938,44 +963,44 @@ class ModelsClient(
         )
 
     def get_all(self):
-        return get(self.session, self.url)
+        return self.session.get(self.url)
 
     def create(self, group, name, description):
         d = {"group": group, "name": name, "description": description}
-        return post(self.session, self.url, d)
+        return self.session.post(self.url, d)
 
     def get_by_id(self, model_id):
-        return get(self.session, self.url, str(model_id))
+        return self.session.get(self.url, str(model_id))
 
     def modify_by_id(self, model_id, name, description):
         d = {"name": name, "description": description}
-        return put(self.session, self.url, d, str(model_id))
+        return self.session.put(self.url, d, str(model_id))
 
     def delete_by_id(self, model_id):
         d = None
-        return delete(self.session, self.url, d, str(model_id))
+        return self.session.delete(self.url, d, str(model_id))
 
     def get_snapshots_by_model_id(self, model_id):
-        return get(self.session, self.url, str(model_id), "snapshots")
+        return self.session.get(self.url, str(model_id), "snapshots")
 
     def get_snapshot_by_plugin_id_model_id(self, model_id, snapshot_id):
-        return get(self.session, self.url, str(model_id), "snapshots", str(snapshot_id))
+        return self.session.get(self.url, str(model_id), "snapshots", str(snapshot_id))
 
     def get_versions_by_model_id(self, model_id):
-        return get(self.session, self.url, str(model_id), "versions")
+        return self.session.get(self.url, str(model_id), "versions")
 
     def create_version_by_model_id(self, model_id, description, artifact):
         d = {"description": description, "artifact": artifact}
-        return post(self.session, self.url, d, str(model_id), "versions")
+        return self.session.post(self.url, d, str(model_id), "versions")
 
     def modify_version_by_model_id_version_id(self, model_id, version_id, description):
         d = {"description": description}
-        return put(
-            self.session, self.url, d, str(model_id), "versions", str(version_id)
+        return self.session.put(
+            self.url, d, str(model_id), "versions", str(version_id)
         )
 
     def get_version_by_model_id_version_id(self, model_id, version_id):
-        return get(self.session, self.url, str(model_id), "versions", str(version_id))
+        return self.session.get(self.url, str(model_id), "versions", str(version_id))
 
 
 class DraftsEndpoint(SubEndpoint):
@@ -997,44 +1022,44 @@ class DraftsEndpoint(SubEndpoint):
         d = {}
         for f in zip(self.fields, fields):
             d[f[0]] = f[1]
-        return post(self.session, self.suburl(parent_id), d)
+        return self.session.post(self.suburl(parent_id), d)
 
     def get_draft_for_resource(self, parent_id):
-        return get(self.session, self.suburl(parent_id))
+        return self.session.get(self.suburl(parent_id))
 
     def modify_draft_for_resource(self, parent_id, *fields):
         d = {}
         for f in zip(self.put_fields, fields):
             d[f[0]] = f[1]
-        return put(self.session, self.suburl(parent_id), d)
+        return self.session.put(self.suburl(parent_id), d)
 
     def delete_draft_for_resource(self, parent_id):
         d = None
-        return delete(self.session, self.suburl(parent_id), d)
+        return self.session.delete(self.suburl(parent_id), d)
 
     # /something/drafts/
 
     def get_all(self):
-        return get(self.session, self.drafts_url)
+        return self.session.get(self.drafts_url)
 
     def create(self, group_id, *fields):
         d = {"group": group_id}
         for f in zip(self.fields, fields):
             d[f[0]] = f[1]
-        return post(self.session, self.drafts_url, d)
+        return self.session.post(self.drafts_url, d)
 
     def modify_by_draft_id(self, draft_id, *fields):
         d = {}
         for f in zip(self.put_fields, fields):
             d[f[0]] = f[1]
-        return put(self.session, self.drafts_url, d, str(draft_id))
+        return self.session.put(self.drafts_url, d, str(draft_id))
 
     def delete_by_draft_id(self, draft_id):
         d = None
-        return delete(self.session, self.drafts_url, d, str(draft_id))
+        return self.session.delete(self.drafts_url, d, str(draft_id))
 
     def get_by_draft_id(self, draft_id):
-        return get(self.session, self.drafts_url, str(draft_id))
+        return self.session.get(self.drafts_url, str(draft_id))
 
 
 class TagsProvider(object):
@@ -1044,20 +1069,20 @@ class TagsProvider(object):
         self.session = session
 
     def get(self, parent_id):
-        return get(self.session, self.url, str(parent_id), "tags")
+        return self.session.get(self.url, str(parent_id), "tags")
 
     def modify(self, parent_id, ids):
         d = {"ids": ids}
-        return put(self.session, self.url, d, str(parent_id), "tags")
+        return self.session.put(self.url, d, str(parent_id), "tags")
 
     def delete_all(self, parent_id):
         d = None
-        return delete(self.session, self.url, d, str(parent_id), "tags")
+        return self.session.delete(self.url, d, str(parent_id), "tags")
 
     def add(self, parent_id, ids):
         d = {"ids": ids}
-        return post(self.session, self.url, d, str(parent_id), "tags")
+        return self.session.post(self.url, d, str(parent_id), "tags")
 
     def delete(self, parent_id, tag_id):
         d = None
-        return delete(self.session, self.url, d, str(parent_id), "tags", str(tag_id))
+        return self.session.delete(self.url, d, str(parent_id), "tags", str(tag_id))
