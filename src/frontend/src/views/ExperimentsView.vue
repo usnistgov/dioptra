@@ -14,7 +14,7 @@
     <template #body-cell-name="props">
       <RouterLink :to="`/experiments/${props.row.id}/jobs`">
         {{ props.row.name.length < 18 ? props.row.name : props.row.name.replace(/(.{18})..+/, "$1…") }}
-        <q-tooltip v-if="props.row.name.length > 18" max-width="30vw">
+        <q-tooltip v-if="props.row.name.length > 18" max-width="30vw" style="overflow-wrap: break-word">
           {{ props.row.name }}
         </q-tooltip>
       </RouterLink>
