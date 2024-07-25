@@ -47,7 +47,7 @@ class DraftAlreadyExistsError(Exception):
     """The draft already exists."""
 
 
-def register_base_v1_error_handlers(api: Api) -> None:
+def register_base_error_handlers(api: Api) -> None:
     @api.errorhandler(BackendDatabaseError)
     def handle_backend_database_error(error):
         return {
@@ -83,44 +83,7 @@ def register_base_v1_error_handlers(api: Api) -> None:
         )
 
 
-def register_error_handlers(api: Api, restapi_version: str) -> None:
-    """Registers the error handlers with the main application.
-
-    Args:
-        api: The main REST |Api| object.
-    """
-    if restapi_version == "v0":
-        register_v0_error_handlers(api)
-
-    elif restapi_version == "v1":
-        register_v1_error_handlers(api)
-
-
-def register_v0_error_handlers(api: Api) -> None:
-    """Registers the error handlers with the main application.
-
-    Args:
-        api: The main REST |Api| object.
-    """
-    from .v0.experiment import (
-        register_error_handlers as attach_experiment_error_handlers,
-    )
-    from .v0.job import register_error_handlers as attach_job_error_handlers
-    from .v0.queue import register_error_handlers as attach_job_queue_error_handlers
-    from .v0.task_plugin import (
-        register_error_handlers as attach_task_plugin_error_handlers,
-    )
-    from .v0.user import register_error_handlers as attach_user_error_handlers
-
-    # Add error handlers
-    attach_experiment_error_handlers(api)
-    attach_job_error_handlers(api)
-    attach_job_queue_error_handlers(api)
-    attach_task_plugin_error_handlers(api)
-    attach_user_error_handlers(api)
-
-
-def register_v1_error_handlers(api: Api) -> None:
+def register_error_handlers(api: Api) -> None:
     """Registers the error handlers with the main application.
 
     Args:
@@ -129,7 +92,7 @@ def register_v1_error_handlers(api: Api) -> None:
 
     from dioptra.restapi import v1
 
-    register_base_v1_error_handlers(api)
+    register_base_error_handlers(api)
     v1.artifacts.errors.register_error_handlers(api)
     v1.entrypoints.errors.register_error_handlers(api)
     v1.experiments.errors.register_error_handlers(api)

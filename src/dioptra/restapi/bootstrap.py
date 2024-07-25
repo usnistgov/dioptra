@@ -28,10 +28,8 @@ from mlflow.tracking import MlflowClient
 from passlib.context import CryptContext
 from redis import Redis
 
-from dioptra.restapi.v0.queue.service import QueueNameService
-from dioptra.restapi.v0.shared.password.service import PasswordService
-from dioptra.restapi.v0.shared.request_scope import request
-from dioptra.restapi.v0.shared.rq.service import RQService
+from dioptra.restapi.v1.shared.password_service import PasswordService
+from dioptra.restapi.v1.shared.request_scope import request
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 
 
@@ -47,21 +45,6 @@ class MLFlowClientModule(Module):
 @dataclass
 class RQServiceConfiguration(object):
     redis: Redis
-    run_mlflow: str
-    run_task_engine: str
-
-
-class RQServiceModule(Module):
-    @request
-    @provider
-    def provide_rq_service_module(
-        self, configuration: RQServiceConfiguration
-    ) -> RQService:
-        return RQService(
-            redis=configuration.redis,
-            run_mlflow=configuration.run_mlflow,
-            run_task_engine=configuration.run_task_engine,
-        )
 
 
 class RQServiceV1Module(Module):
@@ -71,14 +54,6 @@ class RQServiceV1Module(Module):
         self, configuration: RQServiceConfiguration
     ) -> RQServiceV1:
         return RQServiceV1(redis=configuration.redis)
-
-
-class QueueNameServiceModule(Module):
-    @provider
-    def provide_queue_name_service_module(
-        self,
-    ) -> QueueNameService:
-        return QueueNameService()
 
 
 @dataclass
@@ -96,13 +71,7 @@ class PasswordServiceModule(Module):
 
 def _bind_rq_service_configuration(binder: Binder):
     redis_conn: Redis = Redis.from_url(os.getenv("RQ_REDIS_URI", "redis://"))
-    run_mlflow: str = "dioptra.rq.tasks.run_mlflow_task"
-    run_task_engine: str = "dioptra.rq.tasks.run_task_engine_task"
-
-    configuration: RQServiceConfiguration = RQServiceConfiguration(
-        redis=redis_conn, run_mlflow=run_mlflow, run_task_engine=run_task_engine
-    )
-
+    configuration: RQServiceConfiguration = RQServiceConfiguration(redis=redis_conn)
     binder.bind(RQServiceConfiguration, to=configuration, scope=request)
 
 
@@ -148,7 +117,5 @@ def register_providers(modules: List[Callable[..., Any]]) -> None:
     """
 
     modules.append(MLFlowClientModule)
-    modules.append(RQServiceModule)
     modules.append(RQServiceV1Module)
-    modules.append(QueueNameServiceModule)
     modules.append(PasswordServiceModule)

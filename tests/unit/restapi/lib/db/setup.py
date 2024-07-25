@@ -19,7 +19,7 @@ from typing import Final
 from sqlalchemy import insert
 from sqlalchemy.orm import Session
 
-from dioptra.restapi.db import legacy_models, models
+from dioptra.restapi.db import models
 
 ENTRY_POINT_PARAMETER_TYPES: Final[list[dict[str, str]]] = [
     {"parameter_type": "string"},
@@ -66,13 +66,6 @@ RESOURCE_DEPENDENCY_TYPES: Final[list[dict[str, str]]] = [
     {"parent_resource_type": "job", "child_resource_type": "job"},
     {"parent_resource_type": "ml_model", "child_resource_type": "ml_model_version"},
 ]
-LEGACY_JOB_STATUS_TYPES: Final[list[dict[str, str]]] = [
-    {"status": "queued"},
-    {"status": "started"},
-    {"status": "deferred"},
-    {"status": "finished"},
-    {"status": "failed"},
-]
 
 
 def setup_ontology(session: Session) -> None:
@@ -93,7 +86,6 @@ def setup_ontology(session: Session) -> None:
         insert(models.resource_dependency_types_table).values(
             RESOURCE_DEPENDENCY_TYPES
         ),
-        insert(legacy_models.legacy_job_statuses).values(LEGACY_JOB_STATUS_TYPES),
     ]
 
     for stmt in stmts:
