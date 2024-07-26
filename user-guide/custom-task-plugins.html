@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Custom Task Plugins &#8212; Dioptra 0.0.0 documentation</title>
+    <title>Custom Task Plugins &#8212; Dioptra 1.0.0 documentation</title>
   
   
   
@@ -62,8 +62,6 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/custom-task-plugins';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Generics Plugin System" href="generics-plugin-system.html" />
-    <link rel="prev" title="Declarative Experiment Description" href="task_engine_doc.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
@@ -141,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 0.0.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.0.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -162,45 +160,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/building-the-containers.html">Building the Containers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/running-dioptra.html">Running Dioptra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/acquiring-datasets.html">Downloading Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/examples-setup.html">Examples</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="the-basics.html">The Basics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="entry-points.html">Entry Points</a></li>
-<li class="toctree-l1"><a class="reference internal" href="task-plugins.html">Task Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom-entry-points.html">Creating a New Entry Point</a></li>
-<li class="toctree-l1"><a class="reference internal" href="task_engine_doc.html">Declarative Experiment Description</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Custom Task Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generics-plugin-system.html">Generics Plugin System</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="task-plugins-collection.html">Task Plugins Collection</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-artifacts.html">artifacts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-attacks.html">attacks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-backend_configs.html">backend_configs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-data.html">data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-estimators.html">estimators</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-metrics.html">metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-random.html">random</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-registry.html">registry</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-tracking.html">tracking</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api-reference-sdk.html">Testbed SDK API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-generics.html">generics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-utilities.html">utilities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-exceptions.html">exceptions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-pyplugs.html">pyplugs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-rq.html">rq</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-cryptography.html">cryptography</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api-reference-client.html">Testbed Client API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api-reference-restapi.html">Testbed REST API Reference</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/system-requirements.html">System Requirements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">Docker Images List and Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="the-web-frontend.html">The Web Frontend</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api-reference-restapi.html">Testbed REST API Reference</a></li>
 </ul>
 
     </div>
@@ -531,24 +499,6 @@ The task decorator is imported from the prefect library:</p>
   
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="task_engine_doc.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Declarative Experiment Description</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="generics-plugin-system.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Generics Plugin System</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div></div>
   
 </div>

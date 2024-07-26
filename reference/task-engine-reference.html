@@ -1,0 +1,1417 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Declarative Experiment Description &#8212; Dioptra 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/jquery.visible.js"></script>
+    <script src="../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../_static/applyLeaveNotice.js"></script>
+    <script src="../_static/smoothNavScroll.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/task-engine-reference';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Testbed REST API Reference" href="api-reference-restapi.html" />
+    <link rel="prev" title="The Web Frontend" href="../user-guide/the-web-frontend.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.0.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    What is Dioptra?
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/building-the-containers.html">Building the Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/running-dioptra.html">Running Dioptra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/acquiring-datasets.html">Downloading Datasets</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/the-web-frontend.html">The Web Frontend</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference-restapi.html">Testbed REST API Reference</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/reference/task-engine-reference.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Declarative Experiment Description</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#goals">Goals</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structure-and-format">Structure and Format</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notes-on-yaml">Notes on YAML</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structure-description">Structure Description</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#types">Types</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simple-types">Simple Types</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#structured-types">Structured Types</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#list-structured-types">List Structured Types</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tuple-structured-types">Tuple Structured Types</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-structured-types">Mapping Structured Types</a><ul class="nav section-nav flex-column">
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#enumerated-mapping-types">Enumerated Mapping Types</a></li>
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#key-value-type-mapping-types">Key/Value-Type Mapping Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#union-types">Union Types</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#named-and-anonymous-types">Named and Anonymous Types</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#inline-type-definitions">Inline Type Definitions</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tasks">Tasks</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#task-plugin">Task Plugin</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#task-inputs">Task Inputs</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#task-outputs">Task Outputs</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#graph">Graph</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#steps">Steps</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#positional-style-invocation">Positional Style Invocation</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#keyword-style-invocation">Keyword Style Invocation</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-style-invocation">Mixed Style Invocation</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#describing-argument-values">Describing Argument Values</a><ul class="nav section-nav flex-column">
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#type-validation">Type Validation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-inference">Type Inference</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#type-inference-from-literals">Type Inference from Literals</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#inferring-mapping-types">Inferring Mapping Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-compatibility">Type Compatibility</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#union-compatibility">Union Compatibility</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#structured-type-compatibility">Structured Type Compatibility</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-variance">Type Variance</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="declarative-experiment-description">
+<h1><a class="toc-backref" href="#id1">Declarative Experiment Description</a><a class="headerlink" href="#declarative-experiment-description" title="Permalink to this headline">#</a></h1>
+<p>This document describes the data structure used to represent an experiment.</p>
+<div class="contents topic" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#declarative-experiment-description" id="id1">Declarative Experiment Description</a></p>
+<ul>
+<li><p><a class="reference internal" href="#goals" id="id2">Goals</a></p></li>
+<li><p><a class="reference internal" href="#structure-and-format" id="id3">Structure and Format</a></p>
+<ul>
+<li><p><a class="reference internal" href="#notes-on-yaml" id="id4">Notes on YAML</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#structure-description" id="id5">Structure Description</a></p>
+<ul>
+<li><p><a class="reference internal" href="#types" id="id6">Types</a></p>
+<ul>
+<li><p><a class="reference internal" href="#simple-types" id="id7">Simple Types</a></p></li>
+<li><p><a class="reference internal" href="#structured-types" id="id8">Structured Types</a></p>
+<ul>
+<li><p><a class="reference internal" href="#list-structured-types" id="id9">List Structured Types</a></p></li>
+<li><p><a class="reference internal" href="#tuple-structured-types" id="id10">Tuple Structured Types</a></p></li>
+<li><p><a class="reference internal" href="#mapping-structured-types" id="id11">Mapping Structured Types</a></p>
+<ul>
+<li><p><a class="reference internal" href="#enumerated-mapping-types" id="id12">Enumerated Mapping Types</a></p></li>
+<li><p><a class="reference internal" href="#key-value-type-mapping-types" id="id13">Key/Value-Type Mapping Types</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#union-types" id="id14">Union Types</a></p></li>
+<li><p><a class="reference internal" href="#named-and-anonymous-types" id="id15">Named and Anonymous Types</a></p></li>
+<li><p><a class="reference internal" href="#inline-type-definitions" id="id16">Inline Type Definitions</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#parameters" id="id17">Parameters</a></p></li>
+<li><p><a class="reference internal" href="#tasks" id="id18">Tasks</a></p>
+<ul>
+<li><p><a class="reference internal" href="#task-plugin" id="id19">Task Plugin</a></p></li>
+<li><p><a class="reference internal" href="#task-inputs" id="id20">Task Inputs</a></p></li>
+<li><p><a class="reference internal" href="#task-outputs" id="id21">Task Outputs</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#graph" id="id22">Graph</a></p>
+<ul>
+<li><p><a class="reference internal" href="#steps" id="id23">Steps</a></p>
+<ul>
+<li><p><a class="reference internal" href="#positional-style-invocation" id="id24">Positional Style Invocation</a></p></li>
+<li><p><a class="reference internal" href="#keyword-style-invocation" id="id25">Keyword Style Invocation</a></p></li>
+<li><p><a class="reference internal" href="#mixed-style-invocation" id="id26">Mixed Style Invocation</a></p></li>
+<li><p><a class="reference internal" href="#describing-argument-values" id="id27">Describing Argument Values</a></p>
+<ul>
+<li><p><a class="reference internal" href="#references" id="id28">References</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#dependencies" id="id29">Dependencies</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#type-validation" id="id30">Type Validation</a></p>
+<ul>
+<li><p><a class="reference internal" href="#type-inference" id="id31">Type Inference</a></p>
+<ul>
+<li><p><a class="reference internal" href="#type-inference-from-literals" id="id32">Type Inference from Literals</a></p>
+<ul>
+<li><p><a class="reference internal" href="#inferring-mapping-types" id="id33">Inferring Mapping Types</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#type-compatibility" id="id34">Type Compatibility</a></p>
+<ul>
+<li><p><a class="reference internal" href="#union-compatibility" id="id35">Union Compatibility</a></p></li>
+<li><p><a class="reference internal" href="#structured-type-compatibility" id="id36">Structured Type Compatibility</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#type-variance" id="id37">Type Variance</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="goals">
+<h2><a class="toc-backref" href="#id2">Goals</a><a class="headerlink" href="#goals" title="Permalink to this headline">#</a></h2>
+<p>The goal of this declarative description is to describe a task graph in a
+directed acyclic graph (DAG) topology.  The nodes of this graph correspond to
+simple Python functions, where the outputs of some functions may be fed into
+others as inputs.  The operation of the overall graph may be parameterized via
+a set of name-value pairs.  This allows the invoker some control over what the
+graph of functions does.</p>
+</section>
+<section id="structure-and-format">
+<h2><a class="toc-backref" href="#id3">Structure and Format</a><a class="headerlink" href="#structure-and-format" title="Permalink to this headline">#</a></h2>
+<p>The structure described below is something which can be easily represented in
+a file format like JSON or YAML, but one need not use either of those formats,
+or any textual format at all.  The only requirement is that the structure be
+obtained somehow.  It consists of a nesting of basic types, including lists,
+dicts, ints, etc, in the structure prescribed below.  Nevertheless, to describe
+the structure textually in this document, a familiar format is chosen: YAML.
+Implementations may make different choices.</p>
+<section id="notes-on-yaml">
+<h3><a class="toc-backref" href="#id4">Notes on YAML</a><a class="headerlink" href="#notes-on-yaml" title="Permalink to this headline">#</a></h3>
+<p>A full description of <a class="reference external" href="https://yaml.org/">YAML</a> is out of scope for this
+document, but to help readers less familiar with the syntax, below are some
+brief notes about how it works.</p>
+<p>YAML can represent a data structure similar to JSON.  Whereas JSON’s container
+types include “array” and “object”, in YAML these are called “sequence” and
+“mapping”.  YAML allows flexibility in how these types are serialized
+(represented textually); these choices are called <em>styles</em>.  There are two
+broad YAML styles, called <em>block style</em> and <em>flow style</em>.  The YAML snippets
+given in this document will use either style, depending on what results in the
+clearest presentation of the content.</p>
+<p>Example YAML mapping, block style:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value1</span>
+<span class="nt">key2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value2</span>
+</pre></div>
+</div>
+<p>Example YAML mapping, flow style:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">{</span><span class="nt">key1</span><span class="p">:</span><span class="w"> </span><span class="nv">value1</span><span class="p p-Indicator">,</span><span class="nt"> key2</span><span class="p">:</span><span class="w"> </span><span class="nv">value2</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+<p>Example YAML sequence, block style:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value1</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value2</span>
+</pre></div>
+</div>
+<p>Example YAML sequence, flow style:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">[</span><span class="nv">value1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">value2</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="structure-description">
+<h2><a class="toc-backref" href="#id5">Structure Description</a><a class="headerlink" href="#structure-description" title="Permalink to this headline">#</a></h2>
+<p>The top level of the data structure is a mapping with a few prescribed keys,
+which provide the basic ingredients for the experiment: types, parameters,
+tasks, and a graph which links task invocations together:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
+<span class="w">    </span><span class="s">&quot;&lt;type</span><span class="nv"> </span><span class="s">definitions</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+
+<span class="nt">parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="s">&quot;&lt;parameters</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+
+<span class="nt">tasks</span><span class="p">:</span>
+<span class="w">    </span><span class="s">&quot;&lt;tasks</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+
+<span class="nt">graph</span><span class="p">:</span>
+<span class="w">    </span><span class="s">&quot;&lt;graph</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+</pre></div>
+</div>
+<p>The rest of the structural description describes what goes in each of those
+four places.</p>
+<section id="types">
+<h3><a class="toc-backref" href="#id6">Types</a><a class="headerlink" href="#types" title="Permalink to this headline">#</a></h3>
+<p>This section is used to define a set of types.  Types describe the inputs and
+outputs of task plugins, and global parameters.  They allow an additional kind
+of validation of the experiment: that the inputs passed to task plugins are
+compatible with their parameter types.</p>
+<p>The top-level structure of this section is a mapping from type name to type
+definition:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type_name_a</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type_definition_a</span>
+<span class="w">    </span><span class="nt">type_name_b</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type_definition_b</span>
+</pre></div>
+</div>
+<p>There are three kinds of types: <em>simple</em>, <em>structured</em>, and <em>union</em>.  These are
+discussed in the following subsections.</p>
+<p>There are a handful of <a class="reference internal" href="#builtin-types">builtin</a> types as well, whose names
+are reserved: authors must not try to redefine them.  These include <code class="docutils literal notranslate"><span class="pre">string</span></code>,
+<code class="docutils literal notranslate"><span class="pre">integer</span></code>, <code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">boolean</span></code>, <code class="docutils literal notranslate"><span class="pre">null</span></code>, and <code class="docutils literal notranslate"><span class="pre">any</span></code>.</p>
+<section id="simple-types">
+<h4><a class="toc-backref" href="#id7">Simple Types</a><a class="headerlink" href="#simple-types" title="Permalink to this headline">#</a></h4>
+<p>A simple type is just a name.  The name can mean anything you want.  Simple
+types are suitable when you want to express an opaque type, i.e. one where the
+inner structure is unimportant with regards to type checking.  The actual
+type used by the task plugin may be complex or simple, but the type system will
+not know anything about it.  Simple types are the only types to support single
+inheritance.  A simple type may be given a null definition, or a mapping with
+an <code class="docutils literal notranslate"><span class="pre">is_a</span></code> key which maps to the name of its super-type:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_simple_type</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_sub_type</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">is_a</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_simple_type</span>
+</pre></div>
+</div>
+</section>
+<section id="structured-types">
+<h4><a class="toc-backref" href="#id8">Structured Types</a><a class="headerlink" href="#structured-types" title="Permalink to this headline">#</a></h4>
+<p>Structured types support the definition of a few kinds of internal structure.
+This type is necessary when more complex values with internal structure are
+given, within task plugin invocations and as global parameter values.  The type
+system needs to be able to evaluate the structure of these values for
+compatibility with task plugin requirements.  So it is necessary to be able to
+associate with a type, a description of its proper structure.  The three
+supported structures are <em>list</em>, <em>tuple</em>, and <em>mapping</em>.</p>
+<section id="list-structured-types">
+<h5><a class="toc-backref" href="#id9">List Structured Types</a><a class="headerlink" href="#list-structured-types" title="Permalink to this headline">#</a></h5>
+<p>A list is conceptually a sequence of values of homogenous type and arbitrary
+length.  To define a list structure, one need only give an element type:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_elt_type</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_list_type</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">list</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_elt_type</span>
+</pre></div>
+</div>
+</section>
+<section id="tuple-structured-types">
+<h5><a class="toc-backref" href="#id10">Tuple Structured Types</a><a class="headerlink" href="#tuple-structured-types" title="Permalink to this headline">#</a></h5>
+<p>A tuple is conceptually a sequence of values of heterogenous type and fixed
+length, which may be zero.  To define a tuple structure, one needs to list all
+the element types:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_elt_type1</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_elt_type2</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_elt_type3</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_tuple_type</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">tuple</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">my_elt_type1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">my_elt_type2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">my_elt_type3</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</section>
+<section id="mapping-structured-types">
+<h5><a class="toc-backref" href="#id11">Mapping Structured Types</a><a class="headerlink" href="#mapping-structured-types" title="Permalink to this headline">#</a></h5>
+<p>A mapping conceptually associates keys with values.  Mapping types come in a
+couple variants: <em>enumerated</em> and <em>key/value type</em>.</p>
+<section id="enumerated-mapping-types">
+<h6><a class="toc-backref" href="#id12">Enumerated Mapping Types</a><a class="headerlink" href="#enumerated-mapping-types" title="Permalink to this headline">#</a></h6>
+<p>In an enumerated mapping type, a fixed set of property names and types is
+given, which may be empty.  All values of this type are mappings with exactly
+that set of properties, i.e. all of the listed properties are required.  This
+implies that keys must be strings, and value types may be heterogenous:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">prop_type1</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">prop_type2</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enum_mapping_type</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">mapping</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">prop_name1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prop_type1</span>
+<span class="w">            </span><span class="nt">prop_name2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prop_type2</span>
+</pre></div>
+</div>
+</section>
+<section id="key-value-type-mapping-types">
+<h6><a class="toc-backref" href="#id13">Key/Value-Type Mapping Types</a><a class="headerlink" href="#key-value-type-mapping-types" title="Permalink to this headline">#</a></h6>
+<p>In a key/value type mapping, a key type and value type are given.  Values of
+this type must have keys and values of the given types, but the keys and values
+themselves are unrestricted.  This type of mapping is appropriate when
+requirements are more open:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_value_type</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_mapping_type</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">mapping</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">my_value_type</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p>There is a special requirement here that the key type must be either the
+<code class="docutils literal notranslate"><span class="pre">string</span></code> or <code class="docutils literal notranslate"><span class="pre">integer</span></code> <a class="reference internal" href="#builtin-types">builtin type</a>.</p>
+</section>
+</section>
+</section>
+<section id="union-types">
+<h4><a class="toc-backref" href="#id14">Union Types</a><a class="headerlink" href="#union-types" title="Permalink to this headline">#</a></h4>
+<p>A union type is a merger of other types.  To define a union type, one simply
+lists the union member types:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_type1</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_type2</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_union</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">union</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">my_type1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">my_type2</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</section>
+<section id="named-and-anonymous-types">
+<h4><a class="toc-backref" href="#id15">Named and Anonymous Types</a><a class="headerlink" href="#named-and-anonymous-types" title="Permalink to this headline">#</a></h4>
+<p>A name is optional, for most types.  If a type does not have a name, we
+call it <em>anonymous</em>.  Anonymous types arise in two contexts: inline types and
+type inference.  These are the subjects of following sections, but there are
+some principles and consequences to bring up here.</p>
+<ul class="simple">
+<li><p>A name is a unique identifier for a type, within the scope of an
+experiment description.  A particular type name always refers to a unique
+type.  If two types have different names, they are different types.</p></li>
+<li><p>A simple type is <em>only</em> a name, therefore it cannot be anonymous.</p></li>
+<li><p>The only way to give a type a name is to map its name to its definition,
+directly under the top-level <code class="docutils literal notranslate"><span class="pre">types</span></code> key.  Therefore, a simple type
+definition cannot occur in any other place.</p></li>
+</ul>
+</section>
+<section id="inline-type-definitions">
+<h4><a class="toc-backref" href="#id16">Inline Type Definitions</a><a class="headerlink" href="#inline-type-definitions" title="Permalink to this headline">#</a></h4>
+<p>The various examples of type definitions given in previous sections were kept
+simple, in that the elements of those types (where applicable) were references
+to named types whose definitions were present at the top level.  This is the
+only way to use a simple type, but it is not the only way to use the other
+kinds of types.  Definitions of non-simple types may be nested inside other
+non-simple type definitions.  This enables more convenient definition of
+complex types.  An inline type which is nested within a complex type definition
+has no means to assign the type a name; it is therefore always an anonymous
+type.</p>
+<p>The following example defines a list of lists:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">elt_type</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">list_of_lists</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">list</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">list</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">elt_type</span>
+</pre></div>
+</div>
+<p>This is a nested mapping, string -&gt; string -&gt; list:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">elt_type</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nested_mapping</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">mapping</span><span class="p">:</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">mapping</span><span class="p">:</span>
+<span class="w">                </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<span class="w">                </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">list</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">elt_type</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="parameters">
+<h3><a class="toc-backref" href="#id17">Parameters</a><a class="headerlink" href="#parameters" title="Permalink to this headline">#</a></h3>
+<p>The value of the top-level <code class="docutils literal notranslate"><span class="pre">parameters</span></code> key must be a mapping.  The keys
+of the mapping are the global parameter names.  They may map to any value,
+where mapping values are treated specially.  If not a mapping, the value is
+taken as the default value for the parameter.  If a mapping, it may have keys
+“type” and/or “default”.  The mapping form allows explicitly assigning a type
+to the parameter.  If a type is not explicitly given, it will be inferred from
+the default.  For example:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">global_a</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">global_b</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;foo&quot;</span>
+<span class="w">    </span><span class="nt">global_c</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">integer</span>
+<span class="w">        </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">global_a</span></code> has a null default value and null inferred type,
+<code class="docutils literal notranslate"><span class="pre">global_b</span></code> defaults to “foo” and is of string type, and <code class="docutils literal notranslate"><span class="pre">global_c</span></code> defaults
+to 5 and is explicitly given the <code class="docutils literal notranslate"><span class="pre">integer</span></code> type.</p>
+<p>Additional rules include:</p>
+<ul class="simple">
+<li><p>If both a default and type are given, they must be compatible.</p></li>
+<li><p>Each global parameter <em>must</em> have a type, therefore it must have either a
+default value (from which a type can be inferred), or an explicitly given
+type.</p></li>
+</ul>
+</section>
+<section id="tasks">
+<h3><a class="toc-backref" href="#id18">Tasks</a><a class="headerlink" href="#tasks" title="Permalink to this headline">#</a></h3>
+<p>This section describes task plugins.  It gives them and their inputs and
+outputs short names so they may be referred to, and to make subsequent usage
+easier to write and understand.  Inputs and outputs are also assigned types, to
+enable type-based validation of their invocations.</p>
+<p>The value of the top-level <code class="docutils literal notranslate"><span class="pre">tasks</span></code> key is a mapping whose keys are the short
+names of the task plugins, and whose values describe the task plugin.  Each
+plugin description supports up to three keys: <code class="docutils literal notranslate"><span class="pre">plugin</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">outputs</span></code>.  The latter two keys are optional.</p>
+<p>For example:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">task_short_name1</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.example.plugin1</span>
+<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;input_definitions&gt;&quot;</span>
+<span class="w">        </span><span class="nt">outputs</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;output_definitions&gt;&quot;</span>
+<span class="w">    </span><span class="nt">task_short_name2</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.example.plugin2</span>
+<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;input_definitions&gt;&quot;</span>
+<span class="w">        </span><span class="nt">outputs</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;output_definitions&gt;&quot;</span>
+</pre></div>
+</div>
+<section id="task-plugin">
+<h4><a class="toc-backref" href="#id19">Task Plugin</a><a class="headerlink" href="#task-plugin" title="Permalink to this headline">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">plugin</span></code> key is required, and describes a Python module plus a function
+name, separated by dots.  This is mostly the same as what you would see in a
+Python <code class="docutils literal notranslate"><span class="pre">import</span></code> statement, but with the addition of the function name.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Our implementation will accept plugin name with two components minimum.
+Giving fewer than two components will produce an error.</p>
+</div>
+</section>
+<section id="task-inputs">
+<h4><a class="toc-backref" href="#id20">Task Inputs</a><a class="headerlink" href="#task-inputs" title="Permalink to this headline">#</a></h4>
+<p>A task plugin may or may not require any input.  If it requires input, that
+input must be defined under the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> key.  Every input must be given a
+name and a type.  Inputs are defined in a list, which also gives them an
+implicit ordering.  The ordering is important for positional invocations.</p>
+<p>Each task plugin input may be defined in one of two ways: either a length 1
+mapping which maps input name to type, or a longer form which allows giving
+other information along with the name and type.</p>
+<p>Short form input example:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_task</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.example.plugin</span>
+<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">input_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type_name</span>
+</pre></div>
+</div>
+<p>Long form input example:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_task</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.example.plugin</span>
+<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">input_name</span>
+<span class="w">              </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type_name</span>
+<span class="w">              </span><span class="nt">required</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</pre></div>
+</div>
+<p>The long form is distinguished by the presence of the <code class="docutils literal notranslate"><span class="pre">name</span></code> key.  That means
+if a task plugin input is named “name”, the long form must be used.  The above
+example also shows the <code class="docutils literal notranslate"><span class="pre">required</span></code> key.  Usage of this key is optional and
+defaults to true, i.e. all defined task plugin inputs are required by default.
+Long form must be used in order to define an input as optional.</p>
+</section>
+<section id="task-outputs">
+<h4><a class="toc-backref" href="#id21">Task Outputs</a><a class="headerlink" href="#task-outputs" title="Permalink to this headline">#</a></h4>
+<p>A task plugin may or may not produce any output.  If it does, and its output(s)
+will be needed to feed other task(s), then the output(s) must be defined.  They
+require names so they may be referred to, and must also be assigned types so
+that their usage can be validated against other types.  The value of the
+<code class="docutils literal notranslate"><span class="pre">outputs</span></code> property may be either a length 1 mapping or list of such.  Each
+mapping maps an output name to a type.</p>
+<p>If a list of mappings is given, then the plugin’s output must be iterable (e.g.
+like a list), and values from the iterable will be extracted and stored under
+the given names.  If a list is given for <code class="docutils literal notranslate"><span class="pre">outputs</span></code>, but the plugin’s output
+is not iterable, an error will occur.</p>
+<p>If the lengths of the output names and plugin return value are not equal, then
+the number of values which may be subsequently referred to is the shorter of
+the two lengths.  If the number of defined outputs is less than the length of
+the output iterable, this allows authors to extract only the first N outputs
+from the iterable; they need not define all outputs.  On the other hand, if
+there are more output definitions than outputs, then some output names will not
+be defined (because there are no values to assign to them), and subsequent
+attempts to refer to them will produce an error.</p>
+<p>For example:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">my_task</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.example.plugin</span>
+<span class="w">        </span><span class="nt">outputs</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">result</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">number</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="graph">
+<h3><a class="toc-backref" href="#id22">Graph</a><a class="headerlink" href="#graph" title="Permalink to this headline">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">graph</span></code> section is where you describe invocations of the aforementioned
+task plugins, and connect the outputs of some to the inputs of others, creating
+the graph structure.</p>
+<p>Graphs are composed of <em>steps</em>, and the value of the <code class="docutils literal notranslate"><span class="pre">graph</span></code> property is a
+mapping from a step name to a description of the step.  Each step invokes a
+task plugin, so the step description describes which plugin to invoke and how
+to invoke it:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">step1</span><span class="p">:</span>
+<span class="w">        </span><span class="s">&quot;step</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">description&quot;</span>
+<span class="w">    </span><span class="nt">step2</span><span class="p">:</span>
+<span class="w">        </span><span class="s">&quot;step</span><span class="nv"> </span><span class="s">2</span><span class="nv"> </span><span class="s">description&quot;</span>
+</pre></div>
+</div>
+<section id="steps">
+<h4><a class="toc-backref" href="#id23">Steps</a><a class="headerlink" href="#steps" title="Permalink to this headline">#</a></h4>
+<p>Each step invokes a task plugin, which is a Python function, and the way you
+invoke Python functions depends on how they are written.  For example, they
+may have positional-only or keyword-only arguments, or a combination of the
+two.  A step description supports all of these styles.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>It is recommended that of the invocation styles described below, the
+keyword style be used since the meaning of the argument values is clearer
+due to the naming of each argument.  It is also structurally simpler than
+the mixed style.</p>
+</div>
+<section id="positional-style-invocation">
+<h5><a class="toc-backref" href="#id24">Positional Style Invocation</a><a class="headerlink" href="#positional-style-invocation" title="Permalink to this headline">#</a></h5>
+<p>A simple way to describe a positional style task plugin invocation is to map
+the plugin short name to a list of positional arguments:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">step1</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">arg1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">arg2</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p>The above will lookup “plugin1” in the tasks section to find the plugin,
+and invoke it with positional parameters “arg1” and “arg2”.  In order to enable
+simple structures, one is permitted to use a simple non-map, non-list value as
+well, and this will be interpreted the same as a length-one list.</p>
+</section>
+<section id="keyword-style-invocation">
+<h5><a class="toc-backref" href="#id25">Keyword Style Invocation</a><a class="headerlink" href="#keyword-style-invocation" title="Permalink to this headline">#</a></h5>
+<p>Similarly to positional style, the keyword arg style maps a plugin short name
+to a mapping of keyword arg names to values:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">step1</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin1</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">keyword1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arg1</span>
+<span class="w">            </span><span class="nt">keyword2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arg2</span>
+</pre></div>
+</div>
+<p>The above will lookup “plugin1” in the tasks section to find the plugin,
+and invoke it with keyword arguments keyword1=arg1 and keyword2=arg2.</p>
+</section>
+<section id="mixed-style-invocation">
+<h5><a class="toc-backref" href="#id26">Mixed Style Invocation</a><a class="headerlink" href="#mixed-style-invocation" title="Permalink to this headline">#</a></h5>
+<p>There is a longer form invocation description which supports both styles at the
+same time, for a mixed style invocation.  It uses a mapping with prescribed
+keys <code class="docutils literal notranslate"><span class="pre">task</span></code>, <code class="docutils literal notranslate"><span class="pre">args</span></code>, <code class="docutils literal notranslate"><span class="pre">kwargs</span></code>:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">step1</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plugin1</span>
+<span class="w">        </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">posarg1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">posarg2</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">keyword1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arg1</span>
+<span class="w">            </span><span class="nt">keyword2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arg2</span>
+</pre></div>
+</div>
+<p>This is differentiated from the keyword arg style by the presence of the
+<code class="docutils literal notranslate"><span class="pre">task</span></code> key.  This will invoke plugin1 with positional args posarg1 and
+posarg2, and keyword args keyword1=arg1 and keyword2=arg2.</p>
+</section>
+<section id="describing-argument-values">
+<h5><a class="toc-backref" href="#id27">Describing Argument Values</a><a class="headerlink" href="#describing-argument-values" title="Permalink to this headline">#</a></h5>
+<p>In the invocation examples above, argument values were given as simple strings
+to keep the presented data structures clear and free of clutter.  However, one
+can use more than simple values as task plugin argument values.  It is possible
+to use any kind of nested structure you like.  For example, a positional
+argument could itself be a mapping, or the value of a keyword argument could be
+a list:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">step1</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin1</span><span class="p">:</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">prop1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value1</span>
+<span class="w">              </span><span class="nt">prop2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value2</span>
+</pre></div>
+</div>
+<p>The above example maps the plugin short name to a list, therefore this is a
+positional invocation.  The list has one value in it, which is itself a
+mapping: {prop1: value1, prop2: value2}.  The task plugin will be invoked
+positionally, where its one positional argument will be a Python dict.</p>
+<section id="references">
+<h6><a class="toc-backref" href="#id28">References</a><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h6>
+<p>An important aspect of describing an argument value is being able to refer to
+another part of the experiment description.  This is how we make use of global
+<a class="reference internal" href="#parameters">parameters</a>, and refer to the outputs of other steps.</p>
+<p>A reference is a string value which begins with a dollar sign.  To refer to a
+global parameter, follow the dollar sign with the parameter name.  To refer to
+the output of another step, follow the dollar sign with the step name, and if
+necessary, the output name, separated from the step name by a dot.  For
+example:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">global</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+
+<span class="nt">tasks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">plugin1</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.foo.bar.my_plugin</span>
+<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<span class="w">        </span><span class="nt">outputs</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">number</span>
+<span class="w">    </span><span class="nt">plugin2</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">com.bar.foo.another_plugin</span>
+<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">in</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">number</span>
+<span class="w">        </span><span class="nt">outputs</span><span class="p">:</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">age</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">integer</span>
+
+<span class="nt">graph</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">step1</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">$global</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">step2</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$step1.value</span>
+</pre></div>
+</div>
+<p>The above example demonstrates a reference to a parameter (<code class="docutils literal notranslate"><span class="pre">$global</span></code>), and
+to an output of a step (<code class="docutils literal notranslate"><span class="pre">$step1.value</span></code>).  The value of <code class="docutils literal notranslate"><span class="pre">global</span></code> will be
+passed in as a positional arg in step1, and the <code class="docutils literal notranslate"><span class="pre">value</span></code> output of step1 will
+be passed in as a positional arg in step2.  Note that in step2, we take
+advantage of the ability to treat a simple value the same as a length-one list.</p>
+<p>If a step produces only one output, the output name may be omitted.  For
+example, because step1 only produces one output, that output could have been
+referred to more simply as <code class="docutils literal notranslate"><span class="pre">$step1</span></code>.</p>
+<p>If one wanted to use a string which starts with a dollar sign as an argument
+value, the dollar sign may be escaped by doubling it, e.g. <code class="docutils literal notranslate"><span class="pre">$$foo</span></code>.  This
+need only be done when the dollar sign is the first character.  If it is in the
+middle of the value, e.g. <code class="docutils literal notranslate"><span class="pre">foo$bar</span></code>, the dollar sign should not be escaped.</p>
+<p>References may occur anywhere in the description of an argument value.  The
+whole structure is searched, and all references will be replaced with the
+appropriate values before the task plugin is invoked.</p>
+</section>
+</section>
+<section id="dependencies">
+<h5><a class="toc-backref" href="#id29">Dependencies</a><a class="headerlink" href="#dependencies" title="Permalink to this headline">#</a></h5>
+<p>The references described above can imply dependencies among the steps.  If step
+B requires as input the output of step A, then A must run first so that there
+is an output to pass to B.  The task graph runner can work out for itself a
+run order for the steps on that basis.</p>
+<p>But sometimes there are order requirements which exist for other reasons.  A
+task graph runner will not be able to infer these requirements by itself, so a
+facility exists for describing them explicitly.  To express explicit
+dependencies in a graph, add a <code class="docutils literal notranslate"><span class="pre">dependencies</span></code> key to a step description,
+which maps to a list of step names.  For example:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">step1</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">step2</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">plugin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">foo</span>
+<span class="w">        </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">step1</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p>This will force step1 to run before step2.</p>
+</section>
+</section>
+</section>
+</section>
+<section id="type-validation">
+<h2><a class="toc-backref" href="#id30">Type Validation</a><a class="headerlink" href="#type-validation" title="Permalink to this headline">#</a></h2>
+<p>This section describes how types are used.  The larger goal of validation is to
+ensure that the experiment definition is sensible and correct.  The goal of
+type validation is to ensure that task plugins are always passed types of
+values they know how to handle, i.e. is sensible with respect to data types.
+This is not sufficient for correctness of course, but it helps.</p>
+<p>All type validation is static, i.e. it is not based on any runtime
+information about the task plugins.  Task plugin output values are not known.
+It uses only the information given in the various definitions (tasks, types,
+etc).</p>
+<p>Type validation operates on types.  Where values are given, types must
+therefore be inferred from them.  The resulting types are then subject to a
+compatibility check to ensure each task plugin invocation makes sense.  Type
+inference and compatibility checking are the basic foundation of type
+validation.  These two operations are described in the following subsections.</p>
+<section id="type-inference">
+<h3><a class="toc-backref" href="#id31">Type Inference</a><a class="headerlink" href="#type-inference" title="Permalink to this headline">#</a></h3>
+<p>Input values to a task plugin can come from a few different places: outputs of
+other task plugins, global parameter values, and literal values given directly
+in a task plugin invocation.  In all cases, the input values must be assigned
+types, which are then compared to task plugin input requirements for
+compatibility.  Types are statically obtained for invocation inputs as follows:</p>
+<ul class="simple">
+<li><p>Global parameter: explicitly declared type, if present.  If not present,
+a default value must be given, and a type is inferred from that.</p></li>
+<li><p>Task plugin output: the declared type of the output.</p></li>
+<li><p>Literal value: inferred from the value</p></li>
+</ul>
+<p>Because task invocations support compositions of values and references, type
+information may be obtained from multiple sources and combined into a single
+argument type.</p>
+<p>When types are given explicitly in task and global parameter definitions, a
+type name is used which must refer to a type defined in the <code class="docutils literal notranslate"><span class="pre">types</span></code> section
+of the experiment description.  That is a simple case.  Inferring a type from
+a literal value is more complex, and is described in the next section.</p>
+<section id="type-inference-from-literals">
+<h4><a class="toc-backref" href="#id32">Type Inference from Literals</a><a class="headerlink" href="#type-inference-from-literals" title="Permalink to this headline">#</a></h4>
+<p>Type inference from literals is based on Python types.  When experiment
+description content comes from a file (e.g. YAML or JSON), there is a second
+translation that can happen from the file format to Python.  In that case, it
+is a two-step process: file -&gt; Python value -&gt; Type.  The first step is beyond
+the scope of this document, but we will include YAML-specific caveats.  We will
+focus only on the second step.</p>
+<p>Before we can perform type inference, we need a fixed stable of simple types
+which we will use as the targets of our inferences.  These are built into the
+system and can’t be overridden.</p>
+<p id="builtin-types">The following shows the simple types which are pre-defined in Dioptra, and
+their corresponding Python types:</p>
+<table class="table">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 23%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Type Name</p></th>
+<th class="head"><p>Python Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>string</p></td>
+<td><p>str</p></td>
+<td><p>text</p></td>
+</tr>
+<tr class="row-odd"><td><p>integer</p></td>
+<td><p>int</p></td>
+<td><p>integers, subtype of number</p></td>
+</tr>
+<tr class="row-even"><td><p>number</p></td>
+<td><p>float</p></td>
+<td><p>floating point numbers</p></td>
+</tr>
+<tr class="row-odd"><td><p>boolean</p></td>
+<td><p>bool</p></td>
+<td><p>true or false</p></td>
+</tr>
+<tr class="row-even"><td><p>null</p></td>
+<td><p>None (type)</p></td>
+<td><p>the null value</p></td>
+</tr>
+<tr class="row-odd"><td><p>any</p></td>
+<td><p>(fallback)</p></td>
+<td><p>any value</p></td>
+</tr>
+</tbody>
+</table>
+<p>These types may be referred to using the above names (from column 1) without
+defining the types first.  The <code class="docutils literal notranslate"><span class="pre">any</span></code> type is a special type which is used as
+the inference result if nothing more specific could be inferred.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>In YAML, <code class="docutils literal notranslate"><span class="pre">null</span></code> is interpreted as the null value.  Therefore, it <em>does
+not name the null type!</em>  To refer to the null type, use double quotes so
+that the YAML parser knows a string value is intended: <code class="docutils literal notranslate"><span class="pre">&quot;null&quot;</span></code>.</p>
+</div>
+<p>In addition, types can be inferred from common Python data structures which are
+comprised of values of the above types.  This results in anonymous structured
+types as follows:</p>
+<table class="table">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 22%" />
+<col style="width: 43%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Type</p></th>
+<th class="head"><p>Python Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>anonymous mapping</p></td>
+<td><p>Mapping</p></td>
+<td><p>A mapping</p></td>
+</tr>
+<tr class="row-odd"><td><p>anonymous tuple</p></td>
+<td><p>Iterable</p></td>
+<td><p>An iterable of values</p></td>
+</tr>
+</tbody>
+</table>
+<p>A tuple is inferred for iterables which are not one of the other listed
+iterable types (e.g. strings and dicts).  This enables a sensible inference
+result from Python lists and tuples.  List structured types are never inferred,
+but tuples can be compatible with lists, so it is not a problem in practice.</p>
+<p>The element types of the inferred type are inferred from the element types of
+the mapping/iterable value.  Type inference will recurse throughout a complex
+value, so it is possible to infer a complex type.  Mapping inference is more
+complex and is described separately in the next section.</p>
+<section id="inferring-mapping-types">
+<h5><a class="toc-backref" href="#id33">Inferring Mapping Types</a><a class="headerlink" href="#inferring-mapping-types" title="Permalink to this headline">#</a></h5>
+<p>In Python, mapping keys can be heterogenous and of any hashable type, and
+anything can be a value.  Type inference tries to infer the most specific
+mapping type it can, as follows:</p>
+<ol class="arabic simple">
+<li><p>A common base type is inferred from all key types.  If this type is
+<code class="docutils literal notranslate"><span class="pre">string</span></code>, an enumerated mapping type is inferred.  The value type
+corresponding to each key type is inferred from the mapped value.</p></li>
+<li><p>If the common base type of the keys is <code class="docutils literal notranslate"><span class="pre">integer</span></code>, a key/value type mapping
+is inferred where the key type is integer.  The value type used is the union
+of all value types inferred from the mapping, or if all inferred value types
+were the same, then that type.</p></li>
+<li><p>If the common base key type is neither string nor integer, <code class="docutils literal notranslate"><span class="pre">any</span></code> is
+inferred.</p></li>
+<li><p>If the mapping is empty, an empty enumerated mapping type is inferred.</p></li>
+</ol>
+</section>
+</section>
+</section>
+<section id="type-compatibility">
+<h3><a class="toc-backref" href="#id34">Type Compatibility</a><a class="headerlink" href="#type-compatibility" title="Permalink to this headline">#</a></h3>
+<p>Type compatibility refers to whether a task plugin invocation argument of one
+type may be legally passed as the value of a task parameter of a possibly
+different type.  If A “is compatible with” B, then values of type A may be
+passed to task parameters of type B.  This is not a symmetric concept: if A
+is compatible with B, that does not mean that B is compatible with A.</p>
+<p>There is a fixed set of compatibility rules, which hopefully agrees with
+intuition.  To begin with:</p>
+<ul class="simple">
+<li><p>All types are compatible with <code class="docutils literal notranslate"><span class="pre">any</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">any</span></code> is incompatible with all structured types, and all simple types
+except <code class="docutils literal notranslate"><span class="pre">any</span></code></p></li>
+<li><p>All types are compatible with themselves</p></li>
+<li><p>A simple type is compatible with another simple type iff the first is the
+same as or a subtype of the second</p></li>
+</ul>
+<p>The following subsections describe more complex compatibility criteria related
+to structured and union types.</p>
+<section id="union-compatibility">
+<h4><a class="toc-backref" href="#id35">Union Compatibility</a><a class="headerlink" href="#union-compatibility" title="Permalink to this headline">#</a></h4>
+<p>Compatibility rules related to union types are as follows:</p>
+<ul class="simple">
+<li><p>A union type is compatible with another type iff all member types of the
+union are compatible with the latter type</p></li>
+<li><p>A non-union type is compatible with a union type iff the non-union type is
+compatible with at least one member of the union</p></li>
+<li><p>The empty union is compatible with all types</p></li>
+<li><p>Only the empty union is compatible with the empty union</p></li>
+</ul>
+</section>
+<section id="structured-type-compatibility">
+<h4><a class="toc-backref" href="#id36">Structured Type Compatibility</a><a class="headerlink" href="#structured-type-compatibility" title="Permalink to this headline">#</a></h4>
+<p>Compatibility rules related to structured types are as follows:</p>
+<ul class="simple">
+<li><p>Named structured types with different names are incompatible.  This is
+because the types could mean wildly different things, regardless of whether
+they are structurally compatible.  A structural inspection is only necessary
+if at least one of the types is anonymous.  (If the types are non-anonymous
+with equal names, the types are the same, so trivially compatible.)</p></li>
+<li><p>Lists are incompatible with tuples and mappings</p></li>
+<li><p>Tuples are incompatible with mappings</p></li>
+<li><p>Mappings are incompatible with tuples and lists</p></li>
+<li><p>Key/value type mappings are incompatible with enumerated mappings</p></li>
+<li><p>A list is compatible with another list iff the element type of the first
+list is compatible with the element type of the second</p></li>
+<li><p>A tuple type is compatible with another tuple type iff the number of element
+types of each tuple is equal, and corresponding element types are compatible</p></li>
+<li><p>A tuple type is compatible with a list type iff all tuple element types are
+compatible with the list element type</p></li>
+<li><p>An enumerated mapping type is compatible with another enumerated mapping type
+iff they have exactly the same property names, and corresponding property
+types are compatible</p></li>
+<li><p>A key/value type mapping is compatible with another key/value type mapping
+iff key types are compatible and value types are compatible</p></li>
+<li><p>An enumerated mapping type is compatible with a key/value type mapping iff
+the key type of the latter mapping is <code class="docutils literal notranslate"><span class="pre">string</span></code>, and all value types of the
+former mapping are compatible with the value type of the latter mapping</p></li>
+<li><p>The empty enumerated mapping type is compatible with all string-keyed
+key/value type mappings.</p></li>
+</ul>
+</section>
+</section>
+<section id="type-variance">
+<h3><a class="toc-backref" href="#id37">Type Variance</a><a class="headerlink" href="#type-variance" title="Permalink to this headline">#</a></h3>
+<p>“Type variance” refers to whether and how types are allowed to differ in
+various contexts (typically related to programming languages).  An experiment
+is analogous to a program in that functions are called, which are passed values
+as arguments, and return values.  The relevant context for these experiments
+is the task plugin invocations, and how task plugin invocation argument types
+are allowed to differ from the parameter types.</p>
+<p>An important question which comes up is usually expressed in terms of container
+types: if type B is a subtype of A, should we allow a value of type list&lt;B&gt;
+(i.e. “list of B”) to be passed to a parameter of type list&lt;A&gt;?  This is not
+always allowed in programming languages due to type safety: the callee, using
+the list according to the list&lt;A&gt; type, could put instances of A or instances
+of other subtypes of A (which are not B) into the list.  If the caller expects
+their list to still be a list&lt;B&gt; after the call returns, there could be trouble
+down the road.</p>
+<p>In other words, there is the potential for the callee to side-effect its input
+in ways which are unsafe.  If a task plugin changes an input and that input was
+to be passed to multiple other task plugins, the other task plugins which are
+subsequently passed that input will see the change.  One might in fact expect
+that <em>any</em> change to an input would be unexpected to an experiment designer
+using your plugin, who assumes that a plugin output would be passed undisturbed
+to all downstream plugins.</p>
+<p>We have adopted the assumption that task plugins will never side-effect their
+inputs.  Therefore the covariant compatibility decision is safe under that
+assumption.  It is not possible to enforce immutability of task inputs, since
+task plugins are ordinary Python functions using ordinary Python types.  But we
+encourage task plugin authors to treat their inputs immutably.  Instead of
+changing an input, make a changed copy of the input and return that from the
+plugin.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../user-guide/the-web-frontend.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">The Web Frontend</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="api-reference-restapi.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Testbed REST API Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#goals">Goals</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structure-and-format">Structure and Format</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notes-on-yaml">Notes on YAML</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structure-description">Structure Description</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#types">Types</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simple-types">Simple Types</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#structured-types">Structured Types</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#list-structured-types">List Structured Types</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tuple-structured-types">Tuple Structured Types</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-structured-types">Mapping Structured Types</a><ul class="nav section-nav flex-column">
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#enumerated-mapping-types">Enumerated Mapping Types</a></li>
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#key-value-type-mapping-types">Key/Value-Type Mapping Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#union-types">Union Types</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#named-and-anonymous-types">Named and Anonymous Types</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#inline-type-definitions">Inline Type Definitions</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tasks">Tasks</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#task-plugin">Task Plugin</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#task-inputs">Task Inputs</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#task-outputs">Task Outputs</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#graph">Graph</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#steps">Steps</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#positional-style-invocation">Positional Style Invocation</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#keyword-style-invocation">Keyword Style Invocation</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-style-invocation">Mixed Style Invocation</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#describing-argument-values">Describing Argument Values</a><ul class="nav section-nav flex-column">
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#type-validation">Type Validation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-inference">Type Inference</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#type-inference-from-literals">Type Inference from Literals</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#inferring-mapping-types">Inferring Mapping Types</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-compatibility">Type Compatibility</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#union-compatibility">Union Compatibility</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#structured-type-compatibility">Structured Type Compatibility</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-variance">Type Variance</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
+      </p>
+    </div>
+</footer>
+  </body>
+</html>

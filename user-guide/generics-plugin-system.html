@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Generics Plugin System &#8212; Dioptra 0.0.0 documentation</title>
+    <title>Generics Plugin System &#8212; Dioptra 1.0.0 documentation</title>
   
   
   
@@ -62,8 +62,6 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/generics-plugin-system';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Task Plugins Collection" href="task-plugins-collection.html" />
-    <link rel="prev" title="Custom Task Plugins" href="custom-task-plugins.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
@@ -141,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 0.0.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.0.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -162,45 +160,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/building-the-containers.html">Building the Containers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/running-dioptra.html">Running Dioptra</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting-started/acquiring-datasets.html">Downloading Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/examples-setup.html">Examples</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="the-basics.html">The Basics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="entry-points.html">Entry Points</a></li>
-<li class="toctree-l1"><a class="reference internal" href="task-plugins.html">Task Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom-entry-points.html">Creating a New Entry Point</a></li>
-<li class="toctree-l1"><a class="reference internal" href="task_engine_doc.html">Declarative Experiment Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom-task-plugins.html">Custom Task Plugins</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Generics Plugin System</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="task-plugins-collection.html">Task Plugins Collection</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-artifacts.html">artifacts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-attacks.html">attacks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-backend_configs.html">backend_configs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-data.html">data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-estimators.html">estimators</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-metrics.html">metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-random.html">random</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-registry.html">registry</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-task-plugins/api-builtins-tracking.html">tracking</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api-reference-sdk.html">Testbed SDK API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-generics.html">generics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-utilities.html">utilities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-exceptions.html">exceptions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-pyplugs.html">pyplugs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-rq.html">rq</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api-sdk/api-cryptography.html">cryptography</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api-reference-client.html">Testbed Client API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api-reference-restapi.html">Testbed REST API Reference</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Deployment Guide</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/system-requirements.html">System Requirements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment-guide/docker-images-list-and-settings.html">Docker Images List and Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="the-web-frontend.html">The Web Frontend</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api-reference-restapi.html">Testbed REST API Reference</a></li>
 </ul>
 
     </div>
@@ -385,8 +353,8 @@ document.write(`
 </div>
 <section id="what-are-generics">
 <h2>What are generics?<a class="headerlink" href="#what-are-generics" title="Permalink to this headline">#</a></h2>
-<p>The generic functions (<em>generics</em> for short) in <a class="reference internal" href="api-sdk/api-generics.html#module-dioptra.sdk.generics" title="dioptra.sdk.generics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">dioptra.sdk.generics</span></code></a> provide standardized interfaces for sets of related methods.
-As an example, the <a class="reference internal" href="api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_estimator()</span></code></a> generic can be called to train an estimator without needing to specify the name of the underlying library (scikit-learn, Tensorflow, PyTorch).
+<p>The generic functions (<em>generics</em> for short) in <a class="reference internal" href="../reference/api-sdk/api-generics.html#module-dioptra.sdk.generics" title="dioptra.sdk.generics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">dioptra.sdk.generics</span></code></a> provide standardized interfaces for sets of related methods.
+As an example, the <a class="reference internal" href="../reference/api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_estimator()</span></code></a> generic can be called to train an estimator without needing to specify the name of the underlying library (scikit-learn, Tensorflow, PyTorch).
 This is possible since the generics all use multiple argument dispatch, which is an approach to polymorphism that selects the underlying implementation to use based on the types of the objects passed to the function arguments.</p>
 <p>The flow chart below illustrates how method dispatching works when using a generic that has three different implementations,</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>                            if Arg1     +------------------+
@@ -428,10 +396,10 @@ This system means that <strong>all</strong> the underlying generic implementatio
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><a class="reference internal" href="api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_estimator()</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../reference/api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_estimator()</span></code></a></p></td>
 <td><p><cite>dioptra.generics.fit_estimator</cite></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api-sdk/api-generics.html#dioptra.sdk.generics.estimator_predict" title="dioptra.sdk.generics.estimator_predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimator_predict()</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../reference/api-sdk/api-generics.html#dioptra.sdk.generics.estimator_predict" title="dioptra.sdk.generics.estimator_predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimator_predict()</span></code></a></p></td>
 <td><p><cite>dioptra.generics.estimator_predict</cite></p></td>
 </tr>
 </tbody>
@@ -444,7 +412,7 @@ Each generic exposes a <cite>.register</cite> attribute that is a decorator for 
 These functions do not have to have the same number of arguments as the associated generic, but all arguments that are used should be in the same order and assigned the same names, with extra arguments not found in the generic coming at the end.
 None of these arguments are allowed to have default values.
 The expected types for the arguments are then declared using type annotations, which is how the different dispatch methods available to generics are distinguished from one another.</p>
-<p>Consider the following example for the <a class="reference internal" href="api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_estimator()</span></code></a> generic, which has the following signature:</p>
+<p>Consider the following example for the <a class="reference internal" href="../reference/api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_estimator()</span></code></a> generic, which has the following signature:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">fit_estimator</span><span class="p">(</span><span class="n">estimator</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
    <span class="o">...</span>
 </pre></div>
@@ -477,7 +445,7 @@ The expected types for the arguments are then declared using type annotations, w
 </div>
 <p>There are a few things to note about the above code,</p>
 <ol class="arabic simple">
-<li><p>The first of the two implementations omits the <cite>y</cite> argument, which allows <a class="reference internal" href="api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_estimator()</span></code></a> to be called without having to specify <cite>y</cite>.</p></li>
+<li><p>The first of the two implementations omits the <cite>y</cite> argument, which allows <a class="reference internal" href="../reference/api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_estimator()</span></code></a> to be called without having to specify <cite>y</cite>.</p></li>
 <li><p>Both implementations call the helper function <code class="xref py py-func docutils literal notranslate"><span class="pre">fit_keras_model()</span></code>, which allows additional arguments with default values to be included in an implementation.</p></li>
 <li><p>The functions, which do not need to have unique names, are registered simply by topping them with the <cite>&#64;fit_estimator.register</cite> decorator.</p></li>
 </ol>
@@ -509,14 +477,14 @@ The Python package itself should be structured in the usual way, with a minimal 
 </pre></div>
 </div>
 <p>In the file layout shown above, the implementation from the previous section is saved to the file <code class="docutils literal notranslate"><span class="pre">src/fit_estimator_tf_keras/tf_keras_model.py</span></code>.
-Knowing this, we add the following to our <cite>setup.cfg</cite> file to register the implementation to the advertised plugin entry point for the <a class="reference internal" href="api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">fit_estimator</span></code></a> generic:</p>
+Knowing this, we add the following to our <cite>setup.cfg</cite> file to register the implementation to the advertised plugin entry point for the <a class="reference internal" href="../reference/api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">fit_estimator</span></code></a> generic:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[options.entry_points]</span>
 <span class="na">dioptra.generics.fit_estimator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">tf_keras_model=fit_estimator_tf_keras.tf_keras_model</span>
 </pre></div>
 </div>
 <p>As usual, the name of the advertised plugin entry point goes on the left of the first <code class="docutils literal notranslate"><span class="pre">=</span></code> and the import path to the module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">fit_estimator_tf_keras.tf_keras_model</span></code> in this case) containing the implementation goes to the right, which is passed as the <cite>value</cite> of a <cite>key=value</cite> pair.
 The name of the <cite>key</cite>, on the other hand, is not used by the plugin system, so it can be whatever you want and it doesn’t have to match the name of the module.</p>
-<p>Once you have this configured for your package, all you need to do is <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> it and the new implementation will be available to the <a class="reference internal" href="api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">fit_estimator</span></code></a> generic for dispatching the next time you use it.</p>
+<p>Once you have this configured for your package, all you need to do is <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> it and the new implementation will be available to the <a class="reference internal" href="../reference/api-sdk/api-generics.html#dioptra.sdk.generics.fit_estimator" title="dioptra.sdk.generics.fit_estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">fit_estimator</span></code></a> generic for dispatching the next time you use it.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>For guidance on how to prepare a Python package, including what else needs to be included in <cite>setup.cfg</cite> and the rest of the files, see the <a class="reference external" href="https://packaging.python.org/tutorials/packaging-projects/">Packaging Python Projects</a> tutorial.
@@ -537,24 +505,6 @@ Readers are also encouraged to examine the source files of the Dioptra repositor
   
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="custom-task-plugins.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Custom Task Plugins</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="task-plugins-collection.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Task Plugins Collection</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div></div>
   
 </div>

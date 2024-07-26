@@ -1,0 +1,858 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>metrics &#8212; Dioptra 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../_static/jquery.visible.js"></script>
+    <script src="../../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../../_static/applyLeaveNotice.js"></script>
+    <script src="../../_static/smoothNavScroll.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/api-task-plugins/api-builtins-metrics';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.0.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    What is Dioptra?
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started/building-the-containers.html">Building the Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started/running-dioptra.html">Running Dioptra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started/acquiring-datasets.html">Downloading Datasets</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../user-guide/the-web-frontend.html">The Web Frontend</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api-reference-restapi.html">Testbed REST API Reference</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/reference/api-task-plugins/api-builtins-metrics.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>metrics</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-dioptra_builtins.metrics.distance">distance.py</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-dioptra_builtins.metrics.performance">performance.py</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-dioptra_builtins.metrics.exceptions">exceptions.py</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="metrics">
+<span id="api-task-plugins-builtins-metrics"></span><h1>metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">#</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
+<span class="target" id="module-dioptra_builtins.metrics"></span><section id="module-dioptra_builtins.metrics.distance">
+<span id="distance-py"></span><h2>distance.py<a class="headerlink" href="#module-dioptra_builtins.metrics.distance" title="Permalink to this headline">#</a></h2>
+<p>A task plugin module for getting functions from a distance metric registry.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.distance.get_distance_metric_list">
+<span class="sig-name descname"><span class="pre">get_distance_metric_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.12)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/distance.html#get_distance_metric_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.distance.get_distance_metric_list" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets multiple distance metric functions from the registry.</p>
+<p>The following metrics are available in the registry,</p>
+<ul class="simple">
+<li><p><cite>l_inf_norm</cite></p></li>
+<li><p><cite>l_1_norm</cite></p></li>
+<li><p><cite>l_2_norm</cite></p></li>
+<li><p><cite>paired_cosine_similarities</cite></p></li>
+<li><p><cite>paired_euclidean_distances</cite></p></li>
+<li><p><cite>paired_manhattan_distances</cite></p></li>
+<li><p><cite>paired_wasserstein_distances</cite></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>request</strong> – A list of dictionaries with the keys <cite>name</cite> and <cite>func</cite>. The <cite>func</cite> key
+is used to lookup the metric function in the registry and must match one of
+the metric names listed above. The <cite>name</cite> key is human-readable label for
+the metric function.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of tuples with two elements. The first element of each tuple is the label
+from the <cite>name</cite> key of <cite>request</cite>, and the second element is the callable metric
+function.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.distance.get_distance_metric">
+<span class="sig-name descname"><span class="pre">get_distance_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><span class="pre">numpy.ndarray</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/distance.html#get_distance_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.distance.get_distance_metric" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a distance metric function from the registry.</p>
+<p>The following metrics are available in the registry,</p>
+<ul class="simple">
+<li><p><cite>l_inf_norm</cite></p></li>
+<li><p><cite>l_1_norm</cite></p></li>
+<li><p><cite>l_2_norm</cite></p></li>
+<li><p><cite>paired_cosine_similarities</cite></p></li>
+<li><p><cite>paired_euclidean_distances</cite></p></li>
+<li><p><cite>paired_manhattan_distances</cite></p></li>
+<li><p><cite>paired_wasserstein_distances</cite></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>func</strong> – A string that identifies the distance metric to return from the registry.
+The string must match one of the names of the metrics in the registry.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A callable distance metric function.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.distance.l_inf_norm">
+<span class="sig-name descname"><span class="pre">l_inf_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><span class="pre">numpy.ndarray</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/distance.html#l_inf_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.distance.l_inf_norm" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the L<sub>∞</sub> norm between a batch of two matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A batch of matrices containing the original or target values.</p></li>
+<li><p><strong>y_pred</strong> – A batch of matrices containing the perturbed or predicted values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of L<sub>∞</sub> norms.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.distance.l_1_norm">
+<span class="sig-name descname"><span class="pre">l_1_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><span class="pre">numpy.ndarray</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/distance.html#l_1_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.distance.l_1_norm" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the L<sub>1</sub> norm between a batch of two matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A batch of matrices containing the original or target values.</p></li>
+<li><p><strong>y_pred</strong> – A batch of matrices containing the perturbed or predicted values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of L<sub>1</sub> norms.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.distance.l_2_norm">
+<span class="sig-name descname"><span class="pre">l_2_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><span class="pre">numpy.ndarray</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/distance.html#l_2_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.distance.l_2_norm" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the L<sub>2</sub> norm between a batch of two matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A batch of matrices containing the original or target values.</p></li>
+<li><p><strong>y_pred</strong> – A batch of matrices containing the perturbed or predicted values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of L<sub>2</sub> norms.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.distance.paired_cosine_similarities">
+<span class="sig-name descname"><span class="pre">paired_cosine_similarities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><span class="pre">numpy.ndarray</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/distance.html#paired_cosine_similarities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.distance.paired_cosine_similarities" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the cosine similarity between a batch of two matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A batch of matrices containing the original or target values.</p></li>
+<li><p><strong>y_pred</strong> – A batch of matrices containing the perturbed or predicted values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of cosine similarities.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.distance.paired_euclidean_distances">
+<span class="sig-name descname"><span class="pre">paired_euclidean_distances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><span class="pre">numpy.ndarray</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/distance.html#paired_euclidean_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.distance.paired_euclidean_distances" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the Euclidean distance between a batch of two matrices.</p>
+<p>The Euclidean distance is equivalent to the L<sub>2</sub> norm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A batch of matrices containing the original or target values.</p></li>
+<li><p><strong>y_pred</strong> – A batch of matrices containing the perturbed or predicted values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of euclidean distances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.distance.paired_manhattan_distances">
+<span class="sig-name descname"><span class="pre">paired_manhattan_distances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><span class="pre">numpy.ndarray</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/distance.html#paired_manhattan_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.distance.paired_manhattan_distances" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the Manhattan distance between a batch of two matrices.</p>
+<p>The Manhattan distance is equivalent to the L<sub>1</sub> norm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A batch of matrices containing the original or target values.</p></li>
+<li><p><strong>y_pred</strong> – A batch of matrices containing the perturbed or predicted values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of Manhattan distances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.distance.paired_wasserstein_distances">
+<span class="sig-name descname"><span class="pre">paired_wasserstein_distances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><span class="pre">numpy.ndarray</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/distance.html#paired_wasserstein_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.distance.paired_wasserstein_distances" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the Wasserstein distance between a batch of two matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A batch of matrices containing the original or target values.</p></li>
+<li><p><strong>y_pred</strong> – A batch of matrices containing the perturbed or predicted values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> containing a batch of Wasserstein distances.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wasserstein_distance.html#scipy.stats.wasserstein_distance" title="(in SciPy v1.14.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.stats.wasserstein_distance()</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+</section>
+<section id="module-dioptra_builtins.metrics.performance">
+<span id="performance-py"></span><h2>performance.py<a class="headerlink" href="#module-dioptra_builtins.metrics.performance" title="Permalink to this headline">#</a></h2>
+<p>A task plugin module for getting functions from a performance metric registry.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.performance.get_performance_metric_list">
+<span class="sig-name descname"><span class="pre">get_performance_metric_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.12)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/performance.html#get_performance_metric_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.performance.get_performance_metric_list" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets multiple performance metric functions from the registry.</p>
+<p>The following metrics are available in the registry,</p>
+<ul class="simple">
+<li><p><cite>accuracy</cite></p></li>
+<li><p><cite>roc_auc</cite></p></li>
+<li><p><cite>categorical_accuracy</cite></p></li>
+<li><p><cite>mcc</cite></p></li>
+<li><p><cite>f1</cite></p></li>
+<li><p><cite>precision</cite></p></li>
+<li><p><cite>recall</cite></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>request</strong> – A list of dictionaries with the keys <cite>name</cite> and <cite>func</cite>. The <cite>func</cite> key
+is used to lookup the metric function in the registry and must match one of
+the metric names listed above. The <cite>name</cite> key is human-readable label for
+the metric function.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of tuples with two elements. The first element of each tuple is the label
+from the <cite>name</cite> key of <cite>request</cite>, and the second element is the callable metric
+function.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.performance.get_performance_metric">
+<span class="sig-name descname"><span class="pre">get_performance_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/performance.html#get_performance_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.performance.get_performance_metric" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a performance metric function from the registry.</p>
+<p>The following metrics are available in the registry,</p>
+<ul class="simple">
+<li><p><cite>accuracy</cite></p></li>
+<li><p><cite>roc_auc</cite></p></li>
+<li><p><cite>categorical_accuracy</cite></p></li>
+<li><p><cite>mcc</cite></p></li>
+<li><p><cite>f1</cite></p></li>
+<li><p><cite>precision</cite></p></li>
+<li><p><cite>recall</cite></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>func</strong> – A string that identifies the performance metric to return from the
+registry. The string must match one of the names of the metrics in the
+registry.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A callable performance metric function.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.performance.accuracy">
+<span class="sig-name descname"><span class="pre">accuracy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/performance.html#accuracy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.performance.accuracy" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the accuracy score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A 1d array-like, or label indicator array containing the ground truth
+labels.</p></li>
+<li><p><strong>y_pred</strong> – A 1d array-like, or label indicator array containing the predicted
+labels, as returned by a classifier.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The fraction of correctly classified samples.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/1.0/modules/generated/sklearn.metrics.accuracy_score.html#sklearn.metrics.accuracy_score" title="(in scikit-learn v1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.accuracy_score()</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.performance.roc_auc">
+<span class="sig-name descname"><span class="pre">roc_auc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/performance.html#roc_auc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.performance.roc_auc" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the Area Under the Receiver Operating Characteristic Curve (ROC AUC).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – An array-like of shape <cite>(n_samples,)</cite> or <cite>(n_samples, n_classes)</cite>
+containing the ground truth labels.</p></li>
+<li><p><strong>y_pred</strong> – An array-like of shape <cite>(n_samples,)</cite> or <cite>(n_samples, n_classes)</cite>
+containing the predicted labels, as returned by a classifier.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The ROC AUC.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/1.0/modules/generated/sklearn.metrics.roc_auc_score.html#sklearn.metrics.roc_auc_score" title="(in scikit-learn v1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.roc_auc_score()</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.performance.categorical_accuracy">
+<span class="sig-name descname"><span class="pre">categorical_accuracy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/performance.html#categorical_accuracy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.performance.categorical_accuracy" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the categorical accuracy.</p>
+<p>This function is a port of the Keras metric
+<code class="xref py py-class docutils literal notranslate"><span class="pre">CategoricalAccuracy</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A 1d array-like, or label indicator array containing the ground truth
+labels.</p></li>
+<li><p><strong>y_pred</strong> – A 1d array-like, or label indicator array containing the predicted
+labels, as returned by a classifier.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The fraction of correctly classified samples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.performance.mcc">
+<span class="sig-name descname"><span class="pre">mcc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/performance.html#mcc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.performance.mcc" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the Matthews correlation coefficient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A 1d array containing the ground truth labels.</p></li>
+<li><p><strong>y_pred</strong> – A 1d array containing the predicted labels, as returned by a classifier.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The Matthews correlation coefficient (<cite>+1</cite> represents a perfect prediction, <cite>0</cite>
+an average random prediction and <cite>-1</cite> and inverse prediction).</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/1.0/modules/generated/sklearn.metrics.matthews_corrcoef.html#sklearn.metrics.matthews_corrcoef" title="(in scikit-learn v1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.matthews_corrcoef()</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.performance.f1">
+<span class="sig-name descname"><span class="pre">f1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/performance.html#f1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.performance.f1" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the F1 score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A 1d array-like, or label indicator array containing the ground truth
+labels.</p></li>
+<li><p><strong>y_pred</strong> – A 1d array-like, or label indicator array containing the predicted
+labels, as returned by a classifier.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The F1 score of the positive class in binary classification or the weighted
+average of the F1 scores of each class for the multiclass task.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/1.0/modules/generated/sklearn.metrics.f1_score.html#sklearn.metrics.f1_score" title="(in scikit-learn v1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.f1_score()</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.performance.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/performance.html#precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.performance.precision" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the precision score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A 1d array-like, or label indicator array containing the ground truth
+labels.</p></li>
+<li><p><strong>y_pred</strong> – A 1d array-like, or label indicator array containing the predicted
+labels, as returned by a classifier.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The precision of the positive class in binary classification or the weighted
+average of the precision of each class for the multiclass task.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/1.0/modules/generated/sklearn.metrics.precision_score.html#sklearn.metrics.precision_score" title="(in scikit-learn v1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.precision_score()</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.performance.recall">
+<span class="sig-name descname"><span class="pre">recall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/performance.html#recall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.performance.recall" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates the recall score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_true</strong> – A 1d array-like, or label indicator array containing the ground truth
+labels.</p></li>
+<li><p><strong>y_pred</strong> – A 1d array-like, or label indicator array containing the predicted
+labels, as returned by a classifier.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The recall of the positive class in binary classification or the weighted
+average of the recall of each class for the multiclass task.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/1.0/modules/generated/sklearn.metrics.recall_score.html#sklearn.metrics.recall_score" title="(in scikit-learn v1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">sklearn.metrics.recall_score()</span></code></a></p></li>
+</ul>
+</div>
+</dd></dl>
+
+</section>
+<section id="module-dioptra_builtins.metrics.exceptions">
+<span id="exceptions-py"></span><h2>exceptions.py<a class="headerlink" href="#module-dioptra_builtins.metrics.exceptions" title="Permalink to this headline">#</a></h2>
+<p>A task plugin module of exceptions for the metrics plugins collection.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.exceptions.UnknownDistanceMetricError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnknownDistanceMetricError</span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/exceptions.html#UnknownDistanceMetricError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.exceptions.UnknownDistanceMetricError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dioptra.sdk.exceptions.base.BaseTaskPluginError</span></code></p>
+<p>The requested distance metric could not be located.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="dioptra_builtins.metrics.exceptions.UnknownPerformanceMetricError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnknownPerformanceMetricError</span></span><a class="reference internal" href="../../_modules/dioptra_builtins/metrics/exceptions.html#UnknownPerformanceMetricError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra_builtins.metrics.exceptions.UnknownPerformanceMetricError" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dioptra.sdk.exceptions.base.BaseTaskPluginError</span></code></p>
+<p>The requested performance metric could not be located.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-dioptra_builtins.metrics.distance">distance.py</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-dioptra_builtins.metrics.performance">performance.py</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-dioptra_builtins.metrics.exceptions">exceptions.py</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
+      </p>
+    </div>
+</footer>
+  </body>
+</html>

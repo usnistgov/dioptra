@@ -1,0 +1,1114 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Testbed Client API Reference &#8212; Dioptra 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/jquery.visible.js"></script>
+    <script src="../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../_static/applyLeaveNotice.js"></script>
+    <script src="../_static/smoothNavScroll.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/api-reference-client';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.0.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    What is Dioptra?
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/building-the-containers.html">Building the Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/running-dioptra.html">Running Dioptra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/acquiring-datasets.html">Downloading Datasets</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/the-web-frontend.html">The Web Frontend</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference-restapi.html">Testbed REST API Reference</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/reference/api-reference-client.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Testbed Client API Reference</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="testbed-client-api-reference">
+<span id="user-guide-api-reference-sdk-client"></span><h1>Testbed Client API Reference<a class="headerlink" href="#testbed-client-api-reference" title="Permalink to this headline">#</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="../glossary.html"><span class="doc">Glossary</span></a> for the meaning of the acronyms used in this guide.</p>
+</div>
+<span class="target" id="module-dioptra.client"></span><dl class="py class">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DioptraClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'v0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Connects to the Dioptra REST api, and provides access to endpoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> – Address of the Dioptra REST api or if no address is given the
+DIOPTRA_RESTAPI_URI environment variable is used.</p></li>
+<li><p><strong>api_version</strong> – The version of the Dioptra REST API to use. Defaults to “v0”.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a> for
+more information on Dioptra’s REST api.</p>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.experiment_endpoint">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">experiment_endpoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></em><a class="headerlink" href="#dioptra.client.DioptraClient.experiment_endpoint" title="Permalink to this definition">#</a></dt>
+<dd><p>Experiment endpoint url</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.job_endpoint">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">job_endpoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></em><a class="headerlink" href="#dioptra.client.DioptraClient.job_endpoint" title="Permalink to this definition">#</a></dt>
+<dd><p>Job endpoint url</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.task_plugin_endpoint">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task_plugin_endpoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></em><a class="headerlink" href="#dioptra.client.DioptraClient.task_plugin_endpoint" title="Permalink to this definition">#</a></dt>
+<dd><p>Task plugins endpoint url</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.task_plugin_builtins_endpoint">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task_plugin_builtins_endpoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></em><a class="headerlink" href="#dioptra.client.DioptraClient.task_plugin_builtins_endpoint" title="Permalink to this definition">#</a></dt>
+<dd><p>Builtin task plugins endpoint url</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.task_plugin_custom_endpoint">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">task_plugin_custom_endpoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></em><a class="headerlink" href="#dioptra.client.DioptraClient.task_plugin_custom_endpoint" title="Permalink to this definition">#</a></dt>
+<dd><p>Custom task plugins endpoint url</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.queue_endpoint">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">queue_endpoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></em><a class="headerlink" href="#dioptra.client.DioptraClient.queue_endpoint" title="Permalink to this definition">#</a></dt>
+<dd><p>Queue endpoint url</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.delete_custom_task_plugin">
+<span class="sig-name descname"><span class="pre">delete_custom_task_plugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.delete_custom_task_plugin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.delete_custom_task_plugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Deletes a custom task plugin by its unique name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – A unique string identifying a task plugin package within
+dioptra_custom collection.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;collection&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra_custom&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;Success&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;taskPluginName&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;evaluation&#39;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.get_experiment_by_id">
+<span class="sig-name descname"><span class="pre">get_experiment_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.get_experiment_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.get_experiment_by_id" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets an experiment by its unique identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id</strong> – An integer identifying a registered experiment.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-22T13:42:35.379462&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;experimentId&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mnist_feature_squeezing&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-22T13:42:35.379462&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.get_experiment_by_name">
+<span class="sig-name descname"><span class="pre">get_experiment_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.get_experiment_by_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.get_experiment_by_name" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets an experiment by its unique name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – The name of the experiment.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response containing the experiment id, name, and
+metadata.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;experimentId&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mnist&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-22T13:42:35.379462&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-22T13:42:35.379462&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.get_job_by_id">
+<span class="sig-name descname"><span class="pre">get_job_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.get_job_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.get_job_by_id" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a job by its unique identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id</strong> – A string specifying a job’s UUID.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;mlflowRunId&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-26T15:26:43.100093&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;experimentId&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="s1">&#39;queueId&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s1">&#39;workflowUri&#39;</span><span class="p">:</span> <span class="s1">&#39;s3://workflow/268a7620/workflows.tar.gz&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;entryPoint&#39;</span><span class="p">:</span> <span class="s1">&#39;train&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dependsOn&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;queued&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;timeout&#39;</span><span class="p">:</span> <span class="s1">&#39;24h&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;jobId&#39;</span><span class="p">:</span> <span class="s1">&#39;4eb2305e-57c3-4867-a59f-1a1ecd2033d4&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;entryPointKwargs&#39;</span><span class="p">:</span> <span class="s1">&#39;-P model_architecture=shallow_net -P epochs=3&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-26T15:26:43.100093&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.get_queue_by_id">
+<span class="sig-name descname"><span class="pre">get_queue_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.get_queue_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.get_queue_by_id" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a queue by its unique identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id</strong> – An integer identifying a registered queue.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.801442&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;tensorflow_cpu&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;queueId&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.801442&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.get_queue_by_name">
+<span class="sig-name descname"><span class="pre">get_queue_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.get_queue_by_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.get_queue_by_name" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a queue by its unique name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – The name of the queue.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.801442&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;tensorflow_cpu&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;queueId&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.801442&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.get_builtin_task_plugin">
+<span class="sig-name descname"><span class="pre">get_builtin_task_plugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.get_builtin_task_plugin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.get_builtin_task_plugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a custom builtin plugin by its unique name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – A unique string identifying a task plugin package within
+dioptra_builtins collection.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;taskPluginName&#39;</span><span class="p">:</span> <span class="s1">&#39;attacks&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;collection&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra_builtins&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;modules&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;__init__.py&#39;</span><span class="p">,</span> <span class="s1">&#39;fgm.py&#39;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.get_custom_task_plugin">
+<span class="sig-name descname"><span class="pre">get_custom_task_plugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.get_custom_task_plugin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.get_custom_task_plugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a custom task plugin by its unique name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – A unique string identifying a task plugin package within
+dioptra_builtins collection.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;taskPluginName&#39;</span><span class="p">:</span> <span class="s1">&#39;custom_poisoning_plugins&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;collection&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra_custom&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;modules&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">&#39;__init__.py&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;attacks_poison.py&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;data_tensorflow.py&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;datasetup.py&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;defenses_image_preprocessing.py&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;defenses_training.py&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;estimators_keras_classifiers.py&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;registry_art.py&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;tensorflow.py&#39;</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.list_experiments">
+<span class="sig-name descname"><span class="pre">list_experiments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.list_experiments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.list_experiments" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a list of all registered experiments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>A list of responses detailing all experiments.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:20:27.315687&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;experimentId&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mnist&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:20:27.315687&#39;</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-22T13:42:35.379462&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;experimentId&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mnist_feature_squeezing&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-22T13:42:35.379462&#39;</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.list_jobs">
+<span class="sig-name descname"><span class="pre">list_jobs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.list_jobs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.list_jobs" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a list of all submitted jobs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>A list of responses detailing all jobs.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;mlflowRunId&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:54:30.722304&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;experimentId&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s1">&#39;queueId&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s1">&#39;workflowUri&#39;</span><span class="p">:</span> <span class="s1">&#39;s3://workflow/268a7620/workflows.tar.gz&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;entryPoint&#39;</span><span class="p">:</span> <span class="s1">&#39;train&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;dependsOn&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;queued&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;timeout&#39;</span><span class="p">:</span> <span class="s1">&#39;1h&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;jobId&#39;</span><span class="p">:</span> <span class="s1">&#39;a4c574dd-cbd1-43c9-9afe-17d69cd1c73d&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;entryPointKwargs&#39;</span><span class="p">:</span> <span class="s1">&#39;-P data_dir=/nfs/data/Mnist&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:54:30.722304&#39;</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.list_queues">
+<span class="sig-name descname"><span class="pre">list_queues</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.list_queues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.list_queues" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a list of all registered queues.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>A list of responses detailing all registered queues.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.801442&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;tensorflow_cpu&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;queueId&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.801442&#39;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.824101&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;tensorflow_gpu&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;queueId&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.824101&#39;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.867917&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;pytorch_cpu&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;queueId&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.867917&#39;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.893451&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;pytorch_gpu&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;queueId&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-04-24T20:53:09.893451&#39;</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.list_all_task_plugins">
+<span class="sig-name descname"><span class="pre">list_all_task_plugins</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.list_all_task_plugins"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.list_all_task_plugins" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a list of all registered builtin task plugins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>A list of responses detailing all plugins.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;taskPluginName&#39;</span><span class="p">:</span> <span class="s1">&#39;artifacts&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;collection&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra_builtins&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;modules&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;__init__.py&#39;</span><span class="p">,</span> <span class="s1">&#39;mlflow.py&#39;</span><span class="p">,</span> <span class="s1">&#39;utils.py&#39;</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;taskPluginName&#39;</span><span class="p">:</span> <span class="s1">&#39;pixel_threshold&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;collection&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra_custom&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;modules&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;__init__.py&#39;</span><span class="p">,</span> <span class="s1">&#39;pixelthreshold.py&#39;</span><span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.list_builtin_task_plugins">
+<span class="sig-name descname"><span class="pre">list_builtin_task_plugins</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.list_builtin_task_plugins"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.list_builtin_task_plugins" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a list of all registered builtin task plugins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>A list of responses detailing all builtin plugins.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;taskPluginName&#39;</span><span class="p">:</span> <span class="s1">&#39;artifacts&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;collection&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra_builtins&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;modules&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;__init__.py&#39;</span><span class="p">,</span> <span class="s1">&#39;mlflow.py&#39;</span><span class="p">,</span> <span class="s1">&#39;utils.py&#39;</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;taskPluginName&#39;</span><span class="p">:</span> <span class="s1">&#39;backend_configs&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;collection&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra_builtins&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;modules&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;__init__.py&#39;</span><span class="p">,</span> <span class="s1">&#39;tensorflow.py&#39;</span><span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a> for
+more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.list_custom_task_plugins">
+<span class="sig-name descname"><span class="pre">list_custom_task_plugins</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.list_custom_task_plugins"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.list_custom_task_plugins" title="Permalink to this definition">#</a></dt>
+<dd><p>Gets a list of all registered custom task plugins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>A list of responses detailing all custom plugins.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;taskPluginName&#39;</span><span class="p">:</span> <span class="s1">&#39;model_inversion&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;collection&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra_custom&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;modules&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;__init__.py&#39;</span><span class="p">,</span> <span class="s1">&#39;modelinversion.py&#39;</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;taskPluginName&#39;</span><span class="p">:</span> <span class="s1">&#39;pixel_threshold&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;collection&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra_custom&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;modules&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;__init__.py&#39;</span><span class="p">,</span> <span class="s1">&#39;pixelthreshold.py&#39;</span><span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.lock_queue">
+<span class="sig-name descname"><span class="pre">lock_queue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.lock_queue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.lock_queue" title="Permalink to this definition">#</a></dt>
+<dd><p>Locks the queue (name reference) if it is unlocked.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – The name of the queue.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;tensorflow_cpu&#39;</span><span class="p">],</span> <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;Success&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.unlock_queue">
+<span class="sig-name descname"><span class="pre">unlock_queue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.unlock_queue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.unlock_queue" title="Permalink to this definition">#</a></dt>
+<dd><p>Removes the lock from the queue (name reference) if it exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – The name of the queue.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;tensorflow_cpu&#39;</span><span class="p">],</span> <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;Success&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.register_experiment">
+<span class="sig-name descname"><span class="pre">register_experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.register_experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.register_experiment" title="Permalink to this definition">#</a></dt>
+<dd><p>Creates a new experiment via an experiment registration form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – The name to register as a new experiment.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-26T15:45:09.232878&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;experimentId&#39;</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;experiment1234&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-26T15:45:09.232878&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.register_queue">
+<span class="sig-name descname"><span class="pre">register_queue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tensorflow_cpu'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.register_queue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.register_queue" title="Permalink to this definition">#</a></dt>
+<dd><p>Creates a new queue via a queue registration form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – The name to register as a new queue. Defaults to “tensorflow_cpu”.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-26T15:48:47.662293&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;queue&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;queueId&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+    <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-26T15:48:47.662293&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.submit_job">
+<span class="sig-name descname"><span class="pre">submit_job</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">workflows_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.12)"><span class="pre">pathlib.Path</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiment_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_point_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depends_on</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tensorflow_cpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'24h'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.submit_job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.submit_job" title="Permalink to this definition">#</a></dt>
+<dd><p>Creates a new job via a job submission form with an attached file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>workflows_file</strong> – A tarball archive or zip file containing, at a minimum,
+a MLproject file and its associated entry point scripts.</p></li>
+<li><p><strong>experiment_name</strong> – The name of a registered experiment.</p></li>
+<li><p><strong>entry_point</strong> – Entrypoint name.</p></li>
+<li><p><strong>entry_point_kwargs</strong> – A string listing parameter values to pass to the
+entry point for the job. The list of parameters is specified using the
+following format: “-P param1=value1 -P param2=value2”. Defaults to None.</p></li>
+<li><p><strong>depends_on</strong> – A UUID for a previously submitted job to set as a dependency
+for the current job. Defaults to None.</p></li>
+<li><p><strong>queue</strong> – Name of the queue the job is submitted to. Defaults to
+“tensorflow_cpu”.</p></li>
+<li><p><strong>timeout</strong> – The maximum alloted time for a job before it times out and is
+stopped. Defaults to “24h”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;createdOn&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-26T15:26:43.100093&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dependsOn&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s1">&#39;entryPoint&#39;</span><span class="p">:</span> <span class="s1">&#39;train&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;entryPointKwargs&#39;</span><span class="p">:</span> <span class="s1">&#39;-P data_dir=/dioptra/data/Mnist&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;experimentId&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="s1">&#39;jobId&#39;</span><span class="p">:</span> <span class="s1">&#39;4eb2305e-57c3-4867-a59f-1a1ecd2033d4&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;lastModified&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-06-26T15:26:43.100093&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mlflowRunId&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s1">&#39;queueId&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;queued&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;timeout&#39;</span><span class="p">:</span> <span class="s1">&#39;24h&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;workflowUri&#39;</span><span class="p">:</span> <span class="s1">&#39;s3://workflow/07d2c0a9/workflows.tar.gz&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dioptra.client.DioptraClient.upload_custom_plugin_package">
+<span class="sig-name descname"><span class="pre">upload_custom_plugin_package</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_plugin_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_plugin_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.12)"><span class="pre">pathlib.Path</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'dioptra_custom'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.12)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/dioptra/client/_client.html#DioptraClient.upload_custom_plugin_package"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.DioptraClient.upload_custom_plugin_package" title="Permalink to this definition">#</a></dt>
+<dd><p>Registers a new task plugin uploaded via the task plugin upload form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>custom_plugin_name</strong> – Plugin name for for the upload form.</p></li>
+<li><p><strong>custom_plugin_file</strong> – Path to custom plugin.</p></li>
+<li><p><strong>collection</strong> – Collection to upload the plugin to. Defaults to
+“dioptra_custom”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>The Dioptra REST api’s response.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;taskPluginName&#39;</span><span class="p">:</span> <span class="s1">&#39;evaluation&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;collection&#39;</span><span class="p">:</span> <span class="s1">&#39;dioptra_custom&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;modules&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">&#39;tensorflow.py&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;import_keras.py&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;__init__.py&#39;</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>See <a class="reference external" href="https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html">https://pages.nist.gov/dioptra/user-guide/api-reference-restapi.html</a>
+for more information on Dioptra’s REST api.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+<footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Certain commercial equipment, instruments, or
+          materials are identified in this documentation to foster understanding. Such
+          identification does not imply recommendation or endorsement by the National
+          Institute of Standards and Technology, nor does it imply that the materials
+          or equipment identified are necessarily the best available for the purpose.
+        </div>
+      </p>
+    </div>
+</footer>
+  </body>
+</html>
