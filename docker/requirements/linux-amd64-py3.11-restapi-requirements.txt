@@ -18,13 +18,13 @@ attrs==23.2.0
     #   referencing
 blinker==1.8.2
     # via flask
-boto3==1.34.139
+boto3==1.34.149
     # via dioptra (pyproject.toml)
-botocore==1.34.139
+botocore==1.34.149
     # via
     #   boto3
     #   s3transfer
-cachetools==5.3.3
+cachetools==5.4.0
     # via mlflow-skinny
 certifi==2024.7.4
     # via requests
@@ -39,7 +39,9 @@ click==8.1.7
 cloudpickle==3.0.0
     # via mlflow-skinny
 deprecated==1.2.14
-    # via opentelemetry-api
+    # via
+    #   opentelemetry-api
+    #   opentelemetry-semantic-conventions
 entrypoints==0.4
     # via
     #   dioptra (pyproject.toml)
@@ -78,13 +80,13 @@ gunicorn==22.0.0
     # via -r docker/pip-tools/restapi-requirements.in
 idna==3.7
     # via requests
-importlib-metadata==7.1.0
+importlib-metadata==7.2.1
     # via
     #   mlflow-skinny
     #   opentelemetry-api
 importlib-resources==6.4.0
     # via flask-restx
-injector==0.21.0
+injector==0.22.0
     # via dioptra (pyproject.toml)
 itsdangerous==2.2.0
     # via flask
@@ -94,7 +96,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-jsonschema==4.22.0
+jsonschema==4.23.0
     # via
     #   dioptra (pyproject.toml)
     #   flask-restx
@@ -111,23 +113,23 @@ marshmallow==3.21.3
     # via
     #   dioptra (pyproject.toml)
     #   flask-accepts
-mlflow-skinny==2.14.2
+mlflow-skinny==2.14.3
     # via dioptra (pyproject.toml)
 multimethod==1.12
     # via dioptra (pyproject.toml)
-numpy==2.0.0
+numpy==2.0.1
     # via
     #   dioptra (pyproject.toml)
     #   pandas
     #   scipy
-opentelemetry-api==1.25.0
+opentelemetry-api==1.26.0
     # via
     #   mlflow-skinny
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-sdk==1.25.0
+opentelemetry-sdk==1.26.0
     # via mlflow-skinny
-opentelemetry-semantic-conventions==0.46b0
+opentelemetry-semantic-conventions==0.47b0
     # via opentelemetry-sdk
 packaging==24.1
     # via
@@ -140,7 +142,7 @@ passlib==1.7.4
     # via dioptra (pyproject.toml)
 pillow==10.4.0
     # via -r docker/pip-tools/restapi-requirements.in
-protobuf==4.25.3
+protobuf==4.25.4
     # via mlflow-skinny
 psycopg2-binary==2.9.9
     # via -r docker/pip-tools/restapi-requirements.in
@@ -174,7 +176,7 @@ requests==2.32.3
     # via
     #   dioptra (pyproject.toml)
     #   mlflow-skinny
-rpds-py==0.18.1
+rpds-py==0.19.1
     # via
     #   jsonschema
     #   referencing
@@ -195,9 +197,9 @@ sqlalchemy==2.0.31
     #   alembic
     #   dioptra (pyproject.toml)
     #   flask-sqlalchemy
-sqlparse==0.5.0
+sqlparse==0.5.1
     # via mlflow-skinny
-structlog==24.2.0
+structlog==24.4.0
     # via dioptra (pyproject.toml)
 typing-extensions==4.12.2
     # via

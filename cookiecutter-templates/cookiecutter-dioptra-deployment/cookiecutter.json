@@ -8,7 +8,7 @@
     "systemd_required_mounts": "",
     "nginx_server_name": "dioptra.example.org",
     "nginx_expose_ports_on_localhost_only": ["True", "False"],
-    "postgres_container_tag": "15",
+    "postgres_container_tag": "16",
     "__restapi_http_port": "80",
     "__restapi_https_port": "443",
     "__db_admin_username": "postgres",
@@ -66,7 +66,7 @@
         "argbash": {
             "image": "argbash",
             "namespace": "matejak",
-            "tag": "latest",
+            "tag": "sha-0d046a",
             "registry": ""
         },
         "db": {
@@ -78,7 +78,7 @@
         "dbadmin": {
             "image": "pgadmin4",
             "namespace": "dpage",
-            "tag": "latest",
+            "tag": "8.9",
             "registry": ""
         },
         "mc": {
@@ -90,19 +90,19 @@
         "minio": {
             "image": "minio",
             "namespace": "minio",
-            "tag": "latest",
+            "tag": "RELEASE.2024-07-16T23-46-41Z",
             "registry": ""
         },
         "nodejs": {
             "image": "node",
             "namespace": "",
-            "tag": "18",
+            "tag": "22.5.1",
             "registry": ""
         },
         "redis": {
             "image": "redis",
             "namespace": "",
-            "tag": "latest",
+            "tag": "7.2.5",
             "registry": ""
         }
     },

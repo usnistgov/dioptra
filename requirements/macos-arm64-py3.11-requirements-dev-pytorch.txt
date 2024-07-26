@@ -74,11 +74,11 @@ bleach==6.1.0
     #   nbconvert
 blinker==1.8.2
     # via flask
-boto3==1.34.139
+boto3==1.34.149
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-botocore==1.34.139
+botocore==1.34.149
     # via
     #   boto3
     #   s3transfer
@@ -86,7 +86,7 @@ build==1.2.1
     # via
     #   dioptra (pyproject.toml)
     #   pip-tools
-cachetools==5.3.3
+cachetools==5.4.0
     # via
     #   mlflow
     #   tox
@@ -138,11 +138,11 @@ cookiecutter==2.1.1
     # via
     #   dioptra (pyproject.toml)
     #   pytest-cookies
-croniter==2.0.5
+croniter==3.0.1
     # via prefect
 cycler==0.12.1
     # via matplotlib
-dask==2024.6.2
+dask==2024.7.1
     # via
     #   distributed
     #   prefect
@@ -153,10 +153,12 @@ decorator==5.1.1
 defusedxml==0.7.1
     # via nbconvert
 deprecated==1.2.14
-    # via opentelemetry-api
+    # via
+    #   opentelemetry-api
+    #   opentelemetry-semantic-conventions
 distlib==0.3.8
     # via virtualenv
-distributed==2024.6.2
+distributed==2024.7.1
     # via prefect
 docker==7.1.0
     # via
@@ -251,7 +253,7 @@ graphql-core==3.2.3
     #   graphql-relay
 graphql-relay==3.2.0
     # via graphene
-grpcio==1.64.1
+grpcio==1.65.1
     # via tensorboard
 gunicorn==22.0.0
     # via mlflow
@@ -276,7 +278,7 @@ imagesize==1.4.1
     # via sphinx
 imgaug==0.4.0
     # via dioptra (pyproject.toml)
-importlib-metadata==7.1.0
+importlib-metadata==7.2.1
     # via
     #   dask
     #   mlflow
@@ -287,7 +289,7 @@ importlib-resources==6.4.0
     #   prefect
 iniconfig==2.0.0
     # via pytest
-injector==0.21.0
+injector==0.22.0
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -337,7 +339,7 @@ json5==0.9.25
     # via jupyterlab-server
 jsonpointer==3.0.0
     # via jsonschema
-jsonschema[format-nongpl]==4.22.0
+jsonschema[format-nongpl]==4.23.0
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
@@ -373,7 +375,7 @@ jupyter-events==0.10.0
     # via jupyter-server
 jupyter-lsp==2.2.5
     # via jupyterlab
-jupyter-server==2.14.1
+jupyter-server==2.14.2
     # via
     #   jupyter-lsp
     #   jupyterlab
@@ -382,19 +384,19 @@ jupyter-server==2.14.1
     #   notebook-shim
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.2.3
+jupyterlab==4.2.4
     # via
     #   dioptra (pyproject.toml)
     #   notebook
 jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.27.2
+jupyterlab-server==2.27.3
     # via
     #   jupyterlab
     #   notebook
 jupyterlab-widgets==3.0.11
     # via ipywidgets
-kaggle==1.6.14
+kaggle==1.6.17
     # via dioptra (pyproject.toml)
 kiwisolver==1.4.5
     # via matplotlib
@@ -446,7 +448,7 @@ mdurl==0.1.2
     # via markdown-it-py
 mistune==3.0.2
     # via nbconvert
-mlflow==2.14.2
+mlflow==2.14.3
     # via dioptra (pyproject.toml)
 mpmath==1.3.0
     # via sympy
@@ -488,7 +490,7 @@ notebook-shim==0.2.4
     # via
     #   jupyterlab
     #   notebook
-nrtk==0.8.1
+nrtk==0.10.0
     # via dioptra (pyproject.toml)
 numpy==1.26.4
     # via
@@ -524,14 +526,14 @@ opencv-python==4.10.0.84
     #   imgaug
     #   nrtk
     #   pybsm
-opentelemetry-api==1.25.0
+opentelemetry-api==1.26.0
     # via
     #   mlflow
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-sdk==1.25.0
+opentelemetry-sdk==1.26.0
     # via mlflow
-opentelemetry-semantic-conventions==0.46b0
+opentelemetry-semantic-conventions==0.47b0
     # via opentelemetry-sdk
 overrides==7.7.0
     # via jupyter-server
@@ -607,7 +609,7 @@ prompt-toolkit==3.0.47
     # via
     #   ipython
     #   jupyter-console
-protobuf==4.25.3
+protobuf==4.25.4
     # via
     #   mlflow
     #   tensorboard
@@ -621,7 +623,7 @@ ptyprocess==0.7.0
     # via
     #   pexpect
     #   terminado
-pure-eval==0.2.2
+pure-eval==0.2.3
     # via stack-data
 pyarrow==15.0.2
     # via
@@ -667,7 +669,7 @@ pyproject-hooks==1.1.0
     #   pip-tools
 pyspellchecker==0.8.1
     # via esbonio
-pytest==8.2.2
+pytest==8.3.2
     # via
     #   dioptra (pyproject.toml)
     #   pytest-cookies
@@ -766,7 +768,7 @@ rfc3986-validator==0.1.1
     #   jupyter-events
 rich==13.7.1
     # via dioptra (pyproject.toml)
-rpds-py==0.18.1
+rpds-py==0.19.1
     # via
     #   jsonschema
     #   referencing
@@ -797,7 +799,7 @@ scipy==1.13.1
     #   scikit-learn
 send2trash==1.8.3
     # via jupyter-server
-shapely==2.0.4
+shapely==2.0.5
     # via imgaug
 simplejson==3.19.2
     # via dioptra (pyproject.toml)
@@ -861,11 +863,11 @@ sphinxcontrib-applehelp==1.0.8
     # via sphinx
 sphinxcontrib-devhelp==1.0.6
     # via sphinx
-sphinxcontrib-htmlhelp==2.0.5
+sphinxcontrib-htmlhelp==2.0.6
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
-sphinxcontrib-qthelp==1.0.7
+sphinxcontrib-qthelp==1.0.8
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
@@ -876,15 +878,15 @@ sqlalchemy==2.0.31
     #   dioptra (pyproject.toml)
     #   flask-sqlalchemy
     #   mlflow
-sqlparse==0.5.0
+sqlparse==0.5.1
     # via mlflow
 stack-data==0.6.3
     # via ipython
-structlog==24.2.0
+structlog==24.4.0
     # via
     #   dioptra
     #   dioptra (pyproject.toml)
-sympy==1.12.1
+sympy==1.13.1
     # via torch
 tabulate==0.9.0
     # via prefect
@@ -902,7 +904,7 @@ text-unidecode==1.3
     # via python-slugify
 threadpoolctl==3.5.0
     # via scikit-learn
-tifffile==2024.7.2
+tifffile==2024.7.24
     # via scikit-image
 time-machine==2.14.2
     # via pendulum
