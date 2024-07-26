@@ -25,14 +25,14 @@ on:
 
 jobs:
   docs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup python 3.9
+      - name: setup python 3.11
         uses: actions/setup-python@v5.1.1
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: upgrade pip
         run: |

@@ -16,5 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from ._plugin_dirs import plugin_dirs
 from ._redirect_print import redirect_print
+from ._sys_path_dirs import sys_path_dirs
 
-__all__ = ["plugin_dirs", "redirect_print"]
+__all__ = ["plugin_dirs", "redirect_print", "sys_path_dirs"]

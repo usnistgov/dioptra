@@ -95,11 +95,12 @@ class MockRQQueue(object):
 
     def enqueue(self, *args, **kwargs) -> MockRQJob:
         LOGGER.info("Mocking rq.Queue.enqueue() function", args=args, kwargs=kwargs)
+        job_id = kwargs.get("job_id", str(uuid.uuid4()))
         cmd_kwargs = kwargs.get("kwargs")
         depends_on = kwargs.get("depends_on")
         timeout = kwargs.get("timeout")
         return MockRQJob(
-            id=str(uuid.uuid4()),
+            id=job_id,
             queue=self.name,
             timeout=timeout,
             cmd_kwargs=cmd_kwargs,

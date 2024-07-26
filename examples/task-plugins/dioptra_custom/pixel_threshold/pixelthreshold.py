@@ -61,7 +61,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
     from art.attacks.evasion import PixelAttack
-    from art.estimators.classification import KerasClassifier
+    from art.estimators.classification import TensorFlowV2Classifier
 
 except ImportError:  # pragma: nocover
     LOGGER.warn(
@@ -86,7 +86,7 @@ except ImportError:  # pragma: nocover
 def create_pt_dataset(
     data_dir: str,
     adv_data_dir: Union[str, Path],
-    keras_classifier: KerasClassifier,
+    keras_classifier: TensorFlowV2Classifier,
     image_size: Tuple[int, int, int],
     distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
     rescale: float = 1.0 / 255,
@@ -181,7 +181,7 @@ def create_pt_dataset(
 
 
 def _init_pt(
-    keras_classifier: KerasClassifier, batch_size: int, **kwargs
+    keras_classifier: TensorFlowV2Classifier, batch_size: int, **kwargs
 ) -> PixelAttack:
     attack: PixelAttack = PixelAttack(classifier=keras_classifier, **kwargs)
     return attack

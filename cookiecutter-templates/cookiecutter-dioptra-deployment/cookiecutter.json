@@ -4,11 +4,11 @@
     "container_registry": "",
     "__container_namespace": "dioptra",
     "container_tag": "dev",
-    "docker_compose_path": "/usr/local/bin/docker-compose",
+    "docker_compose_path": "docker compose",
     "systemd_required_mounts": "",
     "nginx_server_name": "dioptra.example.org",
     "nginx_expose_ports_on_localhost_only": ["True", "False"],
-    "postgres_container_tag": "15",
+    "postgres_container_tag": "16",
     "__restapi_http_port": "80",
     "__restapi_https_port": "443",
     "__db_admin_username": "postgres",
@@ -18,6 +18,7 @@
     "num_tensorflow_gpu_workers": "0",
     "num_pytorch_cpu_workers": "1",
     "num_pytorch_gpu_workers": "0",
+    "datasets_directory": "",
     "__containers": {
         "networks": ["dioptra"],
         "nginx": {
@@ -65,7 +66,7 @@
         "argbash": {
             "image": "argbash",
             "namespace": "matejak",
-            "tag": "sha-0d046ad",
+            "tag": "sha-0d046a",
             "registry": ""
         },
         "db": {
@@ -77,7 +78,7 @@
         "dbadmin": {
             "image": "pgadmin4",
             "namespace": "dpage",
-            "tag": "8.3",
+            "tag": "8.9",
             "registry": ""
         },
         "mc": {
@@ -89,19 +90,19 @@
         "minio": {
             "image": "minio",
             "namespace": "minio",
-            "tag": "RELEASE.2024-02-13T15-35-11Z",
+            "tag": "RELEASE.2024-07-16T23-46-41Z",
             "registry": ""
         },
         "nodejs": {
             "image": "node",
             "namespace": "",
-            "tag": "21.6.1",
+            "tag": "22.5.1",
             "registry": ""
         },
         "redis": {
             "image": "redis",
             "namespace": "",
-            "tag": "7.2.4",
+            "tag": "7.2.5",
             "registry": ""
         }
     },

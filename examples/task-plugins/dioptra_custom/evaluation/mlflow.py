@@ -18,13 +18,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 import mlflow
 import structlog
 from mlflow.entities.model_registry import ModelVersion
 from mlflow.tracking import MlflowClient
-from pathlib import Path
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
@@ -33,9 +33,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
 @pyplugs.register
-def add_model_to_registry(
-    name: str, model_dir: str
-) -> Optional[ModelVersion]:
+def add_model_to_registry(name: str, model_dir: str) -> Optional[ModelVersion]:
     """Registers a trained model logged during the current run to the MLFlow registry.
 
     Args:
@@ -58,7 +56,7 @@ def add_model_to_registry(
     artifact_uri: str = active_run.info.artifact_uri
     source: str = f"{artifact_uri}/{model_dir}"
 
-    registered_models = [x.name for x in MlflowClient().list_registered_models()]
+    registered_models = [x.name for x in MlflowClient().search_registered_models()]
 
     if name not in registered_models:
         LOGGER.info("create registered model", name=name)
@@ -93,6 +91,7 @@ def get_experiment_name() -> str:
     )
 
     return experiment_name
+
 
 @pyplugs.register
 def prepend_cwd(path: str) -> Path:

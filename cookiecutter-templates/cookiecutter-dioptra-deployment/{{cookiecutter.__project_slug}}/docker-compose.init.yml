@@ -15,8 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 {% from "templates/macros/docker-compose.j2" import container_image, db_service, minio_service, mlflow_tracking_service, nfs_volume, restapi_service, service_networks -%}
-version: "2.4"
-
 {% if cookiecutter.__containers.networks -%}
 networks:
   {% for network in cookiecutter.__containers.networks -%}
@@ -28,7 +26,7 @@ networks:
 {% endif -%}
 services:
   minio:
-    image: minio/minio:latest
+    image: {{ container_image(cookiecutter.__containers.minio) }}
     restart: always
     hostname: {{ cookiecutter.__project_slug }}-minio
     command:
@@ -36,30 +34,33 @@ services:
       - /data
       - --console-address
       - ":9001"
-    env_file:
-      - ./secrets/{{ cookiecutter.__project_slug }}-minio.env
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+      MINIO_KMS_SECRET_KEY: "${MINIO_KMS_SECRET_KEY}"
     networks:
       - dioptra
     volumes:
-      - minio-certs:/root/.minio/certs:rw
-      - minio-data:/data:rw
+      - "minio-certs:/root/.minio/certs:rw"
+      - "minio-data:/data:rw"
 
   db:
     image: postgres:{{ cookiecutter.postgres_container_tag }}
     restart: always
     hostname: {{ cookiecutter.__project_slug }}-db
     shm_size: 256MB
+    environment:
+      POSTGRES_USER_DIOPTRA_PASSWORD: "${POSTGRES_USER_DIOPTRA_PASSWORD}"
     env_file:
       - ./envs/{{ cookiecutter.__project_slug }}-db.env
-      - ./secrets/{{ cookiecutter.__project_slug }}-db.env
     networks:
       - dioptra
     volumes:
-      - init-scripts:/scripts:ro
-      - postgres-data:/var/lib/postgresql/data:rw
-      - postgres-docker-entrypoint-initdb-d:/docker-entrypoint-initdb.d:rw
-      - postgres-etc-postgresql:/etc/postgresql:rw
-      - postgres-var-certs:/var/lib/postgresql/certs:rw
+      - "init-scripts:/scripts:ro"
+      - "postgres-data:/var/lib/postgresql/data:rw"
+      - "postgres-docker-entrypoint-initdb-d:/docker-entrypoint-initdb.d:rw"
+      - "postgres-etc-postgresql:/etc/postgresql:rw"
+      - "postgres-var-certs:/var/lib/postgresql/certs:rw"
 
   restapi:
     image: {{ container_image(cookiecutter.__containers.restapi) }}
@@ -70,13 +71,15 @@ services:
       - {{ cookiecutter.__project_slug }}-db:5432
     env_file:
       - ./envs/{{ cookiecutter.__project_slug }}-restapi.env
-      - ./secrets/{{ cookiecutter.__project_slug }}-restapi.env
-      - ./secrets/{{ cookiecutter.__project_slug }}-restapi-database-uri.env
+    environment:
+      AWS_ACCESS_KEY_ID: "${RESTAPI_AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${RESTAPI_AWS_SECRET_ACCESS_KEY}"
+      DIOPTRA_RESTAPI_DATABASE_URI: "${DIOPTRA_RESTAPI_DATABASE_URI}"
     networks:
       - dioptra
     volumes:
-      - restapi-ca-certificates:/usr/local/share/ca-certificates:rw
-      - restapi-etc-ssl:/etc/ssl:rw
+      - "restapi-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "restapi-etc-ssl:/etc/ssl:rw"
 
   mc:
     image: {{ container_image(cookiecutter.__containers.mc) }}
@@ -87,11 +90,11 @@ services:
     {{ service_networks(cookiecutter.__containers.networks)|indent(4) }}
     {% endif -%}
     volumes:
-      - ./config/minio:/s3-policy:ro
-      - ./secrets:/secrets:ro
-      - minio-certs:/root/.mc/certs/CAs:ro
-      - init-repos:/init-repos:ro
-      - init-scripts:/scripts:ro
+      - "./config/minio:/s3-policy:ro"
+      - "./secrets:/secrets:ro"
+      - "minio-certs:/root/.mc/certs/CAs:ro"
+      - "init-repos:/init-repos:ro"
+      - "init-scripts:/scripts:ro"
 
   argbash:
     image: {{ container_image(cookiecutter.__containers.argbash) }}
@@ -112,8 +115,8 @@ services:
       - "manage-postgres-ssl.m4"
       - "set-permissions.m4"
     volumes:
-      - ./scripts:/scripts-src:ro
-      - init-scripts:/scripts:rw
+      - "./scripts:/scripts-src:ro"
+      - "init-scripts:/scripts:rw"
 
   named-volumes:
     image: {{ container_image(cookiecutter.__containers.nginx) }}
@@ -121,24 +124,24 @@ services:
     entrypoint:
       - "/bin/bash"
     volumes:
-      - ./config:/config:ro
-      - ./secrets:/secrets:ro
-      - ./ssl:/ssl:ro
-      - init-scripts:/scripts:ro
-      - init-repos:/volumes/init-repos:rw
-      - dbadmin-ca-certificates:/volumes/dbadmin-ca-certificates:rw
-      - dbadmin-data:/volumes/dbadmin-data:rw
-      - mc-ca-certificates:/volumes/mc-ca-certificates:rw
-      - minio-certs:/volumes/minio-certs:rw
-      - minio-data:/volumes/minio-data:rw
-      - nginx-conf-d:/volumes/nginx-conf-d:rw
-      - nginx-ca-certificates:/usr/local/share/ca-certificates:rw
-      - nginx-etc-ssl:/volumes/nginx-etc-ssl:rw
-      - nginx-etc-ssl:/etc/ssl:rw
-      - postgres-docker-entrypoint-initdb-d:/volumes/postgres-docker-entrypoint-initdb-d:rw
-      - postgres-etc-postgresql:/volumes/postgres-etc-postgresql:rw
-      - postgres-var-certs:/volumes/postgres-var-certs:rw
-      - redis-data:/volumes/redis-data:rw
+      - "./config:/config:ro"
+      - "./secrets:/secrets:ro"
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "init-repos:/volumes/init-repos:rw"
+      - "dbadmin-ca-certificates:/volumes/dbadmin-ca-certificates:rw"
+      - "dbadmin-data:/volumes/dbadmin-data:rw"
+      - "mc-ca-certificates:/volumes/mc-ca-certificates:rw"
+      - "minio-certs:/volumes/minio-certs:rw"
+      - "minio-data:/volumes/minio-data:rw"
+      - "nginx-conf-d:/volumes/nginx-conf-d:rw"
+      - "nginx-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "nginx-etc-ssl:/volumes/nginx-etc-ssl:rw"
+      - "nginx-etc-ssl:/etc/ssl:rw"
+      - "postgres-docker-entrypoint-initdb-d:/volumes/postgres-docker-entrypoint-initdb-d:rw"
+      - "postgres-etc-postgresql:/volumes/postgres-etc-postgresql:rw"
+      - "postgres-var-certs:/volumes/postgres-var-certs:rw"
+      - "redis-data:/volumes/redis-data:rw"
 
   nginx-ssl:
     image: {{ container_image(cookiecutter.__containers.nginx) }}
@@ -146,10 +149,10 @@ services:
     entrypoint:
       - "/bin/bash"
     volumes:
-      - ./ssl:/ssl:ro
-      - init-scripts:/scripts:ro
-      - nginx-ca-certificates:/usr/local/share/ca-certificates:rw
-      - nginx-etc-ssl:/etc/ssl:rw
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "nginx-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "nginx-etc-ssl:/etc/ssl:rw"
 
   mlflow-tracking-ssl:
     image: {{ container_image(cookiecutter.__containers.mlflow_tracking) }}
@@ -157,10 +160,10 @@ services:
     entrypoint:
       - "/bin/bash"
     volumes:
-      - ./ssl:/ssl:ro
-      - init-scripts:/scripts:ro
-      - mlflow-tracking-ca-certificates:/usr/local/share/ca-certificates:rw
-      - mlflow-tracking-etc-ssl:/etc/ssl:rw
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "mlflow-tracking-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "mlflow-tracking-etc-ssl:/etc/ssl:rw"
 
   restapi-ssl:
     image: {{ container_image(cookiecutter.__containers.restapi) }}
@@ -168,10 +171,10 @@ services:
     entrypoint:
       - "/bin/bash"
     volumes:
-      - ./ssl:/ssl:ro
-      - init-scripts:/scripts:ro
-      - restapi-ca-certificates:/usr/local/share/ca-certificates:rw
-      - restapi-etc-ssl:/etc/ssl:rw
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "restapi-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "restapi-etc-ssl:/etc/ssl:rw"
 
   tfcpu-ssl:
     image: {{ container_image(cookiecutter.__containers.tfcpu) }}
@@ -179,10 +182,10 @@ services:
     entrypoint:
       - "/bin/bash"
     volumes:
-      - ./ssl:/ssl:ro
-      - init-scripts:/scripts:ro
-      - worker-ca-certificates:/usr/local/share/ca-certificates:rw
-      - worker-etc-ssl:/etc/ssl:rw
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "worker-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "worker-etc-ssl:/etc/ssl:rw"
 
   pytorchcpu-ssl:
     image: {{ container_image(cookiecutter.__containers.pytorchcpu) }}
@@ -190,10 +193,10 @@ services:
     entrypoint:
       - "/bin/bash"
     volumes:
-      - ./ssl:/ssl:ro
-      - init-scripts:/scripts:ro
-      - worker-ca-certificates:/usr/local/share/ca-certificates:rw
-      - worker-etc-ssl:/etc/ssl:rw
+      - "./ssl:/ssl:ro"
+      - "init-scripts:/scripts:ro"
+      - "worker-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "worker-etc-ssl:/etc/ssl:rw"
 
   frontend-build:
     image: {{ container_image(cookiecutter.__containers.nodejs) }}
@@ -203,11 +206,11 @@ services:
     env_file:
       - ./envs/ca-certificates.env
     volumes:
-      - init-scripts:/scripts:ro
-      - init-repos:/repo:rw
-      - nginx-ca-certificates:/usr/local/share/ca-certificates:rw
-      - nginx-etc-ssl:/etc/ssl:rw
-      - nginx-frontend:/frontend:rw
+      - "init-scripts:/scripts:ro"
+      - "init-repos:/repo:rw"
+      - "nginx-ca-certificates:/usr/local/share/ca-certificates:rw"
+      - "nginx-etc-ssl:/etc/ssl:rw"
+      - "nginx-frontend:/frontend:rw"
 
 volumes:
   init-repos:

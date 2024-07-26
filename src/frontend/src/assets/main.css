@@ -1,23 +1,119 @@
-@import './base.css';
+/* @import './base.css'; */
 
-#app {
+/* #app {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-
   font-weight: normal;
-}
+} */
 
-a,
+/* a,
 .green {
   text-decoration: none;
   color: hsla(160, 100%, 37%, 1);
   transition: 0.4s;
+  padding: 3px;
 }
 
 @media (hover: hover) {
   a:hover {
     background-color: hsla(160, 100%, 37%, 0.2);
   }
+} */
+
+/* @media (min-width: 1024px) {
+  body {
+    display: flex;
+    place-items: center;
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 2rem;
+  }
+} */
+
+p {
+  font-size: 1.2em
 }
 
+.darkLink {
+  color: #579aca
+}
+
+a:hover {
+  color: #ee9040
+}
+
+.q-tab:hover {
+  color: inherit
+}
+
+.q-breadcrumbs__el:hover {
+  color: inherit
+}
+
+.q-tab__label {
+  font-size: 18px !important
+}
+
+.q-tooltip {
+  font-size: 14px !important
+}
+
+.fixedButton {
+  position: fixed !important;
+  bottom: 80px;
+  right: 80px; 
+}
+
+.sr-only { 
+  border: 0;
+  padding: 0;
+  margin: 0;
+  position: absolute !important;
+  height: 1px; 
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px 1px 1px 1px); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+  clip: rect(1px, 1px, 1px, 1px); /*maybe deprecated but we need to support legacy browsers */
+  clip-path: inset(50%); /*modern browsers, clip-path works inwards from each corner*/
+  white-space: nowrap; /* added line to stop words getting smushed together (as they go onto seperate lines and some screen readers do not understand line feeds as a space */
+}
+
+h1 {
+  font-size: clamp(1rem, 10vw, 4rem) !important;
+  line-height: 1 !important; 
+}
+
+h2 {
+  font-size: clamp(1rem, 5vw, 2rem) !important;
+  line-height: 1 !important;
+  margin-bottom: 0;
+}
+
+.form-title {
+  font-size: clamp(1rem, 10vw, 3rem) !important;
+  font-weight: bold;
+}
+
+.field-label {
+  width: 100px;
+  font-size: 1rem;
+  color: black;
+}
+
+.field-label-short {
+  width: 100px;
+  font-size: 1rem;
+  color: black;
+}
+
+.body--dark .field-label {
+  color: white;
+}
+
+legend {
+  font-size: large;
+}

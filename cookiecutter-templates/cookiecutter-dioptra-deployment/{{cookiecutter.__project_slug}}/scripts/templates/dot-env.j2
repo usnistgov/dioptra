@@ -1,0 +1,16 @@
+DIOPTRA_RESTAPI_DATABASE_URI=postgresql://dioptra:{{ "{{ postgres_user_dioptra_password }}" }}@{{ cookiecutter.__project_slug }}-db/restapi
+DIOPTRA_MLFLOW_TRACKING_DATABASE_URI=postgresql://dioptra:{{ "{{ postgres_user_dioptra_password }}" }}@{{ cookiecutter.__project_slug }}-db/mlflow-tracking
+DIOPTRA_WORKER_USERNAME=dioptra-worker
+DIOPTRA_WORKER_PASSWORD={{ "{{ dioptra_worker_password }}" }}
+MINIO_ROOT_USER=dioptra-admin
+MINIO_ROOT_PASSWORD={{ "{{ minio_root_password }}" }}
+MINIO_KMS_SECRET_KEY={{ cookiecutter.__project_slug }}-minio-key:{{ "{{ minio_kms_secret_key }}" }}
+MLFLOW_TRACKING_AWS_ACCESS_KEY_ID=dioptra-mlflow-tracking
+MLFLOW_TRACKING_AWS_SECRET_ACCESS_KEY={{ "{{ minio_mlflow_tracking_password }}" }}
+PGADMIN_DEFAULT_PASSWORD={{ "{{ pgadmin_default_password }}" }}
+POSTGRES_USER_DIOPTRA_PASSWORD={{ "{{ postgres_user_dioptra_password }}" }}
+RESTAPI_AWS_ACCESS_KEY_ID=dioptra-restapi
+RESTAPI_AWS_SECRET_ACCESS_KEY={{ "{{ minio_restapi_password }}" }}
+WORKER_AWS_ACCESS_KEY_ID=dioptra-worker
+WORKER_AWS_SECRET_ACCESS_KEY={{ "{{ minio_worker_password }}" }}
+{{ "{{ '' }}" }}

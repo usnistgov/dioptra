@@ -59,7 +59,6 @@ class BaseConfig(object):
     USE_MOCK_EQUIVALENCY = False
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    WTF_CSRF_ENABLED = False
     REMEMBER_COOKIE_NAME = "dioptra_remember_token"
     REMEMBER_COOKIE_DURATION = int(
         os.getenv("DIOPTRA_REMEMBER_COOKIE_DURATION", f"{14 * 86400}")
@@ -91,11 +90,8 @@ class TestingConfig(BaseConfig):
     DEBUG = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TESTING = True
-    WTF_CSRF_ENABLED = False
     SESSION_PROTECTION: str | None = None
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DIOPTRA_RESTAPI_TEST_DATABASE_URI", "sqlite://"
-    )
+    SQLALCHEMY_DATABASE_URI = "sqlite://"
 
 
 class ProductionConfig(BaseConfig):
@@ -111,15 +107,20 @@ class ProductionConfig(BaseConfig):
     )
 
 
-class TestingLoginDisabledConfig(BaseConfig):
+class TestingLoginDisabledConfig(TestingConfig):
     CONFIG_NAME = "test_no_login"
     LOGIN_DISABLED = True
+
+
+class TestingV1Config(TestingConfig):
+    CONFIG_NAME = "test_v1"
 
 
 EXPORT_CONFIGS: List[Type[BaseConfig]] = [
     DevelopmentConfig,
     TestingConfig,
     ProductionConfig,
+    TestingV1Config,
     TestingLoginDisabledConfig,
 ]
 config_by_name = {cfg.CONFIG_NAME: cfg for cfg in EXPORT_CONFIGS}

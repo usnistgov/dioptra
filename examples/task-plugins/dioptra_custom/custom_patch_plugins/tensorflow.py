@@ -45,7 +45,7 @@ def register_init_model(active_run, name, model_dir, model) -> Model:
         name=name,
         model_dir=model_dir,
     )
-    mlflow.keras.log_model(
-        keras_model=model, artifact_path=model_dir, registered_model_name=name
+    mlflow.tensorflow.log_model(
+        model=model, artifact_path=model_dir, registered_model_name=name
     )
     return model

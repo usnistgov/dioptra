@@ -26,7 +26,11 @@ import mlflow.tensorflow
 import numpy as np
 import structlog
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import DirectoryIterator, ImageDataGenerator, save_img
+from tensorflow.keras.preprocessing.image import (
+    DirectoryIterator,
+    ImageDataGenerator,
+    save_img,
+)
 
 from dioptra import pyplugs
 from dioptra.sdk.exceptions import ARTDependencyError, TensorflowDependencyError
@@ -56,7 +60,7 @@ def feature_squeeze(
     model: str,
     model_architecture: str,
     adv_tar_name: str,
-    image_size: Tuple[int,int,int],
+    image_size: Tuple[int, int, int],
     adv_data_dir: str,
     data_flow: DirectoryIterator,
     batch_size: int = 32,

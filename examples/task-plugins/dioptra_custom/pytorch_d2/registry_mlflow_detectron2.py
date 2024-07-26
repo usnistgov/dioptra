@@ -21,13 +21,9 @@ from typing import Optional
 import structlog
 from mlflow.entities import Run as MlflowRun
 from mlflow.entities.model_registry import ModelVersion
+from mlflow.pytorch import load_model as load_pytorch_model
 from mlflow.tracking import MlflowClient
 from structlog.stdlib import BoundLogger
-from mlflow.keras import load_model as load_tf_keras_model
-from mlflow.pytorch import load_model as load_pytorch_model
-from dioptra import pyplugs
-from dioptra.sdk.exceptions import TensorflowDependencyError
-from dioptra.sdk.utilities.decorators import require_package
 
 from dioptra import pyplugs
 
@@ -54,7 +50,7 @@ def add_model_to_registry(
     artifact_uri: str = active_run.info.artifact_uri
     source: str = f"{artifact_uri}/{model_dir}"
 
-    registered_models = [x.name for x in MlflowClient().list_registered_models()]
+    registered_models = [x.name for x in MlflowClient().search_registered_models()]
 
     if name not in registered_models:
         LOGGER.info("create registered model", name=name)
