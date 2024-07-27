@@ -18,7 +18,7 @@
         class="col q-mb-xs" 
         outlined 
         dense 
-        v-model="name" 
+        v-model.trim="name"  
         autofocus 
         :rules="[requiredRule]" 
         aria-labelledby="queueName"
@@ -50,7 +50,7 @@
       </label>
       <q-input
         class="col"
-        v-model="description"
+        v-model.trim="description"
         outlined
         type="textarea"
         aria-labelledby="description"

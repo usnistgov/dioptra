@@ -27,7 +27,7 @@ from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE, V1_ROOT
+from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE, V1_EXPERIMENTS_ROUTE, V1_ROOT
 
 from ..lib import actions, asserts, helpers
 
@@ -322,6 +322,33 @@ def assert_entrypoint_is_not_found(
         follow_redirects=True,
     )
     assert response.status_code == 404
+
+
+def assert_entrypoint_is_not_associated_with_experiment(
+    client: FlaskClient,
+    experiment_id: int,
+    entrypoint_id: int,
+) -> None:
+    """Assert that an entrypoint is not associated with an experiment
+
+    Args:
+        client: The Flask test client.
+        experiment_id: The id of the experiment to retrieve.
+        entrypoint_id: The id of the entrypoint to check for association.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the queue id
+            is in the list of queues associated with the entrypoint.
+    """
+    response = client.get(
+        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}",
+        follow_redirects=True,
+    )
+    experiment = response.get_json()
+    print(experiment)
+    entrypoint_ids = set(entrypoint["id"] for entrypoint in experiment["entrypoints"])
+
+    assert response.status_code == 200 and entrypoint_id not in entrypoint_ids
 
 
 def assert_cannot_rename_entrypoint_with_existing_name(
@@ -655,7 +682,7 @@ def test_delete_entrypoint_by_id(
     client: FlaskClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
-    registered_entrypoints: dict[str, Any],
+    registered_experiments: dict[str, Any],
 ) -> None:
     """Test that a entrypoint can be deleted by referencing its id.
 
@@ -665,11 +692,16 @@ def test_delete_entrypoint_by_id(
     - The user deletes a entrypoint by referencing its id.
     - The user attempts to retrieve information about the deleted entrypoint.
     - The request fails with an appropriate error message and response code.
+    - The entrypoint is no longer associated with the experiment.
     """
-    entrypoint_to_delete = registered_entrypoints["entrypoint1"]
+    experiment = registered_experiments["experiment1"]
+    entrypoint_to_delete = experiment["entrypoints"][0]
 
     delete_entrypoint(client, entrypoint_id=entrypoint_to_delete["id"])
     assert_entrypoint_is_not_found(client, entrypoint_id=entrypoint_to_delete["id"])
+    assert_entrypoint_is_not_associated_with_experiment(
+        client, experiment_id=experiment["id"], entrypoint_id=entrypoint_to_delete["id"]
+    )
 
 
 def test_manage_existing_entrypoint_draft(

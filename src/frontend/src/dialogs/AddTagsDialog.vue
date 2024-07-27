@@ -17,7 +17,7 @@
         class="col q-mb-xs" 
         outlined 
         dense 
-        v-model="name" 
+        v-model.trim="name"  
         autofocus 
         :rules="[requiredRule]" 
         aria-labelledby="tagName"

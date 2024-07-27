@@ -59,7 +59,6 @@ class BaseConfig(object):
     USE_MOCK_EQUIVALENCY = False
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    WTF_CSRF_ENABLED = False
     REMEMBER_COOKIE_NAME = "dioptra_remember_token"
     REMEMBER_COOKIE_DURATION = int(
         os.getenv("DIOPTRA_REMEMBER_COOKIE_DURATION", f"{14 * 86400}")
@@ -70,7 +69,6 @@ class BaseConfig(object):
     DIOPTRA_PLUGINS_BUCKET = os.getenv("DIOPTRA_PLUGINS_BUCKET", "plugins")
     DIOPTRA_SWAGGER_PATH = os.getenv("DIOPTRA_SWAGGER_PATH", "/")
     DIOPTRA_BASE_URL = os.getenv("DIOPTRA_BASE_URL")
-    DIOPTRA_RESTAPI_VERSION = os.getenv("DIOPTRA_RESTAPI_VERSION", "v0")
 
 
 class DevelopmentConfig(BaseConfig):
@@ -92,7 +90,6 @@ class TestingConfig(BaseConfig):
     DEBUG = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TESTING = True
-    WTF_CSRF_ENABLED = False
     SESSION_PROTECTION: str | None = None
     SQLALCHEMY_DATABASE_URI = "sqlite://"
 
@@ -117,7 +114,6 @@ class TestingLoginDisabledConfig(TestingConfig):
 
 class TestingV1Config(TestingConfig):
     CONFIG_NAME = "test_v1"
-    DIOPTRA_RESTAPI_VERSION = "v1"
 
 
 EXPORT_CONFIGS: List[Type[BaseConfig]] = [

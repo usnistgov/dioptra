@@ -113,12 +113,6 @@ class MlModelVersion(ResourceSnapshot):
                 "resource_snapshots.resource_id",
             ],
         ),
-        UniqueConstraint(
-            "resource_snapshot_id",
-            "resource_id",
-            "artifact_resource_snapshot_id",
-            "version_number",
-        ),
         UniqueConstraint("resource_snapshot_id", "resource_id"),
     )
     __mapper_args__ = {

@@ -15,6 +15,7 @@
     ref="tableRef"
     :showToggleDraft="true"
     v-model:showDrafts="showDrafts"
+    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -47,22 +48,6 @@
     </template>
     <template #expandedSlot="{ row }">
       <CodeEditor v-model="row.taskGraph" language="yaml" />
-    </template>
-    <template #body-cell-tags="props">
-      <q-chip
-        v-for="(tag, i) in props.row.tags"
-        :key="i"
-        color="primary" 
-        text-color="white"
-      >
-        {{ tag.name }}
-      </q-chip>
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editObjTags = props.row; showTagsDialog = true"
-      />
     </template>
     <template #body-cell-plugins="props">
       <q-chip
@@ -151,7 +136,7 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true, },
+    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
     { name: 'hasDraft', label: 'hasDraft', align: 'left', field: 'hasDraft', sortable: true },
     { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: true, },
     { name: 'parameterNames', label: 'Parameter Name(s)', align: 'left', sortable: true },
