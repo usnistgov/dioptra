@@ -271,7 +271,11 @@
   getEntrypoint()
   async function getEntrypoint() {
     if(route.params.id === 'new') {
-      title.value = 'Create Entrypoint'
+      if(route.params.draftType === 'resourceDraft') {
+        const res = await api.getItem('entrypoints', route.params.resourceDraftParentId)
+        entryPoint.value = res.data
+      }
+      title.value = `Create ${route.params.draftType === 'resourceDraft' ? `Draft for ${entryPoint.value.name}` : 'Entrypoint'}`
       return
     }
     try {
@@ -322,14 +326,26 @@
         array[index] = queue.id
       }
     })
+    entryPoint.value?.plugins?.forEach((plugins, index, array) => {
+      if(typeof plugins === 'object') {
+        array[index] = plugins.id
+      }
+    })
     try {
       // CREATE
-      if (route.params.id === 'new' || (route.params.id === 'new' && route.params.draftType === 'resourceDraft')) {
+      const createParams = {
+        name: entryPoint.value.name,
+        description: entryPoint.value.description,
+        taskGraph: entryPoint.value.taskGraph,
+        parameters: entryPoint.value.parameters,
+        queues: entryPoint.value.queues,
+        plugins: entryPoint.value.plugins
+      }
+      if (route.params.id === 'new') {
         if(isNewDraft) {
           await api.addNewDraft('entrypoints', entryPoint.value)
         } else if(route.params.draftType === 'resourceDraft') {
-          const { group, ...entryPointWithoutGroup } = entryPoint.value
-          await api.addResourceDraft('entrypoints', entryPointWithoutGroup, route.params.resourceDraftParentId)
+          await api.addResourceDraft('entrypoints', createParams, route.params.resourceDraftParentId)
         } else {
           await api.addItem('entrypoints', entryPoint.value)
         }

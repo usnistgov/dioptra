@@ -7,6 +7,7 @@
       :indent-with-tab="true"
       :tab-size="2"
       :extensions="extensions"
+      :disabled="readOnly"
       @ready="handleReady"
       @change="console.log('change', $event)"
       @focus="console.log('focus', $event)"

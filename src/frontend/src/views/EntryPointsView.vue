@@ -10,12 +10,14 @@
     v-model:selected="selected"
     :pagination="{sortBy: 'draft', descending: true}"
     @edit="router.push(`/entrypoints/${selected[0].id}${draftType ? '/newDraft' : ''}`)"
+    @editResourceDraft="loadResouceDraft(selected[0])"
     @delete="showDeleteDialog = true"
     @request="getEntrypoints"
     ref="tableRef"
     :showToggleDraft="true"
     v-model:showDrafts="showDrafts"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @deleteResourceDraft="resourceDraftMode = true; showDeleteDialog = true;"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -47,7 +49,7 @@
       </label>
     </template>
     <template #expandedSlot="{ row }">
-      <CodeEditor v-model="row.taskGraph" language="yaml" />
+      <CodeEditor v-model="row.taskGraph" language="yaml" :readOnly="true" />
     </template>
     <template #body-cell-plugins="props">
       <q-chip
@@ -69,10 +71,22 @@
       <q-btn
         round
         size="sm"
-        :icon="props.row.hasDraft ? 'edit' : 'add'"
-        :color="props.row.hasDraft ? 'primary' : 'grey-5'"
-        @click="loadResouceDraft(props.row)"
-      />
+        :icon="props.row.hasDraft ? 'sym_o_draft' : 'add'"
+        :color="props.row.hasDraft ? 'primary' : ''"
+        :text-color="props.row.hasDraft ? '' : 'black'"
+        :disable="props.row.hasDraft"
+        @click="() => { if(!props.row.hasDraft) loadResouceDraft(props.row) }"
+      >
+        <q-tooltip>
+          <p v-if="props.row.hasDraft" class="q-mb-none">
+            This resource has an associated draft.<br>Use table buttons to edit/delete.
+          </p>
+          <p v-else class="q-mb-none">
+            Click here to add a draft for this resource.
+          </p>
+          
+        </q-tooltip>
+      </q-btn>
     </template>
   </TableComponent>
 
@@ -98,13 +112,14 @@
         Task Graph YAML
       </label>
     </template>
-    <CodeEditor v-model="displayYaml" style="height: auto;" :readOnly="true" />
+    <CodeEditor v-model="displayYaml" language="yaml" style="height: auto;" :readOnly="true" />
   </InfoPopupDialog>
   <DeleteDialog 
-    v-model="showDeleteDialog"
+    v-model:showDialog="showDeleteDialog"
     @submit="deleteEntryPoint"
     type="Entry Point"
     :name="selected.length ? selected[0].name : ''"
+    v-model:resourceDraftMode="resourceDraftMode"
   />
   <AssignTagsDialog 
     v-model="showTagsDialog"
@@ -177,14 +192,18 @@
     } 
   }
 
-  async function deleteEntryPoint() {
+  async function deleteEntryPoint(resourceDraft) {
     try {
-      if(Object.hasOwn(selected.value[0], 'payload') && !selected.value[0].resource) {
+      if(resourceDraft) {
+        await api.deleteResourceDraft('entrypoints', selected.value[0].id)
+        notify.success(`Sucessfully deleted draft for '${selected.value[0].name}'`)
+      } else if(Object.hasOwn(selected.value[0], 'payload') && !selected.value[0].resource) {
         await api.deleteDraft('entrypoints', selected.value[0].id)
+        notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
       } else {
         await api.deleteItem('entrypoints', selected.value[0].id)
+        notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
       }
-      notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()
@@ -204,7 +223,6 @@
     if(entryPoint.hasDraft) {
       try {
         res = await api.getResourceDraft('entrypoints', entryPoint.id)
-        console.log('ressssss = ', res)
         router.push(`/entrypoints/${res.data.id}/resourceDraft/${entryPoint.id}`)
       } catch(err) {
         notify.error(err.response.data.message)
@@ -213,6 +231,8 @@
       router.push(`/entrypoints/new/resourceDraft/${entryPoint.id}`)
     }
   }
+
+  const resourceDraftMode = ref(false)
   
 
 </script>

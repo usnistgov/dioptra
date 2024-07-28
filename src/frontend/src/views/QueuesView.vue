@@ -5,7 +5,9 @@
     :columns="showDrafts ? columns.slice(0, -2) : columns"
     title="Queues"
     @delete="showDeleteDialog = true"
+    @deleteResourceDraft="resourceDraftMode = true; showDeleteDialog = true;"
     @edit="editing = true; showQueueDialog = true"
+    @editResourceDraft="queueToDraft = selected[0]; showDraftDialog = true"
     v-model:selected="selected"
     v-model:showDrafts="showDrafts"
     @request="getQueues"
@@ -18,9 +20,21 @@
         round
         size="sm"
         :icon="props.row.hasDraft ? 'edit' : 'add'"
-        :color="props.row.hasDraft ? 'primary' : 'grey-5'"
-        @click.stop="queueToDraft = props.row; showDraftDialog = true"
-      />
+        :color="props.row.hasDraft ? 'primary' : ''"
+        :text-color="props.row.hasDraft ? '' : 'black'"
+        :disable="props.row.hasDraft"
+        @click="() => { if(!props.row.hasDraft) {queueToDraft = props.row; showDraftDialog = true} }"
+      >
+        <q-tooltip>
+          <p v-if="props.row.hasDraft" class="q-mb-none">
+            This resource has an associated draft.<br>Use table buttons to edit/delete.
+          </p>
+          <p v-else class="q-mb-none">
+            Click here to add a draft for this resource.
+          </p>
+          
+        </q-tooltip>
+      </q-btn>
     </template>
   </TableComponent>
   <q-btn 
@@ -54,6 +68,7 @@
     @submit="deleteQueue"
     type="Queue"
     :name="selected.length ? selected[0].name : ''"
+    v-model:resourceDraftMode="resourceDraftMode"
   />
   <AssignTagsDialog 
     v-model="showTagsDialog"
@@ -190,9 +205,12 @@
     if(!newVal) editing.value = false
   })
 
-  async function deleteQueue() {
+  async function deleteQueue(resourceDraft) {
     try {
-      if(Object.hasOwn(selected.value[0], 'hasDraft')) {
+      if(resourceDraft) {
+        await api.deleteResourceDraft('queues', selected.value[0].id)
+        notify.success(`Sucessfully deleted draft for '${selected.value[0].name}'`)
+      } else if(Object.hasOwn(selected.value[0], 'hasDraft')) {
         await api.deleteItem('queues', selected.value[0].id)
       } else {
         await api.deleteDraft('queues', selected.value[0].id)
@@ -207,5 +225,7 @@
   }
 
   const editObjTags = ref({})
+
+  const resourceDraftMode = ref(false)
 
 </script>

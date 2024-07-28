@@ -239,6 +239,10 @@ export async function updateResourceDraft<T extends keyof CreateParams>(type: T,
   return await axios.put(`/api/${type}/${id}/draft`, params)
 }
 
+export async function deleteResourceDraft<T extends keyof CreateParams>(type: T, id: number) {
+  return await axios.delete(`/api/${type}/${id}/draft`)
+}
+
 export async function updateDraft<T extends ItemType>(type: T, draftId: string, params: UpdateParams[T]) {
   return await axios.put(`/api/${type}/drafts/${draftId}`, params)
 }
