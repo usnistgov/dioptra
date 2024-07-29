@@ -120,6 +120,8 @@
             round
             size="xs"
             icon="add"
+            color="grey-5"
+            text-color="black"
             @click="handleSelectedParam('create', props, i, 'inputParams'); showEditParamDialog = true"
           />
         </template>
@@ -141,6 +143,8 @@
               round
               size="xs"
               icon="add"
+              color="grey-5"
+              text-color="black"
               @click="handleSelectedParam('create', props, i, 'outputParams'); showEditParamDialog = true"
             />
         </template>

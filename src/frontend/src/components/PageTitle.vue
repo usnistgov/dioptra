@@ -4,11 +4,10 @@
   >
     {{ title || 'Loading...' }}
   </h1>
-  <nav aria-label="Breadcrumb">
+  <nav aria-label="Breadcrumb" style="font-size: 1.2em;">
     <q-breadcrumbs class="text-grey">
       <template v-slot:separator>
         <q-icon
-          size="1.2em"
           name="arrow_forward"
         />
       </template>

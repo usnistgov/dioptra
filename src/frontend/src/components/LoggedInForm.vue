@@ -1,7 +1,7 @@
 <template>
   <q-card bordered class="q-pa-lg" style="min-width: 40%;">
     <q-card-section class="text-center">
-        <h1 class="form-title" style="margin-top: 0; margin-bottom: 0;">Logged In</h1>
+        <h1 class="q-mt-none q-mb-sm">Logged In</h1>
         <p>You are currently logged in as <span class="text-weight-bold text-primary">{{ loggedInUser.username }}</span></p>
         <p>
           Email: {{ loggedInUser.email }} <br>

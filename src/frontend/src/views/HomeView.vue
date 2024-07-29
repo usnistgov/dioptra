@@ -7,7 +7,7 @@
   </p>
   <p>
     For reference and instructions, you can view our docs here: <br>
-    <a href="https://pages.nist.gov/dioptra/" target="_blank" :class="darkMode && darkMode !== 'auto' ? 'darkLink' : ''">
+    <a href="https://pages.nist.gov/dioptra/" target="_blank">
       https://pages.nist.gov/dioptra/
     </a>
   </p>
