@@ -38,12 +38,36 @@ p {
   font-size: 1.2em
 }
 
-.darkLink {
-  color: #579aca
+.body--dark a {
+  color: #51bef4;
+  font-weight: 500;
 }
 
-a:hover {
-  color: #ee9040
+.body--dark {
+  color: #cecece !important;
+}
+
+.body--dark .q-field__messages [role="alert"] {
+  color: #ff5353 !important;
+  font-weight: 500;
+}
+
+.q-notification__message {
+  color: white;
+}
+
+.body--dark .q-tab {
+  color: #e4e4e4;
+}
+
+.body--dark .q-card,
+.body--dark .q-table {
+  color: #cecece;
+}
+
+a:hover,
+a.q-breadcrumbs__el:hover {
+  color: #f27e19 !important;
 }
 
 .q-tab:hover {
@@ -84,7 +108,8 @@ a:hover {
 
 h1 {
   font-size: clamp(1rem, 10vw, 4rem) !important;
-  line-height: 1 !important; 
+  line-height: 1 !important;
+  font-weight: 400 !important;
 }
 
 h2 {
@@ -93,25 +118,14 @@ h2 {
   margin-bottom: 0;
 }
 
-.form-title {
-  font-size: clamp(1rem, 10vw, 3rem) !important;
-  font-weight: bold;
-}
-
 .field-label {
   width: 100px;
   font-size: 1rem;
   color: black;
 }
 
-.field-label-short {
-  width: 100px;
-  font-size: 1rem;
-  color: black;
-}
-
 .body--dark .field-label {
-  color: white;
+  color: #cecece;
 }
 
 legend {

@@ -15,7 +15,7 @@
               aria-required="true"
             >
               <template v-slot:before>
-                <label :class="`field-label-short`">Group Name:</label>
+                <label :class="`field-label`">Group Name:</label>
               </template>
             </q-input>
           </div>
@@ -61,7 +61,7 @@
               aria-required="true"
             >
               <template v-slot:before>
-                <label :class="`field-label-short`">Search User:</label>
+                <label :class="`field-label`">Search User:</label>
               </template>
               <template v-slot:append>
                 <q-icon name="search" />
