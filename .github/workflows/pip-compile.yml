@@ -19,6 +19,9 @@ name: pip-compile runs
 on:
   schedule:
     - cron: "10 1 * * *" # at 1:10am every day
+  push:
+    branches:
+      - "*"
 
 jobs:
   pip-compile:
