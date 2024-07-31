@@ -14,6 +14,41 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from .client import DioptraClient, connect_dioptra_client
+import structlog
+from structlog.stdlib import BoundLogger
 
-__all__ = ["connect_dioptra_client", "DioptraClient"]
+from .base import DioptraResponseProtocol, Endpoint
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+
+class AuthClient(Endpoint):
+
+    name = "auth"
+
+    def login(self, username: str, password: str) -> DioptraResponseProtocol:
+        """Send a login request to the Dioptra API.
+
+        Args:
+            username: The username of the user.
+            password: The password of the user.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.post(
+            self.url,
+            "login",
+            json_={"username": username, "password": password},
+        )
+
+    def logout(self, everywhere: bool = False) -> DioptraResponseProtocol:
+        """Send a logout request to the Dioptra API.
+
+        Args:
+            everywhere: If True, log out from all sessions.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.post(self.url, "logout", json_={"everywhere": everywhere})
