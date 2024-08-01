@@ -98,8 +98,51 @@
     </template>
 
     <template #top-right>
-      <q-btn v-if="!hideEditBtn" color="secondary" icon="edit" label="Edit" class="q-mr-lg" @click="$emit('edit')"  :disabled="!selected?.length" />
-      <q-btn v-if="!hideDeleteBtn" color="negative" icon="sym_o_delete" label="Delete" class="q-mr-lg"  @click="$emit('delete')" :disabled="!selected?.length" />
+      <q-btn 
+        v-if="!hideEditBtn" color="secondary"
+        icon="edit" 
+        label="Edit"
+        class="q-mr-lg" 
+        @click="() => { if(!selected[0]?.hasDraft) $emit('edit') }"
+        :disabled="!selected?.length" 
+      >
+        <q-menu v-if="selected[0]?.hasDraft">
+          <q-list style="min-width: 100px">
+            <q-item clickable v-close-popup @click="$emit('edit')">
+              <q-item-section>
+                Edit {{ title.substring(0, title.length - 1) }}
+              </q-item-section>
+            </q-item>
+            <q-separator />
+            <q-item clickable v-close-popup @click="$emit('editResourceDraft')">
+              <q-item-section>Edit Draft</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
+      <q-btn
+        v-if="!hideDeleteBtn"
+        color="negative"
+        icon="sym_o_delete"
+        label="Delete"
+        class="q-mr-lg"
+        @click="() => { if(!selected[0]?.hasDraft) $emit('delete') }" 
+        :disabled="!selected?.length"
+      >
+        <q-menu v-if="selected[0]?.hasDraft">
+          <q-list style="min-width: 100px">
+            <q-item clickable v-close-popup @click="$emit('delete')">
+              <q-item-section>
+                Delete {{ title.substring(0, title.length - 1) }}
+              </q-item-section>
+            </q-item>
+            <q-separator />
+            <q-item clickable v-close-popup @click="$emit('deleteResourceDraft')">
+              <q-item-section>Delete Draft</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
       <q-input v-if="!hideSearch" v-model="filter" debounce="300" dense placeholder="Search" outlined>
           <template #append>
             <q-icon name="search" />
@@ -117,7 +160,7 @@
         style="box-shadow: 0 0 0 0.5px grey"
         :options="[
           {label: title, value: false},
-          {label: 'Drafts', value: true},
+          {label: 'New Drafts', value: true},
         ]"
         @click="refreshTable"
       />
@@ -132,7 +175,7 @@
   const isMobile = inject('isMobile')
 
   const props = defineProps(['columns', 'rows', 'title', 'showExpand', 'hideEditBtn', 'hideDeleteBtn', 'showToggleDraft', 'hideSearch', 'disableSelect', 'rightCaption'])
-  const emit = defineEmits(['edit', 'delete', 'request', 'expand', 'editTags'])
+  const emit = defineEmits(['edit', 'delete', 'request', 'expand', 'editTags', 'deleteResourceDraft', 'editResourceDraft'])
 
   const finalColumns = computed(() => {
     let defaultColumns = [ ...props.columns ]
@@ -157,7 +200,6 @@
   const filter = ref('')
   const selected = defineModel('selected')
   const radioSelected = ref('')
-  //const showDrafts = ref(false)
   const showDrafts = defineModel('showDrafts')
 
   function handleClick(tableProps) {

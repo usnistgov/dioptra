@@ -172,8 +172,14 @@
       </div>
     </fieldset>
   </div>
-
-  <div :class="`${isMobile ? '' : 'q-mx-xl'} float-right q-mb-lg`">
+  <div :class="`${isMobile ? '' : 'q-mx-xl'} q-mb-lg row`">
+      <q-btn
+        v-if="route.params.id === 'new' && !route.params.draftType"
+        color="secondary" 
+        label="Save Draft"
+        @click="submit(true)"
+      />
+      <q-space />
       <q-btn  
         to="/entrypoints"
         color="negative" 
@@ -265,11 +271,22 @@
   getEntrypoint()
   async function getEntrypoint() {
     if(route.params.id === 'new') {
-      title.value = 'Create Entrypoint'
+      if(route.params.draftType === 'resourceDraft') {
+        const res = await api.getItem('entrypoints', route.params.resourceDraftParentId)
+        entryPoint.value = res.data
+      }
+      title.value = `Create ${route.params.draftType === 'resourceDraft' ? `Draft for ${entryPoint.value.name}` : 'Entrypoint'}`
       return
     }
     try {
-      const res = await api.getItem('entrypoints', route.params.id)
+      let res
+      if (route.params.draftType === 'newDraft') {
+        res = await api.getNewDraft('entrypoints', route.params.id)
+      } else if(route.params.draftType === 'resourceDraft') {
+        res = await api.getResourceDraft('entrypoints', route.params.resourceDraftParentId)
+      } else {
+        res = await api.getItem('entrypoints', route.params.id)
+      }
       entryPoint.value = res.data
       title.value = `Edit ${res.data.name}`
       console.log('entryPoint = ', entryPoint.value)
@@ -294,36 +311,59 @@
 
   const taskGraphError = ref('')
 
-  function submit() {
+  function submit(isNewDraft = false) {
     basicInfoForm.value.validate().then(success => {
       taskGraphError.value = entryPoint.value.taskGraph.length > 0 ? '' : 'This field is required'
       if (success && taskGraphError.value === '') {
-        addOrModifyEntrypoint()
-      }
-      else {
-        // error
+        addOrModifyEntrypoint(isNewDraft)
       }
     })
   }
 
-  async function addOrModifyEntrypoint() {
+  async function addOrModifyEntrypoint(isNewDraft) {
     entryPoint.value.queues.forEach((queue, index, array) => {
       if(typeof queue === 'object') {
         array[index] = queue.id
       }
     })
+    entryPoint.value?.plugins?.forEach((plugins, index, array) => {
+      if(typeof plugins === 'object') {
+        array[index] = plugins.id
+      }
+    })
     try {
+      // CREATE
+      const createParams = {
+        name: entryPoint.value.name,
+        description: entryPoint.value.description,
+        taskGraph: entryPoint.value.taskGraph,
+        parameters: entryPoint.value.parameters,
+        queues: entryPoint.value.queues,
+        plugins: entryPoint.value.plugins
+      }
       if (route.params.id === 'new') {
-        await api.addItem('entrypoints', entryPoint.value)
+        if(isNewDraft) {
+          await api.addNewDraft('entrypoints', entryPoint.value)
+        } else if(route.params.draftType === 'resourceDraft') {
+          await api.addResourceDraft('entrypoints', createParams, route.params.resourceDraftParentId)
+        } else {
+          await api.addItem('entrypoints', entryPoint.value)
+        }
         notify.success(`Sucessfully created '${entryPoint.value.name}'`)
       } else {
-        await api.updateItem('entrypoints', route.params.id, {
+        // EDIT
+        const params = {
           name: entryPoint.value.name,
           description: entryPoint.value.description,
           taskGraph: entryPoint.value.taskGraph,
           parameters: entryPoint.value.parameters,
           queues: entryPoint.value.queues,
-        })
+        }
+        if (route.params.draftType === 'resourceDraft') {
+          await api.updateResourceDraft('entrypoints', params, route.params.resourceDraftParentId)
+        } else {
+          await api.updateItem('entrypoints', route.params.id, params, route.params.draftType === 'newDraft')
+        }
         notify.success(`Sucessfully updated '${entryPoint.value.name}'`)
       }
     } catch(err) {

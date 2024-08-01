@@ -4,16 +4,20 @@
   />
   <TableComponent 
     :rows="entrypoints"
-    :columns="columns"
+    :columns="showDrafts ? columns.filter((col) => col.name !== 'tags' && col.name !== 'hasDraft') : columns"
     :showExpand="true"
     title="Entrypoints"
     v-model:selected="selected"
     :pagination="{sortBy: 'draft', descending: true}"
-    @edit="router.push(`/entrypoints/${selected[0].id}`)"
+    @edit="router.push(`/entrypoints/${selected[0].id}${draftType ? '/newDraft' : ''}`)"
+    @editResourceDraft="loadResouceDraft(selected[0])"
     @delete="showDeleteDialog = true"
     @request="getEntrypoints"
     ref="tableRef"
+    :showToggleDraft="true"
+    v-model:showDrafts="showDrafts"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @deleteResourceDraft="resourceDraftMode = true; showDeleteDialog = true;"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -45,7 +49,7 @@
       </label>
     </template>
     <template #expandedSlot="{ row }">
-      <CodeEditor v-model="row.taskGraph" language="yaml" />
+      <CodeEditor v-model="row.taskGraph" language="yaml" :readOnly="true" />
     </template>
     <template #body-cell-plugins="props">
       <q-chip
@@ -62,6 +66,27 @@
         icon="add"
         @click.stop="editEntrypoint = props.row; showAssignPluginsDialog = true"
       />
+    </template>
+    <template #body-cell-hasDraft="props">
+      <q-btn
+        round
+        size="sm"
+        :icon="props.row.hasDraft ? 'sym_o_draft' : 'add'"
+        :color="props.row.hasDraft ? 'primary' : ''"
+        :text-color="props.row.hasDraft ? '' : 'black'"
+        :disable="props.row.hasDraft"
+        @click="() => { if(!props.row.hasDraft) loadResouceDraft(props.row) }"
+      >
+        <q-tooltip>
+          <p v-if="props.row.hasDraft" class="q-mb-none">
+            This resource has an associated draft.<br>Use table buttons to edit/delete.
+          </p>
+          <p v-else class="q-mb-none">
+            Click here to add a draft for this resource.
+          </p>
+          
+        </q-tooltip>
+      </q-btn>
     </template>
   </TableComponent>
 
@@ -87,13 +112,14 @@
         Task Graph YAML
       </label>
     </template>
-    <CodeEditor v-model="displayYaml" style="height: auto;" :readOnly="true" />
+    <CodeEditor v-model="displayYaml" language="yaml" style="height: auto;" :readOnly="true" />
   </InfoPopupDialog>
   <DeleteDialog 
-    v-model="showDeleteDialog"
+    v-model:showDialog="showDeleteDialog"
     @submit="deleteEntryPoint"
     type="Entry Point"
     :name="selected.length ? selected[0].name : ''"
+    v-model:resourceDraftMode="resourceDraftMode"
   />
   <AssignTagsDialog 
     v-model="showTagsDialog"
@@ -110,7 +136,7 @@
 
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
   import { useRouter } from 'vue-router'
   import CodeEditor from '@/components/CodeEditor.vue'
   import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
@@ -126,6 +152,7 @@
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
+    { name: 'hasDraft', label: 'hasDraft', align: 'left', field: 'hasDraft', sortable: true },
     { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: true, },
     { name: 'parameterNames', label: 'Parameter Name(s)', align: 'left', sortable: true },
     { name: 'parameterTypes', label: 'Parameter Type(s)', align: 'left', field: 'parameterTypes', sortable: true },
@@ -135,6 +162,13 @@
   ]
 
   const selected = ref([])
+
+  const draftType = computed(() => {
+    if(selected.value.length === 0) return null
+    if(Object.hasOwn(selected.value[0], 'payload') && !selected.value[0].resource) {
+      return 'newDraft'
+    }
+  })
 
   const showTaskGraphDialog = ref(false)
   const displayYaml = ref('')
@@ -158,19 +192,47 @@
     } 
   }
 
-  async function deleteEntryPoint() {
+  async function deleteEntryPoint(resourceDraft) {
     try {
-      await api.deleteItem('entrypoints', selected.value[0].id)
-      notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+      if(resourceDraft) {
+        await api.deleteResourceDraft('entrypoints', selected.value[0].id)
+        notify.success(`Sucessfully deleted draft for '${selected.value[0].name}'`)
+      } else if(Object.hasOwn(selected.value[0], 'payload') && !selected.value[0].resource) {
+        await api.deleteDraft('entrypoints', selected.value[0].id)
+        notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+      } else {
+        await api.deleteItem('entrypoints', selected.value[0].id)
+        notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+      }
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()
     } catch(err) {
-      notify.error(err.response.data.message);
+      notify.error(err.response.data.message)
     }
   }
 
   const editObjTags = ref({})
   const showTagsDialog = ref(false)
+
+  const showDrafts = ref(false)
+
+  async function loadResouceDraft(entryPoint) {
+    let res
+    console.log('entrypoint = ', entryPoint)
+    if(entryPoint.hasDraft) {
+      try {
+        res = await api.getResourceDraft('entrypoints', entryPoint.id)
+        router.push(`/entrypoints/${res.data.id}/resourceDraft/${entryPoint.id}`)
+      } catch(err) {
+        notify.error(err.response.data.message)
+      }
+    } else {
+      router.push(`/entrypoints/new/resourceDraft/${entryPoint.id}`)
+    }
+  }
+
+  const resourceDraftMode = ref(false)
+  
 
 </script>
