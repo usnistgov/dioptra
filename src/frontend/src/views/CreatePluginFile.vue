@@ -478,7 +478,7 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
+    { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: true },
     { name: 'view', label: 'Structure', align: 'left', sortable: false },
   ]
 
@@ -505,7 +505,7 @@
   const outputParamForm = ref(null)
 
   const taskColumns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: false, },
     { name: 'inputParams', label: 'Input Params', field: 'inputParams', align: 'left', sortable: false },
     { name: 'outputParams', label: 'Output Params', field: 'outputParams', align: 'left', sortable: false },
     { name: 'actions', label: 'Actions', align: 'center', },

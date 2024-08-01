@@ -76,7 +76,11 @@
                 text-color="black"
               />
             </div>
-            <div v-else>
+            <div v-else-if="col.name === 'createdOn' || col.name === 'lastModifiedOn'">
+              {{ formatDate(col.value) }}
+            </div>
+            <div v-else-if="!Array.isArray(col.value)">
+              <!-- if value is an array, then render it with a custom slot -->
               {{ col.value }}
             </div>
           </slot>
@@ -141,6 +145,12 @@
     }
     if(props.showExpand) {
       defaultColumns.push({ name: 'expand', align: 'center', sortable: false, label: 'Expand' })
+    }
+    if(showDrafts.value) {
+      defaultColumns = defaultColumns.map(column => ({
+        ...column,
+        sortable: false
+      }))
     }
     return defaultColumns
   })
@@ -215,6 +225,11 @@
     if(expanded) {
       emit('expand', row)
     }
+  }
+
+  function formatDate(dateString) {
+    const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
+    return new Date(dateString).toLocaleString('en-US', options)
   }
 
 </script>

@@ -52,6 +52,10 @@ class PluginTaskOutputParameterNameAlreadyExistsError(Exception):
     """More than one plugin task output parameter is being assigned the same name."""
 
 
+class PluginSortError(Exception):
+    """The requested sortBy column is not a sortable field."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(PluginDoesNotExistError)
     def handle_plugin_does_not_exist_error(error):
@@ -108,3 +112,10 @@ def register_error_handlers(api: Api) -> None:
             "message": "Bad Request - More than one plugin task output parameter is "
             "being assigned the same name."
         }, 400
+
+    @api.errorhandler(PluginSortError)
+    def handle_queue_sort_error(error):
+        return (
+            {"message": "Bad Request - This column can not be sorted."},
+            400,
+        )

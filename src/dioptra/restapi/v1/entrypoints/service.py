@@ -40,6 +40,7 @@ from .errors import (
     EntrypointDoesNotExistError,
     EntrypointParameterNamesNotUniqueError,
     EntrypointPluginDoesNotExistError,
+    EntrypointSortError,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -49,6 +50,12 @@ SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.EntryPoint.name.like(x, escape="/"),
     "description": lambda x: models.EntryPoint.description.like(x, escape="/"),
     "task_graph": lambda x: models.EntryPoint.task_graph.like(x, escape="/"),
+}
+SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": models.EntryPoint.name,
+    "createdOn": models.EntryPoint.created_on,
+    "lastModifiedOn": models.Resource.last_modified_on,
+    "description": models.EntryPoint.description,
 }
 
 
@@ -175,6 +182,8 @@ class EntrypointService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> tuple[list[utils.EntrypointDict], int]:
         """Fetch a list of entrypoints, optionally filtering by search string and paging
@@ -185,6 +194,8 @@ class EntrypointService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of entrypoints to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of entrypoints and the total number of entrypoints
@@ -243,6 +254,18 @@ class EntrypointService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
+            sort_column = SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            entrypoints_stmt = entrypoints_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
+            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
+            raise EntrypointSortError
+
         entrypoints = list(db.session.scalars(entrypoints_stmt).unique().all())
 
         queue_ids = set(

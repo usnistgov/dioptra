@@ -26,6 +26,7 @@ from dioptra.restapi.v1.schemas import (
     PagingQueryParametersSchema,
     ResourceTypeQueryParametersSchema,
     SearchQueryParametersSchema,
+    SortByGetQueryParametersSchema,
 )
 from dioptra.restapi.v1.users.schema import UserRefSchema
 
@@ -117,6 +118,7 @@ class TagGetQueryParameters(
     PagingQueryParametersSchema,
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
+    SortByGetQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /tags endpoint."""
 

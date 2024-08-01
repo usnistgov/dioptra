@@ -28,6 +28,10 @@ class ArtifactDoesNotExistError(Exception):
     """The requested artifact does not exist."""
 
 
+class ArtifactSortError(Exception):
+    """The requested sortBy column is not a sortable field."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(ArtifactDoesNotExistError)
     def handle_artifact_does_not_exist_error(error):
@@ -40,5 +44,12 @@ def register_error_handlers(api: Api) -> None:
                 "message": "Bad Request - The artifact uri on the registration form "
                 "already exists. Please select another and resubmit."
             },
+            400,
+        )
+
+    @api.errorhandler(ArtifactSortError)
+    def handle_queue_sort_error(error):
+        return (
+            {"message": "Bad Request - This column can not be sorted."},
             400,
         )

@@ -36,6 +36,7 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 from .errors import (
     ModelAlreadyExistsError,
     ModelDoesNotExistError,
+    ModelSortError,
     ModelVersionDoesNotExistError,
 )
 
@@ -49,6 +50,12 @@ MODEL_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
 }
 MODEL_VERSION_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "description": lambda x: models.MlModelVersion.description.like(x, escape="/"),
+}
+MODEL_SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": models.MlModel.name,
+    "createdOn": models.MlModel.created_on,
+    "lastModifiedOn": models.Resource.last_modified_on,
+    "description": models.MlModel.description,
 }
 
 
@@ -132,6 +139,8 @@ class ModelService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> Any:
         """Fetch a list of models, optionally filtering by search string and paging
@@ -142,6 +151,8 @@ class ModelService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of models to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of models and the total number of models matching
@@ -200,6 +211,20 @@ class ModelService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in MODEL_SORTABLE_FIELDS:
+            sort_column = MODEL_SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            latest_ml_models_stmt = latest_ml_models_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in MODEL_SORTABLE_FIELDS:
+            log.debug(
+                f"sort_by_string: '{sort_by_string}' is not in MODEL_SORTABLE_FIELDS"
+            )
+            raise ModelSortError
+
         ml_models = db.session.scalars(latest_ml_models_stmt).all()
 
         # extract list of model ids

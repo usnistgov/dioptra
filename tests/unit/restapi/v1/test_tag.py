@@ -179,6 +179,41 @@ def assert_retrieving_tags_works(
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
+def assert_sorting_tag_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Assert that tags can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of tag ids after sorting.
+            See test_tag_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_TAGS_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    tag_ids = [tag["id"] for tag in response_data["data"]]
+
+    assert response.status_code == 200 and tag_ids == expected
+
+
 def assert_registering_existing_tag_name_fails(
     client: FlaskClient, name: str, group_id: int
 ) -> None:
@@ -298,6 +333,40 @@ def test_create_tag(
     assert_retrieving_tag_by_id_works(
         client, tag_id=tag_expected["id"], expected=tag_expected
     )
+
+
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        (None, None, ["tag1", "tag2", "tag3"]),
+        ("name", True, ["tag2", "tag1", "tag3"]),
+        ("name", False, ["tag3", "tag1", "tag2"]),
+        ("createdOn", True, ["tag3", "tag2", "tag1"]),
+        ("createdOn", False, ["tag1", "tag2", "tag3"]),
+    ],
+)
+def test_tag_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_tags: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that tags can be sorted by column.
+
+    Given an authenticated user and registered tags, this test validates the following
+    sequence of actions:
+
+    - A user registers three tags, "tag_one", "tag_two", "name".
+    - The user is able to retrieve a list of all registered tags sorted by a column
+      ascending/descending.
+    - The returned list of tags matches the order in the parametrize lists above.
+    """
+
+    expected_ids = [registered_tags[expected_name]["id"] for expected_name in expected]
+    assert_sorting_tag_works(client, sortBy, descending, expected=expected_ids)
 
 
 def test_tag_search_query(

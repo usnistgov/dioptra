@@ -22,6 +22,7 @@ registered, renamed, queried, and deleted as expected through the REST API.
 """
 from typing import Any
 
+import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from pytest import MonkeyPatch
@@ -235,6 +236,41 @@ def assert_retrieving_jobs_works(
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
+def assert_sorting_job_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Assert that jobs can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of job ids after sorting.
+            See test_job_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_JOBS_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    job_ids = [job["id"] for job in response_data["data"]]
+
+    assert response.status_code == 200 and job_ids == expected
+
+
 def assert_job_is_not_found(
     client: FlaskClient,
     job_id: int,
@@ -279,11 +315,12 @@ def test_create_job(
 ) -> None:
     """Test that jobs can be correctly registered and retrieved using the API.
 
-    Given an authenticated user, registered queues, registered experiments, and registered entrypoints
-    this test validates the following sequence of actions:
+    Given an authenticated user, registered queues, registered experiments, and
+    registered entrypoints, this test validates the following sequence of actions:
 
     - The user registers a job.
-    - The response is valid and matches the expected values given the registration request.
+    - The response is valid and matches the expected values given the registration
+      request.
     - The user is able to retrieve information about the job using the job id.
     """
 
@@ -305,6 +342,7 @@ def test_create_job(
     """
     # Inline import necessary to prevent circular import
     import dioptra.restapi.v1.shared.rq_service as rq_service
+
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
     description = "The new job."
@@ -379,6 +417,43 @@ def test_job_get_all(
     """
     job_expected_list = list(registered_jobs.values())
     assert_retrieving_jobs_works(client, expected=job_expected_list)
+
+
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        (None, None, ["job1", "job2", "job3"]),
+        ("description", True, ["job2", "job1", "job3"]),
+        ("description", False, ["job3", "job1", "job2"]),
+        ("createdOn", True, ["job3", "job2", "job1"]),
+        ("createdOn", False, ["job1", "job2", "job3"]),
+    ],
+)
+def test_job_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that jobs can be sorted by column.
+
+    Given an authenticated user and registered jobs, this test validates the following
+    sequence of actions:
+
+    - A user registers three jobs descriptions:
+      "The first job.",
+      "The second job.",
+      "Not retrieved.".
+    - The user is able to retrieve a list of all registered jobs sorted by a column
+      ascending/descending.
+    - The returned list of jobs matches the order in the parametrize lists above.
+    """
+
+    expected_ids = [registered_jobs[expected_name]["id"] for expected_name in expected]
+    assert_sorting_job_works(client, sortBy, descending, expected=expected_ids)
 
 
 def test_job_search_query(
@@ -563,8 +638,8 @@ def test_tag_job(
 ) -> None:
     """Test that tags can applied to jobs.
 
-    Given an authenticated user, registered jobs, and registered tags this test validates
-    the following sequence of actions:
+    Given an authenticated user, registered jobs, and registered tags this test
+    validates the following sequence of actions:
 
     - The user appends tags to a job
     - The user retrieves information about the tags of the job and gets

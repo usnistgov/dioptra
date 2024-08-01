@@ -15,6 +15,9 @@
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
     </template>
+    <template #body-cell-files="props">
+      <div>{{ props.row.files?.length }}</div>
+    </template>
     <template #expandedSlot="{ row }">
       <q-btn 
         color="primary" 
@@ -107,10 +110,9 @@
   }
 
   const columns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, sort: (a, b) => a - b },
-    { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
-    { name: 'files', label: 'Files', align: 'left', sortable: false },
-    { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
+    { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: true },
+    { name: 'files', label: 'Number of Files', align: 'left', field: 'files', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
   ]
 

@@ -8,7 +8,6 @@
     :showExpand="true"
     title="Entrypoints"
     v-model:selected="selected"
-    :pagination="{sortBy: 'draft', descending: true}"
     @edit="router.push(`/entrypoints/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getEntrypoints"
@@ -126,12 +125,12 @@
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
-    { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: true, },
-    { name: 'parameterNames', label: 'Parameter Name(s)', align: 'left', sortable: true },
-    { name: 'parameterTypes', label: 'Parameter Type(s)', align: 'left', field: 'parameterTypes', sortable: true },
-    { name: 'defaultValues', label: 'Default Values', align: 'left', field: 'defaultValues', sortable: true },
-    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: true },
-    { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: true },
+    { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: false, },
+    { name: 'parameterNames', label: 'Parameter Name(s)', align: 'left', sortable: false },
+    { name: 'parameterTypes', label: 'Parameter Type(s)', align: 'left', field: 'parameterTypes', sortable: false },
+    { name: 'defaultValues', label: 'Default Values', align: 'left', field: 'defaultValues', sortable: false },
+    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
+    { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: false },
   ]
 
   const selected = ref([])

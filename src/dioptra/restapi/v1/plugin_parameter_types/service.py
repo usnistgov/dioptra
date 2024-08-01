@@ -32,6 +32,7 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 from .errors import (
+    PluginParameterSortError,
     PluginParameterTypeAlreadyExistsError,
     PluginParameterTypeDoesNotExistError,
     PluginParameterTypeMatchesBuiltinTypeError,
@@ -49,6 +50,12 @@ SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "tag": lambda x: models.PluginTaskParameterType.tags.any(
         models.Tag.name.like(x, escape="/")
     ),
+}
+SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": models.PluginTaskParameterType.name,
+    "createdOn": models.PluginTaskParameterType.created_on,
+    "lastModifiedOn": models.Resource.last_modified_on,
+    "description": models.PluginTaskParameterType.description,
 }
 
 
@@ -156,6 +163,8 @@ class PluginParameterTypeService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> tuple[list[utils.PluginParameterTypeDict], int]:
         """Fetch a list of plugin parameter types, optionally filtering by
@@ -167,6 +176,8 @@ class PluginParameterTypeService(object):
             page_index: The index of the first group to be returned.
             page_length: The maximum number of plugin parameter types to be
                 returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of plugin parameter types and the total
@@ -225,6 +236,20 @@ class PluginParameterTypeService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
+            sort_column = SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            plugin_parameter_types_stmt = plugin_parameter_types_stmt.order_by(
+                sort_column
+            )
+        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
+            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
+            raise PluginParameterSortError
+
         plugin_parameter_types = list(
             db.session.scalars(plugin_parameter_types_stmt).all()
         )

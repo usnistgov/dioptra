@@ -32,7 +32,7 @@ from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
-from .errors import QueueAlreadyExistsError, QueueDoesNotExistError
+from .errors import QueueAlreadyExistsError, QueueDoesNotExistError, QueueSortError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -41,6 +41,12 @@ SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.Queue.name.like(x, escape="/"),
     "description": lambda x: models.Queue.description.like(x, escape="/"),
     "tag": lambda x: models.Queue.tags.any(models.Tag.name.like(x, escape="/")),
+}
+SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": models.Queue.name,
+    "createdOn": models.Queue.created_on,
+    "lastModifiedOn": models.Resource.last_modified_on,
+    "description": models.Queue.description,
 }
 
 
@@ -118,6 +124,8 @@ class QueueService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> tuple[list[utils.QueueDict], int]:
         """Fetch a list of queues, optionally filtering by search string and paging
@@ -128,6 +136,8 @@ class QueueService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of queues to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of queues and the total number of queues matching
@@ -183,6 +193,18 @@ class QueueService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
+            sort_column = SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            queues_stmt = queues_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
+            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
+            raise QueueSortError
+
         queues = list(db.session.scalars(queues_stmt).all())
 
         drafts_stmt = select(

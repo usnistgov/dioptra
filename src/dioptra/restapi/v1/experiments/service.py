@@ -34,7 +34,11 @@ from dioptra.restapi.v1.entrypoints.service import EntrypointIdsService
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
-from .errors import ExperimentAlreadyExistsError, ExperimentDoesNotExistError
+from .errors import (
+    ExperimentAlreadyExistsError,
+    ExperimentDoesNotExistError,
+    ExperimentSortError,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -43,6 +47,12 @@ SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.Experiment.name.like(x, escape="/"),
     "description": lambda x: models.Experiment.description.like(x, escape="/"),
     "tag": lambda x: models.Experiment.tags.any(models.Tag.name.like(x, escape="/")),
+}
+SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": models.Experiment.name,
+    "createdOn": models.Experiment.created_on,
+    "lastModifiedOn": models.Resource.last_modified_on,
+    "description": models.Experiment.description,
 }
 
 
@@ -147,6 +157,8 @@ class ExperimentService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> tuple[list[utils.ExperimentDict], int]:
         """Fetch a list of experiments, optionally filtering by search string and paging
@@ -157,6 +169,8 @@ class ExperimentService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first page to be returned.
             page_length: The maximum number of experiments to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of experiments and the total number of experiments
@@ -214,6 +228,18 @@ class ExperimentService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
+            sort_column = SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            experiments_stmt = experiments_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
+            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
+            raise ExperimentSortError
+
         experiments = list(db.session.scalars(experiments_stmt).all())
 
         entrypoint_ids = {

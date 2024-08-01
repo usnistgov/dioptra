@@ -19,15 +19,6 @@
         </q-tooltip>
       </RouterLink>
     </template>
-    <template #body-cell-draft="props">
-      <q-chip v-if="props.row.draft" outline color="red" text-color="white" class="q-ml-none">
-        DRAFT
-      </q-chip>
-      <span v-else></span>
-    </template>
-    <template #body-cell-group="props">
-      <div>{{ props.row.group.name }}</div>
-    </template>
     <template #body-cell-entrypoints="props">
       <q-chip
         v-for="(entrypoint, i) in props.row.entrypoints"
@@ -98,11 +89,9 @@
   const experiments = ref([])
 
   const columns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, sort: (a, b) => a - b },
-    { name: 'draft', label: 'Draft', align: 'left', field: 'draft', sortable: true },
-    { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
-    { name: 'entrypoints', label: 'Entry Points', align: 'left', field: 'entrypoints', sortable: true },
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: false },
+    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
+    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
+    { name: 'entrypoints', label: 'Entry Points', align: 'left', field: 'entrypoints', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
   ]
 

@@ -23,6 +23,7 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 
 from typing import Any
 
+import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 
@@ -158,6 +159,41 @@ def assert_retrieving_artifacts_works(
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
+def assert_sorting_artifact_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Assert that artifacts can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of artifacts ids after sorting.
+            See test_artifact_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    artifact_ids = [artifact["id"] for artifact in response_data["data"]]
+
+    assert response.status_code == 200 and artifact_ids == expected
+
+
 def assert_registering_existing_artifact_uri_fails(
     client: FlaskClient,
     uri: str,
@@ -237,8 +273,8 @@ def test_artifacts_get_all(
 ) -> None:
     """Test that all artifacts can be retrieved.
 
-    Given an authenticated user and registered artifacts, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered artifacts, this test validates the
+    following sequence of actions:
 
     - A user registers three artifacts with uris
         - "s3://bucket/model_v1.artifact"
@@ -252,6 +288,45 @@ def test_artifacts_get_all(
     assert_retrieving_artifacts_works(client, expected=artifacts_expected_list)
 
 
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        (None, None, ["artifact1", "artifact2", "artifact3", "artifact4"]),
+        ("description", True, ["artifact2", "artifact1", "artifact4", "artifact3"]),
+        ("description", False, ["artifact3", "artifact4", "artifact1", "artifact2"]),
+        ("createdOn", True, ["artifact4", "artifact3", "artifact2", "artifact1"]),
+        ("createdOn", False, ["artifact1", "artifact2", "artifact3", "artifact4"]),
+    ],
+)
+def test_artifact_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_artifacts: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that artifacts can be sorted by column.
+
+    Given an authenticated user and registered artifacts, this test validates the
+    following sequence of actions:
+
+    - A user registers three artifacts with these descriptions:
+        "Model artifact.",
+        "Trained conv net model artifact.",
+        "Another model",
+        "Fine-tuned model.".
+    - The user is able to retrieve a list of all registered artifacts sorted by a column
+    - The returned list of artifacts matches the order in the parametrize lists above.
+    """
+
+    expected_ids = [
+        registered_artifacts[expected_name]["id"] for expected_name in expected
+    ]
+    assert_sorting_artifact_works(client, sortBy, descending, expected=expected_ids)
+
+
 def test_artifact_search_query(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -260,8 +335,8 @@ def test_artifact_search_query(
 ) -> None:
     """Test that artifacts can be queried with a search term.
 
-    Given an authenticated user and registered artifacts, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered artifacts, this test validates the
+    following sequence of actions:
 
     - The user is able to retrieve a list of all registered artifacts with 'artifact' in
         their description.
@@ -283,12 +358,13 @@ def test_artifact_group_query(
 ) -> None:
     """Test that artifacts can retrieved using a group filter.
 
-    Given an authenticated user and registered artifacts, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered artifacts, this test validates the
+    following sequence of actions:
 
-    - The user is able to retrieve a list of all registered artifacts that are owned by the
-      default group.
-    - The returned list of artifacts matches the expected list owned by the default group.
+    - The user is able to retrieve a list of all registered artifacts that are owned by
+      the default group.
+    - The returned list of artifacts matches the expected list owned by the default
+      group.
     """
     artifacts_expected_list = list(registered_artifacts.values())
     assert_retrieving_artifacts_works(
@@ -306,8 +382,8 @@ def test_cannot_register_existing_artifact_uri(
 ) -> None:
     """Test that registering a artifact with an existing uri fails.
 
-    Given an authenticated user and registered artifacts, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered artifacts, this test validates the
+    following sequence of actions:
 
     - The user attempts to register a second artifact with the same uri.
     - The request fails with an appropriate error message and response code.

@@ -632,6 +632,7 @@ def registered_jobs(
 ) -> dict[str, Any]:
     # Inline import necessary to prevent circular import
     import dioptra.restapi.v1.shared.rq_service as rq_service
+
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
     queue_id = registered_queues["queue1"]["snapshot"]

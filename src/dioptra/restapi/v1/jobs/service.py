@@ -43,6 +43,7 @@ from .errors import (
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
+    JobSortError,
     QueueNotRegisteredToEntryPointError,
 )
 
@@ -54,6 +55,12 @@ SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "status": lambda x: models.Job.status.like(x),
     "timeout": lambda x: models.Job.timeout.like(x),
     "tag": lambda x: models.Job.tags.any(models.Tag.name.like(x, escape="/")),
+}
+SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "description": models.Job.description,
+    "createdOn": models.Job.created_on,
+    "lastModifiedOn": models.Resource.last_modified_on,
+    "status": models.Job.status,
 }
 JOB_STATUS_TRANSITIONS: Final[dict[str, Any]] = {
     "queued": {"started", "deferred"},
@@ -274,6 +281,8 @@ class JobService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> tuple[list[utils.JobDict], int]:
         """Fetch a list of jobs, optionally filtering by search string and paging
@@ -284,6 +293,8 @@ class JobService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of jobs to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of jobs and the total number of jobs matching
@@ -339,6 +350,18 @@ class JobService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
+            sort_column = SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            jobs_stmt = jobs_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
+            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
+            raise JobSortError
+
         jobs = list(db.session.scalars(jobs_stmt).all())
 
         job_dicts: dict[int, utils.JobDict] = {
@@ -566,6 +589,8 @@ class ExperimentJobService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> tuple[list[utils.JobDict], int]:
         """Fetch a list of jobs for a given experiment, optionally filtering by search
@@ -576,6 +601,8 @@ class ExperimentJobService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first page to be returned.
             page_length: The maximum number of experiments to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of jobs and the total number of jobs matching the
@@ -638,6 +665,18 @@ class ExperimentJobService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
+            sort_column = SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            jobs_stmt = jobs_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
+            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
+            raise JobSortError
+
         jobs = list(db.session.scalars(jobs_stmt).all())
 
         job_dicts: dict[int, utils.JobDict] = {

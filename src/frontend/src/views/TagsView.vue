@@ -61,10 +61,9 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'id', label: 'Tag ID', align: 'left', field: 'id', sortable: true },
-    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', format: val => `${formatDate(val)}`, sortable: true },
-    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', format: val => `${formatDate(val)}`, sortable: true },
-    // { name: 'chips', label: 'Custom Column Example',align: 'left', sortable: false },
+    { name: 'id', label: 'Tag ID', align: 'left', field: 'id', sortable: false },
+    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
+    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   ]
 
   async function getTags(pagination) {
@@ -102,11 +101,6 @@
     } catch(err) {
       notify.error(err.response.data.message)
     }
-  }
-
-  function formatDate(dateString) {
-    const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
-    return new Date(dateString).toLocaleString('en-US', options);
   }
 
   const selected = ref([])
