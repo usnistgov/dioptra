@@ -90,8 +90,8 @@
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
     // { name: 'id', label: 'Queue ID', align: 'left', field: 'id', sortable: true },
-    // { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', format: val => `${formatDate(val)}`, sortable: true },
-    // { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', format: val => `${formatDate(val)}`, sortable: true },
+    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', format: val => `${formatDate(val)}`, sortable: true },
+    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', format: val => `${formatDate(val)}`, sortable: true },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
     { name: 'hasDraft', label: 'hasDraft', align: 'left', field: 'hasDraft', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },

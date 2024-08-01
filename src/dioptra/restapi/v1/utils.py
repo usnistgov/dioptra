@@ -990,6 +990,8 @@ def build_paging_envelope(
     index: int,
     length: int,
     total_num_elements: int,
+    sort_by: str,
+    descending: bool,
 ) -> dict[str, Any]:
     """Build the paging envelope for a response.
 

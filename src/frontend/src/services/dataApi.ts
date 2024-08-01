@@ -130,7 +130,9 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
       index: pagination.index,
       pageLength: pagination.rowsPerPage,
       search: urlEncode(pagination.search),
-      draftType: showDrafts ? 'new' : ''
+      draftType: showDrafts ? 'new' : '',
+      sortBy: pagination.sortBy,
+      descending: pagination.descending,
     },
   })
   if(showDrafts && res.data.data) {

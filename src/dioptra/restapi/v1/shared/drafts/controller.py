@@ -18,6 +18,7 @@
 import uuid
 from functools import partial
 from typing import Type, cast
+from urllib.parse import unquote
 
 import structlog
 from flask import request
@@ -94,6 +95,8 @@ def generate_resource_drafts_endpoint(
             group_id = parsed_query_params["group_id"]
             page_index = parsed_query_params["index"]
             page_length = parsed_query_params["page_length"]
+            sort_by_string = unquote(parsed_query_params["sort_by"])
+            descending = parsed_query_params["descending"]
 
             drafts, total_num_drafts = self._draft_service.get(
                 draft_type=draft_type,
@@ -101,6 +104,8 @@ def generate_resource_drafts_endpoint(
                 base_resource_id=None,
                 page_index=page_index,
                 page_length=page_length,
+                sort_by_string=sort_by_string,
+                descending=descending,
                 log=log,
             )
             return utils.build_paging_envelope(
@@ -115,6 +120,8 @@ def generate_resource_drafts_endpoint(
                 index=page_index,
                 length=page_length,
                 total_num_elements=total_num_drafts,
+                sort_by=sort_by_string,
+                descending=descending,
             )
 
         @login_required

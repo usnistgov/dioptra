@@ -237,6 +237,20 @@ class SearchQueryParametersSchema(Schema):
         load_default="",
     )
 
+class SortByGetQueryParametersSchema(Schema):
+  """A schema for adding sort query parameters to a resource endpoint."""
+
+  sortBy = fields.String(
+      attribute="sort_by",
+      metadata=dict(description="The name of the column to sort."),
+      load_default="",
+  )
+
+  descending = fields.Bool(
+      attribute="descending",
+      metadata=dict(description="Boolean indicating whether to sort by descending or not."),
+      load_default=False,
+  )
 
 class ResourceGetQueryParameters(
     PagingQueryParametersSchema,

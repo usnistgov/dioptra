@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any, cast
+from typing import Any, cast, Final
 
 import structlog
 from flask_login import current_user
@@ -38,6 +38,11 @@ from dioptra.restapi.v1.groups.service import GroupIdService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
+SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    # "name": models.DraftResource.payload.name,
+    "createdOn": models.DraftResource.created_on,
+    "lastModifiedOn": models.DraftResource.last_modified_on,
+}
 
 class ResourceDraftsService(object):
     """The service methods for managing resource drafts."""
@@ -65,6 +70,8 @@ class ResourceDraftsService(object):
         base_resource_id: int | None,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> Any:
         """Fetch a list of drafts
@@ -75,6 +82,8 @@ class ResourceDraftsService(object):
             base_resource_id: An additional resource ID used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of drafts to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of drafts and the total number of drafts.
@@ -138,6 +147,15 @@ class ResourceDraftsService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
+            sort_column = SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            stmt = stmt.order_by(sort_column)
+
         drafts = db.session.scalars(stmt).all()
 
         return drafts, total_num_drafts

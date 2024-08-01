@@ -209,6 +209,38 @@ def assert_retrieving_queues_works(
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
+def assert_sorting_queue_name_works(
+    client: FlaskClient,
+    expected: list[str],
+) -> None:
+    """Assert that queues can be sorted by name ascending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of queue names after sorting by name ascending: "pytorch_cpu", "tensorflow_cpu", "tensorflow_gpu"
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = "name"
+    query_string["descending"] = False
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    queue_names = [queue['name'] for queue in response_data['data']]
+
+    assert response.status_code == 200 and queue_names == expected
+
+
 def assert_registering_existing_queue_name_fails(
     client: FlaskClient, name: str, group_id: int
 ) -> None:
@@ -374,6 +406,24 @@ def test_queue_get_all(
     """
     queue_expected_list = list(registered_queues.values())
     assert_retrieving_queues_works(client, expected=queue_expected_list)
+
+def test_queue_sort_name(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    """Test that queues can be sorted by name ascending.
+
+    Given an authenticated user and registered queues, this test validates the following
+    sequence of actions:
+
+    - A user registers three queues, "tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu".
+    - The user is able to retrieve a list of all registered queues sorted by name ascending.
+    - The returned list of queues matches this order: "pytorch_cpu", "tensorflow_cpu", "tensorflow_gpu".
+    """
+    queue_expected_order = ["pytorch_cpu", "tensorflow_cpu", "tensorflow_gpu"]
+    assert_sorting_queue_name_works(client, expected=queue_expected_order)
 
 
 def test_queue_search_query(
