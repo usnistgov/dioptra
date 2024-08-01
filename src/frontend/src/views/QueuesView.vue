@@ -64,7 +64,7 @@
     :queueToDraft="queueToDraft"
   />
   <DeleteDialog 
-    v-model="showDeleteDialog"
+    v-model:showDialog="showDeleteDialog"
     @submit="deleteQueue"
     type="Queue"
     :name="selected.length ? selected[0].name : ''"
