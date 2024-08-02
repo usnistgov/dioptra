@@ -23,7 +23,6 @@ from dioptra.restapi.v1.schemas import (
     DraftTypeQueryParametersSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
-    SortByGetQueryParametersSchema,
 )
 
 
@@ -123,6 +122,5 @@ class DraftGetQueryParameters(
     PagingQueryParametersSchema,
     GroupIdQueryParametersSchema,
     DraftTypeQueryParametersSchema,
-    SortByGetQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /<resource>/drafts endpoint."""

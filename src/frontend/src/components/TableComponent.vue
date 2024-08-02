@@ -139,6 +139,12 @@
     if(props.showExpand) {
       defaultColumns.push({ name: 'expand', align: 'center', sortable: false, label: 'Expand' })
     }
+    if(showDrafts.value) {
+      defaultColumns = defaultColumns.map(column => ({
+        ...column,
+        sortable: false
+      }))
+    }
     return defaultColumns
   })
 

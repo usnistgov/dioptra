@@ -86,7 +86,7 @@ class QueueEndpoint(Resource):
         search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
-        sort_by_string = unquote(parsed_query_params["sort_by"])
+        sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
 
         queues, total_num_queues = self._queue_service.get(

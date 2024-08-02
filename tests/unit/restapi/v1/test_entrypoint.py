@@ -23,6 +23,7 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 import textwrap
 from typing import Any
 
+import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
@@ -249,6 +250,40 @@ def assert_retrieving_entrypoints_works(
     )
 
     assert response.status_code == 200 and response.get_json()["data"] == expected
+
+
+def assert_sorting_entrypoint_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Assert that entrypoints can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of entrypoints names after sorting.  See test_entrypoint_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    entrypoint_names = [entrypoint['name'] for entrypoint in response_data['data']]
+
+    assert response.status_code == 200 and entrypoint_names == expected
 
 
 def assert_registering_existing_entrypoint_name_fails(
@@ -524,6 +559,36 @@ def test_entrypoint_get_all(
     """
     entrypoint_expected_list = list(registered_entrypoints.values())[:3]
     assert_retrieving_entrypoints_works(client, expected=entrypoint_expected_list)
+
+@pytest.mark.parametrize("sortBy, descending , expected",
+    [
+        (None, None, ["entrypoint_one", "entrypoint_two", "entrypoint_three"]),
+        ('name', True, ["entrypoint_two", "entrypoint_three", "entrypoint_one"]),
+        ('name', False, ["entrypoint_one", "entrypoint_three", "entrypoint_two"]),
+        ('createdOn', True, ["entrypoint_three", "entrypoint_two", "entrypoint_one"]),
+        ('createdOn', False, ["entrypoint_one", "entrypoint_two", "entrypoint_three"]),
+    ]
+)
+def test_entrypoint_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that entrypoints can be sorted by column.
+
+    Given an authenticated user and registered entrypoints, this test validates the following
+    sequence of actions:
+
+    - A user registers three entrypoints, "entrypoint_one", "entrypoint_two", "entrypoint_three".
+    - The user is able to retrieve a list of all registered entrypoints sorted by a column ascending/descending.
+    - The returned list of entrypoints matches the order in the parametrize lists above.
+    """
+
+    assert_sorting_entrypoint_works(client, sortBy, descending, expected=expected)
 
 
 def test_entrypoint_search_query(

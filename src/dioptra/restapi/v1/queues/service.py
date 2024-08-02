@@ -45,7 +45,8 @@ SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
 SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "name": models.Queue.name,
     "createdOn": models.Queue.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on
+    "lastModifiedOn": models.Resource.last_modified_on,
+    "description": models.Queue.description,
 }
 
 class QueueService(object):
