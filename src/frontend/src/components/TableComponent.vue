@@ -76,7 +76,8 @@
                 text-color="black"
               />
             </div>
-            <div v-else>
+            <div v-else-if="!Array.isArray(col.value)">
+              <!-- if value is an array, then render it with a custom slot -->
               {{ col.value }}
             </div>
           </slot>
