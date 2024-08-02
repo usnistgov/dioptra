@@ -2,7 +2,7 @@
   <div :class="` flex-center q-mt-xl ${isMobile ? '' : 'flex q-pt-xl'}`">
     <q-card bordered class="q-pa-lg" style="min-width: 40%;">
       <q-card-section class="text-center">
-          <h1 class="form-title" style="margin-top: 0; margin-bottom: 0;">Register</h1>
+          <h1 class="q-mt-none q-mb-sm">Register</h1>
           <p>Register a new user account</p>
       </q-card-section>
       <q-form @submit="submit()">

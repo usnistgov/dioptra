@@ -72,6 +72,8 @@
                 size="sm"
                 icon="add"
                 @click.stop="$emit('editTags', props.row)"
+                color="grey-5"
+                text-color="black"
               />
             </div>
             <div v-else>
@@ -112,6 +114,7 @@
         v-model="showDrafts"
         toggle-color="primary"
         push
+        style="box-shadow: 0 0 0 0.5px grey"
         :options="[
           {label: title, value: false},
           {label: 'Drafts', value: true},

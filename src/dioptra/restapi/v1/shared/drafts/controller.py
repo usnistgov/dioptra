@@ -191,7 +191,9 @@ def generate_resource_drafts_id_endpoint(
                 request_id=str(uuid.uuid4()), resource="Draft", request_type="POST"
             )
             parsed_obj = request.parsed_obj  # type: ignore
-            draft = self._draft_id_service.modify(draftId, payload=parsed_obj, log=log)
+            draft = self._draft_id_service.modify(
+                draftId, payload=parsed_obj, log=log, error_if_not_found=True
+            )
             return utils.build_resource_draft(
                 cast(models.DraftResource, draft), request_schema
             )

@@ -16,7 +16,7 @@
       }"
     />
     <caption
-      :class="{ invisible: showError?.length === 0 ? true : false }"
+      :class="{ invisible: showError?.length === 0 || showError === undefined ? true : false }"
       class="row text-caption q-ml-md" 
       style="color: rgb(193, 0, 21); font-size: 12px;"
     >

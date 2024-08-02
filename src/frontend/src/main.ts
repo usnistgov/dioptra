@@ -26,7 +26,7 @@ app.use(Quasar, {
     Notify
   },
   config: {
-    dark: 'auto'
+    dark: getSavedDarkMode()
   }
 })
 
@@ -35,3 +35,11 @@ app.use(router)
 app.use(VueCodemirror)
 
 app.mount('#app')
+
+function getSavedDarkMode() {
+  let savedDarkMode = localStorage.getItem('darkMode')
+  if(savedDarkMode !== null) {
+    return savedDarkMode === 'true'
+  }
+  return 'auto'
+}
