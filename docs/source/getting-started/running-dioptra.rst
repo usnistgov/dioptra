@@ -66,7 +66,7 @@ Cruft will now run and prompt you to configure the deployment. See the :ref:`App
 
 We recommend identifying a location to store datasets you will want to use with Dioptra at this point and setting the ``datasets_directory`` variable accordingly. See the :ref:`Downloading the datasets <getting-started-acquiring-datasets>` section for more details.
 
-Once you have configured your deployment, continue following the instructions for initialzing and starting your deployment below.
+Once you have configured your deployment, continue following the instructions for initializing and starting your deployment below.
 
 .. code:: sh
 
