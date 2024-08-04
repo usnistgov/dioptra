@@ -23,6 +23,7 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 
 from typing import Any
 
+import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 
@@ -158,6 +159,40 @@ def assert_retrieving_artifacts_works(
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
+def assert_sorting_artifact_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Assert that artifacts can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of artifacts descriptions after sorting.  See test_artifact_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_ARTIFACTS_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    artifact_descriptions = [artifact['description'] for artifact in response_data['data']]
+
+    assert response.status_code == 200 and artifact_descriptions == expected
+
+
 def assert_registering_existing_artifact_uri_fails(
     client: FlaskClient,
     uri: str,
@@ -250,6 +285,38 @@ def test_artifacts_get_all(
     """
     artifacts_expected_list = list(registered_artifacts.values())
     assert_retrieving_artifacts_works(client, expected=artifacts_expected_list)
+
+
+@pytest.mark.parametrize("sortBy, descending , expected",
+    [
+        (None, None, ["Model artifact.", "Trained conv net model artifact.", "Another model", "Fine-tuned model."]),
+        ('description', True, ["Trained conv net model artifact.", "Model artifact.", "Fine-tuned model.", "Another model"]),
+        ('description', False, ["Another model", "Fine-tuned model.", "Model artifact.", "Trained conv net model artifact."]),
+        ('createdOn', True, ["Fine-tuned model.", "Another model", "Trained conv net model artifact.", "Model artifact."]),
+        ('createdOn', False, ["Model artifact.", "Trained conv net model artifact.", "Another model", "Fine-tuned model."]),
+    ]
+)
+def test_artifact_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_artifacts: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that artifacts can be sorted by column.
+
+    Given an authenticated user and registered artifacts, this test validates the following
+    sequence of actions:
+
+    - A user registers three artifacts with these descriptions: 
+        "Model artifact.", "Trained conv net model artifact.", "Another model", "Fine-tuned model.".
+    - The user is able to retrieve a list of all registered artifacts sorted by a column ascending/descending.
+    - The returned list of artifacts matches the order in the parametrize lists above.
+    """
+
+    assert_sorting_artifact_works(client, sortBy, descending, expected=expected)
 
 
 def test_artifact_search_query(

@@ -67,8 +67,8 @@
 
   const fileColumns = [
     { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
-    { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: false },
-    { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: true, },
+    { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
+    { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: false, },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
   ]
 

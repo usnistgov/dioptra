@@ -138,7 +138,6 @@ class ResourceDraftsService(object):
             .offset(page_index)
             .limit(page_length)
         )
-
         drafts = db.session.scalars(stmt).all()
 
         return drafts, total_num_drafts

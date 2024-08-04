@@ -410,6 +410,7 @@ def test_queue_get_all(
     queue_expected_list = list(registered_queues.values())
     assert_retrieving_queues_works(client, expected=queue_expected_list)
 
+
 @pytest.mark.parametrize("sortBy, descending , expected",
     [
         (None, None, ["tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu"]),

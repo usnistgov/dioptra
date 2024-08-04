@@ -22,6 +22,7 @@ registered, renamed, queried, and deleted as expected through the REST API.
 """
 from typing import Any
 
+import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from pytest import MonkeyPatch
@@ -235,6 +236,40 @@ def assert_retrieving_jobs_works(
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
+def assert_sorting_job_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Assert that jobs can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of job descriptions after sorting.  See test_job_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_JOBS_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    job_descriptions = [job['description'] for job in response_data['data']]
+
+    assert response.status_code == 200 and job_descriptions == expected
+
+
 def assert_job_is_not_found(
     client: FlaskClient,
     job_id: int,
@@ -379,6 +414,37 @@ def test_job_get_all(
     """
     job_expected_list = list(registered_jobs.values())
     assert_retrieving_jobs_works(client, expected=job_expected_list)
+
+
+@pytest.mark.parametrize("sortBy, descending , expected",
+    [
+        (None, None, ["The first job.", "The second job.", "Not retrieved."]),
+        ('description', True, ["The second job.", "The first job.", "Not retrieved."]),
+        ('description', False, ["Not retrieved.", "The first job.", "The second job."]),
+        ('createdOn', True, ["Not retrieved.", "The second job.", "The first job."]),
+        ('createdOn', False, ["The first job.", "The second job.", "Not retrieved."]),
+    ]
+)
+def test_job_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that jobs can be sorted by column.
+
+    Given an authenticated user and registered jobs, this test validates the following
+    sequence of actions:
+
+    - A user registers three jobs descriptions, "The first job.", "The second job.", "Not retrieved.".
+    - The user is able to retrieve a list of all registered jobs sorted by a column ascending/descending.
+    - The returned list of jobs matches the order in the parametrize lists above.
+    """
+
+    assert_sorting_job_works(client, sortBy, descending, expected=expected)
 
 
 def test_job_search_query(

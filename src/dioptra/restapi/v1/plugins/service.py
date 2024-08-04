@@ -43,6 +43,7 @@ from .errors import (
     PluginTaskNameAlreadyExistsError,
     PluginTaskOutputParameterNameAlreadyExistsError,
     PluginTaskParameterTypeNotFoundError,
+    PluginSortError,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -58,6 +59,19 @@ PLUGIN_FILE_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "description": lambda x: models.PluginFile.description.like(x, escape="/"),
     "contents": lambda x: models.PluginFile.contents.like(x, escape="/"),
 }
+PLUGIN_SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": models.Plugin.name,
+    "createdOn": models.Plugin.created_on,
+    "lastModifiedOn": models.Resource.last_modified_on,
+    "description": models.Plugin.description,
+}
+PLUGIN_FILE_SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "filename": models.PluginFile.filename,
+    "createdOn": models.PluginFile.created_on,
+    "lastModifiedOn": models.Resource.last_modified_on,
+    "description": models.PluginFile.description,
+}
+
 
 
 class PluginService(object):
@@ -127,6 +141,8 @@ class PluginService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> tuple[list[utils.PluginWithFilesDict], int]:
         """Fetch a list of plugins, optionally filtering by search string and paging
@@ -137,6 +153,8 @@ class PluginService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of plugins to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of plugins and the total number of plugins
@@ -196,6 +214,18 @@ class PluginService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in PLUGIN_SORTABLE_FIELDS:
+            sort_column = PLUGIN_SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            latest_plugins_stmt = latest_plugins_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in PLUGIN_SORTABLE_FIELDS:
+            log.debug(f"sort_by_string: '{sort_by_string}' is not in PLUGIN_SORTABLE_FIELDS")
+            raise PluginSortError
+
         plugins = db.session.scalars(latest_plugins_stmt).all()
 
         # extract list of plugin ids
@@ -764,6 +794,8 @@ class PluginIdFileService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> tuple[list[utils.PluginFileDict], int]:
         """Fetch a list of plugin files associated with a plugin, optionally
@@ -774,6 +806,8 @@ class PluginIdFileService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of plugins to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of plugins and the total number of plugins
@@ -855,6 +889,18 @@ class PluginIdFileService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in PLUGIN_FILE_SORTABLE_FIELDS:
+            sort_column = PLUGIN_FILE_SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            latest_plugin_files_stmt = latest_plugin_files_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in PLUGIN_FILE_SORTABLE_FIELDS:
+            log.debug(f"sort_by_string: '{sort_by_string}' is not in PLUGIN_FILE_SORTABLE_FIELDS")
+            raise PluginSortError
+
         plugin_files_dict: dict[int, utils.PluginFileDict] = {
             plugin_file.resource_id: utils.PluginFileDict(
                 plugin=plugin, plugin_file=plugin_file, has_draft=False

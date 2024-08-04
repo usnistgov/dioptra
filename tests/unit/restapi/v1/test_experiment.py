@@ -280,9 +280,9 @@ def assert_sorting_experiment_works(
     )
 
     response_data = response.get_json()
-    queue_names = [queue['name'] for queue in response_data['data']]
+    experiment_names = [experiment['name'] for experiment in response_data['data']]
 
-    assert response.status_code == 200 and queue_names == expected
+    assert response.status_code == 200 and experiment_names == expected
 
 
 def assert_experiment_name_matches_expected_name(

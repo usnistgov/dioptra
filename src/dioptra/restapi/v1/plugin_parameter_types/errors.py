@@ -40,6 +40,10 @@ class PluginParameterTypeMissingParameterError(Exception):
     """The requested plugin parameter type is missing a required parameter."""
 
 
+class PluginParameterSortError(Exception):
+    """The requested sortBy column is not a sortable field."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(PluginParameterTypeMatchesBuiltinTypeError)
     def handle_plugin_parameter_type_matches_builtin_type_error(error):
@@ -81,4 +85,10 @@ def register_error_handlers(api: Api) -> None:
                 "another and resubmit."
             },
             400,
+        )
+    
+    @api.errorhandler(PluginParameterSortError)
+    def handle_queue_sort_error(error):
+        return (
+            {"message": "Bad Request - This column can not be sorted."}, 400,
         )

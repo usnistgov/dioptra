@@ -560,6 +560,7 @@ def test_entrypoint_get_all(
     entrypoint_expected_list = list(registered_entrypoints.values())[:3]
     assert_retrieving_entrypoints_works(client, expected=entrypoint_expected_list)
 
+
 @pytest.mark.parametrize("sortBy, descending , expected",
     [
         (None, None, ["entrypoint_one", "entrypoint_two", "entrypoint_three"]),
