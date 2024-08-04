@@ -421,7 +421,7 @@ def test_create_entrypoint(
 ) -> None:
     """Test that entrypoints can be correctly registered and retrieved using the API.
 
-    Given an authenticated user, registered plugins, and registed queues, this test
+    Given an authenticated user, registered plugins, and registered queues, this test
     validates the following sequence of actions:
 
     - The user registers a entrypoint named "tensorflow_cpu".
