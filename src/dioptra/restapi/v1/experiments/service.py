@@ -427,7 +427,7 @@ class ExperimentIdService(object):
         """Delete an experiment.
 
         Args:
-            experiment_id: The unqiue id of the experiment.
+            experiment_id: The unique id of the experiment.
 
         Returns:
             A dictionary reporting the status of the request.
