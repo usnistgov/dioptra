@@ -458,7 +458,7 @@ def test_job_get_status(
     Given an authenticated user and registered jobs, this test validates the following
     sequence of actions:
 
-    - The user is able to retrieve a the status of a registered job.
+    - The user is able to retrieve the status of a registered job.
     - The returned job status matches the expected status.
     """
     job_to_check = registered_jobs["job1"]

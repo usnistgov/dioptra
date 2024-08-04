@@ -140,7 +140,7 @@ For local tasks we will use a different notation for both creating and invoking 
 Creating a Local Task
 ---------------------
 
-In general the major difference besides location of local task plugins is that the the `@task` decorator now replaces the `@pyplugs.register` decorator.
+In general the major difference besides location of local task plugins is that the `@task` decorator now replaces the `@pyplugs.register` decorator.
 The task decorator is imported from the prefect library:
 
 .. code-block:: python
