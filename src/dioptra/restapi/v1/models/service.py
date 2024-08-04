@@ -684,7 +684,7 @@ class ModelIdVersionsNumberService(object):
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Get resource snaphot by id", model_id=model_id)
+        log.debug("Get resource snapshot by id", model_id=model_id)
 
         ml_model_dict = self._model_id_service.get(
             model_id, error_if_not_found=error_if_not_found, log=log
