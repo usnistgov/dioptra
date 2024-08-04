@@ -379,7 +379,7 @@ class UserCurrentService(object):
         user_id_service: UserIdService,
         user_password_service: UserPasswordService,
     ) -> None:
-        """Initialize the current current user service.
+        """Initialize the current user service.
 
         All arguments are provided via dependency injection.
 
