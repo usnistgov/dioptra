@@ -194,7 +194,7 @@ class GroupIdMembersEndpoint(Resource):
     @accepts(schema=GroupMemberSchema(many=True), api=api)
     @responds(schema=GroupMemberSchema(many=True), api=api)
     def put(self, id: int):
-        """Modifies all Group Members' permisssions."""
+        """Modifies all Group Members' permissions."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="GroupMember",
