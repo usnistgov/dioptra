@@ -133,7 +133,7 @@ make code-check
 
 This project has a [commit style guide](./COMMIT_STYLE_GUIDE.md) that is enforced using the `gitlint` tool.
 Developers are expected to run `gitlint` and validate their commit message before opening a Pull Request.
-After commiting your contribution, activate your virtual environment if you haven't already and run:
+After committing your contribution, activate your virtual environment if you haven't already and run:
 
 ```sh
 python -m tox run -e gitlint
