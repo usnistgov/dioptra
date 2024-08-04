@@ -78,7 +78,7 @@ api: Namespace = Namespace("Plugins", description="Plugins endpoint")
 
 
 # WARNING: Do not move the PluginFile Snapshots sub-endpoint definitions.
-# They must be declared first because of an issue related interations with the schemas.
+# They must be declared first because of an issue related interactions with the schemas.
 PluginFileSnapshotsResource = generate_nested_resource_snapshots_endpoint(
     api=api,
     resource_model=models.PluginFile,
