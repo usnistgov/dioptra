@@ -1,4 +1,4 @@
-"""Add 'readonly' resource locks to pre-existing built-in parameter types
+"""Add 'readonly' resource locks to preexisting built-in parameter types
 
 Revision ID: d2bae5f6d991
 Revises: 10f9e72e72aa
