@@ -704,7 +704,7 @@ class DioptraClient(object):
         """Registers a new task plugin uploaded via the task plugin upload form.
 
         Args:
-            custom_plugin_name: Plugin name for for the upload form.
+            custom_plugin_name: Plugin name for the upload form.
             custom_plugin_file: Path to custom plugin.
             collection: Collection to upload the plugin to. Defaults to
                 "dioptra_custom".
