@@ -315,7 +315,7 @@
     try {
       if (route.params.id === 'new') {
         await api.addItem('entrypoints', entryPoint.value)
-        notify.success(`Sucessfully created '${entryPoint.value.name}'`)
+        notify.success(`Successfully created '${entryPoint.value.name}'`)
       } else {
         await api.updateItem('entrypoints', route.params.id, {
           name: entryPoint.value.name,
@@ -324,7 +324,7 @@
           parameters: entryPoint.value.parameters,
           queues: entryPoint.value.queues,
         })
-        notify.success(`Sucessfully updated '${entryPoint.value.name}'`)
+        notify.success(`Successfully updated '${entryPoint.value.name}'`)
       }
     } catch(err) {
       notify.error(err.response.data.message)

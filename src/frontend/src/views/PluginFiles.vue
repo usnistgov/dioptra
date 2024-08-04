@@ -101,7 +101,7 @@
   async function deleteFile() {
     try {
       await api.deleteFile(route.params.id, selected.value[0].id)
-      notify.success(`Sucessfully deleted '${selected.value[0].filename}'`)
+      notify.success(`Successfully deleted '${selected.value[0].filename}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

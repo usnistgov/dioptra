@@ -104,7 +104,7 @@
         name: plugin.value.name,
         description: plugin.value.description
       })
-      notify.success(`Sucessfully updated ${res.data.name}`)
+      notify.success(`Successfully updated ${res.data.name}`)
       router.push('/plugins')
     } catch(err) {
       notify.error(err.response.data.message)

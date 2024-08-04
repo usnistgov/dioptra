@@ -113,7 +113,7 @@
         description: plugin.description,
         group: plugin.group
       })
-      notify.success(`Sucessfully created '${res.data.name}'`)
+      notify.success(`Successfully created '${res.data.name}'`)
       tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message)
@@ -123,7 +123,7 @@
   async function deletePlugin() {
     try {
       await api.deleteItem('plugins', selected.value[0].id)
-      notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+      notify.success(`Successfully deleted '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

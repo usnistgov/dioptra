@@ -117,7 +117,7 @@ async function addModel(name, group, description) {
       group
     })
     showAddEditDialog.value = false
-    notify.success(`Sucessfully created '${res.data.name}'`)
+    notify.success(`Successfully created '${res.data.name}'`)
     tableRef.value.refreshTable()
   } catch(err) {
     notify.error(err.response.data.message)
@@ -127,7 +127,7 @@ async function addModel(name, group, description) {
 async function deleteModel() {
   try {
     await api.deleteItem('models', selected.value[0].id)
-    notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+    notify.success(`Successfully deleted '${selected.value[0].name}'`)
     showDeleteDialog.value = false
     selected.value = []
     tableRef.value.refreshTable()
@@ -149,7 +149,7 @@ const tableRef = ref(null)
 async function updateModel(name, id, description) {
   try {
     await api.updateItem('models', id, { name, description })
-    notify.success(`Sucessfully updated '${name}'`)
+    notify.success(`Successfully updated '${name}'`)
     showAddEditDialog.value = false
     selected.value = []
     tableRef.value.refreshTable()

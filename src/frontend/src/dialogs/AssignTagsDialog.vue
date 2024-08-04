@@ -100,7 +100,7 @@
         name: newTag.value,
         group: store.loggedInGroup.id
       })
-      notify.success(`Sucessfully created tag '${newTag.value}'`)
+      notify.success(`Successfully created tag '${newTag.value}'`)
       newTag.value = ''
       getTags()
     } catch(err) {
@@ -116,7 +116,7 @@
       } else {
         await api.updateTags(props.type, props.editObj.id, selectedTagIDs.value)
       }
-      notify.success(`Sucessfully updated Tags for '${props.editObj.name || props.editObj.description}'`)
+      notify.success(`Successfully updated Tags for '${props.editObj.name || props.editObj.description}'`)
       emit('refreshTable')
     } catch(err) {
       notify.error(err.response.data.message);

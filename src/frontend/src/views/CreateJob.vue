@@ -206,7 +206,7 @@
     console.log('submitting job = ', JSON.parse(JSON.stringify(job.value)))
     try {
       await api.addJob(route.params.id, job.value)
-      notify.success(`Sucessfully created ''`)
+      notify.success(`Successfully created ''`)
     } catch(err) {
       notify.error(err.response.data.message)
     } finally {
