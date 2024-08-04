@@ -564,7 +564,7 @@ def test_experiment_get_entrypoints(
     )
 
 
-@pytest.mark.skip(reason="entrypoints not yet implmented")
+@pytest.mark.skip(reason="entrypoints not yet implemented")
 # @pytest.mark.parametrize(
 #     "initial_entrypoints",
 #     "new_entrypoints",
@@ -631,7 +631,7 @@ def test_experiment_add_entrypoints(
     )
 
 
-@pytest.mark.skip(reason="entrypoints not yet implmented")
+@pytest.mark.skip(reason="entrypoints not yet implemented")
 # @pytest.mark.parametrize(
 #     "initial_entrypoints", "new_entrypoints", "expected_entrypoints",
 #     [
@@ -697,7 +697,7 @@ def test_experiment_modify_entrypoints(
     )
 
 
-@pytest.mark.skip(reason="entrypoints not yet implmented")
+@pytest.mark.skip(reason="entrypoints not yet implemented")
 # @pytest.mark.parametrize(
 #     "initial_entrypoints", "entrypoints_to_remove", "expected_entrypoints",
 #     [
