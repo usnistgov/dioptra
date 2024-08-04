@@ -93,7 +93,7 @@ def create_adversarial_jsma_dataset(
         color_mode=color_mode,
         class_mode=label_mode,
         batch_size=batch_size,
-        shuffle=True,  # alse,
+        shuffle=True,  # false,
     )
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]
