@@ -37,7 +37,7 @@ class PluginFileDoesNotExistError(Exception):
 
 
 class PluginTaskParameterTypeNotFoundError(Exception):
-    """One ore more referenced plugin task parameter types were not found."""
+    """One or more referenced plugin task parameter types were not found."""
 
 
 class PluginTaskNameAlreadyExistsError(Exception):
