@@ -67,7 +67,7 @@ class StepError(BaseTaskEngineError):
 
 
 class StepNotFoundError(StepError):
-    """A reference to a non-existent step."""
+    """A reference to a nonexistent step."""
 
     def __init__(self, step_name: str, context_step_name: Optional[str] = None) -> None:
         super().__init__("Step not found: " + step_name, context_step_name)
@@ -76,7 +76,7 @@ class StepNotFoundError(StepError):
 
 
 class OutputNotFoundError(StepError):
-    """A reference to a non-existent output of an existing step."""
+    """A reference to a nonexistent output of an existing step."""
 
     def __init__(
         self, step_name: str, output_name: str, context_step_name: Optional[str] = None
@@ -135,7 +135,7 @@ class UnresolvableReferenceError(StepError):
 
 
 class TaskPluginNotFoundError(StepError):
-    """A reference to a non-existent task plugin."""
+    """A reference to a nonexistent task plugin."""
 
     def __init__(
         self, task_plugin_short_name: str, context_step_name: Optional[str] = None
