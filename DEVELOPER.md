@@ -17,12 +17,12 @@ Ensure that you have Python 3.11 installed and that it is available in your PATH
 | linux-arm64-py3.11-requirements-dev.txt | Linux | arm64 | ❌ | ❌ |
 | linux-arm64-py3.11-requirements-dev-tensorflow.txt | Linux | arm64 | ✅ | ❌ |
 | linux-arm64-py3.11-requirements-dev-pytorch.txt | Linux | arm64 | ❌ | ✅ |
-| macos-amd64-py3.11-requirements-dev.txt | MacOS | x86-64 | ❌ | ❌ |
-| macos-amd64-py3.11-requirements-dev-tensorflow.txt | MacOS | x86-64 | ✅ | ❌ |
-| macos-amd64-py3.11-requirements-dev-pytorch.txt | MacOS | x86-64 | ❌ | ✅ |
-| macos-arm64-py3.11-requirements-dev.txt | MacOS | arm64 | ❌ | ❌ |
-| macos-arm64-py3.11-requirements-dev-tensorflow.txt | MacOS | arm64 | ✅ | ❌ |
-| macos-arm64-py3.11-requirements-dev-pytorch.txt | MacOS | arm64 | ❌ | ✅ |
+| macos-amd64-py3.11-requirements-dev.txt | macOS | x86-64 | ❌ | ❌ |
+| macos-amd64-py3.11-requirements-dev-tensorflow.txt | macOS | x86-64 | ✅ | ❌ |
+| macos-amd64-py3.11-requirements-dev-pytorch.txt | macOS | x86-64 | ❌ | ✅ |
+| macos-arm64-py3.11-requirements-dev.txt | macOS | arm64 | ❌ | ❌ |
+| macos-arm64-py3.11-requirements-dev-tensorflow.txt | macOS | arm64 | ✅ | ❌ |
+| macos-arm64-py3.11-requirements-dev-pytorch.txt | macOS | arm64 | ❌ | ✅ |
 | win-amd64-py3.11-requirements-dev.txt | Windows | x86-64 | ❌ | ❌ |
 | win-amd64-py3.11-requirements-dev-tensorflow.txt | Windows | x86-64 | ✅ | ❌ |
 | win-amd64-py3.11-requirements-dev-pytorch.txt | Windows | x86-64 | ❌ | ✅ |
@@ -34,7 +34,7 @@ python -m venv .venv
 ```
 
 Activate the virtual environment after creating it.
-To activate it on MacOS/Linux:
+To activate it on macOS/Linux:
 
 ```sh
 source .venv/bin/activate
@@ -53,7 +53,7 @@ python -m pip install --upgrade pip pip-tools
 ```
 
 Finally, use `pip-sync` to install the dependencies in your chosen requirements file and install `dioptra` in development mode.
-On MacOS/Linux:
+On macOS/Linux:
 
 ```sh
 # Replace "linux-amd64-py3.11-requirements-dev.txt" with your chosen file
