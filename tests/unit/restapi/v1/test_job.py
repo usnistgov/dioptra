@@ -474,7 +474,7 @@ def test_modify_job_status(
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> None:
-    """Test that the status of a job can be modifed by the user.
+    """Test that the status of a job can be modified by the user.
 
     Given an authenticated user and registered jobs, this test validates the following
     sequence of actions:
