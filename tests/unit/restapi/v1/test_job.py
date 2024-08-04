@@ -455,7 +455,7 @@ def test_job_get_status(
 ) -> None:
     """Test that the status of a job can be retrieved by the user.
 
-    Given an authenticated user and registered jobss, this test validates the following
+    Given an authenticated user and registered jobs, this test validates the following
     sequence of actions:
 
     - The user is able to retrieve a the status of a registered job.
@@ -476,7 +476,7 @@ def test_modify_job_status(
 ) -> None:
     """Test that the status of a job can be modifed by the user.
 
-    Given an authenticated user and registered jobss, this test validates the following
+    Given an authenticated user and registered jobs, this test validates the following
     sequence of actions:
 
     - The user is able to modify the status of a registered job.
@@ -505,7 +505,7 @@ def test_manage_job_snapshots(
 ) -> None:
     """Test that different snapshots of a job can be retrieved by the user.
 
-    Given an authenticated user and registered jobss, this test validates the following
+    Given an authenticated user and registered jobs, this test validates the following
     sequence of actions:
 
     - The user modifies a job status
