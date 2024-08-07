@@ -246,7 +246,8 @@ def assert_sorting_job_works(
 
     Args:
         client: The Flask test client.
-        expected: The expected order of job descriptions after sorting.  See test_job_sort for expected orders.
+        expected: The expected order of job descriptions after sorting.
+            See test_job_sort for expected orders.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
@@ -314,11 +315,12 @@ def test_create_job(
 ) -> None:
     """Test that jobs can be correctly registered and retrieved using the API.
 
-    Given an authenticated user, registered queues, registered experiments, and registered entrypoints
-    this test validates the following sequence of actions:
+    Given an authenticated user, registered queues, registered experiments, and
+    registered entrypoints, this test validates the following sequence of actions:
 
     - The user registers a job.
-    - The response is valid and matches the expected values given the registration request.
+    - The response is valid and matches the expected values given the registration
+      request.
     - The user is able to retrieve information about the job using the job id.
     """
 
@@ -416,7 +418,8 @@ def test_job_get_all(
     assert_retrieving_jobs_works(client, expected=job_expected_list)
 
 
-@pytest.mark.parametrize("sortBy, descending , expected",
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
     [
         (None, None, ["The first job.", "The second job.", "Not retrieved."]),
         ('description', True, ["The second job.", "The first job.", "Not retrieved."]),
@@ -439,8 +442,12 @@ def test_job_sort(
     Given an authenticated user and registered jobs, this test validates the following
     sequence of actions:
 
-    - A user registers three jobs descriptions, "The first job.", "The second job.", "Not retrieved.".
-    - The user is able to retrieve a list of all registered jobs sorted by a column ascending/descending.
+    - A user registers three jobs descriptions:
+      "The first job.",
+      "The second job.",
+      "Not retrieved.".
+    - The user is able to retrieve a list of all registered jobs sorted by a column
+      ascending/descending.
     - The returned list of jobs matches the order in the parametrize lists above.
     """
 
@@ -629,8 +636,8 @@ def test_tag_job(
 ) -> None:
     """Test that tags can applied to jobs.
 
-    Given an authenticated user, registered jobs, and registered tags this test validates
-    the following sequence of actions:
+    Given an authenticated user, registered jobs, and registered tags this test
+    validates the following sequence of actions:
 
     - The user appends tags to a job
     - The user retrieves information about the tags of the job and gets

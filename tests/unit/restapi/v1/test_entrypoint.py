@@ -262,7 +262,8 @@ def assert_sorting_entrypoint_works(
 
     Args:
         client: The Flask test client.
-        expected: The expected order of entrypoints names after sorting.  See test_entrypoint_sort for expected orders.
+        expected: The expected order of entrypoints names after sorting.
+            See test_entrypoint_sort for expected orders.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
@@ -461,7 +462,8 @@ def test_create_entrypoint(
 
     - The user registers a entrypoint named "tensorflow_cpu".
     - The response is valid matches the expected values given the registration request.
-    - The user is able to retrieve information about the entrypoint using the entrypoint id.
+    - The user is able to retrieve information about the entrypoint using the entrypoint
+      id.
     """
     name = "my_entrypoint"
     description = "The first entrypoint."
@@ -550,10 +552,13 @@ def test_entrypoint_get_all(
 ) -> None:
     """Test that all entrypoints can be retrieved.
 
-    Given an authenticated user and registered entrypoints, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
 
-    - A user registers three entrypoints, "tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu".
+    - A user registers three entrypoints:
+      "tensorflow_cpu",
+      "tensorflow_gpu",
+      "pytorch_cpu".
     - The user is able to retrieve a list of all registered entrypoints.
     - The returned list of entrypoints matches the full list of registered entrypoints.
     """
@@ -561,7 +566,8 @@ def test_entrypoint_get_all(
     assert_retrieving_entrypoints_works(client, expected=entrypoint_expected_list)
 
 
-@pytest.mark.parametrize("sortBy, descending , expected",
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
     [
         (None, None, ["entrypoint_one", "entrypoint_two", "entrypoint_three"]),
         ('name', True, ["entrypoint_two", "entrypoint_three", "entrypoint_one"]),
@@ -581,11 +587,15 @@ def test_entrypoint_sort(
 ) -> None:
     """Test that entrypoints can be sorted by column.
 
-    Given an authenticated user and registered entrypoints, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
 
-    - A user registers three entrypoints, "entrypoint_one", "entrypoint_two", "entrypoint_three".
-    - The user is able to retrieve a list of all registered entrypoints sorted by a column ascending/descending.
+    - A user registers three entrypoints:
+      "entrypoint_one",
+      "entrypoint_two",
+      "entrypoint_three".
+    - The user is able to retrieve a list of all registered entrypoints sorted by a
+      column ascending/descending.
     - The returned list of entrypoints matches the order in the parametrize lists above.
     """
 
@@ -600,10 +610,11 @@ def test_entrypoint_search_query(
 ) -> None:
     """Test that entrypoints can be queried with a search term.
 
-    Given an authenticated user and registered entrypoints, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
 
-    - The user is able to retrieve a list of all registered entrypoints with various queries.
+    - The user is able to retrieve a list of all registered entrypoints with various
+      queries.
     - The returned list of entrypoints matches the expected matches from the query.
     """
     entrypoint_expected_list = list(registered_entrypoints.values())[:2]
@@ -624,12 +635,13 @@ def test_entrypoint_group_query(
 ) -> None:
     """Test that entrypoints can retrieved using a group filter.
 
-    Given an authenticated user and registered entrypoints, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
 
-    - The user is able to retrieve a list of all registered entrypoints that are owned by the
-      default group.
-    - The returned list of entrypoints matches the expected list owned by the default group.
+    - The user is able to retrieve a list of all registered entrypoints that are owned
+      by the default group.
+    - The returned list of entrypoints matches the expected list owned by the default
+      group.
     """
     entrypoint_expected_list = list(registered_entrypoints.values())[:3]
     assert_retrieving_entrypoints_works(
@@ -649,8 +661,8 @@ def test_cannot_register_existing_entrypoint_name(
 ) -> None:
     """Test that registering a entrypoint with an existing name fails.
 
-    Given an authenticated user and registered entrypoints, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
 
     - The user attempts to register a second entrypoint with the same name.
     - The request fails with an appropriate error message and response code.
@@ -679,17 +691,18 @@ def test_rename_entrypoint(
 ) -> None:
     """Test that a entrypoint can be renamed.
 
-    Given an authenticated user and registered entrypoints, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
 
     - The user issues a request to change the name of a entrypoint.
     - The user retrieves information about the same entrypoint and it reflects the name
       change.
-    - The user issues a request to change the name of the entrypoint to the existing name.
-    - The user retrieves information about the same entrypoint and verifies the name remains
-      unchanged.
-    - The user issues a request to change the name of a entrypoint to an existing entrypoint's
+    - The user issues a request to change the name of the entrypoint to the existing
       name.
+    - The user retrieves information about the same entrypoint and verifies the name
+      remains unchanged.
+    - The user issues a request to change the name of a entrypoint to an existing
+      entrypoint's name.
     - The request fails with an appropriate error message and response code.
     """
     updated_entrypoint_name = "new_entrypoint_name"
@@ -752,8 +765,8 @@ def test_delete_entrypoint_by_id(
 ) -> None:
     """Test that a entrypoint can be deleted by referencing its id.
 
-    Given an authenticated user and registered entrypoints, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
 
     - The user deletes a entrypoint by referencing its id.
     - The user attempts to retrieve information about the deleted entrypoint.
@@ -776,10 +789,11 @@ def test_manage_existing_entrypoint_draft(
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
-    """Test that a draft of an existing entrypoint can be created and managed by the user
+    """Test that a draft of an existing entrypoint can be created and managed by
+        the user
 
-    Given an authenticated user and registered entrypoints, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
 
     - The user creates a draft of an existing entrypoint
     - The user retrieves information about the draft and gets the expected response
@@ -991,14 +1005,14 @@ def test_manage_entrypoint_snapshots(
 ) -> None:
     """Test that different snapshots of a entrypoint can be retrieved by the user.
 
-    Given an authenticated user and registered entrypoints, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
 
     - The user modifies a entrypoint
-    - The user retrieves information about the original snapshot of the entrypoint and gets
+    - The user retrieves information about the original snapshot of the entrypoint and
+      gets the expected response
+    - The user retrieves information about the new snapshot of the entrypoint and gets
       the expected response
-    - The user retrieves information about the new snapshot of the entrypoint and gets the
-      expected response
     - The user retrieves a list of all snapshots of the entrypoint and gets the expected
       response
     """
@@ -1051,8 +1065,8 @@ def test_tag_entrypoint(
 ) -> None:
     """Test that different versions of a entrypoint can be retrieved by the user.
 
-    Given an authenticated user and registered entrypoints, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
 
     """
     entrypoint = registered_entrypoints["entrypoint1"]

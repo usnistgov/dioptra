@@ -277,7 +277,8 @@ def assert_sorting_model_works(
 
     Args:
         client: The Flask test client.
-        expected: The expected order of models names after sorting.  See test_models_sort for expected orders.
+        expected: The expected order of models names after sorting.
+            See test_models_sort for expected orders.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
@@ -514,7 +515,8 @@ def test_model_get_all(
     assert_retrieving_models_works(client, expected=model_expected_list)
 
 
-@pytest.mark.parametrize("sortBy, descending , expected",
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
     [
         (None, None, ["my_tensorflow_model", "model2", "model3"]),
         ('name', True, ["my_tensorflow_model", "model3", "model2"]),
@@ -538,7 +540,8 @@ def test_model_sort(
     sequence of actions:
 
     - A user registers three models, "my_tensorflow_model", "model2", "model3".
-    - The user is able to retrieve a list of all registered models sorted by a column ascending/descending.
+    - The user is able to retrieve a list of all registered models sorted by a column
+      ascending/descending.
     - The returned list of models matches the order in the parametrize lists above.
     """
 

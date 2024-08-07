@@ -32,7 +32,11 @@ from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.jobs.service import ExperimentJobIdService, JobIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
-from .errors import ArtifactAlreadyExistsError, ArtifactDoesNotExistError, ArtifactSortError
+from .errors import (
+    ArtifactAlreadyExistsError,
+    ArtifactDoesNotExistError,
+    ArtifactSortError,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

@@ -261,7 +261,8 @@ def assert_sorting_experiment_works(
 
     Args:
         client: The Flask test client.
-        expected: The expected order of experiment names after sorting.  See test_experiment_sort for expected orders.
+        expected: The expected order of experiment names after sorting.
+            See test_experiment_sort for expected orders.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
@@ -400,7 +401,8 @@ def test_experiment_get_all(
     assert_retrieving_all_experiments_works(client, expected=experiment_expected_list)
 
 
-@pytest.mark.parametrize("sortBy, descending , expected",
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
     [
         (None, None, ["experiment1", "experiment2", "experiment3"]),
         ('name', True, ["experiment3", "experiment2", "experiment1"]),
@@ -420,11 +422,12 @@ def test_experiment_sort(
 ) -> None:
     """Test that experiments can be sorted by column.
 
-    Given an authenticated user and registered experiments, this test validates the following
-      sequence of actions:
+    Given an authenticated user and registered experiments, this test validates the
+      following sequence of actions:
 
-    - A user registers three experiments, "experiment1", "experiment2", "experiment3".
-    - The user is able to retrieve a list of all registered experiments sorted by a column ascending/descending.
+    - A user registers three experiments: "experiment1", "experiment2", "experiment3".
+    - The user is able to retrieve a list of all registered experiments sorted by a
+      column ascending/descending.
     - The returned list of experiments matches the order in the parametrize lists above.
     """
 
@@ -839,7 +842,8 @@ def test_manage_existing_experiment_draft(
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
-    """Test that a draft of an existing experiment can be created and managed by the user
+    """Test that a draft of an existing experiment can be created and managed by the
+        user
 
     Given an authenticated user and registered experiments, this test validates the
     following sequence of actions:

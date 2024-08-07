@@ -112,7 +112,7 @@ def register_error_handlers(api: Api) -> None:
             "message": "Bad Request - More than one plugin task output parameter is "
             "being assigned the same name."
         }, 400
-    
+
     @api.errorhandler(PluginSortError)
     def handle_queue_sort_error(error):
         return (

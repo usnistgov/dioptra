@@ -73,7 +73,6 @@ PLUGIN_FILE_SORTABLE_FIELDS: Final[dict[str, Any]] = {
 }
 
 
-
 class PluginService(object):
     @inject
     def __init__(
@@ -223,7 +222,9 @@ class PluginService(object):
                 sort_column = sort_column.asc()
             latest_plugins_stmt = latest_plugins_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in PLUGIN_SORTABLE_FIELDS:
-            log.debug(f"sort_by_string: '{sort_by_string}' is not in PLUGIN_SORTABLE_FIELDS")
+            log.debug(
+                f"sort_by_string: '{sort_by_string}' is not in PLUGIN_SORTABLE_FIELDS"
+            )
             raise PluginSortError
 
         plugins = db.session.scalars(latest_plugins_stmt).all()
@@ -898,7 +899,10 @@ class PluginIdFileService(object):
                 sort_column = sort_column.asc()
             latest_plugin_files_stmt = latest_plugin_files_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in PLUGIN_FILE_SORTABLE_FIELDS:
-            log.debug(f"sort_by_string: '{sort_by_string}' is not in PLUGIN_FILE_SORTABLE_FIELDS")
+            log.debug(
+                f"sort_by_string: '{sort_by_string}' "
+                f"is not in PLUGIN_FILE_SORTABLE_FIELDS"
+            )
             raise PluginSortError
 
         plugin_files_dict: dict[int, utils.PluginFileDict] = {

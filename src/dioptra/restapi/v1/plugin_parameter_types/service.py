@@ -243,7 +243,9 @@ class PluginParameterTypeService(object):
                 sort_column = sort_column.desc()
             else:
                 sort_column = sort_column.asc()
-            plugin_parameter_types_stmt = plugin_parameter_types_stmt.order_by(sort_column)
+            plugin_parameter_types_stmt = (
+                plugin_parameter_types_stmt.order_by(sort_column)
+            )
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
             raise PluginParameterSortError

@@ -56,7 +56,7 @@ def register_error_handlers(api: Api) -> None:
             },
             400,
         )
-    
+
     @api.errorhandler(ModelSortError)
     def handle_queue_sort_error(error):
         return (

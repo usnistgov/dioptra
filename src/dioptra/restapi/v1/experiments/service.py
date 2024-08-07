@@ -34,7 +34,11 @@ from dioptra.restapi.v1.entrypoints.service import EntrypointIdsService
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
-from .errors import ExperimentAlreadyExistsError, ExperimentDoesNotExistError, ExperimentSortError
+from .errors import (
+    ExperimentAlreadyExistsError,
+    ExperimentDoesNotExistError,
+    ExperimentSortError,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

@@ -305,7 +305,8 @@ def assert_sorting_plugin_works(
 
     Args:
         client: The Flask test client.
-        expected: The expected order of plugins names after sorting.  See test_plugin_sort for expected orders.
+        expected: The expected order of plugins names after sorting.
+            See test_plugin_sort for expected orders.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
@@ -568,7 +569,8 @@ def assert_sorting_plugin_file_works(
 
     Args:
         client: The Flask test client.
-        expected: The expected order of plugins filenames after sorting.  See test_plugin_file_sort for expected orders.
+        expected: The expected order of plugins filenames after sorting.
+            See test_plugin_file_sort for expected orders.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
@@ -800,7 +802,8 @@ def test_plugin_get_all(
     assert_retrieving_plugins_works(client, expected=plugin_expected_list)
 
 
-@pytest.mark.parametrize("sortBy, descending , expected",
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
     [
         (None, None, ["plugin_one", "plugin_two", "plugin_three"]),
         ('name', True, ["plugin_two", "plugin_three", "plugin_one"]),
@@ -820,11 +823,12 @@ def test_plugin_sort(
 ) -> None:
     """Test that plugins can be sorted by column.
 
-    Given an authenticated user and registered plugins, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered plugins, this test validates the
+    following sequence of actions:
 
     - A user registers three plugins, "plugin_one", "plugin_two", "plugin_three".
-    - The user is able to retrieve a list of all registered plugins sorted by a column ascending/descending.
+    - The user is able to retrieve a list of all registered plugins sorted by a column
+      ascending/descending.
     - The returned list of plugins matches the order in the parametrize lists above.
     """
 
@@ -1114,13 +1118,29 @@ def test_plugin_file_get_all(
     )
 
 
-@pytest.mark.parametrize("sortBy, descending , expected",
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
     [
-        (None, None, ["plugin_file_one.py", "plugin_file_two.py", "plugin_file_three.py"]),
-        ('filename', True, ["plugin_file_two.py", "plugin_file_three.py", "plugin_file_one.py"]),
-        ('filename', False, ["plugin_file_one.py", "plugin_file_three.py", "plugin_file_two.py"]),
-        ('createdOn', True, ["plugin_file_three.py", "plugin_file_two.py", "plugin_file_one.py"]),
-        ('createdOn', False, ["plugin_file_one.py", "plugin_file_two.py", "plugin_file_three.py"]),
+        (
+            None, None,
+            ["plugin_file_one.py", "plugin_file_two.py", "plugin_file_three.py"]
+        ),
+        (
+            'filename', True,
+            ["plugin_file_two.py", "plugin_file_three.py", "plugin_file_one.py"]
+        ),
+        (
+            'filename', False,
+            ["plugin_file_one.py", "plugin_file_three.py", "plugin_file_two.py"]
+        ),
+        (
+            'createdOn', True,
+            ["plugin_file_three.py", "plugin_file_two.py", "plugin_file_one.py"]
+        ),
+        (
+            'createdOn', False,
+            ["plugin_file_one.py", "plugin_file_two.py", "plugin_file_three.py"]
+        ),
     ]
 )
 def test_plugin_file_sort(
@@ -1134,19 +1154,24 @@ def test_plugin_file_sort(
 ) -> None:
     """Test that plugin files can be sorted by column.
 
-    Given an authenticated user and registered plugin files, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered plugin files, this test validates the
+    following sequence of actions:
 
-    - A user registers three plugin files, "plugin_file_one.py", "plugin_file_two.py", "plugin_file_three.py".
-    - The user is able to retrieve a list of all registered plugins files sorted by a column ascending/descending.
-    - The returned list of plugin files matches the order in the parametrize lists above.
+    - A user registers three plugin files:
+      "plugin_file_one.py",
+      "plugin_file_two.py",
+      "plugin_file_three.py".
+    - The user is able to retrieve a list of all registered plugins files sorted by a
+      column ascending/descending.
+    - The returned list of plugin files matches the order in the parametrize lists
+      above.
     """
 
     assert_sorting_plugin_file_works(
         client,
-        sortBy, 
+        sortBy,
         descending,
-        plugin_id=registered_plugin_with_files['plugin']["id"], 
+        plugin_id=registered_plugin_with_files['plugin']["id"],
         expected=expected)
 
 
@@ -1683,8 +1708,8 @@ def test_manage_plugin_snapshots(
 ) -> None:
     """Test that different snapshots of a plugin can be retrieved by the user.
 
-    Given an authenticated user and registered plugins, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered plugins, this test validates the
+    following sequence of actions:
 
     - The user modifies a plugin
     - The user retrieves information about the original snapshot of the plugin and gets

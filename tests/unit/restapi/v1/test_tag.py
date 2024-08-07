@@ -189,7 +189,8 @@ def assert_sorting_tag_works(
 
     Args:
         client: The Flask test client.
-        expected: The expected order of tag names after sorting.  See test_tag_sort for expected orders.
+        expected: The expected order of tag names after sorting.
+            See test_tag_sort for expected orders.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
@@ -334,7 +335,8 @@ def test_create_tag(
     )
 
 
-@pytest.mark.parametrize("sortBy, descending , expected",
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
     [
         (None, None, ["tag_one", "tag_two", "name"]),
         ('name', True, ["tag_two", "tag_one", "name"]),
@@ -358,7 +360,8 @@ def test_tag_sort(
     sequence of actions:
 
     - A user registers three tags, "tag_one", "tag_two", "name".
-    - The user is able to retrieve a list of all registered tags sorted by a column ascending/descending.
+    - The user is able to retrieve a list of all registered tags sorted by a column
+      ascending/descending.
     - The returned list of tags matches the order in the parametrize lists above.
     """
 

@@ -248,7 +248,9 @@ class SortByGetQueryParametersSchema(Schema):
 
     descending = fields.Bool(
         attribute="descending",
-        metadata=dict(description="Boolean indicating whether to sort by descending or not."),
+        metadata=dict(
+            description="Boolean indicating whether to sort by descending or not."
+        ),
         load_default=False,
     )
 

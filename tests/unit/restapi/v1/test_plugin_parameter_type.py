@@ -138,7 +138,7 @@ def assert_sorting_plugin_parameter_type_works(
 
     Args:
         client: The Flask test client.
-        expected: The expected order of type names after sorting.  
+        expected: The expected order of type names after sorting.
           See test_plugin_parameter_type_sort for expected orders.
 
     Raises:
@@ -160,7 +160,9 @@ def assert_sorting_plugin_parameter_type_works(
     response_data = response.get_json()
     # remove plugin param types created by default before testing
     names_to_remove = ['any', 'string', 'integer', 'number', 'boolean', 'null']
-    filtered_data = [item for item in response_data['data'] if item['name'] not in names_to_remove]
+    filtered_data = (
+        [item for item in response_data['data'] if item['name'] not in names_to_remove]
+    )
     print('filtered_data = ', filtered_data)
     param_names = [param['name'] for param in filtered_data]
 
@@ -464,7 +466,8 @@ def test_get_all_plugin_parameter_types(
     )
 
 
-@pytest.mark.parametrize("sortBy, descending , expected",
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
     [
         (None, None, ["image_shape", "model_output", "model"]),
         ('name', True, ["model_output", "model", "image_shape"]),
@@ -488,11 +491,15 @@ def test_plugin_parameter_type_sort(
     sequence of actions:
 
     - A user registers three types, "image_shape", "model_output", "model".
-    - The user is able to retrieve a list of all registered types sorted by a column ascending/descending.
-    - The returned list of plugin param types matches the order in the parametrize lists above.
+    - The user is able to retrieve a list of all registered types sorted by a column
+      ascending/descending.
+    - The returned list of plugin param types matches the order in the parametrize lists
+      above.
     """
 
-    assert_sorting_plugin_parameter_type_works(client, sortBy, descending, expected=expected)
+    assert_sorting_plugin_parameter_type_works(
+        client, sortBy, descending, expected=expected
+    )
 
 
 def test_plugin_parameter_type_search_query(

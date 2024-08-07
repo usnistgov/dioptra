@@ -220,7 +220,8 @@ def assert_sorting_queue_works(
 
     Args:
         client: The Flask test client.
-        expected: The expected order of queue names after sorting.  See test_queue_sort for expected orders.
+        expected: The expected order of queue names after sorting.
+            See test_queue_sort for expected orders.
 
     Raises:
         AssertionError: If the response status code is not 200 or if the API response
@@ -411,7 +412,8 @@ def test_queue_get_all(
     assert_retrieving_queues_works(client, expected=queue_expected_list)
 
 
-@pytest.mark.parametrize("sortBy, descending , expected",
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
     [
         (None, None, ["tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu"]),
         ('name', True, ["tensorflow_gpu", "tensorflow_cpu", "pytorch_cpu"]),
@@ -435,7 +437,8 @@ def test_queue_sort(
     sequence of actions:
 
     - A user registers three queues, "tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu".
-    - The user is able to retrieve a list of all registered queues sorted by a column ascending/descending.
+    - The user is able to retrieve a list of all registered queues sorted by a column
+      ascending/descending.
     - The returned list of queues matches the order in the parametrize lists above.
     """
 

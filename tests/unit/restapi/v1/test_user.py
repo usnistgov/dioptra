@@ -21,7 +21,6 @@ registered, modified, and deleted as expected through the REST API.
 """
 from typing import Any
 
-import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse

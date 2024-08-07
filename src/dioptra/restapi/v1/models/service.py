@@ -220,7 +220,9 @@ class ModelService(object):
                 sort_column = sort_column.asc()
             latest_ml_models_stmt = latest_ml_models_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in MODEL_SORTABLE_FIELDS:
-            log.debug(f"sort_by_string: '{sort_by_string}' is not in MODEL_SORTABLE_FIELDS")
+            log.debug(
+                f"sort_by_string: '{sort_by_string}' is not in MODEL_SORTABLE_FIELDS"
+            )
             raise ModelSortError
 
         ml_models = db.session.scalars(latest_ml_models_stmt).all()
