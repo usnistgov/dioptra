@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Utility functions to help in building responses from ORM models"""
-from typing import Any, Callable, Final, TypedDict, cast
+from typing import Any, Callable, Final, TypedDict, cast, Optional
 from urllib.parse import urlencode, urlunparse
 
 from marshmallow import Schema
@@ -990,8 +990,8 @@ def build_paging_envelope(
     index: int,
     length: int,
     total_num_elements: int,
-    sort_by: str = None,
-    descending: bool = None,
+    sort_by: Optional[str] = None,
+    descending: Optional[bool] = None,
 ) -> dict[str, Any]:
     """Build the paging envelope for a response.
 
