@@ -159,12 +159,12 @@ def assert_sorting_plugin_parameter_type_works(
 
     response_data = response.get_json()
     # remove plugin param types created by default before testing
-    names_to_remove = ['any', 'string', 'integer', 'number', 'boolean', 'null']
-    filtered_data = (
-        [item for item in response_data['data'] if item['name'] not in names_to_remove]
-    )
-    print('filtered_data = ', filtered_data)
-    param_names = [param['name'] for param in filtered_data]
+    names_to_remove = ["any", "string", "integer", "number", "boolean", "null"]
+    filtered_data = [
+        item for item in response_data["data"] if item["name"] not in names_to_remove
+    ]
+    print("filtered_data = ", filtered_data)
+    param_names = [param["name"] for param in filtered_data]
 
     assert response.status_code == 200 and param_names == expected
 
@@ -470,11 +470,11 @@ def test_get_all_plugin_parameter_types(
     "sortBy, descending , expected",
     [
         (None, None, ["image_shape", "model_output", "model"]),
-        ('name', True, ["model_output", "model", "image_shape"]),
-        ('name', False, ["image_shape", "model", "model_output"]),
-        ('createdOn', True, ["model", "model_output", "image_shape"]),
-        ('createdOn', False, ["image_shape", "model_output", "model"]),
-    ]
+        ("name", True, ["model_output", "model", "image_shape"]),
+        ("name", False, ["image_shape", "model", "model_output"]),
+        ("createdOn", True, ["model", "model_output", "image_shape"]),
+        ("createdOn", False, ["image_shape", "model_output", "model"]),
+    ],
 )
 def test_plugin_parameter_type_sort(
     client: FlaskClient,

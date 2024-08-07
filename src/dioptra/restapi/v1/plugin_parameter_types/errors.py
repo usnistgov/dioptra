@@ -90,5 +90,6 @@ def register_error_handlers(api: Api) -> None:
     @api.errorhandler(PluginParameterSortError)
     def handle_queue_sort_error(error):
         return (
-            {"message": "Bad Request - This column can not be sorted."}, 400,
+            {"message": "Bad Request - This column can not be sorted."},
+            400,
         )

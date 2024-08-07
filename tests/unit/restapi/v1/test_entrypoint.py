@@ -282,7 +282,7 @@ def assert_sorting_entrypoint_works(
     )
 
     response_data = response.get_json()
-    entrypoint_names = [entrypoint['name'] for entrypoint in response_data['data']]
+    entrypoint_names = [entrypoint["name"] for entrypoint in response_data["data"]]
 
     assert response.status_code == 200 and entrypoint_names == expected
 
@@ -570,11 +570,11 @@ def test_entrypoint_get_all(
     "sortBy, descending , expected",
     [
         (None, None, ["entrypoint_one", "entrypoint_two", "entrypoint_three"]),
-        ('name', True, ["entrypoint_two", "entrypoint_three", "entrypoint_one"]),
-        ('name', False, ["entrypoint_one", "entrypoint_three", "entrypoint_two"]),
-        ('createdOn', True, ["entrypoint_three", "entrypoint_two", "entrypoint_one"]),
-        ('createdOn', False, ["entrypoint_one", "entrypoint_two", "entrypoint_three"]),
-    ]
+        ("name", True, ["entrypoint_two", "entrypoint_three", "entrypoint_one"]),
+        ("name", False, ["entrypoint_one", "entrypoint_three", "entrypoint_two"]),
+        ("createdOn", True, ["entrypoint_three", "entrypoint_two", "entrypoint_one"]),
+        ("createdOn", False, ["entrypoint_one", "entrypoint_two", "entrypoint_three"]),
+    ],
 )
 def test_entrypoint_sort(
     client: FlaskClient,

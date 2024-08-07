@@ -36,8 +36,8 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 from .errors import (
     ModelAlreadyExistsError,
     ModelDoesNotExistError,
-    ModelVersionDoesNotExistError,
     ModelSortError,
+    ModelVersionDoesNotExistError,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()

@@ -16,6 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import pytest
 
+
 def pytest_addoption(parser):
     parser.addoption(
         "--run-v1", action="store_true", default=False, help="run v1 tests"

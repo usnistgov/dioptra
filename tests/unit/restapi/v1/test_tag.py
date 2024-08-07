@@ -209,7 +209,7 @@ def assert_sorting_tag_works(
     )
 
     response_data = response.get_json()
-    tag_names = [tag['name'] for tag in response_data['data']]
+    tag_names = [tag["name"] for tag in response_data["data"]]
 
     assert response.status_code == 200 and tag_names == expected
 
@@ -339,11 +339,11 @@ def test_create_tag(
     "sortBy, descending , expected",
     [
         (None, None, ["tag_one", "tag_two", "name"]),
-        ('name', True, ["tag_two", "tag_one", "name"]),
-        ('name', False, ["name", "tag_one", "tag_two"]),
-        ('createdOn', True, ["name", "tag_two", "tag_one"]),
-        ('createdOn', False, ["tag_one", "tag_two", "name"]),
-    ]
+        ("name", True, ["tag_two", "tag_one", "name"]),
+        ("name", False, ["name", "tag_one", "tag_two"]),
+        ("createdOn", True, ["name", "tag_two", "tag_one"]),
+        ("createdOn", False, ["tag_one", "tag_two", "name"]),
+    ],
 )
 def test_tag_sort(
     client: FlaskClient,

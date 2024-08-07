@@ -281,7 +281,7 @@ def assert_sorting_experiment_works(
     )
 
     response_data = response.get_json()
-    experiment_names = [experiment['name'] for experiment in response_data['data']]
+    experiment_names = [experiment["name"] for experiment in response_data["data"]]
 
     assert response.status_code == 200 and experiment_names == expected
 
@@ -405,11 +405,11 @@ def test_experiment_get_all(
     "sortBy, descending , expected",
     [
         (None, None, ["experiment1", "experiment2", "experiment3"]),
-        ('name', True, ["experiment3", "experiment2", "experiment1"]),
-        ('name', False, ["experiment1", "experiment2", "experiment3"]),
-        ('createdOn', True, ["experiment3", "experiment2", "experiment1"]),
-        ('createdOn', False, ["experiment1", "experiment2", "experiment3"]),
-    ]
+        ("name", True, ["experiment3", "experiment2", "experiment1"]),
+        ("name", False, ["experiment1", "experiment2", "experiment3"]),
+        ("createdOn", True, ["experiment3", "experiment2", "experiment1"]),
+        ("createdOn", False, ["experiment1", "experiment2", "experiment3"]),
+    ],
 )
 def test_experiment_sort(
     client: FlaskClient,

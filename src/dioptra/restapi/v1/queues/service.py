@@ -49,6 +49,7 @@ SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "description": models.Queue.description,
 }
 
+
 class QueueService(object):
     """The service methods for registering and managing queues by their unique id."""
 

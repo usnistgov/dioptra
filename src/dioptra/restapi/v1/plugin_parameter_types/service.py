@@ -32,11 +32,11 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 from .errors import (
+    PluginParameterSortError,
     PluginParameterTypeAlreadyExistsError,
     PluginParameterTypeDoesNotExistError,
     PluginParameterTypeMatchesBuiltinTypeError,
     PluginParameterTypeReadOnlyLockError,
-    PluginParameterSortError,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -243,8 +243,8 @@ class PluginParameterTypeService(object):
                 sort_column = sort_column.desc()
             else:
                 sort_column = sort_column.asc()
-            plugin_parameter_types_stmt = (
-                plugin_parameter_types_stmt.order_by(sort_column)
+            plugin_parameter_types_stmt = plugin_parameter_types_stmt.order_by(
+                sort_column
             )
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
             log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")

@@ -266,7 +266,7 @@ def assert_sorting_job_works(
     )
 
     response_data = response.get_json()
-    job_descriptions = [job['description'] for job in response_data['data']]
+    job_descriptions = [job["description"] for job in response_data["data"]]
 
     assert response.status_code == 200 and job_descriptions == expected
 
@@ -342,6 +342,7 @@ def test_create_job(
     """
     # Inline import necessary to prevent circular import
     import dioptra.restapi.v1.shared.rq_service as rq_service
+
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
     description = "The new job."
@@ -422,11 +423,11 @@ def test_job_get_all(
     "sortBy, descending , expected",
     [
         (None, None, ["The first job.", "The second job.", "Not retrieved."]),
-        ('description', True, ["The second job.", "The first job.", "Not retrieved."]),
-        ('description', False, ["Not retrieved.", "The first job.", "The second job."]),
-        ('createdOn', True, ["Not retrieved.", "The second job.", "The first job."]),
-        ('createdOn', False, ["The first job.", "The second job.", "Not retrieved."]),
-    ]
+        ("description", True, ["The second job.", "The first job.", "Not retrieved."]),
+        ("description", False, ["Not retrieved.", "The first job.", "The second job."]),
+        ("createdOn", True, ["Not retrieved.", "The second job.", "The first job."]),
+        ("createdOn", False, ["The first job.", "The second job.", "Not retrieved."]),
+    ],
 )
 def test_job_sort(
     client: FlaskClient,

@@ -39,11 +39,11 @@ from .errors import (
     PluginDoesNotExistError,
     PluginFileAlreadyExistsError,
     PluginFileDoesNotExistError,
+    PluginSortError,
     PluginTaskInputParameterNameAlreadyExistsError,
     PluginTaskNameAlreadyExistsError,
     PluginTaskOutputParameterNameAlreadyExistsError,
     PluginTaskParameterTypeNotFoundError,
-    PluginSortError,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()

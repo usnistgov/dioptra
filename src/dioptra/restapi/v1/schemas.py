@@ -237,6 +237,7 @@ class SearchQueryParametersSchema(Schema):
         load_default="",
     )
 
+
 class SortByGetQueryParametersSchema(Schema):
     """A schema for adding sort query parameters to a resource endpoint."""
 
@@ -253,6 +254,7 @@ class SortByGetQueryParametersSchema(Schema):
         ),
         load_default=False,
     )
+
 
 class ResourceGetQueryParameters(
     PagingQueryParametersSchema,

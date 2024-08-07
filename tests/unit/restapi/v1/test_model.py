@@ -297,7 +297,7 @@ def assert_sorting_model_works(
     )
 
     response_data = response.get_json()
-    model_names = [model['name'] for model in response_data['data']]
+    model_names = [model["name"] for model in response_data["data"]]
 
     assert response.status_code == 200 and model_names == expected
 
@@ -519,11 +519,11 @@ def test_model_get_all(
     "sortBy, descending , expected",
     [
         (None, None, ["my_tensorflow_model", "model2", "model3"]),
-        ('name', True, ["my_tensorflow_model", "model3", "model2"]),
-        ('name', False, ["model2", "model3", "my_tensorflow_model"]),
-        ('createdOn', True, ["model3", "model2", "my_tensorflow_model"]),
-        ('createdOn', False, ["my_tensorflow_model", "model2", "model3"]),
-    ]
+        ("name", True, ["my_tensorflow_model", "model3", "model2"]),
+        ("name", False, ["model2", "model3", "my_tensorflow_model"]),
+        ("createdOn", True, ["model3", "model2", "my_tensorflow_model"]),
+        ("createdOn", False, ["my_tensorflow_model", "model2", "model3"]),
+    ],
 )
 def test_model_sort(
     client: FlaskClient,

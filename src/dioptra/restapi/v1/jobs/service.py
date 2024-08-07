@@ -43,8 +43,8 @@ from .errors import (
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
-    QueueNotRegisteredToEntryPointError,
     JobSortError,
+    QueueNotRegisteredToEntryPointError,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()

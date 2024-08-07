@@ -189,9 +189,9 @@ def assert_sorting_artifact_works(
     )
 
     response_data = response.get_json()
-    artifact_descriptions = (
-        [artifact['description'] for artifact in response_data['data']]
-    )
+    artifact_descriptions = [
+        artifact["description"] for artifact in response_data["data"]
+    ]
 
     assert response.status_code == 200 and artifact_descriptions == expected
 
@@ -294,49 +294,56 @@ def test_artifacts_get_all(
     "sortBy, descending , expected",
     [
         (
-            None, None,
+            None,
+            None,
             [
                 "Model artifact.",
                 "Trained conv net model artifact.",
-                "Another model", "Fine-tuned model.",
-            ]
+                "Another model",
+                "Fine-tuned model.",
+            ],
         ),
         (
-            'description', True,
+            "description",
+            True,
             [
                 "Trained conv net model artifact.",
-                "Model artifact.", "Fine-tuned model.",
+                "Model artifact.",
+                "Fine-tuned model.",
                 "Another model",
-            ]
+            ],
         ),
         (
-            'description', False,
+            "description",
+            False,
             [
                 "Another model",
                 "Fine-tuned model.",
                 "Model artifact.",
-                "Trained conv net model artifact."
-            ]
+                "Trained conv net model artifact.",
+            ],
         ),
         (
-            'createdOn', True,
+            "createdOn",
+            True,
             [
                 "Fine-tuned model.",
                 "Another model",
                 "Trained conv net model artifact.",
                 "Model artifact.",
-            ]
+            ],
         ),
         (
-            'createdOn', False,
+            "createdOn",
+            False,
             [
                 "Model artifact.",
                 "Trained conv net model artifact.",
                 "Another model",
-                "Fine-tuned model."
-            ]
+                "Fine-tuned model.",
+            ],
         ),
-    ]
+    ],
 )
 def test_artifact_sort(
     client: FlaskClient,

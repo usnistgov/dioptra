@@ -123,10 +123,7 @@ def test_sanitize_file_path_preserve_windows(
 
 
 def test_unsafe_tarball_path(tmp_path: Path, io_file_service: IOFileService) -> None:
-    unsafe_tar_content = {
-        "/a/b/c": b"123",
-        "/a/../../b/c": b"456"
-    }
+    unsafe_tar_content = {"/a/b/c": b"123", "/a/../../b/c": b"456"}
 
     tarball_bytes = make_tarball_bytes(unsafe_tar_content)
 

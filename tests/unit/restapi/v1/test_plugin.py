@@ -325,7 +325,7 @@ def assert_sorting_plugin_works(
     )
 
     response_data = response.get_json()
-    plugin_names = [plugin['name'] for plugin in response_data['data']]
+    plugin_names = [plugin["name"] for plugin in response_data["data"]]
 
     assert response.status_code == 200 and plugin_names == expected
 
@@ -589,7 +589,7 @@ def assert_sorting_plugin_file_works(
     )
 
     response_data = response.get_json()
-    plugin_filenames = [file['filename'] for file in response_data['data']]
+    plugin_filenames = [file["filename"] for file in response_data["data"]]
     assert response.status_code == 200 and plugin_filenames == expected
 
 
@@ -806,11 +806,11 @@ def test_plugin_get_all(
     "sortBy, descending , expected",
     [
         (None, None, ["plugin_one", "plugin_two", "plugin_three"]),
-        ('name', True, ["plugin_two", "plugin_three", "plugin_one"]),
-        ('name', False, ["plugin_one", "plugin_three", "plugin_two"]),
-        ('createdOn', True, ["plugin_three", "plugin_two", "plugin_one"]),
-        ('createdOn', False, ["plugin_one", "plugin_two", "plugin_three"]),
-    ]
+        ("name", True, ["plugin_two", "plugin_three", "plugin_one"]),
+        ("name", False, ["plugin_one", "plugin_three", "plugin_two"]),
+        ("createdOn", True, ["plugin_three", "plugin_two", "plugin_one"]),
+        ("createdOn", False, ["plugin_one", "plugin_two", "plugin_three"]),
+    ],
 )
 def test_plugin_sort(
     client: FlaskClient,
@@ -1122,26 +1122,31 @@ def test_plugin_file_get_all(
     "sortBy, descending , expected",
     [
         (
-            None, None,
-            ["plugin_file_one.py", "plugin_file_two.py", "plugin_file_three.py"]
+            None,
+            None,
+            ["plugin_file_one.py", "plugin_file_two.py", "plugin_file_three.py"],
         ),
         (
-            'filename', True,
-            ["plugin_file_two.py", "plugin_file_three.py", "plugin_file_one.py"]
+            "filename",
+            True,
+            ["plugin_file_two.py", "plugin_file_three.py", "plugin_file_one.py"],
         ),
         (
-            'filename', False,
-            ["plugin_file_one.py", "plugin_file_three.py", "plugin_file_two.py"]
+            "filename",
+            False,
+            ["plugin_file_one.py", "plugin_file_three.py", "plugin_file_two.py"],
         ),
         (
-            'createdOn', True,
-            ["plugin_file_three.py", "plugin_file_two.py", "plugin_file_one.py"]
+            "createdOn",
+            True,
+            ["plugin_file_three.py", "plugin_file_two.py", "plugin_file_one.py"],
         ),
         (
-            'createdOn', False,
-            ["plugin_file_one.py", "plugin_file_two.py", "plugin_file_three.py"]
+            "createdOn",
+            False,
+            ["plugin_file_one.py", "plugin_file_two.py", "plugin_file_three.py"],
         ),
-    ]
+    ],
 )
 def test_plugin_file_sort(
     client: FlaskClient,
@@ -1171,8 +1176,9 @@ def test_plugin_file_sort(
         client,
         sortBy,
         descending,
-        plugin_id=registered_plugin_with_files['plugin']["id"],
-        expected=expected)
+        plugin_id=registered_plugin_with_files["plugin"]["id"],
+        expected=expected,
+    )
 
 
 def test_plugin_file_delete_all(

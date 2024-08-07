@@ -240,7 +240,7 @@ def assert_sorting_queue_works(
     )
 
     response_data = response.get_json()
-    queue_names = [queue['name'] for queue in response_data['data']]
+    queue_names = [queue["name"] for queue in response_data["data"]]
 
     assert response.status_code == 200 and queue_names == expected
 
@@ -416,11 +416,11 @@ def test_queue_get_all(
     "sortBy, descending , expected",
     [
         (None, None, ["tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu"]),
-        ('name', True, ["tensorflow_gpu", "tensorflow_cpu", "pytorch_cpu"]),
-        ('name', False, ["pytorch_cpu", "tensorflow_cpu", "tensorflow_gpu"]),
-        ('createdOn', True, ["pytorch_cpu", "tensorflow_gpu", "tensorflow_cpu"]),
-        ('createdOn', False, ["tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu"]),
-    ]
+        ("name", True, ["tensorflow_gpu", "tensorflow_cpu", "pytorch_cpu"]),
+        ("name", False, ["pytorch_cpu", "tensorflow_cpu", "tensorflow_gpu"]),
+        ("createdOn", True, ["pytorch_cpu", "tensorflow_gpu", "tensorflow_cpu"]),
+        ("createdOn", False, ["tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu"]),
+    ],
 )
 def test_queue_sort(
     client: FlaskClient,
