@@ -40,7 +40,7 @@ def register_error_handlers(api: Api) -> None:
     @api.errorhandler(TagAlreadyExistsError)
     def handle_tag_already_exists_error(error):
         return {"message": "Bad Request - The tag name already exists."}, 400
-    
+
     @api.errorhandler(TagSortError)
     def handle_queue_sort_error(error):
         return (
