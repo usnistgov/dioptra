@@ -41,7 +41,7 @@ SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
 SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "name": models.Tag.name,
     "createdOn": models.Tag.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
+    "lastModifiedOn": models.Tag.last_modified_on,
 }
 
 
