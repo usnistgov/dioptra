@@ -130,7 +130,9 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
       index: pagination.index,
       pageLength: pagination.rowsPerPage,
       search: urlEncode(pagination.search),
-      draftType: showDrafts ? 'new' : ''
+      draftType: showDrafts ? 'new' : '',
+      sortBy: pagination.sortBy,
+      descending: pagination.descending,
     },
   })
   if(showDrafts && res.data.data) {
@@ -148,6 +150,8 @@ export async function getJobs(id: number, pagination: Pagination) {
       index: pagination.index,
       pageLength: pagination.rowsPerPage,
       search: urlEncode(pagination.search),
+      sortBy: pagination.sortBy,
+      descending: pagination.descending,
     }
   })
 }
@@ -230,7 +234,9 @@ export async function getFiles(id: number, pagination: Pagination) {
     params: {
       index: pagination.index,
       pageLength: pagination.rowsPerPage,
-      search: urlEncode(pagination.search)
+      search: urlEncode(pagination.search),
+      sortBy: pagination.sortBy,
+      descending: pagination.descending,
     }
   })
 }

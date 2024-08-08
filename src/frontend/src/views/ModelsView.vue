@@ -104,8 +104,9 @@ async function getModels(pagination) {
 
 const columns = [
   { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true,  },
-  { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
-  { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
+  { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: true },
+  { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
+  { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
 ]
 

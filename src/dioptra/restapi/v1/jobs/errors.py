@@ -48,6 +48,10 @@ class QueueNotRegisteredToEntryPointError(Exception):
     """The requested queue is not registered to the provided entry point."""
 
 
+class JobSortError(Exception):
+    """The requested sortBy column is not a sortable field."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(JobDoesNotExistError)
     def handle_job_does_not_exist_error(error):
@@ -92,3 +96,10 @@ def register_error_handlers(api: Api) -> None:
             "message": "Bad Request - The requested queue is not registered to the "
             "provided entry point"
         }, 400
+
+    @api.errorhandler(JobSortError)
+    def handle_queue_sort_error(error):
+        return (
+            {"message": "Bad Request - This column can not be sorted."},
+            400,
+        )

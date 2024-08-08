@@ -28,6 +28,10 @@ class TagDoesNotExistError(Exception):
     """The requested tag does not exist."""
 
 
+class TagSortError(Exception):
+    """The requested sortBy column is not a sortable field."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(TagDoesNotExistError)
     def handle_tag_does_not_exist_error(error):
@@ -36,3 +40,10 @@ def register_error_handlers(api: Api) -> None:
     @api.errorhandler(TagAlreadyExistsError)
     def handle_tag_already_exists_error(error):
         return {"message": "Bad Request - The tag name already exists."}, 400
+
+    @api.errorhandler(TagSortError)
+    def handle_queue_sort_error(error):
+        return (
+            {"message": "Bad Request - This column can not be sorted."},
+            400,
+        )

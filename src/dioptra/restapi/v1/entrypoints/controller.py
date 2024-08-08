@@ -100,12 +100,16 @@ class EntrypointEndpoint(Resource):
         search_string = parsed_query_params["search"]
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
+        sort_by_string = parsed_query_params["sort_by"]
+        descending = parsed_query_params["descending"]
 
         entrypoints, total_num_entrypoints = self._entrypoint_service.get(
             group_id=group_id,
             search_string=search_string,
             page_index=page_index,
             page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -118,6 +122,8 @@ class EntrypointEndpoint(Resource):
             index=page_index,
             length=page_length,
             total_num_elements=total_num_entrypoints,
+            sort_by=sort_by_string,
+            descending=descending,
         )
 
     @login_required

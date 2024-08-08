@@ -32,6 +32,10 @@ class ModelVersionDoesNotExistError(Exception):
     """The requested version of the model does not exist."""
 
 
+class ModelSortError(Exception):
+    """The requested sortBy column is not a sortable field."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(ModelDoesNotExistError)
     def handle_model_does_not_exist_error(error):
@@ -50,5 +54,12 @@ def register_error_handlers(api: Api) -> None:
                 "message": "Bad Request - The model name on the registration form "
                 "already exists. Please select another and resubmit."
             },
+            400,
+        )
+
+    @api.errorhandler(ModelSortError)
+    def handle_queue_sort_error(error):
+        return (
+            {"message": "Bad Request - This column can not be sorted."},
             400,
         )

@@ -31,12 +31,17 @@ from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
-from .errors import TagAlreadyExistsError, TagDoesNotExistError
+from .errors import TagAlreadyExistsError, TagDoesNotExistError, TagSortError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.Tag.name.like(x),
+}
+SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": models.Tag.name,
+    "createdOn": models.Tag.created_on,
+    "lastModifiedOn": models.Tag.last_modified_on,
 }
 
 
@@ -108,6 +113,8 @@ class TagService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> tuple[list[models.Tag], int]:
         """Fetch a list of tags, optionally filtering by search string and paging
@@ -118,6 +125,8 @@ class TagService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of tags to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of tags and the total number of tags matching
@@ -154,6 +163,18 @@ class TagService(object):
         tags_stmt = (
             select(models.Tag).where(*filters).offset(page_index).limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
+            sort_column = SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            tags_stmt = tags_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
+            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
+            raise TagSortError
+
         tags = list(db.session.scalars(tags_stmt).all())
 
         return tags, total_num_tags

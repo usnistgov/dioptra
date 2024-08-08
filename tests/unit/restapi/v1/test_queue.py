@@ -22,6 +22,7 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 from typing import Any
 
+import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
@@ -209,6 +210,41 @@ def assert_retrieving_queues_works(
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
+def assert_sorting_queue_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Assert that queues can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of queue names after sorting.
+            See test_queue_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_QUEUES_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    queue_names = [queue["name"] for queue in response_data["data"]]
+
+    assert response.status_code == 200 and queue_names == expected
+
+
 def assert_registering_existing_queue_name_fails(
     client: FlaskClient, name: str, group_id: int
 ) -> None:
@@ -374,6 +410,39 @@ def test_queue_get_all(
     """
     queue_expected_list = list(registered_queues.values())
     assert_retrieving_queues_works(client, expected=queue_expected_list)
+
+
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        (None, None, ["tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu"]),
+        ("name", True, ["tensorflow_gpu", "tensorflow_cpu", "pytorch_cpu"]),
+        ("name", False, ["pytorch_cpu", "tensorflow_cpu", "tensorflow_gpu"]),
+        ("createdOn", True, ["pytorch_cpu", "tensorflow_gpu", "tensorflow_cpu"]),
+        ("createdOn", False, ["tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu"]),
+    ],
+)
+def test_queue_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that queues can be sorted by column.
+
+    Given an authenticated user and registered queues, this test validates the following
+    sequence of actions:
+
+    - A user registers three queues, "tensorflow_cpu", "tensorflow_gpu", "pytorch_cpu".
+    - The user is able to retrieve a list of all registered queues sorted by a column
+      ascending/descending.
+    - The returned list of queues matches the order in the parametrize lists above.
+    """
+
+    assert_sorting_queue_works(client, sortBy, descending, expected=expected)
 
 
 def test_queue_search_query(
