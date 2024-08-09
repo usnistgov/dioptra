@@ -98,7 +98,7 @@
     try {
       console.log('plugin = ', plugin)
       const res = await api.addItem('pluginParameterTypes', plugin)
-      notify.success(`Sucessfully created '${res.data.name}'`)
+      notify.success(`Successfully created '${res.data.name}'`)
       tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message)
@@ -108,7 +108,7 @@
   async function updatePluginParamType(id, name, description, structure) {
     try {
       const res = await api.updateItem('pluginParameterTypes', id, {name, description, structure})
-      notify.success(`Sucessfully updated '${res.data.name}'`)
+      notify.success(`Successfully updated '${res.data.name}'`)
       tableRef.value.refreshTable()
       selected.value = []
     } catch(err) {
@@ -119,7 +119,7 @@
   async function deletePlugin() {
     try {
       await api.deleteItem('pluginParameterTypes', selected.value[0].id)
-      notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+      notify.success(`Successfully deleted '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

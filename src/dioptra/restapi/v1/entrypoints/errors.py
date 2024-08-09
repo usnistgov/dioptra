@@ -33,7 +33,7 @@ class EntrypointPluginDoesNotExistError(Exception):
 
 
 class EntrypointParameterNamesNotUniqueError(Exception):
-    """Mutliple entrypoint parameters share the same name."""
+    """Multiple entrypoint parameters share the same name."""
 
 
 def register_error_handlers(api: Api) -> None:

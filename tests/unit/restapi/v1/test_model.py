@@ -358,7 +358,7 @@ def assert_retrieving_model_version_by_version_number_works(
     Args:
         client: The Flask test client.
         model_id: The id of the model.
-        model_verison_id: The id of the model version to retrieve.
+        model_version_id: The id of the model version to retrieve.
         expected: The expected response from the API.
 
     Raises:
@@ -1014,12 +1014,12 @@ def test_model_version_search_query(
     registered_models: dict[str, Any],
     registered_model_versions: dict[str, Any],
 ) -> None:
-    """Test that model verisons can be queried with a search term.
+    """Test that model versions can be queried with a search term.
 
     Given an authenticated user, registered model, and registered model versions
     this test validates the following sequence of actions:
 
-    - The user is able to retrieve a list of all registered model verisons with various
+    - The user is able to retrieve a list of all registered model versions with various
       queries.
     - The returned list of model versions matches the expected matches from the query.
     """

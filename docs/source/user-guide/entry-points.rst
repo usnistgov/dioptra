@@ -143,7 +143,7 @@ uri
 Executable Script
 -----------------
 
-The entry point script, in principle, is just an executable Python script that accepts command-line options, so Testbed users can get started quickly by using their pre-existing Python scripts.
+The entry point script, in principle, is just an executable Python script that accepts command-line options, so Testbed users can get started quickly by using their preexisting Python scripts.
 However, if users wish to make use of the Testbed's powerful job tracking and task plugin capabilities, they will need to adopt the Testbed's standard for writing entry point scripts outlined in this section.
 
 .. attention::

@@ -123,7 +123,7 @@
     try {
       if(id) await api.addDraft('queues', params, id)
       else await api.addItem('queues', params)
-      notify.success(`Sucessfully created '${name}'`)
+      notify.success(`Successfully created '${name}'`)
       showQueueDialog.value = false
       showDraftDialog.value = false
       tableRef.value.refreshTable()
@@ -142,7 +142,7 @@
     }
     try {
       await api.addDraft('queues', params, id)
-      notify.success(`Sucessfully created draft '${name}'`)
+      notify.success(`Successfully created draft '${name}'`)
       showQueueDialog.value = false
       tableRef.value.refreshTable()
     } catch(err) {
@@ -157,7 +157,7 @@
       } else {
         await api.updateItem('queues', id, { name, description })
       }
-      notify.success(`Sucessfully updated Queue '${name}'`)
+      notify.success(`Successfully updated Queue '${name}'`)
       showQueueDialog.value = false
       showDraftDialog.value = false
       selected.value = []
@@ -170,7 +170,7 @@
   async function updateDraftLinkedToQueue(queueId, name, description) {
     try {
       await api.updateDraftLinkedtoQueue(queueId, name, description)
-      notify.success(`Sucessfully updated '${name}'`)
+      notify.success(`Successfully updated '${name}'`)
       showDraftDialog.value = false
     } catch(err) {
       notify.error(err.response.data.message)
@@ -197,7 +197,7 @@
       } else {
         await api.deleteDraft('queues', selected.value[0].id)
       }
-      notify.success(`Sucessfully deleted Queue '${selected.value[0].name}'`)
+      notify.success(`Successfully deleted Queue '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

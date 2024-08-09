@@ -752,7 +752,7 @@ def remove_tag(
     resource_id: int,
     tag_id: int,
 ) -> TestResponse:
-    """Remove tag tag from the resource with the provided unique ID.
+    """Remove tag from the resource with the provided unique ID.
 
     Args:
         client: The Flask test client.

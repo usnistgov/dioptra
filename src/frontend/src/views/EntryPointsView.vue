@@ -161,7 +161,7 @@
   async function deleteEntryPoint() {
     try {
       await api.deleteItem('entrypoints', selected.value[0].id)
-      notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+      notify.success(`Successfully deleted '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

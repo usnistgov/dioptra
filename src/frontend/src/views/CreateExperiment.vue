@@ -347,7 +347,7 @@
     try {
       if(route.params.id === 'new') {
         await api.addItem('experiments', experiment.value)
-        notify.success(`Sucessfully created '${experiment.value.name}'`)
+        notify.success(`Successfully created '${experiment.value.name}'`)
       } else {
         experiment.value.entrypoints.forEach((entrypoint, index, array) => {
           if(typeof entrypoint === 'object') {
@@ -359,7 +359,7 @@
         description: experiment.value.description,
         entrypoints: experiment.value.entrypoints
       })
-        notify.success(`Sucessfully updated '${experiment.value.name}'`)
+        notify.success(`Successfully updated '${experiment.value.name}'`)
       }
     } catch(err) {
       console.log('err = ', err)
@@ -376,7 +376,7 @@
   //       description: experiment.value.description,
   //       entrypoints: experiment.value.entrypoints
   //     })
-  //     notify.success(`Sucessfully updated '${res.data.name}'`)
+  //     notify.success(`Successfully updated '${res.data.name}'`)
   //   } catch(err) {
   //     console.log('err = ', err)
   //     notify.error(err.response.data.message)

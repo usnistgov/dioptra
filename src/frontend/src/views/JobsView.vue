@@ -143,7 +143,7 @@
       } else {
         // await api.deleteDraft('queues', selected.value[0].id)
       }
-      notify.success(`Sucessfully deleted '${selected.value[0].description}'`)
+      notify.success(`Successfully deleted '${selected.value[0].description}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

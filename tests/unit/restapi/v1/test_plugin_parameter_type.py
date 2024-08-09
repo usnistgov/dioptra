@@ -14,11 +14,11 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Test suite for plugin paramaeter type operations.
+"""Test suite for plugin parameter type operations.
 
 This module contains a set of tests that validate the CRUD operations and additional
-functionalities for the plugin paramaeter type entity. The tests ensure that the plugin
-paramaeter types can be submitted and retrieved as expected through the REST API.
+functionalities for the plugin parameter type entity. The tests ensure that the plugin
+parameter types can be submitted and retrieved as expected through the REST API.
 """
 from typing import Any
 

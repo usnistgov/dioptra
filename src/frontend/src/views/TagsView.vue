@@ -84,7 +84,7 @@
         name,
         group
       })
-      notify.success(`Sucessfully created tag '${name}'`)
+      notify.success(`Successfully created tag '${name}'`)
       showAddDialog.value = false
       tableRef.value.refreshTable()
     } catch(err) {
@@ -95,7 +95,7 @@
   async function updateTag(name, id) {
     try {
       await api.updateItem('tags', id, { name })
-      notify.success(`Sucessfully edited Tag '${name}'`)
+      notify.success(`Successfully edited Tag '${name}'`)
       showAddDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()
@@ -119,7 +119,7 @@
   async function deleteTag() {
     try {
       await api.deleteItem('tags', selected.value[0].id)
-      notify.success(`Sucessfully deleted Tag '${selected.value[0].name}'`)
+      notify.success(`Successfully deleted Tag '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

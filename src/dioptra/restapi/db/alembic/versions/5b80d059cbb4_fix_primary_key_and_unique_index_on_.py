@@ -55,7 +55,7 @@ def upgrade():
     with op.batch_alter_table("plugin_task_input_parameters", schema=None) as batch_op:
         batch_op.add_column(sa.Column("required", sa.Boolean(), nullable=True))
 
-    # Set the new required field on any pre-existing input_parameters to True.
+    # Set the new required field on any preexisting input_parameters to True.
     with Session() as session:
         for param in session.scalars(sa.select(PluginTaskInputParameterUpgrade)):
             param.required = True

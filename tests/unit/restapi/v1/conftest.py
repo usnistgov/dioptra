@@ -245,7 +245,7 @@ def registered_model_versions(
         client,
         model_id=registered_models["model2"]["id"],
         artifact_id=registered_artifacts["artifact4"]["id"],
-        description="Not retreived.",
+        description="Not retrieved.",
     ).get_json()
     version5_response = actions.register_model_version(
         client,

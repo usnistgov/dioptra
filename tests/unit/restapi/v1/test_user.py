@@ -669,7 +669,7 @@ def test_user_authorization_failure(
     Given an authenticated user, this test validates the following sequence of actions:
 
     - The current attempts to login with an incorrect password.
-    - The user can not log in.
+    - The user cannot log in.
     """
     username = registered_users["user2"]["username"]
     password = registered_users["user2"]["password"] + "incorrect"

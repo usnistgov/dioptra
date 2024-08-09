@@ -220,7 +220,7 @@ def _get_one_of_alternative_names(
             # rare case... would only apply to true/false schemas I think.
             name = "Alternative #" + str(idx + 1)
 
-        # uniquefy names, just in case...
+        # uniquify names, just in case...
         name_count = name_counts[name]
         name_counts[name] += 1
         if name_count == 0:

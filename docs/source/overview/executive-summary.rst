@@ -171,7 +171,7 @@ The architecture is built entirely from open-source resources making it easy for
 Assumptions / System Requirements
 ---------------------------------
 
-Most of the built-in demonstrations in the testbed assume the testbed is deployed on Unix-based operating systems (e.g., Linux, MacOS).
+Most of the built-in demonstrations in the testbed assume the testbed is deployed on Unix-based operating systems (e.g., Linux, macOS).
 Those familiar with the Windows Subsystem for Linux (WSL) should be able to deploy it on Windows, but this mode is not explicitly supported at this time.
 Most included demos perform computationally intensive calculations requiring access to significant computational resources such as Graphics Processing Units (GPUs).
 The architecture has been tested on a :term:`NVIDIA DGX` server with 4 GPUs.
