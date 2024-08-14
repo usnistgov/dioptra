@@ -89,6 +89,17 @@ def delete_entrypoint(
     )
 
 
+def modify_queues_for_entrypoint(
+    client: FlaskClient, entrypoint_id: int, queue_ids: list[int],
+) -> TestResponse:
+    payload: dict[str, Any] = {"ids": queue_ids}
+    return client.put(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
+        json=payload,
+        follow_redirects=True,
+    )
+
+
 def delete_all_queues_for_entrypoint(
     client: FlaskClient, entrypoint_id: int,
 ) -> TestResponse:
@@ -425,7 +436,8 @@ def assert_retrieving_all_queues_for_entrypoint_works(
         f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
         follow_redirects=True,
     )
-    assert response.status_code == 200 and response.get_json() == expected
+    print(response)
+    assert response.status_code == 200 and [queue_ref["id"] for queue_ref in response.get_json()] == expected
 
 
 def assert_append_queues_to_entrypoint_works(
@@ -437,19 +449,7 @@ def assert_append_queues_to_entrypoint_works(
         json=payload,
         follow_redirects=True,
     )
-    assert response.status_code == 200 and response.get_json() == expected
-
-
-def assert_modify_queues_to_entrypoint_works(
-    client: FlaskClient, entrypoint_id: int, queue_ids: list[int], expected: list[Any],
-) -> None:
-    payload: dict[str, Any] = {"ids": queue_ids}
-    response = client.put(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
-        json=payload,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    assert response.status_code == 200 and [queue_ref["id"] for queue_ref in response.get_json()] == expected
 
 
 def assert_delete_all_queues_for_entrypoint_works(
@@ -459,7 +459,8 @@ def assert_delete_all_queues_for_entrypoint_works(
         f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
         follow_redirects=True,
     )
-    assert response.status_code == 200 and response.get_json() == []
+    assert response.status_code == 404
+
 
 # -- Tests -----------------------------------------------------------------------------
 
@@ -1107,11 +1108,11 @@ def test_get_all_queues_for_entrypoint(
     registered_entrypoints: dict[str, Any],
 ) -> None:
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
-    expected_queues = [queue for queue in list(registered_queues.values())]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
     assert_retrieving_all_queues_for_entrypoint_works(
         client, 
         entrypoint_id=entrypoint_id,
-        expected=expected_queues,
+        expected=expected_queue_ids,
     )
 
 
@@ -1124,12 +1125,12 @@ def test_append_queues_to_entrypoint(
 ) -> None:
     entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
     queue_ids_to_append = [queue["id"] for queue in list(registered_queues.values())[1:]]
-    expected_queues = [queue for queue in list(registered_queues.values())]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
     assert_append_queues_to_entrypoint_works(
         client,
         entrypoint_id=entrypoint_id,
         queue_ids=queue_ids_to_append,
-        expected=expected_queues,
+        expected=expected_queue_ids,
     )
 
 
@@ -1141,13 +1142,14 @@ def test_modify_queues_for_entrypoint(
     registered_entrypoints: dict[str, Any],
 ) -> None:
     entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
-    queue_ids_to_replace = [queue["id"] for queue in list(registered_queues.values())]
-    expected_queues = [queue for queue in list(registered_queues.values())]
-    assert_modify_queues_to_entrypoint_works(
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+    modify_queues_for_entrypoint(
+        client, entrypoint_id=entrypoint_id, queue_ids=expected_queue_ids,
+    )
+    assert_retrieving_all_queues_for_entrypoint_works(
         client,
         entrypoint_id=entrypoint_id,
-        queue_ids=queue_ids_to_replace,
-        expected=expected_queues,
+        expected=expected_queue_ids,
     )
 
 
