@@ -477,7 +477,7 @@ def assert_delete_all_queues_for_entrypoint_works(
         f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
         follow_redirects=True,
     )
-    assert response.status_code == 404
+    assert response.status_code == 200 and response.get_json() == []
 
 
 def assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
@@ -1217,10 +1217,9 @@ def test_delete_all_queues_for_entrypoint(
     client: FlaskClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
-    registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
-    entrypoint_id = registered_entrypoints["entrypoint1"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     delete_all_queues_for_entrypoint(client, entrypoint_id=entrypoint_id)
     assert_delete_all_queues_for_entrypoint_works(
         client, entrypoint_id=entrypoint_id,
