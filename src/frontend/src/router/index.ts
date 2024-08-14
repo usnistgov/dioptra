@@ -21,10 +21,6 @@ const router = createRouter({
       component: () => import('../views/PluginsView.vue')
     },
     {
-      path: '/plugins/:id',
-      component: () => import('../views/EditPluginsView.vue')
-    },
-    {
       path: '/oldplugins/:id',
       component: () => import('../views/OldEditPluginsView.vue')
     },
