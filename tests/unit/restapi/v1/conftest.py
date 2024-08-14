@@ -540,7 +540,7 @@ def registered_experiments(
         name="experiment3",
         group_id=auth_account["default_group_id"],
         description="test description",
-        entrypoint_ids=entrypoint_ids,
+        entrypoint_ids=entrypoint_ids[:1],
     ).get_json()
     return {
         "experiment1": experiment1_response,
