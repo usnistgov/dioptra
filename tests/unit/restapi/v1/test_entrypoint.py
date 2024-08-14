@@ -1167,6 +1167,13 @@ def test_get_all_queues_for_entrypoint(
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
+    """Test that queues associated with entrypoints can be retrieved.
+
+    Given an authenticated user, registered entrypoints, and registered queues, 
+    this test validates the following sequence of actions:
+
+    - A user retrieves a list of all queue refs associated with the entrypoints.
+    """
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
     assert_retrieving_all_queues_for_entrypoint_works(
@@ -1181,6 +1188,14 @@ def test_append_queues_to_entrypoint(
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
+    """Test that queues can be appended to entrypoints.
+
+    Given an authenticated user, registered entrypoints, and registered queues, 
+    this test validates the following sequence of actions:
+
+    - A user adds new queue to the list of associated queues with the entrypoint.
+    - A user can then retreive the new list that includes all old and new queues refs.
+    """
     entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
     queue_ids_to_append = [queue["id"] for queue in list(registered_queues.values())[1:]]
     expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
@@ -1199,6 +1214,14 @@ def test_modify_queues_for_entrypoint(
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
+    """Test that the list of associated queues with entrypoints can be modified.
+
+    Given an authenticated user, registered entrypoints, and registered queues, 
+    this test validates the following sequence of actions:
+
+    - A user modifies the list of queues associated with an entrypoint.
+    - A user retrieves the list of all the new queues associated with the experiemnts.
+    """
     entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
     expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
     modify_queues_for_entrypoint(
@@ -1215,6 +1238,14 @@ def test_delete_all_queues_for_entrypoint(
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
+    """Test that the list of all associated queues can be deleted from a entrypoint.
+
+    Given an authenticated user and registered entrypoints, this test validates the 
+    following sequence of actions:
+
+    - A user deletes the list of associated queues with the entrypoint.
+    - A user retrieves an empty list of associated queues with the entrypoint.
+    """
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     delete_all_queues_for_entrypoint(client, entrypoint_id=entrypoint_id)
     assert_delete_all_queues_for_entrypoint_works(
@@ -1229,6 +1260,14 @@ def test_delete_queue_by_id_for_entrypoint(
     registered_queues: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
+    """Test that queues associated with the entrypoint can be deleted by id.
+
+    Given an authenticated user, registered entrypoints, and registered queues, 
+    this test validates the following sequence of actions:
+
+    - A user deletes an associated queue with the entrypoint.
+    - A user retrieves a list of associated queues that does not include the deleted.
+    """
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     queue_id_to_delete = registered_queues["queue1"]["id"]
     expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())[1:]]
@@ -1247,6 +1286,13 @@ def test_get_plugin_snapshots_for_entrypoint(
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
+    """Test that plugins associated with entrypoints can be retrieved.
+
+    Given an authenticated user, registered entrypoints, and registered plugins, 
+    this test validates the following sequence of actions:
+
+    - A user retrieves a list of all plugin refs associated with the entrypoints.
+    """
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     expected_plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
     assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
@@ -1261,6 +1307,14 @@ def test_append_plugins_to_entrypoint(
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
+    """Test that plugins can be appended to entrypoints.
+
+    Given an authenticated user, registered entrypoints, and registered plugins, 
+    this test validates the following sequence of actions:
+
+    - A user adds new plugin to the list of associated plugins with the entrypoint.
+    - A user can then retreive the new list that includes all old and new plugins refs.
+    """
     entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
     expected_plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
     assert_append_plugins_to_entrypoint_works(
@@ -1278,6 +1332,13 @@ def test_get_plugin_snapshot_by_id_for_entrypoint(
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
+    """Test that plugins associated with entrypoints can be retrieved by id.
+
+    Given an authenticated user, registered entrypoints, and registered plugins, 
+    this test validates the following sequence of actions:
+
+    - A user retrieves a plugin ref associated with the entrypoints by its id.
+    """
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     expected_plugin_id = registered_plugin_with_files["plugin"]["id"]
     assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
@@ -1295,6 +1356,14 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
     registered_plugin_with_files: dict[str, Any],
     registered_entrypoints: dict[str, Any],
 ) -> None:
+    """Test that plugins associated with the entrypoint can be deleted by id.
+
+    Given an authenticated user, registered entrypoints, and registered plugins, 
+    this test validates the following sequence of actions:
+
+    - A user deletes an associated plugin with the entrypoint.
+    - A user retrieves a list of associated plugins that does not include the deleted.
+    """
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     plugin_id_to_delete = registered_plugin_with_files["plugin"]["id"]
     delete_plugin_by_id_for_entrypoint(
