@@ -611,7 +611,7 @@ def registered_entrypoints(
         task_graph=task_graph,
         parameters=parameters,
         plugin_ids=plugin_ids,
-        queue_ids=queue_ids,
+        queue_ids=queue_ids[:1],
     ).get_json()
     return {
         "entrypoint1": entrypoint1_response,

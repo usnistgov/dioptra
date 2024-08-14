@@ -89,6 +89,15 @@ def delete_entrypoint(
     )
 
 
+def delete_all_queues_for_entrypoint(
+    client: FlaskClient, entrypoint_id: int,
+) -> TestResponse:
+    return client.delete(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
+        follow_redirects=True,
+    )
+
+
 # -- Assertions ------------------------------------------------------------------------
 
 
@@ -408,6 +417,49 @@ def assert_entrypoint_must_have_unique_param_names(
     )
     assert response.status_code == 400
 
+
+def assert_retrieving_all_queues_for_entrypoint_works(
+    client: FlaskClient, entrypoint_id: int, expected: list[Any],
+) -> None:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and response.get_json() == expected
+
+
+def assert_append_queues_to_entrypoint_works(
+    client: FlaskClient, entrypoint_id: int, queue_ids: list[int], expected: list[Any],
+) -> None:
+    payload: dict[str, Any] = {"ids": queue_ids}
+    response = client.post(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
+        json=payload,
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and response.get_json() == expected
+
+
+def assert_modify_queues_to_entrypoint_works(
+    client: FlaskClient, entrypoint_id: int, queue_ids: list[int], expected: list[Any],
+) -> None:
+    payload: dict[str, Any] = {"ids": queue_ids}
+    response = client.put(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
+        json=payload,
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and response.get_json() == expected
+
+
+def assert_delete_all_queues_for_entrypoint_works(
+    client: FlaskClient, entrypoint_id: int,
+) -> None:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and response.get_json() == []
 
 # -- Tests -----------------------------------------------------------------------------
 
@@ -1045,3 +1097,105 @@ def test_tag_entrypoint(
         client, resource_route=V1_ENTRYPOINTS_ROUTE, resource_id=entrypoint["id"]
     )
     asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])
+
+
+def test_get_all_queues_for_entrypoint(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    expected_queues = [queue for queue in list(registered_queues.values())]
+    assert_retrieving_all_queues_for_entrypoint_works(
+        client, 
+        entrypoint_id=entrypoint_id,
+        expected=expected_queues,
+    )
+
+
+def test_append_queues_to_entrypoint(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    queue_ids_to_append = [queue["id"] for queue in list(registered_queues.values())[1:]]
+    expected_queues = [queue for queue in list(registered_queues.values())]
+    assert_append_queues_to_entrypoint_works(
+        client,
+        entrypoint_id=entrypoint_id,
+        queue_ids=queue_ids_to_append,
+        expected=expected_queues,
+    )
+
+
+def test_modify_queues_for_entrypoint(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    queue_ids_to_replace = [queue["id"] for queue in list(registered_queues.values())]
+    expected_queues = [queue for queue in list(registered_queues.values())]
+    assert_modify_queues_to_entrypoint_works(
+        client,
+        entrypoint_id=entrypoint_id,
+        queue_ids=queue_ids_to_replace,
+        expected=expected_queues,
+    )
+
+
+def test_delete_all_queues_for_entrypoint(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    entrypoint_id = registered_entrypoints["entrypoint1"]
+    delete_all_queues_for_entrypoint(client, entrypoint_id=entrypoint_id)
+    assert_delete_all_queues_for_entrypoint_works(
+        client, entrypoint_id=entrypoint_id,
+    )
+
+
+def test_delete_queue_by_id_for_entrypoint(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    return
+
+def test_get_plugin_snapshots_for_entrypoint(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    return
+
+def test_append_plugins_to_entrypoint(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    return
+
+def test_get_plugin_snapshot_by_id_for_entrypoint(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    return
+
+def test_delete_plugin_snapshots_for_entrypoint(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    return
