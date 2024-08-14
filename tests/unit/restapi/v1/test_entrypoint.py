@@ -109,6 +109,24 @@ def delete_all_queues_for_entrypoint(
     )
 
 
+def delete_queue_by_id_for_entrypoint(
+    client: FlaskClient, entrypoint_id: int, queue_id: int,
+) -> TestResponse:
+    return client.delete(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues/{queue_id}",
+        follow_redirects=True,
+    )
+
+
+def delete_plugin_by_id_for_entrypoint(
+        client: FlaskClient, entrypoint_id: int, plugin_id: int,
+) -> TestResponse:
+    return client.delete(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/plugins/{plugin_id}",
+        follow_redirects=True,
+    )
+
+
 # -- Assertions ------------------------------------------------------------------------
 
 
@@ -460,6 +478,48 @@ def assert_delete_all_queues_for_entrypoint_works(
         follow_redirects=True,
     )
     assert response.status_code == 404
+
+
+def assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+    client: FlaskClient, entrypoint_id: int, expected: list[int],
+) -> None:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/plugins",
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and [plugin_snapshot["id"] for plugin_snapshot in response.get_json()] == expected
+
+
+def assert_append_plugins_to_entrypoint_works(
+    client: FlaskClient, entrypoint_id: int, plugin_ids: list[int], expected: list[int],
+) -> None:
+    payload: dict[str, Any] = {"plugins": plugin_ids}
+    response = client.post(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/plugins",
+        json=payload,
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and [plugin_snapshot["id"] for plugin_snapshot in response.get_json()] == expected
+
+
+def assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
+    client: FlaskClient, entrypoint_id: int, plugin_id: int, expected: int,
+) -> None:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/plugins/{plugin_id}",
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and response.get_json()["id"] == expected
+
+
+def assert_delete_plugin_for_entrypoint_works(
+    client: FlaskClient, entrypoint_id: int
+) -> None:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/plugins",
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and response.get_json() == []
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -1171,33 +1231,80 @@ def test_delete_queue_by_id_for_entrypoint(
     client: FlaskClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> None:
-    return
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    queue_id_to_delete = registered_queues["queue1"]["id"]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())[1:]]
+    delete_queue_by_id_for_entrypoint(
+        client, entrypoint_id=entrypoint_id, queue_id=queue_id_to_delete,
+    )
+    assert_retrieving_all_queues_for_entrypoint_works(
+        client, entrypoint_id=entrypoint_id, expected=expected_queue_ids,
+    )
+
 
 def test_get_plugin_snapshots_for_entrypoint(
     client: FlaskClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> None:
-    return
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    expected_plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        client, entrypoint_id=entrypoint_id, expected=expected_plugin_ids,
+    )
+
 
 def test_append_plugins_to_entrypoint(
     client: FlaskClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> None:
-    return
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    expected_plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    assert_append_plugins_to_entrypoint_works(
+        client,
+        entrypoint_id=entrypoint_id,
+        plugin_ids=expected_plugin_ids,
+        expected=expected_plugin_ids,
+    )
+
 
 def test_get_plugin_snapshot_by_id_for_entrypoint(
     client: FlaskClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> None:
-    return
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    expected_plugin_id = registered_plugin_with_files["plugin"]["id"]
+    assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
+        client,
+        entrypoint_id=entrypoint_id,
+        plugin_id=expected_plugin_id,
+        expected=expected_plugin_id,
+    )
 
-def test_delete_plugin_snapshots_for_entrypoint(
+
+def test_delete_plugin_snapshot_by_id_for_entrypoint(
     client: FlaskClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> None:
-    return
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    plugin_id_to_delete = registered_plugin_with_files["plugin"]["id"]
+    delete_plugin_by_id_for_entrypoint(
+        client, entrypoint_id=entrypoint_id, plugin_id=plugin_id_to_delete,
+    )
+    assert_delete_plugin_for_entrypoint_works(
+        client, entrypoint_id=entrypoint_id,
+    )

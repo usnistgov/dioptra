@@ -610,7 +610,7 @@ def registered_entrypoints(
         group_id=auth_account["groups"][0]["id"],
         task_graph=task_graph,
         parameters=parameters,
-        plugin_ids=plugin_ids,
+        plugin_ids=[],
         queue_ids=queue_ids[:1],
     ).get_json()
     return {
