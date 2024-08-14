@@ -1170,9 +1170,7 @@ def test_get_all_queues_for_entrypoint(
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
     assert_retrieving_all_queues_for_entrypoint_works(
-        client, 
-        entrypoint_id=entrypoint_id,
-        expected=expected_queue_ids,
+        client, entrypoint_id=entrypoint_id, expected=expected_queue_ids,
     )
 
 
@@ -1207,9 +1205,7 @@ def test_modify_queues_for_entrypoint(
         client, entrypoint_id=entrypoint_id, queue_ids=expected_queue_ids,
     )
     assert_retrieving_all_queues_for_entrypoint_works(
-        client,
-        entrypoint_id=entrypoint_id,
-        expected=expected_queue_ids,
+        client, entrypoint_id=entrypoint_id, expected=expected_queue_ids,
     )
 
 
