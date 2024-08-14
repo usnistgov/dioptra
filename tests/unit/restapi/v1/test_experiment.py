@@ -1136,6 +1136,13 @@ def test_get_all_entrypoints_for_experiment(
     registered_entrypoints: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
+    """Test that entrypoints associated with experiments can be retrieved.
+
+    Given an authenticated user, registered experiments, and registered entrypoints, 
+    this test validates the following sequence of actions:
+
+    - A user retrieves a list of all entrypoint refs associated with the experiment.
+    """
     experiment_id = registered_experiments["experiment1"]["id"]
     expected_entrypoint_ids = [entrypoint["id"] for entrypoint in list(registered_entrypoints.values())]
     assert_retrieving_all_entrypoints_for_experiment_works(
@@ -1150,6 +1157,14 @@ def test_append_entrypoints_to_experiment(
     registered_entrypoints: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
+    """Test that entrypoints can be appended to experiments.
+
+    Given an authenticated user, registered experiments, and registered entrypoints, 
+    this test validates the following sequence of actions:
+
+    - A user adds new entrypoint to the list of associated entrypoints with the experiment.
+    - A user can then retreive the new list that includes all old and new entrypoint refs.
+    """
     experiment_id = registered_experiments["experiment3"]["id"]
     entrypoint_ids_to_append = [entrypoint["id"] for entrypoint in list(registered_entrypoints.values())[1:]]
     expected_entrypoint_ids = [entrypoint["id"] for entrypoint in list(registered_entrypoints.values())]
@@ -1168,6 +1183,14 @@ def test_modify_entrypoints_for_experiments(
     registered_entrypoints: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
+    """Test that the list of associated entrypoints with experiments can be modified.
+
+    Given an authenticated user, registered experiments, and registered entrypoints, 
+    this test validates the following sequence of actions:
+
+    - A user modifies the list of entrypoints associated with an experiment.
+    - A user retrieves the list of all the new entrypoints associated with the experiemnts.
+    """
     experiment_id = registered_experiments["experiment3"]["id"]
     expected_entrypoint_ids = [entrypoint["id"] for entrypoint in list(registered_entrypoints.values())]
     modify_entrypoints_for_experiments(
@@ -1184,6 +1207,14 @@ def test_delete_all_entrypoints_for_experiment(
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
+    """Test that the list of all associated entrypoints can be deleted from a experiment.
+
+    Given an authenticated user and registered experiments, this test validates the 
+    following sequence of actions:
+
+    - A user deletes the list of associated entrypoints with the experiment.
+    - A user retrieves an empty list of associated entrypoints with the experiment.
+    """
     experiment_id = registered_experiments["experiment1"]["id"]
     delete_all_entrypoints_for_experiment(client, experiment_id=experiment_id)
     assert_delete_all_queues_for_entrypoint_works(
@@ -1198,6 +1229,14 @@ def test_delete_entrypoints_by_id_for_experiment(
     registered_entrypoints: dict[str, Any],
     registered_experiments: dict[str, Any],   
 ) -> None:
+    """Test that entrypoints associated with the experiments can be deleted by id.
+
+    Given an authenticated user, registered experiments, and registered entrypoints, 
+    this test validates the following sequence of actions:
+
+    - A user deletes an associated entrypoint with the experiment.
+    - A user retrieves a list of associated entrypoints that does not include the deleted.
+    """
     experiment_id = registered_experiments["experiment1"]["id"]
     entrypoint_to_delete = registered_entrypoints["entrypoint1"]["id"]
     expected_entrypoint_ids = [entrypoint["id"] for entrypoint in list(registered_entrypoints.values())[1:]]
