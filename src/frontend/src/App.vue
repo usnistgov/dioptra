@@ -20,7 +20,12 @@
   const isMobile = computed(() => {
     return $q.screen.sm || $q.screen.xs
   })
+
+  const isMedium = computed(() => {
+    return $q.screen.md || $q.screen.sm || $q.screen.xs
+  })
   
   provide('isMobile', isMobile)
+  provide('isMedium', isMedium)
 
 </script>
