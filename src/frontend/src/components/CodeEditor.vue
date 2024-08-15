@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-  import { computed, shallowRef, defineModel } from 'vue'
+  import { computed, shallowRef } from 'vue'
   import { Codemirror } from 'vue-codemirror'
   import { yaml } from '@codemirror/lang-yaml'
   import { oneDark } from '@codemirror/theme-one-dark'

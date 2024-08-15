@@ -5,7 +5,7 @@
     :columns="columns"
     title="Experiments"
     v-model:selected="selected"
-    @edit="store.savedExperimentForm = selected[0]; store.editMode = true; router.push(`/experiments/${selected[0].id}`)"
+    @edit="router.push(`/experiments/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
     @request="getExperiments"
     ref="tableRef"
@@ -27,6 +27,16 @@
     </template>
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
+    </template>
+    <template #body-cell-entrypoints="props">
+      <q-chip
+        v-for="(entrypoint, i) in props.row.entrypoints"
+        :key="i"
+        color="secondary" 
+        text-color="white"
+      >
+        {{ entrypoint.name }}
+      </q-chip>
     </template>
   </TableComponent>
 
@@ -72,7 +82,6 @@
 
   import TableComponent from '@/components/TableComponent.vue'
   import { ref } from 'vue'
-  import { useDataStore } from '@/stores/DataStore.ts'
   import { useRouter } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
@@ -81,8 +90,6 @@
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
   
   const router = useRouter()
-
-  const store = useDataStore()
 
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
@@ -94,7 +101,7 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, sort: (a, b) => a - b },
     { name: 'draft', label: 'Draft', align: 'left', field: 'draft', sortable: true },
     { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
-    { name: 'entryPoints', label: 'Entry Points', align: 'left', field: 'entryPoints', sortable: true },
+    { name: 'entrypoints', label: 'Entry Points', align: 'left', field: 'entrypoints', sortable: true },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
   ]
