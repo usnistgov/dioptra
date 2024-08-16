@@ -154,8 +154,10 @@ class EntrypointMutableFieldsSchema(Schema):
         fields.Integer(),
         attribute="queue_ids",
         data_key="queues",
+        allow_none=True,
         metadata=dict(description="The queue for the entrypoint."),
         load_only=True,
+        load_default=list(),
     )
 
 
