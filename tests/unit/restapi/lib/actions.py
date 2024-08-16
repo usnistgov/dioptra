@@ -66,7 +66,7 @@ def register_entrypoint(
     task_graph: str,
     parameters: list[dict[str, Any]],
     plugin_ids: list[int],
-    queue_ids: list[int],
+    queue_ids: list[int] | None = None,
 ) -> TestResponse:
     """Register an entrypoint using the API.
 
@@ -87,8 +87,10 @@ def register_entrypoint(
         "taskGraph": task_graph,
         "parameters": parameters,
         "plugins": plugin_ids,
-        "queues": queue_ids,
     }
+
+    if queue_ids:
+        payload["queues"] = queue_ids
 
     if description:
         payload["description"] = description

@@ -549,6 +549,21 @@ def test_create_entrypoint(
         queue_ids=queue_ids,
     )
 
+    # Testing that queue_ids feild can be excluded
+    entrypoint_response = actions.register_entrypoint(
+        client,
+        name="queues_not_included",
+        description=description,
+        group_id=group_id,
+        task_graph=task_graph,
+        parameters=parameters,
+        plugin_ids=plugin_ids,
+    )
+    entrypoint_expected = entrypoint_response.get_json()
+    assert_retrieving_entrypoint_by_id_works(
+        client, entrypoint_id=entrypoint_expected["id"], expected=entrypoint_expected
+    )
+
 
 def test_entrypoint_get_all(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
