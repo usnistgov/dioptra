@@ -383,7 +383,6 @@ def assert_entrypoint_is_not_associated_with_experiment(
         follow_redirects=True,
     )
     experiment = response.get_json()
-    print(experiment)
     entrypoint_ids = set(entrypoint["id"] for entrypoint in experiment["entrypoints"])
 
     assert response.status_code == 200 and entrypoint_id not in entrypoint_ids
@@ -470,16 +469,6 @@ def assert_append_queues_to_entrypoint_works(
     assert response.status_code == 200 and [queue_ref["id"] for queue_ref in response.get_json()] == expected
 
 
-def assert_delete_all_queues_for_entrypoint_works(
-    client: FlaskClient, entrypoint_id: int,
-) -> None:
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json() == []
-
-
 def assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
     client: FlaskClient, entrypoint_id: int, expected: list[int],
 ) -> None:
@@ -510,16 +499,6 @@ def assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
         follow_redirects=True,
     )
     assert response.status_code == 200 and response.get_json()["id"] == expected
-
-
-def assert_delete_plugin_for_entrypoint_works(
-    client: FlaskClient, entrypoint_id: int
-) -> None:
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/plugins",
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json() == []
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -1248,8 +1227,8 @@ def test_delete_all_queues_for_entrypoint(
     """
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     delete_all_queues_for_entrypoint(client, entrypoint_id=entrypoint_id)
-    assert_delete_all_queues_for_entrypoint_works(
-        client, entrypoint_id=entrypoint_id,
+    assert_retrieving_all_queues_for_entrypoint_works(
+        client, entrypoint_id=entrypoint_id, expected=[],
     )
 
 
@@ -1369,6 +1348,6 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
     delete_plugin_by_id_for_entrypoint(
         client, entrypoint_id=entrypoint_id, plugin_id=plugin_id_to_delete,
     )
-    assert_delete_plugin_for_entrypoint_works(
-        client, entrypoint_id=entrypoint_id,
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        client, entrypoint_id=entrypoint_id, expected=[],
     )
