@@ -343,16 +343,6 @@ def assert_append_entrypoints_to_experiment_works(
     assert response.status_code == 200 and [entrypoint_ref["id"] for entrypoint_ref in response.get_json()] == expected
 
 
-def assert_delete_all_queues_for_entrypoint_works(
-    client: FlaskClient, experiment_id: int, 
-) -> None:
-    response = client.get(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}/entrypoints",
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json() == []
-
-
 # -- Tests -----------------------------------------------------------------------------
 
 
@@ -1217,8 +1207,8 @@ def test_delete_all_entrypoints_for_experiment(
     """
     experiment_id = registered_experiments["experiment1"]["id"]
     delete_all_entrypoints_for_experiment(client, experiment_id=experiment_id)
-    assert_delete_all_queues_for_entrypoint_works(
-        client, experiment_id=experiment_id,
+    assert_retrieving_all_entrypoints_for_experiment_works(
+        client, experiment_id=experiment_id, expected=[]
     )
 
 
