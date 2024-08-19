@@ -580,6 +580,56 @@ class BuiltinPluginParameterTypeService(object):
         """
         self._group_id_service = group_id_service
 
+    def get(
+        self,
+        group_id: int,
+        error_if_not_found: bool = False,
+        **kwargs,
+    ) -> models.PluginTaskParameterType | None:
+        """Fetch a list of plugin parameter types by their names.
+
+        Args:
+            group_id: The the group id of the plugin parameter type.
+            error_if_not_found: If True, raise an error if the plugin parameter
+                type is not found. Defaults to False.
+
+        Returns:
+            The plugin parameter type object if found, otherwise None.
+
+        Raises:
+            PluginParameterTypeDoesNotExistError: If the plugin parameter type
+                is not found and `error_if_not_found` is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Get builtin plugin parameter types",
+            group_id=group_id,
+        )
+
+        builtin_types = list(BUILTIN_TYPES.keys())
+
+        stmt = (
+            select(models.PluginTaskParameterType)
+            .join(models.Resource)
+            .where(
+                models.PluginTaskParameterType.name.in_(builtin_types),
+                models.Resource.group_id == group_id,
+                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.latest_snapshot_id
+                == models.PluginTaskParameterType.resource_snapshot_id,
+            )
+        )
+        plugin_parameter_types = list(db.session.scalars(stmt).all())
+
+        if len(plugin_parameter_types) != len(builtin_types):
+            retrieved_names = {param_type.name for param_type in plugin_parameter_types}
+            missing_names = set(builtin_types) - retrieved_names
+            if error_if_not_found:
+                log.debug("Plugin Parameter Type(s) not found", names=missing_names)
+                raise PluginParameterTypeDoesNotExistError
+
+        return plugin_parameter_types
+
     def create_all(
         self,
         user: models.User,

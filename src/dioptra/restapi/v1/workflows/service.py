@@ -15,13 +15,31 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
-from typing import IO, Final
+import tarfile
+from collections import defaultdict
+from hashlib import sha256
+from io import BytesIO
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import IO, Any, Final
 
 import structlog
+import toml
+from injector import inject
 from structlog.stdlib import BoundLogger
+from werkzeug.datastructures import FileStorage
 
-from .lib import package_job_files, views
-from .schema import FileTypes
+from dioptra.restapi.db import db
+from dioptra.restapi.v1.entrypoints.service import EntrypointService
+from dioptra.restapi.v1.plugin_parameter_types.service import (
+    BuiltinPluginParameterTypeService,
+    PluginParameterTypeService,
+)
+from dioptra.restapi.v1.plugins.service import PluginIdFileService, PluginService
+from dioptra.sdk.utilities.paths import set_cwd
+
+from .lib import clone_git_repository, package_job_files, views
+from .schema import FileTypes, ResourceImportSourceTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -60,3 +78,184 @@ class JobFilesDownloadService(object):
             file_type=file_type,
             logger=log,
         )
+
+
+class ResourceImportService(object):
+    """The service methods for packaging job files for download."""
+
+    @inject
+    def __init__(
+        self,
+        plugin_service: PluginService,
+        plugin_id_file_service: PluginIdFileService,
+        plugin_parameter_type_service: PluginParameterTypeService,
+        builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
+        entrypoint_service: EntrypointService,
+    ) -> None:
+        """Initialize the resource import service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            plugin_name_service: A PluginNameService object.
+            plugin_id_file_service: A PluginIdFileService object.
+            plugin_parameter_type_service: A PluginParameterTypeService object.
+            builtin_plugin_parameter_type_service: A BuiltinPluginParameterTypeService object.
+            entrypoint_service: A EntrypointService object.
+        """
+        self._plugin_service = plugin_service
+        self._plugin_id_file_service = plugin_id_file_service
+        self._plugin_parameter_type_service = plugin_parameter_type_service
+        self._builtin_plugin_parameter_type_service = (
+            builtin_plugin_parameter_type_service
+        )
+        self._entrypoint_service = entrypoint_service
+
+    def import_resources(
+        self,
+        group_id: int,
+        source_type: str,
+        git_url: str | None,
+        archive_file: FileStorage | None,
+        config_path: str,
+        read_only: bool,
+        resolve_name_conflicts_strategy: str,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Import resources from a archive file or git repository
+
+        Args:
+            group_id: The group to import resources into
+
+        Returns:
+            A message summarizing imported resources
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Import resources", group_id=group_id)
+
+        with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
+            working_dir = Path(tmp_dir)
+
+            if source_type == ResourceImportSourceTypes.UPLOAD:
+                bytes = archive_file.stream.read()
+                with tarfile.open(fileobj=BytesIO(bytes), mode="r:*") as tar:
+                    tar.extractall(path=working_dir, filter="data")
+                hash = sha256(bytes).hexdigest()
+            elif source_type == ResourceImportSourceTypes.GIT:
+                hash = clone_git_repository(git_url, working_dir)
+
+            log.info(hash=hash, paths=list(working_dir.glob("*")))
+
+            config_path = working_dir / config_path
+            if not config_path.exists() or not config_path.is_file():
+                raise Exception
+
+            config = toml.load(config_path)
+
+            # register new plugin param types
+            param_types = {
+                param_type["name"]: self._plugin_parameter_type_service.create(
+                    name=param_type["name"],
+                    description=param_type.get("description", None),
+                    structure=param_type.get("structure", None),
+                    group_id=group_id,
+                    commit=False,
+                    log=log,
+                )
+                for param_type in config.get("plugin_param_types", [])
+            }
+            # retrieve built-ins
+            param_types.update(
+                {
+                    param_type.name: param_type
+                    for param_type in self._builtin_plugin_parameter_type_service.get(
+                        group_id=group_id, error_if_not_found=False, log=log
+                    )
+                }
+            )
+            db.session.flush()
+
+            # register new plugins
+            plugin_ids = {}
+            for plugin in config.get("plugins", []):
+                plugin_dict = self._plugin_service.create(
+                    name=Path(plugin["path"]).stem,
+                    description=plugin.get("description", None),
+                    group_id=group_id,
+                    commit=False,
+                    log=log,
+                )
+                db.session.flush()
+                plugin_ids[plugin_dict["plugin"].name] = plugin_dict[
+                    "plugin"
+                ].resource_id
+
+                tasks = _build_tasks(plugin.get("tasks", []), param_types)
+                for plugin_file_path in Path(plugin["path"]).rglob("*.py"):
+                    filename = str(plugin_file_path.relative_to(plugin["path"]))
+                    contents = plugin_file_path.read_text()
+
+                    plugin_file_dict = self._plugin_id_file_service.create(
+                        filename,
+                        contents=contents,
+                        description=None,
+                        tasks=tasks[filename],
+                        plugin_id=plugin_dict["plugin"].resource_id,
+                        commit=False,
+                    )
+
+            # register new entrypoints
+            for entrypoint in config.get("entrypoints", []):
+                contents = Path(entrypoint["path"]).read_text()
+                params = [
+                    {
+                        "name": param["name"],
+                        "parameter_type": param["type"],
+                        "default_value": param.get("default_value", None),
+                    }
+                    for param in entrypoint.get("params", [])
+                ]
+                self._entrypoint_service.create(
+                    name=entrypoint.get("name", Path(entrypoint["path"]).stem),
+                    description=entrypoint.get("description", None),
+                    task_graph=contents,
+                    parameters=params,
+                    plugin_ids=[
+                        plugin_ids[plugin] for plugin in entrypoint.get("plugins", [])
+                    ],
+                    queue_ids=[],
+                    group_id=group_id,
+                    commit=False,
+                    log=log,
+                )
+
+        db.session.commit()
+
+        return {"message": "successfully imported"}
+
+
+def _build_tasks(tasks_config, param_types):
+    tasks = defaultdict(list)
+    for task in tasks_config:
+        tasks[task["filename"]].append(
+            {
+                "name": task["name"],
+                "description": task.get("description", None),
+                "input_params": [
+                    {
+                        "name": param["name"],
+                        "parameter_type_id": param_types[param["type"]].resource_id,
+                        "required": param.get("required", False),
+                    }
+                    for param in task["input_params"]
+                ],
+                "output_params": [
+                    {
+                        "name": param["name"],
+                        "parameter_type_id": param_types[param["type"]].resource_id,
+                    }
+                    for param in task["output_params"]
+                ],
+            }
+        )
+    return tasks
