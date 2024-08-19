@@ -1,6 +1,7 @@
 <template>
   <q-toolbar class="bg-primary text-white">
     <q-btn
+      v-if="store.loggedInUser"
       class="lt-lg"
       icon="menu"
       flat
@@ -45,8 +46,8 @@
         </q-list>
       </q-menu>
     </q-btn>
-    <nav class="gt-md">
-      <q-tabs  no-caps>
+    <nav v-if="store.loggedInUser" class="gt-md">
+      <q-tabs no-caps>
         <q-route-tab label="Home" to="/" />
         <q-route-tab label="Experiments" to="/experiments" />
         <q-route-tab label="Entrypoints" to="/entrypoints" />
@@ -164,10 +165,14 @@
     else return `${store.loggedInUser}`
   }
 
-  // check login status on mounted and reloads
-  router.beforeEach((to, from) => {
+  router.beforeEach(async(to, from) => {
+    // check login status on mounted and reloads
     if (from === START_LOCATION) {
-      callGetLoginStatus()
+      await callGetLoginStatus()
+    }
+    // redirect to login if logged out
+    if(!store.loggedInUser && to.path !== '/login' && to.path !== '/register') {
+      router.push('/login')
     }
   })
 
