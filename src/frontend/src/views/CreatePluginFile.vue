@@ -61,25 +61,33 @@
     </fieldset>
     <fieldset :class="`${isMobile ? 'col-12' : 'col q-ml-md'}`">
       <legend>Plugin Tasks</legend>
-      <TableComponent
-        :rows="pluginParameterTypes"
-        :columns="columns"
-        title="Plugin Param Types"
-        @request="getPluginParameterTypes"
-        ref="tableRef"
-        :hideToggleDraft="true"
-        :hideEditBtn="true"
-        :hideDeleteBtn="true"
-        :disableSelect="true"
+      <q-expansion-item
+        :label="`${showParamTypes ? 'Hide' : 'Show'} Plugin Param Types`"
+        v-model="showParamTypes"
+        header-class="text-bold shadow-2"
+        class="q-mb-none"
       >
-      <template #body-cell-view="props">
-        <q-btn
-          label="View"
-          color="primary"
-          @click.stop="structure = JSON.stringify(props.row.structure, null, 2); displayStructure = true;"
-        />
-      </template>
-      </TableComponent>
+        <TableComponent
+          :rows="pluginParameterTypes"
+          :columns="columns"
+          title="Plugin Param Types"
+          @request="getPluginParameterTypes"
+          ref="tableRef"
+          :hideToggleDraft="true"
+          :hideEditBtn="true"
+          :hideDeleteBtn="true"
+          :disableSelect="true"
+          style="margin-top: 0"
+        >
+          <template #body-cell-view="props">
+            <q-btn
+              label="View"
+              color="primary"
+              @click.stop="structure = JSON.stringify(props.row.structure, null, 2); displayStructure = true;"
+            />
+          </template>
+        </TableComponent>
+      </q-expansion-item>
       <TableComponent
         :rows="tasks"
         :columns="taskColumns"
@@ -152,7 +160,7 @@
           <q-btn icon="sym_o_delete" round size="sm" color="negative" flat @click="selectedTaskProps = props; showDeleteDialog = true" />
         </template>
       </TableComponent>
-      <q-card bordered class="q-ma-xl">
+      <q-card bordered class="q-mx-xl q-my-lg">
         <q-card-section>
         <div class="text-h6">Task Form</div>
       </q-card-section>
@@ -356,6 +364,8 @@
   const selectedTaskProps = ref()
   const showDeleteDialog = ref(false)
   const showEditParamDialog = ref(false)
+
+  const showParamTypes = ref(false)
 
   const title = ref('')
 
