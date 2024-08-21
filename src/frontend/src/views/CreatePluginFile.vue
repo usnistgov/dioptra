@@ -414,7 +414,7 @@
   }
 
   async function addOrModifyFile() {
-    const plguinFileSubmit = {
+    const pluginFileSubmit = {
         filename: pluginFile.value.filename,
         contents: pluginFile.value.contents,
         description: pluginFile.value.description,
@@ -423,9 +423,9 @@
     try {
       let res
       if(route.params.fileId === 'new') {
-        res = await api.addFile(route.params.id, plguinFileSubmit)
+        res = await api.addFile(route.params.id, pluginFileSubmit)
       } else {
-        res = await api.updateFile(route.params.id, route.params.fileId, plguinFileSubmit)
+        res = await api.updateFile(route.params.id, route.params.fileId, pluginFileSubmit)
       }
       notify.success(`Successfully ${route.params.fileId === 'new' ? 'created' : 'updated'} '${res.data.filename}'`)
       router.push(`/plugins/${route.params.id}/files`)

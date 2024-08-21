@@ -160,7 +160,7 @@
   const parameters = ref([])
   const computedValue = computed(() => {
     let output = {}
-    if(parameters.value.legnth === 0) return output
+    if(parameters.value.length === 0) return output
     parameters.value.forEach((param) => {
       output[param.name] = param.value
     })
