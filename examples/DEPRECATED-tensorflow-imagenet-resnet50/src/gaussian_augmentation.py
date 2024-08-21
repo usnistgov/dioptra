@@ -81,7 +81,7 @@ def _coerce_int_to_bool(ctx, param, value):
 @click.option(
     "--def-tar-name",
     type=click.STRING,
-    default="guassian_augmentation_dataset.tar.gz",
+    default="gaussian_augmentation_dataset.tar.gz",
     help="Name to give to tarfile artifact containing preprocessed  images",
 )
 @click.option(
@@ -150,7 +150,7 @@ def _coerce_int_to_bool(ctx, param, value):
     help="Set the entry point rng seed",
     default=-1,
 )
-def guassian_augmentation(
+def gaussian_augmentation(
     image_size,
     def_tar_name,
     def_data_dir,
@@ -167,7 +167,7 @@ def guassian_augmentation(
 ):
     LOGGER.info(
         "Execute MLFlow entry point",
-        entry_point="guassian_augmentation",
+        entry_point="gaussian_augmentation",
         image_size=image_size,
         def_tar_name=def_tar_name,
         def_data_dir=def_data_dir,
@@ -184,7 +184,7 @@ def guassian_augmentation(
     )
 
     with mlflow.start_run() as active_run:  # noqa: F841
-        flow: Flow = init_guassian_augmentation_flow()
+        flow: Flow = init_gaussian_augmentation_flow()
         state = flow.run(
             parameters=dict(
                 image_size=image_size,
@@ -207,7 +207,7 @@ def guassian_augmentation(
     return state
 
 
-def init_guassian_augmentation_flow() -> Flow:
+def init_gaussian_augmentation_flow() -> Flow:
     with Flow("Fast Gradient Method") as flow:
         (
             image_size,
@@ -341,4 +341,4 @@ if __name__ == "__main__":
     configure_structlog()
 
     with plugin_dirs(), StdoutLogStream(as_json), StderrLogStream(as_json):
-        _ = guassian_augmentation()
+        _ = gaussian_augmentation()
