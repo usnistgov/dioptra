@@ -90,7 +90,9 @@ def delete_entrypoint(
 
 
 def modify_queues_for_entrypoint(
-    client: FlaskClient, entrypoint_id: int, queue_ids: list[int],
+    client: FlaskClient,
+    entrypoint_id: int,
+    queue_ids: list[int],
 ) -> TestResponse:
     payload: dict[str, Any] = {"ids": queue_ids}
     return client.put(
@@ -101,7 +103,8 @@ def modify_queues_for_entrypoint(
 
 
 def delete_all_queues_for_entrypoint(
-    client: FlaskClient, entrypoint_id: int,
+    client: FlaskClient,
+    entrypoint_id: int,
 ) -> TestResponse:
     return client.delete(
         f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
@@ -110,7 +113,9 @@ def delete_all_queues_for_entrypoint(
 
 
 def delete_queue_by_id_for_entrypoint(
-    client: FlaskClient, entrypoint_id: int, queue_id: int,
+    client: FlaskClient,
+    entrypoint_id: int,
+    queue_id: int,
 ) -> TestResponse:
     return client.delete(
         f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues/{queue_id}",
@@ -119,7 +124,9 @@ def delete_queue_by_id_for_entrypoint(
 
 
 def delete_plugin_by_id_for_entrypoint(
-        client: FlaskClient, entrypoint_id: int, plugin_id: int,
+    client: FlaskClient,
+    entrypoint_id: int,
+    plugin_id: int,
 ) -> TestResponse:
     return client.delete(
         f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/plugins/{plugin_id}",
@@ -447,18 +454,26 @@ def assert_entrypoint_must_have_unique_param_names(
 
 
 def assert_retrieving_all_queues_for_entrypoint_works(
-    client: FlaskClient, entrypoint_id: int, expected: list[Any],
+    client: FlaskClient,
+    entrypoint_id: int,
+    expected: list[Any],
 ) -> None:
     response = client.get(
         f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/queues",
         follow_redirects=True,
     )
     print(response)
-    assert response.status_code == 200 and [queue_ref["id"] for queue_ref in response.get_json()] == expected
+    assert (
+        response.status_code == 200
+        and [queue_ref["id"] for queue_ref in response.get_json()] == expected
+    )
 
 
 def assert_append_queues_to_entrypoint_works(
-    client: FlaskClient, entrypoint_id: int, queue_ids: list[int], expected: list[Any],
+    client: FlaskClient,
+    entrypoint_id: int,
+    queue_ids: list[int],
+    expected: list[Any],
 ) -> None:
     payload: dict[str, Any] = {"ids": queue_ids}
     response = client.post(
@@ -466,21 +481,33 @@ def assert_append_queues_to_entrypoint_works(
         json=payload,
         follow_redirects=True,
     )
-    assert response.status_code == 200 and [queue_ref["id"] for queue_ref in response.get_json()] == expected
+    assert (
+        response.status_code == 200
+        and [queue_ref["id"] for queue_ref in response.get_json()] == expected
+    )
 
 
 def assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
-    client: FlaskClient, entrypoint_id: int, expected: list[int],
+    client: FlaskClient,
+    entrypoint_id: int,
+    expected: list[int],
 ) -> None:
     response = client.get(
         f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/plugins",
         follow_redirects=True,
     )
-    assert response.status_code == 200 and [plugin_snapshot["id"] for plugin_snapshot in response.get_json()] == expected
+    assert (
+        response.status_code == 200
+        and [plugin_snapshot["id"] for plugin_snapshot in response.get_json()]
+        == expected
+    )
 
 
 def assert_append_plugins_to_entrypoint_works(
-    client: FlaskClient, entrypoint_id: int, plugin_ids: list[int], expected: list[int],
+    client: FlaskClient,
+    entrypoint_id: int,
+    plugin_ids: list[int],
+    expected: list[int],
 ) -> None:
     payload: dict[str, Any] = {"plugins": plugin_ids}
     response = client.post(
@@ -488,11 +515,18 @@ def assert_append_plugins_to_entrypoint_works(
         json=payload,
         follow_redirects=True,
     )
-    assert response.status_code == 200 and [plugin_snapshot["id"] for plugin_snapshot in response.get_json()] == expected
+    assert (
+        response.status_code == 200
+        and [plugin_snapshot["id"] for plugin_snapshot in response.get_json()]
+        == expected
+    )
 
 
 def assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
-    client: FlaskClient, entrypoint_id: int, plugin_id: int, expected: int,
+    client: FlaskClient,
+    entrypoint_id: int,
+    plugin_id: int,
+    expected: int,
 ) -> None:
     response = client.get(
         f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}/plugins/{plugin_id}",
@@ -1148,7 +1182,7 @@ def test_get_all_queues_for_entrypoint(
 ) -> None:
     """Test that queues associated with entrypoints can be retrieved.
 
-    Given an authenticated user, registered entrypoints, and registered queues, 
+    Given an authenticated user, registered entrypoints, and registered queues,
     this test validates the following sequence of actions:
 
     - A user retrieves a list of all queue refs associated with the entrypoints.
@@ -1156,7 +1190,9 @@ def test_get_all_queues_for_entrypoint(
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
     assert_retrieving_all_queues_for_entrypoint_works(
-        client, entrypoint_id=entrypoint_id, expected=expected_queue_ids,
+        client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_queue_ids,
     )
 
 
@@ -1169,14 +1205,16 @@ def test_append_queues_to_entrypoint(
 ) -> None:
     """Test that queues can be appended to entrypoints.
 
-    Given an authenticated user, registered entrypoints, and registered queues, 
+    Given an authenticated user, registered entrypoints, and registered queues,
     this test validates the following sequence of actions:
 
     - A user adds new queue to the list of associated queues with the entrypoint.
     - A user can then retreive the new list that includes all old and new queues refs.
     """
     entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
-    queue_ids_to_append = [queue["id"] for queue in list(registered_queues.values())[1:]]
+    queue_ids_to_append = [
+        queue["id"] for queue in list(registered_queues.values())[1:]
+    ]
     expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
     assert_append_queues_to_entrypoint_works(
         client,
@@ -1195,7 +1233,7 @@ def test_modify_queues_for_entrypoint(
 ) -> None:
     """Test that the list of associated queues with entrypoints can be modified.
 
-    Given an authenticated user, registered entrypoints, and registered queues, 
+    Given an authenticated user, registered entrypoints, and registered queues,
     this test validates the following sequence of actions:
 
     - A user modifies the list of queues associated with an entrypoint.
@@ -1204,10 +1242,14 @@ def test_modify_queues_for_entrypoint(
     entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
     expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
     modify_queues_for_entrypoint(
-        client, entrypoint_id=entrypoint_id, queue_ids=expected_queue_ids,
+        client,
+        entrypoint_id=entrypoint_id,
+        queue_ids=expected_queue_ids,
     )
     assert_retrieving_all_queues_for_entrypoint_works(
-        client, entrypoint_id=entrypoint_id, expected=expected_queue_ids,
+        client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_queue_ids,
     )
 
 
@@ -1219,7 +1261,7 @@ def test_delete_all_queues_for_entrypoint(
 ) -> None:
     """Test that the list of all associated queues can be deleted from a entrypoint.
 
-    Given an authenticated user and registered entrypoints, this test validates the 
+    Given an authenticated user and registered entrypoints, this test validates the
     following sequence of actions:
 
     - A user deletes the list of associated queues with the entrypoint.
@@ -1228,7 +1270,9 @@ def test_delete_all_queues_for_entrypoint(
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     delete_all_queues_for_entrypoint(client, entrypoint_id=entrypoint_id)
     assert_retrieving_all_queues_for_entrypoint_works(
-        client, entrypoint_id=entrypoint_id, expected=[],
+        client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
     )
 
 
@@ -1241,7 +1285,7 @@ def test_delete_queue_by_id_for_entrypoint(
 ) -> None:
     """Test that queues associated with the entrypoint can be deleted by id.
 
-    Given an authenticated user, registered entrypoints, and registered queues, 
+    Given an authenticated user, registered entrypoints, and registered queues,
     this test validates the following sequence of actions:
 
     - A user deletes an associated queue with the entrypoint.
@@ -1251,10 +1295,14 @@ def test_delete_queue_by_id_for_entrypoint(
     queue_id_to_delete = registered_queues["queue1"]["id"]
     expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())[1:]]
     delete_queue_by_id_for_entrypoint(
-        client, entrypoint_id=entrypoint_id, queue_id=queue_id_to_delete,
+        client,
+        entrypoint_id=entrypoint_id,
+        queue_id=queue_id_to_delete,
     )
     assert_retrieving_all_queues_for_entrypoint_works(
-        client, entrypoint_id=entrypoint_id, expected=expected_queue_ids,
+        client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_queue_ids,
     )
 
 
@@ -1267,7 +1315,7 @@ def test_get_plugin_snapshots_for_entrypoint(
 ) -> None:
     """Test that plugins associated with entrypoints can be retrieved.
 
-    Given an authenticated user, registered entrypoints, and registered plugins, 
+    Given an authenticated user, registered entrypoints, and registered plugins,
     this test validates the following sequence of actions:
 
     - A user retrieves a list of all plugin refs associated with the entrypoints.
@@ -1275,7 +1323,9 @@ def test_get_plugin_snapshots_for_entrypoint(
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     expected_plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
     assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
-        client, entrypoint_id=entrypoint_id, expected=expected_plugin_ids,
+        client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_plugin_ids,
     )
 
 
@@ -1288,7 +1338,7 @@ def test_append_plugins_to_entrypoint(
 ) -> None:
     """Test that plugins can be appended to entrypoints.
 
-    Given an authenticated user, registered entrypoints, and registered plugins, 
+    Given an authenticated user, registered entrypoints, and registered plugins,
     this test validates the following sequence of actions:
 
     - A user adds new plugin to the list of associated plugins with the entrypoint.
@@ -1313,7 +1363,7 @@ def test_get_plugin_snapshot_by_id_for_entrypoint(
 ) -> None:
     """Test that plugins associated with entrypoints can be retrieved by id.
 
-    Given an authenticated user, registered entrypoints, and registered plugins, 
+    Given an authenticated user, registered entrypoints, and registered plugins,
     this test validates the following sequence of actions:
 
     - A user retrieves a plugin ref associated with the entrypoints by its id.
@@ -1337,7 +1387,7 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
 ) -> None:
     """Test that plugins associated with the entrypoint can be deleted by id.
 
-    Given an authenticated user, registered entrypoints, and registered plugins, 
+    Given an authenticated user, registered entrypoints, and registered plugins,
     this test validates the following sequence of actions:
 
     - A user deletes an associated plugin with the entrypoint.
@@ -1346,8 +1396,12 @@ def test_delete_plugin_snapshot_by_id_for_entrypoint(
     entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     plugin_id_to_delete = registered_plugin_with_files["plugin"]["id"]
     delete_plugin_by_id_for_entrypoint(
-        client, entrypoint_id=entrypoint_id, plugin_id=plugin_id_to_delete,
+        client,
+        entrypoint_id=entrypoint_id,
+        plugin_id=plugin_id_to_delete,
     )
     assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
-        client, entrypoint_id=entrypoint_id, expected=[],
+        client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
     )

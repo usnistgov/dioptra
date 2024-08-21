@@ -86,7 +86,9 @@ def delete_experiment_with_id(client: FlaskClient, experiment_id: int) -> TestRe
 
 
 def modify_entrypoints_for_experiments(
-    client: FlaskClient, experiment_id: int, entrypoint_ids: list[int],
+    client: FlaskClient,
+    experiment_id: int,
+    entrypoint_ids: list[int],
 ) -> TestResponse:
     payload: dict[str, Any] = {"ids": entrypoint_ids}
     return client.put(
@@ -97,7 +99,8 @@ def modify_entrypoints_for_experiments(
 
 
 def delete_all_entrypoints_for_experiment(
-    client: FlaskClient, experiment_id: int,
+    client: FlaskClient,
+    experiment_id: int,
 ) -> TestResponse:
     return client.delete(
         f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}/entrypoints",
@@ -322,17 +325,25 @@ def assert_experiment_is_not_found(
 
 
 def assert_retrieving_all_entrypoints_for_experiment_works(
-    client: FlaskClient, experiment_id: int, expected: list[int],
+    client: FlaskClient,
+    experiment_id: int,
+    expected: list[int],
 ) -> None:
     response = client.get(
         f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}/entrypoints",
         follow_redirects=True,
     )
-    assert response.status_code == 200 and [entrypoint_ref["id"] for entrypoint_ref in response.get_json()] == expected
+    assert (
+        response.status_code == 200
+        and [entrypoint_ref["id"] for entrypoint_ref in response.get_json()] == expected
+    )
 
 
 def assert_append_entrypoints_to_experiment_works(
-    client: FlaskClient, experiment_id: int, entrypoint_ids: list[int], expected: list[int],
+    client: FlaskClient,
+    experiment_id: int,
+    entrypoint_ids: list[int],
+    expected: list[int],
 ) -> None:
     payload: dict[str, Any] = {"ids": entrypoint_ids}
     response = client.post(
@@ -340,7 +351,10 @@ def assert_append_entrypoints_to_experiment_works(
         json=payload,
         follow_redirects=True,
     )
-    assert response.status_code == 200 and [entrypoint_ref["id"] for entrypoint_ref in response.get_json()] == expected
+    assert (
+        response.status_code == 200
+        and [entrypoint_ref["id"] for entrypoint_ref in response.get_json()] == expected
+    )
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -1128,15 +1142,19 @@ def test_get_all_entrypoints_for_experiment(
 ) -> None:
     """Test that entrypoints associated with experiments can be retrieved.
 
-    Given an authenticated user, registered experiments, and registered entrypoints, 
+    Given an authenticated user, registered experiments, and registered entrypoints,
     this test validates the following sequence of actions:
 
     - A user retrieves a list of all entrypoint refs associated with the experiment.
     """
     experiment_id = registered_experiments["experiment1"]["id"]
-    expected_entrypoint_ids = [entrypoint["id"] for entrypoint in list(registered_entrypoints.values())]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())
+    ]
     assert_retrieving_all_entrypoints_for_experiment_works(
-        client, experiment_id=experiment_id, expected=expected_entrypoint_ids,
+        client,
+        experiment_id=experiment_id,
+        expected=expected_entrypoint_ids,
     )
 
 
@@ -1149,15 +1167,19 @@ def test_append_entrypoints_to_experiment(
 ) -> None:
     """Test that entrypoints can be appended to experiments.
 
-    Given an authenticated user, registered experiments, and registered entrypoints, 
+    Given an authenticated user, registered experiments, and registered entrypoints,
     this test validates the following sequence of actions:
 
     - A user adds new entrypoint to the list of associated entrypoints with the experiment.
     - A user can then retreive the new list that includes all old and new entrypoint refs.
     """
     experiment_id = registered_experiments["experiment3"]["id"]
-    entrypoint_ids_to_append = [entrypoint["id"] for entrypoint in list(registered_entrypoints.values())[1:]]
-    expected_entrypoint_ids = [entrypoint["id"] for entrypoint in list(registered_entrypoints.values())]
+    entrypoint_ids_to_append = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())[1:]
+    ]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())
+    ]
     assert_append_entrypoints_to_experiment_works(
         client,
         experiment_id=experiment_id,
@@ -1175,19 +1197,25 @@ def test_modify_entrypoints_for_experiments(
 ) -> None:
     """Test that the list of associated entrypoints with experiments can be modified.
 
-    Given an authenticated user, registered experiments, and registered entrypoints, 
+    Given an authenticated user, registered experiments, and registered entrypoints,
     this test validates the following sequence of actions:
 
     - A user modifies the list of entrypoints associated with an experiment.
     - A user retrieves the list of all the new entrypoints associated with the experiemnts.
     """
     experiment_id = registered_experiments["experiment3"]["id"]
-    expected_entrypoint_ids = [entrypoint["id"] for entrypoint in list(registered_entrypoints.values())]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())
+    ]
     modify_entrypoints_for_experiments(
-        client, experiment_id=experiment_id, entrypoint_ids=expected_entrypoint_ids,
+        client,
+        experiment_id=experiment_id,
+        entrypoint_ids=expected_entrypoint_ids,
     )
     assert_retrieving_all_entrypoints_for_experiment_works(
-        client, experiment_id=experiment_id, expected=expected_entrypoint_ids,
+        client,
+        experiment_id=experiment_id,
+        expected=expected_entrypoint_ids,
     )
 
 
@@ -1199,7 +1227,7 @@ def test_delete_all_entrypoints_for_experiment(
 ) -> None:
     """Test that the list of all associated entrypoints can be deleted from a experiment.
 
-    Given an authenticated user and registered experiments, this test validates the 
+    Given an authenticated user and registered experiments, this test validates the
     following sequence of actions:
 
     - A user deletes the list of associated entrypoints with the experiment.
@@ -1217,11 +1245,11 @@ def test_delete_entrypoints_by_id_for_experiment(
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
-    registered_experiments: dict[str, Any],   
+    registered_experiments: dict[str, Any],
 ) -> None:
     """Test that entrypoints associated with the experiments can be deleted by id.
 
-    Given an authenticated user, registered experiments, and registered entrypoints, 
+    Given an authenticated user, registered experiments, and registered entrypoints,
     this test validates the following sequence of actions:
 
     - A user deletes an associated entrypoint with the experiment.
@@ -1229,10 +1257,16 @@ def test_delete_entrypoints_by_id_for_experiment(
     """
     experiment_id = registered_experiments["experiment1"]["id"]
     entrypoint_to_delete = registered_entrypoints["entrypoint1"]["id"]
-    expected_entrypoint_ids = [entrypoint["id"] for entrypoint in list(registered_entrypoints.values())[1:]]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())[1:]
+    ]
     delete_entrypoints_by_id_for_experiment(
-        client, experiment_id=experiment_id, entrypoint_id=entrypoint_to_delete,
+        client,
+        experiment_id=experiment_id,
+        entrypoint_id=entrypoint_to_delete,
     )
     assert_retrieving_all_entrypoints_for_experiment_works(
-        client, experiment_id=experiment_id, expected=expected_entrypoint_ids,
+        client,
+        experiment_id=experiment_id,
+        expected=expected_entrypoint_ids,
     )

@@ -305,6 +305,7 @@ def test_create_job(
     """
     # Inline import necessary to prevent circular import
     import dioptra.restapi.v1.shared.rq_service as rq_service
+
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
     description = "The new job."
