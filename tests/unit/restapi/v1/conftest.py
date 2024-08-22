@@ -328,7 +328,7 @@ def registered_plugin_with_files(
     plugin_file3_response = actions.register_plugin_file(
         client,
         plugin_id=plugin_response["id"],
-        filename="plugin_file_three.py",
+        filename="path/to/plugin_file_three.py",
         description="Not Retrieved.",
         contents=contents,
     ).get_json()
