@@ -232,11 +232,9 @@ export async function deleteDraft<T extends ItemType>(type: T, draftId: number) 
 export async function getFiles(id: number, pagination: Pagination) {
   return await axios.get(`/api/plugins/${id}/files`, {
     params: {
-      index: pagination.index,
-      pageLength: pagination.rowsPerPage,
-      search: urlEncode(pagination.search),
-      sortBy: pagination.sortBy,
-      descending: pagination.descending,
+      index: pagination?.index || 0,
+      pageLength: pagination?.rowsPerPage || 100,
+      search: urlEncode(pagination?.search || '')
     }
   })
 }
