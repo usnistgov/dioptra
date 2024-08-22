@@ -61,33 +61,6 @@
     </fieldset>
     <fieldset :class="`${isMobile ? 'col-12' : 'col q-ml-md'}`">
       <legend>Plugin Tasks</legend>
-      <q-expansion-item
-        :label="`${showParamTypes ? 'Hide' : 'Show'} Plugin Param Types`"
-        v-model="showParamTypes"
-        header-class="text-bold shadow-2"
-        class="q-mb-none"
-      >
-        <TableComponent
-          :rows="pluginParameterTypes"
-          :columns="columns"
-          title="Plugin Param Types"
-          @request="getPluginParameterTypes"
-          ref="tableRef"
-          :hideToggleDraft="true"
-          :hideEditBtn="true"
-          :hideDeleteBtn="true"
-          :disableSelect="true"
-          style="margin-top: 0"
-        >
-          <template #body-cell-view="props">
-            <q-btn
-              label="View"
-              color="primary"
-              @click.stop="structure = JSON.stringify(props.row.structure, null, 2); displayStructure = true;"
-            />
-          </template>
-        </TableComponent>
-      </q-expansion-item>
       <TableComponent
         :rows="tasks"
         :columns="taskColumns"
@@ -160,139 +133,168 @@
           <q-btn icon="sym_o_delete" round size="sm" color="negative" flat @click="selectedTaskProps = props; showDeleteDialog = true" />
         </template>
       </TableComponent>
-      <q-card bordered class="q-mx-xl q-my-lg">
+      <q-card bordered class="q-ma-lg">
         <q-card-section>
-        <div class="text-h6">Task Form</div>
-      </q-card-section>
-      <q-form ref="taskForm" greedy @submit.prevent="addTask" class="q-mx-xl">
-        <q-input 
-          outlined 
-          dense 
-          v-model.trim="task.name"
-          :rules="[requiredRule]"
-          class="q-mb-sm"
-          label="Task Name"
-        />
-        <label>
-          Input Params:
-        </label>
-        <q-chip
-          v-for="(param, i) in inputParams"
-          :key="i"
-          color="indigo"
-          text-color="white"
-          removable
-          @remove="inputParams.splice(i, 1)"
-        >
-          {{ `${param.name}` }}
-          <span v-if="param.required" class="text-red">*</span>
-          {{ `: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}` }}
-        </q-chip>
-        <q-form ref="inputParamForm" greedy @submit.prevent="addInputParam">
-          <div class="row">
-            <q-input
-              v-model.trim="inputParam.name"
-              label="Input Param Name"
-              :rules="[requiredRule]"
-              dense
-              outlined
-              class="col q-mr-sm"
-            />
-            <q-select 
-              v-model="inputParam.parameterType"
-              emit-value
-              option-value="id"
-              option-label="name"
-              map-options
-              label="Param Type"
-              :options="pluginParameterTypes"
-              class="col q-mr-xl"
-              outlined
-              dense
-              :rules="[requiredRule]"
-            />
-            <div class="col">
-              <q-checkbox
-                label="Required"
-                left-label
-                v-model="inputParam.required"
+          <div class="text-h6">Task Form</div>
+        </q-card-section>
+        <q-form ref="taskForm" greedy @submit.prevent="addTask" class="q-mx-lg">
+          <q-input 
+            outlined 
+            dense 
+            v-model.trim="task.name"
+            :rules="[requiredRule]"
+            class="q-mb-sm"
+            label="Task Name"
+          />
+          <label>
+            Input Params:
+          </label>
+          <q-chip
+            v-for="(param, i) in inputParams"
+            :key="i"
+            color="indigo"
+            text-color="white"
+            removable
+            @remove="inputParams.splice(i, 1)"
+          >
+            {{ `${param.name}` }}
+            <span v-if="param.required" class="text-red">*</span>
+            {{ `: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}` }}
+          </q-chip>
+          <q-form ref="inputParamForm" greedy @submit.prevent="addInputParam">
+            <div class="row">
+              <q-input
+                v-model.trim="inputParam.name"
+                label="Input Param Name"
+                :rules="[requiredRule]"
+                dense
+                outlined
+                class="col q-mr-sm"
+              />
+              <q-select 
+                v-model="inputParam.parameterType"
+                emit-value
+                option-value="id"
+                option-label="name"
+                map-options
+                label="Param Type"
+                :options="pluginParameterTypes"
+                class="col q-mr-xl"
+                outlined
+                dense
+                :rules="[requiredRule]"
+              />
+              <div class="col">
+                <q-checkbox
+                  label="Required"
+                  left-label
+                  v-model="inputParam.required"
+                />
+              </div>
+              <q-btn
+                round
+                icon="add"
+                color="indigo"
+                style="height: 10px"
+                class="q-mr-sm"
+                @click="addInputParam()"
               />
             </div>
+          </q-form>
+
+          <label>
+            Output Params:
+          </label>
+          <q-chip
+            v-for="(param, i) in outputParams"
+            :key="i"
+            color="purple"
+            text-color="white"
+            removable
+            @remove="outputParams.splice(i, 1)"
+            :label="`${param.name}: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0].name}`"
+          />
+          <q-form ref="outputParamForm" greedy @submit.prevent="addOutputParam">
+            <div class="row">
+              <q-input
+                v-model.trim="outputParam.name"
+                label="Output Param Name"
+                :rules="[requiredRule]"
+                dense
+                outlined
+                class="col q-mr-sm"
+              />
+              <q-select 
+                v-model="outputParam.parameterType"
+                emit-value
+                option-value="id"
+                option-label="name"
+                map-options
+                label="Param Type"
+                :options="pluginParameterTypes"
+                class="col q-mr-xl"
+                outlined
+                dense
+                :rules="[requiredRule]"
+              />
+              <div class="col"></div>
+              <q-btn
+                round
+                icon="add"
+                color="purple"
+                style="height: 10px"
+                class="q-mr-sm"
+                @click="addOutputParam()"
+              />
+            </div>
+          </q-form>
+
+
+
+          <q-card-actions align="right">
             <q-btn
-              round
+              label="Add Task"
+              color="secondary"
               icon="add"
-              color="indigo"
-              style="height: 10px"
-              class="q-mr-sm"
-              @click="addInputParam()"
-            />
-          </div>
+              type="submit"
+            >
+              <span class="sr-only">Add Task</span>
+              <q-tooltip>
+                Add Task
+              </q-tooltip>
+            </q-btn>
+          </q-card-actions>
         </q-form>
+      </q-card>
 
-        <label>
-          Output Params:
-        </label>
-        <q-chip
-          v-for="(param, i) in outputParams"
-          :key="i"
-          color="purple"
-          text-color="white"
-          removable
-          @remove="outputParams.splice(i, 1)"
-          :label="`${param.name}: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0].name}`"
-        />
-        <q-form ref="outputParamForm" greedy @submit.prevent="addOutputParam">
-          <div class="row">
-            <q-input
-              v-model.trim="outputParam.name"
-              label="Output Param Name"
-              :rules="[requiredRule]"
-              dense
-              outlined
-              class="col q-mr-sm"
-            />
-            <q-select 
-              v-model="outputParam.parameterType"
-              emit-value
-              option-value="id"
-              option-label="name"
-              map-options
-              label="Param Type"
-              :options="pluginParameterTypes"
-              class="col q-mr-xl"
-              outlined
-              dense
-              :rules="[requiredRule]"
-            />
-            <div class="col"></div>
+      <q-expansion-item
+        :label="`${showParamTypes ? 'Hide' : 'Show'} Plugin Param Types`"
+        v-model="showParamTypes"
+        header-class="text-bold shadow-2"
+        class="q-mb-md"
+        ref="expansionItem"
+        @after-show="scroll"
+      >
+        <TableComponent
+          :rows="pluginParameterTypes"
+          :columns="columns"
+          title="Plugin Param Types"
+          @request="getPluginParameterTypes"
+          :hideToggleDraft="true"
+          :hideEditBtn="true"
+          :hideDeleteBtn="true"
+          :disableSelect="true"
+          style="margin-top: 0"
+        >
+          <template #body-cell-view="props">
             <q-btn
-              round
-              icon="add"
-              color="purple"
-              style="height: 10px"
-              class="q-mr-sm"
-              @click="addOutputParam()"
+              label="View"
+              color="primary"
+              @click.stop="structure = JSON.stringify(props.row.structure, null, 2); displayStructure = true;"
             />
-          </div>
-        </q-form>
-
-
-
-        <q-card-actions align="right">
-          <q-btn
-            label="Add Task"
-            color="secondary"
-            icon="add"
-            type="submit"
-          >
-            <span class="sr-only">Add Task</span>
-            <q-tooltip>
-              Add Task
-            </q-tooltip>
-          </q-btn>
-        </q-card-actions>
-      </q-form>
-    </q-card>
+          </template>
+        </TableComponent>
+      </q-expansion-item>
     </fieldset>
   </div>
 
@@ -365,7 +367,12 @@
   const showDeleteDialog = ref(false)
   const showEditParamDialog = ref(false)
 
+  const expansionItem = ref(null)
   const showParamTypes = ref(false)
+
+  function scroll() {
+    expansionItem.value.$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const title = ref('')
 
