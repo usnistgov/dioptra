@@ -461,6 +461,8 @@ def assert_plugin_file_response_contents_matches_expectations(
             assert isinstance(param["parameterType"]["group"]["name"], str)
             assert isinstance(param["parameterType"]["group"]["url"], str)
 
+    assert response["tasks"] == expected_contents["tasks"]
+
 
 def assert_retrieving_plugin_file_by_id_works(
     client: FlaskClient,
@@ -900,8 +902,8 @@ def test_register_plugin_file(
         """from dioptra import pyplugs
 
         @pyplugs.register
-        def hello_world(name: str) -> str:
-            return f"Hello, {name}!"
+        def hello_world(given_name: str, family_name: str) -> str:
+            return f"Hello, {given_name} {family_name}!"
         """
     )
     user_id = auth_account["id"]
@@ -910,7 +912,8 @@ def test_register_plugin_file(
         {
             "name": "hello_world",
             "inputParams": [
-                {"name": "name", "parameterType": string_parameter_type["id"]}
+                {"name": "given_name", "parameterType": string_parameter_type["id"]},
+                {"name": "family_name", "parameterType": string_parameter_type["id"]},
             ],
             "outputParams": [
                 {
@@ -928,14 +931,25 @@ def test_register_plugin_file(
             "name": "hello_world",
             "inputParams": [
                 {
-                    "name": "name",
+                    "name": "given_name",
                     "parameterType": {
                         "id": string_parameter_type["id"],
                         "group": string_parameter_type["group"],
                         "url": string_url,
                         "name": string_parameter_type["name"],
                     },
-                }
+                    "required": True,
+                },
+                {
+                    "name": "family_name",
+                    "parameterType": {
+                        "id": string_parameter_type["id"],
+                        "group": string_parameter_type["group"],
+                        "url": string_url,
+                        "name": string_parameter_type["name"],
+                    },
+                    "required": True,
+                },
             ],
             "outputParams": [
                 {

@@ -871,7 +871,9 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
 
 def build_plugin_task(plugin_task: models.PluginTask) -> PluginTaskDict:
     input_params: list[PluginTaskInputParameterDict] = []
-    for input_parameter in plugin_task.input_parameters:
+    for input_parameter in sorted(
+        plugin_task.input_parameters, key=lambda x: x.parameter_number
+    ):
         input_params.append(
             PluginTaskInputParameterDict(
                 name=input_parameter.name,
@@ -883,7 +885,9 @@ def build_plugin_task(plugin_task: models.PluginTask) -> PluginTaskDict:
         )
 
     output_params: list[PluginTaskOutputParameterDict] = []
-    for output_parameter in plugin_task.output_parameters:
+    for output_parameter in sorted(
+        plugin_task.output_parameters, key=lambda x: x.parameter_number
+    ):
         output_params.append(
             PluginTaskOutputParameterDict(
                 name=output_parameter.name,

@@ -185,7 +185,7 @@ class ArtifactService(object):
             return [], total_num_artifacts
 
         # get latest artifact snapshots
-        lastest_artifacts_stmt = (
+        latest_artifacts_stmt = (
             select(models.Artifact)
             .join(models.Resource)
             .where(
@@ -197,7 +197,7 @@ class ArtifactService(object):
             .offset(page_index)
             .limit(page_length)
         )
-        artifacts = db.session.scalars(lastest_artifacts_stmt).all()
+        artifacts = db.session.scalars(latest_artifacts_stmt).all()
 
         drafts_stmt = select(
             models.DraftResource.payload["resource_id"].as_string().cast(Integer)

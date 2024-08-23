@@ -1,12 +1,12 @@
 <template>
   <DialogComponent 
     v-model="showDialog"
-    @emitSubmit="emitAdd"
+    @emitSubmit="emitAddOrEdit"
     :hideDraftBtn="true"
   >
     <template #title>
       <label id="modalTitle">
-        Register Plugin
+        {{ editPlugin ? 'Edit Plugin' : 'Register Plugin'}}
       </label>
     </template>
     <div class="row items-center q-mb-xs">
@@ -24,7 +24,7 @@
         aria-required="true"
       />
     </div>
-    <div class="row items-center q-mb-xs">
+    <div class="row items-center q-mb-xs" v-if="!editPlugin">
       <label class="col-3 q-mb-lg" id="pluginGroup">
         Group:
       </label>
@@ -64,14 +64,14 @@
 
   const store = useLoginStore()
 
+  const props = defineProps(['editPlugin'])
+
   const showDialog = defineModel()
 
   const plugin = ref({
     name: '',
     group: '',
     description: '',
-    tags: [],
-    files: []
   })
 
   function requiredRule(val) {
@@ -95,16 +95,23 @@
   }
 
 
-  const emit = defineEmits(['addPlugin'])
+  const emit = defineEmits(['addPlugin', 'updatePlugin'])
 
-  function emitAdd() {
-    const copy = JSON.parse(JSON.stringify(plugin.value))
-    emit('addPlugin', copy)
+  function emitAddOrEdit() {
+    if(props.editPlugin) {
+      emit('updatePlugin', plugin.value, props.editPlugin.id)
+    } else {
+      emit('addPlugin', plugin.value)
+    }
     showDialog.value = false
   }
 
   watch(showDialog, (newVal) => {
-    if(!newVal) {
+    if(newVal) {
+      plugin.value.name = props.editPlugin.name
+      plugin.value.description = props.editPlugin.description
+    }
+    else {
       plugin.value.name = ''
       plugin.value.group = ''
       plugin.value.description = ''
