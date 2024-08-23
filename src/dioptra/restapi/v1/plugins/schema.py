@@ -15,7 +15,9 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Plugin resources."""
-from marshmallow import Schema, fields
+import re
+
+from marshmallow import Schema, fields, validate
 
 from dioptra.restapi.v1.plugin_parameter_types.schema import (
     PluginParameterTypeRefSchema,
@@ -29,11 +31,29 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_schema,
 )
 
+ALLOWED_PLUGIN_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
+ALLOWED_PLUGIN_FILENAME_REGEX = re.compile(r"^([A-Za-z]|[A-Za-z_][A-Za-z0-9_]+)\.py$")
+ALLOWED_PLUGIN_TASK_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
+ALLOWED_PLUGIN_TASK_PARAMETER_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
+
+
 PluginRefBaseSchema = generate_base_resource_ref_schema("Plugin")
+PluginSnapshotRefBaseSchema = generate_base_resource_ref_schema(
+    "Plugin", keep_snapshot_id=True
+)
 
 
 class PluginRefSchema(PluginRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a Plugin resource."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Plugin resource."),
+    )
+
+
+class PluginSnapshotRefSchema(PluginSnapshotRefBaseSchema):  # type: ignore
+    """The snapshot reference schema for the data stored in a Plugin resource."""
 
     name = fields.String(
         attribute="name",
@@ -64,6 +84,16 @@ class PluginTaskParameterSchema(Schema):
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the PluginTaskParameter."),
+        required=True,
+        validate=validate.Regexp(
+            ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
+            error=(
+                "'{input}' is not a compatible name for a Python function "
+                "parameter. A Python function parameter must start with a letter or "
+                "underscore, followed by letters, numbers, or underscores. In "
+                "addition, '_' is not a valid Python function parameter."
+            ),
+        ),
     )
     parameterTypeId = fields.Int(
         attribute="parameter_type_id",
@@ -72,6 +102,7 @@ class PluginTaskParameterSchema(Schema):
             description="The ID of the assigned PluginParameterType resource"
         ),
         load_only=True,
+        required=True,
     )
     parameterType = fields.Nested(
         PluginParameterTypeRefSchema,
@@ -81,21 +112,45 @@ class PluginTaskParameterSchema(Schema):
     )
 
 
+class PluginTaskInputParameterSchema(PluginTaskParameterSchema):
+    """The schema for the data stored in a PluginTaskInputParameter"""
+
+    required = fields.Boolean(
+        attribute="required",
+        metadata=dict(
+            description=(
+                "Sets whether the input parameter is required (True) or optional "
+                "(False). If True, then this parameter must be assigned a value in "
+                "order to execute the PluginTask."
+            ),
+        ),
+        load_default=True,
+    )
+
+
+class PluginTaskOutputParameterSchema(PluginTaskParameterSchema):
+    """The schema for the data stored in a PluginTaskInputParameter"""
+
+
 class PluginTaskSchema(Schema):
     """The schema for the data stored in a PluginTask."""
 
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the PluginTask."),
-        # marshmallow does not properly respect dump_only in a nested type if there
-        # are no other dump_only fields in the schema. Setting this field as both
-        # load_only and dump_only fixes the nested type issue while keeping this field
-        # present in both load and dump usage.
-        load_only=True,
-        dump_only=True,
+        required=True,
+        validate=validate.Regexp(
+            ALLOWED_PLUGIN_TASK_REGEX,
+            error=(
+                "'{input}' is not a compatible name for a Python function. A Python "
+                "function name must start with a letter or underscore, followed by "
+                "letters, numbers, or underscores. In addition, '_' is not a valid "
+                "Python function name."
+            ),
+        ),
     )
     inputParams = fields.Nested(
-        PluginTaskParameterSchema,
+        PluginTaskInputParameterSchema,
         attribute="input_params",
         many=True,
         metadata=dict(
@@ -103,7 +158,7 @@ class PluginTaskSchema(Schema):
         ),
     )
     outputParams = fields.Nested(
-        PluginTaskParameterSchema,
+        PluginTaskOutputParameterSchema,
         attribute="output_params",
         many=True,
         metadata=dict(
@@ -119,11 +174,23 @@ class PluginMutableFieldsSchema(Schema):
     """The schema for the mutable data fields in a Plugin resource."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Plugin resource.")
+        attribute="name",
+        metadata=dict(description="Name of the Plugin resource."),
+        required=True,
+        validate=validate.Regexp(
+            ALLOWED_PLUGIN_NAME_REGEX,
+            error=(
+                "'{input}' is not a compatible name for Python module. A Python "
+                "module must start with a letter or underscore, followed by letters, "
+                "numbers, or underscores. In addition, a Python module name cannot "
+                "be named '_' with no other characters."
+            ),
+        ),
     )
     description = fields.String(
         attribute="description",
         metadata=dict(description="Description of the Plugin resource."),
+        load_default=None,
     )
 
 
@@ -154,7 +221,7 @@ class PluginGetQueryParameters(
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
 ):
-    """The query parameters for the GET method of the /queues endpoint."""
+    """The query parameters for the GET method of the /plugins endpoint."""
 
 
 PluginFileBaseSchema = generate_base_resource_schema("PluginFile", snapshot=True)
@@ -164,10 +231,23 @@ class PluginFileMutableFieldsSchema(Schema):
     """The schema for the mutable data fields in a PluginFile resource."""
 
     filename = fields.String(
-        attribute="name", metadata=dict(description="Name of the PluginFile resource.")
+        attribute="filename",
+        metadata=dict(description="Name of the PluginFile resource."),
+        required=True,
+        validate=validate.Regexp(
+            ALLOWED_PLUGIN_FILENAME_REGEX,
+            error=(
+                "'{input}' is not a compatible name for a Python file. A Python "
+                "filename must start with a letter or underscore, followed by letters, "
+                "numbers, or underscores, and ending with a lowercase '.py'. In "
+                "addition, '_.py' is not a valid Python filename."
+            ),
+        ),
     )
     contents = fields.String(
-        attribute="contents", metadata=dict(description="Contents of the file.")
+        attribute="contents",
+        metadata=dict(description="Contents of the file."),
+        required=True,
     )
     tasks = fields.Nested(
         PluginTaskSchema,
@@ -175,14 +255,20 @@ class PluginFileMutableFieldsSchema(Schema):
         metadata=dict(description="Tasks associated with the PluginFile resource."),
         many=True,
     )
+    description = fields.String(
+        attribute="description",
+        metadata=dict(description="Description of the PluginFile resource."),
+        load_default=None,
+    )
 
 
 class PluginFileSchema(PluginFileMutableFieldsSchema, PluginFileBaseSchema):  # type: ignore
     """The schema for the data stored in a PluginFile resource."""
 
-    pluginId = fields.Int(
-        attribute="plugin_id",
-        metadata=dict(description="ID for the Plugin resource this file belongs to."),
+    plugin = fields.Nested(
+        PluginRefSchema,
+        attribute="plugin",
+        metadata=dict(description="The Plugin resource this file belongs to."),
         dump_only=True,
     )
 
@@ -199,5 +285,6 @@ class PluginFilePageSchema(BasePageSchema):
 
 class PluginFileGetQueryParameters(
     PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
 ):
-    """The query parameters for the GET method of the /queues/{id}/files/ endpoint."""
+    """The query parameters for the GET method of the /plugins/{id}/files/ endpoint."""

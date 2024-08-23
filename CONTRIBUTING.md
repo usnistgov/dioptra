@@ -72,7 +72,7 @@ See the [Dioptra Commit Style Guide](./COMMIT_STYLE_GUIDE.md).
 
 #### Squashing
 
-All final commits will be squashed, therefore when squashing your branch, it’s important to make sure you update the commit message. If you’re using Github’s UI it will by default create a new commit message which is a combination of all commits and **does not follow the commit guidelines**.
+All final commits will be squashed, therefore when squashing your branch, it’s important to make sure you update the commit message. If you’re using GitHub’s UI it will by default create a new commit message which is a combination of all commits and **does not follow the commit guidelines**.
 
 If you’re working locally, it often can be useful to `--amend` a commit, or utilize `rebase -i` to reorder, squash, and reword your commits.
 

@@ -25,6 +25,7 @@ from . import (
     plugin_parameter_types,
     plugins,
     queues,
+    shared,
     tags,
     users,
 )
@@ -39,6 +40,7 @@ __all__ = [
     "models",
     "plugin_parameter_types",
     "plugins",
+    "shared",
     "queues",
     "tags",
     "users",

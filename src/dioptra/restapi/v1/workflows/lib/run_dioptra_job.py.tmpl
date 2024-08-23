@@ -1,0 +1,170 @@
+# This Software (Dioptra) is being made available as a public service by the
+# National Institute of Standards and Technology (NIST), an Agency of the United
+# States Department of Commerce. This software was developed in part by employees of
+# NIST and in part by NIST contractors. Copyright in portions of this software that
+# were developed by NIST contractors has been licensed or assigned to NIST. Pursuant
+# to Title 17 United States Code Section 105, works of NIST employees are not
+# subject to copyright protection in the United States. However, NIST may hold
+# international copyright in software created by its employees and domestic
+# copyright (or licensing rights) in portions of software that were assigned or
+# licensed to NIST. To the extent that NIST holds copyright in this software, it is
+# being made available under the Creative Commons Attribution 4.0 International
+# license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts
+# of the software developed or licensed by NIST.
+#
+# ACCESS THE FULL CC BY 4.0 LICENSE HERE:
+# https://creativecommons.org/licenses/by/4.0/legalcode
+import json
+import uuid
+from pathlib import Path
+from typing import Any, Mapping, MutableMapping, Protocol, cast
+
+import mlflow
+import structlog
+import yaml
+from structlog.stdlib import BoundLogger
+
+from dioptra.sdk.utilities.contexts import sys_path_dirs
+from dioptra.task_engine.task_engine import run_experiment
+from dioptra.task_engine.validation import is_valid
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+DIOPTRA_JOB_ID = "dioptra.jobId"
+
+# Templated variables
+JOB_ID = ${job_id}
+EXPERIMENT_ID = ${experiment_id}
+JOB_YAML_PATH = "${task_engine_yaml_path}"
+JOB_PARAMS_JSON_PATH = "${job_params_json_path}"
+
+
+class SimpleDioptraClient(Protocol):
+    def set_job_mlflow_run_id(
+        self, job_id: int, mlflow_run_id: str | uuid.UUID
+    ) -> None:
+        ...  # fmt: skip
+
+
+def main(
+    plugins_dir: str | Path = "plugins",
+    enable_mlflow_tracking: bool = False,
+    dioptra_client: SimpleDioptraClient | None = None,
+    logger: BoundLogger | None = None,
+) -> None:
+    log = logger or LOGGER.new(job_id=JOB_ID, experiment_id=EXPERIMENT_ID)  # noqa: F841
+
+    if not Path(plugins_dir).exists():
+        log.error("Plugins directory does not exist", plugins_dir=str(plugins_dir))
+        raise ValueError(f"Plugins directory {plugins_dir} does not exist")
+
+    job_yaml = _load_job_yaml(JOB_YAML_PATH)
+    job_parameters = _load_job_params(JOB_PARAMS_JSON_PATH)
+
+    if not is_valid(job_yaml):
+        log.error("Job YAML was invalid!")
+        raise ValueError("Job YAML was invalid!")
+
+    if enable_mlflow_tracking:
+        if dioptra_client is None:
+            log.error(
+                "The client for the Dioptra API is missing, it must be provided to "
+                "enable MLflow tracking functionality."
+            )
+            raise ValueError(
+                "The client for the Dioptra API is missing, it must be provided to "
+                "enable MLflow tracking functionality."
+            )
+
+        return _run_mlflow_tracked_job(
+            dioptra_client, Path(plugins_dir), job_yaml, job_parameters, log
+        )
+
+    return _run_job(Path(plugins_dir), job_yaml, job_parameters, log)
+
+
+def _run_job(
+    plugins_dir: Path,
+    job_yaml: Mapping[str, Any],
+    job_parameters: MutableMapping[str, Any],
+    logger: BoundLogger | None = None,
+) -> None:
+    """Run the job.
+
+    Args:
+        plugins_dir: Path to the plugins directory
+        job_yaml: A declarative experiment description, as a mapping
+        job_parameters: Global parameters for this run, as a mapping from
+            parameter name to value
+        logger: A structlog logger instance. If not provided, a new logger
+            will be created
+    """
+    log = logger or LOGGER.new(job_id=JOB_ID, experiment_id=EXPERIMENT_ID)  # noqa: F841
+
+    try:
+        with sys_path_dirs(dirs=(str(plugins_dir),)):
+            run_experiment(job_yaml, job_parameters)
+
+        log.info("=== Run succeeded ===")
+
+    except Exception as e:
+        log.exception("=== Run failed ===")
+        raise e
+
+
+def _run_mlflow_tracked_job(
+    dioptra_client: SimpleDioptraClient,
+    plugins_dir: Path,
+    job_yaml: Mapping[str, Any],
+    job_parameters: MutableMapping[str, Any],
+    logger: BoundLogger | None = None,
+) -> None:
+    """Run the job and start tracking the run in MLflow tracking server.
+
+    Args:
+        dioptra_client: A client for interacting with the Dioptra service.
+        plugins_dir: Path to the plugins directory
+        job_yaml: A declarative experiment description, as a mapping
+        job_parameters: Global parameters for this run, as a mapping from
+            parameter name to value
+        logger: A structlog logger instance. If not provided, a new logger
+            will be created
+    """
+    log = logger or LOGGER.new(job_id=JOB_ID, experiment_id=EXPERIMENT_ID)  # noqa: F841
+    active_run = mlflow.start_run()
+
+    try:
+        dioptra_client.set_job_mlflow_run_id(
+            job_id=JOB_ID, mlflow_run_id=active_run.info.run_id
+        )
+        mlflow.set_tag(DIOPTRA_JOB_ID, JOB_ID)
+        mlflow.log_dict(job_yaml, Path(JOB_YAML_PATH).name)
+        mlflow.log_params(job_parameters)
+
+        with sys_path_dirs(dirs=(str(plugins_dir),)):
+            run_experiment(job_yaml, job_parameters)
+
+        log.info("=== Run succeeded ===")
+        mlflow.end_run()
+
+    except Exception as e:
+        log.exception("=== Run failed ===")
+        mlflow.end_run("FAILED")
+        raise e
+
+
+def _load_job_yaml(filepath: str) -> Mapping[str, Any]:
+    job_filepath = Path(filepath)
+    with job_filepath.open("rt") as f:
+        return cast(Mapping[str, Any], yaml.safe_load(f))
+
+
+def _load_job_params(filepath: str) -> MutableMapping[str, Any]:
+    job_params_filepath = Path(filepath)
+    with job_params_filepath.open("rt") as f:
+        return cast(MutableMapping[str, Any], json.load(f))
+
+
+if __name__ == "__main__":
+    # Running the file as a script does not enable the Mlflow Tracking capability. This
+    # is useful for debugging whether the job YAML and plugins are set up appropriately.
+    main()

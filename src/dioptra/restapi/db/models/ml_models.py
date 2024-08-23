@@ -14,13 +14,20 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import (
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    UniqueConstraint,
+    and_,
+    select,
+)
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from dioptra.restapi.db.db import bigint, intpk, text_
 
 from .artifacts import Artifact
-from .resources import ResourceSnapshot
+from .resources import Resource, ResourceSnapshot, resource_dependencies_table
 
 # -- ORM Classes -----------------------------------------------------------------------
 
@@ -31,16 +38,63 @@ class MlModel(ResourceSnapshot):
     # Database fields
     resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
     resource_id: Mapped[bigint] = mapped_column(init=False, nullable=False, index=True)
+    name: Mapped[text_] = mapped_column(nullable=False)
+
+    # Additional settings
+    __table_args__ = (  # type: ignore[assignment]
+        Index(
+            None,
+            "resource_snapshot_id",
+            "resource_id",
+            unique=True,
+        ),
+        ForeignKeyConstraint(
+            ["resource_snapshot_id", "resource_id"],
+            [
+                "resource_snapshots.resource_snapshot_id",
+                "resource_snapshots.resource_id",
+            ],
+        ),
+        UniqueConstraint("resource_snapshot_id", "resource_id"),
+    )
+    __mapper_args__ = {
+        "polymorphic_identity": "ml_model",
+    }
+
+
+class MlModelVersion(ResourceSnapshot):
+    __tablename__ = "ml_model_versions"
+
+    # Database fields
+    resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
+    resource_id: Mapped[bigint] = mapped_column(init=False, nullable=False, index=True)
     artifact_resource_snapshot_id: Mapped[bigint] = mapped_column(
         ForeignKey("artifacts.resource_snapshot_id"), init=False, nullable=False
     )
-    name: Mapped[text_] = mapped_column(nullable=False)
+    version_number: Mapped[bigint] = mapped_column(nullable=False)
 
     # Relationships
     artifact: Mapped[Artifact] = relationship(
         primaryjoin=(
-            "Artifact.resource_snapshot_id == MlModel.artifact_resource_snapshot_id"
+            "Artifact.resource_snapshot_id "
+            "== MlModelVersion.artifact_resource_snapshot_id"
         ),
+    )
+
+    # Derived fields (read-only)
+    model_id: Mapped[bigint] = column_property(
+        select(Resource.resource_id)
+        .join(
+            resource_dependencies_table,
+            and_(
+                Resource.resource_id
+                == resource_dependencies_table.c.parent_resource_id,
+                resource_dependencies_table.c.child_resource_id == resource_id,
+            ),
+        )
+        .limit(1)
+        .correlate_except(Resource)
+        .scalar_subquery()
     )
 
     # Additional settings
@@ -62,5 +116,5 @@ class MlModel(ResourceSnapshot):
         UniqueConstraint("resource_snapshot_id", "resource_id"),
     )
     __mapper_args__ = {
-        "polymorphic_identity": "ml_model",
+        "polymorphic_identity": "ml_model_version",
     }

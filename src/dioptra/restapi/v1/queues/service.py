@@ -22,18 +22,26 @@ from typing import Any, Final
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import func, select
+from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError, SearchNotImplementedError
+from dioptra.restapi.db.models.constants import resource_lock_types
+from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
+from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 from .errors import QueueAlreadyExistsError, QueueDoesNotExistError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "queue"
+SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": lambda x: models.Queue.name.like(x, escape="/"),
+    "description": lambda x: models.Queue.description.like(x, escape="/"),
+    "tag": lambda x: models.Queue.tags.any(models.Tag.name.like(x, escape="/")),
+}
 
 
 class QueueService(object):
@@ -63,7 +71,7 @@ class QueueService(object):
         group_id: int,
         commit: bool = True,
         **kwargs,
-    ) -> models.Queue:
+    ) -> utils.QueueDict:
         """Create a new queue.
 
         Args:
@@ -78,6 +86,7 @@ class QueueService(object):
 
         Raises:
             QueueAlreadyExistsError: If a queue with the given name already exists.
+            GroupDoesNotExistError: If the group with the provided ID does not exist.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -101,7 +110,7 @@ class QueueService(object):
                 name=new_queue.name,
             )
 
-        return new_queue
+        return utils.QueueDict(queue=new_queue, has_draft=False)
 
     def get(
         self,
@@ -110,7 +119,7 @@ class QueueService(object):
         page_index: int,
         page_length: int,
         **kwargs,
-    ) -> Any:
+    ) -> tuple[list[utils.QueueDict], int]:
         """Fetch a list of queues, optionally filtering by search string and paging
         parameters.
 
@@ -125,7 +134,6 @@ class QueueService(object):
             the query.
 
         Raises:
-            SearchNotImplementedError: If a search string is provided.
             BackendDatabaseError: If the database query returns a None when counting
                 the number of queues.
         """
@@ -138,8 +146,9 @@ class QueueService(object):
             filters.append(models.Resource.group_id == group_id)
 
         if search_string:
-            log.debug("Searching is not implemented", search_string=search_string)
-            raise SearchNotImplementedError
+            filters.append(
+                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
+            )
 
         stmt = (
             select(func.count(models.Queue.resource_id))
@@ -155,7 +164,7 @@ class QueueService(object):
         if total_num_queues is None:
             log.error(
                 "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
+                "queues when it should return a number.",
                 sql=str(stmt),
             )
             raise BackendDatabaseError
@@ -163,8 +172,8 @@ class QueueService(object):
         if total_num_queues == 0:
             return [], total_num_queues
 
-        stmt = (
-            select(models.Queue)  # type: ignore
+        queues_stmt = (
+            select(models.Queue)
             .join(models.Resource)
             .where(
                 *filters,
@@ -174,19 +183,32 @@ class QueueService(object):
             .offset(page_index)
             .limit(page_length)
         )
-        queues = db.session.scalars(stmt).all()
+        queues = list(db.session.scalars(queues_stmt).all())
 
-        return queues, total_num_queues
+        drafts_stmt = select(
+            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+        ).where(
+            models.DraftResource.payload["resource_id"]
+            .as_string()
+            .cast(Integer)
+            .in_(tuple(queue.resource_id for queue in queues)),
+            models.DraftResource.user_id == current_user.user_id,
+        )
+        queues_dict: dict[int, utils.QueueDict] = {
+            queue.resource_id: utils.QueueDict(queue=queue, has_draft=False)
+            for queue in queues
+        }
+        for resource_id in db.session.scalars(drafts_stmt):
+            queues_dict[resource_id]["has_draft"] = True
+
+        return list(queues_dict.values()), total_num_queues
 
 
 class QueueIdService(object):
     """The service methods for registering and managing queues by their unique id."""
 
     @inject
-    def __init__(
-        self,
-        queue_name_service: QueueNameService,
-    ) -> None:
+    def __init__(self, queue_name_service: QueueNameService) -> None:
         """Initialize the queue service.
 
         All arguments are provided via dependency injection.
@@ -201,7 +223,7 @@ class QueueIdService(object):
         queue_id: int,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> models.Queue | None:
+    ) -> utils.QueueDict | None:
         """Fetch a queue by its unique id.
 
         Args:
@@ -237,7 +259,19 @@ class QueueIdService(object):
 
             return None
 
-        return queue
+        drafts_stmt = (
+            select(models.DraftResource.draft_resource_id)
+            .where(
+                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
+                == queue.resource_id,
+                models.DraftResource.user_id == current_user.user_id,
+            )
+            .exists()
+            .select()
+        )
+        has_draft = db.session.scalar(drafts_stmt)
+
+        return utils.QueueDict(queue=queue, has_draft=has_draft)
 
     def modify(
         self,
@@ -247,8 +281,8 @@ class QueueIdService(object):
         error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
-    ) -> models.Queue | None:
-        """Rename a queue.
+    ) -> utils.QueueDict | None:
+        """Modify a queue.
 
         Args:
             queue_id: The unique id of the queue.
@@ -268,11 +302,12 @@ class QueueIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        queue = self.get(queue_id, error_if_not_found=error_if_not_found, log=log)
+        queue_dict = self.get(queue_id, error_if_not_found=error_if_not_found, log=log)
 
-        if queue is None:
+        if queue_dict is None:
             return None
 
+        queue = queue_dict["queue"]
         group_id = queue.resource.group_id
         if (
             name != queue.name
@@ -299,7 +334,7 @@ class QueueIdService(object):
                 description=description,
             )
 
-        return new_queue
+        return utils.QueueDict(queue=new_queue, has_draft=False)
 
     def delete(self, queue_id: int, **kwargs) -> dict[str, Any]:
         """Delete a queue.
@@ -309,6 +344,9 @@ class QueueIdService(object):
 
         Returns:
             A dictionary reporting the status of the request.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -321,7 +359,7 @@ class QueueIdService(object):
             raise QueueDoesNotExistError
 
         deleted_resource_lock = models.ResourceLock(
-            resource_lock_type="delete",
+            resource_lock_type=resource_lock_types.DELETE,
             resource=queue_resource,
         )
         db.session.add(deleted_resource_lock)
@@ -329,6 +367,53 @@ class QueueIdService(object):
         log.debug("Queue deleted", queue_id=queue_id)
 
         return {"status": "Success", "queue_id": queue_id}
+
+
+class QueueIdsService(object):
+    """The service methods for retrieving queues from a list of ids."""
+
+    def get(
+        self,
+        queue_ids: list[int],
+        error_if_not_found: bool = False,
+        **kwargs,
+    ) -> list[models.Queue]:
+        """Fetch a list of queues by their unique ids.
+
+        Args:
+            queue_ids: The unique ids of the queues.
+            error_if_not_found: If True, raise an error if the queue is not found.
+                Defaults to False.
+
+        Returns:
+            The queue object if found, otherwise None.
+
+        Raises:
+            QueueDoesNotExistError: If the queue is not found and `error_if_not_found`
+                is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get queue by id", queue_ids=queue_ids)
+
+        stmt = (
+            select(models.Queue)
+            .join(models.Resource)
+            .where(
+                models.Queue.resource_id.in_(tuple(queue_ids)),
+                models.Queue.resource_snapshot_id == models.Resource.latest_snapshot_id,
+                models.Resource.is_deleted == False,  # noqa: E712
+            )
+        )
+        queues = list(db.session.scalars(stmt).all())
+
+        if len(queues) != len(queue_ids) and error_if_not_found:
+            queue_ids_missing = set(queue_ids) - set(
+                queue.resource_id for queue in queues
+            )
+            log.debug("Queue not found", queue_ids=list(queue_ids_missing))
+            raise QueueDoesNotExistError
+
+        return queues
 
 
 class QueueNameService(object):

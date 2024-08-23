@@ -36,61 +36,10 @@ from requests import ConnectionError
 from requests import Session as RequestsSession
 
 from dioptra.restapi.db import db as restapi_db
-from dioptra.restapi.v0.shared.request_scope import request
+from dioptra.restapi.v1.shared.request_scope import request
 
 from .lib import db as libdb
 from .lib.server import FlaskTestServer
-
-
-@pytest.fixture(scope="session")
-def task_plugins_dir(tmp_path_factory):
-    base_dir = tmp_path_factory.getbasetemp()
-    artifacts_dir = tmp_path_factory.mktemp("artifacts", numbered=False)
-    models_dir = tmp_path_factory.mktemp("models", numbered=False)
-
-    for fn in ["__init__.py", "mlflow.py"]:
-        (artifacts_dir / fn).touch()
-
-    for fn in ["__init__.py", "keras.py", "data.json"]:
-        (models_dir / fn).touch()
-
-    return base_dir
-
-
-@pytest.fixture
-def workflow_tar_gz():
-    workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
-
-    with (
-        tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f,
-        io.BytesIO(initial_bytes=b"data") as data,
-    ):
-        tarinfo = tarfile.TarInfo(name="MLproject")
-        tarinfo.size = len(data.getbuffer())
-        f.addfile(tarinfo=tarinfo, fileobj=data)
-
-    workflow_tar_gz_fileobj.seek(0)
-    yield workflow_tar_gz_fileobj
-    workflow_tar_gz_fileobj.close()
-
-
-@pytest.fixture
-def workflow_tar_gz_factory():
-    def wrapped():
-        workflow_tar_gz_fileobj: BinaryIO = io.BytesIO()
-
-        with (
-            tarfile.open(fileobj=workflow_tar_gz_fileobj, mode="w:gz") as f,
-            io.BytesIO(initial_bytes=b"data") as data,
-        ):
-            tarinfo = tarfile.TarInfo(name="MLproject")
-            tarinfo.size = len(data.getbuffer())
-            f.addfile(tarinfo=tarinfo, fileobj=data)
-
-        workflow_tar_gz_fileobj.seek(0)
-        return workflow_tar_gz_fileobj
-
-    return wrapped
 
 
 @pytest.fixture
@@ -122,15 +71,13 @@ def dependency_modules() -> List[Any]:
     from dioptra.restapi.bootstrap import (
         PasswordServiceModule,
         RQServiceConfiguration,
-        RQServiceModule,
+        RQServiceV1Module,
         _bind_password_service_configuration,
     )
 
     def _bind_rq_service_configuration(binder: Binder) -> None:
         configuration: RQServiceConfiguration = RQServiceConfiguration(
             redis=Redis.from_url("redis://"),
-            run_mlflow="dioptra.rq.tasks.run_mlflow_task",
-            run_task_engine="dioptra.rq.tasks.run_task_engine_task",
         )
 
         binder.bind(
@@ -153,8 +100,8 @@ def dependency_modules() -> List[Any]:
 
     return [
         configure,
-        PasswordServiceModule(),
-        RQServiceModule(),
+        PasswordServiceModule,
+        RQServiceV1Module,
     ]
 
 

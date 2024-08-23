@@ -16,6 +16,8 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Common schemas for serializing/deserializing resources."""
 
+import enum
+
 from marshmallow import Schema, fields
 
 
@@ -44,6 +46,7 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
                 description=f"ID of the Group that will own the {name} resource."
             ),
             load_only=True,
+            required=True,
         ),
         "group": fields.Nested(
             GroupRefSchema,
@@ -78,10 +81,17 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
             ),
             dump_only=True,
         ),
+        "hasDraft": fields.Bool(
+            attribute="has_draft",
+            metadata=dict(
+                description=f"Whether a draft exists for the {name} resource."
+            ),
+            dump_only=True,
+        ),
         "tags": fields.Nested(
             TagRefSchema,
             attribute="tags",
-            metadata=dict(description="Tags associated with the {name} resource."),
+            metadata=dict(description=f"Tags associated with the {name} resource."),
             many=True,
             dump_only=True,
         ),
@@ -108,7 +118,7 @@ def generate_base_resource_ref_schema(
             metadata=dict(description=f"ID for the {name} resource."),
         ),
         "snapshotId": fields.Integer(
-            attribute="id",
+            attribute="snapshot_id",
             metadata=dict(description=f"Snapshot ID for the {name} resource."),
         ),
         "group": fields.Nested(
@@ -123,21 +133,12 @@ def generate_base_resource_ref_schema(
         ),
     }
 
-    if not keep_snapshot_id:
+    if keep_snapshot_id:
+        schema.pop("id")
+        return Schema.from_dict(schema, name=f"{name}SnapshotRefBaseSchema")
+    else:
         schema.pop("snapshotId")
-
-    return Schema.from_dict(schema, name="f{name}RefBaseSchema")
-
-
-class ResourceUrlsSchema(Schema):
-    """The schema for a list of Resource URLs"""
-
-    urls = fields.List(
-        fields.Url(),
-        attribute="urls",
-        metadata=dict(description="A list of URLs to access Resources."),
-        relative=True,
-    )
+        return Schema.from_dict(schema, name=f"{name}RefBaseSchema")
 
 
 class BasePageSchema(Schema):
@@ -150,6 +151,10 @@ class BasePageSchema(Schema):
     isComplete = fields.Boolean(
         attribute="is_complete",
         metadata=dict(description="Boolean indicating if more data is available."),
+    )
+    totalNumResults = fields.Integer(
+        attribute="total_num_results",
+        metadata=dict(description="Total number of results."),
     )
     first = fields.Url(
         attribute="first",
@@ -189,6 +194,7 @@ class ResourceTypeQueryParametersSchema(Schema):
     resourceType = fields.String(
         attribute="resource_type",
         metadata=dict(description="Filter results by the type of resource."),
+        load_default=None,
     )
 
 
@@ -202,6 +208,26 @@ class GroupIdQueryParametersSchema(Schema):
     )
 
 
+class DraftTypes(enum.Enum):
+    ALL = "all"
+    EXISTING = "existing"
+    NEW = "new"
+
+
+class DraftTypeQueryParametersSchema(Schema):
+    """A schema for adding draft_type query parameters to a resource endpoint."""
+
+    draftType = fields.Enum(
+        DraftTypes,
+        attribute="draft_type",
+        metadata=dict(
+            description="The type of drafts to return: all, existing, or new."
+        ),
+        by_value=True,
+        load_default=DraftTypes.ALL,
+    )
+
+
 class SearchQueryParametersSchema(Schema):
     """A schema for adding search query parameters to a resource endpoint."""
 
@@ -209,6 +235,23 @@ class SearchQueryParametersSchema(Schema):
         attribute="search",
         metadata=dict(description="Search terms for the query (* and ? wildcards)."),
         load_default="",
+    )
+
+
+class ResourceGetQueryParameters(
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+):
+    """The query parameters for the GET method of the resource endpoints."""
+
+
+class IdListSchema(Schema):
+    """The schema for a list of IDs."""
+
+    ids = fields.List(
+        fields.Integer(),
+        attribute="ids",
+        metadata=dict(description="List of identifiers for one or more objects."),
     )
 
 
@@ -225,4 +268,14 @@ class IdStatusResponseSchema(Schema):
     status = fields.String(
         attribute="status",
         metadata=dict(description="The status of the request."),
+    )
+
+
+class ResourceUrlsPageSchema(BasePageSchema):
+    """The paged schema for the Resource URLs."""
+
+    data = fields.List(
+        fields.String(),
+        many=True,
+        metadata=dict(description="List of Resource URLs in the current page."),
     )

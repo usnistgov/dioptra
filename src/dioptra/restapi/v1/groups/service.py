@@ -26,7 +26,9 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError, SearchNotImplementedError
+from dioptra.restapi.db.models.constants import group_lock_types
+from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 from .errors import GroupDoesNotExistError, GroupNameNotAvailableError
 
@@ -51,6 +53,9 @@ GROUP_CREATOR_MEMBER_PERMISSIONS: Final[dict[str, bool]] = {
 GROUP_CREATOR_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
     "owner": True,
     "admin": True,
+}
+SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": lambda x: models.Group.name.like(x, escape="/"),
 }
 
 
@@ -147,18 +152,19 @@ class GroupService(object):
             the query.
 
         Raises:
-            SearchNotImplementedError: If a search string is provided.
             BackendDatabaseError: If the database query returns a None when counting
                 the number of groups.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get list of groups")
 
-        if search_string:
-            log.debug("Searching is not implemented", search_string=search_string)
-            raise SearchNotImplementedError
+        search_filters = construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
 
-        stmt = select(func.count(models.Group.group_id)).filter_by(is_deleted=False)
+        stmt = (
+            select(func.count(models.Group.group_id))
+            .filter_by(is_deleted=False)
+            .filter(search_filters)
+        )
         total_num_groups = db.session.scalars(stmt).first()
 
         if total_num_groups is None:
@@ -175,6 +181,7 @@ class GroupService(object):
         stmt = (
             select(models.Group)  # type: ignore
             .filter_by(is_deleted=False)
+            .filter(search_filters)
             .offset(page_index)
             .limit(page_length)
         )
@@ -305,7 +312,7 @@ class GroupIdService(object):
         name = group.name
 
         deleted_group_lock = models.GroupLock(
-            group_lock_type="delete",
+            group_lock_type=group_lock_types.DELETE,
             group=group,
         )
         db.session.add(deleted_group_lock)

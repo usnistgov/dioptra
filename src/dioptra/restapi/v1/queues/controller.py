@@ -15,10 +15,9 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The module defining the endpoints for Queue resources."""
-from __future__ import annotations
-
 import uuid
 from typing import cast
+from urllib.parse import unquote
 
 import structlog
 from flask import request
@@ -29,8 +28,22 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.routes import V1_QUEUES_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
+from dioptra.restapi.v1.shared.drafts.controller import (
+    generate_resource_drafts_endpoint,
+    generate_resource_drafts_id_endpoint,
+    generate_resource_id_draft_endpoint,
+)
+from dioptra.restapi.v1.shared.snapshots.controller import (
+    generate_resource_snapshots_endpoint,
+    generate_resource_snapshots_id_endpoint,
+)
+from dioptra.restapi.v1.shared.tags.controller import (
+    generate_resource_tags_endpoint,
+    generate_resource_tags_id_endpoint,
+)
 
 from .schema import (
     QueueGetQueryParameters,
@@ -38,7 +51,7 @@ from .schema import (
     QueuePageSchema,
     QueueSchema,
 )
-from .service import QueueIdService, QueueService
+from .service import RESOURCE_TYPE, SEARCHABLE_FIELDS, QueueIdService, QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -70,7 +83,7 @@ class QueueEndpoint(Resource):
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
         group_id = parsed_query_params["group_id"]
-        search_string = parsed_query_params["search"]
+        search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
 
@@ -82,10 +95,12 @@ class QueueEndpoint(Resource):
             log=log,
         )
         return utils.build_paging_envelope(
-            "queues",
+            V1_QUEUES_ROUTE,
             build_fn=utils.build_queue,
             data=queues,
+            group_id=group_id,
             query=search_string,
+            draft_type=None,
             index=page_index,
             length=page_length,
             total_num_elements=total_num_queues,
@@ -102,9 +117,9 @@ class QueueEndpoint(Resource):
         parsed_obj = request.parsed_obj  # noqa: F841
 
         queue = self._queue_service.create(
-            name=str(parsed_obj["name"]),
-            description=str(parsed_obj["description"]),
-            group_id=int(parsed_obj["group_id"]),
+            name=parsed_obj["name"],
+            description=parsed_obj["description"],
+            group_id=parsed_obj["group_id"],
             log=log,
         )
         return utils.build_queue(queue)
@@ -155,7 +170,7 @@ class QueueIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Queue", request_type="PUT", id=id
         )
-        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        parsed_obj = request.parsed_obj  # type: ignore
         queue = cast(
             models.Queue,
             self._queue_id_service.modify(
@@ -167,3 +182,47 @@ class QueueIdEndpoint(Resource):
             ),
         )
         return utils.build_queue(queue)
+
+
+QueueDraftResource = generate_resource_drafts_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_QUEUES_ROUTE,
+    request_schema=QueueSchema,
+)
+QueueDraftIdResource = generate_resource_drafts_id_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=QueueMutableFieldsSchema,
+)
+QueueIdDraftResource = generate_resource_id_draft_endpoint(
+    api,
+    resource_name=RESOURCE_TYPE,
+    request_schema=QueueMutableFieldsSchema,
+)
+
+QueueSnapshotsResource = generate_resource_snapshots_endpoint(
+    api=api,
+    resource_model=models.Queue,
+    resource_name=RESOURCE_TYPE,
+    route_prefix=V1_QUEUES_ROUTE,
+    searchable_fields=SEARCHABLE_FIELDS,
+    page_schema=QueuePageSchema,
+    build_fn=utils.build_queue,
+)
+QueueSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
+    api=api,
+    resource_model=models.Queue,
+    resource_name=RESOURCE_TYPE,
+    response_schema=QueueSchema,
+    build_fn=utils.build_queue,
+)
+
+QueueTagsResource = generate_resource_tags_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)
+QueueTagsIdResource = generate_resource_tags_id_endpoint(
+    api=api,
+    resource_name=RESOURCE_TYPE,
+)

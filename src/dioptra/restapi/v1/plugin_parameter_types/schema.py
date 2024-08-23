@@ -46,14 +46,17 @@ class PluginParameterTypeMutableFieldsSchema(Schema):
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the PluginParameterType resource."),
+        required=True,
     )
     description = fields.String(
         attribute="description",
-        metadata=dict(description="Description of the PluginparameterType resource."),
+        metadata=dict(description="Description of the PluginParameterType resource."),
+        load_default=None,
     )
     structure = fields.Dict(
         attribute="structure",
         metadata=dict(description="Structure of the PluginParameterType resource."),
+        load_default=None,
     )
 
 
@@ -75,8 +78,7 @@ class PluginParameterTypePageSchema(BasePageSchema):
         PluginParameterTypeSchema,
         many=True,
         metadata=dict(
-            description="List of PluginParameterType resources in the \
-                                   current page."
+            description="List of PluginParameterType resources in the current page."
         ),
     )
 

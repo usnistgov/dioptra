@@ -20,22 +20,29 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dioptra"
-version = "0.0.0"
+version = "1.0.0dev0"
 authors = [
     { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
-    { name="Julian Sexton", email="jtsexton@mitre.org" },
-    { name="Howard Huang", email="hhuang@mitre.org" },
-    { name="Michael Chisholm", email="chisholm@mitre.org" },
-    { name="Andrew Hand", email="ahand@mitre.org" },
-    { name="Alexander Byrne", email="alexanderbyrne@mitre.org" },
-    { name="Luke Barber", email="lbarber@mitre.org" },
-    { name="Cory Miniter" },
-    { name="Paul Rowe", email="prowe@mitre.org" },
     { name="Harold Booth", email="harold.booth@nist.gov" },
+    { name="Keith Manville", email="kmanville@mitre.org" },
+    { name="Julian Sexton", email="jtsexton@mitre.org" },
+    { name="Michael Andy Chisholm", email="chisholm@mitre.org" },
+    { name="Henry Choy", email="hchoy@mitre.org" },
+    { name="Andrew Hand", email="ahand@mitre.org" },
+    { name="Bronwyn Hodges", email="bhodges@mitre.org" },
+    { name="Paul Scemama" },
+    { name="Dmitry Cousin", email="dmitry.cousin@nist.gov" },
+    { name="Eric Trapnell", email="eric.trapnell@nist.gov" },
+    { name="Mark Trapnell", email="mark.trapnell@nist.gov" },
+    { name="Howard Huang", email="hhuang@mitre.org" },
+    { name="Paul Rowe" },
+    { name="Alexander Byrne", email="alexanderbyrne@mitre.org" },
+    { name="Luke Barber" },
+    { name="Cory Miniter" },
 ]
 maintainers = [
     { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
-    { name="Paul Rowe", email="prowe@mitre.org" },
+    { name="Keith Manville", email="kmanville@mitre.org" },
     { name="Harold Booth", email="harold.booth@nist.gov" },
 ]
 description = "Dioptra provides Machine Learning Security researchers with an environment for organizing and running experiments."
@@ -60,6 +67,7 @@ dependencies = [
     "numpy>=1.22.0",
     "pandas>=1.5.0",
     "passlib>=1.7.0",
+    "pyparsing>=3.1.0",
     "python-dateutil>=2.8.0",
     "PyYAML>=6.0.0",
     "redis>=3.5.0",
@@ -72,7 +80,7 @@ dependencies = [
     "werkzeug>=3.0.0",
 ]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Framework :: Flask",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
@@ -93,16 +101,13 @@ dioptra-db = "dioptra.restapi.db.alembic.run:cli"
 run-experiment = "dioptra.task_engine.run_experiment:main"
 validate-experiment = "dioptra.task_engine.validate:main"
 s3-download = "dioptra.worker.s3_download_cli:main"
-dioptra-worker = "dioptra.worker.dioptra_worker:main"
+dioptra-worker-v1 = "dioptra.worker.dioptra_worker_v1:main"
 
 [project.entry-points."dioptra.generics.estimator_predict"]
 tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"
 
 [project.entry-points."dioptra.generics.fit_estimator"]
 tf_keras_model = "dioptra.generics_plugins.fit_estimator.tf_keras_model"
-
-[project.entry-points."mlflow.project_backend"]
-dioptra = "dioptra.mlflow_plugins.dioptra_backend:DioptraProjectBackend"
 
 [project.optional-dependencies]
 cookiecutter = [
@@ -188,42 +193,43 @@ exclude = '''
 '''
 
 [tool.bumpver]
-current_version = "0.0.0"
-version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
+current_version = "1.0.0-dev"
+version_pattern = "MAJOR.MINOR.PATCH[-TAG]"
 commit_message = "release {old_version} → {new_version}"
 commit = true
 tag = true
 push = false
 
 [tool.bumpver.file_patterns]
+"README.md" = [
+    "Release {version}",
+]
 "pyproject.toml" = [
-    "{version}",
-]
-"version-vars.mk" = [
-    "CODE_PKG_VERSION = {version}"
-]
-".github/workflows/env/version-vars.env" = [
-    "CODE_PKG_VERSION={version}"
+    'current_version = "{version}"',
+    'version = "{pep440_version}"',
 ]
 "docs/source/conf.py" = [
-    'release = "{version}"'
+    'release = "{version}"',
 ]
-"src/dioptra/mlflow_plugins/__version__.py" = [
-    "{version}",
+"src/dioptra/client/__version__.py" = [
+    "{pep440_version}",
 ]
 "src/dioptra/pyplugs/__version__.py" = [
-    "{version}",
+    "{pep440_version}",
 ]
 "src/dioptra/restapi/__version__.py" = [
-    "{version}",
+    "{pep440_version}",
 ]
 "src/dioptra/rq/__version__.py" = [
-    "{version}",
+    "{pep440_version}",
+]
+"src/dioptra/sdk/__version__.py" = [
+    "{pep440_version}",
 ]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.0.0"
+version = "1.0.0dev0"
 changelog_file = "CHANGELOG.md"
 style = [
     ["qmark", "fg:#ff9d00 bold"],

@@ -29,8 +29,9 @@ from sqlite3 import Connection as SQLite3Connection
 from typing import Annotated, Any, Optional
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import JSON, BigInteger, Integer, MetaData, String, Text, event
+from sqlalchemy import JSON, BigInteger, Boolean, Integer, MetaData, String, Text, event
 from sqlalchemy.engine import Engine
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass, mapped_column
 
 from .custom_types import GUID, TZDateTime
@@ -50,10 +51,11 @@ optionaldatetimetz = Annotated[Optional[datetime.datetime], mapped_column(TZDate
 optionaljson_ = Annotated[Optional[dict[str, Any]], mapped_column(JSON)]
 optionalstr = Annotated[Optional[str], mapped_column(Text(), nullable=True)]
 optionalstr36 = Annotated[Optional[str], mapped_column(String(36), nullable=True)]
-json_ = Annotated[dict[str, Any], mapped_column(JSON)]
+json_ = Annotated[dict[str, Any], mapped_column(MutableDict.as_mutable(JSON))]
 str36 = Annotated[str, mapped_column(String(36))]
 str255 = Annotated[str, mapped_column(String(255))]
 text_ = Annotated[str, mapped_column(Text())]
+bool_ = Annotated[bool, mapped_column(Boolean())]
 
 _naming_convention = {
     "ix": "ix_%(column_0_label)s",

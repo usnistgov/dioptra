@@ -563,7 +563,6 @@ def test_user_get_all(
     assert_retrieving_users_works(client, expected=user_expected_list)
 
 
-@pytest.mark.v1_test
 def test_user_search_query(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -575,7 +574,7 @@ def test_user_search_query(
     Given an authenticated user and registered users, this test validates the following
     sequence of actions:
 
-    - The user is able to retrieve a list of all users that have "user" in the username.
+    - The user is able to retrieve a list of all users that match the query.
     - The returned list of users matches the expected matches from the query.
     """
     user_expected_list = [
@@ -585,6 +584,17 @@ def test_user_search_query(
     assert_retrieving_users_works(
         client, expected=user_expected_list, search="username:*user*"
     )
+    assert_retrieving_users_works(
+        client, expected=user_expected_list, search="username:'*user*'"
+    )
+    assert_retrieving_users_works(
+        client, expected=user_expected_list, search='username:"user?"'
+    )
+    assert_retrieving_users_works(
+        client, expected=user_expected_list, search="username:user?,email:user*"
+    )
+    assert_retrieving_users_works(client, expected=[], search=r"username:\*user*")
+    assert_retrieving_users_works(client, expected=[], search="email:user?")
 
 
 def test_cannot_register_existing_username(
@@ -659,7 +669,7 @@ def test_user_authorization_failure(
     Given an authenticated user, this test validates the following sequence of actions:
 
     - The current attempts to login with an incorrect password.
-    - The user can not log in.
+    - The user cannot log in.
     """
     username = registered_users["user2"]["username"]
     password = registered_users["user2"]["password"] + "incorrect"

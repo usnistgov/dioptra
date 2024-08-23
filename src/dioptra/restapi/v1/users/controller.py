@@ -17,6 +17,7 @@
 """The module defining the endpoints for User resources."""
 import uuid
 from typing import Any, cast
+from urllib.parse import unquote
 
 import structlog
 from flask import request
@@ -70,7 +71,7 @@ class UserEndpoint(Resource):
         )
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
-        search_string = parsed_query_params["search"]
+        search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
 
@@ -85,6 +86,8 @@ class UserEndpoint(Resource):
             build_fn=utils.build_user,
             data=users,
             query=search_string,
+            draft_type=None,
+            group_id=None,
             index=page_index,
             length=page_length,
             total_num_elements=total_num_users,

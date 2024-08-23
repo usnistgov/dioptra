@@ -27,6 +27,9 @@ from dioptra.restapi.v1.schemas import (
 )
 
 ExperimentRefBaseSchema = generate_base_resource_ref_schema("Experiment")
+ExperimentSnapshotRefBaseSchema = generate_base_resource_ref_schema(
+    "Experiment", keep_snapshot_id=True
+)
 
 
 class ExperimentRefSchema(ExperimentRefBaseSchema):  # type: ignore
@@ -38,26 +41,38 @@ class ExperimentRefSchema(ExperimentRefBaseSchema):  # type: ignore
     )
 
 
+class ExperimentSnapshotRefSchema(ExperimentSnapshotRefBaseSchema):  # type: ignore
+    """The snapshot reference schema for the data stored in a Experiment resource."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Experiment resource."),
+    )
+
+
 class ExperimentMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Experiment resource."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Experiment resource.")
+        attribute="name",
+        metadata=dict(description="Name of the Experiment resource."),
+        required=True,
     )
     description = fields.String(
         attribute="description",
         metadata=dict(description="Description of the Experiment resource."),
+        load_default=None,
     )
     entrypointIds = fields.List(
         fields.Int(),
         attribute="entrypoint_ids",
         data_key="entrypoints",
         allow_none=True,
-        load_default=None,
         metadata=dict(
             description="A list of Entrypoint IDs.",
         ),
         load_only=True,
+        load_default=list(),
     )
 
 
@@ -68,19 +83,7 @@ class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # 
     """The schema for the data stored in a Experiment resource."""
 
     from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
-    from dioptra.restapi.v1.jobs.schema import JobRefSchema
 
-    tagIds = fields.List(
-        fields.Int(),
-        attribute="tag_ids",
-        data_key="tags",
-        allow_none=True,
-        load_default=None,
-        metadata=dict(
-            description="A list of Tag IDs.",
-        ),
-        load_only=True,
-    )
     entrypoints = fields.Nested(
         EntrypointRefSchema,
         attribute="entrypoints",
@@ -88,12 +91,18 @@ class ExperimentSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # 
         metadata=dict(description="List of associated Entrypoint resources."),
         dump_only=True,
     )
-    jobs = fields.Nested(
-        JobRefSchema,
-        attribute="jobs",
-        many=True,
-        metadata=dict(description="List of associated Jobs resources."),
-        dump_only=True,
+
+
+class ExperimentDraftSchema(ExperimentMutableFieldsSchema, ExperimentBaseSchema):  # type: ignore
+    entrypointIds = fields.List(
+        fields.Int(),
+        attribute="entrypoint_ids",
+        data_key="entrypoints",
+        allow_none=True,
+        metadata=dict(
+            description="A list of Entrypoint IDs.",
+        ),
+        load_default=list(),
     )
 
 

@@ -28,9 +28,14 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError, SearchNotImplementedError
-from dioptra.restapi.v0.shared.password.service import PasswordService
+from dioptra.restapi.db.models.constants import user_lock_types
+from dioptra.restapi.errors import BackendDatabaseError
 from dioptra.restapi.v1.groups.service import GroupMemberService, GroupNameService
+from dioptra.restapi.v1.plugin_parameter_types.service import (
+    BuiltinPluginParameterTypeService,
+)
+from dioptra.restapi.v1.shared.password_service import PasswordService
+from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 from .errors import (
     NoCurrentUserError,
@@ -54,6 +59,10 @@ DEFAULT_GROUP_PERMISSIONS: Final[dict[str, Any]] = {
     "share_write": False,
 }
 DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
+SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+    "username": lambda x: models.User.username.like(x, escape="/"),
+    "email": lambda x: models.User.email_address.like(x, escape="/"),
+}
 
 
 class UserService(object):
@@ -66,6 +75,7 @@ class UserService(object):
         user_name_service: UserNameService,
         group_name_service: GroupNameService,
         group_member_service: GroupMemberService,
+        builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
     ) -> None:
         """Initialize the user service.
 
@@ -76,11 +86,16 @@ class UserService(object):
             user_name_service: A UserNameService object.
             group_name_service: A GroupNameService object.
             group_member_service: A GroupMemberService object.
+            builtin_plugin_parameter_type_service: A BuiltinPluginParameterTypeService
+                object.
         """
         self._user_password_service = user_password_service
         self._user_name_service = user_name_service
         self._group_name_service = group_name_service
         self._group_member_service = group_member_service
+        self._builtin_plugin_parameter_type_service = (
+            builtin_plugin_parameter_type_service
+        )
 
     def create(
         self,
@@ -171,18 +186,19 @@ class UserService(object):
             the query.
 
         Raises:
-            SearchNotImplementedError: If a search string is provided.
             BackendDatabaseError: If the database query returns a None when counting
                 the number of users.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get list of users")
 
-        if search_string:
-            log.debug("Searching is not implemented", search_string=search_string)
-            raise SearchNotImplementedError
+        search_filters = construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
 
-        stmt = select(func.count(models.User.user_id)).filter_by(is_deleted=False)
+        stmt = (
+            select(func.count(models.User.user_id))
+            .filter_by(is_deleted=False)
+            .filter(search_filters)
+        )
         total_num_users = db.session.scalars(stmt).first()
 
         if total_num_users is None:
@@ -199,6 +215,7 @@ class UserService(object):
         stmt = (
             select(models.User)  # type: ignore
             .filter_by(is_deleted=False)
+            .filter(search_filters)
             .offset(page_index)
             .limit(page_length)
         )
@@ -261,7 +278,12 @@ class UserService(object):
         ) is not None:
             return group
 
-        return models.Group(name=DEFAULT_GROUP_NAME, creator=user)
+        default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user)
+        # Register the built-in plugin parameter types when creating a new group.
+        self._builtin_plugin_parameter_type_service.create_all(
+            user=user, group=default_group, commit=False
+        )
+        return default_group
 
 
 class UserIdService(object):
@@ -357,7 +379,7 @@ class UserCurrentService(object):
         user_id_service: UserIdService,
         user_password_service: UserPasswordService,
     ) -> None:
-        """Initialize the current current user service.
+        """Initialize the current user service.
 
         All arguments are provided via dependency injection.
 
@@ -431,17 +453,18 @@ class UserCurrentService(object):
             log=log,
         )
 
+        user_id = current_user.user_id
         username = current_user.username
 
         deleted_user_lock = models.UserLock(
-            user_lock_type="delete",
+            user_lock_type=user_lock_types.DELETE,
             user=current_user,
         )
         db.session.add(deleted_user_lock)
         db.session.commit()
-        log.debug("User account deleted", user_id=current_user.user_id)
+        log.debug("User account deleted", user_id=user_id, username=username)
 
-        return {"status": "Success", "username": username}
+        return {"status": "Success", "id": [user_id]}
 
     def change_password(
         self,

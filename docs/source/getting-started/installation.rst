@@ -37,7 +37,7 @@ The minimum requirements for installing the ``dioptra`` Python package on your h
 
 - CPU: An x86-64 processor
 - RAM: 4GB or higher
-- Operating System: Windows 10, MacOS 10.14 or newer, Linux (Ubuntu 20.04 LTS recommended)
+- Operating System: Windows 10, macOS 10.14 or newer, Linux (Ubuntu 20.04 LTS recommended)
 - Python 3.7 or above (3.7 and 3.8 are actively tested)
 
 .. _quickstart-create-environment:
@@ -57,7 +57,7 @@ There are two install options to start using `Conda Environments <https://docs.c
       The following links will provide an installation package for version 2020.11 of `Anaconda <https://docs.anaconda.com/>`_ on your host machine (must meet all :ref:`quickstart-system-requirements`).
 
       - `Anaconda for Windows <https://repo.anaconda.com/archive/Anaconda3-2020.11-Windows-x86_64.exe>`_
-      - `Anaconda for MacOS <https://repo.anaconda.com/archive/Anaconda3-2020.11-MacOSX-x86_64.pkg>`_
+      - `Anaconda for macOS <https://repo.anaconda.com/archive/Anaconda3-2020.11-macOSX-x86_64.pkg>`_
       - `Anaconda for Linux <https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh>`_
 
       If your host machine does not meet the :ref:`quickstart-system-requirements`, then go to the `Anaconda Installation Documents <https://docs.anaconda.com/anaconda/install/>`_ for more help.
@@ -67,7 +67,7 @@ There are two install options to start using `Conda Environments <https://docs.c
       The following links will provide an installation package for the latest version of `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`_ on your host machine (must meet all :ref:`quickstart-system-requirements`).
 
       - `Miniconda for Windows <https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe>`_
-      - `Miniconda for MacOS <https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.pkg>`_
+      - `Miniconda for macOS <https://repo.anaconda.com/miniconda/Miniconda3-latest-macOSX-x86_64.pkg>`_
       - `Miniconda for Linux <https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh>`_
 
       If your host machine does not meet the :ref:`quickstart-system-requirements`, then go to the `Miniconda Installation Documents <https://docs.conda.io/en/latest/miniconda.html>`_ for more help.
@@ -82,9 +82,9 @@ The minimum requirements for test-driving the Testbed architecture locally on yo
 
 - CPU: Intel or AMD-based x86-64 processor with 4+ physical cores at 1.90GHz or higher (recommended)
 - RAM: 16GB or higher (recommended)
-- Operating System: Windows 10, MacOS 10.14 or newer, Linux (Ubuntu 20.04 LTS recommended)
+- Operating System: Windows 10, macOS 10.14 or newer, Linux (Ubuntu 20.04 LTS recommended)
 - GNU/Linux-compatible environment, see :ref:`quickstart-gnu-linux-environment`
-- Docker Desktop 3.1.0 or later (Windows/MacOS)
+- Docker Desktop 3.1.0 or later (Windows/macOS)
 
 .. _quickstart-gnu-linux-environment:
 
@@ -94,14 +94,14 @@ GNU/Linux Environments
 A host device that uses a GNU/Linux environment can be the following:
 
 - Most Linux distributions
-- MacOS/OS X with Homebrew_
+- macOS/OS X with Homebrew_
 - Windows with the `Windows Subsystem for Linux`_
 - A virtual machine running a Linux distribution
 
 .. note::
 
    Dioptra was developed for use with native GNU/Linux environments.
-   When using MacOS/OS X or Windows there is a chance you will encounter errors that are specific to your system's setup that are not covered in this documentation.
+   When using macOS/OS X or Windows there is a chance you will encounter errors that are specific to your system's setup that are not covered in this documentation.
    To resolve such issues, first look at the external documentation linked (i.e. Homebrew_ and `Windows Subsystem for Linux`_) before submitting a bug report.
    Also, when using a virtual machine it is likely the performance can be throttled because of the CPU and Memory allocations set at the time the virtual machine was configured.
    If performance becomes an issue when using a virtual machine, consider increasing the CPU and Memory resources allocated to the machine.
@@ -121,7 +121,7 @@ To clone the repository, open a new **Terminal** session for your operating syst
 
       Use the keyboard shortcut :kbd:`ctrl` + :kbd:`alt` + :kbd:`t` to open the **Terminal**.
 
-   .. tab-item:: MacOS
+   .. tab-item:: macOS
 
       Use the keyboard shortcut :kbd:`command` + :kbd:`space` to open the **Spotlight Search**, type ``Terminal`` into the search bar, and click the *Terminal* application under *Top Hit* at the top of your results.
 
@@ -138,10 +138,10 @@ Next, navigate to the directory where you will clone the repository,
 
 .. attention::
 
-   Windows Subsystem for Linux (WSL) and MacOS users may encounter performance and file permission issues depending on the directory where the repository is cloned.
+   Windows Subsystem for Linux (WSL) and macOS users may encounter performance and file permission issues depending on the directory where the repository is cloned.
    This problem is due to the way that Docker is implemented on these operating systems.
-   For WSL users, these issues may occur if you clone the repository within any folder on the Windows filesystem under ``/mnt/c``, while for MacOS users it may occur if the repository is cloned within the ``Downloads`` or ``Documents`` directory.
-   For this reason, WSL and MacOS users are both encouraged to create and clone the repository into a projects directory in their home directory,
+   For WSL users, these issues may occur if you clone the repository within any folder on the Windows filesystem under ``/mnt/c``, while for macOS users it may occur if the repository is cloned within the ``Downloads`` or ``Documents`` directory.
+   For this reason, WSL and macOS users are both encouraged to create and clone the repository into a projects directory in their home directory,
 
    .. code-block:: sh
 

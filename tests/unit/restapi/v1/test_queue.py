@@ -20,17 +20,15 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
-
 from typing import Any
 
-import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_QUEUES_ROUTE, V1_ROOT
+from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE, V1_QUEUES_ROUTE, V1_ROOT
 
-from ..lib import actions, helpers
+from ..lib import actions, asserts, helpers
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -106,6 +104,7 @@ def assert_queue_response_contents_matches_expectations(
         "createdOn",
         "lastModifiedOn",
         "latestSnapshot",
+        "hasDraft",
         "name",
         "description",
         "tags",
@@ -120,6 +119,7 @@ def assert_queue_response_contents_matches_expectations(
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
+    assert isinstance(response["hasDraft"], bool)
 
     assert response["name"] == expected_contents["name"]
     assert response["description"] == expected_contents["description"]
@@ -191,8 +191,8 @@ def assert_retrieving_queues_works(
 
     query_string: dict[str, Any] = {}
 
-    # if group_id is not None:
-    query_string["group_id"] = group_id
+    if group_id is not None:
+        query_string["groupId"] = group_id
 
     if search is not None:
         query_string["search"] = search
@@ -266,6 +266,32 @@ def assert_queue_is_not_found(
         follow_redirects=True,
     )
     assert response.status_code == 404
+
+
+def assert_queue_is_not_associated_with_entrypoint(
+    client: FlaskClient,
+    entrypoint_id: int,
+    queue_id: int,
+) -> None:
+    """Assert that a queue is associated with an entrypoint
+
+    Args:
+        client: The Flask test client.
+        entrypoint_id: The id of the entrypoint to retrieve.
+        queue_id: The id of the queue to check for association.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the queue id
+            is in the list of queues associated with the entrypoint.
+    """
+    response = client.get(
+        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}",
+        follow_redirects=True,
+    )
+    entrypoint = response.get_json()
+    queue_ids = set(queue["id"] for queue in entrypoint["queues"])
+
+    assert response.status_code == 200 and queue_id not in queue_ids
 
 
 def assert_cannot_rename_queue_with_existing_name(
@@ -350,7 +376,6 @@ def test_queue_get_all(
     assert_retrieving_queues_works(client, expected=queue_expected_list)
 
 
-@pytest.mark.v1_test
 def test_queue_search_query(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -362,16 +387,18 @@ def test_queue_search_query(
     Given an authenticated user and registered queues, this test validates the following
     sequence of actions:
 
-    - The user is able to retrieve a list of all registered queues with a description
-      that contains 'queue'.
+    - The user is able to retrieve a list of all registered queues with various queries.
     - The returned list of queues matches the expected matches from the query.
     """
     queue_expected_list = list(registered_queues.values())[:2]
     assert_retrieving_queues_works(
-        client,
-        expected=queue_expected_list,
-        search="description:*queue*",
+        client, expected=queue_expected_list, search="description:*queue*"
     )
+    assert_retrieving_queues_works(
+        client, expected=queue_expected_list, search="*queue*, name:tensorflow*"
+    )
+    queue_expected_list = list(registered_queues.values())
+    assert_retrieving_queues_works(client, expected=queue_expected_list, search="*")
 
 
 def test_queue_group_query(
@@ -484,6 +511,7 @@ def test_delete_queue_by_id(
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
 ) -> None:
     """Test that a queue can be deleted by referencing its id.
 
@@ -493,8 +521,307 @@ def test_delete_queue_by_id(
     - The user deletes a queue by referencing its id.
     - The user attempts to retrieve information about the deleted queue.
     - The request fails with an appropriate error message and response code.
+    - The queue is no longer associated with the entrypoint.
     """
-    queue_to_delete = registered_queues["queue1"]
+    entrypoint = registered_entrypoints["entrypoint1"]
+    queue_to_delete = entrypoint["queues"][0]
 
     delete_queue_with_id(client, queue_id=queue_to_delete["id"])
     assert_queue_is_not_found(client, queue_id=queue_to_delete["id"])
+    assert_queue_is_not_associated_with_entrypoint(
+        client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
+    )
+
+
+def test_manage_existing_queue_draft(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    """Test that a draft of an existing queue can be created and managed by the user
+
+    Given an authenticated user and registered queues, this test validates the following
+    sequence of actions:
+
+    - The user creates a draft of an existing queue
+    - The user retrieves information about the draft and gets the expected response
+    - The user attempts to create another draft of the same existing queue
+    - The request fails with an appropriate error message and response code.
+    - The user modifies the name of the queue in the draft
+    - The user retrieves information about the draft and gets the expected response
+    - The user deletes the draft
+    - The user attempts to retrieve information about the deleted draft.
+    - The request fails with an appropriate error message and response code.
+    """
+    queue = registered_queues["queue1"]
+    name = "draft"
+    new_name = "draft2"
+    description = "description"
+
+    # test creation
+    payload = {"name": name, "description": description}
+    expected = {
+        "user_id": auth_account["id"],
+        "group_id": queue["group"]["id"],
+        "resource_id": queue["id"],
+        "resource_snapshot_id": queue["snapshot"],
+        "num_other_drafts": 0,
+        "payload": payload,
+    }
+    response = actions.create_existing_resource_draft(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"], payload=payload
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+    asserts.assert_retrieving_draft_by_resource_id_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue["id"],
+        expected=response,
+    )
+    asserts.assert_creating_another_existing_draft_fails(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+
+    # test modification
+    payload = {"name": new_name, "description": description}
+    expected = {
+        "user_id": auth_account["id"],
+        "group_id": queue["group"]["id"],
+        "resource_id": queue["id"],
+        "resource_snapshot_id": queue["snapshot"],
+        "num_other_drafts": 0,
+        "payload": payload,
+    }
+    response = actions.modify_existing_resource_draft(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue["id"],
+        payload=payload,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(response, expected)
+
+    # test deletion
+    actions.delete_existing_resource_draft(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+    asserts.assert_existing_draft_is_not_found(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+
+
+def test_manage_new_queue_drafts(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    """Test that drafts of queue can be created and managed by the user
+
+    Given an authenticated user, this test validates the following sequence of actions:
+
+    - The user creates two queue drafts
+    - The user retrieves information about the drafts and gets the expected response
+    - The user modifies the description of the queue in the first draft
+    - The user retrieves information about the draft and gets the expected response
+    - The user deletes the first draft
+    - The user attempts to retrieve information about the deleted draft.
+    - The request fails with an appropriate error message and response code.
+    """
+    group_id = auth_account["groups"][0]["id"]
+    drafts = {
+        "draft1": {"name": "queue1", "description": "new queue"},
+        "draft2": {"name": "queue2", "description": None},
+    }
+
+    # test creation
+    draft1_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": drafts["draft1"],
+    }
+    draft1_response = actions.create_new_resource_draft(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        group_id=group_id,
+        payload=drafts["draft1"],
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        draft1_response, draft1_expected
+    )
+    asserts.assert_retrieving_draft_by_id_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        draft_id=draft1_response["id"],
+        expected=draft1_response,
+    )
+    draft2_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": drafts["draft2"],
+    }
+    draft2_response = actions.create_new_resource_draft(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        group_id=group_id,
+        payload=drafts["draft2"],
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        draft2_response, draft2_expected
+    )
+    asserts.assert_retrieving_draft_by_id_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        draft_id=draft2_response["id"],
+        expected=draft2_response,
+    )
+    asserts.assert_retrieving_drafts_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        expected=[draft1_response, draft2_response],
+    )
+
+    # test modification
+    draft1_mod = {"name": "draft1", "description": "new description"}
+    draft1_mod_expected = {
+        "user_id": auth_account["id"],
+        "group_id": group_id,
+        "payload": draft1_mod,
+    }
+    response = actions.modify_new_resource_draft(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        draft_id=draft1_response["id"],
+        payload=draft1_mod,
+    ).get_json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        response, draft1_mod_expected
+    )
+
+    # test deletion
+    actions.delete_new_resource_draft(
+        client, resource_route=V1_QUEUES_ROUTE, draft_id=draft1_response["id"]
+    )
+    asserts.assert_new_draft_is_not_found(
+        client, resource_route=V1_QUEUES_ROUTE, draft_id=draft1_response["id"]
+    )
+
+
+def test_manage_queue_snapshots(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    """Test that different snapshots of a queue can be retrieved by the user.
+
+    Given an authenticated user and registered queues, this test validates the following
+    sequence of actions:
+
+    - The user modifies a queue
+    - The user retrieves information about the original snapshot of the queue and gets
+      the expected response
+    - The user retrieves information about the new snapshot of the queue and gets the
+      expected response
+    - The user retrieves a list of all snapshots of the queue and gets the expected
+      response
+    """
+    queue_to_rename = registered_queues["queue1"]
+    modified_queue = modify_queue(
+        client,
+        queue_id=queue_to_rename["id"],
+        new_name=queue_to_rename["name"] + "modified",
+        new_description=queue_to_rename["description"],
+    ).get_json()
+    modified_queue.pop("hasDraft")
+    queue_to_rename.pop("hasDraft")
+    queue_to_rename["latestSnapshot"] = False
+    queue_to_rename["lastModifiedOn"] = modified_queue["lastModifiedOn"]
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue_to_rename["id"],
+        snapshot_id=queue_to_rename["snapshot"],
+        expected=queue_to_rename,
+    )
+    asserts.assert_retrieving_snapshot_by_id_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=modified_queue["id"],
+        snapshot_id=modified_queue["snapshot"],
+        expected=modified_queue,
+    )
+    expected_snapshots = [queue_to_rename, modified_queue]
+    asserts.assert_retrieving_snapshots_works(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue_to_rename["id"],
+        expected=expected_snapshots,
+    )
+
+
+def test_tag_queue(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_tags: dict[str, Any],
+) -> None:
+    """Test that tags can applied to queues.
+
+    Given an authenticated user and registered queues, this test validates the following
+    sequence of actions:
+
+    """
+    queue = registered_queues["queue1"]
+    tags = [tag["id"] for tag in registered_tags.values()]
+
+    # test append
+    response = actions.append_tags(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue["id"],
+        tag_ids=[tags[0], tags[1]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[1]]
+    )
+    response = actions.append_tags(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue["id"],
+        tag_ids=[tags[1], tags[2]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[1], tags[2]]
+    )
+
+    # test remove
+    actions.remove_tag(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"], tag_id=tags[1]
+    )
+    response = actions.get_tags(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[0], tags[2]]
+    )
+
+    # test modify
+    response = actions.modify_tags(
+        client,
+        resource_route=V1_QUEUES_ROUTE,
+        resource_id=queue["id"],
+        tag_ids=[tags[1], tags[2]],
+    )
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.get_json(), [tags[1], tags[2]]
+    )
+
+    # test delete
+    response = actions.remove_tags(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+    response = actions.get_tags(
+        client, resource_route=V1_QUEUES_ROUTE, resource_id=queue["id"]
+    )
+    asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])

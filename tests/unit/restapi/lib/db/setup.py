@@ -19,7 +19,7 @@ from typing import Final
 from sqlalchemy import insert
 from sqlalchemy.orm import Session
 
-from dioptra.restapi.db import legacy_models, models
+from dioptra.restapi.db import models
 
 ENTRY_POINT_PARAMETER_TYPES: Final[list[dict[str, str]]] = [
     {"parameter_type": "string"},
@@ -42,6 +42,7 @@ GROUP_LOCK_TYPES: Final[list[dict[str, str]]] = [
 ]
 RESOURCE_LOCK_TYPES: Final[list[dict[str, str]]] = [
     {"resource_lock_type": "delete"},
+    {"resource_lock_type": "readonly"},
 ]
 RESOURCE_TYPES: Final[list[dict[str, str]]] = [
     {"resource_type": "artifact"},
@@ -54,6 +55,7 @@ RESOURCE_TYPES: Final[list[dict[str, str]]] = [
     {"resource_type": "plugin_task_parameter_type"},
     {"resource_type": "queue"},
     {"resource_type": "resource_snapshot"},
+    {"resource_type": "ml_model_version"},
 ]
 RESOURCE_DEPENDENCY_TYPES: Final[list[dict[str, str]]] = [
     {"parent_resource_type": "experiment", "child_resource_type": "entry_point"},
@@ -62,13 +64,7 @@ RESOURCE_DEPENDENCY_TYPES: Final[list[dict[str, str]]] = [
     {"parent_resource_type": "plugin", "child_resource_type": "plugin_file"},
     {"parent_resource_type": "job", "child_resource_type": "artifact"},
     {"parent_resource_type": "job", "child_resource_type": "job"},
-]
-LEGACY_JOB_STATUS_TYPES: Final[list[dict[str, str]]] = [
-    {"status": "queued"},
-    {"status": "started"},
-    {"status": "deferred"},
-    {"status": "finished"},
-    {"status": "failed"},
+    {"parent_resource_type": "ml_model", "child_resource_type": "ml_model_version"},
 ]
 
 
@@ -90,7 +86,6 @@ def setup_ontology(session: Session) -> None:
         insert(models.resource_dependency_types_table).values(
             RESOURCE_DEPENDENCY_TYPES
         ),
-        insert(legacy_models.legacy_job_statuses).values(LEGACY_JOB_STATUS_TYPES),
     ]
 
     for stmt in stmts:

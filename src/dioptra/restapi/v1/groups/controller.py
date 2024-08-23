@@ -17,6 +17,7 @@
 """The module defining the endpoints for Group resources."""
 import uuid
 from typing import cast
+from urllib.parse import unquote
 
 import structlog
 from flask import request
@@ -69,7 +70,7 @@ class GroupEndpoint(Resource):
         )
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
-        search_string = parsed_query_params["search"]
+        search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
 
@@ -83,7 +84,9 @@ class GroupEndpoint(Resource):
             "groups",
             build_fn=utils.build_group,
             data=groups,
+            group_id=None,
             query=search_string,
+            draft_type=None,
             index=page_index,
             length=page_length,
             total_num_elements=total_num_groups,
@@ -99,10 +102,7 @@ class GroupEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # noqa: F841
 
-        group = self._group_service.create(
-            name=str(parsed_obj["name"]),
-            log=log,
-        )
+        group = self._group_service.create(name=parsed_obj["name"], log=log)
         return utils.build_group(group)
 
 
@@ -155,7 +155,7 @@ class GroupIdEndpoint(Resource):
         group = cast(
             models.Group,
             self._group_id_service.modify(
-                id, name=str(parsed_obj["name"]), error_if_not_found=True, log=log
+                id, name=parsed_obj["name"], error_if_not_found=True, log=log
             ),
         )
         return utils.build_group(group)
@@ -194,7 +194,7 @@ class GroupIdMembersEndpoint(Resource):
     @accepts(schema=GroupMemberSchema(many=True), api=api)
     @responds(schema=GroupMemberSchema(many=True), api=api)
     def put(self, id: int):
-        """Modifies all Group Members' permisssions."""
+        """Modifies all Group Members' permissions."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="GroupMember",

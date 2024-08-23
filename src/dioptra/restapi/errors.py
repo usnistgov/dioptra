@@ -31,7 +31,23 @@ class SearchNotImplementedError(Exception):
     """The search functionality has not been implemented."""
 
 
-def register_base_v1_error_handlers(api: Api) -> None:
+class SearchParseError(Exception):
+    """The search query could not be parsed."""
+
+
+class ResourceDoesNotExistError(Exception):
+    """The resource does not exist."""
+
+
+class DraftDoesNotExistError(Exception):
+    """The requested draft does not exist."""
+
+
+class DraftAlreadyExistsError(Exception):
+    """The draft already exists."""
+
+
+def register_base_error_handlers(api: Api) -> None:
     @api.errorhandler(BackendDatabaseError)
     def handle_backend_database_error(error):
         return {
@@ -40,48 +56,34 @@ def register_base_v1_error_handlers(api: Api) -> None:
         }, 500
 
     @api.errorhandler(SearchNotImplementedError)
-    def handle_no_current_user_error(error):
+    def handle_search_not_implemented_error(error):
         return {"message": "The search functionality has not been implemented"}, 501
 
+    @api.errorhandler(SearchParseError)
+    def handle_search_parse_error(error):
+        return {
+            "message": "The provided search query could not be parsed",
+            "query": error.args[0],
+            "reason": error.args[1],
+        }, 422
 
-def register_error_handlers(api: Api, restapi_version: str) -> None:
-    """Registers the error handlers with the main application.
+    @api.errorhandler(ResourceDoesNotExistError)
+    def handle_resource_does_not_exist(error):
+        return {"message": "Not Found - The requested resource does not exist"}, 404
 
-    Args:
-        api: The main REST |Api| object.
-    """
-    if restapi_version == "v0":
-        register_v0_error_handlers(api)
+    @api.errorhandler(DraftDoesNotExistError)
+    def handle_draft_does_not_exist(error):
+        return {"message": "Not Found - The requested draft does not exist"}, 404
 
-    elif restapi_version == "v1":
-        register_v1_error_handlers(api)
-
-
-def register_v0_error_handlers(api: Api) -> None:
-    """Registers the error handlers with the main application.
-
-    Args:
-        api: The main REST |Api| object.
-    """
-    from .v0.experiment import (
-        register_error_handlers as attach_experiment_error_handlers,
-    )
-    from .v0.job import register_error_handlers as attach_job_error_handlers
-    from .v0.queue import register_error_handlers as attach_job_queue_error_handlers
-    from .v0.task_plugin import (
-        register_error_handlers as attach_task_plugin_error_handlers,
-    )
-    from .v0.user import register_error_handlers as attach_user_error_handlers
-
-    # Add error handlers
-    attach_experiment_error_handlers(api)
-    attach_job_error_handlers(api)
-    attach_job_queue_error_handlers(api)
-    attach_task_plugin_error_handlers(api)
-    attach_user_error_handlers(api)
+    @api.errorhandler(DraftAlreadyExistsError)
+    def handle_draft_already_exists(error):
+        return (
+            {"message": "Bad Request - The draft for this resource already exists."},
+            400,
+        )
 
 
-def register_v1_error_handlers(api: Api) -> None:
+def register_error_handlers(api: Api) -> None:
     """Registers the error handlers with the main application.
 
     Args:
@@ -90,7 +92,15 @@ def register_v1_error_handlers(api: Api) -> None:
 
     from dioptra.restapi import v1
 
-    register_base_v1_error_handlers(api)
+    register_base_error_handlers(api)
+    v1.artifacts.errors.register_error_handlers(api)
+    v1.entrypoints.errors.register_error_handlers(api)
+    v1.experiments.errors.register_error_handlers(api)
     v1.groups.errors.register_error_handlers(api)
+    v1.jobs.errors.register_error_handlers(api)
+    v1.models.errors.register_error_handlers(api)
+    v1.plugin_parameter_types.errors.register_error_handlers(api)
+    v1.plugins.errors.register_error_handlers(api)
     v1.queues.errors.register_error_handlers(api)
+    v1.tags.errors.register_error_handlers(api)
     v1.users.errors.register_error_handlers(api)

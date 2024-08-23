@@ -14,12 +14,20 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index, and_, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
-from dioptra.restapi.db.db import bigint, db, intpk, optionaljson_, optionalstr, text_
+from dioptra.restapi.db.db import (
+    bigint,
+    bool_,
+    db,
+    intpk,
+    optionaljson_,
+    optionalstr,
+    text_,
+)
 
-from .resources import ResourceSnapshot
+from .resources import Resource, ResourceSnapshot, resource_dependencies_table
 
 # -- ORM Classes -----------------------------------------------------------------------
 
@@ -57,8 +65,26 @@ class PluginFile(ResourceSnapshot):
     filename: Mapped[text_] = mapped_column(nullable=False, index=True)
     contents: Mapped[optionalstr]
 
+    # Derived fields (read-only)
+    plugin_id: Mapped[bigint] = column_property(
+        select(Resource.resource_id)
+        .join(
+            resource_dependencies_table,
+            and_(
+                Resource.resource_id
+                == resource_dependencies_table.c.parent_resource_id,
+                resource_dependencies_table.c.child_resource_id == resource_id,
+            ),
+        )
+        .limit(1)
+        .correlate_except(Resource)
+        .scalar_subquery()
+    )
+
     # Relationships
-    tasks: Mapped[list["PluginTask"]] = relationship(init=False, back_populates="file")
+    tasks: Mapped[list["PluginTask"]] = relationship(
+        init=False, back_populates="file", lazy="joined"
+    )
 
     # Additional settings
     __table_args__ = (  # type: ignore[assignment]
@@ -88,10 +114,10 @@ class PluginTask(db.Model):  # type: ignore[name-defined]
     # Relationships
     file: Mapped["PluginFile"] = relationship(back_populates="tasks")
     input_parameters: Mapped[list["PluginTaskInputParameter"]] = relationship(
-        back_populates="task"
+        back_populates="task", lazy="joined"
     )
     output_parameters: Mapped[list["PluginTaskOutputParameter"]] = relationship(
-        back_populates="task"
+        back_populates="task", lazy="joined"
     )
 
 
@@ -141,20 +167,25 @@ class PluginTaskInputParameter(db.Model):  # type: ignore[name-defined]
         nullable=False,
         index=True,
     )
-    name: Mapped[text_] = mapped_column(nullable=False)
+    name: Mapped[text_] = mapped_column(nullable=False, primary_key=True)
+    required: Mapped[bool_] = mapped_column(nullable=False)
 
     # Relationships
     task: Mapped["PluginTask"] = relationship(
         init=False, back_populates="input_parameters"
     )
     parameter_type: Mapped["PluginTaskParameterType"] = relationship(
-        back_populates="input_parameters"
+        back_populates="input_parameters", lazy="joined"
     )
 
     # Additional settings
     __table_args__ = (
         Index(
-            None, "plugin_file_resource_snapshot_id", "plugin_task_name", unique=True
+            None,
+            "plugin_file_resource_snapshot_id",
+            "plugin_task_name",
+            "name",
+            unique=True,
         ),
         ForeignKeyConstraint(
             ["plugin_file_resource_snapshot_id", "plugin_task_name"],
@@ -179,20 +210,24 @@ class PluginTaskOutputParameter(db.Model):  # type: ignore[name-defined]
         nullable=False,
         index=True,
     )
-    name: Mapped[text_] = mapped_column(nullable=False)
+    name: Mapped[text_] = mapped_column(nullable=False, primary_key=True)
 
     # Relationships
     task: Mapped["PluginTask"] = relationship(
         init=False, back_populates="output_parameters"
     )
     parameter_type: Mapped["PluginTaskParameterType"] = relationship(
-        back_populates="output_parameters"
+        back_populates="output_parameters", lazy="joined"
     )
 
     # Additional settings
     __table_args__ = (
         Index(
-            None, "plugin_file_resource_snapshot_id", "plugin_task_name", unique=True
+            None,
+            "plugin_file_resource_snapshot_id",
+            "plugin_task_name",
+            "name",
+            unique=True,
         ),
         ForeignKeyConstraint(
             ["plugin_file_resource_snapshot_id", "plugin_task_name"],

@@ -27,6 +27,9 @@ from dioptra.restapi.v1.schemas import (
 )
 
 QueueRefBaseSchema = generate_base_resource_ref_schema("Queue")
+QueueSnapshotRefBaseSchema = generate_base_resource_ref_schema(
+    "Queue", keep_snapshot_id=True
+)
 
 
 class QueueRefSchema(QueueRefBaseSchema):  # type: ignore
@@ -38,15 +41,27 @@ class QueueRefSchema(QueueRefBaseSchema):  # type: ignore
     )
 
 
+class QueueSnapshotRefSchema(QueueSnapshotRefBaseSchema):  # type: ignore
+    """The snapshot reference schema for the data stored in a Queue resource."""
+
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="Name of the Queue resource."),
+    )
+
+
 class QueueMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Queue resource."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Queue resource.")
+        attribute="name",
+        metadata=dict(description="Name of the Queue resource."),
+        required=True,
     )
     description = fields.String(
         attribute="description",
         metadata=dict(description="Description of the Queue resource."),
+        load_default=None,
     )
 
 

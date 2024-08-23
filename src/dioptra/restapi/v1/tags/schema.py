@@ -41,6 +41,11 @@ class TagRefSchema(Schema):
     name = fields.String(
         attribute="name", metadata=dict(description="Name of the Tag.")
     )
+    group = fields.Nested(
+        GroupRefSchema,
+        attribute="group",
+        metadata=dict(description="Owner of the Tag."),
+    )
     url = fields.Url(
         attribute="url",
         metadata=dict(description="URL for accessing the full Tag."),
@@ -49,10 +54,10 @@ class TagRefSchema(Schema):
 
 
 class TagMutableFieldsSchema(Schema):
-    """The fields schema for the mutable data in a Queue resource."""
+    """The fields schema for the mutable data in a Tag resource."""
 
     name = fields.String(
-        attribute="name", metadata=dict(description="Name of the Queue resource.")
+        attribute="name", metadata=dict(description="Name of the Tag resource.")
     )
 
 
@@ -63,6 +68,12 @@ class TagBaseSchema(Schema):
         attribute="id",
         metadata=dict(description="ID for the Tag."),
         dump_only=True,
+    )
+    groupId = fields.Integer(
+        attribute="group_id",
+        data_key="group",
+        metadata=dict(description="Group that owns the Tag."),
+        load_only=True,
     )
     group = fields.Nested(
         GroupRefSchema,

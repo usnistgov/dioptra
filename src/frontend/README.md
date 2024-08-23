@@ -1,4 +1,4 @@
-# Dioptra Frontend
+# frontend
 
 This template should help get you started developing with Vue 3 in Vite.
 
@@ -20,11 +20,21 @@ The following steps will be necessary:
 
     -   Build the containers
 
--   Run a database migration to add the latest table definitions to a local SQLite database that will be stored in the project root using the following commands:
+-   Run a database migration to add the latest table definitions to a local SQLite database that will be stored in the project root using the following commands if using bash shell:
 
     ```sh
     export DIOPTRA_RESTAPI_DEV_DATABASE_URI=sqlite:///$(pwd)/dioptra-dev.db
     export DIOPTRA_RESTAPI_ENV=dev
+    export DIOPTRA_SESSION_PROTECTION=none
+    dioptra-db autoupgrade
+    ```
+
+-   If running windows powershell, use these commands instead:
+
+    ```
+    $env:DIOPTRA_RESTAPI_DEV_DATABASE_URI="sqlite:///$pwd\dioptra-dev.db"
+    $env:DIOPTRA_RESTAPI_ENV="dev"
+    $env:DIOPTRA_SESSION_PROTECTION="none"
     dioptra-db autoupgrade
     ```
 
@@ -76,8 +86,6 @@ The following steps will be necessary:
 
         -   for `DIOPTRA_RESTAPI_ENV` change from `prod` to `dev`
 
-        -   for `DIOPTRA_RESTAPI_VERSION` change from `v0` to `v1` if you wish to use v1 of the API
-
         -   Change the hostname for each of the URLs to `localhost` from their generated values
 
     -   The final script file should look something like the below:
@@ -90,7 +98,6 @@ The following steps will be necessary:
         export RQ_REDIS_URI=redis://localhost:6379/0
         export DIOPTRA_RESTAPI_DEV_DATABASE_URI=sqlite:///$(pwd)/dioptra-dev.db
         export DIOPTRA_RESTAPI_ENV=dev
-        export DIOPTRA_RESTAPI_VERSION=v0
         flask run --host ::1
         ```
 
@@ -108,6 +115,17 @@ From here, move on to starting the vite development server using the instruction
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
 
+## Type Support for `.vue` Imports in TS
+
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
+
+If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
+
+1. Disable the built-in TypeScript Extension
+    1) Run `Extensions: Show Built-in Extensions` from VSCode's command palette
+    2) Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
+2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+
 ## Customize configuration
 
 See [Vite Configuration Reference](https://vitejs.dev/config/).
@@ -124,7 +142,7 @@ npm install
 npm run dev
 ```
 
-### Compile and Minify for Production
+### Type-Check, Compile and Minify for Production
 
 ```sh
 npm run build

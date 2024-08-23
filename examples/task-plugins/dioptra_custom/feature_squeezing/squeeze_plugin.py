@@ -84,7 +84,7 @@ def feature_squeeze(
         run_id=run_id,
     )
 
-    batch_size = 32  # There is currently a bug preventing batch size from getting passsed in correctly
+    batch_size = 32  # There is currently a bug preventing batch size from getting passed in correctly
     tensorflow_global_seed: int = rng.integers(low=0, high=2**31 - 1)
     dataset_seed: int = rng.integers(low=0, high=2**31 - 1)
 

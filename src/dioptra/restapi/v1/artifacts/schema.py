@@ -19,6 +19,7 @@ from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
+    GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
     generate_base_resource_ref_schema,
@@ -46,6 +47,7 @@ class ArtifactMutableFieldsSchema(Schema):
     description = fields.String(
         attribute="description",
         metadata=dict(description="Description of the Artifact resource."),
+        load_default=None,
     )
 
 
@@ -59,16 +61,12 @@ class ArtifactSchema(ArtifactMutableFieldsSchema, ArtifactBaseSchema):  # type: 
         attribute="job_id",
         data_key="job",
         metadata=dict(description="id of the job that produced this Artifact"),
+        required=True,
     )
-    mlflowRunId = fields.Int(
-        attribute="mlflow_run_id",
-        data_key="mlflowRun",
-        metadata=dict(description="id of the tracking MLflow run"),
-    )
-    artifactUri = fields.URL(
-        attribute="artifact_uri",
+    uri = fields.String(
+        attribute="uri",
         metadata=dict(description="URL pointing to the location of the Artifact."),
-        relative=True,
+        required=True,
     )
 
 
@@ -84,6 +82,7 @@ class ArtifactPageSchema(BasePageSchema):
 
 class ArtifactGetQueryParameters(
     PagingQueryParametersSchema,
+    GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /artifacts endpoint."""
