@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -85,7 +85,7 @@ jobs:
         run: sudo apt install -y wamerican
 
       - name: setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
 
