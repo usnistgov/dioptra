@@ -87,46 +87,46 @@ It will install, upgrade, and uninstall all packages accordingly and ensure that
 
 - The following describes commands to execute in four different terminal windows:
   1. Flask Terminal
-    - Environment variables that must be set for flask:
-      ```
-      DIOPTRA_RESTAPI_DEV_DATABASE_URI="sqlite:////home/<username>/dioptra/deployments/dev/dioptra-dev.db"  
-      DIOPTRA_RESTAPI_ENV=dev  
-      DIOPTRA_RESTAPI_VERSION=v1  
-      ```
-      N.B.: replace <username> with your username. On some systems the home path may also be different. Verify the expansion of '~' with the `pwd` command while in the appropriate directory.
+     - Environment variables that must be set for flask:
+       ```
+       DIOPTRA_RESTAPI_DEV_DATABASE_URI="sqlite:////home/<username>/dioptra/deployments/dev/dioptra-dev.db"  
+       DIOPTRA_RESTAPI_ENV=dev  
+       DIOPTRA_RESTAPI_VERSION=v1  
+       ```
+       N.B.: replace <username> with your username. On some systems the home path may also be different. Verify the expansion of '~' with the `pwd` command while in the appropriate directory.
 
-    - Activate the python environment set-up in prior steps
-    - `dioptra-db autoupgrade`
-    - `flask run`
+     - Activate the python environment set-up in prior steps
+     - `dioptra-db autoupgrade`
+     - `flask run`
 
   2. Frontend UI Terminal
-    - Commands to get a Frontend running:
-      ```bash
-      cd src/fronted
-      npm install
-      npm run dev
-      ```
+     - Commands to get a Frontend running:
+       ```bash
+       cd src/fronted
+       npm install
+       npm run dev
+       ```
 
   3. Redis Terminal
-    - `redis-server`
+     - `redis-server`
 
   4. Dioptra Worker
-    - Starting a Dioptra Worker requires the following environment variables:
-      ```
-      DIOPTRA_WORKER_USERNAME="dioptra-worker"  # This must be a registered user in the Dioptra app
-      DIOPTRA_WORKER_PASSWORD="password"        # Must match the username's password
-      DIOPTRA_API="http://localhost:5000"       # This is the default API location when you run `flask run`
-      RQ_REDIS_URI="redis://localhost:6379/0"   # This is the default URI when you run `redis-server`
-      MLFLOW_S3_ENDPOINT_URL="http://localhost:35000"  # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
-      OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES   # Macs only, needed to make the RQ worker (i.e. the Dioptra Worker) work
-      ```
-    - Activate the python environment set-up in prior steps (e.g. `source .venv/bin/activate`)
-    - With the prior environment variables set then execute the following commands:
-      ```bash
-      mkdir -p ~/dioptra/deployments/dev/workdir/
-      cd ~/dioptra/deployments/dev/workdir/
-      dioptra-worker-v1 'Tensorflow CPU'  # Assumes 'Tensorflow CPU' is a registered Queue name
-      ```
+     - Starting a Dioptra Worker requires the following environment variables:
+       ```
+       DIOPTRA_WORKER_USERNAME="dioptra-worker"  # This must be a registered user in the Dioptra app
+       DIOPTRA_WORKER_PASSWORD="password"        # Must match the username's password
+       DIOPTRA_API="http://localhost:5000"       # This is the default API location when you run `flask run`
+       RQ_REDIS_URI="redis://localhost:6379/0"   # This is the default URI when you run `redis-server`
+       MLFLOW_S3_ENDPOINT_URL="http://localhost:35000"  # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
+       OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES   # Macs only, needed to make the RQ worker (i.e. the Dioptra Worker) work
+       ```
+     - Activate the python environment set-up in prior steps (e.g. `source .venv/bin/activate`)
+     - With the prior environment variables set then execute the following commands:
+       ```bash
+       mkdir -p ~/dioptra/deployments/dev/workdir/
+       cd ~/dioptra/deployments/dev/workdir/
+       dioptra-worker-v1 'Tensorflow CPU'  # Assumes 'Tensorflow CPU' is a registered Queue name
+       ```
 - Frontend app is available by default at http://localhost:5173 (the frontend terminal windows should also indicate the URL to use)
 - Create Dioptra worker in the Frontend UI or through API. curl command for interacting with API (assuming you have the environment variables in Step 4 set) is:
   ```
