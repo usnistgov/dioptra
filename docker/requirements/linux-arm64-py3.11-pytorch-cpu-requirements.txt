@@ -89,7 +89,7 @@ flask==3.0.3
     #   mlflow
 flask-accepts==0.18.4
     # via dioptra (pyproject.toml)
-flask-cors==4.0.1
+flask-cors==5.0.0
     # via dioptra (pyproject.toml)
 flask-login==0.6.3
     # via dioptra (pyproject.toml)
