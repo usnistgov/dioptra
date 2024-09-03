@@ -128,11 +128,11 @@ It will install, upgrade, and uninstall all packages accordingly and ensure that
        dioptra-worker-v1 'Tensorflow CPU'  # Assumes 'Tensorflow CPU' is a registered Queue name
        ```
 - Frontend app is available by default at http://localhost:5173 (the frontend terminal windows should also indicate the URL to use)
-- Create Dioptra worker in the Frontend UI or through API. curl command for interacting with API (assuming you have the environment variables in Step 4 set) is:
+- Create Dioptra worker in the Frontend UI or through API. curl command for interacting with API (assuming you have the environment variables in Step iv set) is:
   ```
   curl http://localhost:5000/api/v1/users/ -X POST --data-raw "{\"username\": \"$DIOPTRA_WORKER_USERNAME\",  \"email\": \"dioptra-worker@localhost\", \"password\": \"$DIOPTRA_WORKER_PASSWORD\", \"confirmPassword\": \"$DIOPTRA_WORKER_PASSWORD\"}"
   ```
-- Create 'Tensorflow CPU' Queue -- this needs to agree with the queue name used in Step 4.
+- Create 'Tensorflow CPU' Queue -- this needs to agree with the queue name used in Step iv.
 
 ### Building the documentation
 
