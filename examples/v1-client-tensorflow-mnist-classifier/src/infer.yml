@@ -32,26 +32,26 @@ types:
 
 parameters:
   run_id: ""
-  image_size: [28, 28, 1]
+  image_size_p: [28, 28, 1]
+  training_job_id:
+  fgm_job_id:
   adv_tar_name: testing_adversarial_fgm.tar.gz
   adv_data_dir: adv_testing
-  model_name: mnist_le_net
-  model_version: 1
-  seed: -1
+  seed_p: -1
 
 tasks:
   init_rng:
-    plugin: dioptra_builtins.random.rng.init_rng
+    plugin: dioptra_custom.vc.random_rng.init_rng
     inputs:
       - name: seed
         type: integer
         required: false
     outputs:
-      - seed: integer
-      - rng: rng
+      - ret1: integer
+      - ret2: rng
 
-  draw_random:
-    plugin: dioptra_builtins.random.sample.draw_random_integer
+  draw_random_integer:
+    plugin: dioptra_custom.vc.random_sample.draw_random_integer
     inputs:
       - rng: rng
       - name: low
@@ -64,19 +64,19 @@ tasks:
       value: integer
 
   init_tensorflow:
-    plugin: dioptra_builtins.backend_configs.tensorflow.init_tensorflow
+    plugin: dioptra_custom.vc.backend_configs_tensorflow.init_tensorflow
     inputs:
       - seed: integer
 
-  log_params:
-    plugin: dioptra_builtins.tracking.mlflow.log_parameters
+  log_parameters:
+    plugin: dioptra_custom.vc.tracking_mlflow.log_parameters
     inputs:
       - parameters: parameters
 
-  download_artifacts:
-    plugin: dioptra_builtins.artifacts.mlflow.download_all_artifacts_in_run
+  download_all_artifacts_for_job:
+    plugin: dioptra_custom.vc.artifacts_mlflow.download_all_artifacts_for_job
     inputs:
-      - run_id: string
+      - job_id: string
       - artifact_path: string
       - name: destination_path
         type: string_null
@@ -85,7 +85,7 @@ tasks:
       download_path: string
 
   extract_tarfile:
-    plugin: dioptra_builtins.artifacts.utils.extract_tarfile
+    plugin: dioptra_custom.vc.artifacts_utils.extract_tarfile
     inputs:
       - filepath: path_string
       - name: tarball_read_mode
@@ -95,8 +95,8 @@ tasks:
         type: any
         required: false
 
-  create_dataset:
-    plugin: dioptra_builtins.data.tensorflow.create_image_dataset
+  create_image_dataset:
+    plugin: dioptra_custom.vc.data_tensorflow.create_image_dataset
     inputs:
       - data_dir: string
       - subset: string_null
@@ -117,50 +117,102 @@ tasks:
     outputs:
       iterator: directory_iterator
 
-  load_classifier:
-    plugin: dioptra_builtins.registry.mlflow.load_tensorflow_keras_classifier
+  load_tensorflow_keras_classifier:
+    plugin: dioptra_custom.vc.registry_mlflow.load_tensorflow_keras_classifier
     inputs:
-      - name: name
-        type: string
-        required: true
-      - version: integer
+      - uri: string
     outputs:
       classifier: sequential
+  get_uri_for_artifact:
+    plugin: dioptra_custom.vc.artifacts_restapi.get_uri_for_artifact
+    inputs:
+      - job_id: string
+      - name: index
+        type: integer
+        required: false
+    outputs:
+      ret: string
 
-  evaluate_metrics:
-    plugin: dioptra_custom.evaluation.tensorflow.evaluate_metrics_tensorflow
+  evaluate_metrics_tensorflow:
+    plugin: dioptra_custom.vc.tensorflow.evaluate_metrics_tensorflow
     inputs:
       - classifier: any
       - dataset: any
     outputs:
       metrics: eval_metric_results
-  log_results:
-    plugin: dioptra_builtins.tracking.mlflow.log_metrics
+  log_metrics:
+    plugin: dioptra_custom.vc.tracking_mlflow.log_metrics
     inputs:
       - metrics: eval_metric_results
+  get_none:
+    plugin: dioptra_custom.vc.tensorflow.get_none
+    inputs:
+      - arg: string
+    outputs:
+      ret: "null"
+  process_float:
+    plugin: dioptra_custom.vc.tensorflow.process_float
+    inputs:
+        - arg: string
+    outputs:
+      ret: number
+  process_bool:
+    plugin: dioptra_custom.vc.tensorflow.process_bool
+    inputs:
+        - arg: string
+    outputs:
+      ret: boolean
+  process_int:
+    plugin: dioptra_custom.vc.tensorflow.process_int
+    inputs:
+        - arg: string
+    outputs:
+      ret: integer
+  process_int_list:
+    plugin: dioptra_custom.vc.tensorflow.process_int_list
+    inputs:
+      - arg: string
+    outputs:
+      ret: image_size
+  process_float_list:
+    plugin: dioptra_custom.vc.tensorflow.process_float_list
+    inputs:
+      - arg: string
+    outputs:
+      ret: image_size
+
 
 graph:
+
+  image_size:
+    process_int_list: $image_size_p
+
+  seed:
+    process_int: $seed_p
+
   init_rng:
     init_rng: $seed
 
   tensorflow_global_seed:
-    draw_random: $init_rng.rng
+    draw_random_integer: 
+      rng: $init_rng.ret2
 
   dataset_seed:
-    draw_random: $init_rng.rng
+    draw_random_integer:
+      rng: $init_rng.ret2
 
   init_tensorflow_results:
     init_tensorflow: $tensorflow_global_seed
 
   log_mlflow_params_result:
-    log_params:
+    log_parameters:
       - entry_point_seed: $seed
         tensorflow_global_seed: $tensorflow_global_seed
         dataset_seed: $dataset_seed
 
   adv_tar_path:
-    download_artifacts:
-      run_id: $run_id
+    download_all_artifacts_for_job:
+      job_id: $fgm_job_id
       artifact_path: $adv_tar_name
 
   extract_tarfile_results:
@@ -168,7 +220,7 @@ graph:
       filepath: $adv_tar_path
 
   adv_ds:
-    create_dataset:
+    create_image_dataset:
       data_dir: $adv_data_dir
       subset: null
       validation_split: null
@@ -178,23 +230,26 @@ graph:
       - init_tensorflow_results
       - extract_tarfile_results
 
+  model_uri:
+    get_uri_for_artifact:
+      job_id: $training_job_id
+
   classifier:
-    load_classifier:
-      name: $model_name
-      version: $model_version
+    load_tensorflow_keras_classifier:
+      uri: $model_uri
     dependencies:
       - init_tensorflow_results
       - adv_ds
 
   classifier_performance_metrics:
-    evaluate_metrics:
+    evaluate_metrics_tensorflow:
       classifier: $classifier
       dataset: $adv_ds
     dependencies:
       - classifier
 
   logged_metrics:
-    log_results:
+    log_metrics:
       metrics: $classifier_performance_metrics
     dependencies:
       - classifier_performance_metrics

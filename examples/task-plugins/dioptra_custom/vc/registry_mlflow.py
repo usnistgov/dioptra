@@ -18,23 +18,35 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Optional
 
 import mlflow
-import os
 import structlog
+from mlflow.entities import Run as MlflowRun
 from mlflow.entities.model_registry import ModelVersion
 from mlflow.tracking import MlflowClient
 from structlog.stdlib import BoundLogger
 
 from dioptra import pyplugs
-from .artifacts_restapi import upload_model_to_restapi
+from dioptra.sdk.exceptions import TensorflowDependencyError
+from dioptra.sdk.utilities.decorators import require_package
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+try:
+    from tensorflow.keras.models import Sequential
+
+except ImportError:  # pragma: nocover
+    LOGGER.warn(
+        "Unable to import one or more optional packages, functionality may be reduced",
+        package="tensorflow",
+    )
 
 
 @pyplugs.register
-def add_model_to_registry(name: str, model_dir: str) -> Optional[ModelVersion]:
+def add_model_to_registry(
+    active_run: MlflowRun, name: str, model_dir: str
+) -> Optional[ModelVersion]:
     """Registers a trained model logged during the current run to the MLFlow registry.
 
     Args:
@@ -48,11 +60,8 @@ def add_model_to_registry(name: str, model_dir: str) -> Optional[ModelVersion]:
         A :py:class:`~mlflow.entities.model_registry.ModelVersion` object created by the
         backend.
     """
-    job_id = os.environ['__JOB_ID']
     if not name.strip():
         return None
-
-    active_run = mlflow.active_run()
 
     run_id: str = active_run.info.run_id
     artifact_uri: str = active_run.info.artifact_uri
@@ -68,13 +77,12 @@ def add_model_to_registry(name: str, model_dir: str) -> Optional[ModelVersion]:
     model_version: ModelVersion = MlflowClient().create_model_version(
         name=name, source=source, run_id=run_id
     )
-    upload_model_to_restapi(name, source, job_id)
 
     return model_version
 
 
 @pyplugs.register
-def get_experiment_name() -> str:
+def get_experiment_name(active_run: MlflowRun) -> str:
     """Gets the name of the experiment for the current run.
 
     Args:
@@ -84,8 +92,6 @@ def get_experiment_name() -> str:
     Returns:
         The name of the experiment.
     """
-    active_run = mlflow.active_run()
-
     experiment_name: str = (
         MlflowClient().get_experiment(active_run.info.experiment_id).name
     )
@@ -97,7 +103,18 @@ def get_experiment_name() -> str:
 
 
 @pyplugs.register
-def prepend_cwd(path: str) -> Path:
-    ret = Path.cwd() / path
-    return ret
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def load_tensorflow_keras_classifier(uri: str) -> Sequential:
+    """Loads a registered Keras classifier.
 
+    Args:
+        name: The name of the registered model in the MLFlow model registry.
+        version: The version number of the registered model in the MLFlow registry.
+
+    Returns:
+        A trained :py:class:`tf.keras.Sequential` object.
+    """
+    LOGGER.info("Load Keras classifier from model registry", uri=uri)
+
+    return mlflow.keras.load_model(model_uri=uri)
+    

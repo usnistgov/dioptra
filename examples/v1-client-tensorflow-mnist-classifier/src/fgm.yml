@@ -2,7 +2,7 @@ types:
   rng:
   path:
   path_string:
-    union: [string, path]
+    union: [string, any]
   path_string_null:
     union: [path_string, "null"]
   dirs:
@@ -17,48 +17,54 @@ types:
   distance_metric_request:
     mapping: [string, string]
   distance_metrics_requests:
-    list: distance_metric_request
+    list: 
+      mapping: [string, string]
   distance_metric:
     tuple: [string, any]
   distance_metrics:
-    list: distance_metric
+    list: 
+      tuple: [string, any]
   distance_metrics_null:
-    union: [distance_metrics, "null"]
+    union: 
+      - list: 
+          tuple: [string, any]
+      - "null"
   dataframe:
   image_size:
     tuple: [integer, integer, integer]
+  clip_values:
+    tuple: [float, float, float]
   norm:
     union: [integer, number, string]
 
 parameters:
   data_dir: /dioptra/data/Mnist/testing
-  image_size: [28, 28, 1]
+  image_size_p: [28, 28, 1]
   adv_tar_name: testing_adversarial_fgm.tar.gz
   adv_data_dir: adv_testing
   distance_metrics_filename: distance_metrics.csv
-  model_name: mnist_le_net
-  model_version: 1
-  clip_values: [0, 1]
-  batch_size: 32
-  eps: 0.3
-  eps_step: 0.1
-  minimal: false
+  training_job_id:
+  clip_values_p: [0, 1]
+  batch_size_p: 32
+  eps_p: 0.3
+  eps_step_p: 0.1
+  minimal_p: false
   norm: "inf"
-  seed: -1
+  seed_p: -1
 
 tasks:
   init_rng:
-    plugin: dioptra_builtins.random.rng.init_rng
+    plugin: dioptra_custom.vc.random_rng.init_rng
     inputs:
       - name: seed
         type: integer
         required: false
     outputs:
-      - seed: integer
-      - rng: rng
+      - ret1: integer
+      - ret2: rng
 
-  draw_random:
-    plugin: dioptra_builtins.random.sample.draw_random_integer
+  draw_random_integer:
+    plugin: dioptra_custom.vc.random_sample.draw_random_integer
     inputs:
       - rng: rng
       - name: low
@@ -71,42 +77,39 @@ tasks:
       value: integer
 
   init_tensorflow:
-    plugin: dioptra_builtins.backend_configs.tensorflow.init_tensorflow
+    plugin: dioptra_custom.vc.backend_configs_tensorflow.init_tensorflow
     inputs:
       - seed: integer
 
   make_directories:
-    plugin: dioptra_builtins.artifacts.utils.make_directories
+    plugin: dioptra_custom.vc.artifacts_utils.make_directories
     inputs:
       - dirs: dirs
 
-  log_params:
-    plugin: dioptra_builtins.tracking.mlflow.log_parameters
+  log_parameters:
+    plugin: dioptra_custom.vc.tracking_mlflow.log_parameters
     inputs:
       - parameters: parameters
 
-  load_classifier:
-    plugin: dioptra_builtins.registry.art.load_wrapped_tensorflow_keras_classifier
+  load_wrapped_tensorflow_keras_classifier:
+    plugin: dioptra_custom.vc.registry_art.load_wrapped_tensorflow_keras_classifier
     inputs:
-      - name: name
-        type: string
-        required: true
-      - version: integer
+      - artifact_uri: string
       - name: classifier_kwargs
         type: kwargs
         required: false
     outputs:
       classifier: keras_classifier
 
-  distance_metrics:
-    plugin: dioptra_builtins.metrics.distance.get_distance_metric_list
+  get_distance_metric_list:
+    plugin: dioptra_custom.vc.metrics_distance.get_distance_metric_list
     inputs:
       - request: distance_metrics_requests
     outputs:
       distance_metrics_list: distance_metrics
 
-  create_dataset:
-    plugin: dioptra_builtins.attacks.fgm.create_adversarial_fgm_dataset
+  create_adversarial_fgm_dataset:
+    plugin: dioptra_custom.vc.attacks_fgm.create_adversarial_fgm_dataset
     inputs:
       - data_dir: string
       - adv_data_dir: path_string
@@ -139,8 +142,8 @@ tasks:
     outputs:
       dataset: dataframe
 
-  upload_artifact_directory:
-    plugin: dioptra_builtins.artifacts.mlflow.upload_directory_as_tarball_artifact
+  upload_directory_as_tarball_artifact:
+    plugin: dioptra_custom.vc.artifacts_mlflow.upload_directory_as_tarball_artifact
     inputs:
       - source_dir: path_string
       - tarball_filename: string
@@ -151,8 +154,8 @@ tasks:
         type: path_string_null
         required: false
 
-  upload_artifact_dataframe:
-    plugin: dioptra_builtins.artifacts.mlflow.upload_data_frame_artifact
+  upload_data_frame_artifact:
+    plugin: dioptra_custom.vc.artifacts_mlflow.upload_data_frame_artifact
     inputs:
       - data_frame: dataframe
       - file_name: string
@@ -163,39 +166,116 @@ tasks:
       - name: working_dir
         type: path_string_null
         required: false
+  get_uri_for_artifact:
+    plugin: dioptra_custom.vc.artifacts_restapi.get_uri_for_artifact
+    inputs:
+      - job_id: string
+      - name: index
+        type: integer
+        required: false
+    outputs:
+      ret: string
+  get_none:
+    plugin: dioptra_custom.vc.tensorflow.get_none
+    inputs:
+      - arg: string
+    outputs:
+      ret: "null"
+  process_float:
+    plugin: dioptra_custom.vc.tensorflow.process_float
+    inputs:
+        - arg: string
+    outputs:
+      ret: number
+  process_bool:
+    plugin: dioptra_custom.vc.tensorflow.process_bool
+    inputs:
+        - arg: string
+    outputs:
+      ret: boolean
+  process_int:
+    plugin: dioptra_custom.vc.tensorflow.process_int
+    inputs:
+        - arg: string
+    outputs:
+      ret: integer
+  process_int_list:
+    plugin: dioptra_custom.vc.tensorflow.process_int_list
+    inputs:
+      - arg: string
+    outputs:
+      ret: image_size
+  process_float_list:
+    plugin: dioptra_custom.vc.tensorflow.process_float_list
+    inputs:
+      - arg: string
+    outputs:
+      ret: image_size
 
 graph:
+  image_size:
+    process_int_list: $image_size_p
+
+  clip_values:
+    process_float_list: $clip_values_p
+
+  batch_size:
+    process_int: $batch_size_p
+
+  eps:
+    process_float: $eps_p
+
+  eps_step:
+    process_float: $eps_step_p
+
+  minimal:
+    process_bool: $minimal_p
+    
+  true_none:
+    get_none: 'None'
+
+  true_false:
+    process_bool: 'False'
+
+  seed:
+    process_int: $seed_p
+
   init_rng:
     init_rng: $seed
 
-  tensorflow_global_seed:
-    draw_random: $init_rng.rng
+  global_seed:
+    draw_random_integer:
+      rng: $init_rng.ret2
 
   dataset_seed:
-    draw_random: $init_rng.rng
+    draw_random_integer:
+      rng: $init_rng.ret2
 
   init_tensorflow_results:
-    init_tensorflow: $tensorflow_global_seed
+    init_tensorflow: $global_seed
 
   make_directories_results:
     make_directories: [[$adv_data_dir]]
 
   log_mlflow_params_result:
-    log_params:
+    log_parameters:
       - entry_point_seed: $seed
-        tensorflow_global_seed: $tensorflow_global_seed
+        tensorflow_global_seed: $global_seed
         dataset_seed: $dataset_seed
 
+  artifact_uri:
+    get_uri_for_artifact:
+      job_id: $training_job_id
+
   keras_classifier:
-    load_classifier:
-      name: $model_name
-      version: $model_version
+    load_wrapped_tensorflow_keras_classifier:
+      artifact_uri: $artifact_uri
       classifier_kwargs:
         clip_values: $clip_values
     dependencies: init_tensorflow_results
 
   distance_metrics:
-    distance_metrics:
+    get_distance_metric_list:
       - - name: l_infinity_norm
           func: l_inf_norm
         - name: l_1_norm
@@ -212,7 +292,7 @@ graph:
           func: paired_wasserstein_distances
 
   dataset:
-    create_dataset:
+    create_adversarial_fgm_dataset:
       data_dir: $data_dir
       keras_classifier: $keras_classifier
       distance_metrics_list: $distance_metrics
@@ -226,14 +306,15 @@ graph:
     dependencies: make_directories_results
 
   upload_directory:
-    upload_artifact_directory:
+    upload_directory_as_tarball_artifact:
       - $adv_data_dir
       - $adv_tar_name
     dependencies: dataset
 
   upload_dataset:
-    upload_artifact_dataframe:
-      - $dataset
-      - $distance_metrics_filename
-      - csv.gz
-      - index: false
+    upload_data_frame_artifact:
+      data_frame: $dataset
+      file_name: $distance_metrics_filename
+      file_format: csv.gz
+      file_format_kwargs:
+        index: $true_false
