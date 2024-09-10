@@ -594,6 +594,9 @@ class JobsClient(Endpoint, HasTagsProvider):
     def get_by_id(self, job_id):
         return get(self.session, self.url, str(job_id))
 
+    def get_mlflow_run_id(self, job_id):
+        return get(self.session, self.url, str(job_id), "mlflowRun")
+
     def get_snapshots_by_job_id(self, job_id):
         return get(self.session, self.url, str(job_id), "snapshots")
 
