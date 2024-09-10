@@ -95,7 +95,8 @@ class EntrypointValidateService(object):
         self, 
         task_graph: str, 
         plugin_ids: list[int], 
-        parameters: dict[str: str]\
+        parameters: dict[str: str],
+        **kwargs,
     ) -> dict[str, str]:
         """Validate a entrypoint workflow before the entrypoint is created.
 
