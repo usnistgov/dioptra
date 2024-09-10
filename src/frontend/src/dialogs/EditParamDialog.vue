@@ -69,8 +69,10 @@
   const typeOptions = reactive([
     'string',
     'float',
-    'path',
-    'url',
+    'integer',
+    'boolean',
+    'list',
+    'mapping',
   ])
 
   watch(showDialog, (newVal) => {

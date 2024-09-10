@@ -24,8 +24,10 @@ from dioptra.restapi.db import models
 ENTRY_POINT_PARAMETER_TYPES: Final[list[dict[str, str]]] = [
     {"parameter_type": "string"},
     {"parameter_type": "float"},
-    {"parameter_type": "path"},
-    {"parameter_type": "uri"},
+    {"parameter_type": "integer"},
+    {"parameter_type": "boolean"},
+    {"parameter_type": "list"},
+    {"parameter_type": "mapping"},
 ]
 JOB_STATUS_TYPES: Final[list[dict[str, str]]] = [
     {"status": "queued"},

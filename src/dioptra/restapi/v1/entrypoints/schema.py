@@ -96,7 +96,9 @@ class EntrypointParameterSchema(Schema):
         attribute="parameter_type",
         metadata=dict(description="Data type of the Entrypoint parameter."),
         required=True,
-        validate=validate.OneOf(["string", "float", "path", "uri"]),
+        validate=validate.OneOf(
+            ["string", "float", "integer", "boolean", "list", "mapping"]
+        ),
     )
 
 

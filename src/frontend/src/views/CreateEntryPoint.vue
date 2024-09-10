@@ -246,8 +246,10 @@
   const typeOptions = ref([
     'string',
     'float',
-    'path',
-    'uri',
+    'integer',
+    'boolean',
+    'list',
+    'mapping',
   ])
 
   const basicInfoForm = ref(null)
