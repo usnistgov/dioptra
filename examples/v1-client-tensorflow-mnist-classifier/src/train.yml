@@ -52,7 +52,7 @@ parameters:
   validation_split_p: 0.2
   batch_size_p: 32
   model_architecture: le_net
-  epochs_p: 1
+  epochs_p: 30
   register_model_name: "mnist_classifier"
 
 tasks:
