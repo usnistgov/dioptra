@@ -27,6 +27,8 @@ from structlog.stdlib import BoundLogger
 
 from .schema import FileTypes, JobFilesDownloadQueryParametersSchema, EntrypointWorkflowSchema
 from .service import JobFilesDownloadService, EntrypointValidateService
+from .schema import FileTypes, JobFilesDownloadQueryParametersSchema, EntrypointWorkflowSchema
+from .service import JobFilesDownloadService, EntrypointValidateService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -97,7 +99,7 @@ class EntrypointValidateEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(schema=EntrypointWorkflowSchema, api=api)
+    @accepts(entrypoint_workflow_schema=EntrypointWorkflowSchema, api=api)
     def post(self):
         """Validates the workflow for a entrypoint."""  # noqa: B950
         log = LOGGER.new(
@@ -110,6 +112,6 @@ class EntrypointValidateEndpoint(Resource):
         return self._entrypoint_validate_service.validate(
             task_graph=task_graph,
             plugin_ids=plugin_ids,
-            entrypoint_parameters=parameters,
+            parameters=parameters,
             log=log,
         )
