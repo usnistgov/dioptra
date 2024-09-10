@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the entrypoint entity. The tests ensure that the entrypoints can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
+import textwrap
 from typing import Any
 
 from flask.testing import FlaskClient
@@ -81,7 +82,13 @@ def test_entrypoint_workflow_validation(
     auth_account: dict[str, Any],
 ) -> None:
     """"""
-    task_graph = ""
+    task_graph = textwrap.dedent(
+        """# my entrypoint graph
+        graph:
+          message:
+            my_entrypoint: $name
+        """
+    )
     plugin_ids = []
     entrypoint_parameters = []
     assert_entrypoint_workflow_is_valid(
