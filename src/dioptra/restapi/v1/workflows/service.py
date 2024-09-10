@@ -25,7 +25,7 @@ from .lib import package_job_files, views
 from .schema import FileTypes
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.v1.plugins.service import PluginIdsService
+from dioptra.restapi.v1.plugins.service import PluginIdFileIdService
 from dioptra.restapi.v1.workflows.lib.export_task_engine_yaml import extract_tasks
 from dioptra.task_engine.validation import validate, is_valid
 
@@ -74,7 +74,7 @@ class EntrypointValidateService(object):
     @inject
     def __init__(
         self,
-        plugin_ids_service: PluginIdsService,
+        plugin_file_id_service: PluginIdFileIdService,
     ) -> None:
         """Initialize the entrypoint service.
 
@@ -83,7 +83,7 @@ class EntrypointValidateService(object):
         Args:
             plugin_ids_service: A PluginIdsService object.
         """
-        self._plugin_ids_service = plugin_ids_service
+        self._plugin_file_id_service = plugin_file_id_service
 
     def validate(
         self, 
@@ -108,8 +108,13 @@ class EntrypointValidateService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Validate a entrypoint workflow", task_graph=task_graph, plugin_ids=plugin_ids, entrypoint_parameters=parameters)
 
-        entry_point_plugin_files = self._plugin_ids_service.get(plugin_ids, error_if_not_found=True)
-        tasks, parameter_types = extract_tasks(entry_point_plugin_files)
+        entrypoint_plugin_files = []
+        for plugin_id in plugin_ids:
+            plugin_files, _ = self._plugin_id_file_service.get(plugin_id)
+            for plugin_file in plugin_files:
+                entrypoint_plugin_files.append(plugin_file)
+
+        tasks, parameter_types = extract_tasks(entrypoint_plugin_files)
         task_engine_dict = {
             "types": parameter_types,
             "parameters": parameters,
