@@ -578,7 +578,17 @@ def registered_entrypoints(
         {
             "name": "entrypoint_param_3",
             "defaultValue": "/path",
-            "parameterType": "path",
+            "parameterType": "string",
+        },
+        {
+            "name": "entrypoint_param_4",
+            "defaultValue": "1",
+            "parameterType": "integer",
+        },
+        {
+            "name": "entrypoint_param_5",
+            "defaultValue": "['a', 'b', {'c': 1}]",
+            "parameterType": "list",
         },
     ]
     plugin_ids = [registered_plugin_with_files["plugin"]["id"]]

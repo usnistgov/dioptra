@@ -24,8 +24,22 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
+from .type_coercions import (
+    BOOLEAN_PARAM_TYPE,
+    FLOAT_PARAM_TYPE,
+    INTEGER_PARAM_TYPE,
+    STRING_PARAM_TYPE,
+    coerce_to_type,
+)
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
+EXPLICIT_GLOBAL_TYPES: Final[set[str]] = {
+    STRING_PARAM_TYPE,
+    BOOLEAN_PARAM_TYPE,
+    INTEGER_PARAM_TYPE,
+    FLOAT_PARAM_TYPE,
+}
 YAML_FILE_ENCODING: Final[str] = "utf-8"
 YAML_EXPORT_SETTINGS: Final[dict[str, Any]] = {
     "indent": 2,
@@ -107,7 +121,19 @@ def extract_parameters(
         A dictionary of the entrypoint's parameters.
     """
     log = logger or LOGGER.new()  # noqa: F841
-    return {param.name: param.default_value for param in entrypoint.parameters}
+    parameters: dict[str, Any] = {}
+    for param in entrypoint.parameters:
+        default_value = param.default_value
+        parameters[param.name] = {
+            "default": coerce_to_type(x=default_value, type_name=param.parameter_type)
+        }
+
+        if param.parameter_type in EXPLICIT_GLOBAL_TYPES:
+            parameters[param.name]["type"] = (
+                _convert_parameter_type_to_task_engine_type(param.parameter_type)
+            )
+
+    return parameters
 
 
 def extract_tasks(
@@ -212,3 +238,15 @@ def _build_task_outputs(
         {output_param.name: output_param.parameter_type.name}
         for output_param in output_parameters
     ]
+
+
+def _convert_parameter_type_to_task_engine_type(parameter_type: str) -> Any:
+    conversion_map = {
+        "boolean": "boolean",
+        "string": "string",
+        "float": "number",
+        "integer": "integer",
+        "list": {"list": "any"},
+        "mapping": {"mapping": ["string", "any"]},
+    }
+    return conversion_map[parameter_type]
