@@ -1,0 +1,10 @@
+hello_step:
+  hello:
+    name: $name
+goodbye_step:
+  greet:
+    greeting: Goodbye
+    name: $name
+shout_step:
+  shout:
+    message: $goodbye_step.message
