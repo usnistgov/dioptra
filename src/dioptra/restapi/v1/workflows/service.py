@@ -19,10 +19,16 @@ from typing import IO, Final
 
 import structlog
 from structlog.stdlib import BoundLogger
+from injector import inject
 
 from .lib import views
 from .lib.package_job_files import package_job_files
 from .schema import FileTypes
+
+from dioptra.restapi.db import db, models
+from dioptra.restapi.v1.plugins.service import PluginIdsService
+from dioptra.restapi.v1.workflows.lib.export_task_engine_yaml import extract_tasks
+from dioptra.task_engine.validation import validate, is_valid
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -65,3 +71,62 @@ class JobFilesDownloadService(object):
             file_type=file_type,
             logger=log,
         )
+
+
+class EntrypointValidateService(object):
+    """"""
+
+    @inject
+    def __init__(
+        self,
+        plugin_ids_service: PluginIdsService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            plugin_ids_service: A PluginIdsService object.
+        """
+        self._plugin_ids_service = plugin_ids_service
+
+    def validate(
+        self, 
+        task_graph: str, 
+        plugin_ids: list[int], 
+        parameters: dict[str: str]\
+    ) -> dict[str, str]:
+        """Validate a entrypoint workflow before the entrypoint is created.
+
+        Args:
+            task_graph:
+            plugin_ids: 
+            parameters: 
+
+        Returns:
+            
+
+        Raises:
+            
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Validate a entrypoint workflow", task_graph=task_graph, plugin_ids=plugin_ids, entrypoint_parameters=parameters)
+
+        entry_point_plugin_files = self._plugin_ids_service.get(plugin_ids, error_if_not_found=True)
+        tasks, parameter_types = extract_tasks(entry_point_plugin_files)
+        task_engine_dict = {
+            "types": parameter_types,
+            "parameters": parameters,
+            "tasks": tasks,
+            "graph": task_graph,
+        }
+        valid = is_valid(task_engine_dict)
+        if valid:
+            return {"status": "Success", "valid": valid}
+        else:
+            issues = validate(task_engine_dict)
+            return {
+                "status": "Success", 
+                "valid": valid,
+                "issues": issues,
+            }
