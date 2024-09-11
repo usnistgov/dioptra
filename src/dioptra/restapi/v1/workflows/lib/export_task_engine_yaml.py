@@ -51,6 +51,7 @@ YAML_EXPORT_SETTINGS: Final[dict[str, Any]] = {
 def export_task_engine_yaml(
     entrypoint: models.EntryPoint,
     entry_point_plugin_files: list[models.EntryPointPluginFile],
+    plugin_parameter_types: list[models.PluginTaskParameterType],
     base_dir: Path,
     logger: BoundLogger | None = None,
 ) -> Path:
@@ -59,6 +60,8 @@ def export_task_engine_yaml(
     Args:
         entrypoint: The entrypoint to export.
         entry_point_plugin_files: The entrypoint's plugin files.
+        plugin_parameter_types: The latest snapshots of the plugin parameter types
+            accessible to the entrypoint.
         base_dir: The directory to export the task engine YAML file to.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
@@ -69,7 +72,9 @@ def export_task_engine_yaml(
     log = logger or LOGGER.new()  # noqa: F841
     task_yaml_path = Path(base_dir, entrypoint.name).with_suffix(".yml")
     task_engine_dict = build_task_engine_dict(
-        entrypoint=entrypoint, entry_point_plugin_files=entry_point_plugin_files
+        entrypoint=entrypoint,
+        entry_point_plugin_files=entry_point_plugin_files,
+        plugin_parameter_types=plugin_parameter_types,
     )
 
     with task_yaml_path.open("wt", encoding=YAML_FILE_ENCODING) as f:
@@ -81,6 +86,7 @@ def export_task_engine_yaml(
 def build_task_engine_dict(
     entrypoint: models.EntryPoint,
     entry_point_plugin_files: list[models.EntryPointPluginFile],
+    plugin_parameter_types: list[models.PluginTaskParameterType],
     logger: BoundLogger | None = None,
 ) -> dict[str, Any]:
     """Build a dictionary representation of a task engine YAML file.
@@ -88,6 +94,8 @@ def build_task_engine_dict(
     Args:
         entrypoint: The entrypoint to export.
         entry_point_plugin_files: The entrypoint's plugin files.
+        plugin_parameter_types: The latest snapshots of the plugin parameter types
+            accessible to the entrypoint.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
 
@@ -95,7 +103,9 @@ def build_task_engine_dict(
         A dictionary representation of a task engine YAML file.
     """
     log = logger or LOGGER.new()  # noqa: F841
-    tasks, parameter_types = extract_tasks(entry_point_plugin_files)
+    tasks, parameter_types = extract_tasks(
+        entry_point_plugin_files, plugin_parameter_types=plugin_parameter_types
+    )
     parameters = extract_parameters(entrypoint)
     graph = extract_graph(entrypoint)
     return {
@@ -138,12 +148,15 @@ def extract_parameters(
 
 def extract_tasks(
     entry_point_plugin_files: list[models.EntryPointPluginFile],
+    plugin_parameter_types: list[models.PluginTaskParameterType],
     logger: BoundLogger | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Extract the plugin tasks and parameter types from the entrypoint plugin files.
 
     Args:
         entry_point_plugin_files: The entrypoint's plugin files.
+        plugin_parameter_types: The latest snapshots of the plugin parameter types
+            accessible to the entrypoint.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
 
@@ -180,6 +193,24 @@ def extract_tasks(
                 name = param.parameter_type.name
                 if name not in BUILTIN_TYPES:
                     parameter_types[name] = param.parameter_type.structure
+
+            # HACK: THIS IS A WORKAROUND THAT VIOLATES IDEMPOTENCE/REPRODUCIBILITY!
+            #
+            # This workaround allows users to create and use parameter types that are
+            # only used indirectly, such as when defining a structured parameter type.
+            # This is a "hack" because the objects in `plugin_parameter_types` are the
+            # latest available snapshots, not the snapshots that were associated with
+            # the plugins when the entrypoint was saved/updated. This is in contrast
+            # with the parameter types accumulated in the previous for loop block, which
+            # are linked to the entrypoint and job by their snapshot id instead of the
+            # resource id. This difference means that the task engine YAML files are not
+            # 100% reproducible, as any changes to an "indirect" plugin parameter type
+            # will be immediately reflected in subsequent download requests made to the
+            # job files workflow.
+            for parameter_type in plugin_parameter_types:
+                name = parameter_type.name
+                if name not in BUILTIN_TYPES and name not in parameter_types:
+                    parameter_types[name] = parameter_type.structure
 
     return tasks, parameter_types
 

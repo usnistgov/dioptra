@@ -135,3 +135,34 @@ def get_job_parameter_values(
         models.EntryPointParameterValue.job_resource_id == job_id,
     )
     return list(db.session.scalars(entry_point_param_values_stmt).unique().all())
+
+
+def get_plugin_parameter_types(
+    job_id: int, logger: BoundLogger | None = None
+) -> list[models.PluginTaskParameterType]:
+    """Run a query to get the plugin task parameter types for the job.
+
+    Args:
+        job_id: The ID of the job to get the plugin task parameter types for.
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The plugin files for the entrypoint.
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    group_id_stmt = select(models.Resource.group_id).where(
+        models.Resource.resource_id == job_id
+    )
+    plugin_parameter_types_stmt = (
+        select(models.PluginTaskParameterType)
+        .join(models.Resource)
+        .where(
+            models.Resource.is_deleted == False,  # noqa: E712
+            models.Resource.group_id == group_id_stmt.scalar_subquery(),
+            models.Resource.latest_snapshot_id
+            == models.PluginTaskParameterType.resource_snapshot_id,
+        )
+    )
+    return list(db.session.scalars(plugin_parameter_types_stmt).all())
