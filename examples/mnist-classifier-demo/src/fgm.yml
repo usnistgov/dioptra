@@ -53,33 +53,75 @@ parameters:
   seed_p: -1
 
 tasks:
-  init_rng:
-    plugin: dioptra_custom.vc.random_rng.init_rng
+  load_dataset:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_dataset
     inputs:
-      - name: seed
+      - name: ep_seed
         type: integer
+        required: false
+      - name: data_dir
+        type: string
+        required: false
+      - name: subset
+        type: str_null
+        required: false
+      - name: image_size
+        type: image_size
+        required: false
+      - name: rescale
+        type: number
+        required: false
+      - name: validation_split
+        type: num_null
+        required: false
+      - name: batch_size
+        type: integer
+        required: false
+      - name: label_mode
+        type: string
+        required: false
+      - name: shuffle
+        type: boolean
         required: false
     outputs:
-      - ret1: integer
-      - ret2: rng
+      dataset: directory_iterator
 
-  draw_random_integer:
-    plugin: dioptra_custom.vc.random_sample.draw_random_integer
+  get_model:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.get_model
     inputs:
-      - rng: rng
-      - name: low
-        type: integer
+      - name: dataset
+        type: directory_iterator
         required: false
-      - name: high
-        type: integer
+      - name: model_architecture
+        type: string
+        required: false
+      - name: input_shape
+        type: image_size
+        required: false
+      - name: loss
+        type: string
+        required: false
+      - name: learning_rate
+        type: number
+        required: false
+      - name: optimizer
+        type: string
+        required: false
+      - name: metrics_list
+        type: metrics_list
+        required: false
+      - name: uri
+        type: string
+        required: false
+      - name: imagenet_preprocessing
+        type: boolean
+        required: false
+      - name: classifier_kwargs
+        type: kwargs
         required: false
     outputs:
-      value: integer
+      classifier: sequential
 
-  init_tensorflow:
-    plugin: dioptra_custom.vc.backend_configs_tensorflow.init_tensorflow
-    inputs:
-      - seed: integer
 
   make_directories:
     plugin: dioptra_custom.vc.artifacts_utils.make_directories
