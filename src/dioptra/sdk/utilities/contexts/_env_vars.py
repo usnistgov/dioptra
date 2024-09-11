@@ -2,6 +2,7 @@ import os
 from contextlib import contextmanager
 from typing import Iterator
 
+
 @contextmanager
 def env_vars(env_updates: dict[str, str]) -> Iterator[None]:
     """Create a context for temporarily updating environment variables.

@@ -14,9 +14,9 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from ._env_vars import env_vars
 from ._plugin_dirs import plugin_dirs
 from ._redirect_print import redirect_print
 from ._sys_path_dirs import sys_path_dirs
-from ._env_vars import env_vars
 
 __all__ = ["plugin_dirs", "redirect_print", "sys_path_dirs", "env_vars"]

@@ -24,6 +24,7 @@ import structlog
 import yaml
 from structlog.stdlib import BoundLogger
 
+from dioptra.sdk.utilities.contexts import env_vars
 from dioptra.sdk.utilities.contexts import sys_path_dirs
 from dioptra.task_engine.task_engine import run_experiment
 from dioptra.task_engine.validation import is_valid
@@ -101,7 +102,7 @@ def _run_job(
     log = logger or LOGGER.new(job_id=JOB_ID, experiment_id=EXPERIMENT_ID)  # noqa: F841
 
     try:
-        with sys_path_dirs(dirs=(str(plugins_dir),)):
+        with sys_path_dirs(dirs=(str(plugins_dir),)), env_vars({"__JOB_ID": str(JOB_ID)}):
             run_experiment(job_yaml, job_parameters)
 
         log.info("=== Run succeeded ===")
@@ -140,7 +141,7 @@ def _run_mlflow_tracked_job(
         mlflow.log_dict(job_yaml, Path(JOB_YAML_PATH).name)
         mlflow.log_params(job_parameters)
 
-        with sys_path_dirs(dirs=(str(plugins_dir),)):
+        with sys_path_dirs(dirs=(str(plugins_dir),)), env_vars({"__JOB_ID": str(JOB_ID)}):
             run_experiment(job_yaml, job_parameters)
 
         log.info("=== Run succeeded ===")
