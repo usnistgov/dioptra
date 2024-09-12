@@ -173,8 +173,12 @@ def extract_tasks(
         plugin_file = entry_point_plugin_file.plugin_file
 
         for task in plugin_file.tasks:
-            input_parameters = task.input_parameters
-            output_parameters = task.output_parameters
+            input_parameters = sorted(
+                task.input_parameters, key=lambda x: x.parameter_number
+            )
+            output_parameters = sorted(
+                task.output_parameters, key=lambda x: x.parameter_number
+            )
 
             tasks[task.plugin_task_name] = {
                 "plugin": _build_plugin_field(plugin, plugin_file, task),
