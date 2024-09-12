@@ -133,7 +133,7 @@ class SimpleDioptraClient(object):
         return parsed_api_url.scheme, parsed_api_url.netloc
 
 
-def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:
+def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
     """Fetches the job files from the Dioptra API and runs the job.
 
     Args:
@@ -180,17 +180,41 @@ def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:
         run_dioptra_job_path = working_dir / "run_dioptra_job.py"
 
         # Use client to download the job files for the provided job_id
-        job_files_package = client.download_job_files(
-            job_id=job_id, output_dir=working_dir
-        )
+        try:
+            job_files_package = client.download_job_files(
+                job_id=job_id, output_dir=working_dir
+            )
+
+        except Exception as e:
+            client.set_job_status(
+                job_id=job_id, experiment_id=experiment_id, status="failed"
+            )
+            log.exception("Could not download job files")
+            raise e
 
         # Unpack the (trusted) tar.gz file in it.
-        with tarfile.open(job_files_package, mode="r:*") as tar:
-            tar.extractall(path=working_dir, filter="data")
+        try:
+            with tarfile.open(job_files_package, mode="r:*") as tar:
+                tar.extractall(path=working_dir, filter="data")
+
+        except Exception as e:
+            client.set_job_status(
+                job_id=job_id, experiment_id=experiment_id, status="failed"
+            )
+            log.exception("Could not extract from tar file")
+            raise e
 
         # Import the run_dioptra_job.py file as a module
-        with sys_path_dirs(dirs=(str(working_dir),)):
-            run_dioptra_job = importlib.import_module(run_dioptra_job_path.stem)
+        try:
+            with sys_path_dirs(dirs=(str(working_dir),)):
+                run_dioptra_job = importlib.import_module(run_dioptra_job_path.stem)
+
+        except Exception as e:
+            client.set_job_status(
+                job_id=job_id, experiment_id=experiment_id, status="failed"
+            )
+            log.exception("Could not import run_dioptra_job.py")
+            raise e
 
         # Execute the main function in the included script file.
         try:
