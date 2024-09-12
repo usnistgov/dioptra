@@ -26,8 +26,9 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.sdk.utilities.contexts import env_vars
 from dioptra.sdk.utilities.contexts import sys_path_dirs
+from dioptra.task_engine.issues import IssueSeverity
 from dioptra.task_engine.task_engine import run_experiment
-from dioptra.task_engine.validation import is_valid
+from dioptra.task_engine.validation import validate
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 DIOPTRA_JOB_ID = "dioptra.jobId"
@@ -58,12 +59,21 @@ def main(
         log.error("Plugins directory does not exist", plugins_dir=str(plugins_dir))
         raise ValueError(f"Plugins directory {plugins_dir} does not exist")
 
-    job_yaml = _load_job_yaml(JOB_YAML_PATH)
-    job_parameters = _load_job_params(JOB_PARAMS_JSON_PATH)
+    try:
+        job_yaml = _load_job_yaml(JOB_YAML_PATH)
 
-    if not is_valid(job_yaml):
-        log.error("Job YAML was invalid!")
-        raise ValueError("Job YAML was invalid!")
+    except Exception as e:
+        log.exception("Could not load job YAML file")
+        raise e
+
+    try:
+        job_parameters = _load_job_params(JOB_PARAMS_JSON_PATH)
+
+    except Exception as e:
+        log.exception("Could not load parameters JSON file")
+        raise e
+
+    _validate_yaml(job_yaml, log)
 
     if enable_mlflow_tracking:
         if dioptra_client is None:
@@ -163,6 +173,27 @@ def _load_job_params(filepath: str) -> MutableMapping[str, Any]:
     job_params_filepath = Path(filepath)
     with job_params_filepath.open("rt") as f:
         return cast(MutableMapping[str, Any], json.load(f))
+
+
+def _validate_yaml(
+    job_yaml: Mapping[str, Any],
+    logger: BoundLogger | None = None,
+) -> None:
+    log = logger or LOGGER.new(job_id=JOB_ID, experiment_id=EXPERIMENT_ID)  # noqa: F841
+
+    issues = validate(job_yaml)
+    errors: list[str] = []
+
+    for issue in issues:
+        if issue.severity is IssueSeverity.WARNING:
+            log.warn("Found issue with Job YAML", message=issue.message)
+
+        if issue.severity is IssueSeverity.ERROR:
+            log.error("Found error in Job YAML", message=issue.message)
+            errors.append(issue.message)
+
+    if errors:
+        raise ValueError(f"Errors found in Job YAML: {errors}")
 
 
 if __name__ == "__main__":
