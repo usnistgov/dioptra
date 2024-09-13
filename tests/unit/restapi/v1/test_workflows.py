@@ -132,7 +132,13 @@ def test_entrypoint_workflow_validation(
     )
 
     plugin_ids = [plugin_response["id"]]
-    entrypoint_parameters = []
+    entrypoint_parameters = [
+        {
+            "name" : "name",
+            "defaultValue": "User",
+            "parameterType": "string",
+        },
+    ]
     assert_entrypoint_workflow_is_valid(
         client,
         task_graph=task_graph,
