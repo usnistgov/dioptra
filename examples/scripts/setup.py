@@ -122,7 +122,7 @@ def get_plugins_to_register(client, yaml_file, plugins_to_upload=None):
             upload['inputParams'] = []
         if 'outputs' in definition:
             outputs = definition['outputs']
-            upload['outputParams'] = create_outputParam_object(client, outputs, types) 
+            upload['outputParams'] = create_outputParam_object(client, outputs, types)
         else:
             upload['outputParams'] = []
         if (python_file in plugins_to_upload):
@@ -161,11 +161,11 @@ def register_plugins(client, group, plugins_to_upload):
     return list(set(plugins))
 def create_parameters_object(client, params):
     ret = []
-    type_map = {'int': 'float', 'float':'float', 'string':'string'}
+    type_map = {'int': 'integer', 'float':'float', 'string':'string', 'list':'list', 'bool': 'boolean'}
     for p in params:
         if (type(params[p]).__name__ in type_map.keys()):
             paramType = type_map[type(params[p]).__name__]
-            paramType='string' # TODO: remove if backend can handle types correctly
+            #paramType='string' # TODO: remove if backend can handle types correctly
             defaultValue = str(params[p])
         else:
             defaultValue = str(params[p])
@@ -226,3 +226,26 @@ def upload_experiment(client, entrypoint, entrypoint_name, entrypoint_desc, plug
 def run_experiment(client, experiment_id, job_desc, queue_id, entrypoint_id, job_time_limit, parameters = {}):
     return client.experiments.create_jobs_by_experiment_id(experiment_id, job_desc, queue_id, entrypoint_id, parameters, job_time_limit)
 
+def delete_all(client):
+    for d in client.experiments.get_all(pageLength=100000)['data']:
+        client.experiments.delete_by_id(d['id'])
+    for d in client.entrypoints.get_all(pageLength=100000)['data']:
+        client.entrypoints.delete_by_id(d['id'])
+    for d in client.jobs.get_all(pageLength=100000)['data']:
+        client.jobs.delete_by_id(d['id'])
+    for d in client.models.get_all(pageLength=100000)['data']:
+        client.models.delete_by_id(d['id'])
+    for d in client.plugins.get_all(pageLength=100000)['data']:
+        try:
+            client.plugins.delete_by_id(d['id'])
+        except:
+            pass
+    for d in client.tags.get_all(pageLength=100000)['data']:
+        client.tags.delete_by_id(d['id'])
+    for d in client.pluginParameterTypes.get_all(pageLength=100000)['data']:
+        try:
+            client.pluginParameterTypes.delete_by_id(d['id'])
+        except:
+            pass
+    for d in client.queues.get_all(pageLength=100000)['data']:
+        client.queues.delete_by_id(d['id'])

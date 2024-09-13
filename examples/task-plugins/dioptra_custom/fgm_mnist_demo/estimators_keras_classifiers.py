@@ -100,7 +100,6 @@ def init_classifier(
         n_classes,
     )
     classifier.compile(loss=loss, optimizer=optimizer, metrics=metrics)
-
     return classifier
 
 

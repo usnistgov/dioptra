@@ -1,42 +1,49 @@
 types:
+  name_parameters:
+    mapping:
+      name: string
+      parameters:
+        mapping: [string, any]
   metrics_list:
-    list: 
-      mapping:
-        name: string
-        parameters:
-          mapping: [string, any]
+    list: name_parameters
   callbacks_list:
-    list: 
-      mapping:
-        name: string
-        parameters:
-          mapping: [string, any]
+    list: name_parameters
+  model_list:
+    list: model_def
+  model_def:
+    mapping: [string, any]
+  artifact_list:
+    list: artifact
+  artifact:
+    mapping: [string, any]
   directory_iterator:
   image_size:
     tuple: [integer, integer, integer]
-  sequential:
+  classifier:
+  fit_kwargs:
+    mapping: [string, any]
   fit_kwargs_null:
-    union:
-      - mapping: [string, any]
-      - "null"
+    union: [fit_kwargs, "null"]
   str_null:
     union: [string, "null"]
+  list_str_null:
+    list: str_null
   num_null:
     union: [number, "null"]
   kwargs:
     mapping: [string, any]
 
 parameters:
-  seed_p: -1
+  seed: -1
   optimizer_name: Adam
-  learning_rate_p: 0.001
+  learning_rate: 0.001
   training_dir: /dioptra/data/Mnist/training
   testing_dir: /dioptra/data/Mnist/testing
-  image_size_p: [28, 28, 1]
-  validation_split_p: 0.2
-  batch_size_p: 32
+  image_size: [28, 28, 1]
+  validation_split: 0.2
+  batch_size: 32
   model_architecture: le_net
-  epochs_p: 30
+  epochs: 30
   register_model_name: "mnist_classifier"
 
 tasks:
@@ -49,8 +56,8 @@ tasks:
       - name: data_dir
         type: string
         required: false
-      - name: subset
-        type: str_null
+      - name: subsets
+        type: list_str_null
         required: false
       - name: image_size
         type: image_size
@@ -71,10 +78,12 @@ tasks:
         type: boolean
         required: false
     outputs:
-      dataset: directory_iterator
+      - training: directory_iterator
+      - validation: directory_iterator
+      - testing: directory_iterator
 
-  get_model:
-    plugin: dioptra_custom.fgm_mnist_demo.plugins.get_model
+  create_model:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.create_model
     inputs:
       - name: dataset
         type: directory_iterator
@@ -96,24 +105,13 @@ tasks:
         required: false
       - name: metrics_list
         type: metrics_list
-        required: false
-      - name: uri
-        type: string
-        required: false
-      - name: imagenet_preprocessing
-        type: boolean
-        required: false
-      - name: classifier_kwargs
-        type: kwargs
-        required: false
     outputs:
-      classifier: sequential
+      classifier: classifier
 
   train:
     plugin: dioptra_custom.fgm_mnist_demo.plugins.train
     inputs:
-      - model_name: string
-      - estimator: any
+      - estimator: classifier
       - x: any
       - name: y
         type: any
@@ -124,89 +122,38 @@ tasks:
       - name: fit_kwargs
         type: fit_kwargs_null
         required: false
+    outputs:
+      classifier: classifier
+
   compute_metrics:
     plugin: dioptra_custom.fgm_mnist_demo.plugins.compute_metrics
     inputs:
-      - classifier: sequential
+      - classifier: classifier
       - dataset: directory_iterator
-  get_none:
-    plugin: dioptra_custom.fgm_mnist_demo.tensorflow.get_none
+
+  save_artifacts_and_models:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.save_artifacts_and_models
     inputs:
-      - arg: string
-    outputs:
-      ret: "null"
-  process_float:
-    plugin: dioptra_custom.fgm_mnist_demo.tensorflow.process_float
-    inputs:
-        - arg: string
-    outputs:
-      ret: number
-  process_int:
-    plugin: dioptra_custom.fgm_mnist_demo.tensorflow.process_int
-    inputs:
-        - arg: string
-    outputs:
-      ret: integer
-  process_int_list:
-    plugin: dioptra_custom.fgm_mnist_demo.tensorflow.process_int_list
-    inputs:
-      - arg: string
-    outputs:
-      ret: image_size
+      - name: artifacts 
+        type: artifact_list
+        required: false
+      - name: models
+        type: model_list
+        required: false
       
-graph:
-  batch_size:
-    process_int: $batch_size_p
-
-  epochs:
-    process_int: $epochs_p
-
-  validation_split:
-    process_float: $validation_split_p
-
-  true_none:
-    get_none: 'h'
-
-  image_size:
-    process_int_list: $image_size_p
-
-  learning_rate:
-    process_float: $learning_rate_p
-
-  seed:
-    process_int: $seed_p
-    
-  training_data:
+graph:    
+  dataset:
     load_dataset:
       ep_seed: $seed
       data_dir: $training_dir
-      subset: training
+      subsets: [training, validation, testing]
       image_size: $image_size
       validation_split: $validation_split
-      batch_size: $batch_size
-
-  validation_data:
-    load_dataset:
-      ep_seed: $seed
-      data_dir: $training_dir
-      subset: validation
-      image_size: $image_size
-      validation_split: $validation_split
-      batch_size: $batch_size
-
-  testing_data:
-    load_dataset:
-      ep_seed: $seed
-      data_dir: $testing_dir
-      subset: null
-      image_size: $image_size
-      validation_split: $validation_split
-      batch_size: $batch_size
-      
+      batch_size: $batch_size      
 
   model:
-    get_model:
-      dataset: $training_data
+    create_model:
+      dataset: $dataset.training
       model_architecture: $model_architecture
       input_shape: $image_size
       learning_rate: $learning_rate
@@ -221,13 +168,12 @@ graph:
         - name: AUC
           parameters: { name: auc }
     dependencies:
-      - training_data
+      - dataset
 
-  training:
+  trained_model:
     train:
-      model_name: $register_model_name
       estimator: $model
-      x: $training_data
+      x: $dataset.training
       callbacks_list:
         - name: EarlyStopping
           parameters:
@@ -237,14 +183,21 @@ graph:
             restore_best_weights: true
       fit_kwargs:
         nb_epochs: $epochs
-        validation_data: $validation_data
+        validation_data: $dataset.validation
         verbose: 2
     dependencies:
       - model
 
   metrics:
     compute_metrics:
-      classifier: $model
-      dataset: $testing_data
+      classifier: $trained_model
+      dataset: $dataset.testing
     dependencies:
-      - training
+      - trained_model
+
+  save:
+    save_artifacts_and_models:
+      models:
+        - name: $register_model_name
+          model: $trained_model
+          

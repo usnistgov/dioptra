@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import requests
 import structlog
-
+import os
 from dioptra import pyplugs
 from structlog.stdlib import BoundLogger
 from posixpath import join as urljoin
@@ -25,21 +25,39 @@ from urllib.parse import urlparse, urlunparse
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 @pyplugs.register    
-def get_uri_for_artifact(job_id, index=0):
+def get_uri_for_model(model_name, model_version=-1):
     session, url = get_logged_in_session()
-    job = get(session, url, 'jobs', str(job_id))
-    uri = job['artifacts'][index]['artifactUri']
+    models = get(session, url, f'models?search={model_name}&pageLength=500')
+    for model in models['data']:
+        if (model['name'] == model_name):
+            model_id = model['id']
+            if (model_version >= 0):
+                selected_model = get(session, url, 
+                    f'models/{model_id}/versions/{model_version}'
+                )
+            else:
+                selected_model = model['latestVersion']
+
+    uri = selected_model['artifact']['artifactUri']
     return uri
-def get_artifacts_for_job(job_id):
+
+def get_uris_for_job(job_id):
     session, url = get_logged_in_session()
     job = get(session, url, 'jobs', str(job_id))
     return [artifact['artifactUri'] for artifact in job['artifacts']]
+
+def get_uris_for_artifacts(artifact_ids):
+    session, url = get_logged_in_session()
+    return [get(session, url, 'artifacts', aid) for aid in artifact_ids]
 
 def get_logged_in_session():
     session = requests.Session()
     url = "http://dioptra-deployment-restapi:5000/api/v1"
 
-    login = post(session, url, {'username':'pluginuser', 'password':'pleasemakesuretoPLUGINthecomputer'}, 'auth', 'login')
+    login = post(session, url, {
+            'username':os.environ['DIOPTRA_WORKER_USERNAME'], 
+            'password':os.environ['DIOPTRA_WORKER_PASSWORD']},
+            'auth', 'login')
     LOGGER.info("login request sent", response=str(login))
 
     return session, url

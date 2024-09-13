@@ -1,112 +1,60 @@
 types:
-  rng:
   path:
-  sequential:
-  number_null:
+  classifier:
+  num_null:
     union: [number, "null"]
-  string_null:
-    union: [string, "null"]
   path_string:
     union: [string, path]
-  path_string_null:
-    union: [path_string, "null"]
-  dirs:
+  list_path_string:
     list: path_string
+  str_null:
+    union: [string, "null"]
+  list_str_null:
+    list: str_null
   directory_iterator:
-  parameters:
-    mapping: [string, number]
   kwargs:
     mapping: [string, any]
-  kwargs_null:
-    union: [kwargs, "null"]
-  keras_classifier:
-  eval_metric:
-    mapping: [string, any]
-  eval_metric_results:
-    mapping: [string, number]
-  dataframe:
   image_size:
     tuple: [integer, integer, integer]
-  norm:
-    union: [integer, number, string]
 
 parameters:
   run_id: ""
-  image_size_p: [28, 28, 1]
-  training_job_id:
+  image_size: [28, 28, 1]
+  model_name: mnist_classifier
+  model_version: -1
   fgm_job_id:
   adv_tar_name: testing_adversarial_fgm.tar.gz
   adv_data_dir: adv_testing
-  seed_p: -1
+  seed: -1
 
 tasks:
-  init_rng:
-    plugin: dioptra_custom.vc.random_rng.init_rng
-    inputs:
-      - name: seed
-        type: integer
-        required: false
-    outputs:
-      - ret1: integer
-      - ret2: rng
-
-  draw_random_integer:
-    plugin: dioptra_custom.vc.random_sample.draw_random_integer
-    inputs:
-      - rng: rng
-      - name: low
-        type: integer
-        required: false
-      - name: high
-        type: integer
-        required: false
-    outputs:
-      value: integer
-
-  init_tensorflow:
-    plugin: dioptra_custom.vc.backend_configs_tensorflow.init_tensorflow
-    inputs:
-      - seed: integer
-
-  log_parameters:
-    plugin: dioptra_custom.vc.tracking_mlflow.log_parameters
-    inputs:
-      - parameters: parameters
-
-  download_all_artifacts_for_job:
-    plugin: dioptra_custom.vc.artifacts_mlflow.download_all_artifacts_for_job
+  load_artifacts_for_job:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_artifacts_for_job
     inputs:
       - job_id: string
-      - artifact_path: string
-      - name: destination_path
-        type: string_null
+      - name: extract_files
+        type: list_path_string
         required: false
-    outputs:
-      download_path: string
-
-  extract_tarfile:
-    plugin: dioptra_custom.vc.artifacts_utils.extract_tarfile
+  load_dataset:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_dataset
     inputs:
-      - filepath: path_string
-      - name: tarball_read_mode
+      - name: ep_seed
+        type: integer
+        required: false
+      - name: data_dir
         type: string
         required: false
-      - name: output_dir
-        type: any
+      - name: subsets
+        type: list_str_null
         required: false
-
-  create_image_dataset:
-    plugin: dioptra_custom.vc.data_tensorflow.create_image_dataset
-    inputs:
-      - data_dir: string
-      - subset: string_null
-      - image_size: image_size
-      - seed: integer
+      - name: image_size
+        type: image_size
+        required: false
       - name: rescale
         type: number
         required: false
       - name: validation_split
-        type: number_null
+        type: num_null
         required: false
       - name: batch_size
         type: integer
@@ -114,142 +62,62 @@ tasks:
       - name: label_mode
         type: string
         required: false
-    outputs:
-      iterator: directory_iterator
-
-  load_tensorflow_keras_classifier:
-    plugin: dioptra_custom.vc.registry_mlflow.load_tensorflow_keras_classifier
-    inputs:
-      - uri: string
-    outputs:
-      classifier: sequential
-  get_uri_for_artifact:
-    plugin: dioptra_custom.vc.artifacts_restapi.get_uri_for_artifact
-    inputs:
-      - job_id: string
-      - name: index
-        type: integer
+      - name: shuffle
+        type: boolean
         required: false
     outputs:
-      ret: string
+      - training: directory_iterator
+      - validation: directory_iterator
+      - testing: directory_iterator
 
-  evaluate_metrics_tensorflow:
-    plugin: dioptra_custom.vc.tensorflow.evaluate_metrics_tensorflow
+  load_model:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_model
     inputs:
-      - classifier: any
-      - dataset: any
+      - name: model_name
+        type: string
+        required: false
+      - name: model_version
+        type: integer
+        required: false
+      - name: imagenet_preprocessing
+        type: boolean
+        required: false
+      - name: art
+        type: boolean
+        required: false
+      - name: classifier_kwargs
+        type: kwargs
+        required: false
     outputs:
-      metrics: eval_metric_results
-  log_metrics:
-    plugin: dioptra_custom.vc.tracking_mlflow.log_metrics
+      classifier: classifier
+      
+  compute_metrics:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.compute_metrics
     inputs:
-      - metrics: eval_metric_results
-  get_none:
-    plugin: dioptra_custom.vc.tensorflow.get_none
-    inputs:
-      - arg: string
-    outputs:
-      ret: "null"
-  process_float:
-    plugin: dioptra_custom.vc.tensorflow.process_float
-    inputs:
-        - arg: string
-    outputs:
-      ret: number
-  process_bool:
-    plugin: dioptra_custom.vc.tensorflow.process_bool
-    inputs:
-        - arg: string
-    outputs:
-      ret: boolean
-  process_int:
-    plugin: dioptra_custom.vc.tensorflow.process_int
-    inputs:
-        - arg: string
-    outputs:
-      ret: integer
-  process_int_list:
-    plugin: dioptra_custom.vc.tensorflow.process_int_list
-    inputs:
-      - arg: string
-    outputs:
-      ret: image_size
-  process_float_list:
-    plugin: dioptra_custom.vc.tensorflow.process_float_list
-    inputs:
-      - arg: string
-    outputs:
-      ret: image_size
-
+      - classifier: classifier
+      - dataset: directory_iterator
 
 graph:
-
-  image_size:
-    process_int_list: $image_size_p
-
-  seed:
-    process_int: $seed_p
-
-  init_rng:
-    init_rng: $seed
-
-  tensorflow_global_seed:
-    draw_random_integer: 
-      rng: $init_rng.ret2
-
-  dataset_seed:
-    draw_random_integer:
-      rng: $init_rng.ret2
-
-  init_tensorflow_results:
-    init_tensorflow: $tensorflow_global_seed
-
-  log_mlflow_params_result:
-    log_parameters:
-      - entry_point_seed: $seed
-        tensorflow_global_seed: $tensorflow_global_seed
-        dataset_seed: $dataset_seed
-
-  adv_tar_path:
-    download_all_artifacts_for_job:
+  load:
+    load_artifacts_for_job:
       job_id: $fgm_job_id
-      artifact_path: $adv_tar_name
+      extract_files: [$adv_tar_name]
 
-  extract_tarfile_results:
-    extract_tarfile:
-      filepath: $adv_tar_path
-
-  adv_ds:
-    create_image_dataset:
+  dataset:
+    load_dataset:
+      ep_seed: $seed
       data_dir: $adv_data_dir
-      subset: null
-      validation_split: null
+      subsets: [testing]
       image_size: $image_size
-      seed: $dataset_seed
-    dependencies:
-      - init_tensorflow_results
-      - extract_tarfile_results
+ 
+  model:
+    load_model:
+      model_name: $model_name
+      model_version: $model_version
 
-  model_uri:
-    get_uri_for_artifact:
-      job_id: $training_job_id
-
-  classifier:
-    load_tensorflow_keras_classifier:
-      uri: $model_uri
+  metrics:
+    compute_metrics:
+      classifier: $model
+      dataset: $dataset.testing
     dependencies:
-      - init_tensorflow_results
-      - adv_ds
-
-  classifier_performance_metrics:
-    evaluate_metrics_tensorflow:
-      classifier: $classifier
-      dataset: $adv_ds
-    dependencies:
-      - classifier
-
-  logged_metrics:
-    log_metrics:
-      metrics: $classifier_performance_metrics
-    dependencies:
-      - classifier_performance_metrics
+      - model

@@ -82,31 +82,3 @@ def get_performance_metrics(
         )
 
     return performance_metrics
-
-@pyplugs.register
-def process_int_list(arg: str):
-    lst = arg.replace('[','').replace(']', '').replace(' ','')
-    lst = list(map(lambda x: int(x), lst.split(',')))
-    return lst
-
-@pyplugs.register
-def process_float_list(arg: str):
-    lst = arg.replace('[','').replace(']', '').replace(' ','')
-    lst = list(map(lambda x: float(x), lst.split(',')))
-    return lst
-
-@pyplugs.register
-def process_float(arg: str):
-    return float(arg)
-
-@pyplugs.register
-def process_int(arg: str):
-    return int(arg)
-    
-@pyplugs.register
-def process_bool(arg: str):
-    return bool(arg)
-
-@pyplugs.register
-def get_none(arg: str):
-    return None

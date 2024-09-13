@@ -77,7 +77,7 @@ except ImportError:  # pragma: nocover
 @pyplugs.register
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
-def create_adversarial_fgm_dataset(
+def fgm(
     data_flow: Any,
     data_dir: str,
     adv_data_dir: Union[str, Path],
@@ -150,6 +150,7 @@ def create_adversarial_fgm_dataset(
         minimal=minimal,
         norm=norm,
     )
+    print(data_flow)
 
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]
