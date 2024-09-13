@@ -99,7 +99,7 @@ class EntrypointValidateEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(entrypoint_workflow_schema=EntrypointWorkflowSchema, api=api)
+    @accepts(schema=EntrypointWorkflowSchema, api=api)
     def post(self):
         """Validates the workflow for a entrypoint."""  # noqa: B950
         log = LOGGER.new(
@@ -112,6 +112,6 @@ class EntrypointValidateEndpoint(Resource):
         return self._entrypoint_validate_service.validate(
             task_graph=task_graph,
             plugin_ids=plugin_ids,
-            parameters=parameters,
+            entrypoint_parameters=parameters,
             log=log,
         )
