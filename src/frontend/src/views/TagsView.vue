@@ -9,6 +9,7 @@
     v-model:selected="selected"
     @request="getTags"
     ref="tableRef"
+    @create="showAddDialog = true"
   >
     <template #body-cell-name="props">
       <q-chip color="primary" text-color="white">

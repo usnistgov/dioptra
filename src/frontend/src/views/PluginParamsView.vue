@@ -7,11 +7,11 @@
     v-model:selected="selected"
     @edit="editing = true; editPluginParamType = selected[0]; showAddDialog = true"
     @delete="showDeleteDialog = true"
-    :showExpand="true"
     @request="getPluginParameterTypes"
     ref="tableRef"
     :hideToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="showAddDialog = true"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>

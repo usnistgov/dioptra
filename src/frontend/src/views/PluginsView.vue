@@ -11,6 +11,7 @@
     @request="getPlugins"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="showPluginDialog = true"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>

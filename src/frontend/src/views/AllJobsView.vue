@@ -11,6 +11,7 @@
     ref="tableRef"
     :hideEditBtn="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    :hideCreateBtn="true"
   >
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}

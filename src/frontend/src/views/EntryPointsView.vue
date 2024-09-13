@@ -13,6 +13,7 @@
     @request="getEntrypoints"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="router.push('/entrypoints/new')"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
