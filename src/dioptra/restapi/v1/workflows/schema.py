@@ -19,7 +19,7 @@ from enum import Enum
 
 from marshmallow import Schema, fields
 
-from dioptra.restapi.entrypoints import EntrypointParameterSchema
+from dioptra.restapi.v1.entrypoints.schema import EntrypointParameterSchema
 
 
 class FileTypes(Enum):
