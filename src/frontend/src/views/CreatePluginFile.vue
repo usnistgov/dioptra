@@ -62,7 +62,7 @@
     <fieldset :class="`${isMobile ? 'col-12' : 'col q-ml-md'}`">
       <legend>Plugin Tasks</legend>
       <TableComponent
-        :rows="tasks"
+        :rows="pluginFile.tasks"
         :columns="taskColumns"
         title="Plugin Tasks"
         ref="tableRef"
@@ -91,7 +91,7 @@
             dense
             clickable
             removable
-            @remove="tasks[props.rowIndex].inputParams.splice(i, 1)"
+            @remove="pluginFile.tasks[props.rowIndex].inputParams.splice(i, 1)"
             @click="handleSelectedParam('edit', props, i, 'inputParams'); showEditParamDialog = true"
           >
             {{ `${param.name}` }}
@@ -118,7 +118,7 @@
               clickable
               removable
               @click="handleSelectedParam('edit', props, i, 'outputParams'); showEditParamDialog = true"
-              @remove="tasks[props.rowIndex].outputParams.splice(i, 1)"
+              @remove="pluginFile.tasks[props.rowIndex].outputParams.splice(i, 1)"
               :label="`${param.name}: ${pluginParameterTypes.filter((type) => type.id === param.parameterType)[0]?.name}`"
             />
             <q-btn
@@ -199,7 +199,12 @@
                 style="height: 10px"
                 class="q-mr-sm"
                 @click="addInputParam()"
-              />
+              >
+                <span class="sr-only">Add Input Param</span>
+                <q-tooltip>
+                  Add Input Param
+                </q-tooltip>
+              </q-btn>
             </div>
           </q-form>
 
@@ -246,11 +251,14 @@
                 style="height: 10px"
                 class="q-mr-sm"
                 @click="addOutputParam()"
-              />
+              >
+                <span class="sr-only">Add Output Param</span>
+                <q-tooltip>
+                  Add Output Param
+                </q-tooltip>
+              </q-btn>
             </div>
           </q-form>
-
-
 
           <q-card-actions align="right">
             <q-btn
@@ -258,12 +266,7 @@
               color="secondary"
               icon="add"
               type="submit"
-            >
-              <span class="sr-only">Add Task</span>
-              <q-tooltip>
-                Add Task
-              </q-tooltip>
-            </q-btn>
+            />
           </q-card-actions>
         </q-form>
       </q-card>
@@ -306,6 +309,7 @@
       color="negative" 
       label="Cancel"
       class="q-mr-lg"
+      @click="confirmLeave = true"
     />
     <q-btn  
       @click="submit()" 
@@ -331,7 +335,7 @@
   </InfoPopupDialog>
   <DeleteDialog 
     v-model="showDeleteDialog"
-    @submit="tasks.splice(selectedTaskProps.rowIndex, 1); showDeleteDialog = false"
+    @submit="pluginFile.tasks.splice(selectedTaskProps.rowIndex, 1); showDeleteDialog = false"
     type="Plugin Task"
     :name="selectedTaskProps?.row?.name"
   />
@@ -343,11 +347,20 @@
     @updateParam="updateParam"
     @addParam="addParam"
   />
+  <LeaveFormDialog 
+    v-model="showLeaveDialog"
+    type="plugin file"
+    @leaveForm="leaveForm"
+  />
+  <ReturnToFormDialog
+    v-model="showReturnDialog"
+    @cancel="clearForm"
+  />
 </template>
 
 <script setup>
-  import { ref, inject, watch, onMounted } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
+  import { ref, inject, watch, onMounted, computed } from 'vue'
+  import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
   import CodeEditor from '@/components/CodeEditor.vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
@@ -356,13 +369,39 @@
   import PageTitle from '@/components/PageTitle.vue'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import EditPluginTaskParamDialog from '@/dialogs/EditPluginTaskParamDialog.vue'
+  import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
+  import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
+  import { useLoginStore } from '@/stores/LoginStore'
+
+  const store = useLoginStore()
   
   const route = useRoute()
   const router = useRouter()
 
   const isMobile = inject('isMobile')
 
-  const pluginFile = ref({})
+  const pluginFile = ref({
+    filename: '',
+    description: '',
+    contents: '',
+    tasks: []
+  })
+  const initialCopy = ref({
+    filename: '',
+    description: '',
+    contents: '',
+    tasks: [],
+  })
+
+  const valuesChanged = computed(() => {
+    for (const key in initialCopy.value) {
+      if(JSON.stringify(initialCopy.value[key]) !== JSON.stringify(pluginFile.value[key])) {
+        return true
+      }
+    }
+    return false
+  })
+
   const uploadedFile = ref(null)
 
   const selectedTaskProps = ref()
@@ -381,6 +420,11 @@
   onMounted(async () => {
     if(route.params.fileId === 'new') {
       title.value = 'Create File'
+      if(store.savedForms.files[route.params.id]) {
+        pluginFile.value = JSON.parse(JSON.stringify(store.savedForms.files[route.params.id]))
+        initialCopy.value = JSON.parse(JSON.stringify(store.savedForms.files[route.params.id]))
+        showReturnDialog.value = true
+      }
       return
     }
     try {
@@ -388,8 +432,8 @@
       console.log('getFile = ', res)
       pluginFile.value = res.data
       title.value = `Edit ${res.data.filename}`
-      tasks.value = res.data.tasks
-      tasks.value.forEach((task) => {
+      pluginFile.value.tasks = res.data.tasks
+      pluginFile.value.tasks.forEach((task) => {
         [...task.inputParams, ... task.outputParams].forEach((param) => {
           param.parameterType = param.parameterType.id
         })
@@ -433,23 +477,18 @@
   }
 
   async function addOrModifyFile() {
-    const pluginFileSubmit = {
-        filename: pluginFile.value.filename,
-        contents: pluginFile.value.contents,
-        description: pluginFile.value.description,
-        tasks: tasks.value
-      }
     try {
       let res
       if(route.params.fileId === 'new') {
-        res = await api.addFile(route.params.id, pluginFileSubmit)
+        res = await api.addFile(route.params.id, pluginFile.value)
       } else {
-        res = await api.updateFile(route.params.id, route.params.fileId, pluginFileSubmit)
+        res = await api.updateFile(route.params.id, route.params.fileId, pluginFile.value)
       }
+      store.savedForms.files[route.params.id] = null
       notify.success(`Successfully ${route.params.fileId === 'new' ? 'created' : 'updated'} '${res.data.filename}'`)
+      confirmLeave.value = true
       router.push(`/plugins/${route.params.id}/files`)
     } catch(err) {
-      console.log('err = ', err)
       notify.error(err.response.data.message)
     } 
   }
@@ -472,7 +511,6 @@
     reader.readAsText(file); // Reads the file as text
   }
 
-  const selected = ref([])
   const tableRef = ref(null)
   const pluginParameterTypes = ref([])
   const displayStructure = ref(false)
@@ -497,7 +535,6 @@
   const inputParams = ref([])
   const outputParams = ref([])
 
-  const tasks = ref([])
   const task = ref({
   })
 
@@ -554,7 +591,7 @@
   function addTask() {
     taskForm.value.validate().then(success => {
       if (success) {
-        tasks.value.push({
+        pluginFile.value.tasks.push({
           name: task.value.name,
           inputParams: inputParams.value,
           outputParams: outputParams.value
@@ -584,11 +621,55 @@
   }
 
   function updateParam(updatedParam) {
-    tasks.value[selectedTaskProps.value.rowIndex][selectedTaskProps.value.type][selectedTaskProps.value.paramIndex] = updatedParam
+    pluginFile.value.tasks[selectedTaskProps.value.rowIndex][selectedTaskProps.value.type][selectedTaskProps.value.paramIndex] = updatedParam
   }
 
   function addParam(newParam) {
-    tasks.value[selectedTaskProps.value.rowIndex][selectedTaskProps.value.type].push(newParam)
+    pluginFile.value.tasks[selectedTaskProps.value.rowIndex][selectedTaskProps.value.type].push(newParam)
+  }
+
+  onBeforeRouteLeave((to, from, next) => {
+    toPath.value = to.path
+    if(confirmLeave.value || !valuesChanged.value) {
+      next(true)
+    } else if(route.params.fileId === 'new') {
+      leaveForm()
+    } else {
+      showLeaveDialog.value = true
+    }
+  })
+
+  const showLeaveDialog = ref(false)
+  const showReturnDialog = ref(false)
+  const confirmLeave = ref(false)
+  const toPath = ref()
+
+  const isEmptyValues = computed(() => {
+    return Object.values(pluginFile.value).every((value) => 
+      (typeof value === 'string' && value === '') || 
+      (Array.isArray(value) && value.length === 0)
+    )
+  })
+
+  function leaveForm() {
+    if(isEmptyValues.value) {
+      store.savedForms.files[route.params.id] = null
+    } else if(route.params.fileId === 'new') {
+      store.savedForms.files[route.params.id] = pluginFile.value
+    }
+    confirmLeave.value = true
+    router.push(toPath.value)
+  }
+
+  function clearForm() {
+    pluginFile.value = {
+      filename: '',
+      description: '',
+      contents: '',
+      tasks: [],
+    }
+    basicInfoForm.value.reset()
+    store.savedForms.files[route.params.id] = null
   }
 
 </script>
