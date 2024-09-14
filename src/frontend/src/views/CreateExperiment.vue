@@ -104,18 +104,24 @@
     <LeaveFormDialog 
       v-model="showLeaveDialog"
       type="experiment"
-      @leaveForm="confirmLeave = true; router.push(toPath)"
+      :edit="route.params.id === 'new' ? false : true"
+      @leaveForm="leaveForm"
+    />
+    <ReturnToFormDialog
+      v-model="showReturnDialog"
+      @cancel="clearForm"
     />
 </template>
 
 <script setup>
-  import { ref, inject, computed } from 'vue'
+  import { ref, inject, computed, watch } from 'vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
   import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
+  import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
 
   const route = useRoute()
   
@@ -136,6 +142,40 @@
     description: '',
     entrypoints: [],
   })
+
+  function clearForm() {
+    experiment.value = {
+      name: '',
+      group: '',
+      description: '',
+      entrypoints: [],
+    }
+    basicInfoForm.value.reset()
+    store.savedForms.experiment = null
+  }
+
+  // watch(experiment.value.entrypoints, () => {
+  //   console.log('entrypoint changed!')
+  // })
+
+  watch(() => experiment.value.entrypoints, async() => {
+    if(!store.savedForms?.experiment) return
+    if(experiment.value.entrypoints.length === 0) return
+    for (const [index, entrypoint] of experiment.value.entrypoints.entries()) {
+      if(typeof entrypoint === 'number') {
+        const res = await getEntrypoint(entrypoint)
+        experiment.value.entrypoints[index] = res.data
+      }
+    }
+  })
+
+  async function getEntrypoint(entrypointID) {
+    try{
+      return await api.getItem('entrypoints', entrypointID)
+    }catch(err) {
+      console.warn(err)
+    }
+  }
 
   const isEmptyValues = computed(() => {
     return Object.values(experiment.value).every((value) => 
@@ -163,10 +203,16 @@
   })
 
   const title = ref('')
+  const showReturnDialog = ref(false)
+
   getExperiment()
   async function getExperiment() {
     if(route.params.id === 'new') {
       title.value = 'Create Experiment'
+      if(store.savedForms?.experiment) {
+        showReturnDialog.value = true
+        experiment.value = store.savedForms.experiment
+      }
       return
     }
     try {
@@ -196,16 +242,16 @@
   }
 
   async function addorModifyExperiment() {
+    experiment.value.entrypoints.forEach((entrypoint, index, array) => {
+      if(typeof entrypoint === 'object') {
+        array[index] = entrypoint.id
+      }
+    })
     try {
       if(route.params.id === 'new') {
         await api.addItem('experiments', experiment.value)
         notify.success(`Successfully created '${experiment.value.name}'`)
       } else {
-        experiment.value.entrypoints.forEach((entrypoint, index, array) => {
-          if(typeof entrypoint === 'object') {
-            array[index] = entrypoint.id
-          }
-        })
         await api.updateItem('experiments', route.params.id, {
         name: experiment.value.name,
         description: experiment.value.description,
@@ -213,11 +259,10 @@
       })
         notify.success(`Successfully updated '${experiment.value.name}'`)
       }
+      router.push('/experiments')
     } catch(err) {
       console.log('err = ', err)
       notify.error(err.response.data.message)
-    } finally {
-      router.push('/experiments')
     }
   }
 
@@ -252,5 +297,13 @@
   const showLeaveDialog = ref(false)
   const confirmLeave = ref(false)
   const toPath = ref()
+
+  function leaveForm() {
+    if(route.params.id === 'new') {
+      store.savedForms.experiment = experiment.value
+    }
+    confirmLeave.value = true
+    router.push(toPath.value)
+  }
 
 </script>

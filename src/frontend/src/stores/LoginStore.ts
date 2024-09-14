@@ -38,6 +38,8 @@ export const useLoginStore = defineStore('login', () => {
     { name: 'Mila', id: '20', read: true, write: false, shareRead: true, shareWrite: true, admin: false, owner: false }
   ])
   
+
+  const savedForms = ref({})
   
 
   // computed()'s are getters
@@ -45,5 +47,5 @@ export const useLoginStore = defineStore('login', () => {
   // function()'s are actions
   
 
-  return { loggedInUser, loggedInGroup, groups, users, };
+  return { loggedInUser, loggedInGroup, groups, users, savedForms };
 })

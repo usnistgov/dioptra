@@ -2,6 +2,7 @@
   <PageTitle 
     title="Create Job"
   />
+  {{ job }}
   <div :class="`row ${isMobile ? '' : 'q-mx-xl'} q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
@@ -206,11 +207,10 @@
     console.log('submitting job = ', JSON.parse(JSON.stringify(job.value)))
     try {
       await api.addJob(route.params.id, job.value)
-      notify.success(`Successfully created ''`)
+      notify.success(`Successfully created job`)
+      router.push(`/experiments/${route.params.id}/jobs`)
     } catch(err) {
       notify.error(err.response.data.message)
-    } finally {
-      router.push(`/experiments/${route.params.id}/jobs`)
     }
   }
 
