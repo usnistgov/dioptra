@@ -22,9 +22,9 @@ parameters:
   image_size: [28, 28, 1]
   model_name: mnist_classifier
   model_version: -1
-  fgm_job_id:
-  adv_tar_name: testing_adversarial_fgm.tar.gz
-  adv_data_dir: adv_testing
+  job_id:
+  tar_name: testing_adversarial_fgm.tar.gz
+  data_dir: adv_testing
   seed: -1
 
 tasks:
@@ -100,13 +100,13 @@ tasks:
 graph:
   load:
     load_artifacts_for_job:
-      job_id: $fgm_job_id
-      extract_files: [$adv_tar_name]
+      job_id: $job_id
+      extract_files: [$tar_name]
 
   dataset:
     load_dataset:
       ep_seed: $seed
-      data_dir: $adv_data_dir
+      data_dir: $data_dir
       subsets: [testing]
       image_size: $image_size
  

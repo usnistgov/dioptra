@@ -43,6 +43,7 @@ from .artifacts_utils import make_directories, extract_tarfile
 from .metrics_distance import get_distance_metric_list
 from .attacks_fgm import fgm
 from .artifacts_mlflow import upload_directory_as_tarball_artifact, upload_data_frame_artifact, download_all_artifacts
+from .defenses_image_preprocessing import create_defended_dataset
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -208,7 +209,7 @@ def attack(
     minimal: bool = False,
     norm: Union[int, float, str] = np.inf,
 ):
-    make_directories(adv_data_dir)
+    make_directories([adv_data_dir] )
     distance_metrics_list = get_distance_metric_list(distance_metrics)
     fgm_dataset = fgm(
         data_flow=dataset,
@@ -236,8 +237,27 @@ def compute_metrics(
     log_metrics(metrics)
 
 @pyplugs.register
-def augment_data():
-    pass
+def augment_data(
+    dataset: Any,
+    def_data_dir: Union[str, Path],
+    image_size: Tuple[int, int, int],
+    distance_metrics: List[Dict[str, str]],
+    batch_size: int = 32,
+    def_type: str = "spatial_smoothing",
+    defense_kwargs: Optional[Dict[str, Any]] = None,
+):
+    make_directories([def_data_dir])
+    distance_metrics_list = get_distance_metric_list(distance_metrics)
+    defended_dataset = create_defended_dataset(
+        data_flow=dataset,
+        def_data_dir=def_data_dir,
+        image_size=image_size,
+        distance_metrics_list=distance_metrics_list,
+        batch_size=batch_size,
+        def_type=def_type,
+        defense_kwargs=defense_kwargs,
+    )
+    return defended_dataset
 
 @pyplugs.register
 def predict():

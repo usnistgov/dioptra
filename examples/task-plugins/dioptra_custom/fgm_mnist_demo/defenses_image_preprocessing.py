@@ -66,40 +66,24 @@ DEFENSE_LIST = {
 @require_package("art", exc_type=ARTDependencyError)
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def create_defended_dataset(
-    data_dir: str,
-    dataset_name: str,
+    data_flow: Any,
     def_data_dir: Union[str, Path],
     image_size: Tuple[int, int, int],
     distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
     batch_size: int = 32,
-    label_mode: str = "categorical",
     def_type: str = "spatial_smoothing",
-    **kwargs,
+    defense_kwargs: Optional[Dict[str, Any]] = None,
 ) -> pd.DataFrame:
     distance_metrics_list = distance_metrics_list or []
-    color_mode: str = "rgb" if image_size[2] == 3 else "grayscale"
-    rescale: float = 1.0 if image_size[2] == 3 else 1.0 / 255
     clip_values: Tuple[float, float] = (0, 255) if image_size[2] == 3 else (0, 1.0)
-    target_size: Tuple[int, int] = image_size[:2]
     def_data_dir = Path(def_data_dir)
-    data_dir = Path(data_dir) / dataset_name
-
-    defense = init_defense(
+    defense_kwargs = {} if defense_kwargs is None else defense_kwargs
+    defense = _init_defense(
         clip_values=clip_values,
         def_type=def_type,
-        **kwargs,
+        defense_kwargs=defense_kwargs,
     )
 
-    data_generator: ImageDataGenerator = ImageDataGenerator(rescale=rescale)
-
-    data_flow = data_generator.flow_from_directory(
-        directory=data_dir,
-        target_size=target_size,
-        color_mode=color_mode,
-        class_mode=label_mode,
-        batch_size=batch_size,
-        shuffle=False,
-    )
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]
     class_names_list = sorted(data_flow.class_indices, key=data_flow.class_indices.get)
@@ -149,10 +133,10 @@ def create_defended_dataset(
     return pd.DataFrame(distance_metrics_)
 
 
-def init_defense(clip_values, def_type, **kwargs):
+def _init_defense(clip_values, def_type, defense_kwargs):
     defense = DEFENSE_LIST[def_type](
         clip_values=clip_values,
-        **kwargs,
+        **defense_kwargs,
     )
     return defense
 
