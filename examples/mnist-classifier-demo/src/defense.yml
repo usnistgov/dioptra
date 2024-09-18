@@ -58,6 +58,7 @@ parameters:
   norm: "inf"
   seed: -1
   def_type: spatial_smoothing
+  defense_kwargs: {}
 
 tasks:
   load_artifacts_for_job:
@@ -182,6 +183,7 @@ graph:
       image_size: $image_size
       batch_size: $batch_size
       def_type: $def_type
+      defense_kwargs: $defense_kwargs
       distance_metrics:
         - name: l_infinity_norm
           func: l_inf_norm

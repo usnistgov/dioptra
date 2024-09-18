@@ -161,7 +161,7 @@ def register_plugins(client, group, plugins_to_upload):
     return list(set(plugins))
 def create_parameters_object(client, params):
     ret = []
-    type_map = {'int': 'integer', 'float':'float', 'string':'string', 'list':'list', 'bool': 'boolean'}
+    type_map = {'int': 'integer', 'float':'float', 'string':'string', 'list':'list', 'bool': 'boolean', 'dict': 'mapping'}
     for p in params:
         if (type(params[p]).__name__ in type_map.keys()):
             paramType = type_map[type(params[p]).__name__]
