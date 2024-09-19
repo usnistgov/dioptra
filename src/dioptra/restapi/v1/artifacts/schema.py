@@ -42,6 +42,33 @@ class ArtifactRefSchema(ArtifactRefBaseSchema):  # type: ignore
     )
 
 
+class ArtifactFileSchema(Schema):  # type: ignore
+    """The schema for the files stored in an Artifact resource."""
+    
+    relativePath = fields.String(
+        attribute="relative_path",
+        metadata=dict(description="Relative path to the Artifact File."),
+    )
+    artifactType = fields.String(
+        attribute="artifact_type",
+        metadata=dict(description="The file type of the Artifact."),
+    )
+    fileSize = fields.Integer(
+        attribute="file_size",
+        metadata=dict(description="The size of the Artifact."),
+    )
+
+
+class ArtifactFilePageSchema(BasePageSchema):
+    """The paged schema for the files stored in an Artifact resource."""
+
+    data = fields.Nested(
+        ArtifactFileSchema,
+        many=True,
+        metadata=dict(description="List of Artifact files in the current page."),
+    )
+
+
 class ArtifactMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Artifact resource."""
 
@@ -69,6 +96,22 @@ class ArtifactSchema(ArtifactMutableFieldsSchema, ArtifactBaseSchema):  # type: 
         metadata=dict(description="URL pointing to the location of the Artifact."),
         required=True,
     )
+    isDir = fields.Boolean(
+        attribute="is_dir",
+        metadata=dict(description="Indicates whether or not the Artifact is a directory."),
+        required=True,
+    )
+    files = fields.Nested(
+        ArtifactFileSchema,
+        attribute="files",
+        metadata=dict(description="The list of files contained in an Artifact."),
+        required=True,
+    )
+    fileTree = fields.Nested(
+        ArtifactFileSchema,
+        attribute="file_tree",
+        metadata=dict(description="The file tree for all files contained in an Artifact."),
+    )
 
 
 class ArtifactPageSchema(BasePageSchema):
@@ -81,10 +124,38 @@ class ArtifactPageSchema(BasePageSchema):
     )
 
 
+class ShowFileTreeQueryParametersSchema(Schema):
+    """A schema for adding show_file_tree query parameters to an artifact
+       resource endpoint."""
+
+    showFileTree = fields.Boolean(
+        attribute="show_file_tree",
+        metadata=dict(description="Display files as a directory."),
+        load_default=None,
+    )
+
+
+class DownloadPathQueryParametersSchema(Schema):
+    """A schema for adding path and downlaod query parameters to a resource endpoint."""
+
+    path = fields.String(
+        attribute="path",
+        metadata=dict(description="Path of a specific artifact."),
+        load_default=None,
+    )
+    download = fields.Boolean(
+        attribute="download",
+        metadata=dict(description="Determines whether the file will be downloaded or viewed."),
+        load_default=None,
+    )
+
+
 class ArtifactGetQueryParameters(
     PagingQueryParametersSchema,
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
     SortByGetQueryParametersSchema,
+    ShowFileTreeQueryParametersSchema,
+    DownloadPathQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /artifacts endpoint."""

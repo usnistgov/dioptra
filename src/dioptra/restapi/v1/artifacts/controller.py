@@ -42,12 +42,15 @@ from .schema import (
     ArtifactMutableFieldsSchema,
     ArtifactPageSchema,
     ArtifactSchema,
+    ArtifactFileSchema,
+    ArtifactFilePageSchema,
 )
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
     ArtifactIdService,
     ArtifactService,
+    ArtifactIdContentsService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -175,6 +178,75 @@ class ArtifactIdEndpoint(Resource):
                 error_if_not_found=True,
                 log=log,
             ),
+        )
+        return utils.build_artifact(artifact)
+
+
+@api.route("/<int:id>/contents")
+@api.param("id", "ID for the Artifact resource.")
+class ArtifactIdContentsEndpoint(Resource):
+    @inject
+    def __init__(self, artifact_id_contents_service: ArtifactIdContentsService, *args, **kwargs) -> None:
+        """Initialize the artifact_id resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            artifact_id_contents_service: A ArtifactIdContentsService object.
+        """
+        self._artifact_id_service = artifact_id_contents_service
+        super().__init__(*args, **kwargs)
+    
+    @login_required
+    @accepts(query_params_schema=ArtifactGetQueryParameters, api=api)
+    @responds(schema=ArtifactFilePageSchema, api=api)
+    def get(self, id: int):
+        """Gets a list of all files associated with an Artifact resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
+        )
+        parsed_query_params = request.parsed_query_params  # noqa: F841
+
+        group_id = parsed_query_params["group_id"]
+        search_string = unquote(parsed_query_params["search"])
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+        sort_by_string = parsed_query_params["sort_by"]
+        descending = parsed_query_params["descending"]
+
+        artifacts, total_num_artifacts = self._artifact_service.get(
+            group_id=group_id,
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
+            log=log,
+        )
+        return utils.build_paging_envelope(
+            V1_ARTIFACTS_ROUTE,
+            build_fn=utils.build_artifact,
+            data=artifacts,
+            group_id=group_id,
+            query=search_string,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_artifacts,
+            sort_by=sort_by_string,
+            descending=descending,
+        )
+
+    @login_required
+    @responds(schema=ArtifactFileSchema, api=api)
+    def get(self, id: int):
+        """Gets an Artifact file."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
+        )
+        artifact = cast(
+            models.Artifact,
+            self._artifact_id_service.get(id, error_if_not_found=True, log=log),
         )
         return utils.build_artifact(artifact)
 
