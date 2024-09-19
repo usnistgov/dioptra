@@ -38,19 +38,19 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
 )
 
 from .schema import (
+    ArtifactFilePageSchema,
+    ArtifactFileSchema,
     ArtifactGetQueryParameters,
     ArtifactMutableFieldsSchema,
     ArtifactPageSchema,
     ArtifactSchema,
-    ArtifactFileSchema,
-    ArtifactFilePageSchema,
 )
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    ArtifactIdContentsService,
     ArtifactIdService,
     ArtifactService,
-    ArtifactIdContentsService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -186,7 +186,9 @@ class ArtifactIdEndpoint(Resource):
 @api.param("id", "ID for the Artifact resource.")
 class ArtifactIdContentsEndpoint(Resource):
     @inject
-    def __init__(self, artifact_id_contents_service: ArtifactIdContentsService, *args, **kwargs) -> None:
+    def __init__(
+        self, artifact_id_contents_service: ArtifactIdContentsService, *args, **kwargs
+    ) -> None:
         """Initialize the artifact_id resource.
 
         All arguments are provided via dependency injection.
@@ -196,7 +198,7 @@ class ArtifactIdContentsEndpoint(Resource):
         """
         self._artifact_id_service = artifact_id_contents_service
         super().__init__(*args, **kwargs)
-    
+
     @login_required
     @accepts(query_params_schema=ArtifactGetQueryParameters, api=api)
     @responds(schema=ArtifactFilePageSchema, api=api)
@@ -236,19 +238,6 @@ class ArtifactIdContentsEndpoint(Resource):
             sort_by=sort_by_string,
             descending=descending,
         )
-
-    @login_required
-    @responds(schema=ArtifactFileSchema, api=api)
-    def get(self, id: int):
-        """Gets an Artifact file."""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
-        )
-        artifact = cast(
-            models.Artifact,
-            self._artifact_id_service.get(id, error_if_not_found=True, log=log),
-        )
-        return utils.build_artifact(artifact)
 
 
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
