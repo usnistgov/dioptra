@@ -124,7 +124,7 @@
       try {
         const res = await api.getData('plugins', {
           search: val,
-          rowsPerPage: 100,
+          rowsPerPage: 0, // get all
           index: 0
         })
         pluginOptions.value = res.data.data

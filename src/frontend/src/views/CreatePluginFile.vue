@@ -514,13 +514,12 @@
   ]
 
   async function getPluginParameterTypes(pagination) {
-    console.log('pagination = ', pagination)
+    pagination.rowsPerPage = 0 // get all
     try {
       const res = await api.getData('pluginParameterTypes', pagination)
       pluginParameterTypes.value = res.data.data
       tableRef.value.updateTotalRows(res.data.totalNumResults)
     } catch(err) {
-      console.log('err = ', err)
       notify.error(err.response.data.message)
     } 
   }

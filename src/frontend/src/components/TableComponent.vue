@@ -14,7 +14,7 @@
     dense
     v-model:pagination="pagination"
     @request="onRequest"
-    :rows-per-page-options="[5,10,15,20,25,50]"
+    :rows-per-page-options="[5,10,15,20,25,50,0]"
   >
     <template v-slot:header="props">
       <q-tr :props="props">

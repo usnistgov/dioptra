@@ -238,7 +238,7 @@
       try {
         const res = await api.getData('queues', {
           search: val,
-          rowsPerPage: 100,
+          rowsPerPage: 0, // get all
           index: 0
         })
         queues.value = res.data.data
@@ -253,7 +253,7 @@
       try {
         const res = await api.getData('entrypoints', {
           search: val,
-          rowsPerPage: 100,
+          rowsPerPage: 0, // get all
           index: 0
         })
         entrypoints.value = res.data.data
