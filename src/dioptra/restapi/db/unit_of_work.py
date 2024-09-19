@@ -20,6 +20,7 @@ from typing import Literal, Type
 
 from dioptra.restapi.db.db import db
 from dioptra.restapi.db.repository.groups import GroupRepository
+from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.db.repository.users import UserRepository
 
 
@@ -35,6 +36,7 @@ class UnitOfWork(contextlib.AbstractContextManager):
         self.session = db.session
         self.user_repo = UserRepository(self.session)
         self.group_repo = GroupRepository(self.session)
+        self.queue_repo = QueueRepository(self.session)
 
     def commit(self) -> None:
         self.session.commit()

@@ -38,6 +38,7 @@ from requests import Session as RequestsSession
 
 from dioptra.restapi.db import db as restapi_db
 from dioptra.restapi.db.repository.groups import GroupRepository
+from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.db.repository.users import UserRepository
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.v1.shared.request_scope import request
@@ -248,6 +249,13 @@ def group_repo(db: SQLAlchemy) -> GroupRepository:
 @pytest.fixture
 def user_repo(db: SQLAlchemy) -> UserRepository:
     repo = UserRepository(db.session)
+
+    return repo
+
+
+@pytest.fixture
+def queue_repo(db: SQLAlchemy) -> QueueRepository:
+    repo = QueueRepository(db.session)
 
     return repo
 

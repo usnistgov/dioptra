@@ -27,3 +27,7 @@ class UsernameNotAvailableError(Exception):
 
 class UserEmailNotAvailableError(Exception):
     """The email address is not available."""
+
+
+class QueueAlreadyExistsError(Exception):
+    """The queue name already exists."""

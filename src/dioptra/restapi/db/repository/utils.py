@@ -18,13 +18,31 @@ import enum
 import typing
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Session, scoped_session
+from sqlalchemy.orm import Session, aliased, scoped_session
 
-from dioptra.restapi.db.models import Group, GroupLock, User, UserLock
-from dioptra.restapi.db.models.constants import GroupLockTypes, UserLockTypes
+from dioptra.restapi.db.models import (
+    Group,
+    GroupLock,
+    GroupMember,
+    Resource,
+    ResourceLock,
+    ResourceSnapshot,
+    User,
+    UserLock,
+)
+from dioptra.restapi.db.models.constants import (
+    group_lock_types,
+    resource_lock_types,
+    user_lock_types,
+)
 from dioptra.restapi.db.repository.errors import (
     UserEmailNotAvailableError,
     UsernameNotAvailableError,
+)
+from dioptra.restapi.db.shared_errors import (
+    ResourceDeletedError,
+    ResourceExistsError,
+    ResourceNotFoundError,
 )
 
 # General ORM-using code ought to be compatible with "plain" SQLAlchemy or
@@ -60,6 +78,65 @@ class DeletionPolicy(enum.Enum):
     DELETED = enum.auto()
 
 
+def get_group_id(group: Group | int) -> int | None:
+    """
+    Helper for APIs which allow a Group domain object or group_id integer
+    primary key value.  This normalizes the value to the group_id value, or
+    None (if a Group object was passed with a null .group_id attribute).
+
+    Args:
+        group: A group object, group_id integer primary key value
+
+    Returns:
+        A group ID or None
+    """
+    if isinstance(group, int):
+        group_id = group
+    else:
+        group_id = group.group_id
+
+    return group_id
+
+
+def get_resource_id(resource: Resource | ResourceSnapshot | int) -> int | None:
+    """
+    Helper for APIs which allow a Resource/ResourceSnapshot object or
+    resource_id integer primary key value.  This normalizes the value to the
+    resource_id value, or None (if an object was passed with a null
+    .resource_id attribute).
+
+    Args:
+        resource: A resource, snapshot, or resource_id integer primary key
+            value
+
+    Returns:
+        A resource ID or None
+    """
+    if isinstance(resource, int):
+        resource_id = resource
+
+    else:
+        # This hack should not in theory be necessary.  But when creating a
+        # snapshot, SQLAlchemy doesn't seem to set foreign key attributes when
+        # setting the "resource" relationship attribute.  That means that when
+        # creating a snapshot via an existing resource, the snapshot's
+        # .resource_id attribute may still be null, whereas
+        # .resource.resource_id is non-null.  For us, it means we can't trust a
+        # null .resource_id attribute on a snapshot.  It may mean there is no
+        # corresponding resource, or it may mean SQLAlchemy just didn't set the
+        # attribute.  So if 'resource' is a snapshot with a null .resource_id,
+        # make a second attempt to get a resource ID via .resource.resource_id.
+        resource_id = resource.resource_id
+        if (
+            resource_id is None
+            and isinstance(resource, ResourceSnapshot)
+            and resource.resource
+        ):
+            resource_id = resource.resource.resource_id
+
+    return resource_id
+
+
 def user_exists(session: CompatibleSession[S], user: User) -> ExistenceResult:
     """
     Check whether the given user exists in the database, and if so, whether
@@ -89,7 +166,7 @@ def user_exists(session: CompatibleSession[S], user: User) -> ExistenceResult:
 
         if not row:
             exists = ExistenceResult.DOES_NOT_EXIST
-        elif row[1] == UserLockTypes.DELETE:
+        elif row[1] == user_lock_types.DELETE:
             exists = ExistenceResult.DELETED
         else:
             exists = ExistenceResult.EXISTS
@@ -97,26 +174,29 @@ def user_exists(session: CompatibleSession[S], user: User) -> ExistenceResult:
     return exists
 
 
-def group_exists(session: CompatibleSession[S], group: Group) -> ExistenceResult:
+def group_exists(session: CompatibleSession[S], group: Group | int) -> ExistenceResult:
     """
     Check whether the given group exists in the database, and if so, whether
     it was deleted or not.
 
     Args:
         session: An SQLAlchemy session
-        group: A Group object
+        group: A Group object or group_id integer primary key value
 
     Returns:
         One of the ExistenceResult enum values
     """
-    if group.group_id is None:
+
+    group_id = get_group_id(group)
+
+    if group_id is None:
         exists = ExistenceResult.DOES_NOT_EXIST
     else:
         # May as well get existence + deletion status in one query
         stmt = (
             sa.select(Group.group_id, GroupLock.group_lock_type)
             .outerjoin(GroupLock)
-            .where(Group.group_id == group.group_id)
+            .where(Group.group_id == group_id)
         )
         results = session.execute(stmt)
         # will need to change if a group may have multiple lock types
@@ -124,10 +204,97 @@ def group_exists(session: CompatibleSession[S], group: Group) -> ExistenceResult
 
         if not row:
             exists = ExistenceResult.DOES_NOT_EXIST
-        elif row[1] == GroupLockTypes.DELETE:
+        elif row[1] == group_lock_types.DELETE:
             exists = ExistenceResult.DELETED
         else:
             exists = ExistenceResult.EXISTS
+
+    return exists
+
+
+def resource_exists(
+    session: CompatibleSession[S], resource: Resource | ResourceSnapshot | int
+) -> ExistenceResult:
+    """
+    Check whether the given resource exists in the database, and if so, whether
+    it was deleted or not.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, snapshot (something with a .resource_id
+            attribute we can use to identify a resource), or resource_id
+            integer primary key value
+
+    Returns:
+        One of the ExistenceResult enum values
+    """
+
+    resource_id = get_resource_id(resource)
+
+    if resource_id is None:
+        exists = ExistenceResult.DOES_NOT_EXIST
+    else:
+        stmt = (
+            sa.select(ResourceLock.resource_lock_type)
+            .select_from(Resource)
+            .outerjoin(ResourceLock)
+            .where(Resource.resource_id == resource_id)
+            # Note: using "IN ('delete', NULL)" as a shortcut operator doesn't
+            # work here, since IN operates via '=', and '=' doesn't behave as
+            # expected with nulls.
+            .where(
+                sa.or_(
+                    ResourceLock.resource_lock_type == resource_lock_types.DELETE,
+                    ResourceLock.resource_lock_type == None,  # noqa: E711
+                )
+            )
+        )
+
+        # This really ought to only produce at most one value
+        locks = session.scalars(stmt).all()
+
+        if not locks:
+            exists = ExistenceResult.DOES_NOT_EXIST
+        elif resource_lock_types.DELETE in locks:
+            exists = ExistenceResult.DELETED
+        else:
+            exists = ExistenceResult.EXISTS
+
+    return exists
+
+
+def snapshot_exists(session: CompatibleSession[S], snapshot: ResourceSnapshot) -> bool:
+    """
+    Check whether the given snapshot exists in the database.  Snapshots can't
+    be individually deleted (only the resources), so a deletion check is not
+    applicable here.
+
+    Args:
+        session: An SQLAlchemy session
+        snapshot: Any snapshot object
+
+    Returns:
+        True if the snapshot exists; False if not
+    """
+
+    if snapshot.resource_snapshot_id is None:
+        exists = False
+
+    else:
+        sub_stmt: sa.Select = (
+            sa.select(sa.literal_column("1"))
+            .select_from(ResourceSnapshot)
+            .where(
+                ResourceSnapshot.resource_snapshot_id == snapshot.resource_snapshot_id
+            )
+        )
+        exists_stmt = sa.select(sub_stmt.exists())
+
+        exists = session.scalar(exists_stmt)
+
+        # For mypy.  I think a "select exists(....)" should always return true
+        # or false.
+        assert exists is not None
 
     return exists
 
@@ -159,20 +326,11 @@ def assert_user_exists(
     user_id = "<no-ID>" if user.user_id is None else user.user_id
     user_name = "<no-name>" if user.username is None else user.username
 
-    if existence_result == ExistenceResult.DOES_NOT_EXIST:
-        raise Exception(f"User does not exist: {user_name}/{user_id}")
-
-    elif existence_result == ExistenceResult.EXISTS:
-        if deletion_policy == DeletionPolicy.DELETED:
-            raise Exception(f"User exists, not deleted: {user_name}/{user_id}")
-
-    elif existence_result == ExistenceResult.DELETED:
-        if deletion_policy == DeletionPolicy.NOT_DELETED:
-            raise Exception(f"User is deleted: {user_name}/{user_id}")
+    _assert_exists(deletion_policy, existence_result, "User", f"{user_id}/{user_name}")
 
 
 def assert_group_exists(
-    session: CompatibleSession[S], group: Group, deletion_policy: DeletionPolicy
+    session: CompatibleSession[S], group: Group | int, deletion_policy: DeletionPolicy
 ) -> None:
     """
     Check whether the given group exists in the database.  This function accepts
@@ -187,7 +345,7 @@ def assert_group_exists(
 
     Args:
         session: An SQLAlchemy session
-        group: A Group object
+        group: A Group object or group_id integer primary key value
         deletion_policy: One of the DeletionPolicy enum values
 
     Raises:
@@ -195,19 +353,86 @@ def assert_group_exists(
     """
     existence_result = group_exists(session, group)
 
-    group_id = "<no-ID>" if group.group_id is None else group.group_id
-    group_name = "<no-name>" if group.name is None else group.name
+    group_id = get_group_id(group)
+    if isinstance(group, int):
+        obj_id = str(group_id)
+    else:
+        obj_id = f"{group_id}/{group.name}"
 
-    if existence_result == ExistenceResult.DOES_NOT_EXIST:
-        raise Exception(f"Group does not exist: {group_name}/{group_id}")
+    _assert_exists(deletion_policy, existence_result, "Group", obj_id)
 
-    elif existence_result == ExistenceResult.EXISTS:
-        if deletion_policy == DeletionPolicy.DELETED:
-            raise Exception(f"Group exists, not deleted: {group_name}/{group_id}")
 
-    elif existence_result == ExistenceResult.DELETED:
-        if deletion_policy == DeletionPolicy.NOT_DELETED:
-            raise Exception(f"Group is deleted: {group_name}/{group_id}")
+def assert_resource_exists(
+    session: CompatibleSession[S],
+    resource: Resource | ResourceSnapshot | int,
+    deletion_policy: DeletionPolicy,
+) -> None:
+    """
+    Check whether the given resource exists in the database.  This function
+    accepts a policy value expressing the caller's preference with respect to
+    deleted resources:
+
+        ANY: Check whether the resource exists in the database at all (deletion
+            state doesn't matter)
+        NOT_DELETED: Check whether the resource exists in the database and is
+            not deleted
+        DELETED: Check whether the resource exists in the database and is
+            deleted
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, snapshot, or resource_id integer primary key
+            value
+        deletion_policy: One of the DeletionPolicy enum values
+
+    Raises:
+        ResourceNotFoundError: if the resource is not found (even deleted)
+        ResourceDeletedError: if the resource exists and is deleted, an
+            error with respect to the NOT_DELETED policy
+        ResourceExistsError: if the resource exists and is not deleted, an
+            error with respect to the DELETED policy
+    """
+    existence_result = resource_exists(session, resource)
+
+    resource_id = get_resource_id(resource)
+    if isinstance(resource, int):
+        resource_type = None
+    else:
+        resource_type = resource.resource_type
+
+    if existence_result is ExistenceResult.DOES_NOT_EXIST:
+        raise ResourceNotFoundError(resource_id, resource_type)
+
+    elif existence_result is ExistenceResult.EXISTS:
+        if deletion_policy is DeletionPolicy.DELETED:
+            raise ResourceExistsError(resource_id, resource_type)
+
+    elif existence_result is ExistenceResult.DELETED:
+        if deletion_policy is DeletionPolicy.NOT_DELETED:
+            raise ResourceDeletedError(resource_id, resource_type)
+
+
+def assert_snapshot_exists(
+    session: CompatibleSession[S], snapshot: ResourceSnapshot
+) -> None:
+    """
+    Check whether the given snapshot exists in the database.  Snapshots can't
+    be individually deleted (only the resources), so deletion policy is not
+    applicable here.
+
+    Args:
+        session: An SQLAlchemy session
+        snapshot: A snapshot object
+
+    Raises:
+        Exception if the snapshot doesn't exist
+    """
+
+    if not snapshot_exists(session, snapshot):
+        snapshot_id = str(snapshot.resource_snapshot_id or "<no-ID>")
+        snapshot_type = snapshot.resource_type or "<no-type>"
+
+        raise Exception(f"{snapshot_type} snapshot not found: {snapshot_id}")
 
 
 def assert_user_does_not_exist(
@@ -238,20 +463,13 @@ def assert_user_does_not_exist(
     user_id = "<no-ID>" if user.user_id is None else user.user_id
     user_name = "<no-name>" if user.username is None else user.username
 
-    if existence_result is ExistenceResult.EXISTS:
-        if deletion_policy is not DeletionPolicy.DELETED:
-            raise Exception(f"User exists, not deleted: {user_name}/{user_id}")
-
-    elif existence_result is ExistenceResult.DELETED:
-        if deletion_policy is not DeletionPolicy.NOT_DELETED:
-            raise Exception(f"User exists (deleted): {user_name}/{user_id}")
-
-    # else: ExistenceResult.DOES_NOT_EXIST.  deletion policy doesn't matter in
-    # this case; the user does not exist at all.
+    _assert_does_not_exist(
+        deletion_policy, existence_result, "User", f"{user_id}/{user_name}"
+    )
 
 
 def assert_group_does_not_exist(
-    session: CompatibleSession[S], group: Group, deletion_policy: DeletionPolicy
+    session: CompatibleSession[S], group: Group | int, deletion_policy: DeletionPolicy
 ) -> None:
     """
     Check whether the given group exists in the database.  This function accepts
@@ -267,7 +485,7 @@ def assert_group_does_not_exist(
 
     Args:
         session: An SQLAlchemy session
-        group: A Group object
+        group: A Group object or group_id integer primary key value
         deletion_policy: One of the DeletionPolicy enum values
 
     Raises:
@@ -275,19 +493,171 @@ def assert_group_does_not_exist(
     """
     existence_result = group_exists(session, group)
 
-    group_id = "<no-ID>" if group.group_id is None else group.group_id
-    group_name = "<no-name>" if group.name is None else group.name
+    group_id = get_group_id(group)
+    if isinstance(group, int):
+        obj_id = str(group_id)
+    else:
+        obj_id = f"{group_id}/{group.name}"
+
+    _assert_does_not_exist(deletion_policy, existence_result, "Group", obj_id)
+
+
+def assert_resource_does_not_exist(
+    session: CompatibleSession[S],
+    resource: Resource | ResourceSnapshot | int,
+    deletion_policy: DeletionPolicy,
+) -> None:
+    """
+    Check whether the given resource exists in the database.  This function
+    accepts a policy value expressing the caller's preference with respect to
+    deleted resources:
+
+        ANY: Ensure the resource does not exist in the database at all (deletion
+             state doesn't matter).  Same as resource_exists(...) == DOES_NOT_EXIST
+        NOT_DELETED: Ensure the resource doesn't exist as non-deleted (deleted is
+                     ok).  Same as resource_exists(...) != EXISTS
+        DELETED: Ensure the resource doesn't exist as deleted (non-deleted ok).
+                 Same as resource_exists(...) != DELETED
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, snapshot, or resource_id integer primary key
+            value
+        deletion_policy: One of the DeletionPolicy enum values
+
+    Raises:
+        ResourceExistsError: if the resource is found and is not deleted, an
+            error with respect to policies ANY and NOT_DELETED
+        ResourceDeletedError: if the resource is found and is deleted, an
+            error with respect to policies ANY and DELETED
+    """
+    existence_result = resource_exists(session, resource)
+
+    resource_id = get_resource_id(resource)
+    if isinstance(resource, int):
+        resource_type = None
+    else:
+        resource_type = resource.resource_type
 
     if existence_result is ExistenceResult.EXISTS:
         if deletion_policy is not DeletionPolicy.DELETED:
-            raise Exception(f"Group exists, not deleted: {group_name}/{group_id}")
+            raise ResourceExistsError(resource_id, resource_type)
 
     elif existence_result is ExistenceResult.DELETED:
         if deletion_policy is not DeletionPolicy.NOT_DELETED:
-            raise Exception(f"Group exists (deleted): {group_name}/{group_id}")
+            raise ResourceDeletedError(resource_id, resource_type)
 
     # else: ExistenceResult.DOES_NOT_EXIST.  deletion policy doesn't matter in
-    # this case; the group does not exist at all.
+    # this case; the object does not exist at all.
+
+
+def assert_snapshot_does_not_exist(
+    session: CompatibleSession[S], snapshot: ResourceSnapshot
+) -> None:
+    """
+    Check whether the given snapshot exists in the database.  Snapshots can't
+    be individually deleted (only the resources), so deletion policy is not
+    applicable here.
+
+    Args:
+        session: An SQLAlchemy session
+        snapshot: A snapshot object
+
+    Raises:
+        Exception: if the snapshot exists
+    """
+
+    snapshot_id = str(snapshot.resource_snapshot_id or "<no-ID>")
+    snapshot_type = snapshot.resource_type or "<no-type>"
+
+    if snapshot_exists(session, snapshot):
+        raise Exception(f"{snapshot_type} snapshot exists: {snapshot_id}")
+
+
+def _assert_exists(
+    deletion_policy: DeletionPolicy,
+    existence_result: ExistenceResult,
+    obj_type: str,
+    obj_id: str,
+) -> None:
+    """
+    Common code for checking existence relative to deletion policy.
+
+    Args:
+        deletion_policy: One of the DeletionPolicy enum values
+        existence_result: One of the ExistenceResult enum values
+        obj_type: Brief word(s) to describe the kind of object (e.g. a
+            "user", "queue", etc), used in error messages
+        obj_id: Brief word(s) to identify the particular object being checked,
+            e.g. an ID, name, etc, used in error messages
+    """
+    if existence_result is ExistenceResult.DOES_NOT_EXIST:
+        raise Exception(f"{obj_type} does not exist: {obj_id}")
+
+    elif existence_result is ExistenceResult.EXISTS:
+        if deletion_policy is DeletionPolicy.DELETED:
+            raise Exception(f"{obj_type} exists, not deleted: {obj_id}")
+
+    elif existence_result is ExistenceResult.DELETED:
+        if deletion_policy is DeletionPolicy.NOT_DELETED:
+            raise Exception(f"{obj_type} is deleted: {obj_id}")
+
+
+def _assert_does_not_exist(
+    deletion_policy: DeletionPolicy,
+    existence_result: ExistenceResult,
+    obj_type: str,
+    obj_id: str,
+):
+    """
+    Common code for checking non-existence relative to deletion policy.
+
+    Args:
+        deletion_policy: One of the DeletionPolicy enum values
+        existence_result: One of the ExistenceResult enum values
+        obj_type: Brief word(s) to describe the kind of object (e.g. a
+            "user", "queue", etc), used in error messages
+        obj_id: Brief word(s) to identify the particular object being checked,
+            e.g. an ID, name, etc, used in error messages
+    """
+    if existence_result is ExistenceResult.EXISTS:
+        if deletion_policy is not DeletionPolicy.DELETED:
+            raise Exception(f"{obj_type} exists, not deleted: {obj_id}")
+
+    elif existence_result is ExistenceResult.DELETED:
+        if deletion_policy is not DeletionPolicy.NOT_DELETED:
+            raise Exception(f"{obj_type} exists (deleted): {obj_id}")
+
+    # else: ExistenceResult.DOES_NOT_EXIST.  deletion policy doesn't matter in
+    # this case; the object does not exist at all.
+
+
+def assert_user_in_group(
+    session: CompatibleSession[S], user: User, group: Group
+) -> None:
+    """
+    Ensure the given user is a member of the given group.  This function
+    assumes both already exist in the database.  It also ignores the deletion
+    status of both.  Existence/deletion status should be checked by the caller
+    first, if necessary.
+
+    Args:
+        session: An SQLAlchemy session
+        user: An existing user
+        group: An existing group
+
+    Raises:
+        Exception: if the given user is not in the given group
+    """
+
+    # Assume existence checks on user and group were already done, so they are
+    # known to exist.
+    membership = session.get(GroupMember, (user.user_id, group.group_id))
+
+    if not membership:
+        raise Exception(
+            f"User ({user.user_id}/{user.username}) is not in group ({group.group_id}/{group.name})"  # noqa: B950
+        )
 
 
 def check_user_collision(session: CompatibleSession[S], user: User) -> None:
@@ -321,3 +691,79 @@ def check_user_collision(session: CompatibleSession[S], user: User) -> None:
         raise UserEmailNotAvailableError(
             "User already exists with email address: " + user.email_address
         )
+
+
+def apply_resource_deletion_policy(
+    stmt: sa.Select, deletion_policy: DeletionPolicy
+) -> sa.Select:
+    """
+    Factored out code to add components to a SELECT statement to apply deletion
+    policy to it, affecting whether deleted resources are searched.  This
+    function is intended to apply to snapshot queries; it adds a join to
+    Resource, which will use the foreign key relationship between Resource and
+    ResourceSnapshot which already exists.  But it could in theory work with
+    any other select statement having a table which has a defined foreign key
+    relationship with Resource.
+
+    Args:
+        stmt: A snapshot select statement to modify
+        deletion_policy: The policy to apply
+
+    Returns:
+        A modified select statement
+    """
+
+    # Use an alias, just in case the given select statement already includes a
+    # join with Resource.
+    resource_alias = aliased(Resource)
+
+    if deletion_policy is DeletionPolicy.NOT_DELETED:
+        stmt = stmt.join(resource_alias).where(
+            resource_alias.is_deleted == False  # noqa: E712
+        )
+    elif deletion_policy is DeletionPolicy.DELETED:
+        stmt = stmt.join(resource_alias).where(
+            resource_alias.is_deleted == True  # noqa: E712
+        )
+
+    return stmt
+
+
+def delete_resource(
+    session: CompatibleSession[S], resource: Resource | ResourceSnapshot | int
+) -> None:
+    """
+    Common routine for deleting a resource.  No-op if the resource is already
+    deleted.
+
+    Args:
+        session: An SQLAlchemy session
+        resource: A resource, snapshot, or resource_id integer primary key
+            value
+
+    Raises:
+        ResourceNotFoundError: if the resource does not exist
+    """
+
+    exists_result = resource_exists(session, resource)
+
+    if exists_result is ExistenceResult.DOES_NOT_EXIST:
+        resource_id = get_resource_id(resource)
+        resource_type = None if isinstance(resource, int) else resource.resource_type
+        raise ResourceNotFoundError(resource_id, resource_type)
+
+    elif exists_result is ExistenceResult.EXISTS:
+
+        # here, we really need the Resource object; ResourceLock's constructor
+        # is just designed that way.
+        if isinstance(resource, int):
+            resource_obj = session.get(Resource, resource)
+        elif isinstance(resource, ResourceSnapshot):
+            resource_obj = resource.resource
+        else:
+            resource_obj = resource
+
+        lock = ResourceLock(resource_lock_types.DELETE, resource_obj)
+        session.add(lock)
+
+    # else: exists_result is DELETED; nothing to do.

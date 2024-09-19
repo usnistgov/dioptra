@@ -19,9 +19,7 @@ from __future__ import annotations
 
 from flask_restx import Api
 
-
-class QueueAlreadyExistsError(Exception):
-    """The queue name already exists."""
+from dioptra.restapi.db.repository.errors import QueueAlreadyExistsError
 
 
 class QueueDoesNotExistError(Exception):
