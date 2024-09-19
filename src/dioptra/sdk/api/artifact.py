@@ -14,30 +14,30 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import tempfile
+from __future__ import annotations
 
-import structlog
-from structlog.stdlib import BoundLogger
-
-import dioptra.sdk.utilities.run_dioptra_job as run_dioptra_job
-from dioptra.sdk.utilities.paths import set_cwd
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
+import abc as abc
+from pathlib import Path
+from typing import Any
 
 
-def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
-    """Sets-up a temporary directory and starts a Dioptra job
+class ArtifactTaskInterface(abc.ABCMeta):
+    @staticmethod
+    @abc.abstractmethod
+    def serialize(working_dir: Path, name: str, contents: Any, **kwargs) -> Path:
+        raise NotImplementedError
 
-    Args:
-        job_id: The Dioptra job ID.
-        experiment_id: The Dioptra experiment ID.
-    """
-    log = LOGGER.new(job_id=job_id, experiment_id=experiment_id)  # noqa: F841
+    @staticmethod
+    @abc.abstractmethod
+    def deserialize(working_dir: Path, path: str, **kwargs) -> Any:
+        raise NotImplementedError
 
-    # Set up a temporary directory and set it as the current working directory
-    with tempfile.TemporaryDirectory() as tempdir, set_cwd(tempdir):
-        run_dioptra_job.main(
-            job_id=job_id,
-            experiment_id=experiment_id,
-            logger=log,
-        )
+    @staticmethod
+    @abc.abstractmethod
+    def validation() -> dict[str, Any] | None:
+        raise NotImplementedError
+
+    @staticmethod
+    @abc.abstractmethod
+    def name() -> str:
+        raise NotImplementedError

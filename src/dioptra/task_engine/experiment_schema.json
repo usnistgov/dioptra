@@ -21,9 +21,26 @@
                 "$ref": "#/$defs/graph_step"
             },
             "minProperties": 1
+        },
+        "artifact_outputs": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/artifact_output"
+            },
+            "minProperties": 0
+        },
+        "artifact_inputs": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/$defs/artifact_input"
+            },
+            "minProperties": 0
         }
     },
-    "required": ["tasks", "graph"],
+    "required": [
+        "tasks",
+        "graph"
+    ],
     "additionalProperties": false,
     "$defs": {
         "type_definitions": {
@@ -32,7 +49,6 @@
                 "$ref": "#/$defs/type_definition"
             }
         },
-
         "type_definition": {
             "oneOf": [
                 {
@@ -43,7 +59,6 @@
                 }
             ]
         },
-
         "simple_type_definition": {
             "title": "Simple type definition",
             "oneOf": [
@@ -63,7 +78,6 @@
                 }
             ]
         },
-
         "complex_type_definition": {
             "title": "Complex type definition",
             "oneOf": [
@@ -81,7 +95,6 @@
                 }
             ]
         },
-
         "complex_type_def_or_reference": {
             "title": "Complex type definition or type name",
             "$comment": "Useful in nested contexts within type definitions",
@@ -94,7 +107,6 @@
                 }
             ]
         },
-
         "list_structure": {
             "title": "List structure",
             "type": "object",
@@ -103,10 +115,11 @@
                     "$ref": "#/$defs/complex_type_def_or_reference"
                 }
             },
-            "required": ["list"],
+            "required": [
+                "list"
+            ],
             "additionalProperties": false
         },
-
         "tuple_structure": {
             "title": "Tuple structure",
             "type": "object",
@@ -118,10 +131,11 @@
                     }
                 }
             },
-            "required": ["tuple"],
+            "required": [
+                "tuple"
+            ],
             "additionalProperties": false
         },
-
         "mapping_structure": {
             "title": "Mapping structure",
             "type": "object",
@@ -147,10 +161,11 @@
                     ]
                 }
             },
-            "required": ["mapping"],
+            "required": [
+                "mapping"
+            ],
             "additionalProperties": false
         },
-
         "union_type_definition": {
             "title": "Union type definition",
             "type": "object",
@@ -162,15 +177,15 @@
                     }
                 }
             },
-            "required": ["union"],
+            "required": [
+                "union"
+            ],
             "additionalProperties": false
         },
-
         "type_reference": {
             "title": "The name of a type",
             "type": "string"
         },
-
         "parameters": {
             "title": "Parameter definitions",
             "type": "object",
@@ -203,7 +218,6 @@
                 ]
             }
         },
-
         "task_plugin": {
             "type": "object",
             "properties": {
@@ -233,10 +247,11 @@
                     ]
                 }
             },
-            "required": ["plugin"],
+            "required": [
+                "plugin"
+            ],
             "additionalProperties": false
         },
-
         "task_plugin_input": {
             "type": "object",
             "oneOf": [
@@ -245,7 +260,9 @@
                     "type": "object",
                     "not": {
                         "$comment": "Disambiguate from the longer form input",
-                        "required": ["name"]
+                        "required": [
+                            "name"
+                        ]
                     },
                     "additionalProperties": {
                         "$ref": "#/$defs/type_reference"
@@ -267,12 +284,14 @@
                             "type": "boolean"
                         }
                     },
-                    "required": ["name", "type"],
+                    "required": [
+                        "name",
+                        "type"
+                    ],
                     "additionalProperties": false
                 }
             ]
         },
-
         "task_plugin_output": {
             "title": "Single output",
             "type": "object",
@@ -282,7 +301,6 @@
             "minProperties": 1,
             "maxProperties": 1
         },
-
         "graph_step": {
             "oneOf": [
                 {
@@ -296,13 +314,14 @@
                 }
             ]
         },
-
         "positional_invocation": {
             "title": "Positional invocation",
             "type": "object",
             "not": {
                 "$comment": "If the 'task' property is present, we always treat as a mixed invocation.",
-                "required": ["task"]
+                "required": [
+                    "task"
+                ]
             },
             "properties": {
                 "dependencies": {
@@ -322,13 +341,14 @@
             "minProperties": 1,
             "maxProperties": 2
         },
-
         "keyword_invocation": {
             "title": "Keyword invocation",
             "type": "object",
             "not": {
                 "$comment": "If the 'task' property is present, we always treat as a mixed invocation.",
-                "required": ["task"]
+                "required": [
+                    "task"
+                ]
             },
             "properties": {
                 "dependencies": {
@@ -342,7 +362,6 @@
             "minProperties": 1,
             "maxProperties": 2
         },
-
         "mixed_invocation": {
             "title": "Mixed position/keyword invocation",
             "type": "object",
@@ -370,10 +389,64 @@
                     "$ref": "#/$defs/step_dependencies"
                 }
             },
-            "required": ["task"],
+            "required": [
+                "task"
+            ],
             "additionalProperties": false
         },
-
+        "artifact_output": {
+            "title": "Artifact Outputs",
+            "type": "object",
+            "properties": {
+                "contents": {
+                    "title": "The input source for an artifact output",
+                    "type": "string"
+                },
+                "task": {
+                    "$ref": "#/$defs/artifact_task"
+                }
+            },
+            "required": [
+                "contents",
+                "task"
+            ],
+            "additionalProperties": false
+        },
+        "artifact_task": {
+            "title": "The logic for managing the serialization of an artifact to output.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "title": "The name of the artifact task",
+                    "type": "string",
+                    "enum": []
+                },
+                "args": {
+                    "$comment": "Place holder for arguments for the artifact tasks. Built-up by the code.",
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": true
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "artifact_input": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/task_plugin_output"
+                },
+                {
+                    "title": "List of outputs",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/task_plugin_output"
+                    }
+                }
+            ]
+        },
         "step_dependencies": {
             "oneOf": [
                 {

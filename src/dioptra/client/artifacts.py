@@ -14,10 +14,17 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from typing import Any, ClassVar, TypeVar
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any, ClassVar, Final, TypeVar
 
 from .base import CollectionClient, DioptraSession
 from .snapshots import SnapshotsSubCollectionClient
+from .utils import FileTypes
+
+FILES: Final[str] = "files"
+CONTENTS: Final[str] = "contents"
 
 T = TypeVar("T")
 
@@ -38,12 +45,12 @@ class ArtifactsCollectionClient(CollectionClient[T]):
             session: The Dioptra API session object.
         """
         super().__init__(session)
-        self._snapshots = SnapshotsSubCollectionClient[T](
+        self._snapshots = ArtifactsSnapshotCollectionClient[T](
             session=session, root_collection=self
         )
 
     @property
-    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+    def snapshots(self) -> ArtifactsSnapshotCollectionClient[T]:
         """The client for retrieving artifact resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -121,36 +128,61 @@ class ArtifactsCollectionClient(CollectionClient[T]):
         return self._session.get(self.url, str(artifact_id))
 
     def create(
-        self, group_id: int, job_id: str | int, uri: str, description: str | None = None
+        self,
+        group_id: str | int,
+        job_id: str | int,
+        artifact_uri: str,
+        plugin_snapshot_id: str | int | None = None,
+        task_id: str | int | None = None,
+        description: str | None = None,
     ) -> T:
         """Creates an artifact.
 
         Args:
             group_id: The id of the group that will own the artifact.
             job_id: The id of the job that produced this artifact.
-            uri: The URI pointing to the location of the artifact.
+            artifact_uri: The URI pointing to the location of the artifact.
             description: The description of the new artifact. Optional, defaults to
                 None.
-
+            plugin_snapshot_id: the snapshot id of the plugin contain the
+                tasks used to perform serializing/deserializing of this Artifact
+            task_id: The id of the plugin task that performs
+                serializing/deserializing for this Artifact.
         Returns:
             The response from the Dioptra API.
         """
-        json_ = {
-            "group": group_id,
-            "job": job_id,
-            "uri": uri,
+        json_: dict[str, Any] = {
+            "group": int(group_id),
+            "job": int(job_id),
+            "artifactUri": artifact_uri,
         }
+
+        if plugin_snapshot_id is not None:
+            json_["pluginSnapshotId"] = int(plugin_snapshot_id)
+
+        if task_id is not None:
+            json_["taskId"] = int(task_id)
 
         if description is not None:
             json_["description"] = description
 
         return self._session.post(self.url, json_=json_)
 
-    def modify_by_id(self, artifact_id: str | int, description: str | None) -> T:
+    def modify_by_id(
+        self,
+        artifact_id: str | int,
+        plugin_snapshot_id: str | int | None = None,
+        task_id: str | int | None = None,
+        description: str | None = None,
+    ) -> T:
         """Modify the artifact matching the provided id.
 
         Args:
             artifact_id: The artifact id, an integer.
+            plugin_snapshot_id: the snapshot id of the plugin contain the
+                tasks used to perform serializing/deserializing of this Artifact
+            task_id: The id of the plugin task that performs
+                serializing/deserializing for this Artifact.
             description: The new description of the artifact. To remove the description,
                 pass None.
 
@@ -159,7 +191,111 @@ class ArtifactsCollectionClient(CollectionClient[T]):
         """
         json_: dict[str, Any] = {}
 
+        if plugin_snapshot_id is not None:
+            json_["pluginSnapshotId"] = int(plugin_snapshot_id)
+
+        if task_id is not None:
+            json_["taskId"] = int(task_id)
+
         if description is not None:
             json_["description"] = description
 
         return self._session.put(self.url, str(artifact_id), json_=json_)
+
+    def get_files(self, artifact_id: str | int) -> T:
+        """Get the file listing for the artifact matching the provided id.
+
+        Args:
+            artifact_id: The artifact id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(self.url, str(artifact_id), FILES)
+
+    def get_contents(
+        self,
+        artifact_id: str | int,
+        file_type: FileTypes = FileTypes.TAR_GZ,
+        artifact_path: str | None = None,
+        output_dir: Path | None = None,
+        file_stem: str = "contents",
+    ) -> Path:
+        """Get the contents of an artifact with the given artifact resource id.
+
+        Args:
+            artifact_id: The artifact resource id, an integer.
+            file_type: the file type for the bundle.
+            artifact_path: if the artifact is a directory, then a value other None
+                indicates the path when the directory structure to retrieve. if the
+                artifact is a file, None must be provided.
+            output_dir: the directory to put the downloaded artifact
+            file_stem: the file prefix or stem to save the downloaded file to.
+
+        Returns:
+            A path to where the contents are downloaded.
+        """
+        contents_path = (
+            Path(file_stem).with_suffix(file_type.suffix)
+            if output_dir is None
+            else Path(output_dir, file_stem).with_suffix(file_type.suffix)
+        )
+        params = {"fileType": file_type.value, "path": artifact_path}
+
+        return self._session.download(
+            str(artifact_id),
+            CONTENTS,
+            output_path=contents_path,
+            params=params,
+        )
+
+
+class ArtifactsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
+    def __init__(
+        self,
+        session: DioptraSession[T],
+        root_collection: ArtifactsCollectionClient[T],
+    ):
+        super().__init__(session=session, root_collection=root_collection)
+
+    def get_contents(
+        self,
+        artifact_id: str | int,
+        artifact_snapshot_id: str | int,
+        file_type: FileTypes | None = None,
+        artifact_path: str | None = None,
+        output_dir: Path | None = None,
+        file_stem: str = "contents",
+    ) -> Path:
+        """Get the contents of an artifact with the given artifact resource id and
+        artifact snapshot id.
+
+        Args:
+            artifact_id: The artifact resource id, an integer.
+            artifact_snapshot_id: The artifact snapshot id, an integer.
+            file_type: the file type for the bundle.
+            artifact_path: if the artifact is a directory, then a value other None
+                indicates the path when the directory structure to retrieve. if the
+                artifact is a file, None must be provided.
+            output_dir: the directory to put the downloaded artifact
+            file_stem: the file prefix or stem to save the downloaded file to.
+
+        Returns:
+            A path to where the contents are downloaded.
+        """
+        contents_path = (
+            Path(file_stem) if output_dir is None else Path(output_dir, file_stem)
+        )
+        params = {"path": artifact_path}
+
+        if file_type is not None:
+            contents_path = contents_path.with_suffix(file_type.suffix)
+            params["fileType"] = file_type.value
+
+        return self._session.download(
+            self.build_sub_collection_url(artifact_id),
+            str(artifact_snapshot_id),
+            CONTENTS,
+            output_path=contents_path,
+            params=params,
+        )

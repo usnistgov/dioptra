@@ -244,7 +244,7 @@ def register_artifact(
     Returns:
         The response from the API.
     """
-    payload = {"uri": uri, "job": job_id, "group": group_id}
+    payload = {"artifactUri": uri, "job": job_id, "group": group_id}
 
     if description is not None:
         payload["description"] = description
@@ -768,6 +768,7 @@ def remove_tag(
         f"/{V1_ROOT}/{resource_route}/{resource_id}/tags/{tag_id}",
         follow_redirects=True,
     )
+
 
 def post_metrics(
     client: FlaskClient, job_id: int, metric_name: str, metric_value: float

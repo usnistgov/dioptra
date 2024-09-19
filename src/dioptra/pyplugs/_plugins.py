@@ -308,18 +308,17 @@ def _import(package: str, plugin: str) -> None:
 def _import_all(package: str) -> None:
     """Import all plugins in a package"""
     try:
-        all_resources = resources.contents(package)
-
+        # Loop through all Python files in the directories of the package
+        plugins = [
+            r.name[:-3]
+            for r in resources.files(package).iterdir()
+            if r.is_file() and r.name.endswith(".py") and not r.name.startswith("_")
+        ]
     except ImportError as err:
         raise UnknownPackageError(err) from None
 
     # Note that we have tried to import the package by adding it to _PLUGINS
     _PLUGINS.setdefault(package, {})
-
-    # Loop through all Python files in the directories of the package
-    plugins = [
-        r[:-3] for r in all_resources if r.endswith(".py") and not r.startswith("_")
-    ]
 
     for plugin in plugins:
         try:

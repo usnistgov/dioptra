@@ -290,9 +290,7 @@ def assert_creating_another_existing_draft_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = drafts_client.create(
-        *resource_ids, **payload
-    )
+    response = drafts_client.create(*resource_ids, **payload)
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 

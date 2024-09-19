@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from pathlib import Path
-from typing import Any, Final, cast
+from typing import Any, Final, TextIO, cast
 
 import structlog
 import yaml
@@ -40,11 +40,10 @@ EXPLICIT_GLOBAL_TYPES: Final[set[str]] = {
     INTEGER_PARAM_TYPE,
     FLOAT_PARAM_TYPE,
 }
-YAML_FILE_ENCODING: Final[str] = "utf-8"
 YAML_EXPORT_SETTINGS: Final[dict[str, Any]] = {
     "indent": 2,
     "sort_keys": False,
-    "encoding": YAML_FILE_ENCODING,
+    "encoding": "utf-8",
 }
 
 
@@ -52,9 +51,9 @@ def export_task_engine_yaml(
     entrypoint: models.EntryPoint,
     plugin_plugin_files: list[models.PluginPluginFile],
     plugin_parameter_types: list[models.PluginTaskParameterType],
-    base_dir: Path,
+    output: TextIO,
     logger: BoundLogger | None = None,
-) -> Path:
+) -> None:
     """Export an entrypoint's task engine YAML file to a specified directory.
 
     Args:
@@ -62,25 +61,17 @@ def export_task_engine_yaml(
         plugin_plugin_files: The entrypoint's plugin files.
         plugin_parameter_types: The latest snapshots of the plugin parameter types
             accessible to the entrypoint.
-        base_dir: The directory to export the task engine YAML file to.
+        output: The TextIO Stream to export the task engine YAML file to.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
-
-    Returns:
-        The path to the exported task engine YAML file.
     """
     log = logger or LOGGER.new()  # noqa: F841
-    task_yaml_path = Path(base_dir, entrypoint.name).with_suffix(".yml")
     task_engine_dict = build_task_engine_dict(
         entrypoint=entrypoint,
         plugin_plugin_files=plugin_plugin_files,
         plugin_parameter_types=plugin_parameter_types,
     )
-
-    with task_yaml_path.open("wt", encoding=YAML_FILE_ENCODING) as f:
-        yaml.safe_dump(task_engine_dict, f, **YAML_EXPORT_SETTINGS)
-
-    return task_yaml_path
+    yaml.safe_dump(task_engine_dict, output, **YAML_EXPORT_SETTINGS)
 
 
 def build_task_engine_dict(
@@ -106,14 +97,31 @@ def build_task_engine_dict(
     tasks, parameter_types = extract_tasks(
         plugin_plugin_files, plugin_parameter_types=plugin_parameter_types
     )
+    # add artifact parameter types if needed
+    add_artifact_parameter_types(entrypoint.artifact_parameters, parameter_types)
     parameters = extract_parameters(entrypoint)
     graph = extract_graph(entrypoint)
+
+    artifact_outputs = extract_artifact_outputs(entrypoint)
+    artifact_inputs = extract_artifact_inputs(entrypoint.artifact_parameters)
     return {
         "types": parameter_types,
         "parameters": parameters,
         "tasks": tasks,
         "graph": graph,
+        "artifact_outputs": artifact_outputs,
+        "artifact_inputs": artifact_inputs,
     }
+
+
+def add_artifact_parameter_types(
+    artifact_parameters: list[models.EntryPointArtifact], types: dict[str, Any]
+) -> None:
+    for param in artifact_parameters:
+        for output in param.output_parameters:
+            name = output.parameter_type.name
+            if name not in BUILTIN_TYPES and name not in types:
+                types[name] = output.parameter_type.structure
 
 
 def extract_parameters(
@@ -146,6 +154,28 @@ def extract_parameters(
     return parameters
 
 
+def extract_artifact_inputs(
+    artifact_parameters: list[models.EntryPointArtifact],
+    logger: BoundLogger | None = None,
+) -> dict[str, Any]:
+    """Extract the parameters from an entrypoint.
+
+    Args:
+        entrypoint: The entrypoint to extract parameters from.
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        A dictionary of the entrypoint's parameters.
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+    inputs: dict[str, Any] = {}
+    for param in artifact_parameters:
+        inputs[param.name] = _build_artifact_outputs(param.output_parameters)
+
+    return inputs
+
+
 def extract_tasks(
     plugin_plugin_files: list[models.PluginPluginFile],
     plugin_parameter_types: list[models.PluginTaskParameterType],
@@ -173,6 +203,8 @@ def extract_tasks(
         plugin_file = plugin_plugin_file.plugin_file
 
         for task in plugin_file.tasks:
+            if not isinstance(task, models.FunctionTask):
+                continue
             input_parameters = sorted(
                 task.input_parameters, key=lambda x: x.parameter_number
             )
@@ -234,11 +266,33 @@ def extract_graph(
         A dictionary representation of the entrypoint's task graph.
     """
     log = logger or LOGGER.new()  # noqa: F841
-    return cast(dict[str, Any], yaml.safe_load(entrypoint.task_graph))
+    full_yaml = yaml.safe_load(entrypoint.task_graph)
+    return cast(dict[str, Any], full_yaml)
+
+
+def extract_artifact_outputs(
+    entrypoint: models.EntryPoint,
+    logger: BoundLogger | None = None,
+) -> dict[str, Any]:
+    """Extract the artifact graph from an entrypoint.
+
+    Args:
+        entrypoint: The entrypoint containing the artifact graph.
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        A dictionary representation of the entrypoint's artifact graph.
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+    full_yaml = yaml.safe_load(entrypoint.artifact_graph)
+    if full_yaml is None:
+        full_yaml = {}
+    return cast(dict[str, Any], full_yaml)
 
 
 def _build_plugin_field(
-    plugin: models.Plugin, plugin_file: models.PluginFile, task: models.PluginTask
+    plugin: models.Plugin, plugin_file: models.PluginFile, task: models.FunctionTask
 ) -> str:
     if plugin_file.filename == "__init__.py":
         # Omit filename from plugin import path if it is an __init__.py file.
@@ -269,6 +323,17 @@ def _build_task_outputs(
     if len(output_parameters) == 1:
         return {output_parameters[0].name: output_parameters[0].parameter_type.name}
 
+    return [
+        {output_param.name: output_param.parameter_type.name}
+        for output_param in output_parameters
+    ]
+
+
+def _build_artifact_outputs(
+    output_parameters: list[models.EntryPointArtifactOutputParameter],
+) -> list[dict[str, Any]] | dict[str, Any]:
+    if len(output_parameters) == 1:
+        return {output_parameters[0].name: output_parameters[0].parameter_type.name}
     return [
         {output_param.name: output_param.parameter_type.name}
         for output_param in output_parameters

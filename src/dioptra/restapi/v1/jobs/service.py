@@ -18,28 +18,31 @@
 from __future__ import annotations
 
 from typing import Any, Final, cast
-from uuid import UUID
 
 import structlog
 from flask_login import current_user
 from injector import inject
 from mlflow.exceptions import MlflowException
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import (
     BackendDatabaseError,
+    DioptraError,
     EntityDoesNotExistError,
     EntityNotRegisteredError,
+    JobArtifactParameterMissingError,
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
+    JobMlflowRunNotSetError,
     MLFlowError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.artifacts.snapshot import ArtifactSnapshotIdService
 from dioptra.restapi.v1.entrypoints.service import (
     RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
 )
@@ -74,11 +77,11 @@ SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "status": models.Job.status,
 }
 JOB_STATUS_TRANSITIONS: Final[dict[str, Any]] = {
-    "queued": {"started", "deferred"},
-    "started": {"finished", "failed"},
-    "deferred": {"started"},
-    "failed": {},
-    "finished": {},
+    "queued": {"started", "deferred", "reset"},
+    "started": {"finished", "failed", "reset"},
+    "deferred": {"started", "reset"},
+    "failed": {"reset"},
+    "finished": {"reset"},
 }
 
 
@@ -92,6 +95,7 @@ class JobService(object):
         queue_id_service: QueueIdService,
         entrypoint_id_service: EntrypointIdService,
         group_id_service: GroupIdService,
+        artifact_snapshot_id_service: ArtifactSnapshotIdService,
         rq_service: RQServiceV1,
     ) -> None:
         """Initialize the job service.
@@ -108,6 +112,7 @@ class JobService(object):
         self._experiment_id_service = experiment_id_service
         self._queue_id_service = queue_id_service
         self._entrypoint_id_service = entrypoint_id_service
+        self._artifact_snapshot_id_service = artifact_snapshot_id_service
         self._group_id_service = group_id_service
         self._rq_service = rq_service
 
@@ -117,6 +122,7 @@ class JobService(object):
         queue_id: int,
         entrypoint_id: int,
         values: dict[str, str],
+        artifact_value_ids: dict[str, dict[str, int]],
         description: str,
         timeout: str,
         **kwargs,
@@ -128,6 +134,8 @@ class JobService(object):
             queue_id: The unique id for the queue this job will execute on.
             entrypoint_id: The unique id for the entrypoint defining the job.
             values: The parameter values passed to the entrypoint to configure the job.
+            artifact_value_ids: The artifact values passed to the entrypoint to
+                configure the job.
             description: The description of the job.
             timeout: The length of time the job will run before timing out.
             group_id: The group that will own the job.
@@ -137,6 +145,8 @@ class JobService(object):
 
         Raises:
             EntityExistsError: If a job with the given name already exists.
+            EntityDoesNotExistError: if any of the values in artifact_value_ids does not
+                correspond with an Artifact
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -213,21 +223,16 @@ class JobService(object):
         queue = queue_dict["queue"]
 
         # Fetch the validated entrypoint
-        entrypoint_dict = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
-            ),
-        )
+        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
         entrypoint = entrypoint_dict["entry_point"]
 
         # Validate the keys in values against the registered entrypoint parameter names
-        invalid_job_params = set(values.keys()) - set(
-            param.name for param in entrypoint.parameters
+        invalid_job_params = list(
+            set(values.keys()) - set(param.name for param in entrypoint.parameters)
         )
         if len(invalid_job_params) > 0:
-            log.debug("Invalid parameter names", parameters=list(invalid_job_params))
-            raise JobInvalidParameterNameError
+            log.debug("Invalid parameter names", parameters=invalid_job_params)
+            raise JobInvalidParameterNameError(invalid_job_params)
 
         # Create the new Job resource and record the assigned entrypoint parameter
         # values
@@ -245,6 +250,13 @@ class JobService(object):
             for entrypoint_parameter in entrypoint.parameters
         ]
 
+        entrypoint_artifact_values = self._create_entrypoint_artifact_values(
+            artifact_value_ids=artifact_value_ids,
+            entrypoint=entrypoint,
+            job_resource=job_resource,
+            log=log,
+        )
+
         new_job = models.Job(
             timeout=timeout,
             status=status,
@@ -252,10 +264,12 @@ class JobService(object):
             resource=job_resource,
             creator=current_user,
         )
+        db.session.add(new_job)
         new_job.entry_point_job = models.EntryPointJob(
             job_resource=job_resource,
             entry_point=entrypoint,
             entry_point_parameter_values=entrypoint_parameter_values,
+            entry_point_artifact_values=entrypoint_artifact_values,
         )
         new_job.experiment_job = models.ExperimentJob(
             job_resource=job_resource,
@@ -265,7 +279,6 @@ class JobService(object):
             job_resource=job_resource,
             queue=queue,
         )
-        db.session.add(new_job)
         db.session.commit()
         self._rq_service.submit(
             job_id=new_job.resource_id,
@@ -282,6 +295,80 @@ class JobService(object):
             artifacts=[],
             has_draft=False,
         )
+
+    def _create_entrypoint_artifact_values(
+        self,
+        artifact_value_ids: dict[str, dict[str, int]],
+        entrypoint: models.EntryPoint,
+        job_resource: models.Resource,
+        log: BoundLogger,
+    ) -> list[models.EntryPointArtifactValue]:
+        # Validate the keys in artifact_values against the registered entrypoint
+        # artifact names, retrieve the artifacts, verify that there are no extra
+        invalid_artifact_params = set(artifact_value_ids.keys())
+        missing_artifact_params: list[str] = []
+        entrypoint_artifact_values: list[models.EntryPointArtifactValue] = []
+        for artifact_parameter in entrypoint.artifact_parameters:
+            try:
+                invalid_artifact_params.remove(artifact_parameter.name)
+
+                value = artifact_value_ids[artifact_parameter.name]
+                # if no artifact found, will raise EntityDoesNotExist
+                artifact = self._artifact_snapshot_id_service.get(
+                    artifact_id=value["id"], artifact_snapshot_id=value["snapshot_id"]
+                )
+
+                # test that types match -- including the order
+                len_task_params = len(artifact.task.output_parameters)
+                len_artifact_params = len(artifact_parameter.output_parameters)
+                if len_task_params != len_artifact_params:
+                    message = (
+                        "Output parameter types do not match. Different number of "
+                        "types: expected {len_artifact_params} and received "
+                        f"{len_task_params} types for parameter "
+                        f"{artifact_parameter.name}"
+                    )
+                    log.error(message)
+                    raise DioptraError(message)
+
+                if [
+                    param.parameter_type.resource_snapshot_id
+                    for param in sorted(
+                        artifact_parameter.output_parameters,
+                        key=lambda x: x.parameter_number,
+                    )
+                ] != [
+                    param.parameter_type.resource_snapshot_id
+                    for param in sorted(
+                        artifact_parameter.output_parameters,
+                        key=lambda x: x.parameter_number,
+                    )
+                ]:
+                    raise DioptraError(
+                        "Output parameter types do not match for "
+                        f"parameter {artifact_parameter.name}."
+                    )
+
+                entrypoint_artifact_values.append(
+                    models.EntryPointArtifactValue(
+                        artifact=artifact,
+                        job_resource=job_resource,
+                        artifact_parameter=artifact_parameter,
+                    )
+                )
+            except KeyError:
+                # an artifact parameter was not provided
+                missing_artifact_params.append(artifact_parameter.name)
+
+        # anything left-over was not a valid artifact parameter
+        if len(invalid_artifact_params) > 0:
+            raise JobInvalidParameterNameError(
+                list(invalid_artifact_params), artifact=True
+            )
+        if len(missing_artifact_params) > 0:
+            raise JobArtifactParameterMissingError(list(invalid_artifact_params))
+
+        return entrypoint_artifact_values
 
     def get(
         self,
@@ -370,29 +457,7 @@ class JobService(object):
             raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
 
         jobs = list(db.session.scalars(jobs_stmt).all())
-
-        job_dicts: dict[int, utils.JobDict] = {
-            job.resource_id: utils.JobDict(
-                job=job,
-                artifacts=[],
-                has_draft=False,
-            )
-            for job in jobs
-        }
-
-        job_ids = [job.resource_id for job in jobs]
-        artifacts_stmt = (
-            select(models.Artifact)
-            .join(models.Resource)
-            .where(
-                models.Artifact.job_id.in_(job_ids),
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        for artifact in db.session.scalars(artifacts_stmt).all():
-            job_dicts[artifact.job_id]["artifacts"].append(artifact)
-
-        return list(job_dicts.values()), total_num_jobs
+        return _build_job_dict(jobs), total_num_jobs
 
 
 class JobIdService(object):
@@ -401,22 +466,18 @@ class JobIdService(object):
     def get(
         self,
         job_id: int,
-        error_if_not_found: bool = False,
         **kwargs,
-    ) -> utils.JobDict | None:
+    ) -> utils.JobDict:
         """Fetch a job by its unique id.
 
         Args:
             job_id: The unique id of the job.
-            error_if_not_found: If True, raise an error if the job is not found.
-                Defaults to False.
 
         Returns:
             The job object if found, otherwise None.
 
         Raises:
-            EntityDoesNotExistError: If the job is not found and `error_if_not_found`
-                is True.
+            EntityDoesNotExistError: If the job is not found
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job by id", job_id=job_id)
@@ -433,10 +494,7 @@ class JobIdService(object):
         job = db.session.scalars(stmt).first()
 
         if job is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
-
-            return None
+            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
 
         artifacts_stmt = (
             select(models.Artifact)
@@ -482,6 +540,46 @@ class JobIdService(object):
         log.debug("Job deleted", job_id=job_id)
 
         return {"status": "Success", "id": [job_id]}
+
+    def get_parameter_values(
+        self, job_id: int, **kwargs
+    ) -> list[models.EntryPointParameterValue]:
+        """Run a query to get the parameter values for the job.
+
+        Args:
+            job_id: The ID of the job to get the parameter values for.
+            logger: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            The parameter values for the job.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+
+        entry_point_param_values_stmt = select(models.EntryPointParameterValue).where(
+            models.EntryPointParameterValue.job_resource_id == job_id,
+        )
+        return list(db.session.scalars(entry_point_param_values_stmt).unique().all())
+
+    def get_artifact_values(
+        self, job_id: int, **kwargs
+    ) -> list[models.EntryPointArtifactValue]:
+        """Run a query to get the artfiact values for the job.
+
+        Args:
+            job_id: The ID of the job to get the artifact values for.
+            logger: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            The parameter values for the job.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+
+        entry_point_artifact_values_stmt = select(models.EntryPointArtifactValue).where(
+            models.EntryPointArtifactValue.job_resource_id == job_id,
+        )
+        return list(db.session.scalars(entry_point_artifact_values_stmt).unique().all())
 
 
 class JobIdStatusService(object):
@@ -563,9 +661,7 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        run_id: UUID | None = self._job_id_mlflowrun_service.get(
-            job_id=job_id, **kwargs
-        )["mlflow_run_id"]
+        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
 
         try:
             client = MlflowClient()
@@ -576,7 +672,7 @@ class JobIdMetricsService(object):
             metrics = []
         else:
             try:
-                run = client.get_run(run_id.hex)
+                run = client.get_run(run_id)
                 metrics = [
                     {"name": metric, "value": run.data.metrics[metric]}
                     for metric in run.data.metrics.keys()
@@ -608,33 +704,31 @@ class JobIdMetricsService(object):
 
         from mlflow.tracking import MlflowClient
 
-        run_id: UUID | None = self._job_id_mlflowrun_service.get(
-            job_id=job_id, **kwargs
-        )["mlflow_run_id"]
+        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
 
         if run_id is None:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=None)
-        else:
-            try:
-                client = MlflowClient()
-            except MlflowException as e:
-                raise MLFlowError(e.message) from e
+            raise JobMlflowRunNotSetError
 
-            # this is here just to raise an error if the run does not exist
-            try:
-                run = client.get_run(run_id.hex)  # noqa: F841
-            except MlflowException as e:
-                raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
+        try:
+            client = MlflowClient()
+        except MlflowException as e:
+            raise MLFlowError(e.message) from e
 
-            try:
-                client.log_metric(
-                    run_id.hex,
-                    key=metric_name,
-                    value=metric_value,
-                    step=metric_step,
-                )
-            except MlflowException as e:
-                raise MLFlowError(e.message) from e
+        # this is here just to raise an error if the run does not exist
+        try:
+            client.get_run(run_id)  # noqa: F841
+        except MlflowException as e:
+            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id) from e
+
+        try:
+            client.log_metric(
+                run_id,
+                key=metric_name,
+                value=metric_value,
+                step=metric_step,
+            )
+        except MlflowException as e:
+            raise MLFlowError(e.message) from e
 
         return {"name": metric_name, "value": metric_value}
 
@@ -679,9 +773,7 @@ class JobIdMetricsSnapshotsService(object):
             metric_name=metric_name,
         )
 
-        run_id: UUID | None = self._job_id_mlflowrun_service.get(
-            job_id=job_id, **kwargs
-        )["mlflow_run_id"]
+        run_id: str | None = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
 
         try:
             client = MlflowClient()
@@ -689,10 +781,10 @@ class JobIdMetricsSnapshotsService(object):
             raise MLFlowError(e.message) from e
 
         if run_id is None:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=None)
+            raise JobMlflowRunNotSetError
 
         try:
-            history = client.get_metric_history(run_id=run_id.hex, key=metric_name)
+            history = client.get_metric_history(run_id=run_id, key=metric_name)
         except MlflowException as e:
             raise MLFlowError(e.message) from e
 
@@ -739,6 +831,7 @@ class ExperimentJobService(object):
         queue_id: int,
         entrypoint_id: int,
         values: dict[str, str],
+        artifact_values: dict[str, dict[str, int]],
         description: str,
         timeout: str,
         **kwargs,
@@ -750,6 +843,8 @@ class ExperimentJobService(object):
             queue_id: The unique id for the queue this job will execute on.
             entrypoint_id: The unique id for the entrypoint defining the job.
             values: The parameter values passed to the entrypoint to configure the job.
+            artifact_values: The artifact values passed to the entrypoint to configure
+                the job.
             description: The description of the job.
             timeout: The length of time the job will run before timing out.
             group_id: The group that will own the job.
@@ -763,6 +858,7 @@ class ExperimentJobService(object):
             queue_id=queue_id,
             entrypoint_id=entrypoint_id,
             values=values,
+            artifact_value_ids=artifact_values,
             description=description,
             timeout=timeout,
             log=log,
@@ -862,17 +958,7 @@ class ExperimentJobService(object):
             raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
 
         jobs = list(db.session.scalars(jobs_stmt).all())
-
-        job_dicts: dict[int, utils.JobDict] = {
-            job.resource_id: utils.JobDict(
-                job=job,
-                artifacts=[],
-                has_draft=False,
-            )
-            for job in jobs
-        }
-
-        return list(job_dicts.values()), total_num_jobs
+        return _build_job_dict(jobs), total_num_jobs
 
 
 class ExperimentJobIdService(object):
@@ -921,14 +1007,7 @@ class ExperimentJobIdService(object):
                 RESOURCE_TYPE, job_id=job_id, experiment_id=experiment_id
             )
 
-        return cast(
-            utils.JobDict,
-            self._job_id_service.get(
-                job_id=job_id,
-                error_if_not_found=True,
-                log=log,
-            ),
-        )
+        return self._job_id_service.get(job_id=job_id, log=log)
 
     def delete(self, experiment_id: int, job_id: int, **kwargs) -> dict[str, Any]:
         """Delete a job.
@@ -994,11 +1073,8 @@ class ExperimentJobIdStatusService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        job_dict = cast(
-            utils.JobDict,
-            self._experiment_job_id_service.get(
-                experiment_id, job_id, error_if_not_found=True, log=log
-            ),
+        job_dict = self._experiment_job_id_service.get(
+            experiment_id, job_id, error_if_not_found=True, log=log
         )
         job = job_dict["job"]
 
@@ -1030,8 +1106,15 @@ class ExperimentJobIdStatusService(object):
         job_dict = self._experiment_job_id_service.get(experiment_id, job_id, log=log)
         job = job_dict["job"]
 
-        if status not in JOB_STATUS_TRANSITIONS.get(job.status, None):
+        if status not in JOB_STATUS_TRANSITIONS.get(job.status, {}):
             raise JobInvalidStatusTransitionError
+        if status == "reset":
+            db.session.execute(
+                delete(models.JobMlflowRun).where(
+                    models.JobMlflowRun.job_resource_id == job_id
+                )
+            )
+            status = "queued"
 
         new_job = models.Job(
             timeout=job.timeout,
@@ -1040,11 +1123,10 @@ class ExperimentJobIdStatusService(object):
             resource=job.resource,
             creator=job.creator,
         )
+        db.session.add(new_job)
         new_job.entry_point_job = job.entry_point_job
         new_job.experiment_job = job.experiment_job
         new_job.queue_job = job.queue_job
-
-        db.session.add(new_job)
 
         if commit:
             db.session.commit()
@@ -1101,7 +1183,7 @@ class ExperimentJobIdMlflowrunService(object):
         job = job_dict["job"]
 
         mlflow_run_id = (
-            job.mlflow_run.mlflow_run_id if job.mlflow_run is not None else None
+            job.mlflow_run.mlflow_run_id.hex if job.mlflow_run is not None else None
         )
         return {"mlflow_run_id": mlflow_run_id}
 
@@ -1149,7 +1231,7 @@ class ExperimentJobIdMlflowrunService(object):
                 mlflow_run_id=mlflow_run_id,
             )
 
-        return {"mlflow_run_id": job.mlflow_run.mlflow_run_id}
+        return {"mlflow_run_id": job.mlflow_run.mlflow_run_id.hex}
 
 
 class JobIdMlflowrunService(object):
@@ -1173,28 +1255,26 @@ class JobIdMlflowrunService(object):
         self,
         job_id: int,
         **kwargs,
-    ) -> dict[str, Any]:
+    ) -> str | None:
         """Fetch a job's mlflow run id by its unique id.
 
         Args:
             job_id: The unique id of the job.
 
         Returns:
-            The MlflowRun id of the job object if found, otherwise an error message.
+            The MlflowRun id of the job object, otherwise None if the job exists but
+            does not yet have an mlflow run ID.
+
+        Raises:
+            EntityDoesNotExistError: If the job is not found
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        job_dict = cast(
-            utils.JobDict,
-            self._job_id_service.get(job_id, error_if_not_found=True, log=log),
-        )
+        job_dict = self._job_id_service.get(job_id, log=log)
         job = job_dict["job"]
 
-        mlflow_run_id = (
-            job.mlflow_run.mlflow_run_id if job.mlflow_run is not None else None
-        )
-        return {"mlflow_run_id": mlflow_run_id}
+        return job.mlflow_run.mlflow_run_id.hex if job.mlflow_run is not None else None
 
     def create(
         self,
@@ -1219,10 +1299,7 @@ class JobIdMlflowrunService(object):
             "Set the job's mlflow run id", job_id=job_id, mlflow_run_id=mlflow_run_id
         )
 
-        job_dict = cast(
-            utils.JobDict,
-            self._job_id_service.get(job_id, error_if_not_found=True, log=log),
-        )
+        job_dict = self._job_id_service.get(job_id, log=log)
         job = job_dict["job"]
 
         if job.mlflow_run is not None:
@@ -1241,7 +1318,7 @@ class JobIdMlflowrunService(object):
                 mlflow_run_id=mlflow_run_id,
             )
 
-        return {"mlflow_run_id": job.mlflow_run.mlflow_run_id}
+        return {"mlflow_run_id": job.mlflow_run.mlflow_run_id.hex}
 
 
 class ExperimentMetricsService(object):
@@ -1307,3 +1384,28 @@ class ExperimentMetricsService(object):
             for job_id in job_ids
         ]
         return metrics_for_jobs, num_jobs
+
+
+def _build_job_dict(jobs: list[models.Job]) -> list[utils.JobDict]:
+    job_dicts: dict[int, utils.JobDict] = {
+        job.resource_id: utils.JobDict(
+            job=job,
+            artifacts=[],
+            has_draft=False,
+        )
+        for job in jobs
+    }
+
+    job_ids = [job.resource_id for job in jobs]
+    artifacts_stmt = (
+        select(models.Artifact)
+        .join(models.Resource)
+        .where(
+            models.Artifact.job_id.in_(job_ids),
+            models.Resource.is_deleted == False,  # noqa: E712
+        )
+    )
+    for artifact in db.session.scalars(artifacts_stmt).all():
+        job_dicts[artifact.job_id]["artifacts"].append(artifact)
+
+    return list(job_dicts.values())

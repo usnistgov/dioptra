@@ -31,13 +31,14 @@ import re
 from collections import Counter
 from importlib.resources import as_file, files
 from pathlib import PurePosixPath, PureWindowsPath
-from typing import Any, Callable, List, Protocol, Type, cast
+from typing import Any, Callable, Iterable, List, Protocol, Type, cast
+from urllib.parse import urlparse
 
 from flask.views import View
 from flask_restx import Api, Namespace, Resource, inputs
 from flask_restx.reqparse import RequestParser
 from injector import Injector
-from marshmallow import Schema
+from marshmallow import Schema, ValidationError
 from marshmallow import fields as ma
 from marshmallow import missing
 from marshmallow.schema import SchemaMeta
@@ -230,7 +231,56 @@ def read_json_file(package: str, filename: str) -> Any:
         return json.loads(fp.read_text())
 
 
-def verify_filename_is_safe(filename) -> None:
+def validate_artifact_url(url: str) -> None:
+    try:
+        result = urlparse(url)
+    except ValueError:
+        raise ValidationError("Failed to parse URL") from None
+
+    # only allow these schemes
+    if result.scheme not in [
+        "http",
+        "https",
+        "ftp",
+        "ftps",
+        "sftp",
+        "file",
+        "mlflow-artifacts",
+        "s3",
+    ]:
+        raise ValidationError("Not a valid scheme")
+
+    # network location required if not a file
+    if result.scheme not in ["file", "mlflow-artifacts"] and (
+        result.netloc is None or result.netloc == ""
+    ):
+        raise ValidationError("Location is required")
+
+    try:
+        verify_filename_is_safe(result.path, relative=False, absolute=True)
+    except ValueError:
+        raise ValidationError("URL is not absolute") from None
+
+
+def verify_filename_is_safe(
+    filename: str, relative: bool = True, absolute: bool = False
+) -> None:
+    """
+    Verifies that a filename is "safe". Safe in this case means that it is a relative
+    posix style path, and a sub-directory refence with no attempts to use '..' as a
+    means to accomplish directory traversal.
+
+    Args:
+        filename: the filename to verify
+        relative: whether to allow  relative filenames
+        absolute: whether to allow absolute filenames
+
+    Returns:
+        a normalized version of the path that has been verified
+
+    Raises:
+        ValueError: If filename is deemed to be unsafe
+    """
     if PureWindowsPath(filename).as_posix() != str(PurePosixPath(filename)):  # noqa: B950; fmt: skip
         raise ValueError(
             "Invalid filename (reason: filename is a Windows path): {filename}"
@@ -241,18 +291,23 @@ def verify_filename_is_safe(filename) -> None:
             f"Invalid filename (reason: filename is not normalized): {filename}"
         )
 
-    if not PurePosixPath(filename).is_relative_to("."):
+    if not absolute and not PurePosixPath(filename).is_relative_to("."):
         raise ValueError(
-            f"Invalid filename (reason: filename is not relative to ./): {filename}"
+            f"Invalid filename (reason: filename is not a relative path): {filename}"
         )
 
-    if PurePosixPath("..") in PurePosixPath(posixpath.normpath(filename)).parents:  # noqa: B950; fmt: skip
+    if not relative and not PurePosixPath(filename).is_absolute():
         raise ValueError(
-            "Invalid filename (reason: filename is not a sub-directory of ./): "
+            f"Invalid filename (reason: filename is not an absolute path): {filename}"
+        )
+
+    if PurePosixPath("..") in PurePosixPath(filename).parents:  # noqa: B950; fmt: skip
+        raise ValueError(
+            "Invalid filename (reason: filename contains directory traversal parts): "
             f"{filename}"
         )
 
-    if any([DOTS_REGEX.match(str(x)) for x in PurePosixPath(posixpath.normpath(filename)).parts]):  # noqa: B950; fmt: skip
+    if any([DOTS_REGEX.match(str(x)) for x in PurePosixPath(filename).parts]):  # noqa: B950; fmt: skip
         raise ValueError(
             "Invalid filename (reason: filename contains a sub-directory name that "
             f"is all dots): {filename}"
@@ -388,7 +443,7 @@ TYPE_MAP_MA_TO_REQPARSE = {
 
 
 # Validation Functions
-def find_non_unique(name: str, parameters: list[dict[str, Any]]) -> list[str]:
+def find_non_unique(name: str, parameters: Iterable[dict[str, Any]]) -> list[str]:
     """
     Finds all values of a key that are not unique in a list of dictionaries.
     Useful for checking that a provided input satisfies uniqueness constraints.

@@ -79,7 +79,7 @@ class PluginTaskParameterSchema(Schema):
             ),
         ),
     )
-    parameterTypeId = fields.Int(
+    parameterTypeId = fields.Integer(
         attribute="parameter_type_id",
         data_key="parameterType",
         metadata=dict(
@@ -119,6 +119,11 @@ class PluginTaskOutputParameterSchema(PluginTaskParameterSchema):
 class PluginTaskSchema(Schema):
     """The schema for the data stored in a PluginTask."""
 
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="Id of the PluginTask."),
+        dump_only=True,
+    )
     name = fields.String(
         attribute="name",
         metadata=dict(description="Name of the PluginTask."),
@@ -133,12 +138,17 @@ class PluginTaskSchema(Schema):
             ),
         ),
     )
+
+
+class FunctionTaskSchema(PluginTaskSchema):
+    """The schema for the data stored in a FunctionTask."""
+
     inputParams = fields.Nested(
         PluginTaskInputParameterSchema,
         attribute="input_params",
         many=True,
         metadata=dict(
-            description="List of input PluginTaskParameters in this PluginTask."
+            description="List of input PluginTaskParameters in this FunctionTask."
         ),
     )
     outputParams = fields.Nested(
@@ -146,8 +156,40 @@ class PluginTaskSchema(Schema):
         attribute="output_params",
         many=True,
         metadata=dict(
-            description="List of output PluginTaskParameters in this PluginTask."
+            description="List of output PluginTaskParameters in this FunctionTask."
         ),
+    )
+
+
+class ArtifactTaskSchema(PluginTaskSchema):
+    """The schema for the data stored in an ArtifactTask."""
+
+    outputParams = fields.Nested(
+        PluginTaskOutputParameterSchema,
+        attribute="output_params",
+        many=True,
+        metadata=dict(
+            description=(
+                "List of output PluginTaskParameters produced by this ArtifactTask."
+            )
+        ),
+    )
+
+
+class PluginTaskContainerSchema(Schema):
+    """The schema for the data stored in a PluginTask."""
+
+    functions = fields.Nested(
+        FunctionTaskSchema,
+        attribute="functions",
+        many=True,
+        metadata=dict(description=("List of function tasks.")),
+    )
+    artifacts = fields.Nested(
+        ArtifactTaskSchema,
+        attribute="artifacts",
+        many=True,
+        metadata=dict(description=("List of artifact tasks.")),
     )
 
 
@@ -157,7 +199,7 @@ PluginFileRefBaseSchema = generate_base_resource_ref_schema("PluginFile")
 class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a PluginFile."""
 
-    pluginId = fields.Int(
+    pluginId = fields.Integer(
         attribute="plugin_id",
         data_key="plugin",
         metadata=dict(description="ID for the Plugin resource this file belongs to."),
@@ -258,10 +300,10 @@ class PluginFileMutableFieldsSchema(Schema):
         required=True,
     )
     tasks = fields.Nested(
-        PluginTaskSchema,
+        PluginTaskContainerSchema,
         attribute="tasks",
         metadata=dict(description="Tasks associated with the PluginFile resource."),
-        many=True,
+        many=False,
     )
     description = fields.String(
         attribute="description",

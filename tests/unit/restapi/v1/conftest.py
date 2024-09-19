@@ -20,16 +20,15 @@ import shutil
 import subprocess
 import tarfile
 import textwrap
+import uuid
 from collections.abc import Iterator
 from http import HTTPStatus
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, cast
 
-
 import pytest
 import tomli as toml
-import uuid
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy

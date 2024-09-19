@@ -24,7 +24,7 @@ from dioptra.task_engine import type_registry, type_validation, types, util
 from dioptra.task_engine.error_message import json_path_to_string
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
-_SCHEMA_FILENAME = "experiment_schema.json"
+SCHEMA_FILENAME = "experiment_schema.json"
 
 
 def _instance_path_to_description(  # noqa: C901
@@ -98,18 +98,27 @@ def _instance_path_to_description(  # noqa: C901
     return description
 
 
-def _get_json_schema() -> Union[dict, bool]:  # hypothetical types of schemas
+def get_json_schema(default: bool = False) -> dict:
     """
-    Read and parse the declarative experiment description JSON-Schema file.
+    Read and parse the declarative experiment description JSON-Schema file. Will first
+    look in a ".dioptra" folder to see if an altered version is available, otherwise
+    the default
+
+    Args:
+        default: if true returns the default schema regardless of the existence of any
+            available altered version
 
     Returns:
         The schema, as parsed JSON
     """
-    # Currently assumes the schema json file and this source file are in the
-    # same directory.
-    schema_path = pathlib.Path(__file__).with_name(_SCHEMA_FILENAME)
+    # attempt to get the override first
+    schema_path = pathlib.Path(".dioptra") / SCHEMA_FILENAME
+    if default or not schema_path.exists():
+        # Currently assumes the schema json file and this source file are in the
+        # same directory.
+        schema_path = pathlib.Path(__file__).with_name(SCHEMA_FILENAME)
 
-    schema: Union[dict, bool]
+    schema: dict
     with schema_path.open("r", encoding="utf-8") as fp:
         schema = json.load(fp)
 
@@ -130,7 +139,7 @@ def _schema_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue
         experiment description was valid.
     """
 
-    schema = _get_json_schema()
+    schema = get_json_schema()
 
     error_messages = util.schema_validate(
         experiment_desc, schema, _instance_path_to_description
@@ -290,6 +299,46 @@ def _check_global_parameter_types(
 
                 issue = ValidationIssue(IssueType.TYPE, IssueSeverity.ERROR, message)
 
+                issues.append(issue)
+
+    return issues
+
+
+def _check_artifact_output_types(
+    experiment_desc: Mapping[str, Any],
+) -> list[ValidationIssue]:
+    """
+    Check whether all global parameter types are valid.
+
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
+    """
+
+    artifacts = experiment_desc.get("artifact_inputs", {})
+    type_defs = experiment_desc.get("types", {})
+    type_names = type_registry.BUILTIN_TYPES.keys() | type_defs.keys()
+
+    issues = []
+
+    for artifact_name, artifact_outputs in artifacts.items():
+        if not isinstance(artifact_outputs, list):
+            artifact_outputs = [artifact_outputs]
+        for output in artifact_outputs:
+            name, type_ = next(iter(output.items()))
+            if type_ not in type_names:
+                message = (
+                    'For artifact "{}": output "{}" has undefined type: {}'.format(
+                        artifact_name, name, type_
+                    )
+                )
+                issue = ValidationIssue(
+                    IssueType.SEMANTIC, IssueSeverity.ERROR, message
+                )
                 issues.append(issue)
 
     return issues
@@ -615,7 +664,75 @@ def _check_task_plugin_io_types(
     return issues
 
 
-def _check_graph_references(  # noqa: C901
+def _check_reference(  # noqa: C901
+    ref: str, experiment_desc: Mapping[str, Any]
+) -> str | None:
+    graph = experiment_desc["graph"]
+    task_defs = experiment_desc["tasks"]
+    params = experiment_desc.get("parameters", {})
+    artifact_inputs = experiment_desc.get("artifact_inputs", {})
+
+    message: str | None = None
+    ref_name, ref_output = util.get_reference_coords(ref)
+    if ref_name in graph:
+        referent_step = graph[ref_name]
+        task_plugin_short_name = util.step_get_plugin_short_name(referent_step)
+        # unrecognized task plugin short name is a different check.
+        # We will disregard that possibility here.
+        task_def = task_defs[task_plugin_short_name]
+        task_outputs = task_def.get("outputs", [])
+
+        if not isinstance(task_outputs, list):
+            task_outputs = [task_outputs]
+
+        task_output_names = [next(iter(task_output)) for task_output in task_outputs]
+
+        if ref_output is None:
+            if not task_outputs:
+                message = 'reference "{}": referenced step produces no output'.format(
+                    ref
+                )
+            elif len(task_outputs) > 1:
+                message = (
+                    'reference "{}": an output name must be given if the task plugin '
+                    "produces more than one output."
+                ).format(ref)
+
+        elif ref_output not in task_output_names:
+            message = ('reference "{}": unrecognized output: {}').format(
+                ref, ref_output
+            )
+
+    elif ref_name in params:
+        if ref_output:
+            message = (
+                'reference "{}": references to parameters may not include an output '
+                "name: {}"
+            ).format(ref, ref_output)
+
+    elif ref_name in artifact_inputs:
+        artifact_output = artifact_inputs[ref_name]
+        if not isinstance(artifact_output, list):
+            artifact_output = [artifact_output]
+        artifact_output_names = [next(iter(output)) for output in artifact_output]
+        if ref_output is None:
+            if len(artifact_output) > 1:
+                message = (
+                    'reference "{}": an output name must be given if the artifact task '
+                    "produces more than one output."
+                ).format(ref)
+        elif ref_output not in artifact_output_names:
+            message = ('reference "{}" unrecognized artifact output: {}').format(
+                ref_name, ref_output
+            )
+
+    else:
+        message = "unresolvable reference: {}".format(ref_name)
+
+    return message
+
+
+def _check_graph_references(
     experiment_desc: Mapping[str, Any],
 ) -> list[ValidationIssue]:
     """
@@ -631,70 +748,49 @@ def _check_graph_references(  # noqa: C901
         experiment description was valid.
     """
     graph = experiment_desc["graph"]
-    task_defs = experiment_desc["tasks"]
-    params = experiment_desc.get("parameters", {})
-
     issues = []
     for step_name, step_def in graph.items():
         for ref in util.get_references(step_def):
-            message = None
-
-            dot_idx = ref.find(".")
-            if dot_idx >= 0:
-                ref_name = ref[:dot_idx]
-                ref_output = ref[dot_idx + 1 :]
-            else:
-                ref_name = ref
-                ref_output = None
-
-            if ref_name in graph:
-                referent_step = graph[ref_name]
-                task_plugin_short_name = util.step_get_plugin_short_name(referent_step)
-                # unrecognized task plugin short name is a different check.
-                # We will disregard that possibility here.
-                task_def = task_defs[task_plugin_short_name]
-                task_outputs = task_def.get("outputs", [])
-
-                if not isinstance(task_outputs, list):
-                    task_outputs = [task_outputs]
-
-                task_output_names = [
-                    next(iter(task_output)) for task_output in task_outputs
-                ]
-
-                if ref_output is None:
-                    if not task_outputs:
-                        message = (
-                            'In step "{}": reference "{}": referenced'
-                            " step produces no output".format(step_name, ref)
-                        )
-                    elif len(task_outputs) > 1:
-                        message = (
-                            'In step "{}": reference "{}": an output name must'
-                            " be given if the task plugin produces more than"
-                            " one output."
-                        ).format(step_name, ref)
-
-                elif ref_output not in task_output_names:
-                    message = (
-                        'In step "{}": reference "{}": unrecognized output: {}'
-                    ).format(step_name, ref, ref_output)
-
-            elif ref_name in params:
-                if ref_output:
-                    message = (
-                        'In step "{}": reference "{}": references to parameters'
-                        " may not include an output name: {}"
-                    ).format(step_name, ref, ref_output)
-
-            else:
-                message = 'In step "{}": unresolvable reference: {}'.format(
-                    step_name, ref_name
-                )
-
-            if message:
+            check = _check_reference(ref, experiment_desc)
+            if check is not None:
                 issue = ValidationIssue(
-                    IssueType.SEMANTIC, IssueSeverity.ERROR, message
+                    IssueType.SEMANTIC,
+                    IssueSeverity.ERROR,
+                    'In step "{}": {}'.format(step_name, check),
+                )
+                issues.append(issue)
+
+    return issues
+
+
+def _check_artifact_references(
+    experiment_desc: Mapping[str, Any],
+) -> list[ValidationIssue]:
+    """
+    Scan all references within artifact outputs, check whether they are legal,
+    and whether they refer to recognized parameters, steps, and/or step outputs.
+
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or
+            equivalent
+
+    Returns:
+        A list of ValidationIssue objects; will be an empty list if the
+        experiment description was valid.
+    """
+    artifact_outputs = experiment_desc.get("artifact_outputs", {})
+
+    issues = []
+    for artifact_name, _ in artifact_outputs.items():
+        ref = artifact_outputs[artifact_name]["contents"]
+        if util.is_reference(ref):
+            # if reference drop the leading "$" and check it
+            check = _check_reference(ref[1:], experiment_desc)
+            if check is not None:
+                issue = ValidationIssue(
+                    IssueType.SEMANTIC,
+                    IssueSeverity.ERROR,
+                    'In artifact output "{}": {}'.format(artifact_name, check),
                 )
                 issues.append(issue)
 
@@ -1052,6 +1148,9 @@ def _manually_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIss
                 graph_ref_issues += _check_graph_dependencies(experiment_desc)
                 issues += graph_ref_issues
 
+                # Need to check that any references to steps are valid
+                issues += _check_artifact_references(experiment_desc)
+
                 # The graph topology is based on references.  If there were
                 # reference errors, we don't have sensible graph.  So we aren't
                 # able to check the graph for cycles.  So we will skip this
@@ -1060,6 +1159,7 @@ def _manually_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIss
                     issues += _check_graph_cycle(experiment_desc)
 
     issues += _check_global_parameter_types(experiment_desc)
+    issues += _check_artifact_output_types(experiment_desc)
     issues += _check_type_definition_type_references(experiment_desc)
     issues += _check_type_reference_cycle(experiment_desc)
 

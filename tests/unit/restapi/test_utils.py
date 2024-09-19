@@ -16,7 +16,10 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-from dioptra.restapi.utils import find_non_unique
+import pytest
+from marshmallow import ValidationError
+
+from dioptra.restapi.utils import find_non_unique, validate_artifact_url
 
 
 def test_find_non_unique():
@@ -62,3 +65,29 @@ def test_find_non_unique():
         )
         == 2
     )
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        ("http://www.example.org/some/path/to/a/file"),
+        ("file:////some/path/to/a/file"),
+        ("https://www.example.org/some/path/to/a/file"),
+        ("mlflow-artifacts:/0/911421d1835f4e6bbdfa6d0a79f65d45/artifacts/my_artifact"),
+    ],
+)
+def test_validate_valid_url(url: str):
+    validate_artifact_url(url)
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        ("file:////some/../path/to/a/file"),
+        ("imap://www.example.org"),
+        ("https:://www.example.org"),
+    ],
+)
+def test_validate_invalid_url(url: str):
+    with pytest.raises(ValidationError):
+        validate_artifact_url(url)

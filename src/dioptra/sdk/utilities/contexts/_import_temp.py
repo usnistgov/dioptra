@@ -14,30 +14,25 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import tempfile
-
-import structlog
-from structlog.stdlib import BoundLogger
-
-import dioptra.sdk.utilities.run_dioptra_job as run_dioptra_job
-from dioptra.sdk.utilities.paths import set_cwd
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
+import importlib
+import sys
+from contextlib import contextmanager
+from pathlib import Path
 
 
-def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
-    """Sets-up a temporary directory and starts a Dioptra job
-
-    Args:
-        job_id: The Dioptra job ID.
-        experiment_id: The Dioptra experiment ID.
+@contextmanager
+def import_temp(package_name: str, path: Path):
     """
-    log = LOGGER.new(job_id=job_id, experiment_id=experiment_id)  # noqa: F841
+    Context manager to temporarily add a module
+    """
+    original_modules = sys.modules.copy()
 
-    # Set up a temporary directory and set it as the current working directory
-    with tempfile.TemporaryDirectory() as tempdir, set_cwd(tempdir):
-        run_dioptra_job.main(
-            job_id=job_id,
-            experiment_id=experiment_id,
-            logger=log,
-        )
+    sys.path.insert(0, path.resolve().as_posix())
+    module = importlib.import_module(package_name)
+    try:
+        yield module
+    finally:
+        sys.path.pop(0)
+        for name in list(sys.modules.keys()):
+            if name not in original_modules:
+                del sys.modules[name]

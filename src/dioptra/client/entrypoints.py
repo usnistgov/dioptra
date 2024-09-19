@@ -14,6 +14,9 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from __future__ import annotations
+
+from pathlib import Path
 from typing import Any, ClassVar, Final, TypeVar
 
 from .base import (
@@ -30,20 +33,130 @@ from .drafts import (
 )
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
+from .utils import FileTypes
 
 DRAFT_FIELDS: Final[set[str]] = {
     "name",
     "description",
     "taskGraph",
+    "artifactGraph",
     "parameters",
+    "artifactParameters",
     "queues",
     "plugins",
+    "artifactPlugins",
 }
 FIELD_NAMES_TO_CAMEL_CASE: Final[dict[str, str]] = {
     "task_graph": "taskGraph",
 }
 
+CONFIG: Final[str] = "config"
+PLUGINS: Final[str] = "plugins"
+ARTIFACT_PLUGINS: Final[str] = "artifactPlugins"
+BUNDLE: Final[str] = "bundle"
+
 T = TypeVar("T")
+
+
+class EntrypointArtifactPluginsSubCollectionClient(SubCollectionClient[T]):
+    """The client for managing Dioptra's /entrypoints/{id}/artifactPlugins
+    sub-collection.
+
+    Attributes:
+        name: The name of the sub-collection.
+    """
+
+    name: ClassVar[str] = "artifactPlugins"
+
+    def __init__(
+        self,
+        session: DioptraSession[T],
+        root_collection: CollectionClient[T],
+        parent_sub_collections: list["SubCollectionClient[T]"] | None = None,
+    ) -> None:
+        """Initialize the EntrypointArtifactPluginsSubCollectionClient instance.
+
+        Args:
+            session: The Dioptra API session object.
+            root_collection: The client for the root collection that owns this
+                sub-collection.
+            parent_sub_collections: Unused in this client, must be None.
+        """
+        if parent_sub_collections is not None:
+            raise DioptraClientError(
+                "The parent_sub_collections argument must be None for this client."
+            )
+
+        super().__init__(
+            session=session,
+            root_collection=root_collection,
+            parent_sub_collections=parent_sub_collections,
+        )
+
+    def get(self, entrypoint_id: int | str) -> T:
+        """Get a list of artifact plugins added to the entrypoint.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(self.build_sub_collection_url(entrypoint_id))
+
+    def get_by_id(self, entrypoint_id: str | int, artifact_plugin_id: str | int) -> T:
+        """Get the entrypoint plugin matching the provided id.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            artifact_plugin_id: The id for the plugin that will be retrieved.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(
+            self.build_sub_collection_url(entrypoint_id), str(artifact_plugin_id)
+        )
+
+    def create(
+        self,
+        entrypoint_id: str | int,
+        artifact_plugin_ids: list[int],
+    ) -> T:
+        """Adds one or more artifact plugins to the entrypoint.
+
+        If a artifact plugin id matches an artifact plugin that is
+        already attached to the entrypoint, then the entrypoint will
+        update the artifact plugin to the latest version.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            artifact_plugin_ids: A list of artifact plugin ids that
+                will be registered to the entrypoint.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        json_ = {"artifactPlugins": artifact_plugin_ids}
+        return self._session.post(
+            self.build_sub_collection_url(entrypoint_id), json_=json_
+        )
+
+    def delete_by_id(
+        self, entrypoint_id: str | int, artifact_plugin_id: str | int
+    ) -> T:
+        """Remove an artifact plugin from the entrypoint.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            artifact_plugin_id: The id for the artifact plugin that will be removed.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.delete(
+            self.build_sub_collection_url(entrypoint_id), str(artifact_plugin_id)
+        )
 
 
 class EntrypointPluginsSubCollectionClient(SubCollectionClient[T]):
@@ -255,6 +368,123 @@ class EntrypointQueuesSubCollectionClient(SubCollectionClient[T]):
         )
 
 
+class EntrypointsSnapshotCollectionClient(SnapshotsSubCollectionClient[T]):
+    def __init__(
+        self,
+        session: DioptraSession[T],
+        root_collection: EntrypointsCollectionClient[T],
+    ):
+        super().__init__(session=session, root_collection=root_collection)
+
+    def get_config(
+        self, entrypoint_id: str | int, entrypoint_snapshot_id: str | int
+    ) -> T:
+        """Get the config for the entrypoint matching the provided snapshot id.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(
+            self.build_sub_collection_url(entrypoint_id),
+            str(entrypoint_snapshot_id),
+            CONFIG,
+        )
+
+    def get_plugins_bundle(
+        self,
+        entrypoint_id: str | int,
+        entrypoint_snapshot_id: str | int,
+        file_type: FileTypes = FileTypes.TAR_GZ,
+        output_dir: Path | None = None,
+        file_stem: str = "plugins",
+    ) -> Path:
+        """Get the plugins bundle for the entrypoint matching the provided snapshot id.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+            file_type: the file type for the bundle.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        bundle_path = (
+            Path(file_stem).with_suffix(file_type.suffix)
+            if output_dir is None
+            else Path(output_dir, file_stem).with_suffix(file_type.suffix)
+        )
+        params = {"fileType": file_type.value}
+
+        return self._session.download(
+            self.build_sub_collection_url(entrypoint_id),
+            str(entrypoint_snapshot_id),
+            PLUGINS,
+            BUNDLE,
+            output_path=bundle_path,
+            params=params,
+        )
+
+    def get_artifact_plugins(
+        self,
+        entrypoint_id: str | int,
+        entrypoint_snapshot_id: str | int,
+    ) -> T:
+        """Get the artifact plugins for the entrypoint matching the provided
+            snapshot id.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(
+            self.build_sub_collection_url(entrypoint_id),
+            str(entrypoint_snapshot_id),
+            ARTIFACT_PLUGINS,
+        )
+
+    def get_artifact_plugins_bundle(
+        self,
+        entrypoint_id: str | int,
+        entrypoint_snapshot_id: str | int,
+        file_type: FileTypes = FileTypes.TAR_GZ,
+        output_dir: Path | None = None,
+        file_stem: str = "artifact-plugins",
+    ) -> Path:
+        """Get the artifact plugins bundle for the entrypoint matching the provided
+            snapshot id.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            entrypoint_snapshot_id: The entrypoint snapshot id, an integer.
+            file_type: the file type for the bundle.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        bundle_path = (
+            Path(file_stem).with_suffix(file_type.suffix)
+            if output_dir is None
+            else Path(output_dir, file_stem).with_suffix(file_type.suffix)
+        )
+        params = {"fileType": file_type.value}
+
+        return self._session.download(
+            self.build_sub_collection_url(entrypoint_id),
+            str(entrypoint_snapshot_id),
+            ARTIFACT_PLUGINS,
+            BUNDLE,
+            output_path=bundle_path,
+            params=params,
+        )
+
+
 class EntrypointsCollectionClient(CollectionClient[T]):
     """The client for managing Dioptra's /entrypoints collection.
 
@@ -272,6 +502,9 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         """
         super().__init__(session)
         self._plugins = EntrypointPluginsSubCollectionClient[T](
+            session=session, root_collection=self
+        )
+        self._artifact_plugins = EntrypointArtifactPluginsSubCollectionClient[T](
             session=session, root_collection=self
         )
         self._queues = EntrypointQueuesSubCollectionClient[T](
@@ -299,7 +532,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
                 name_mapping=FIELD_NAMES_TO_CAMEL_CASE
             ),
         )
-        self._snapshots = SnapshotsSubCollectionClient[T](
+        self._snapshots = EntrypointsSnapshotCollectionClient[T](
             session=session, root_collection=self
         )
         self._tags = TagsSubCollectionClient[T](session=session, root_collection=self)
@@ -308,6 +541,11 @@ class EntrypointsCollectionClient(CollectionClient[T]):
     def plugins(self) -> EntrypointPluginsSubCollectionClient[T]:
         """The client for managing the plugins sub-collection."""
         return self._plugins
+
+    @property
+    def artifact_plugins(self) -> EntrypointArtifactPluginsSubCollectionClient[T]:
+        """The client for managing the artifact plugins sub-collection."""
+        return self._artifact_plugins
 
     @property
     def queues(self) -> EntrypointQueuesSubCollectionClient[T]:
@@ -377,7 +615,7 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         return self._modify_resource_drafts
 
     @property
-    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+    def snapshots(self) -> EntrypointsSnapshotCollectionClient[T]:
         """The client for retrieving entrypoint resource snapshots.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -489,10 +727,13 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         group_id: int,
         name: str,
         task_graph: str,
+        artifact_graph: str | None = None,
         description: str | None = None,
         parameters: list[dict[str, Any]] | None = None,
+        artifact_parameters: list[dict[str, Any]] | None = None,
         queues: list[int] | None = None,
         plugins: list[int] | None = None,
+        artifact_plugins: list[int] | None = None,
     ) -> T:
         """Creates a entrypoint.
 
@@ -501,14 +742,20 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             name: The name of the new entrypoint.
             task_graph: The task graph for the new entrypoint as a YAML-formatted
                 string.
+            artifact_graph: The artifact graph for the new entrypoint as a
+                YAML-formatted string.
             description: The description of the new entrypoint. Optional, defaults to
                 None.
             parameters: The list of parameters for the new entrypoint. Optional,
                 defaults to None.
+            artifact_parameters: The list of artifact parameters for the new entrypoint.
+                Optional, defaults to None.
             queues: A list of queue ids to associate with the new entrypoint. Optional,
                 defaults to None.
             plugins: A list of plugin ids to associate with the new entrypoint.
                 Optional, defaults to None.
+            artifact_plugins: A list of artifact plugin ids to associate with the new
+                entrypoint. Optional, defaults to None.
 
         Returns:
             The response from the Dioptra API.
@@ -519,17 +766,26 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             "taskGraph": task_graph,
         }
 
+        if artifact_graph is not None:
+            json_["artifactGraph"] = artifact_graph
+
         if description is not None:
             json_["description"] = description
 
         if parameters is not None:
             json_["parameters"] = parameters
 
+        if artifact_parameters is not None:
+            json_["artifactParameters"] = artifact_parameters
+
         if queues is not None:
             json_["queues"] = queues
 
         if plugins is not None:
             json_["plugins"] = plugins
+
+        if artifact_plugins is not None:
+            json_["artifactPlugins"] = artifact_plugins
 
         return self._session.post(self.url, json_=json_)
 
@@ -538,8 +794,10 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         entrypoint_id: str | int,
         name: str,
         task_graph: str,
+        artifact_graph: str | None,
         description: str | None,
         parameters: list[dict[str, Any]] | None,
+        artifact_parameters: list[dict[str, Any]] | None,
         queues: list[int] | None,
     ) -> T:
         """Modify the entrypoint matching the provided id.
@@ -549,10 +807,14 @@ class EntrypointsCollectionClient(CollectionClient[T]):
             name: The new name of the entrypoint.
             task_graph: The new task graph for the entrypoint as a YAML-formatted
                 string.
+            artifact_graph: The artifact graph for the new entrypoint as a
+                YAML-formatted string.
             description: The new description of the entrypoint. To remove the
                 description, pass None.
             parameters: The new list of parameters for the entrypoint. To remove all
                 parameters, pass None.
+            artifact_parameters: The list of artifact parameters for the new entrypoint.
+                Optional, defaults to None.
             queues: The new list of queue ids to associate with the entrypoint. To
                 remove all associated queues, pass None.
 
@@ -561,11 +823,17 @@ class EntrypointsCollectionClient(CollectionClient[T]):
         """
         json_: dict[str, Any] = {"name": name, "taskGraph": task_graph}
 
+        if artifact_graph is not None:
+            json_["artifactGraph"] = artifact_graph
+
         if description is not None:
             json_["description"] = description
 
         if parameters is not None:
             json_["parameters"] = parameters
+
+        if artifact_parameters is not None:
+            json_["artifactParameters"] = artifact_parameters
 
         if queues is not None:
             json_["queues"] = queues

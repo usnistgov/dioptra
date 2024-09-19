@@ -53,11 +53,11 @@ from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.sdk.utilities.paths import set_cwd
 
+from ..filetypes import FileTypes
 from .lib import views
 from .lib.clone_git_repository import clone_git_repository
 from .lib.package_job_files import package_job_files
 from .schema import (
-    FileTypes,
     ResourceImportResolveNameConflictsStrategy,
     ResourceImportSourceTypes,
 )
@@ -509,7 +509,17 @@ class ResourceImportService(object):
             plugins[plugin_dict["plugin"].name] = plugin_dict["plugin"]
             db.session.flush()
 
-            tasks = self._build_tasks(plugin.get("tasks", []), param_types)
+            task_config = plugin.get("tasks", {})
+            function_tasks = self._build_tasks(
+                tasks_config=task_config.get("functions", []),
+                param_types=param_types,
+                function=True,
+            )
+            artifact_tasks = self._build_tasks(
+                tasks_config=task_config.get("artifacts", []),
+                param_types=param_types,
+                function=False,
+            )
             for plugin_file_path in Path(plugin["path"]).rglob("*.py"):
                 filename = str(plugin_file_path.relative_to(plugin["path"]))
                 try:
@@ -523,7 +533,8 @@ class ResourceImportService(object):
                     filename,
                     contents=contents,
                     description=None,
-                    tasks=tasks[filename],
+                    artifact_tasks=function_tasks[filename],
+                    function_tasks=artifact_tasks[filename],
                     plugin_id=plugin_dict["plugin"].resource_id,
                     commit=False,
                     log=log,
@@ -592,12 +603,19 @@ class ResourceImportService(object):
             plugin_ids = [
                 plugins[plugin].resource_id for plugin in entrypoint.get("plugins", [])
             ]
+            artifact_plugin_ids = [
+                plugins[plugin].resource_id
+                for plugin in entrypoint.get("artifact_plugins", [])
+            ]
             entrypoint_dict = self._entrypoint_service.create(
                 name=entrypoint.get("name", Path(entrypoint["path"]).stem),
                 description=entrypoint.get("description", None),
                 task_graph=contents,
+                artifact_graph=entrypoint.get("artifact_graph", None),
                 parameters=params,
+                artifact_parameters=entrypoint.get("artifact_parameters", None),
                 plugin_ids=plugin_ids,
+                artifact_plugin_ids=artifact_plugin_ids,
                 queue_ids=[],
                 group_id=group_id,
                 commit=False,
@@ -615,6 +633,7 @@ class ResourceImportService(object):
         self,
         tasks_config: list[dict[str, Any]],
         param_types: dict[str, models.PluginTaskParameterType],
+        function: bool,
     ) -> dict[str, list]:
         """
         Builds dictionaries describing plugin tasks from a configuration file
@@ -629,22 +648,27 @@ class ResourceImportService(object):
 
         tasks = defaultdict(list)
         for task in tasks_config:
-            try:
-                input_params = [
-                    {
-                        "name": param["name"],
-                        "parameter_type_id": param_types[param["type"]].resource_id,
-                        "required": param.get("required", False),
-                    }
-                    for param in task["input_params"]
-                ]
-            except KeyError as e:
-                raise ImportFailedError(
-                    "Plugin task input parameter type not found.",
-                    reason=f"Parameter type named {e} not does not exist and "
-                    "is not defined in provided toml config.",
-                ) from e
-
+            entry = {
+                "name": task["name"],
+                "description": task.get("description", None),
+            }
+            if function:
+                try:
+                    input_params = [
+                        {
+                            "name": param["name"],
+                            "parameter_type_id": param_types[param["type"]].resource_id,
+                            "required": param.get("required", False),
+                        }
+                        for param in task["input_params"]
+                    ]
+                    entry["input_params"] = input_params
+                except KeyError as e:
+                    raise ImportFailedError(
+                        "Plugin task input parameter type not found.",
+                        reason=f"Parameter type named {e} not does not exist and "
+                        "is not defined in provided toml config.",
+                    ) from e
             try:
                 output_params = [
                     {
@@ -653,19 +677,12 @@ class ResourceImportService(object):
                     }
                     for param in task["output_params"]
                 ]
+                entry["output_params"] = output_params
             except KeyError as e:
                 raise ImportFailedError(
                     "Plugin task output parameter type not found.",
                     reason=f"Parameter type named {e} not does not exist and "
                     "is not defined in provided toml config.",
                 ) from e
-
-            tasks[task["filename"]].append(
-                {
-                    "name": task["name"],
-                    "description": task.get("description", None),
-                    "input_params": input_params,
-                    "output_params": output_params,
-                }
-            )
+            tasks[task["filename"]].append(entry)
         return tasks

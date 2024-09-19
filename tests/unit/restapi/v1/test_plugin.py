@@ -1037,7 +1037,8 @@ def test_register_plugin_file(
         (r"hello.py/world.py", HTTPStatus.BAD_REQUEST),     # .py in middle of path
         (r"1/2/3/4.py", HTTPStatus.BAD_REQUEST),            # All numeric directory names # noqa: B950
         (r"../sample.py", HTTPStatus.BAD_REQUEST),          # No relative paths
-        (r"..sample.py", HTTPStatus.BAD_REQUEST),           # No prefix with dots
+        (r"..sample.py", HTTPStatus.BAD_REQUEST),
+        # No prefix with dots
         # fmt: on
     ],
 )

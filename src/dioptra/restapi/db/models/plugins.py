@@ -42,7 +42,7 @@ class Plugin(ResourceSnapshot):
 
     # Relationships
     plugin_plugin_files: Mapped[list["PluginPluginFile"]] = relationship(
-        init=False, back_populates="plugin_file"
+        init=False, back_populates="plugin"
     )
     plugin_files: Mapped[list["PluginFile"]] = relationship(
         "PluginFile",
@@ -135,20 +135,63 @@ class PluginPluginFile(db.Model):  # type: ignore[name-defined]
 class PluginTask(db.Model):  # type: ignore[name-defined]
     __tablename__ = "plugin_tasks"
 
+    task_id: Mapped[intpk] = mapped_column(init=False)
+
     # Database fields
-    plugin_file_resource_snapshot_id: Mapped[intpk] = mapped_column(
-        ForeignKey("plugin_files.resource_snapshot_id"), init=False
+    plugin_file_resource_snapshot_id: Mapped[bigint] = mapped_column(
+        ForeignKey("plugin_files.resource_snapshot_id"), init=False, nullable=False
     )
-    plugin_task_name: Mapped[text_] = mapped_column(primary_key=True)
+    plugin_task_name: Mapped[text_] = mapped_column(nullable=False)
+    type: Mapped[str] = mapped_column(init=False, nullable=False)
 
     # Relationships
     file: Mapped["PluginFile"] = relationship(back_populates="tasks")
+
+    # other settings
+    __table_args__ = (
+        Index(
+            None, "plugin_file_resource_snapshot_id", "plugin_task_name", unique=True
+        ),
+    )
+    __mapper_args__ = {
+        "polymorphic_identity": "employee",
+        "polymorphic_on": "type",
+    }
+
+
+class FunctionTask(PluginTask):
+    __tablename__ = "function_tasks"
+    function_task_id: Mapped[intpk] = mapped_column(
+        ForeignKey("plugin_tasks.task_id"), init=False
+    )
+
     input_parameters: Mapped[list["PluginTaskInputParameter"]] = relationship(
-        back_populates="task", lazy="joined"
+        lazy="joined"
     )
     output_parameters: Mapped[list["PluginTaskOutputParameter"]] = relationship(
-        back_populates="task", lazy="joined"
+        lazy="joined"
     )
+
+    __mapper_args__ = {
+        "polymorphic_load": "selectin",
+        "polymorphic_identity": "function",
+    }
+
+
+class ArtifactTask(PluginTask):
+    __tablename__ = "artifact_tasks"
+    artifact_task_id: Mapped[intpk] = mapped_column(
+        ForeignKey("plugin_tasks.task_id"), init=False
+    )
+
+    output_parameters: Mapped[list["PluginTaskOutputParameter"]] = relationship(
+        lazy="joined"
+    )
+
+    __mapper_args__ = {
+        "polymorphic_load": "selectin",
+        "polymorphic_identity": "artifact",
+    }
 
 
 class PluginTaskParameterType(ResourceSnapshot):
@@ -160,7 +203,7 @@ class PluginTaskParameterType(ResourceSnapshot):
     name: Mapped[text_] = mapped_column(nullable=False, index=True)
     structure: Mapped[optionaljson_] = mapped_column(nullable=True)
 
-    # Relationships
+    # Relationships -- TODO: are these really needed?
     input_parameters: Mapped[list["PluginTaskInputParameter"]] = relationship(
         init=False, back_populates="parameter_type"
     )
@@ -188,8 +231,9 @@ class PluginTaskInputParameter(db.Model):  # type: ignore[name-defined]
     __tablename__ = "plugin_task_input_parameters"
 
     # Database fields
-    plugin_file_resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
-    plugin_task_name: Mapped[text_] = mapped_column(init=False, primary_key=True)
+    plugin_task_id: Mapped[intpk] = mapped_column(
+        ForeignKey("plugin_tasks.task_id"), init=False
+    )
     parameter_number: Mapped[intpk]
     plugin_task_parameter_type_resource_snapshot_id: Mapped[bigint] = mapped_column(
         ForeignKey("plugin_task_parameter_types.resource_snapshot_id"),
@@ -201,29 +245,8 @@ class PluginTaskInputParameter(db.Model):  # type: ignore[name-defined]
     required: Mapped[bool_] = mapped_column(nullable=False)
 
     # Relationships
-    task: Mapped["PluginTask"] = relationship(
-        init=False, back_populates="input_parameters"
-    )
     parameter_type: Mapped["PluginTaskParameterType"] = relationship(
         back_populates="input_parameters", lazy="joined"
-    )
-
-    # Additional settings
-    __table_args__ = (
-        Index(
-            None,
-            "plugin_file_resource_snapshot_id",
-            "plugin_task_name",
-            "name",
-            unique=True,
-        ),
-        ForeignKeyConstraint(
-            ["plugin_file_resource_snapshot_id", "plugin_task_name"],
-            [
-                "plugin_tasks.plugin_file_resource_snapshot_id",
-                "plugin_tasks.plugin_task_name",
-            ],
-        ),
     )
 
 
@@ -231,8 +254,9 @@ class PluginTaskOutputParameter(db.Model):  # type: ignore[name-defined]
     __tablename__ = "plugin_task_output_parameters"
 
     # Database fields
-    plugin_file_resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
-    plugin_task_name: Mapped[text_] = mapped_column(init=False, primary_key=True)
+    plugin_task_id: Mapped[intpk] = mapped_column(
+        ForeignKey("plugin_tasks.task_id"), init=False
+    )
     parameter_number: Mapped[intpk]
     plugin_task_parameter_type_resource_snapshot_id: Mapped[bigint] = mapped_column(
         ForeignKey("plugin_task_parameter_types.resource_snapshot_id"),
@@ -243,27 +267,6 @@ class PluginTaskOutputParameter(db.Model):  # type: ignore[name-defined]
     name: Mapped[text_] = mapped_column(nullable=False, primary_key=True)
 
     # Relationships
-    task: Mapped["PluginTask"] = relationship(
-        init=False, back_populates="output_parameters"
-    )
     parameter_type: Mapped["PluginTaskParameterType"] = relationship(
         back_populates="output_parameters", lazy="joined"
-    )
-
-    # Additional settings
-    __table_args__ = (
-        Index(
-            None,
-            "plugin_file_resource_snapshot_id",
-            "plugin_task_name",
-            "name",
-            unique=True,
-        ),
-        ForeignKeyConstraint(
-            ["plugin_file_resource_snapshot_id", "plugin_task_name"],
-            [
-                "plugin_tasks.plugin_file_resource_snapshot_id",
-                "plugin_tasks.plugin_task_name",
-            ],
-        ),
     )

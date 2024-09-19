@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import json
 import tarfile
 import zipfile
 from pathlib import Path
@@ -25,8 +26,8 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 
-from ..schema import FileTypes
-from .export_job_parameters import export_job_parameters
+from ...filetypes import FileTypes
+from .export_job_parameters import build_job_parameters_dict
 from .export_plugin_files import export_plugin_files
 from .export_run_dioptra_job_script import export_run_dioptra_job_script
 from .export_task_engine_yaml import export_task_engine_yaml
@@ -72,16 +73,24 @@ def package_job_files(
             plugins_base_dir=plugin_base_dir,
             logger=log,
         )
-        task_engine_yaml_path = export_task_engine_yaml(
-            entrypoint=entry_point,
-            plugin_plugin_files=entry_point_plugin_files,
-            plugin_parameter_types=plugin_parameter_types,
-            base_dir=base_dir,
-            logger=log,
-        )
-        job_params_json_path = export_job_parameters(
-            job_param_values=job_parameter_values, base_dir=base_dir, logger=log
-        )
+
+        task_engine_yaml_path = Path(base_dir, entry_point.name).with_suffix(".yml")
+        with task_engine_yaml_path.open("wt", encoding="utf-8") as f:
+            export_task_engine_yaml(
+                entrypoint=entry_point,
+                plugin_plugin_files=entry_point_plugin_files,
+                plugin_parameter_types=plugin_parameter_types,
+                output=f,
+                logger=log,
+            )
+
+        job_params_json_path = Path(base_dir, "parameters").with_suffix(".json")
+        with job_params_json_path.open("wt", encoding="utf-8") as f:
+            job_parameters = build_job_parameters_dict(
+                job_param_values=job_parameter_values, logger=log
+            )
+            json.dump(job_parameters, fp=f, indent=2)
+
         run_dioptra_job_script = export_run_dioptra_job_script(
             job_id=job_id,
             experiment_id=experiment.resource_id,
