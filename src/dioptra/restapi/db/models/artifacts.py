@@ -14,11 +14,14 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from typing import Optional
+
 from sqlalchemy import ForeignKeyConstraint, Index, and_, select
-from sqlalchemy.orm import Mapped, column_property, mapped_column
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from dioptra.restapi.db.db import bigint, intpk, text_
 
+from .plugins import ArtifactTask, PluginPluginFile
 from .resources import Resource, ResourceSnapshot, resource_dependencies_table
 
 # -- ORM Classes -----------------------------------------------------------------------
@@ -31,6 +34,12 @@ class Artifact(ResourceSnapshot):
     resource_snapshot_id: Mapped[intpk] = mapped_column(init=False)
     resource_id: Mapped[bigint] = mapped_column(init=False, nullable=False, index=True)
     uri: Mapped[text_] = mapped_column(nullable=False)
+    is_dir: Mapped[bool] = mapped_column(nullable=False)
+    file_size: Mapped[Optional[int]] = mapped_column(nullable=True)
+
+    plugin_snapshot_id: Mapped[bigint] = mapped_column(init=False, nullable=True)
+    plugin_file_id: Mapped[bigint] = mapped_column(init=False, nullable=True)
+    task_name: Mapped[bigint] = mapped_column(init=False, nullable=True)
 
     # Derived fields (read-only)
     job_id: Mapped[bigint] = column_property(
@@ -48,6 +57,11 @@ class Artifact(ResourceSnapshot):
         .scalar_subquery()
     )
 
+    task: Mapped["ArtifactTask"] = relationship(init=False)
+    plugin_plugin_file: Mapped["PluginPluginFile"] = relationship(
+        init=False, overlaps="task"
+    )
+
     # Additional settings
     __table_args__ = (  # type: ignore[assignment]
         Index(None, "resource_snapshot_id", "resource_id", unique=True),
@@ -56,6 +70,20 @@ class Artifact(ResourceSnapshot):
             [
                 "resource_snapshots.resource_snapshot_id",
                 "resource_snapshots.resource_id",
+            ],
+        ),
+        ForeignKeyConstraint(
+            ["plugin_file_id", "task_name"],
+            [
+                "plugin_tasks.plugin_file_resource_snapshot_id",
+                "plugin_tasks.plugin_task_name",
+            ],
+        ),
+        ForeignKeyConstraint(
+            ["plugin_snapshot_id", "plugin_file_id"],
+            [
+                "plugin_plugin_files.plugin_resource_snapshot_id",
+                "plugin_plugin_files.plugin_file_resource_snapshot_id",
             ],
         ),
     )

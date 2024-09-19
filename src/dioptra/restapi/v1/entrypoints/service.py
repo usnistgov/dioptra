@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final, cast
+from typing import Any, Final, Iterable
 
 import structlog
 from flask_login import current_user
@@ -29,16 +29,21 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.errors import (
+    ArtifactTaskPluginTaskOverlapError,
     BackendDatabaseError,
     EntityDoesNotExistError,
     EntityExistsError,
+    PluginTaskArtifactTaskOverlapError,
     QueryParameterNotUniqueError,
     SortParameterValidationError,
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.plugins.service import PluginIdsService
+from dioptra.restapi.v1.plugins.service import (
+    PluginIdsService,
+    get_plugin_task_parameter_types_by_id,
+)
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdsService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
@@ -91,8 +96,11 @@ class EntrypointService(object):
         name: str,
         description: str | None,
         task_graph: str,
+        artifact_graph: str,
         parameters: list[dict[str, Any]],
+        artifact_parameters: list[dict[str, Any]],
         plugin_ids: list[int],
+        artifact_plugin_ids: list[int],
         queue_ids: list[int],
         group_id: int,
         commit: bool = True,
@@ -115,38 +123,42 @@ class EntrypointService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
+        # TODO: need to add a check here that graphs are valid yaml
+
         duplicate = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
         if duplicate is not None:
             raise EntityExistsError(
                 RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
             )
 
+        plugin_ids = list(set(plugin_ids))
+        artifact_plugin_ids = list(set(artifact_plugin_ids))
         group = self._group_id_service.get(group_id, error_if_not_found=True)
         queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
         plugins = self._plugin_ids_service.get(plugin_ids, error_if_not_found=True)
+        artifact_plugins = self._plugin_ids_service.get(
+            artifact_plugin_ids, error_if_not_found=True
+        )
+        # check this early
+        _ensure_no_plugin_task_overlap(plugin_ids, artifact_plugin_ids, True)
 
         resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
-
-        entrypoint_parameters = [
-            models.EntryPointParameter(
-                name=param["name"],
-                default_value=param["default_value"],
-                parameter_type=param["parameter_type"],
-                parameter_number=i,
-            )
-            for i, param in enumerate(parameters)
-        ]
 
         new_entrypoint = models.EntryPoint(
             name=name,
             description=description,
             task_graph=task_graph,
-            parameters=entrypoint_parameters,
+            artifact_graph=artifact_graph,
+            parameters=_create_parameters(parameters),
+            artifact_parameters=_create_artifact_parameters(
+                artifact_parameters=artifact_parameters, log=log
+            ),
             resource=resource,
             creator=current_user,
         )
+        db.session.add(new_entrypoint)
 
-        entry_point_plugins = [
+        new_entrypoint.entry_point_plugins = [
             models.EntryPointPlugin(
                 entry_point=new_entrypoint,
                 plugin=plugin["plugin"],
@@ -154,13 +166,22 @@ class EntrypointService(object):
             for plugin in plugins
         ]
 
-        new_entrypoint.entry_point_plugins = entry_point_plugins
+        new_entrypoint.entry_point_artifact_plugins = [
+            models.EntryPointArtifactPlugin(
+                entry_point=new_entrypoint,
+                plugin=artifact_plugin["plugin"],
+            )
+            for artifact_plugin in artifact_plugins
+        ]
 
         plugin_resources = [plugin["plugin"].resource for plugin in plugins]
+        artifact_plugin_resources = [
+            artifact_plugin["plugin"].resource for artifact_plugin in artifact_plugins
+        ]
         queue_resources = [queue.resource for queue in queues]
-        new_entrypoint.children.extend(plugin_resources + queue_resources)
-
-        db.session.add(new_entrypoint)
+        new_entrypoint.children.extend(
+            plugin_resources + queue_resources + artifact_plugin_resources
+        )
 
         if commit:
             db.session.commit()
@@ -305,7 +326,8 @@ class EntrypointService(object):
 
 
 class EntrypointIdService(object):
-    """The service methods for creating and managing entrypoints by their unique id."""
+    """The service methods for creating and managing entrypoints by
+    their unique id."""
 
     @inject
     def __init__(
@@ -327,54 +349,36 @@ class EntrypointIdService(object):
     def get(
         self,
         entrypoint_id: int,
-        entrypoint_snapshot_id: int | None = None,
-        error_if_not_found: bool = False,
         **kwargs,
-    ) -> utils.EntrypointDict | None:
+    ) -> utils.EntrypointDict:
         """Fetch a entrypoint by its unique id.
 
         Args:
             entrypoint_id: The unique id of the entrypoint.
-            entrypoint_snapshot_id: The id for one of the snapshots associated with the
-                entrypoint_id. If None, the latest snapshot is used. Defaults to None.
-            error_if_not_found: If True, raise an error if the entrypoint is not found.
-                Defaults to False.
 
         Returns:
-            The entrypoint object if found, otherwise None.
+            The entrypoint object
 
         Raises:
-            EntityDoesNotExistError: If `error_if_not_found` is True and the entrypoint
-                snapshot cannot be found.
+            EntityDoesNotExistError: If the entrypoint is not found
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
         # Get a specific snapshot if entrypoint_snapshot_id is specified
-        snapshot_id = (
-            entrypoint_snapshot_id
-            if entrypoint_snapshot_id is not None
-            else models.Resource.latest_snapshot_id
-        )
         stmt = (
             select(models.EntryPoint)
             .join(models.Resource)
             .where(
                 models.EntryPoint.resource_id == entrypoint_id,
-                models.EntryPoint.resource_snapshot_id == snapshot_id,
+                models.EntryPoint.resource_snapshot_id
+                == models.Resource.latest_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
             )
         )
         entrypoint = db.session.scalars(stmt).first()
 
         if entrypoint is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(
-                    RESOURCE_TYPE,
-                    entrypoint_id=entrypoint_id,
-                    entrypoint_snapshot_id=entrypoint_snapshot_id,
-                )
-
-            return None
+            raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
 
         queue_ids = set(
             resource.resource_id
@@ -405,12 +409,13 @@ class EntrypointIdService(object):
         name: str,
         description: str,
         task_graph: str,
+        artifact_graph: str,
         parameters: list[dict[str, Any]],
+        artifact_parameters: list[dict[str, Any]],
         queue_ids: list[int],
-        error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
-    ) -> utils.EntrypointDict | None:
+    ) -> utils.EntrypointDict:
         """Modify an entrypoint.
 
         Args:
@@ -418,7 +423,9 @@ class EntrypointIdService(object):
             name: The new name of the entrypoint.
             description: The new description of the entrypoint.
             task_graph: The new task graph of the entrypoint.
+            artifact_graph: The new artifact definitions of the entrypoint.
             parameters: the new parameters of the entrypoint.
+            artifact_parameters: the new artifact_parameters of the entrypoint.
             error_if_not_found: If True, raise an error if the group is not found.
                 Defaults to False.
             commit: If True, commit the transaction. Defaults to True.
@@ -438,12 +445,7 @@ class EntrypointIdService(object):
         if len(duplicates) > 0:
             raise QueryParameterNotUniqueError(RESOURCE_TYPE, name=duplicates)
 
-        entrypoint_dict = self.get(
-            entrypoint_id, error_if_not_found=error_if_not_found, log=log
-        )
-
-        if entrypoint_dict is None:
-            return None
+        entrypoint_dict = self.get(entrypoint_id, log=log)
 
         entrypoint = entrypoint_dict["entry_point"]
         group_id = entrypoint.resource.group_id
@@ -458,42 +460,31 @@ class EntrypointIdService(object):
 
         queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
 
-        entrypoint_parameters = [
-            models.EntryPointParameter(
-                name=param["name"],
-                default_value=param["default_value"],
-                parameter_type=param["parameter_type"],
-                parameter_number=i,
-            )
-            for i, param in enumerate(parameters)
-        ]
-
         new_entrypoint = models.EntryPoint(
             name=name,
             description=description,
             task_graph=task_graph,
-            parameters=entrypoint_parameters,
+            artifact_graph=artifact_graph,
+            parameters=_create_parameters(parameters),
+            artifact_parameters=_create_artifact_parameters(
+                artifact_parameters=artifact_parameters, log=log
+            ),
             resource=entrypoint.resource,
             creator=current_user,
         )
-        new_entrypoint.entry_point_plugins = [
-            models.EntryPointPlugin(
-                entry_point=new_entrypoint,
-                plugin=entry_point_plugin.plugin,
-            )
-            for entry_point_plugin in entrypoint.entry_point_plugins
-        ]
+        db.session.add(new_entrypoint)
 
-        plugin_resources = list(
-            {
-                plugin.plugin.resource_id: plugin.plugin.resource
-                for plugin in new_entrypoint.entry_point_plugins
-            }.values()
+        plugin_resources = _copy_plugins(
+            plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
+        )
+        artifact_plugin_resources = _copy_artifact_plugins(
+            artifact_plugins=entrypoint.entry_point_artifact_plugins,
+            target_entrypoint=new_entrypoint,
         )
         queue_resources = [queue.resource for queue in queues]
-        new_entrypoint.children = plugin_resources + queue_resources
-
-        db.session.add(new_entrypoint)
+        new_entrypoint.children = (
+            plugin_resources + queue_resources + artifact_plugin_resources
+        )
 
         if commit:
             db.session.commit()
@@ -538,6 +529,128 @@ class EntrypointIdService(object):
         return {"status": "Success", "id": [entrypoint_id]}
 
 
+class EntrypointSnapshotIdService(object):
+    def get(
+        self, entrypoint_id: int, entrypoint_snapshot_id: int, **kwargs
+    ) -> models.EntryPoint:
+        """Run a query to get the EntryPoint for an entrypoint snapshot id.
+
+        Args:
+            entrypoint_id: the ID of the entrypoint
+            entrypoint_snapshot_id: The Snapshot ID of the entrypoint to retrieve
+
+        Returns:
+            The entrypoint.
+
+        Raises:
+            EntityDoesNotExistError: If the entrypoint is not found
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "get entrypoint snapshot",
+            resource_id=entrypoint_id,
+            resource_snapshot_id=entrypoint_snapshot_id,
+        )
+        entry_point_resource_snapshot_stmt = select(models.EntryPoint).where(
+            models.EntryPoint.resource_id == entrypoint_id,
+            models.EntryPoint.resource_snapshot_id == entrypoint_snapshot_id,
+        )
+        entry_point = db.session.scalar(entry_point_resource_snapshot_stmt)
+
+        if entry_point is None:
+            raise EntityDoesNotExistError(
+                RESOURCE_TYPE,
+                entrypoint_id=entrypoint_id,
+                entrypoint_snapshot_id=entrypoint_snapshot_id,
+            )
+        return entry_point
+
+    def get_plugin_files(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        **kwargs,
+    ) -> list[models.PluginPluginFile]:
+        """Run a query to get the plugin files for an entrypoint.
+
+        Args:
+            entrypoint_snapshot_id: The Snapshot ID of the entrypoint to get the plugin
+            files for.
+
+        Returns:
+            The plugin files for the entrypoint.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("get plugin files", resource_snapshot_id=entrypoint_snapshot_id)
+
+        entry_point = self.get(
+            entrypoint_id=entrypoint_id,
+            entrypoint_snapshot_id=entrypoint_snapshot_id,
+            log=log,
+        )
+        return [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+
+    def get_artifact_plugin_files(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        **kwargs,
+    ) -> list[models.PluginPluginFile]:
+        """Run a query to get the plugin files for an entrypoint.
+
+        Args:
+            entrypoint_snapshot_id: The Snapshot ID of the entrypoint to get the plugin
+            files for.
+
+        Returns:
+            The plugin files for the entrypoint.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("get plugin files", resource_snapshot_id=entrypoint_snapshot_id)
+
+        entry_point = self.get(
+            entrypoint_id=entrypoint_id,
+            entrypoint_snapshot_id=entrypoint_snapshot_id,
+            log=log,
+        )
+        return [
+            plugin_plugin_file
+            for artifact_plugin in entry_point.entry_point_artifact_plugins
+            for plugin_plugin_file in artifact_plugin.plugin.plugin_plugin_files
+        ]
+
+    def get_group_plugin_parameter_types(
+        self, group_id: int, **kwargs
+    ) -> list[models.PluginTaskParameterType]:
+        """Run a query to get the plugin task parameter types associated with a group.
+
+        Args:
+            group_id: The group id for which to get the plugin task parameter types.
+            log: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            The plugin files for the Job's entrypoint.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+
+        plugin_parameter_types_stmt = (
+            select(models.PluginTaskParameterType)
+            .join(models.Resource)
+            .where(
+                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.group_id == group_id,
+                models.Resource.latest_snapshot_id
+                == models.PluginTaskParameterType.resource_snapshot_id,
+            )
+        )
+        return list(db.session.scalars(plugin_parameter_types_stmt).all())
+
+
 class EntrypointIdPluginsService(object):
     """The service methods for creating and managing entrypoints by their unique id."""
 
@@ -580,12 +693,7 @@ class EntrypointIdPluginsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
-        entrypoint = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
-            ),
-        )
+        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)
 
         return _get_entrypoint_plugin_snapshots(entrypoint["entry_point"])
 
@@ -613,66 +721,69 @@ class EntrypointIdPluginsService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
-            ),
-        )["entry_point"]
-
-        new_entrypoint_parameters = [
-            models.EntryPointParameter(
-                name=param.name,
-                default_value=param.default_value,
-                parameter_type=param.parameter_type,
-                parameter_number=param.parameter_number,
-            )
-            for param in entrypoint.parameters
+        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
+            "entry_point"
         ]
+        # make sure the ids are unique
+
+        plugin_id_set = set(plugin_ids)
+        plugin_ids = list(plugin_id_set)
+        # check this early
+        _ensure_no_plugin_task_overlap(
+            plugin_ids,
+            [
+                artifact_plugin.plugin.resource_id
+                for artifact_plugin in entrypoint.entry_point_artifact_plugins
+            ],
+            True,
+        )
+
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
             description=entrypoint.description,
             task_graph=entrypoint.task_graph,
-            parameters=new_entrypoint_parameters,
+            artifact_graph=entrypoint.artifact_graph,
+            parameters=_copy_parameters(entrypoint.parameters),
+            artifact_parameters=_copy_artifact_parameters(
+                entrypoint.artifact_parameters
+            ),
             resource=entrypoint.resource,
             creator=current_user,
         )
+        db.session.add(new_entrypoint)
 
-        new_entry_point_plugins = [
-            models.EntryPointPlugin(
-                entry_point=new_entrypoint,
-                plugin=plugin["plugin"],
-            )
-            for plugin in self._plugin_ids_service.get(
-                plugin_ids, error_if_not_found=True
-            )
-        ]
-        existing_entry_point_plugins = [
-            models.EntryPointPlugin(
-                entry_point=new_entrypoint,
-                plugin=entry_point_plugin.plugin,
-            )
-            for entry_point_plugin in entrypoint.entry_point_plugins
-            if entry_point_plugin.plugin.resource_id not in set(plugin_ids)
-        ]
-        new_entrypoint.entry_point_plugins = (
-            existing_entry_point_plugins + new_entry_point_plugins
+        # copy over the existing plugins (except the ones which need to be updated)
+        plugin_resources = _copy_plugins(
+            plugins=filter(
+                lambda p: p.plugin.resource_id not in plugin_id_set,
+                entrypoint.entry_point_plugins,
+            ),
+            target_entrypoint=new_entrypoint,
         )
 
-        plugin_resources = list(
-            {
-                plugin.plugin.resource_id: plugin.plugin.resource
-                for plugin in new_entrypoint.entry_point_plugins
-            }.values()
+        # now add to the existing plugins (gets the latest version)
+        for plugin in self._plugin_ids_service.get(plugin_ids, error_if_not_found=True):
+            new_plugin = models.EntryPointPlugin(
+                entry_point=new_entrypoint, plugin=plugin["plugin"]
+            )
+            new_entrypoint.entry_point_plugins.append(new_plugin)
+            plugin_resources.append(new_plugin.plugin.resource)
+
+        # artifact plugins stay the same, task plugins are changing
+        artifact_plugin_resources = _copy_artifact_plugins(
+            artifact_plugins=entrypoint.entry_point_artifact_plugins,
+            target_entrypoint=new_entrypoint,
         )
+
         queue_resources = [
             resource
             for resource in entrypoint.children
             if resource.resource_type == "queue"
         ]
-        new_entrypoint.children = plugin_resources + queue_resources
 
-        db.session.add(new_entrypoint)
+        new_entrypoint.children = (
+            plugin_resources + queue_resources + artifact_plugin_resources
+        )
 
         if commit:
             db.session.commit()
@@ -725,12 +836,9 @@ class EntrypointIdPluginsIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
-        entrypoint = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
-            ),
-        )["entry_point"]
+        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
+            "entry_point"
+        ]
 
         plugin = [
             entry_point_plugin.plugin
@@ -769,12 +877,9 @@ class EntrypointIdPluginsIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
-            ),
-        )["entry_point"]
+        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
+            "entry_point"
+        ]
 
         plugin_ids = set(
             plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugins
@@ -785,40 +890,42 @@ class EntrypointIdPluginsIdService(object):
             )
 
         # create a new snapshot with the plugin removed
-        entrypoint_parameters = [
-            models.EntryPointParameter(
-                name=param.name,
-                default_value=param.default_value,
-                parameter_type=param.parameter_type,
-                parameter_number=param.parameter_number,
-            )
-            for param in entrypoint.parameters
-        ]
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
             description=entrypoint.description,
             task_graph=entrypoint.task_graph,
-            parameters=entrypoint_parameters,
+            artifact_graph=entrypoint.artifact_graph,
+            parameters=_copy_parameters(entrypoint.parameters),
+            artifact_parameters=_copy_artifact_parameters(
+                entrypoint.artifact_parameters
+            ),
             resource=entrypoint.resource,
             creator=current_user,
         )
-        new_entrypoint.entry_point_plugins = [
-            models.EntryPointPlugin(
-                entry_point=new_entrypoint,
-                plugin=entry_point_plugin.plugin,
-            )
-            for entry_point_plugin in entrypoint.entry_point_plugins
-            if entry_point_plugin.plugin.resource_id != plugin_id
-        ]
+        db.session.add(new_entrypoint)
 
-        # remove the plugin resource dependency association
-        new_entrypoint.children = [
+        artifact_plugin_resources = _copy_artifact_plugins(
+            artifact_plugins=entrypoint.entry_point_artifact_plugins,
+            target_entrypoint=new_entrypoint,
+        )
+        # copy all plugins but the one targeted for deletion
+        plugin_resources = _copy_plugins(
+            plugins=filter(
+                lambda p: p.plugin.resource_id != plugin_id,
+                entrypoint.entry_point_plugins,
+            ),
+            target_entrypoint=new_entrypoint,
+        )
+
+        queue_resources = [
             resource
             for resource in entrypoint.children
-            if resource.resource_id != plugin_id
+            if resource.resource_type == "queue"
         ]
 
-        db.session.add(new_entrypoint)
+        new_entrypoint.children = (
+            plugin_resources + queue_resources + artifact_plugin_resources
+        )
 
         if commit:
             db.session.commit()
@@ -829,6 +936,302 @@ class EntrypointIdPluginsIdService(object):
             )
 
         return {"status": "Success", "id": [plugin_id]}
+
+
+class EntrypointIdArtifactPluginsService(object):
+    """
+    The service methods for creating and managing artifact plugins for an entrypoint.
+    """
+
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_service: EntrypointIdService,
+        plugin_ids_service: PluginIdsService,
+        queue_ids_service: QueueIdsService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_id_service: A EntrypointIdService object.
+            plugin_ids_service: A PluginIdsService object.
+            queue_ids_service: A QueueIdsService object.
+        """
+        self._entrypoint_id_service = entrypoint_id_service
+        self._plugin_ids_service = plugin_ids_service
+        self._queue_ids_service = queue_ids_service
+
+    def get(
+        self,
+        entrypoint_id: int,
+        **kwargs,
+    ) -> list[utils.PluginWithFilesDict]:
+        """Fetch the artifact plugin snapshots for an entrypoint by its unique id.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+
+        Returns:
+            The artifact plugin snapshots for the entrypoint.
+
+        Raises:
+            EntityDoesNotExistError: If the entrypoint is not found.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
+
+        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)
+
+        return _get_entrypoint_artifact_plugin_snapshots(entrypoint["entry_point"])
+
+    def append(
+        self,
+        entrypoint_id: int,
+        artifact_plugin_ids: list[int],
+        commit: bool = True,
+        **kwargs,
+    ) -> list[utils.PluginWithFilesDict]:
+        """Append artifact plugins to an entrypoint.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+            artifact_plugin_ids: The plugins to be appended. If an artifact
+                plugin is already attached to the entrypoint, it is synced to
+                the latest snapshot.
+            commit: If True, commit the transaction. Defaults to True.
+
+        Returns:
+            The updated entrypoint object.
+
+        Raises:
+            EntityDoesNotExistError: If the entrypoint is not found.
+            EntityExistsError: If the entrypoint name already exists.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
+            "entry_point"
+        ]
+
+        artifact_plugin_id_set = set(artifact_plugin_ids)
+        artifact_plugin_ids = list(artifact_plugin_id_set)
+        _ensure_no_plugin_task_overlap(
+            [plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugins],
+            artifact_plugin_ids,
+            False,
+        )
+
+        new_entrypoint = models.EntryPoint(
+            name=entrypoint.name,
+            description=entrypoint.description,
+            task_graph=entrypoint.task_graph,
+            artifact_graph=entrypoint.artifact_graph,
+            parameters=_copy_parameters(entrypoint.parameters),
+            artifact_parameters=_copy_artifact_parameters(
+                entrypoint.artifact_parameters
+            ),
+            resource=entrypoint.resource,
+            creator=current_user,
+        )
+        db.session.add(new_entrypoint)
+
+        # plugins stay the same, artifact plugins are changing
+        plugin_resources = _copy_plugins(
+            plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
+        )
+
+        # copy over existing artifact plugins (except the ones which need to be updated)
+        artifact_plugin_resources = _copy_artifact_plugins(
+            artifact_plugins=filter(
+                lambda a: a.plugin.resource_id not in artifact_plugin_id_set,
+                entrypoint.entry_point_artifact_plugins,
+            ),
+            target_entrypoint=new_entrypoint,
+        )
+
+        # now add to the existing artfiact plugins (gets the latest version)
+        for plugin in self._plugin_ids_service.get(
+            artifact_plugin_ids, error_if_not_found=True
+        ):
+            new_plugin = models.EntryPointArtifactPlugin(
+                entry_point=new_entrypoint, plugin=plugin["plugin"]
+            )
+            new_entrypoint.entry_point_artifact_plugins.append(new_plugin)
+            artifact_plugin_resources.append(new_plugin.plugin.resource)
+
+        queue_resources = [
+            resource
+            for resource in entrypoint.children
+            if resource.resource_type == "queue"
+        ]
+
+        new_entrypoint.children = (
+            plugin_resources + queue_resources + artifact_plugin_resources
+        )
+
+        if commit:
+            db.session.commit()
+            log.debug(
+                "Artifact Plugins appended to Entrypoint successfully",
+                entrypoint_id=entrypoint_id,
+                plugin_ids=artifact_plugin_ids,
+            )
+
+        return _get_entrypoint_artifact_plugin_snapshots(new_entrypoint)
+
+
+class EntrypointIdArtifactPluginsIdService(object):
+    """The service methods for creating and managing the artifact plugins for a specific
+    entrypoint by their unique id."""
+
+    @inject
+    def __init__(
+        self,
+        entrypoint_id_service: EntrypointIdService,
+        queue_ids_service: QueueIdsService,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_id_service: A EntrypointIdService object.
+            queue_ids_service: A QueueIdsService object.
+        """
+        self._entrypoint_id_service = entrypoint_id_service
+        self._queue_ids_service = queue_ids_service
+
+    def get(
+        self,
+        entrypoint_id: int,
+        artifact_plugin_id: int,
+        **kwargs,
+    ) -> utils.PluginWithFilesDict:
+        """Fetch the artifact plugin snapshots for an entrypoint by its unique id.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+            artifact_plugin_id: the artifact plugin id
+
+        Returns:
+            The artifact plugin snapshots for the entrypoint.
+
+        Raises:
+            EntityDoesNotExistError: If the entrypoint or artifact plugin is not found.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
+
+        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
+            "entry_point"
+        ]
+
+        artifact_plugin = [
+            entry_point_artifact_plugin.plugin
+            for entry_point_artifact_plugin in entrypoint.entry_point_artifact_plugins
+            if artifact_plugin_id == entry_point_artifact_plugin.plugin.resource_id
+        ]
+
+        if not artifact_plugin:
+            raise EntityDoesNotExistError(
+                PLUGIN_RESOURCE_TYPE,
+                entrypoint_id=entrypoint_id,
+                plugin_id=artifact_plugin_id,
+            )
+
+        return utils.PluginWithFilesDict(
+            plugin=artifact_plugin[0],
+            plugin_files=artifact_plugin[0].plugin_files,
+            has_draft=None,
+        )
+
+    def delete(
+        self,
+        entrypoint_id: int,
+        artifact_plugin_id: int,
+        commit: bool = True,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Remove an artifact plugin from an entrypoint.
+
+        Args:
+            entrypoint_id: The unique id of the entrypoint.
+            artifact_plugin_id: The artifact plugin to be removed.
+            commit: If True, commit the transaction. Defaults to True.
+
+        Returns:
+            A dictionary reporting the status of the request.
+
+        Raises:
+            EntityDoesNotExistError: If the entrypoint or artifact plugin is not found.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
+            "entry_point"
+        ]
+
+        artifact_plugin_ids = set(
+            artifact_plugin.plugin.resource_id
+            for artifact_plugin in entrypoint.entry_point_artifact_plugins
+        )
+        if artifact_plugin_id not in artifact_plugin_ids:
+            raise EntityDoesNotExistError(
+                PLUGIN_RESOURCE_TYPE,
+                entrypoint_id=entrypoint_id,
+                artifact_plugin_id=artifact_plugin_id,
+            )
+
+        # create a new snapshot with the artifact plugin removed
+        new_entrypoint = models.EntryPoint(
+            name=entrypoint.name,
+            description=entrypoint.description,
+            task_graph=entrypoint.task_graph,
+            artifact_graph=entrypoint.artifact_graph,
+            parameters=_copy_parameters(entrypoint.parameters),
+            artifact_parameters=_copy_artifact_parameters(
+                entrypoint.artifact_parameters
+            ),
+            resource=entrypoint.resource,
+            creator=current_user,
+        )
+        db.session.add(new_entrypoint)
+
+        # plugins stay the same, artifact plugins are changing
+        plugin_resources = _copy_plugins(
+            plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
+        )
+
+        # copy over artifact plugins but the one targeted for deletion
+        artifact_plugin_resources = _copy_artifact_plugins(
+            artifact_plugins=filter(
+                lambda a: a.plugin.resource_id != artifact_plugin_id,
+                entrypoint.entry_point_artifact_plugins,
+            ),
+            target_entrypoint=new_entrypoint,
+        )
+
+        queue_resources = [
+            resource
+            for resource in entrypoint.children
+            if resource.resource_type == "queue"
+        ]
+
+        new_entrypoint.children = (
+            plugin_resources + queue_resources + artifact_plugin_resources
+        )
+
+        if commit:
+            db.session.commit()
+            log.debug(
+                "Artifact Plugin removed from entrypoint",
+                entrypoint_id=entrypoint_id,
+                artifact_plugin_id=artifact_plugin_id,
+            )
+
+        return {"status": "Success", "id": [artifact_plugin_id]}
 
 
 class EntrypointIdsService(object):
@@ -924,19 +1327,13 @@ class EntrypointIdQueuesService(object):
             "Get queues for an entrypoint by resource id", resource_id=entrypoint_id
         )
 
-        entrypoint_dict = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
-            ),
-        )
+        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
         return entrypoint_dict["queues"]
 
     def append(
         self,
         entrypoint_id: int,
         queue_ids: list[int],
-        error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> list[models.Queue] | None:
@@ -945,16 +1342,13 @@ class EntrypointIdQueuesService(object):
         Args:
             entrypoint_id: The unique id of the entrypoint.
             queue_ids: The list of queue ids to append.
-            error_if_not_found: If True, raise an error if the resource is not found.
-                Defaults to False.
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated list of queues resource objects.
 
         Raises:
-            EntityDoesNotExistError: If the resource is not found and
-                `error_if_not_found` is True.
+            EntityDoesNotExistError: If the resource is not found
             EntityDoesNotExistError: If one or more queues are not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -962,12 +1356,7 @@ class EntrypointIdQueuesService(object):
             "Append queues to an entrypoint by resource id", resource_id=entrypoint_id
         )
 
-        entrypoint_dict = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
-            ),
-        )
+        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
         entrypoint = entrypoint_dict["entry_point"]
         queues = entrypoint_dict["queues"]
 
@@ -993,7 +1382,6 @@ class EntrypointIdQueuesService(object):
         self,
         entrypoint_id: int,
         queue_ids: list[int],
-        error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> list[models.Queue]:
@@ -1016,12 +1404,7 @@ class EntrypointIdQueuesService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint_dict = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
-            ),
-        )
+        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
         entrypoint = entrypoint_dict["entry_point"]
 
         queues = self._queue_ids_service.get(
@@ -1053,12 +1436,7 @@ class EntrypointIdQueuesService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint_dict = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
-            ),
-        )
+        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
         entrypoint = entrypoint_dict["entry_point"]
         entrypoint.children = [
             resource
@@ -1107,12 +1485,7 @@ class EntrypointIdQueuesIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint_dict = cast(
-            utils.EntrypointDict,
-            self._entrypoint_id_service.get(
-                entrypoint_id, error_if_not_found=True, log=log
-            ),
-        )
+        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
         entrypoint = entrypoint_dict["entry_point"]
 
         queue_resources = {
@@ -1194,7 +1567,7 @@ class EntrypointNameService(object):
 def _get_entrypoint_plugin_snapshots(
     entrypoint: models.EntryPoint,
 ) -> list[utils.PluginWithFilesDict]:
-    plugins = [
+    return [
         utils.PluginWithFilesDict(
             plugin=entry_point_plugin.plugin,
             plugin_files=entry_point_plugin.plugin.plugin_files,
@@ -1203,4 +1576,153 @@ def _get_entrypoint_plugin_snapshots(
         for entry_point_plugin in entrypoint.entry_point_plugins
     ]
 
-    return plugins
+
+def _get_entrypoint_artifact_plugin_snapshots(
+    entrypoint: models.EntryPoint,
+) -> list[utils.PluginWithFilesDict]:
+    return [
+        utils.PluginWithFilesDict(
+            plugin=entry_point_artifact_plugin.plugin,
+            plugin_files=entry_point_artifact_plugin.plugin.plugin_files,
+            has_draft=False,
+        )
+        for entry_point_artifact_plugin in entrypoint.entry_point_artifact_plugins
+    ]
+
+
+def _ensure_no_plugin_task_overlap(
+    plugins: list[int],
+    artifact_plugins: list[int],
+    addingPlugins: bool = True,
+):
+    intersection = set(plugins).intersection(artifact_plugins)
+    if len(intersection) > 0:
+        if addingPlugins:
+            raise PluginTaskArtifactTaskOverlapError(str(intersection))
+        else:
+            raise ArtifactTaskPluginTaskOverlapError(str(intersection))
+
+
+def _copy_plugins(
+    plugins: Iterable[models.EntryPointPlugin], target_entrypoint: models.EntryPoint
+) -> list[models.Resource]:
+    target_entrypoint.entry_point_plugins = [
+        models.EntryPointPlugin(
+            entry_point=target_entrypoint,
+            plugin=plugin.plugin,
+        )
+        for plugin in plugins
+    ]
+    # return a unique list of plugin resources
+    return list(
+        {
+            plugin.plugin.resource_id: plugin.plugin.resource
+            for plugin in target_entrypoint.entry_point_plugins
+        }.values()
+    )
+
+
+def _copy_artifact_plugins(
+    artifact_plugins: Iterable[models.EntryPointArtifactPlugin],
+    target_entrypoint: models.EntryPoint,
+) -> list[models.Resource]:
+    target_entrypoint.entry_point_artifact_plugins = [
+        models.EntryPointArtifactPlugin(
+            entry_point=target_entrypoint,
+            plugin=artifact_plugin.plugin,
+        )
+        for artifact_plugin in artifact_plugins  # noqa: B950
+    ]
+    # return a unique list of artifact plugin resources
+    return list(
+        {
+            artifact_plugin.plugin.resource_id: artifact_plugin.plugin.resource
+            for artifact_plugin in target_entrypoint.entry_point_artifact_plugins
+        }.values()
+    )
+
+
+def _create_parameters(
+    parameters: list[dict[str, Any]],
+) -> Iterable[models.EntryPointParameter]:
+    return [
+        models.EntryPointParameter(
+            name=param["name"],
+            default_value=param["default_value"],
+            parameter_type=param["parameter_type"],
+            parameter_number=i,
+        )
+        for i, param in enumerate(parameters)
+    ]
+
+
+def _copy_parameters(
+    parameters: list[models.EntryPointParameter],
+) -> Iterable[models.EntryPointParameter]:
+    return [
+        models.EntryPointParameter(
+            name=param.name,
+            default_value=param.default_value,
+            parameter_type=param.parameter_type,
+            parameter_number=param.parameter_number,
+        )
+        for param in parameters
+    ]
+
+
+def _create_artifact_parameters(
+    artifact_parameters: list[dict[str, Any]], log: BoundLogger
+) -> Iterable[models.EntryPointArtifact]:
+    if artifact_parameters is None or len(artifact_parameters) == 0:
+        return []
+    for artifact in artifact_parameters:
+        duplicates = find_non_unique("name", artifact["output_parameters"])
+        if len(duplicates) > 0:
+            raise QueryParameterNotUniqueError(
+                "artifact output parameter",
+                artifact_parameter_name=artifact["name"],
+                parameter_names=duplicates,
+            )
+
+    type_ids = [
+        parameter["parameter_type_id"]
+        for artifact in artifact_parameters
+        for parameter in artifact["output_parameters"]
+    ]
+    id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
+
+    return [
+        models.EntryPointArtifact(
+            name=artifact["name"],
+            artifact_number=a,
+            output_parameters=[
+                models.EntryPointArtifactOutputParameter(
+                    name=param["name"],
+                    parameter_number=p,
+                    parameter_type=id_type_map[param["parameter_type_id"]],
+                )
+                for p, param in enumerate(artifact["output_parameters"])
+            ],
+        )
+        for a, artifact in enumerate(artifact_parameters)
+    ]
+
+
+def _copy_artifact_parameters(
+    artifact_parameters: list[models.EntryPointArtifact],
+) -> Iterable[models.EntryPointArtifact]:
+    return [
+        models.EntryPointArtifact(
+            name=artifact.name,
+            artifact_number=index,
+            output_parameters=[
+                models.EntryPointArtifactOutputParameter(
+                    name=param.name,
+                    parameter_number=p,
+                    parameter_type=param.parameter_type,
+                )
+                for p, param in enumerate(artifact.output_parameters)
+            ],
+        )
+        for index, artifact in enumerate(artifact_parameters)
+    ]

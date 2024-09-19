@@ -277,6 +277,26 @@ class SortParameterValidationError(DioptraError):
         super().__init__(f"The sort parameter, {column}, for {type} is not sortable.")
 
 
+class ArtifactTaskPluginTaskOverlapError(DioptraError):
+    """Overlap between Artifact Plugins and Task Plugins."""
+
+    def __init__(self, artifacts: str, **kwargs):
+        super().__init__(
+            f"The artifact task(s) {artifacts} are in the list of task plugins,"
+            " when they should be separate."
+        )
+
+
+class PluginTaskArtifactTaskOverlapError(DioptraError):
+    """Overlap between Artifact Plugins and Task Plugins."""
+
+    def __init__(self, plugins: str, **kwargs):
+        super().__init__(
+            f"The plugin task(s) {plugins} are in the list of artifact tasks,"
+            " when they should be separate."
+        )
+
+
 class QueryParameterValidationError(DioptraError):
     """Input parameters failed validation."""
 
@@ -312,10 +332,47 @@ class JobInvalidStatusTransitionError(DioptraError):
 class JobInvalidParameterNameError(DioptraError):
     """The requested job parameter name is invalid."""
 
+    names: list[str]
+    artifact: bool
+
+    def __init__(self, names: list[str], artifact: bool = False):
+        param_type = "artifact parameter" if artifact else "parameter"
+        if len(names) == 1:
+            message = f"Provided job {param_type} name, {names[0]}, does not match any "
+            "entrypoint parameters."
+        else:
+            joined = ", ".join(names)
+            message = f"Provided job {param_type} names, {joined}, do not match any "
+            "entrypoint parameters."
+        super().__init__(message)
+        self.names = names
+        self.artifact = artifact
+
+
+class JobArtifactValueError(DioptraError):
+    """The requested artifact value name is invalid."""
+
+    name: str
+    artifact_id: int
+
+    def __init__(self, name: str, artifact_id: int):
+        super().__init__(
+            f"Provided job artifact id, {artifact_id}, for parameter {name} does not "
+            "exist."
+        )
+        self.name = name
+        self.artifact_id = artifact_id
+
+
+class JobArtifactParameterMissingError(DioptraError):
+    """The Artifact Parameter is missing a value."""
+
+    name: list[str]
+
     def __init__(self, names: list[str]):
         super().__init__(
-            f"One or more provided job parameter names do not match any declared "
-            f"entrypoint parameters: {names}"
+            "The following job Artifact Parameters are missing a value: "
+            f"{','.join(names)}."
         )
 
 
@@ -325,6 +382,16 @@ class JobMlflowRunAlreadySetError(DioptraError):
     def __init__(self):
         super().__init__(
             "The requested job already has an mlflow run id set. It may not be changed."
+        )
+
+
+class JobMlflowRunNotSetError(DioptraError):
+    """The requested job does not have an mlflow run id set."""
+
+    def __init__(self):
+        super().__init__(
+            "The requested job does not have an mlflow run id set for an operation that"
+            "requires an mlflow run id."
         )
 
 

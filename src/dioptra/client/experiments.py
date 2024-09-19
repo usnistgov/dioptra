@@ -260,6 +260,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         queue_id: int,
         entrypoint_snapshot_id: int | None = None,
         values: dict[str, Any] | None = None,
+        artifact_values: dict[str, Any] | None = None,
         timeout: str | None = None,
         description: str | None = None,
     ) -> T:
@@ -290,6 +291,9 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
 
         if values is not None:
             json_["values"] = values
+
+        if artifact_values is not None:
+            json_["artifactValues"] = artifact_values
 
         if timeout is not None:
             json_["timeout"] = timeout

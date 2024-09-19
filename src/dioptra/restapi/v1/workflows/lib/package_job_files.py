@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import json
 import tarfile
 import zipfile
 from pathlib import Path
@@ -25,8 +26,8 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 
-from ..schema import FileTypes
-from .export_job_parameters import export_job_parameters
+from ...filetypes import FileTypes
+from .export_job_parameters import build_job_parameters_dict
 from .export_plugin_files import export_plugin_files
 from .export_run_dioptra_job_script import export_run_dioptra_job_script
 from .export_task_engine_yaml import export_task_engine_yaml

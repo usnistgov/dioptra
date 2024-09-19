@@ -14,9 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import json
-from pathlib import Path
-from typing import Final
+from typing import Any
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -27,26 +25,22 @@ from .type_coercions import GlobalParameterType, coerce_to_type
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-JSON_FILE_ENCODING: Final[str] = "utf-8"
 
-
-def export_job_parameters(
+def build_job_parameters_dict(
     job_param_values: list[models.EntryPointParameterValue],
-    base_dir: Path,
     logger: BoundLogger | None = None,
-) -> Path:
-    """Export a job's parameters to a parameters.json file in a specified directory.
+) -> dict[str, GlobalParameterType]:
+    """Builds a dict of a job's parameters coerce types as appropriate.
 
     Args:
-        base_dir: The directory to export the parameters JSON file to.
+        job_param_values: the list of EntryPointParameterValues.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
 
     Returns:
-        The path to the exported parameters.json file.
+        The a dict of the names of the parameters mapped to their type.
     """
     log = logger or LOGGER.new()  # noqa: F841
-    job_params_json_path = Path(base_dir, "parameters").with_suffix(".json")
 
     job_parameters: dict[str, GlobalParameterType] = {}
     for param_value in job_param_values:
@@ -55,8 +49,42 @@ def export_job_parameters(
             type_name=param_value.parameter.parameter_type,
         )
         job_parameters[param_value.parameter.name] = value
+    return job_parameters
 
-    with job_params_json_path.open("wt", encoding=JSON_FILE_ENCODING) as f:
-        json.dump(job_parameters, f, indent=2)
 
-    return job_params_json_path
+def build_job_artifacts_dict(
+    job_artifact_values: list[models.EntryPointArtifactValue],
+    logger: BoundLogger | None = None,
+) -> dict[str, dict[str, Any]]:
+    """Builds a dict of a job's parameters coerce types as appropriate.
+
+    Args:
+        values: a list of EntryPointArtifactValue instances.
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The a dict of the names of the parameters mapped to their type.
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    artifacts: dict[str, dict[str, Any]] = {}
+    for value in job_artifact_values:
+        artifacts[value.artifact_parameter.name] = {
+            "artifact_id": value.artifact.resource_id,
+            "artifact_snapshot_id": value.artifact.resource_snapshot_id,
+            "is_dir": value.artifact.is_dir,
+            "artifact_task": {
+                "plugin_id": value.artifact.plugin_plugin_file.plugin.resource_id,
+                "plugin_name": value.artifact.plugin_plugin_file.plugin.name,
+                "plugin_snapshot_id": value.artifact.plugin_snapshot_id,
+                "file_name": value.artifact.plugin_plugin_file.plugin_file.filename,
+                "task_name": value.artifact.task_name,
+                "outputs": [
+                    {"name": param.name, "type": param.parameter_type.name}
+                    for param in value.artifact.task.output_parameters
+                ],
+            },
+        }
+
+    return artifacts

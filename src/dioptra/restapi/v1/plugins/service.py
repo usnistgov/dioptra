@@ -19,7 +19,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import Any, Final, cast
+from typing import Any, Final, Iterable, cast
 
 import structlog
 from flask_login import current_user
@@ -46,6 +46,7 @@ LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 PLUGIN_RESOURCE_TYPE: Final[str] = "plugin"
 PLUGIN_FILE_RESOURCE_TYPE: Final[str] = "plugin_file"
+PLUGIN_TASK_RESOURCE_TYPE: Final[str] = "plugin_task"
 PLUGIN_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.Plugin.name.like(x, escape="/"),
     "description": lambda x: models.Plugin.description.like(x, escape="/"),
@@ -699,7 +700,9 @@ class PluginIdFileService(object):
         filename: str,
         contents: str,
         description: str | None,
-        tasks: list[dict[str, Any]],
+        function_tasks: list[dict[str, Any]],
+        artifact_tasks: list[dict[str, Any]],
+        plugin_id: int,
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginFileDict:
@@ -771,7 +774,12 @@ class PluginIdFileService(object):
         new_plugin_files = plugin.plugin_files + [new_plugin_file]
         _associate_plugin_with_plugin_files(new_plugin, new_plugin_files)
 
-        _add_plugin_tasks(tasks, plugin_file=new_plugin_file, log=log)
+        _add_plugin_tasks(
+            function_tasks=function_tasks,
+            artifact_tasks=artifact_tasks,
+            plugin_file=new_plugin_file,
+            log=log,
+        )
 
         if commit:
             db.session.commit()
@@ -979,6 +987,94 @@ class PluginIdFileService(object):
         return {"status": "Success", "id": plugin_file_ids}
 
 
+class PluginIdSnapshotIdService(object):
+    def get(self, plugin_id: int, plugin_snapshot_id: int, **kwargs) -> models.Plugin:
+        """Run a query to get the EntryPoint for an entrypoint snapshot id.
+
+        Args:
+            entrypoint_snapshot_id: The Snapshot ID of the entrypoint to retrieve
+
+        Returns:
+            The entrypoint.
+
+        Raises:
+            EntityDoesNotExistError: If the entrypoint is not found
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "get plugin snapshot",
+            resource_id=plugin_id,
+            resource_snapshot_id=plugin_snapshot_id,
+        )
+        plugin_resource_snapshot_stmt = select(models.Plugin).where(
+            models.Plugin.resource_id == plugin_id,
+            models.Plugin.resource_snapshot_id == plugin_snapshot_id,
+            models.Resource.is_deleted == False,  # noqa: E712
+        )
+        plugin = db.session.scalar(plugin_resource_snapshot_stmt)
+
+        if plugin is None:
+            raise EntityDoesNotExistError(
+                PLUGIN_RESOURCE_TYPE,
+                plugin_id=plugin_id,
+                plugin_snapshot_id=plugin_snapshot_id,
+            )
+        return plugin
+
+    def get_plugin_plugin_file(
+        self, plugin_snapshot_id: int, plugin_file_snapshot_id: int, **kwargs
+    ) -> models.PluginPluginFile | None:
+        """Gets the Plugin Plugin File for this combination of plugin and plugin file.
+
+        Args:
+            plugin_snapshot_id: The Snapshot ID of the plugin
+            plugin_file_snapshot_id: The Snapshot ID of the plugin file
+
+        Returns:
+            The PluginPluginFile or None if not found
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "get PluginPluginFile",
+            plugin_snapshot_id=plugin_snapshot_id,
+            plugin_file_snapshot_id=plugin_file_snapshot_id,
+        )
+        plugin_plugin_file_stmt = select(models.PluginPluginFile).where(
+            models.PluginPluginFile.plugin_file_resource_snapshot_id
+            == plugin_file_snapshot_id,
+            models.PluginPluginFile.plugin_resource_snapshot_id == plugin_snapshot_id,
+        )
+        return db.session.scalar(plugin_plugin_file_stmt)
+
+
+class PluginTaskIdService(object):
+    def get(self, task_id: int, **kwargs) -> models.PluginTask:
+        """Run a query to get the Plugin Task for a task id.
+
+        Args:
+            task_id: The ID of the task to retrieve
+
+        Returns:
+            The PluginTask.
+
+        Raises:
+            EntityDoesNotExistError: If the PluginTask is not found
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("get plugin task", task_id=task_id)
+        task_snapshot_stmt = select(models.PluginTask).where(
+            models.PluginTask.task_id == task_id
+        )
+        task = db.session.scalar(task_snapshot_stmt)
+
+        if task is None:
+            raise EntityDoesNotExistError(
+                PLUGIN_TASK_RESOURCE_TYPE,
+                task_id=task_id,
+            )
+        return task
+
+
 class PluginIdFileIdService(object):
     @inject
     def __init__(self, plugin_file_name_service: PluginFileNameService):
@@ -1075,7 +1171,8 @@ class PluginIdFileIdService(object):
         filename: str,
         contents: str,
         description: str,
-        tasks: list,
+        function_tasks: list[dict[str, Any]],
+        artifact_tasks: list[dict[str, Any]],
         error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
@@ -1151,7 +1248,12 @@ class PluginIdFileIdService(object):
         new_plugin_files[updated_plugin_file.resource_id] = updated_plugin_file
         _associate_plugin_with_plugin_files(new_plugin, list(new_plugin_files.values()))
 
-        _add_plugin_tasks(tasks, plugin_file=updated_plugin_file, log=log)
+        _add_plugin_tasks(
+            function_tasks=function_tasks,
+            artifact_tasks=artifact_tasks,
+            plugin_file=updated_plugin_file,
+            log=log,
+        )
 
         if commit:
             db.session.commit()
@@ -1241,79 +1343,33 @@ class PluginIdFileIdService(object):
         return {"status": "Success", "id": [plugin_file_id_to_return]}
 
 
-def _construct_plugin_task(
-    plugin_file: models.PluginFile,
-    task: dict[str, Any],
-    parameter_types_id_to_orm: dict[int, models.PluginTaskParameterType],
-    log: BoundLogger,
-) -> models.PluginTask:
-    duplicates = find_non_unique("name", task["input_params"])
-    if len(duplicates) > 0:
-        raise QueryParameterNotUniqueError(
-            "plugin task input parameter",
-            plugin_task_name=task["name"],
-            input_param_names=duplicates,
-        )
+def get_plugin_task_parameter_types_by_id(
+    ids: Iterable[int], log: BoundLogger
+) -> dict[int, models.PluginTaskParameterType]:
+    """Gets all of the PluginTaskParameterType instances based on the given ids
+    iterable
 
-    duplicates = find_non_unique("name", task["output_params"])
-    if len(duplicates) > 0:
-        raise QueryParameterNotUniqueError(
-            "plugin task output parameter",
-            plugin_task_name=task["name"],
-            output_param_names=duplicates,
-        )
+    Args:
+        ids: an iterable containing all of the ids
+        log: where log messages should go
 
-    input_parameters_list = []
-    for parameter_number, input_param in enumerate(task["input_params"]):
-        parameter_type = parameter_types_id_to_orm[input_param["parameter_type_id"]]
-        input_parameters_list.append(
-            models.PluginTaskInputParameter(
-                name=input_param["name"],
-                parameter_number=parameter_number,
-                parameter_type=parameter_type,
-                required=input_param["required"],
-            )
-        )
+    Returns:
+        The a dictionary of ids to PluginTaskParameterType instances
 
-    output_parameters_list = []
-    for parameter_number, output_param in enumerate(task["output_params"]):
-        parameter_type = parameter_types_id_to_orm[output_param["parameter_type_id"]]
-        output_parameters_list.append(
-            models.PluginTaskOutputParameter(
-                name=output_param["name"],
-                parameter_number=parameter_number,
-                parameter_type=parameter_type,
-            )
-        )
-
-    plugin_task_orm = models.PluginTask(
-        file=plugin_file,
-        plugin_task_name=task["name"],
-        input_parameters=input_parameters_list,
-        output_parameters=output_parameters_list,
-    )
-    return plugin_task_orm
-
-
-def _get_referenced_parameter_types(
-    tasks: list[dict[str, Any]], log: BoundLogger
-) -> dict[int, models.PluginTaskParameterType] | None:
-    parameter_type_ids = set(
-        [
-            param["parameter_type_id"]
-            for task in tasks
-            for param in itertools.chain(task["input_params"], task["output_params"])
-        ]
-    )
-
-    if not len(parameter_type_ids) > 0:
-        return None
-
+    Raises:
+        ValueError: if ids does not contain at least one value
+        EntityDoesNotExistError: if one or more of the ids does not exist in the
+            PluginTaskParameterType table
+    """
+    id_list = set(ids)
+    length = len(id_list)
+    if length < 1:
+        raise ValueError("ids must contain at least one value")
     parameter_types_stmt = (
         select(models.PluginTaskParameterType)
         .join(models.Resource)
         .where(
-            models.PluginTaskParameterType.resource_id.in_(tuple(parameter_type_ids)),
+            models.PluginTaskParameterType.resource_id.in_(tuple(id_list)),
             models.Resource.is_deleted == False,  # noqa: E712
             models.Resource.latest_snapshot_id
             == models.PluginTaskParameterType.resource_snapshot_id,
@@ -1326,21 +1382,160 @@ def _get_referenced_parameter_types(
             "The database query returned a None when it should return plugin "
             "parameter types.",
             sql=str(parameter_types_stmt),
-            num_expected=len(parameter_type_ids),
+            num_expected=length,
         )
         raise BackendDatabaseError
 
-    if not len(parameter_types) == len(parameter_type_ids):
+    if not len(parameter_types) == length:
         returned_parameter_type_ids = set([x.resource_id for x in parameter_types])
-        ids_not_found = parameter_type_ids - returned_parameter_type_ids
+        ids_not_found = id_list - returned_parameter_type_ids
         raise EntityDoesNotExistError(
             "plugin task parameter types",
-            num_expected=len(parameter_type_ids),
+            num_expected=length,
             num_found=len(parameter_types),
             ids_not_found=sorted(list(ids_not_found)),
         )
 
     return {x.resource_id: x for x in parameter_types}
+
+
+def _construct_input_params(
+    task_name: str,
+    parameters: list[dict[str, Any]],
+    map: dict[int, models.PluginTaskParameterType],
+) -> Iterable[models.PluginTaskInputParameter]:
+    duplicates = find_non_unique("name", parameters)
+    if len(duplicates) > 0:
+        raise QueryParameterNotUniqueError(
+            "artifact task input parameter",
+            plugin_task_name=task_name,
+            input_param_names=duplicates,
+        )
+    return [
+        models.PluginTaskInputParameter(
+            name=input_param["name"],
+            parameter_number=parameter_number,
+            parameter_type=map[input_param["parameter_type_id"]],
+            required=input_param["required"],
+        )
+        for parameter_number, input_param in enumerate(parameters)
+    ]
+
+
+def _construct_output_params(
+    task_name: str,
+    parameters: list[dict[str, Any]],
+    map: dict[int, models.PluginTaskParameterType],
+) -> Iterable[models.PluginTaskOutputParameter]:
+    duplicates = find_non_unique("name", parameters)
+    if len(duplicates) > 0:
+        raise QueryParameterNotUniqueError(
+            "artifact task output parameter",
+            plugin_task_name=task_name,
+            output_param_names=duplicates,
+        )
+    return [
+        models.PluginTaskOutputParameter(
+            name=output_param["name"],
+            parameter_number=parameter_number,
+            parameter_type=map[output_param["parameter_type_id"]],
+        )
+        for parameter_number, output_param in enumerate(parameters)
+    ]
+
+
+def _construct_function_task(
+    plugin_file: models.PluginFile,
+    task: dict[str, Any],
+    parameter_type_ids_to_orm: dict[int, models.PluginTaskParameterType],
+) -> models.FunctionTask:
+    return models.FunctionTask(
+        file=plugin_file,
+        plugin_task_name=task["name"],
+        input_parameters=_construct_input_params(
+            task["name"], task["input_params"], parameter_type_ids_to_orm
+        ),
+        output_parameters=_construct_output_params(
+            task["name"], task["output_params"], parameter_type_ids_to_orm
+        ),
+    )
+
+
+def _construct_artifact_task(
+    plugin_file: models.PluginFile,
+    task: dict[str, Any],
+    parameter_type_ids_to_orm: dict[int, models.PluginTaskParameterType],
+) -> models.ArtifactTask:
+    return models.ArtifactTask(
+        file=plugin_file,
+        plugin_task_name=task["name"],
+        output_parameters=_construct_output_params(
+            task["name"], task["output_params"], parameter_type_ids_to_orm
+        ),
+    )
+
+
+def _get_referenced_parameter_types(
+    function_tasks: list[dict[str, Any]],
+    artifact_tasks: list[dict[str, Any]],
+    log: BoundLogger,
+) -> dict[int, models.PluginTaskParameterType] | None:
+    parameter_type_ids = list(
+        itertools.chain(
+            [
+                param["parameter_type_id"]
+                for task in function_tasks
+                for param in itertools.chain(
+                    task["input_params"], task["output_params"]
+                )
+            ],
+            [
+                param["parameter_type_id"]
+                for task in artifact_tasks
+                for param in task["output_params"]
+            ],
+        )
+    )
+
+    if not len(parameter_type_ids) > 0:
+        return None
+
+    return get_plugin_task_parameter_types_by_id(ids=parameter_type_ids, log=log)
+
+
+def _add_plugin_tasks(
+    function_tasks: list[dict[str, Any]],
+    artifact_tasks: list[dict[str, Any]],
+    plugin_file: models.PluginFile,
+    log: BoundLogger,
+) -> None:
+    duplicates = find_non_unique(
+        "name", itertools.chain(function_tasks, artifact_tasks)
+    )
+    if len(duplicates) > 0:
+        raise QueryParameterNotUniqueError("plugin task", task_names=duplicates)
+
+    parameter_type_ids_to_orm = (
+        _get_referenced_parameter_types(
+            function_tasks=function_tasks, artifact_tasks=artifact_tasks, log=log
+        )
+        or {}
+    )
+
+    for task in function_tasks:
+        plugin_task = _construct_function_task(
+            plugin_file,
+            task=task,
+            parameter_type_ids_to_orm=parameter_type_ids_to_orm,
+        )
+        db.session.add(plugin_task)
+    for task in artifact_tasks:
+        plugin_task = _construct_artifact_task(
+            plugin_file,
+            task=task,
+            parameter_type_ids_to_orm=parameter_type_ids_to_orm,
+        )
+        db.session.add(plugin_task)
 
 
 def _associate_plugin_with_plugin_files(
@@ -1351,24 +1546,3 @@ def _associate_plugin_with_plugin_files(
             plugin=plugin, plugin_file=plugin_file
         )
         db.session.add(plugin_plugin_file)
-
-
-def _add_plugin_tasks(
-    tasks: list[dict[str, Any]], plugin_file: models.PluginFile, log: BoundLogger
-) -> None:
-    if not tasks:
-        return None
-
-    duplicates = find_non_unique("name", tasks)
-    if len(duplicates) > 0:
-        raise QueryParameterNotUniqueError("plugin task", task_names=duplicates)
-
-    parameter_types_id_to_orm = _get_referenced_parameter_types(tasks, log=log) or {}
-    for task in tasks:
-        plugin_task = _construct_plugin_task(
-            plugin_file,
-            task=task,
-            parameter_types_id_to_orm=parameter_types_id_to_orm,
-            log=log,
-        )
-        db.session.add(plugin_task)

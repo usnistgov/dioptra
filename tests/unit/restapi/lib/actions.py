@@ -244,7 +244,7 @@ def register_artifact(
     Returns:
         The response from the API.
     """
-    payload = {"uri": uri, "job": job_id, "group": group_id}
+    payload = {"artifactUri": uri, "job": job_id, "group": group_id}
 
     if description is not None:
         payload["description"] = description

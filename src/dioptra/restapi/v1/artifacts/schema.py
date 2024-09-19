@@ -17,6 +17,8 @@
 """The schemas for serializing/deserializing Artifact resources."""
 from marshmallow import Schema, fields
 
+from dioptra.restapi.utils import validate_artifact_url
+from dioptra.restapi.v1.filetypes import FileTypes
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -33,12 +35,42 @@ ArtifactRefBaseSchema = generate_base_resource_ref_schema("Artifact")
 class ArtifactRefSchema(ArtifactRefBaseSchema):  # type: ignore
     """The reference schema for the data stored in a Artifact resource."""
 
-    artifactUri = fields.URL(
-        attribute="artifact_uri",
-        metadata=dict(
-            description="URL pointing to the location of the Artifact resource."
-        ),
+    url = fields.Url(
+        attribute="url",
+        metadata=dict(description="URL for accessing the full Artifact Resource."),
         relative=True,
+        dump_only=True,
+    )
+
+
+class ArtifactFileMetadataSchema(Schema):
+    """The schema for the artifact file metadata."""
+
+    isDir = fields.Bool(
+        attribute="is_dir",
+        metadata=dict(description="Whether the file denotes a directory or not."),
+        dump_only=True,
+    )
+    fileSize = fields.Integer(
+        attribute="file_size",
+        metadata=dict(description="The size in bytes of the file."),
+        dump_only=True,
+    )
+    fileUrl = fields.Url(
+        attribute="file_url",
+        metadata=dict(description="URL for accessing the contents of the Artifact."),
+        relative=True,
+        dump_only=True,
+    )
+
+
+class ArtifactFileSchema(ArtifactFileMetadataSchema):
+    """The schema for an artifact file."""
+
+    relativePath = fields.String(
+        attribute="relative_path",
+        metadata=dict(description="Relative path to the Artifact URI."),
+        dump_only=True,
     )
 
 
@@ -50,23 +82,46 @@ class ArtifactMutableFieldsSchema(Schema):
         metadata=dict(description="Description of the Artifact resource."),
         load_default=None,
     )
+    pluginSnapshotId = fields.Int(
+        attribute="plugin_snapshot_id",
+        metadata=dict(
+            description="The Snapshot ID of the plugin containing the plugin file that "
+            "performs serializing/deserializing of this Artifact."
+        ),
+        load_default=None,
+    )
+    taskId = fields.Int(
+        attribute="task_id",
+        metadata=dict(
+            description="The id of the plugin artifact task that performs the"
+            "serializing/deserializing of this Artifact."
+        ),
+        load_default=None,
+    )
 
 
 ArtifactBaseSchema = generate_base_resource_schema("Artifact", snapshot=True)
 
 
-class ArtifactSchema(ArtifactMutableFieldsSchema, ArtifactBaseSchema):  # type: ignore
+class ArtifactSchema(
+    ArtifactFileMetadataSchema,
+    ArtifactMutableFieldsSchema,
+    ArtifactBaseSchema,  # type: ignore
+):
     """The schema for the data stored in an Artifact resource."""
 
+    # Not URL since this version of validate_url allows mlflow specific schemes
+    artifactUri = fields.String(
+        attribute="artifact_uri",
+        metadata=dict(
+            description="URL pointing to the location of the Artifact resource."
+        ),
+        validate=validate_artifact_url,
+    )
     jobId = fields.Int(
         attribute="job_id",
         data_key="job",
         metadata=dict(description="id of the job that produced this Artifact"),
-        required=True,
-    )
-    uri = fields.String(
-        attribute="uri",
-        metadata=dict(description="URL pointing to the location of the Artifact."),
         required=True,
     )
 
@@ -78,6 +133,29 @@ class ArtifactPageSchema(BasePageSchema):
         ArtifactSchema,
         many=True,
         metadata=dict(description="List of Artifact resources in the current page."),
+    )
+
+
+class ArtifactContentsGetQueryParameters(Schema):
+    """A schema for adding artifact contents query parameters to a resource endpoint."""
+
+    path = fields.String(
+        attribute="path",
+        metadata=dict(
+            description="Path of a specific artifact. Only valid if artifact"
+            "is a directory."
+        ),
+        load_default=None,
+    )
+    fileType = fields.Enum(
+        FileTypes,
+        attribute="file_type",
+        metadata=dict(
+            description="Only valid if the artifact is a directory. The type of file to"
+            "download: tar_gz or zip.",
+        ),
+        by_value=True,
+        load_default=None,
     )
 
 

@@ -20,6 +20,8 @@ import enum
 
 from marshmallow import Schema, fields
 
+from .filetypes import FileTypes
+
 
 def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
     """Generates the base schema for a Resource."""
@@ -302,4 +304,18 @@ class ResourceUrlsPageSchema(BasePageSchema):
         fields.String(),
         many=True,
         metadata=dict(description="List of Resource URLs in the current page."),
+    )
+
+
+class FileDownloadParametersSchema(Schema):
+    """The query parameters for download of a file."""
+
+    fileType = fields.Enum(
+        FileTypes,
+        attribute="file_type",
+        metadata=dict(
+            description="The type of file to download: tar_gz or zip.",
+        ),
+        by_value=True,
+        load_default=FileTypes.TAR_GZ,
     )

@@ -77,13 +77,22 @@ class TaskEngineYamlService(object):
         tasks, parameter_types = self.extract_tasks(
             plugin_plugin_files, plugin_parameter_types=plugin_parameter_types
         )
+        # add artifact parameter types if needed
+        self.add_artifact_parameter_types(
+            entrypoint.artifact_parameters, parameter_types
+        )
         parameters = self.extract_parameters(entry_point)
         graph = self.extract_graph(entry_point)
+
+        artifact_outputs = self.extract_artifact_outputs(entrypoint)
+        artifact_inputs = self.extract_artifact_inputs(entrypoint.artifact_parameters)
         return {
             "types": parameter_types,
             "parameters": parameters,
             "tasks": tasks,
             "graph": graph,
+            "artifact_outputs": artifact_outputs,
+            "artifact_inputs": artifact_inputs,
         }
 
     def build_yaml(
@@ -127,6 +136,17 @@ class TaskEngineYamlService(object):
         """
         return validate_task_engine_dict(task_engine_dict)
 
+    def add_artifact_parameter_types(
+        self,
+        artifact_parameters: list[models.EntryPointArtifact],
+        types: dict[str, Any],
+    ) -> None:
+        for param in artifact_parameters:
+            for output in param.output_parameters:
+                name = output.parameter_type.name
+                if name not in BUILTIN_TYPES and name not in types:
+                    types[name] = output.parameter_type.structure
+
     def extract_parameters(
         self,
         entry_point: protocols.EntryPointProtocol,
@@ -161,6 +181,27 @@ class TaskEngineYamlService(object):
 
         return parameters
 
+    def extract_artifact_inputs(
+        artifact_parameters: list[models.EntryPointArtifact],
+        logger: BoundLogger | None = None,
+    ) -> dict[str, Any]:
+        """Extract the parameters from an entrypoint.
+
+        Args:
+            entrypoint: The entrypoint to extract parameters from.
+            logger: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            A dictionary of the entrypoint's parameters.
+        """
+        log = logger or LOGGER.new()  # noqa: F841
+        inputs: dict[str, Any] = {}
+        for param in artifact_parameters:
+            inputs[param.name] = _build_artifact_outputs(param.output_parameters)
+
+        return inputs
+
     def extract_tasks(
         self,
         plugin_plugin_files: Sequence[protocols.PluginPluginFileProtocol],
@@ -190,6 +231,8 @@ class TaskEngineYamlService(object):
             plugin_file = plugin_plugin_file.plugin_file
 
             for task in plugin_file.tasks:
+                if not isinstance(task, models.FunctionTask):
+                    continue
                 input_parameters = sorted(
                     task.input_parameters, key=lambda x: x.parameter_number
                 )
@@ -257,11 +300,32 @@ class TaskEngineYamlService(object):
         except (ParserError, ScannerError) as e:
             raise InvalidYamlError(str(e)) from e
 
+    def extract_artifact_outputs(
+        self,
+        entrypoint: models.EntryPoint,
+        logger: BoundLogger | None = None,
+    ) -> dict[str, Any]:
+        """Extract the artifact graph from an entrypoint.
+
+        Args:
+            entrypoint: The entrypoint containing the artifact graph.
+            logger: A structlog logger object to use for logging. A new logger will be
+                created if None.
+
+        Returns:
+            A dictionary representation of the entrypoint's artifact graph.
+        """
+        log = logger or LOGGER.new()  # noqa: F841
+        full_yaml = yaml.safe_load(entrypoint.artifact_graph)
+        if full_yaml is None:
+            full_yaml = {}
+        return cast(dict[str, Any], full_yaml)
+
     def build_plugin_field(
         self,
         plugin: protocols.PluginProtocol,
         plugin_file: protocols.PluginFileProtocol,
-        task: protocols.PluginTaskProtocol,
+        task: protocols.PluginFunctionTaskProtocol,
     ) -> str:
         if plugin_file.filename == "__init__.py":
             # Omit filename from plugin import path if it is an __init__.py file.
@@ -292,6 +356,17 @@ class TaskEngineYamlService(object):
         if len(output_parameters) == 1:
             return {output_parameters[0].name: output_parameters[0].parameter_type.name}
 
+        return [
+            {output_param.name: output_param.parameter_type.name}
+            for output_param in output_parameters
+        ]
+
+    def _build_artifact_outputs(
+        self,
+        output_parameters: list[models.EntryPointArtifactOutputParameter],
+    ) -> list[dict[str, Any]] | dict[str, Any]:
+        if len(output_parameters) == 1:
+            return {output_parameters[0].name: output_parameters[0].parameter_type.name}
         return [
             {output_param.name: output_param.parameter_type.name}
             for output_param in output_parameters
