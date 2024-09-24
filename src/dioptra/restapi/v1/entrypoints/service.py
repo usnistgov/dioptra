@@ -94,6 +94,7 @@ class EntrypointService(object):
         plugin_ids: list[int],
         queue_ids: list[int],
         group_id: int,
+        replace_existing: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> utils.EntrypointDict:
@@ -104,6 +105,8 @@ class EntrypointService(object):
                 be unique.
             description: The description of the entrypoint.
             group_id: The group that will own the entrypoint.
+            replace_existing: If True and a resource already exists with this
+                name, delete it instead of raising an exception
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -116,11 +119,21 @@ class EntrypointService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         if (
-            self._entrypoint_name_service.get(name, group_id=group_id, log=log)
-            is not None
-        ):
-            log.debug("Entrypoint name already exists", name=name, group_id=group_id)
-            raise EntrypointAlreadyExistsError
+            existing := self._entrypoint_name_service.get(
+                name, group_id=group_id, log=log
+            )
+        ) is not None:
+            if replace_existing:
+                deleted_resource_lock = models.ResourceLock(
+                    resource_lock_type=resource_lock_types.DELETE,
+                    resource=existing.resource,
+                )
+                db.session.add(deleted_resource_lock)
+            else:
+                log.debug(
+                    "Entrypoint name already exists", name=name, group_id=group_id
+                )
+                raise EntrypointAlreadyExistsError
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
         queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)

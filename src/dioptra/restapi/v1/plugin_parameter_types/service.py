@@ -86,6 +86,7 @@ class PluginParameterTypeService(object):
         structure: dict[str, Any],
         description: str,
         group_id: int,
+        replace_existing: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginParameterTypeDict:
@@ -99,6 +100,8 @@ class PluginParameterTypeService(object):
                 type's structure.
             description: The description of the plugin parameter type.
             group_id: The group that will own the plugin parameter type.
+            replace_existing: If True and a resource already exists with this
+                name, delete it instead of raising an exception
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -121,17 +124,23 @@ class PluginParameterTypeService(object):
             raise PluginParameterTypeMatchesBuiltinTypeError
 
         if (
-            self._plugin_parameter_type_name_service.get(
+            existing := self._plugin_parameter_type_name_service.get(
                 name, group_id=group_id, log=log
             )
-            is not None
-        ):
-            log.debug(
-                "Plugin Parameter Type name already exists",
-                name=name,
-                group_id=group_id,
-            )
-            raise PluginParameterTypeAlreadyExistsError
+        ) is not None:
+            if replace_existing:
+                deleted_resource_lock = models.ResourceLock(
+                    resource_lock_type=resource_lock_types.DELETE,
+                    resource=existing.resource,
+                )
+                db.session.add(deleted_resource_lock)
+            else:
+                log.debug(
+                    "Plugin Parameter Type name already exists",
+                    name=name,
+                    group_id=group_id,
+                )
+                raise PluginParameterTypeAlreadyExistsError
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
