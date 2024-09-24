@@ -16,7 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
 import json
-import jsonschema
 import tarfile
 from collections import defaultdict
 from hashlib import sha256
@@ -25,6 +24,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import IO, Any, Final
 
+import jsonschema
 import structlog
 import toml
 from injector import inject
@@ -43,8 +43,8 @@ from dioptra.sdk.utilities.paths import set_cwd
 from .lib import clone_git_repository, package_job_files, views
 from .schema import (
     FileTypes,
-    ResourceImportSourceTypes,
     ResourceImportResolveNameConflictsStrategy,
+    ResourceImportSourceTypes,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -181,6 +181,7 @@ class ResourceImportService(object):
                     description=param_type.get("description", None),
                     structure=param_type.get("structure", None),
                     group_id=group_id,
+                    read_only=read_only,
                     replace_existing=replace_existing,
                     commit=False,
                     log=log,
@@ -205,6 +206,7 @@ class ResourceImportService(object):
                     name=Path(plugin["path"]).stem,
                     description=plugin.get("description", None),
                     group_id=group_id,
+                    read_only=read_only,
                     replace_existing=replace_existing,
                     commit=False,
                     log=log,
@@ -225,6 +227,7 @@ class ResourceImportService(object):
                         description=None,
                         tasks=tasks[filename],
                         plugin_id=plugin_dict["plugin"].resource_id,
+                        read_only=read_only,
                         commit=False,
                         log=log,
                     )
@@ -250,6 +253,7 @@ class ResourceImportService(object):
                     ],
                     queue_ids=[],
                     group_id=group_id,
+                    read_only=read_only,
                     replace_existing=replace_existing,
                     commit=False,
                     log=log,

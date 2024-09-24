@@ -28,12 +28,20 @@ class PluginDoesNotExistError(Exception):
     """The requested plugin does not exist."""
 
 
+class PluginReadOnlyLockError(Exception):
+    """The plugin has a read-only lock and cannot be modified."""
+
+
 class PluginFileAlreadyExistsError(Exception):
     """The plugin file filename already exists."""
 
 
 class PluginFileDoesNotExistError(Exception):
     """The requested plugin file does not exist."""
+
+
+class PluginFileReadOnlyLockError(Exception):
+    """The plugin file has a read-only lock and cannot be modified."""
 
 
 class PluginTaskParameterTypeNotFoundError(Exception):
@@ -71,6 +79,13 @@ def register_error_handlers(api: Api) -> None:
             400,
         )
 
+    @api.errorhandler(PluginReadOnlyLockError)
+    def handle_plugin_read_only_lock_error(error):
+        return {
+            "message": "Forbidden - The plugin has a read-only "
+            "lock and cannot be modified."
+        }, 403
+
     @api.errorhandler(PluginFileDoesNotExistError)
     def handle_plugin_file_does_not_exist_error(error):
         return {"message": "Not Found - The requested plugin file does not exist"}, 404
@@ -84,6 +99,13 @@ def register_error_handlers(api: Api) -> None:
             },
             400,
         )
+
+    @api.errorhandler(PluginFileReadOnlyLockError)
+    def handle_plugin_file_read_only_lock_error(error):
+        return {
+            "message": "Forbidden - The plugin file has a read-only "
+            "lock and cannot be modified."
+        }, 403
 
     @api.errorhandler(PluginTaskParameterTypeNotFoundError)
     def handle_plugin_task_parameter_type_not_found_error(error):
