@@ -1,3 +1,0 @@
-message:
-  greet:
-    name: $name
