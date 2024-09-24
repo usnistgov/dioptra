@@ -32,6 +32,10 @@ class EntrypointPluginDoesNotExistError(Exception):
     """The requested plugin does not exist for the entrypoint."""
 
 
+class EntrypointReadOnlyLockError(Exception):
+    """The entrypoint has a read-only lock and cannot be modified."""
+
+
 class EntrypointParameterNamesNotUniqueError(Exception):
     """Multiple entrypoint parameters share the same name."""
 
@@ -51,6 +55,13 @@ def register_error_handlers(api: Api) -> None:
             "message": "Not Found - The requested plugin does not exist for this "
             "entrypoint"
         }, 404
+
+    @api.errorhandler(EntrypointReadOnlyLockError)
+    def handle_entrypoint_read_only_lock_error(error):
+        return {
+            "message": "Forbidden - The entrypoint has a read-only "
+            "lock and cannot be modified."
+        }, 403
 
     @api.errorhandler(EntrypointAlreadyExistsError)
     def handle_entrypoint_already_exists_error(error):

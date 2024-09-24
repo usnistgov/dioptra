@@ -86,6 +86,8 @@ class PluginParameterTypeService(object):
         structure: dict[str, Any],
         description: str,
         group_id: int,
+        read_only: bool = False,
+        replace_existing: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginParameterTypeDict:
@@ -99,6 +101,9 @@ class PluginParameterTypeService(object):
                 type's structure.
             description: The description of the plugin parameter type.
             group_id: The group that will own the plugin parameter type.
+            read_only: If True, apply a read only lock to the resource
+            replace_existing: If True and a resource already exists with this
+                name, delete it instead of raising an exception
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -121,17 +126,23 @@ class PluginParameterTypeService(object):
             raise PluginParameterTypeMatchesBuiltinTypeError
 
         if (
-            self._plugin_parameter_type_name_service.get(
+            existing := self._plugin_parameter_type_name_service.get(
                 name, group_id=group_id, log=log
             )
-            is not None
-        ):
-            log.debug(
-                "Plugin Parameter Type name already exists",
-                name=name,
-                group_id=group_id,
-            )
-            raise PluginParameterTypeAlreadyExistsError
+        ) is not None:
+            if replace_existing:
+                deleted_resource_lock = models.ResourceLock(
+                    resource_lock_type=resource_lock_types.DELETE,
+                    resource=existing.resource,
+                )
+                db.session.add(deleted_resource_lock)
+            else:
+                log.debug(
+                    "Plugin Parameter Type name already exists",
+                    name=name,
+                    group_id=group_id,
+                )
+                raise PluginParameterTypeAlreadyExistsError
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
@@ -143,6 +154,13 @@ class PluginParameterTypeService(object):
             resource=resource,
             creator=current_user,
         )
+        if read_only:
+            db.session.add(
+                models.ResourceLock(
+                    resource_lock_type=resource_lock_types.READONLY,
+                    resource=resource,
+                )
+            )
         db.session.add(new_plugin_parameter_type)
 
         if commit:
@@ -579,6 +597,56 @@ class BuiltinPluginParameterTypeService(object):
             group_id_service: A GroupIdService object.
         """
         self._group_id_service = group_id_service
+
+    def get(
+        self,
+        group_id: int,
+        error_if_not_found: bool = False,
+        **kwargs,
+    ) -> models.PluginTaskParameterType | None:
+        """Fetch a list of plugin parameter types by their names.
+
+        Args:
+            group_id: The the group id of the plugin parameter type.
+            error_if_not_found: If True, raise an error if the plugin parameter
+                type is not found. Defaults to False.
+
+        Returns:
+            The plugin parameter type object if found, otherwise None.
+
+        Raises:
+            PluginParameterTypeDoesNotExistError: If the plugin parameter type
+                is not found and `error_if_not_found` is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Get builtin plugin parameter types",
+            group_id=group_id,
+        )
+
+        builtin_types = list(BUILTIN_TYPES.keys())
+
+        stmt = (
+            select(models.PluginTaskParameterType)
+            .join(models.Resource)
+            .where(
+                models.PluginTaskParameterType.name.in_(builtin_types),
+                models.Resource.group_id == group_id,
+                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.latest_snapshot_id
+                == models.PluginTaskParameterType.resource_snapshot_id,
+            )
+        )
+        plugin_parameter_types = list(db.session.scalars(stmt).all())
+
+        if len(plugin_parameter_types) != len(builtin_types):
+            retrieved_names = {param_type.name for param_type in plugin_parameter_types}
+            missing_names = set(builtin_types) - retrieved_names
+            if error_if_not_found:
+                log.debug("Plugin Parameter Type(s) not found", names=missing_names)
+                raise PluginParameterTypeDoesNotExistError
+
+        return plugin_parameter_types
 
     def create_all(
         self,
