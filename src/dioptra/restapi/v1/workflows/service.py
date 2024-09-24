@@ -15,6 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
+import json
+import jsonschema
 import tarfile
 from collections import defaultdict
 from hashlib import sha256
@@ -44,6 +46,8 @@ from .schema import FileTypes, ResourceImportSourceTypes
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "workflow"
+
+DIOPTRA_RESOURCES_SCHEMA_PATH: Final[str] = "dioptra-resources.schema.json"
 
 
 class JobFilesDownloadService(object):
@@ -130,6 +134,12 @@ class ResourceImportService(object):
 
         Args:
             group_id: The group to import resources into
+            source_type: The source to import from (either "upload" or "git")
+            git_url: The url to the git repository if source_type is "git"
+            archive_file: The contents of the upload if source_type is "upload"
+            read_only: Whether to apply a readonly lock to all imported resources
+            resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
+                Either "fail" or "overwrite"
 
         Returns:
             A message summarizing imported resources
@@ -150,11 +160,14 @@ class ResourceImportService(object):
 
             log.info(hash=hash, paths=list(working_dir.glob("*")))
 
-            config_path = working_dir / config_path
-            if not config_path.exists() or not config_path.is_file():
-                raise Exception
+            config = toml.load(working_dir / config_path)
 
-            config = toml.load(config_path)
+            # validate the config file
+            with open(
+                Path(__file__).resolve().parent / DIOPTRA_RESOURCES_SCHEMA_PATH, "rb"
+            ) as f:
+                schema = json.load(f)
+            jsonschema.validate(config, schema)
 
             # register new plugin param types
             param_types = {
