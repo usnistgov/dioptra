@@ -7,4 +7,4 @@ goodbye_step:
     name: $name
 shout_step:
   shout:
-    message: $goodbye_step.message
+    greeting: $goodbye_step.greeting
