@@ -189,7 +189,7 @@ class ResourceImportService(object):
                     replace_existing=replace_existing,
                     commit=False,
                     log=log,
-                )
+                )["plugin_task_parameter_type"]
                 for param_type in config.get("plugin_param_types", [])
             }
             # retrieve built-ins
@@ -225,7 +225,7 @@ class ResourceImportService(object):
                     filename = str(plugin_file_path.relative_to(plugin["path"]))
                     contents = plugin_file_path.read_text()
 
-                    plugin_file_dict = self._plugin_id_file_service.create(
+                    self._plugin_id_file_service.create(
                         filename,
                         contents=contents,
                         description=None,
