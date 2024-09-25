@@ -35,7 +35,7 @@ def greet(greeting: str, name: str) -> str:
 
 
 @pyplugs.register()
-def shout(message: str) -> str:
-    message = message.upper()
-    LOGGER.info(message)
-    return message
+def shout(greeting: str) -> str:
+    loud_greeting = greeting.upper()
+    LOGGER.info(loud_greeting)
+    return loud_greeting
