@@ -316,7 +316,7 @@ def assert_registering_existing_entrypoint_name_fails(
         plugin_ids=plugin_ids,
         queue_ids=queue_ids,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_entrypoint_name_matches_expected_name(
@@ -442,7 +442,7 @@ def assert_entrypoint_must_have_unique_param_names(
         plugin_ids=plugin_ids,
         queue_ids=queue_ids,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 # -- Tests -----------------------------------------------------------------------------

@@ -20,7 +20,8 @@ from typing import IO, Final
 import structlog
 from structlog.stdlib import BoundLogger
 
-from .lib import package_job_files, views
+from .lib import views
+from .lib.package_job_files import package_job_files
 from .schema import FileTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()

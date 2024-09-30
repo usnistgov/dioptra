@@ -27,12 +27,15 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    SortParameterValidationError,
+)
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-
-from .errors import QueueAlreadyExistsError, QueueDoesNotExistError, QueueSortError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -91,18 +94,20 @@ class QueueService(object):
             The newly created queue object.
 
         Raises:
-            QueueAlreadyExistsError: If a queue with the given name already exists.
-            GroupDoesNotExistError: If the group with the provided ID does not exist.
+            EntityExistsError: If a queue with the given name already exists.
+            EntityDoesNotExistError: If the group with the provided ID does not exist.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        if self._queue_name_service.get(name, group_id=group_id, log=log) is not None:
-            log.debug("Queue name already exists", name=name, group_id=group_id)
-            raise QueueAlreadyExistsError
+        duplicate = self._queue_name_service.get(name, group_id=group_id, log=log)
+        if duplicate is not None:
+            raise EntityExistsError(
+                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+            )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
-        resource = models.Resource(resource_type="queue", owner=group)
+        resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
         new_queue = models.Queue(
             name=name, description=description, resource=resource, creator=current_user
         )
@@ -202,8 +207,7 @@ class QueueService(object):
                 sort_column = sort_column.asc()
             queues_stmt = queues_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
-            raise QueueSortError
+            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
 
         queues = list(db.session.scalars(queues_stmt).all())
 
@@ -257,7 +261,7 @@ class QueueIdService(object):
             The queue object if found, otherwise None.
 
         Raises:
-            QueueDoesNotExistError: If the queue is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the queue is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -276,8 +280,7 @@ class QueueIdService(object):
 
         if queue is None:
             if error_if_not_found:
-                log.debug("Queue not found", queue_id=queue_id)
-                raise QueueDoesNotExistError
+                raise EntityDoesNotExistError(RESOURCE_TYPE, queue_id=queue_id)
 
             return None
 
@@ -318,9 +321,9 @@ class QueueIdService(object):
             The updated queue object.
 
         Raises:
-            QueueDoesNotExistError: If the queue is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the queue is not found and `error_if_not_found`
                 is True.
-            QueueAlreadyExistsError: If the queue name already exists.
+            EntityExistsError: If the queue name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -331,13 +334,12 @@ class QueueIdService(object):
 
         queue = queue_dict["queue"]
         group_id = queue.resource.group_id
-        if (
-            name != queue.name
-            and self._queue_name_service.get(name, group_id=group_id, log=log)
-            is not None
-        ):
-            log.debug("Queue name already exists", name=name, group_id=group_id)
-            raise QueueAlreadyExistsError
+        if name != queue.name:
+            duplicate = self._queue_name_service.get(name, group_id=group_id, log=log)
+            if duplicate is not None:
+                raise EntityExistsError(
+                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+                )
 
         new_queue = models.Queue(
             name=name,
@@ -368,7 +370,7 @@ class QueueIdService(object):
             A dictionary reporting the status of the request.
 
         Raises:
-            QueueDoesNotExistError: If the queue is not found.
+            EntityDoesNotExistError: If the queue is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -378,7 +380,7 @@ class QueueIdService(object):
         queue_resource = db.session.scalars(stmt).first()
 
         if queue_resource is None:
-            raise QueueDoesNotExistError
+            raise EntityDoesNotExistError(RESOURCE_TYPE, queue_id=queue_id)
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
@@ -411,7 +413,7 @@ class QueueIdsService(object):
             The queue object if found, otherwise None.
 
         Raises:
-            QueueDoesNotExistError: If the queue is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the queue is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -432,8 +434,9 @@ class QueueIdsService(object):
             queue_ids_missing = set(queue_ids) - set(
                 queue.resource_id for queue in queues
             )
-            log.debug("Queue not found", queue_ids=list(queue_ids_missing))
-            raise QueueDoesNotExistError
+            raise EntityDoesNotExistError(
+                RESOURCE_TYPE, queue_ids=list(queue_ids_missing)
+            )
 
         return queues
 
@@ -460,7 +463,7 @@ class QueueNameService(object):
             The queue object if found, otherwise None.
 
         Raises:
-            QueueDoesNotExistError: If the queue is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the queue is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -480,8 +483,7 @@ class QueueNameService(object):
 
         if queue is None:
             if error_if_not_found:
-                log.debug("Queue not found", name=name)
-                raise QueueDoesNotExistError
+                raise EntityDoesNotExistError(RESOURCE_TYPE, name=name)
 
             return None
 

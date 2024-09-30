@@ -227,7 +227,7 @@ def register_tag(
 
 def register_artifact(
     client: FlaskClient,
-    uri: int,
+    uri: str,
     job_id: int,
     group_id: int,
     description: str | None = None,

@@ -216,7 +216,7 @@ def assert_registering_existing_artifact_uri_fails(
         group_id=group_id,
         job_id=job_id,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 # -- Tests -----------------------------------------------------------------------------

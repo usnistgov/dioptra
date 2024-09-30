@@ -26,17 +26,16 @@ from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    SortParameterValidationError,
+)
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.jobs.service import ExperimentJobIdService, JobIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-
-from .errors import (
-    ArtifactAlreadyExistsError,
-    ArtifactDoesNotExistError,
-    ArtifactSortError,
-)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -97,14 +96,14 @@ class ArtifactService(object):
             The newly created artifact object.
 
         Raises:
-            ArtifactAlreadyExistsError: If the artifact already exists.
+            EntityExistsError: If the artifact already exists.
 
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        if self._artifact_uri_service.get(uri, log=log) is not None:
-            log.debug("Artifact uri already exists", uri=uri)
-            raise ArtifactAlreadyExistsError
+        duplicate = self._artifact_uri_service.get(uri, log=log)
+        if duplicate is not None:
+            raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=uri)
 
         job_dict = cast(
             utils.JobDict,
@@ -220,8 +219,7 @@ class ArtifactService(object):
                 sort_column = sort_column.asc()
             latest_artifacts_stmt = latest_artifacts_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
-            raise ArtifactSortError
+            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
 
         artifacts = db.session.scalars(latest_artifacts_stmt).all()
 
@@ -310,7 +308,7 @@ class ArtifactUriService(object):
         artifact_uri: str,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> utils.ArtifactDict | None:
+    ) -> models.Artifact | None:
         """Fetch an artifact by its unique uri.
 
         Args:
@@ -323,7 +321,7 @@ class ArtifactUriService(object):
             The artifact object if found, otherwise None.
 
         Raises:
-            ArtifactDoesNotExistError: If the artifact is not found and
+            EntityDoesNotExistError: If the artifact is not found and
                 `error_if_not_found` is True.
 
         """
@@ -345,8 +343,7 @@ class ArtifactUriService(object):
 
         if artifact is None:
             if error_if_not_found:
-                log.debug("Artifact not found", artifact_uri=artifact_uri)
-                raise ArtifactDoesNotExistError
+                raise EntityDoesNotExistError(RESOURCE_TYPE, artifact_uri=artifact_uri)
 
             return None
 
@@ -373,7 +370,7 @@ class ArtifactIdService(object):
             The artifact object if found, otherwise None.
 
         Raises:
-            ArtifactDoesNotExistError: If the artifact is not found and
+            EntityDoesNotExistError: If the artifact is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -393,8 +390,7 @@ class ArtifactIdService(object):
 
         if artifact is None:
             if error_if_not_found:
-                log.debug("Artifact not found", artifact_id=artifact_id)
-                raise ArtifactDoesNotExistError
+                raise EntityDoesNotExistError(RESOURCE_TYPE, artifact_id=artifact_id)
 
             return None
 
@@ -433,9 +429,9 @@ class ArtifactIdService(object):
             The updated artifact object.
 
         Raises:
-            ArtifactDoesNotExistError: If the artifact is not found and
+            EntityDoesNotExistError: If the artifact is not found and
                 `error_if_not_found` is True.
-            ArtifactAlreadyExistsError: If the artifact name already exists.
+            EntityExistsError: If the artifact name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 

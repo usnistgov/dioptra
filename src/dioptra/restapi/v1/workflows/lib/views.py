@@ -19,8 +19,13 @@ from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-
-from ..errors import JobEntryPointDoesNotExistError
+from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.v1.entrypoints.service import (
+    RESOURCE_TYPE as ENTRYPONT_RESOURCE_TYPE,
+)
+from dioptra.restapi.v1.experiments.service import (
+    RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -48,11 +53,7 @@ def get_entry_point(
     entry_point = db.session.scalar(entry_point_stmt)
 
     if entry_point is None:
-        log.debug(
-            "The job's entrypoint does not exist",
-            job_id=job_id,
-        )
-        raise JobEntryPointDoesNotExistError
+        raise EntityDoesNotExistError(ENTRYPONT_RESOURCE_TYPE, job_id=job_id)
 
     return entry_point
 
@@ -78,11 +79,7 @@ def get_experiment(job_id: int, logger: BoundLogger | None = None) -> models.Exp
     experiment = db.session.scalar(experiment_stmt)
 
     if experiment is None:
-        log.debug(
-            "The experiment associated with the job does not exist",
-            job_id=job_id,
-        )
-        raise JobEntryPointDoesNotExistError
+        raise EntityDoesNotExistError(EXPERIMENT_RESOURCE_TYPE, job_id=job_id)
 
     return experiment
 

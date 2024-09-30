@@ -227,7 +227,7 @@ def assert_registering_existing_tag_name_fails(
         AssertionError: If the response status code is not 400.
     """
     response = actions.register_tag(client, name=name, group_id=group_id)
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_tag_name_matches_expected_name(
@@ -291,7 +291,7 @@ def assert_cannot_rename_tag_with_existing_name(
         tag_id=tag_id,
         new_name=existing_name,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 # -- Tests -----------------------------------------------------------------------------
