@@ -19,6 +19,7 @@ The user repository: data operations related to users
 """
 import uuid
 from collections.abc import Sequence
+from typing import Any, Final
 
 import sqlalchemy as sa
 
@@ -33,11 +34,17 @@ from dioptra.restapi.db.repository.utils import (
     assert_user_does_not_exist,
     assert_user_exists,
     check_user_collision,
+    construct_sql_query_filters,
     user_exists,
 )
 
 
 class UserRepository:
+
+    SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+        "username": lambda x: User.username.like(x, escape="/"),
+        "email": lambda x: User.email_address.like(x, escape="/"),
+    }
 
     def __init__(self, session: CompatibleSession[S]):
         self.session = session
@@ -207,6 +214,55 @@ class UserRepository:
         user = self.session.scalar(stmt)
 
         return user
+
+    def get_by_filters_paged(
+        self,
+        filters: list[dict],
+        page_start: int,
+        page_length: int,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    ) -> tuple[Sequence[User], int]:
+        """
+        Get some users according to search criteria.
+
+        Args:
+            filters: A structure representing search criteria.  See
+                parse_search_text().
+            page_start: A row index where the returned page should start
+            page_length: A row count representing the page length
+            deletion_policy: Whether to look at deleted users, non-deleted
+                users, or all users
+
+        Returns:
+            A 2-tuple including a page of User objects, and a count of the
+            total number of users matching the criteria
+        """
+        sql_filter = construct_sql_query_filters(filters, self.SEARCHABLE_FIELDS)
+
+        count_stmt = sa.select(sa.func.count()).select_from(User)
+        if sql_filter is not None:
+            count_stmt = count_stmt.where(sql_filter)
+        count_stmt = _apply_deletion_policy(count_stmt, deletion_policy)
+        current_count = self.session.scalar(count_stmt)
+
+        # For mypy: a "SELECT count(*)..." query should never return NULL.
+        assert current_count is not None
+
+        users: Sequence[User]
+        if current_count == 0:
+            users = []
+        else:
+            page_stmt = sa.select(User)
+            if sql_filter is not None:
+                page_stmt = page_stmt.where(sql_filter)
+            page_stmt = _apply_deletion_policy(page_stmt, deletion_policy)
+            # *must* enforce a sort order for consistent paging
+            page_stmt = page_stmt.order_by(User.user_id)
+            page_stmt = page_stmt.offset(page_start).limit(page_length)
+
+            users = self.session.scalars(page_stmt).all()
+
+        return users, current_count
 
     def num_users(
         self, deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED

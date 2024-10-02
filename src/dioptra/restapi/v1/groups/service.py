@@ -18,18 +18,16 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any, Final, cast
+from typing import Any, Final
 
 import structlog
 from injector import inject
-from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
+from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import BackendDatabaseError
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 from .errors import GroupDoesNotExistError, GroupNameNotAvailableError
 
@@ -44,9 +42,6 @@ DEFAULT_GROUP_MEMBER_PERMISSIONS: Final[dict[str, bool]] = {
 DEFAULT_GROUP_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
     "owner": False,
     "admin": True,
-}
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": lambda x: models.Group.name.like(x, escape="/"),
 }
 
 
@@ -130,36 +125,12 @@ class GroupService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get list of groups")
 
-        search_filters = construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-
-        stmt = (
-            select(func.count(models.Group.group_id))
-            .filter_by(is_deleted=False)
-            .filter(search_filters)
+        search_struct = parse_search_text(search_string)
+        groups, total_num_groups = self._uow.group_repo.get_by_filters_paged(
+            search_struct, page_index * page_length, page_length
         )
-        total_num_groups = db.session.scalars(stmt).first()
 
-        if total_num_groups is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_groups == 0:
-            return cast(list[models.Group], []), total_num_groups
-
-        stmt = (
-            select(models.Group)  # type: ignore
-            .filter_by(is_deleted=False)
-            .filter(search_filters)
-            .offset(page_index)
-            .limit(page_length)
-        )
-        groups = cast(list[models.Group], db.session.scalars(stmt).all())
-
-        return groups, total_num_groups
+        return list(groups), total_num_groups
 
 
 class GroupIdService(object):

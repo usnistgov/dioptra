@@ -31,3 +31,17 @@ class UserEmailNotAvailableError(Exception):
 
 class QueueAlreadyExistsError(Exception):
     """The queue name already exists."""
+
+
+class QueueSortError(Exception):
+    """The requested sortBy column is not a sortable field."""
+
+
+class UnsupportedFilterField(Exception):
+    """A filter field is not supported for a particular repository method"""
+
+    def __init__(self, field_name: str) -> None:
+        self.field_name = field_name
+
+        message = f"{self.field_name!r} is not a valid field"
+        super().__init__(message)

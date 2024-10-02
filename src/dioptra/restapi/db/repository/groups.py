@@ -17,7 +17,8 @@
 """
 The group repository: data operations related to groups
 """
-from typing import Final
+from collections.abc import Sequence
+from typing import Any, Final
 
 import sqlalchemy as sa
 
@@ -33,6 +34,7 @@ from dioptra.restapi.db.repository.utils import (
     assert_group_exists,
     assert_user_exists,
     check_user_collision,
+    construct_sql_query_filters,
     group_exists,
     user_exists,
 )
@@ -51,6 +53,10 @@ GROUP_CREATOR_MEMBER_PERMISSIONS: Final[dict[str, bool]] = {
 
 
 class GroupRepository:
+
+    SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+        "name": lambda x: Group.name.like(x, escape="/"),
+    }
 
     def __init__(self, session: CompatibleSession[S]):
         self.session = session
@@ -179,6 +185,40 @@ class GroupRepository:
         group = self.session.scalar(stmt)
 
         return group
+
+    def get_by_filters_paged(
+        self,
+        filters: list[dict],
+        page_start: int,
+        page_length: int,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    ) -> tuple[Sequence[User], int]:
+        sql_filter = construct_sql_query_filters(filters, self.SEARCHABLE_FIELDS)
+
+        count_stmt = sa.select(sa.func.count()).select_from(Group)
+        if sql_filter is not None:
+            count_stmt = count_stmt.where(sql_filter)
+        count_stmt = _apply_deletion_policy(count_stmt, deletion_policy)
+        current_count = self.session.scalar(count_stmt)
+
+        # For mypy: a "SELECT count(*)..." query should never return NULL.
+        assert current_count is not None
+
+        groups: Sequence[Group]
+        if current_count == 0:
+            groups = []
+        else:
+            page_stmt = sa.select(Group)
+            if sql_filter is not None:
+                page_stmt = page_stmt.where(sql_filter)
+            page_stmt = _apply_deletion_policy(page_stmt, deletion_policy)
+            # *must* enforce a sort order for consistent paging
+            page_stmt = page_stmt.order_by(Group.group_id)
+            page_stmt = page_stmt.offset(page_start).limit(page_length)
+
+            groups = self.session.scalars(page_stmt).all()
+
+        return groups, current_count
 
     def num_groups(
         self, deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED
