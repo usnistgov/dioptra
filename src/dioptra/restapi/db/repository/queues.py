@@ -19,10 +19,11 @@ The queue repository: data operations related to queues
 """
 
 from collections.abc import Iterable, Sequence
+from typing import Any, Final
 
 import sqlalchemy as sa
 
-from dioptra.restapi.db.models import Group, Queue, Resource
+from dioptra.restapi.db.models import Group, Queue, Resource, Tag
 from dioptra.restapi.db.repository.utils import (
     CompatibleSession,
     DeletionPolicy,
@@ -34,15 +35,31 @@ from dioptra.restapi.db.repository.utils import (
     assert_snapshot_does_not_exist,
     assert_user_exists,
     assert_user_in_group,
+    construct_sql_query_filters,
     delete_resource,
     get_group_id,
     get_resource_id,
 )
 from dioptra.restapi.db.shared_errors import ResourceError
-from dioptra.restapi.errors import EntityExistsError
+from dioptra.restapi.errors import EntityExistsError, SortParameterValidationError
 
 
 class QueueRepository:
+
+    SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
+        "name": lambda x: Queue.name.like(x, escape="/"),
+        "description": lambda x: Queue.description.like(x, escape="/"),
+        "tag": lambda x: Queue.tags.any(Tag.name.like(x, escape="/")),
+    }
+
+    # Maps a general sort criterion name to a Queue attribute name
+    SORTABLE_FIELDS: Final[dict[str, str]] = {
+        "name": "name",
+        "createdOn": "created_on",
+        "lastModifiedOn": "last_modified_on",
+        "description": "description",
+    }
+
     def __init__(self, session: CompatibleSession[S]):
         self.session = session
 
@@ -269,3 +286,95 @@ class QueueRepository:
         queue = self.session.scalar(stmt)
 
         return queue
+
+    def get_by_filters_paged(
+        self,
+        group: Group | int | None,
+        filters: list[dict],
+        page_start: int,
+        page_length: int,
+        sort_by: str | None,
+        descending: bool,
+        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
+    ) -> tuple[Sequence[Queue], int]:
+        """
+        Get a page of queues according to more complex criteria.
+
+        Args:
+            group: Limit queues to those owned by this group; None to not limit
+                the search
+            filters: Search criteria, see parse_search_text()
+            page_start: Zero-based row index where the page should start
+            page_length: Maximum number of rows in the page
+            sort_by: Sort criterion; must be a key of SORTABLE_FIELDS.  None
+                to sort in an implementation-dependent way.
+            descending: Whether to sort in descending order; only applicable
+                if sort_by is given
+            deletion_policy: Whether to look at deleted queues, non-deleted
+                queue, or all queues
+
+        Returns:
+            A 2-tuple including the page of queues and total count of matching
+            queues which exist
+        """
+        sql_filter = construct_sql_query_filters(filters, self.SEARCHABLE_FIELDS)
+        if sort_by:
+            if sort_by in self.SORTABLE_FIELDS:
+                sort_by = self.SORTABLE_FIELDS[sort_by]
+            else:
+                raise SortParameterValidationError("queue", sort_by)
+        group_id = None if group is None else get_group_id(group)
+
+        if group_id is not None:
+            assert_group_exists(self.session, group_id, DeletionPolicy.NOT_DELETED)
+
+        count_stmt = (
+            sa.select(sa.func.count())
+            .select_from(Queue, Resource)
+            .where(Queue.resource_snapshot_id == Resource.latest_snapshot_id)
+        )
+
+        if group_id is not None:
+            count_stmt = count_stmt.where(Resource.group_id == group_id)
+
+        if sql_filter is not None:
+            count_stmt = count_stmt.where(sql_filter)
+
+        count_stmt = apply_resource_deletion_policy(count_stmt, deletion_policy)
+        current_count = self.session.scalar(count_stmt)
+
+        # For mypy: a "SELECT count(*)..." query should never return NULL.
+        assert current_count is not None
+
+        queues: Sequence[Queue]
+        if current_count == 0:
+            queues = []
+        else:
+            page_stmt = (
+                sa.select(Queue)
+                .join(Resource)
+                .where(Queue.resource_snapshot_id == Resource.latest_snapshot_id)
+            )
+
+            if group_id is not None:
+                page_stmt = page_stmt.where(Resource.group_id == group_id)
+
+            if sql_filter is not None:
+                page_stmt = page_stmt.where(sql_filter)
+
+            page_stmt = apply_resource_deletion_policy(page_stmt, deletion_policy)
+
+            if sort_by:
+                sort_criteria = getattr(Queue, sort_by)
+                if descending:
+                    sort_criteria = sort_criteria.desc()
+            else:
+                # *must* enforce a sort order for consistent paging
+                sort_criteria = Queue.resource_snapshot_id
+            page_stmt = page_stmt.order_by(sort_criteria)
+
+            page_stmt = page_stmt.offset(page_start).limit(page_length)
+
+            queues = self.session.scalars(page_stmt).all()
+
+        return queues, current_count

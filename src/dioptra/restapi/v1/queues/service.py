@@ -23,35 +23,20 @@ from typing import Any, Final
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Integer, func, select
+from sqlalchemy import Integer, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.shared_errors import ResourceDeletedError, ResourceNotFoundError
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import (
-    BackendDatabaseError,
-    EntityDoesNotExistError,
-    SortParameterValidationError,
-)
+from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "queue"
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": lambda x: models.Queue.name.like(x, escape="/"),
-    "description": lambda x: models.Queue.description.like(x, escape="/"),
-    "tag": lambda x: models.Queue.tags.any(models.Tag.name.like(x, escape="/")),
-}
-SORTABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": models.Queue.name,
-    "createdOn": models.Queue.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
-    "description": models.Queue.description,
-}
 
 
 class QueueService(object):
@@ -151,61 +136,17 @@ class QueueService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of queues")
 
-        filters = list()
+        search_struct = parse_search_text(search_string)
 
-        if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
-
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-            )
-
-        stmt = (
-            select(func.count(models.Queue.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id == models.Queue.resource_snapshot_id,
-            )
+        queues, total_num_queues = self._uow.queue_repo.get_by_filters_paged(
+            group_id,
+            search_struct,
+            page_index * page_length,
+            page_length,
+            sort_by_string,
+            descending,
+            DeletionPolicy.NOT_DELETED,
         )
-        total_num_queues = db.session.scalars(stmt).first()
-
-        if total_num_queues is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "queues when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_queues == 0:
-            return [], total_num_queues
-
-        queues_stmt = (
-            select(models.Queue)
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id == models.Queue.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
-        )
-
-        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
-            sort_column = SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            queues_stmt = queues_stmt.order_by(sort_column)
-        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
-
-        queues = list(db.session.scalars(queues_stmt).all())
 
         drafts_stmt = select(
             models.DraftResource.payload["resource_id"].as_string().cast(Integer)

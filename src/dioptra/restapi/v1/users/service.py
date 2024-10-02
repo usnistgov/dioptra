@@ -24,14 +24,12 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
+from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
     EntityDoesNotExistError,
     NoCurrentUserError,
     QueryParameterValidationError,
@@ -43,7 +41,7 @@ from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
 )
 from dioptra.restapi.v1.shared.password_service import PasswordService
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -55,10 +53,6 @@ DEFAULT_GROUP_PERMISSIONS: Final[dict[str, Any]] = {
     "share_write": False,
 }
 DAYS_TO_EXPIRE_PASSWORD_DEFAULT: Final[int] = 365
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "username": lambda x: models.User.username.like(x, escape="/"),
-    "email": lambda x: models.User.email_address.like(x, escape="/"),
-}
 
 
 class UserService(object):
@@ -159,7 +153,7 @@ class UserService(object):
 
         Args:
             search_string: A search string used to filter results.
-            page_index: The index of the first user to be returned.
+            page_index: The index of the first page to be returned.
             page_length: The maximum number of users to be returned.
 
         Returns:
@@ -173,36 +167,12 @@ class UserService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get list of users")
 
-        search_filters = construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-
-        stmt = (
-            select(func.count(models.User.user_id))
-            .filter_by(is_deleted=False)
-            .filter(search_filters)
+        search_struct = parse_search_text(search_string)
+        users, total_num_users = self._uow.user_repo.get_by_filters_paged(
+            search_struct, page_index * page_length, page_length
         )
-        total_num_users = db.session.scalars(stmt).first()
 
-        if total_num_users is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "users when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_users == 0:
-            return cast(list[models.User], []), total_num_users
-
-        stmt = (
-            select(models.User)  # type: ignore
-            .filter_by(is_deleted=False)
-            .filter(search_filters)
-            .offset(page_index)
-            .limit(page_length)
-        )
-        users = cast(list[models.User], db.session.scalars(stmt).all())
-
-        return users, total_num_users
+        return list(users), total_num_users
 
     def _create_or_get_default_group(
         self,
