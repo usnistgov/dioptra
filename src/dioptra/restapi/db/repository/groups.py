@@ -34,6 +34,7 @@ from dioptra.restapi.db.repository.utils import (
     assert_user_exists,
     check_user_collision,
     construct_sql_query_filters,
+    get_group_id,
     group_exists,
     user_exists,
 )
@@ -194,6 +195,22 @@ class GroupRepository:
         page_length: int,
         deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
     ) -> tuple[Sequence[User], int]:
+        """
+        Get some groups according to search criteria.
+
+        Args:
+            filters: A structure representing search criteria.  See
+                parse_search_text().
+            page_start: A row index where the returned page should start
+            page_length: A row count representing the page length; use <= 0
+                for unlimited length
+            deletion_policy: Whether to look at deleted groups, non-deleted
+                groups, or all groups
+
+        Returns:
+            A 2-tuple including a page of Group objects, and a count of the
+            total number of groups matching the criteria
+        """
         sql_filter = construct_sql_query_filters(filters, self.SEARCHABLE_FIELDS)
 
         count_stmt = sa.select(sa.func.count()).select_from(Group)
@@ -215,7 +232,9 @@ class GroupRepository:
             page_stmt = _apply_deletion_policy(page_stmt, deletion_policy)
             # *must* enforce a sort order for consistent paging
             page_stmt = page_stmt.order_by(Group.group_id)
-            page_stmt = page_stmt.offset(page_start).limit(page_length)
+            page_stmt = page_stmt.offset(page_start)
+            if page_length > 0:
+                page_stmt = page_stmt.limit(page_length)
 
             groups = self.session.scalars(page_stmt).all()
 
@@ -246,13 +265,13 @@ class GroupRepository:
 
         return num_groups
 
-    def num_members(self, group: Group) -> int:
+    def num_members(self, group: Group | int) -> int:
         """
         Get the number of members in the given group.  This is done in a way
         that's hopefully more efficient than len(group.members).
 
         Args:
-            group: A group
+            group: A Group object or group_id integer primary key value
 
         Returns:
             A member count
@@ -265,10 +284,11 @@ class GroupRepository:
 
         # len(group.members) might require actually reading all the rows and
         # translating them into objects.  I hope to avoid that.
+        group_id = get_group_id(group)
         num_members_stmt = (
             sa.select(sa.func.count())
             .select_from(GroupMember)
-            .where(GroupMember.group_id == group.group_id)
+            .where(GroupMember.group_id == group_id)
         )
 
         num_members = self.session.scalar(num_members_stmt)
@@ -279,13 +299,13 @@ class GroupRepository:
 
         return num_members
 
-    def num_managers(self, group: Group) -> int:
+    def num_managers(self, group: Group | int) -> int:
         """
         Get the number of managers in the given group.  This is done in a way
         that's hopefully more efficient than len(group.managers).
 
         Args:
-            group: A group
+            group: A Group object or group_id integer primary key value
 
         Returns:
             A manager count
@@ -298,10 +318,11 @@ class GroupRepository:
 
         # len(group.members) might require actually reading all the rows and
         # translating them into objects.  I hope to avoid that.
+        group_id = get_group_id(group)
         num_members_stmt = (
             sa.select(sa.func.count())
             .select_from(GroupManager)
-            .where(GroupManager.group_id == group.group_id)
+            .where(GroupManager.group_id == group_id)
         )
 
         num_managers = self.session.scalar(num_members_stmt)
@@ -318,8 +339,7 @@ class GroupRepository:
         """
         Add a user to the managership of the given group.  If the user is
         already a manager, this is a no-op.  Permissions are ignored in that
-        case.  To modify permissions for an existing manager, see
-        UserRepository.set_manager_permissions().
+        case.
 
         Args:
             group: A group
@@ -409,8 +429,7 @@ class GroupRepository:
         """
         Add a user to the membership of the given group.  If the user is
         already a member, this is a no-op.  Permissions are ignored in that
-        case.  To modify permissions for an existing member, see
-        UserRepository.set_member_permissions().
+        case.
 
         Args:
             group: A group

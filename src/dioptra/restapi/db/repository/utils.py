@@ -80,6 +80,26 @@ class DeletionPolicy(enum.Enum):
     DELETED = enum.auto()
 
 
+def get_user_id(user: User | int) -> int | None:
+    """
+    Helper for APIs which allow a User domain object or user_id integer
+    primary key value.  This normalizes the value to the user_id value, or
+    None (if a User object was passed with a null .user_id attribute).
+
+    Args:
+        user: A User object or user_id integer primary key value
+
+    Returns:
+        A user ID or None
+    """
+    if isinstance(user, int):
+        user_id = user
+    else:
+        user_id = user.user_id
+
+    return user_id
+
+
 def get_group_id(group: Group | int) -> int | None:
     """
     Helper for APIs which allow a Group domain object or group_id integer
@@ -87,7 +107,7 @@ def get_group_id(group: Group | int) -> int | None:
     None (if a Group object was passed with a null .group_id attribute).
 
     Args:
-        group: A group object, group_id integer primary key value
+        group: A Group object or group_id integer primary key value
 
     Returns:
         A group ID or None
@@ -139,19 +159,22 @@ def get_resource_id(resource: Resource | ResourceSnapshot | int) -> int | None:
     return resource_id
 
 
-def user_exists(session: CompatibleSession[S], user: User) -> ExistenceResult:
+def user_exists(session: CompatibleSession[S], user: User | int) -> ExistenceResult:
     """
     Check whether the given user exists in the database, and if so, whether
     it was deleted or not.
 
     Args:
         session: An SQLAlchemy session
-        user: A User object
+        user: A User object or user_id integer primary key value
 
     Returns:
         One of the ExistenceResult enum values
     """
-    if user.user_id is None:
+
+    user_id = get_user_id(user)
+
+    if user_id is None:
         exists = ExistenceResult.DOES_NOT_EXIST
     else:
         # May as well get existence + deletion status in one query.  I think
@@ -160,7 +183,7 @@ def user_exists(session: CompatibleSession[S], user: User) -> ExistenceResult:
         stmt = (
             sa.select(User.user_id, UserLock.user_lock_type)
             .outerjoin(UserLock)
-            .where(User.user_id == user.user_id)
+            .where(User.user_id == user_id)
         )
         results = session.execute(stmt)
         # will need to change if a user may have multiple lock types
@@ -302,7 +325,7 @@ def snapshot_exists(session: CompatibleSession[S], snapshot: ResourceSnapshot) -
 
 
 def assert_user_exists(
-    session: CompatibleSession[S], user: User, deletion_policy: DeletionPolicy
+    session: CompatibleSession[S], user: User | int, deletion_policy: DeletionPolicy
 ) -> None:
     """
     Check whether the given user exists in the database.  This function accepts
@@ -317,7 +340,7 @@ def assert_user_exists(
 
     Args:
         session: An SQLAlchemy session
-        user: A User object
+        user: A User object or user_id integer primary key value
         deletion_policy: One of the DeletionPolicy enum values
 
     Raises:
@@ -325,10 +348,13 @@ def assert_user_exists(
     """
     existence_result = user_exists(session, user)
 
-    user_id = "<no-ID>" if user.user_id is None else user.user_id
-    user_name = "<no-name>" if user.username is None else user.username
+    user_id = get_user_id(user)
+    if isinstance(user, int):
+        obj_id = str(user_id)
+    else:
+        obj_id = f"{user_id}/{user.username}"
 
-    _assert_exists(deletion_policy, existence_result, "User", f"{user_id}/{user_name}")
+    _assert_exists(deletion_policy, existence_result, "User", obj_id)
 
 
 def assert_group_exists(
@@ -438,7 +464,7 @@ def assert_snapshot_exists(
 
 
 def assert_user_does_not_exist(
-    session: CompatibleSession[S], user: User, deletion_policy: DeletionPolicy
+    session: CompatibleSession[S], user: User | int, deletion_policy: DeletionPolicy
 ) -> None:
     """
     Check whether the given user exists in the database.  This function accepts
@@ -454,7 +480,7 @@ def assert_user_does_not_exist(
 
     Args:
         session: An SQLAlchemy session
-        user: A User object
+        user: A User object or user_id integer primary key value
         deletion_policy: One of the DeletionPolicy enum values
 
     Raises:
@@ -462,12 +488,13 @@ def assert_user_does_not_exist(
     """
     existence_result = user_exists(session, user)
 
-    user_id = "<no-ID>" if user.user_id is None else user.user_id
-    user_name = "<no-name>" if user.username is None else user.username
+    user_id = get_user_id(user)
+    if isinstance(user, int):
+        obj_id = str(user_id)
+    else:
+        obj_id = f"{user_id}/{user.username}"
 
-    _assert_does_not_exist(
-        deletion_policy, existence_result, "User", f"{user_id}/{user_name}"
-    )
+    _assert_does_not_exist(deletion_policy, existence_result, "User", obj_id)
 
 
 def assert_group_does_not_exist(

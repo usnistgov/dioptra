@@ -238,6 +238,7 @@ def test_group_num_groups(group_repo, account, db):
 def test_group_num_members(group_repo, user_repo, account, db):
 
     assert group_repo.num_members(account.group) == 1
+    assert group_repo.num_members(account.group.group_id) == 1
 
     u2 = User("user2", "password2", "user2@example.org")
     user_repo.create(u2, account.group)
@@ -247,6 +248,7 @@ def test_group_num_members(group_repo, user_repo, account, db):
     db.session.commit()
 
     assert group_repo.num_members(account.group) == 2
+    assert group_repo.num_members(account.group.group_id) == 2
 
 
 def test_group_num_members_not_exist(group_repo, account):
@@ -259,6 +261,7 @@ def test_group_num_members_not_exist(group_repo, account):
 def test_group_num_managers(group_repo, user_repo, account, db):
 
     assert group_repo.num_managers(account.group) == 1
+    assert group_repo.num_managers(account.group.group_id) == 1
 
     u2 = User("user2", "password2", "user2@example.org")
     user_repo.create(u2, account.group)
@@ -268,6 +271,7 @@ def test_group_num_managers(group_repo, user_repo, account, db):
     db.session.commit()
 
     assert group_repo.num_managers(account.group) == 2
+    assert group_repo.num_managers(account.group.group_id) == 2
 
 
 def test_group_num_managers_not_exist(group_repo, account):
