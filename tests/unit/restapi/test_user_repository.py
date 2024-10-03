@@ -317,20 +317,25 @@ def test_user_get_page(user_repo, account, db):
 
     # Unsure sqlalchemy always returns lists... just gather from its sequences
     # into lists, to make sure we can compare them.
-    page = list(user_repo.get_page(0, 3))
+    page, count = list(user_repo.get_by_filters_paged([], 0, 3))
     assert page == users[:3]
+    assert count == 11
 
-    page = list(user_repo.get_page(1, 4))
+    page, count = list(user_repo.get_by_filters_paged([], 1, 4))
     assert page == users[1:5]
+    assert count == 11
 
-    page = list(user_repo.get_page(8, 5))
+    page, count = list(user_repo.get_by_filters_paged([], 8, 5))
     assert page == users[8:]
+    assert count == 11
 
-    page = list(user_repo.get_page(20, 20))
+    page, count = list(user_repo.get_by_filters_paged([], 20, 20))
     assert page == []
+    assert count == 11
 
-    page = list(user_repo.get_page(0, 0))
+    page, count = list(user_repo.get_by_filters_paged([], 0, 0))
     assert page == users
+    assert count == 11
 
 
 def test_user_get_page_deleted(user_repo, account, db):
@@ -355,14 +360,17 @@ def test_user_get_page_deleted(user_repo, account, db):
 
     # Unsure sqlalchemy always returns lists... just gather from its sequences
     # into lists, to make sure we can compare them.
-    page = list(user_repo.get_page(0, 3, DeletionPolicy.NOT_DELETED))
+    page, count = list(user_repo.get_by_filters_paged([], 0, 3, DeletionPolicy.NOT_DELETED))
     assert page == [users[0], users[1], users[3]]
+    assert count == 8
 
-    page = list(user_repo.get_page(0, 3, DeletionPolicy.DELETED))
+    page, count = list(user_repo.get_by_filters_paged([], 0, 3, DeletionPolicy.DELETED))
     assert page == [users[2], users[6], users[8]]
+    assert count == 3
 
-    page = list(user_repo.get_page(0, 3, DeletionPolicy.ANY))
+    page, count = list(user_repo.get_by_filters_paged([], 0, 3, DeletionPolicy.ANY))
     assert page == users[:3]
+    assert count == 11
 
 
 def test_user_get_member_permissions(user_repo, account, db):
@@ -378,16 +386,23 @@ def test_user_get_member_permissions(user_repo, account, db):
     assert not perms.share_read
     assert perms.share_write
 
+    # Get by ID
+    perms = user_repo.get_member_permissions(u2.user_id, account.group)
+    assert perms.read
+    assert not perms.write
+    assert not perms.share_read
+    assert perms.share_write
+
 
 def test_user_get_member_permissions_not_exist(user_repo, account):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
 
     with pytest.raises(Exception):
-        user_repo.get_member_permissions(u2, account.group)
+        user_repo.get_member_permissions(u2, account.group.group_id)
 
     with pytest.raises(Exception):
-        user_repo.get_member_permissions(account.user, g2)
+        user_repo.get_member_permissions(account.user.user_id, g2)
 
     with pytest.raises(Exception):
         user_repo.get_member_permissions(u2, g2)
@@ -396,6 +411,14 @@ def test_user_get_member_permissions_not_exist(user_repo, account):
 def test_user_get_manager_permissions(user_repo, account):
 
     mgr = user_repo.get_manager_permissions(account.user, account.group)
+
+    assert mgr.user == account.user
+    assert mgr.group == account.group
+    assert mgr.admin
+    assert mgr.owner
+
+    # Get by ID
+    mgr = user_repo.get_manager_permissions(account.user.user_id, account.group)
 
     assert mgr.user == account.user
     assert mgr.group == account.group
@@ -411,7 +434,7 @@ def test_user_get_manager_permissions_not_exist(user_repo, account):
         user_repo.get_manager_permissions(u2, account.group)
 
     with pytest.raises(Exception):
-        user_repo.get_manager_permissions(account.user, g2)
+        user_repo.get_manager_permissions(account.user.user_id, g2)
 
 
 def test_user_get_manager_permissions_not_manager(user_repo, account, db):
@@ -422,111 +445,3 @@ def test_user_get_manager_permissions_not_manager(user_repo, account, db):
     mgr = user_repo.get_manager_permissions(u2, account.group)
 
     assert not mgr
-
-
-def test_user_set_member_permissions(user_repo, account, db):
-
-    user_repo.set_member_permissions(
-        account.user,
-        account.group,
-        read=True,
-        write=False,
-        share_read=False,
-        share_write=True,
-    )
-    db.session.commit()
-
-    membership = user_repo.get_member_permissions(account.user, account.group)
-    assert membership.read
-    assert not membership.write
-    assert not membership.share_read
-    assert membership.share_write
-
-    # Leave some perms None and ensure they don't change
-    user_repo.set_member_permissions(
-        account.user, account.group, read=False, share_read=True
-    )
-    db.session.commit()
-
-    membership = user_repo.get_member_permissions(account.user, account.group)
-    assert not membership.read
-    assert not membership.write
-    assert membership.share_read
-    assert membership.share_write
-
-
-def test_user_set_member_permissions_membership_not_exist(
-    user_repo, group_repo, account, db
-):
-
-    u2 = User("user2", "password2", "user2@example.org")
-    g2 = Group("group2", u2)
-    group_repo.create(g2)
-    db.session.commit()
-
-    with pytest.raises(Exception):
-        user_repo.set_member_permissions(
-            u2,
-            account.group,
-            read=False,
-            write=True,
-            share_read=True,
-            share_write=False,
-        )
-
-
-def test_user_set_member_permissions_user_group_not_exist(user_repo, account):
-
-    u2 = User("user2", "password2", "user2@example.org")
-    g2 = Group("group2", u2)
-
-    with pytest.raises(Exception):
-        user_repo.set_member_permissions(u2, account.group)
-
-    with pytest.raises(Exception):
-        user_repo.set_member_permissions(account.user, g2)
-
-
-def test_user_set_manager_permissions(user_repo, account, db):
-
-    user_repo.set_manager_permissions(
-        account.user, account.group, owner=False, admin=True
-    )
-    db.session.commit()
-
-    manager = user_repo.get_manager_permissions(account.user, account.group)
-
-    assert not manager.owner
-    assert manager.admin
-
-    # Leave some perms None and ensure they don't change
-    user_repo.set_manager_permissions(account.user, account.group, admin=False)
-    db.session.commit()
-
-    manager = user_repo.get_manager_permissions(account.user, account.group)
-
-    assert not manager.owner
-    assert not manager.admin
-
-
-def test_user_set_manager_permissions_managership_not_exist(user_repo, account, db):
-
-    # u2 is a regular member, not a manager
-    u2 = User("user2", "password2", "user2@example.org")
-    user_repo.create(u2, account.group)
-    db.session.commit()
-
-    with pytest.raises(Exception):
-        user_repo.set_manager_permissions(u2, account.group)
-
-
-def test_user_set_manager_permissions_user_group_not_exist(user_repo, account):
-
-    u2 = User("user2", "password2", "user2@example.org")
-    g2 = Group("group2", u2)
-
-    with pytest.raises(Exception):
-        user_repo.set_manager_permissions(u2, account.group)
-
-    with pytest.raises(Exception):
-        user_repo.set_manager_permissions(account.user, g2)

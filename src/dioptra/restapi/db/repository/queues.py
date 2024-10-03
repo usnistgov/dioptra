@@ -182,7 +182,7 @@ class QueueRepository:
         Get the latest snapshot of the given queue resource.
 
         Args:
-            resource_ids: An ID or iterable of IDs of queue resource IDs
+            resource_ids: A single or iterable of queue resource IDs
             deletion_policy: Whether to look at deleted queues, non-deleted
                 queue, or all queues
 
@@ -290,14 +290,15 @@ class QueueRepository:
         deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
     ) -> tuple[Sequence[Queue], int]:
         """
-        Get a page of queues according to more complex criteria.
+        Get some queues according to search criteria.
 
         Args:
             group: Limit queues to those owned by this group; None to not limit
                 the search
             filters: Search criteria, see parse_search_text()
             page_start: Zero-based row index where the page should start
-            page_length: Maximum number of rows in the page
+            page_length: Maximum number of rows in the page; use <= 0 for
+                unlimited length
             sort_by: Sort criterion; must be a key of SORTABLE_FIELDS.  None
                 to sort in an implementation-dependent way.
             descending: Whether to sort in descending order; only applicable
@@ -364,7 +365,9 @@ class QueueRepository:
                 sort_criteria = Queue.resource_snapshot_id
             page_stmt = page_stmt.order_by(sort_criteria)
 
-            page_stmt = page_stmt.offset(page_start).limit(page_length)
+            page_stmt = page_stmt.offset(page_start)
+            if page_length > 0:
+                page_stmt = page_stmt.limit(page_length)
 
             queues = self.session.scalars(page_stmt).all()
 

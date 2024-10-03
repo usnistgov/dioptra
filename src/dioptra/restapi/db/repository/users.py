@@ -35,6 +35,8 @@ from dioptra.restapi.db.repository.utils import (
     assert_user_exists,
     check_user_collision,
     construct_sql_query_filters,
+    get_group_id,
+    get_user_id,
     user_exists,
 )
 
@@ -229,7 +231,8 @@ class UserRepository:
             filters: A structure representing search criteria.  See
                 parse_search_text().
             page_start: A row index where the returned page should start
-            page_length: A row count representing the page length
+            page_length: A row count representing the page length; use <= 0
+                for unlimited length
             deletion_policy: Whether to look at deleted users, non-deleted
                 users, or all users
 
@@ -258,7 +261,9 @@ class UserRepository:
             page_stmt = _apply_deletion_policy(page_stmt, deletion_policy)
             # *must* enforce a sort order for consistent paging
             page_stmt = page_stmt.order_by(User.user_id)
-            page_stmt = page_stmt.offset(page_start).limit(page_length)
+            page_stmt = page_stmt.offset(page_start)
+            if page_length > 0:
+                page_stmt = page_stmt.limit(page_length)
 
             users = self.session.scalars(page_stmt).all()
 
@@ -289,47 +294,15 @@ class UserRepository:
 
         return num_users
 
-    def get_page(
-        self,
-        page_start: int,
-        page_length: int,
-        deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
-    ) -> Sequence[User]:
-        """
-        Get a "page" of users.  The page start is a user index (not a page
-        index).  Use index zero to start at the beginning.  Using a page start
-        that's beyond the last user will result in an empty sequence, not an
-        error.  The number of users returned will not be larger than
-        page_length (if it is > 0), but might be smaller.
-
-        Args:
-            page_start: A user start index (use 0 for the first page)
-            page_length: Page length, in terms of number of users per page.
-                If <= 0, don't limit page length (get all remaining users)
-            deletion_policy: Whether to look at deleted users, non-deleted
-                users, or all users
-
-        Returns:
-            A sequence of users
-        """
-        stmt = sa.select(User)
-        stmt = _apply_deletion_policy(stmt, deletion_policy)
-
-        # *must* enforce a sort order for consistent paging
-        stmt = stmt.order_by(User.user_id).offset(page_start)
-
-        if page_length > 0:
-            stmt = stmt.limit(page_length)
-
-        return self.session.scalars(stmt).all()
-
-    def get_member_permissions(self, user: User, group: Group) -> GroupMember | None:
+    def get_member_permissions(
+        self, user: User | int, group: Group | int
+    ) -> GroupMember | None:
         """
         Get a user's permissions with respect to the given group.
 
         Args:
-            group: A group
-            user: A user
+            group: A Group object or group_id integer primary key value
+            user: A User object or user_id integer primary key value
 
         Returns:
             A GroupMember object which contains the permissions, or None if
@@ -341,17 +314,22 @@ class UserRepository:
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
         assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
 
-        membership = self.session.get(GroupMember, (user.user_id, group.group_id))
+        group_id = get_group_id(group)
+        user_id = get_user_id(user)
+
+        membership = self.session.get(GroupMember, (user_id, group_id))
 
         return membership
 
-    def get_manager_permissions(self, user: User, group: Group) -> GroupManager | None:
+    def get_manager_permissions(
+        self, user: User | int, group: Group | int
+    ) -> GroupManager | None:
         """
         Get a user's group manager permissions with respect to the given group.
 
         Args:
-            group: A group
-            user: A user
+            group: A Group object or group_id integer primary key value
+            user: A User object or user_id integer primary key value
 
         Returns:
             A GroupManager object which contains the permissions, or None if
@@ -363,101 +341,12 @@ class UserRepository:
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
         assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
 
-        manager = self.session.get(GroupManager, (user.user_id, group.group_id))
+        group_id = get_group_id(group)
+        user_id = get_user_id(user)
+
+        manager = self.session.get(GroupManager, (user_id, group_id))
 
         return manager
-
-    def set_member_permissions(
-        self,
-        user: User,
-        group: Group,
-        read: bool | None = None,
-        write: bool | None = None,
-        share_read: bool | None = None,
-        share_write: bool | None = None,
-    ) -> None:
-        """
-        Set a user's permissions with respect to the given group.  Use None as
-        a permission value if needed, to leave a permission as-is.
-
-        Args:
-            group: A group
-            user: A user
-            read: The read permission to set
-            write: The write permission to set
-            share_read: The share_read permission to set
-            share_write: The share_write permission to set
-
-        Raises:
-            Exception: If the user or group don't exist, or if the given user
-                is not a member of the given group
-        """
-
-        # TODO: is this method really necessary?  Users could call
-        #     get_member_permissions() to get a GroupMember object and then
-        #     modify permissions themselves.
-
-        assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
-        assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
-
-        membership = self.session.get(GroupMember, (user.user_id, group.group_id))
-
-        if membership:
-            if read is not None:
-                membership.read = read
-            if write is not None:
-                membership.write = write
-            if share_read is not None:
-                membership.share_read = share_read
-            if share_write is not None:
-                membership.share_write = share_write
-
-        else:
-            raise Exception(
-                f"Not a member: user={user.user_id}, group={group.group_id}"
-            )
-
-    def set_manager_permissions(
-        self,
-        user: User,
-        group: Group,
-        owner: bool | None = None,
-        admin: bool | None = None,
-    ) -> None:
-        """
-        Set a manager's permissions with respect to the given group.  Use None
-        as a permission value if needed, to leave a permission as-is.
-
-        Args:
-            group: A group
-            user: A user
-            owner: The owner permission to set
-            admin: The admin permission to set
-
-        Raises:
-            Exception: if the user or group don't exist, or if the given user
-                is not a manager of the given group
-        """
-
-        # TODO: is this method really necessary?  Users could call
-        #     get_manager_permissions() to get a GroupManager object and then
-        #     modify permissions themselves.
-
-        assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
-        assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
-
-        manager = self.session.get(GroupManager, (user.user_id, group.group_id))
-
-        if manager:
-            if owner is not None:
-                manager.owner = owner
-            if admin is not None:
-                manager.admin = admin
-
-        else:
-            raise Exception(
-                f"Not a manager: user={user.user_id}, group={group.group_id}"
-            )
 
 
 def _apply_deletion_policy(
