@@ -20,6 +20,7 @@
 """
 from __future__ import annotations
 
+import http
 import typing
 from io import StringIO
 
@@ -70,19 +71,6 @@ class DioptraError(Exception):
             else:
                 self.message = f"{self.message} Cause: {self.__cause__}"
         return self.message
-
-
-class SubmissionError(DioptraError):
-    """The submission input is in error.
-    Args:
-        type: the resource type
-        action: the action
-    """
-
-    def __init__(self, type: str, action: str):
-        super().__init__(f"Input Error while attempting to {action} for {type}.")
-        self.resource_type = type
-        self.action = action
 
 
 class EntityDoesNotExistError(DioptraError):
@@ -141,13 +129,6 @@ class ReadOnlyLockError(LockError):
         super().__init__(buffer.getvalue())
         self.entity_type = type
         self.entity_attributes = kwargs
-
-
-class QueueLockedError(LockError):
-    """The requested queue is locked."""
-
-    def __init__(self, type: str, **kwargs: typing.Any):
-        super().__init__("The requested queue is locked.")
 
 
 class BackendDatabaseError(DioptraError):
@@ -296,28 +277,15 @@ class UserPasswordError(DioptraError):
         super().__init__(message)
 
 
-STATUS_MESSAGE: typing.Final[dict[int, str]] = {
-    400: "Bad Request",
-    401: "Unauthorized",
-    403: "Forbidden",
-    404: "Not Found",
-    409: "Bad Request",
-    422: "Unprocessable Content",
-    500: "Internal Error",
-    501: "Not Implemented",
-}
-
-
 def error_result(
-    error: DioptraError, status: int, detail: dict[str, typing.Any]
+    error: DioptraError, status: http.HTTPStatus, detail: dict[str, typing.Any]
 ) -> tuple[dict[str, typing.Any], int]:
-    prefix = STATUS_MESSAGE.get(status, "Error")
     return {
         "error": error.__class__.__name__,
-        "message": f"{prefix} - {error.message}",
+        "message": f"{status.phrase} - {error.message}",
         "detail": detail,
         "originating_path": request.full_path,
-    }, status
+    }, status.value
 
 
 # Silenced Complexity error for this function since it is a straitfoward registration of
@@ -336,7 +304,9 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             "Entity not found", entity_type=error.entity_type, **error.entity_attributes
         )
         return error_result(
-            error, 404, {"entity_type": error.entity_type, **error.entity_attributes}
+            error,
+            http.HTTPStatus.NOT_FOUND,
+            {"entity_type": error.entity_type, **error.entity_attributes},
         )
 
     @api.errorhandler(EntityExistsError)
@@ -349,7 +319,7 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         )
         return error_result(
             error,
-            409,
+            http.HTTPStatus.CONFLICT,
             {
                 "entity_type": error.entity_type,
                 "existing_id": error.existing_id,
@@ -360,51 +330,53 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     @api.errorhandler(BackendDatabaseError)
     def handle_backend_database_error(error: BackendDatabaseError):
         log.error(error.to_message())
-        return error_result(error, 500, {})
+        return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
 
     @api.errorhandler(SearchNotImplementedError)
     def handle_search_not_implemented_error(error: SearchNotImplementedError):
         log.debug(error.to_message())
-        return error_result(error, 501, {})
+        return error_result(error, http.HTTPStatus.NOT_IMPLEMENTED, {})
 
     @api.errorhandler(SearchParseError)
     def handle_search_parse_error(error: SearchParseError):
         log.debug(error.to_message())
         return error_result(
-            error, 422, {"query": error.args[0], "reason": error.args[1]}
+            error,
+            http.HTTPStatus.UNPROCESSABLE_ENTITY,
+            {"query": error.args[0], "reason": error.args[1]},
         )
 
     @api.errorhandler(DraftDoesNotExistError)
     def handle_draft_does_not_exist(error: DraftDoesNotExistError):
         log.debug(error.to_message())
-        return error_result(error, 404, {})
+        return error_result(error, http.HTTPStatus.NOT_FOUND, {})
 
     @api.errorhandler(DraftAlreadyExistsError)
     def handle_draft_already_exists(error: DraftAlreadyExistsError):
         log.debug(error.to_message())
-        return error_result(error, 400, {})
+        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
 
     @api.errorhandler(LockError)
     def handle_lock_error(error: LockError):
         log.debug(error.to_message())
-        return error_result(error, 403, {})
+        return error_result(error, http.HTTPStatus.FORBIDDEN, {})
 
     @api.errorhandler(NoCurrentUserError)
     def handle_no_current_user_error(error: NoCurrentUserError):
         log.debug(error.to_message())
-        return error_result(error, 401, {})
+        return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
 
     @api.errorhandler(UserPasswordChangeError)
     def handle_password_change_error(error: UserPasswordChangeError):
         log.debug(error.to_message())
-        return error_result(error, 403, {})
+        return error_result(error, http.HTTPStatus.FORBIDDEN, {})
 
     @api.errorhandler(UserPasswordError)
     def handle_user_password_error(error: UserPasswordError):
         log.debug(error.to_message())
-        return error_result(error, 401, {})
+        return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
 
     @api.errorhandler(DioptraError)
     def handle_base_error(error: DioptraError):
         log.debug(error.to_message())
-        return error_result(error, 400, {})
+        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
