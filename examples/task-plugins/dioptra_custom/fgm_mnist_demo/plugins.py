@@ -25,6 +25,9 @@ import pandas as pd
 import scipy.stats
 import structlog
 from structlog.stdlib import BoundLogger
+from tensorflow.keras.preprocessing.image import (
+    DirectoryIterator
+)
 
 from dioptra import pyplugs
 from .tensorflow import get_optimizer, get_model_callbacks, get_performance_metrics, evaluate_metrics_tensorflow
@@ -44,6 +47,7 @@ from .metrics_distance import get_distance_metric_list
 from .attacks_fgm import fgm
 from .artifacts_mlflow import upload_directory_as_tarball_artifact, upload_data_frame_artifact, download_all_artifacts
 from .defenses_image_preprocessing import create_defended_dataset
+from .attacks_patch import create_adversarial_patches, create_adversarial_patch_dataset
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -125,11 +129,12 @@ def load_model(
     model_version: int | None = None,
     imagenet_preprocessing: bool = False,
     art: bool = False,
+    image_size: Any = None,
     classifier_kwargs: Optional[Dict[str, Any]] = None
 ):
     uri = get_uri_for_model(model_name, model_version)
     if (art):
-        classifier = load_wrapped_tensorflow_keras_classifier(uri, imagenet_preprocessing, classifier_kwargs)
+        classifier = load_wrapped_tensorflow_keras_classifier(uri, imagenet_preprocessing, image_size, classifier_kwargs)
     else:
         classifier = load_tensorflow_keras_classifier(uri)
     return classifier
@@ -194,33 +199,26 @@ def load_artifacts(
         extract_tarfile(extract)
 
 @pyplugs.register
-def attack(
+def attack_fgm(
     dataset: Any,
-    data_dir: str,
     adv_data_dir: Union[str, Path],
     classifier: Any,
-    image_size: Tuple[int, int, int],
     distance_metrics: List[Dict[str, str]],
-    rescale: float = 1.0 / 255,
     batch_size: int = 32,
-    label_mode: str = "categorical",
     eps: float = 0.3,
     eps_step: float = 0.1,
     minimal: bool = False,
     norm: Union[int, float, str] = np.inf,
 ):
-    make_directories([adv_data_dir] )
+    '''generate fgm examples'''
+    make_directories([adv_data_dir])
     distance_metrics_list = get_distance_metric_list(distance_metrics)
     fgm_dataset = fgm(
         data_flow=dataset,
-        data_dir=data_dir,
         adv_data_dir=adv_data_dir,
         keras_classifier=classifier,
-        image_size=image_size,
         distance_metrics_list=distance_metrics_list,
-        rescale=rescale,
         batch_size=batch_size,
-        label_mode=label_mode,
         eps=eps,
         eps_step=eps_step,
         minimal=minimal,
@@ -228,6 +226,67 @@ def attack(
     )
     return fgm_dataset
 
+@pyplugs.register()
+def attack_patch(
+    data_flow: Any,
+    adv_data_dir: Union[str, Path],
+    model: Any,
+    patch_target: int,
+    num_patch: int,
+    num_patch_samples: int,
+    rotation_max: float,
+    scale_min: float,
+    scale_max: float,
+    learning_rate: float,
+    max_iter: int,
+    patch_shape: Tuple,
+):
+    '''generate patches'''
+    make_directories([adv_data_dir])
+    create_adversarial_patches(    
+        data_flow=data_flow,
+        adv_data_dir=adv_data_dir,
+        keras_classifier=model,
+        patch_target=patch_target,
+        num_patch=num_patch,
+        num_patch_samples=num_patch_samples,
+        rotation_max=rotation_max,
+        scale_min=scale_min,
+        scale_max=scale_max,
+        learning_rate=learning_rate,
+        max_iter=max_iter,
+        patch_shape=patch_shape,
+    )
+
+@pyplugs.register()
+def augment_patch(
+    data_flow: Any,
+    adv_data_dir: Union[str, Path],
+    patch_dir: str,
+    model: Any,
+    patch_shape: Tuple,
+    distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
+    batch_size: int = 32,
+    patch_scale: float = 0.4,
+    rotation_max: float = 22.5,
+    scale_min: float = 0.1,
+    scale_max: float = 1.0,
+):
+    '''add patches to a dataset'''
+    make_directories([adv_data_dir])
+    create_adversarial_patch_dataset(
+        data_flow=data_flow,
+        adv_data_dir=adv_data_dir,
+        patch_dir=patch_dir,
+        keras_classifier=model,
+        patch_shape=patch_shape,
+        distance_metrics_list=distance_metrics_list,
+        batch_size=batch_size,
+        patch_scale=patch_scale,
+        rotation_max=rotation_max,
+        scale_min=scale_min,
+        scale_max=scale_max
+    )
 @pyplugs.register
 def compute_metrics(
     classifier: Any,

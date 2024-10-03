@@ -40,18 +40,21 @@ types:
 parameters:
   data_dir: /dioptra/data/Mnist/testing
   image_size: [28, 28, 1]
-  adv_tar_name: testing_adversarial_fgm.tar.gz
-  adv_data_dir: adv_testing
-  distance_metrics_filename: distance_metrics.csv
+  adv_tar_name: adversarial_patch.tar.gz
+  adv_data_dir: adv_patches
   model_name: mnist_classifier
   model_version: -1
   clip_values: [0, 1]
-  batch_size: 32
-  eps: 0.3
-  eps_step: 0.1
-  minimal: false
-  norm: "inf"
   seed: -1
+  patch_target: -1
+  num_patch: 1
+  rotation_max: 22.5
+  scale_min: 0.1
+  scale_max: 1.0
+  learning_rate: 5.0
+  max_iter: 500
+  patch_shape: [2, 2, 1]
+  batch_size: 10
 
 tasks:
   load_dataset:
@@ -113,33 +116,22 @@ tasks:
     outputs:
       classifier: classifier
 
-  attack_fgm:
-    plugin: dioptra_custom.fgm_mnist_demo.plugins.attack_fgm
+  attack_patch:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.attacks_patch
     inputs:
-      - dataset: any
+      - data_flow: directory_iterator
       - adv_data_dir: path_string
-      - classifier: any
-      - distance_metrics: distance_metrics_requests
-      - name: rescale
-        type: number
-        required: false
-      - name: batch_size
-        type: integer
-        required: false
-      - name: eps
-        type: number
-        required: false
-      - name: eps_step
-        type: number
-        required: false
-      - name: minimal
-        type: boolean
-        required: false
-      - name: norm
-        type: norm
-        required: false
-    outputs:
-      ret: artifact
+      - model: any
+      - patch_target: integer
+      - num_patch: integer
+      - num_patch_samples: integer
+      - rotation_max: number
+      - scale_min: number
+      - scale_max: number
+      - learning_rate: number
+      - max_iter: integer
+      - patch_shape: any
+
   save_artifacts_and_models:
     plugin: dioptra_custom.fgm_mnist_demo.plugins.save_artifacts_and_models
     inputs:
@@ -164,35 +156,25 @@ graph:
       model_name: $model_name
       model_version: $model_version
       art: true
+      image_size: $image_size
       classifier_kwargs:
         clip_values: $clip_values
 
 
-  fgm:
-    attack_fgm:
-      dataset: $dataset.testing
+  gen_patches:
+    attack_patch:
+      data_flow: $dataset.testing
       adv_data_dir: $adv_data_dir
-      classifier: $model
-      batch_size: $batch_size
-      eps: $eps
-      eps_step: $eps_step
-      minimal: $minimal
-      norm: $norm
-      distance_metrics:
-        - name: l_infinity_norm
-          func: l_inf_norm
-        - name: l_1_norm
-          func: l_1_norm
-        - name: l_2_norm
-          func: l_2_norm
-        - name: cosine_similarity
-          func: paired_cosine_similarities
-        - name: euclidean_distance
-          func: paired_euclidean_distances
-        - name: manhattan_distance
-          func: paired_manhattan_distances
-        - name: wasserstein_distance
-          func: paired_wasserstein_distances
+      model: $model
+      patch_target: $patch_target
+      num_patch: $num_patch
+      num_patch_samples: $batch_size
+      rotation_max: $rotation_max
+      scale_min: $scale_min
+      scale_max: $scale_max
+      learning_rate: $learning_rate
+      max_iter: $max_iter
+      patch_shape: $patch_shape
 
   save:
     save_artifacts_and_models:
@@ -200,11 +182,5 @@ graph:
         - type: tarball
           adv_data_dir: $adv_data_dir
           adv_tar_name: $adv_tar_name
-        - type: dataframe
-          data_frame: $fgm
-          file_name: $distance_metrics_filename
-          file_format: csv.gz
-          file_format_kwargs:
-            index: false
     dependencies:
-      - fgm
+      - gen_patches

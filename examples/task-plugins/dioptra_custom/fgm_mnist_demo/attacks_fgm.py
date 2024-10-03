@@ -79,14 +79,10 @@ except ImportError:  # pragma: nocover
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def fgm(
     data_flow: Any,
-    data_dir: str,
     adv_data_dir: Union[str, Path],
     keras_classifier: TensorFlowV2Classifier,
-    image_size: Tuple[int, int, int],
     distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
-    rescale: float = 1.0 / 255,
     batch_size: int = 32,
-    label_mode: str = "categorical",
     eps: float = 0.3,
     eps_step: float = 0.1,
     minimal: bool = False,
@@ -150,7 +146,6 @@ def fgm(
         minimal=minimal,
         norm=norm,
     )
-    print(data_flow)
 
     num_images = data_flow.n
     img_filenames = [Path(x) for x in data_flow.filenames]

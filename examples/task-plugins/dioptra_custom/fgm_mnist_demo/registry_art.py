@@ -63,6 +63,7 @@ except ImportError:  # pragma: nocover
 def load_wrapped_tensorflow_keras_classifier(
     artifact_uri: str,
     imagenet_preprocessing: bool = False,
+    image_size: Any = None,
     classifier_kwargs: Optional[Dict[str, Any]] = None,
 ) -> TensorFlowV2Classifier:
     """Loads and wraps a registered Keras classifier for compatibility with the |ART|.
@@ -85,7 +86,7 @@ def load_wrapped_tensorflow_keras_classifier(
         uri=artifact_uri
     )
     nb_classes = keras_classifier.output_shape[1]
-    input_shape = keras_classifier.input_shape
+    input_shape = keras_classifier.input_shape if image_size == None else image_size
     loss_object = losses.get(keras_classifier.loss)
     preprocessing = (
         (np.array([103.939, 116.779, 123.680]), np.array([1.0, 1.0, 1.0]))
