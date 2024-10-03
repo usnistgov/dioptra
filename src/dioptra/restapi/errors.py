@@ -22,6 +22,8 @@ from __future__ import annotations
 
 from flask_restx import Api
 
+from dioptra.restapi.db.shared_errors import ResourceDeletedError, ResourceNotFoundError
+
 
 class BackendDatabaseError(Exception):
     """The backend database returned an unexpected response."""
@@ -104,3 +106,19 @@ def register_error_handlers(api: Api) -> None:
     v1.queues.errors.register_error_handlers(api)
     v1.tags.errors.register_error_handlers(api)
     v1.users.errors.register_error_handlers(api)
+
+    # Temporary, until exception revamp is complete.  These apply to all
+    # resource types, therefore they don't belong with any single family of
+    # endpoints.
+    api.errorhandler(ResourceNotFoundError)(_handle_resource_does_not_exist_error)
+    api.errorhandler(ResourceDeletedError)(_handle_resource_deleted_error)
+
+
+def _handle_resource_does_not_exist_error(error: ResourceNotFoundError):
+    resource_type = error.resource_type or "resource"
+    return {"message": f"Not Found - The requested {resource_type} does not exist"}, 404
+
+
+def _handle_resource_deleted_error(error: ResourceDeletedError):
+    resource_type = error.resource_type or "resource"
+    return {"message": f"Not Found - The requested {resource_type} is deleted"}, 404

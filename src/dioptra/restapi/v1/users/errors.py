@@ -19,6 +19,11 @@ from __future__ import annotations
 
 from flask_restx import Api
 
+from dioptra.restapi.db.repository.errors import (
+    UserEmailNotAvailableError,
+    UsernameNotAvailableError,
+)
+
 
 class NoCurrentUserError(Exception):
     """There is no currently logged-in user."""
@@ -38,14 +43,6 @@ class UserPasswordExpiredError(Exception):
 
 class UserPasswordVerificationError(Exception):
     """Password verification failed."""
-
-
-class UsernameNotAvailableError(Exception):
-    """The username is not available."""
-
-
-class UserEmailNotAvailableError(Exception):
-    """The email address is not available."""
 
 
 class UserDoesNotExistError(Exception):

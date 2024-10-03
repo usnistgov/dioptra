@@ -19,9 +19,7 @@ from __future__ import annotations
 
 from flask_restx import Api
 
-
-class QueueAlreadyExistsError(Exception):
-    """The queue name already exists."""
+from dioptra.restapi.db.repository.errors import QueueAlreadyExistsError, QueueSortError
 
 
 class QueueDoesNotExistError(Exception):
@@ -30,10 +28,6 @@ class QueueDoesNotExistError(Exception):
 
 class QueueLockedError(Exception):
     """The requested queue is locked."""
-
-
-class QueueSortError(Exception):
-    """The requested sortBy column is not a sortable field."""
 
 
 def register_error_handlers(api: Api) -> None:
