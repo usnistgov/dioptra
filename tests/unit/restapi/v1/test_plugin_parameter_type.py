@@ -130,9 +130,12 @@ def assert_retrieving_plugin_parameter_types_works(
 
 def assert_sorting_plugin_parameter_type_works(
     client: FlaskClient,
-    sortBy: str,
-    descending: bool,
     expected: list[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that plugin parameter types can be sorted by column ascending/descending.
 
@@ -148,8 +151,21 @@ def assert_sorting_plugin_parameter_type_works(
 
     query_string: dict[str, Any] = {}
 
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
+    if descending is not None:
+        query_string["descending"] = descending
+
+    if sort_by is not None:
+        query_string["sortBy"] = sort_by
+
+    if group_id is not None:
+        query_string["groupId"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["pageLength"] = paging_info["page_length"]
 
     response = client.get(
         f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
@@ -467,7 +483,7 @@ def test_get_all_plugin_parameter_types(
 
 
 @pytest.mark.parametrize(
-    "sortBy, descending , expected",
+    "sort_by, descending , expected",
     [
         (
             None,
@@ -501,7 +517,7 @@ def test_plugin_parameter_type_sort(
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
-    sortBy: str,
+    sort_by: str | None,
     descending: bool,
     expected: list[str],
 ) -> None:
@@ -522,7 +538,7 @@ def test_plugin_parameter_type_sort(
         for expected_name in expected
     ]
     assert_sorting_plugin_parameter_type_works(
-        client, sortBy, descending, expected=expected_ids
+        client, sort_by=sort_by, descending=descending, expected=expected_ids
     )
 
 

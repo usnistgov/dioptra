@@ -17,7 +17,6 @@
 """Fixtures representing resources needed for test suites"""
 import textwrap
 from collections.abc import Iterator
-from pathlib import Path
 from typing import Any, cast
 
 import pytest

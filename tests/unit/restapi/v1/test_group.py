@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Test suite for group operations.
+
 This module contains a set of tests that validate the CRUD operations and additional
 functionalities for the group entity. The tests ensure that the groups can be
 registered, queried, and renamed as expected through the REST API.
