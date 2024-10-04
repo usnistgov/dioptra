@@ -27,10 +27,10 @@ T = TypeVar("T")
 
 
 class AuthCollectionClient(CollectionClient[T]):
-    """The client for interacting with the Dioptra API's auth endpoint.
+    """The client for managing Dioptra's /auth collection.
 
     Attributes:
-        name: The name of the endpoint.
+        name: The name of the collection managed by the client.
     """
 
     name: ClassVar[str] = "auth"

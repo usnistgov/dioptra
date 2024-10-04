@@ -379,7 +379,7 @@ class CollectionClient(Generic[T]):
     """The interface for an API collection client.
 
     Attributes:
-        name: The name of the collection.
+        name: The name of the collection managed by the client.
     """
 
     name: ClassVar[str]
@@ -399,6 +399,12 @@ class CollectionClient(Generic[T]):
 
 
 class SubCollectionClient(Generic[T]):
+    """The interface for an API sub-collection client.
+
+    Attributes:
+        name: The name of the sub-collection managed by the client.
+    """
+
     name: ClassVar[str]
 
     def __init__(
@@ -407,6 +413,18 @@ class SubCollectionClient(Generic[T]):
         root_collection: CollectionClient[T],
         parent_sub_collections: list["SubCollectionClient[T]"] | None = None,
     ) -> None:
+        """Initialize the SubCollectionClient instance.
+
+        Args:
+            session: The Dioptra API session object.
+            root_collection: The client for the root collection that owns this
+                sub-collection.
+            parent_sub_collections: An ordered list of parent sub-collection clients
+                that own this sub-collection and are also owned by the root collection.
+                For example, a client for the hypothetical
+                /col/{id1}/subColA/{id2}/subColB sub-collection would list the client
+                for subColA as the parent sub-collection.
+        """
         self._session = session
         self._root_collection = root_collection
         self._parent_sub_collections: list["SubCollectionClient[T]"] = (
@@ -414,17 +432,36 @@ class SubCollectionClient(Generic[T]):
         )
 
     def build_sub_collection_url(self, *resource_ids: str | int) -> str:
+        """Build a sub-collection URL owned by one or more parent resources.
+
+        Args:
+            *resource_ids: The parent resource IDs that own the sub-collection.
+
+        Returns:
+            The joined sub-collection URL.
+
+        Raises:
+            SubCollectionUrlError: If the number of resource IDs does not match the
+                expected count. For example, a client for the hypothetical
+                /col/{id1}/subColA/{id2}/subColB sub-collection would expect 2 resource
+                IDs.
+        """
+        # Running example for hypothetical URL: /col/{id1}/subColA/{id2}/subColB
         self._validate_resource_ids_count(resource_ids)
+        # Builds the URL root (ex: /col/{id1})
         parent_url_parts: list[str] = [
             self._root_collection.url,
             str(resource_ids[0]),
         ]
 
+        # Builds the parent sub-collection parts (ex: /subColA/{id2})
         for resource_id, parent_sub_collection in zip(
             resource_ids[1:], self._parent_sub_collections
         ):
             parent_url_parts.extend([parent_sub_collection.name, str(resource_id)])
 
+        # Joins the root and parent parts with the sub-collection name
+        # (ex: /col/{id1}/subColA/{id2}/subColB)
         return self._session.build_url(*parent_url_parts, self.name)
 
     def _validate_resource_ids_count(self, resource_ids: tuple[str | int, ...]) -> None:
