@@ -250,8 +250,7 @@ class ResourceDraftsIdService(object):
 
         if draft is None:
             if error_if_not_found:
-                log.debug("Draft not found", draft_resource_id=draft_id)
-                raise DraftDoesNotExistError
+                raise DraftDoesNotExistError(draft_resource_id=draft_id)
 
             return None
 
@@ -372,8 +371,7 @@ class ResourceIdDraftService(object):
 
         if draft is None:
             if error_if_not_found:
-                log.debug("Draft not found", resource_id=resource_id)
-                raise DraftDoesNotExistError
+                raise DraftDoesNotExistError(resource_id=resource_id)
 
             return None, num_other_drafts
 

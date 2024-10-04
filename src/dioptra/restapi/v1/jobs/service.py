@@ -30,17 +30,23 @@ from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import (
     BackendDatabaseError,
     EntityDoesNotExistError,
-    EntryPointNotRegisteredToExperimentError,
+    EntityNotRegisteredError,
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
-    QueueNotRegisteredToEntryPointError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entrypoints.service import (
+    RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
+)
 from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
+from dioptra.restapi.v1.experiments.service import (
+    RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
+)
 from dioptra.restapi.v1.experiments.service import ExperimentIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
+from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdService
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
@@ -160,12 +166,12 @@ class JobService(object):
         )
 
         if entrypoint_id not in set(experiment_entry_point_ids):
-            log.debug(
-                "Entry point not registered to experiment",
-                entrypoint_id=entrypoint_id,
-                experiment_id=experiment_id,
+            raise EntityNotRegisteredError(
+                EXPERIMENT_RESOURCE_TYPE,
+                experiment_id,
+                ENTRYPOINT_RESOURCE_TYPE,
+                entrypoint_id,
             )
-            raise EntryPointNotRegisteredToExperimentError
 
         # Validate that the provided queue_id is registered to the entrypoint
         parent_entry_point = aliased(models.EntryPoint)
@@ -188,12 +194,9 @@ class JobService(object):
         )
 
         if queue_id not in set(entry_point_queue_ids):
-            log.debug(
-                "Queue not registered to entry point",
-                queue_id=queue_id,
-                entrypoint_id=entrypoint_id,
+            raise EntityNotRegisteredError(
+                ENTRYPOINT_RESOURCE_TYPE, entrypoint_id, QUEUE_RESOURCE_TYPE, queue_id
             )
-            raise QueueNotRegisteredToEntryPointError
 
         # Fetch the validated queue
         queue_dict = cast(

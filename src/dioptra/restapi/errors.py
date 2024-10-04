@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import http
 import typing
-from io import StringIO
 
 import structlog
 from flask import request
@@ -31,26 +30,32 @@ from structlog.stdlib import BoundLogger
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-"""
-Helper function to add attribute name/value pairs to StringIO instance as an error
-message.
-Args:
-    buffer: The StringIO instance into which the attribute name/value pairs are to be
-    added.
-    attributes: the list of attribute value pairs to add to the buffer.
-"""
 
+def add_attribute_values(**kwargs: typing.Any) -> list[str]:
+    """
+    Helper function to add attribute name/value pairs to a list for use in an error
+    message.
 
-def add_attribute_values(buffer: StringIO, **kwargs: typing.Any) -> None:
-    index = 0
+    Args:
+        buffer: The StringIO instance into which the attribute name/value pairs are to
+        be added.
+        attributes: the list of attribute value pairs to add to the buffer.
+    """
     length = len(kwargs)
-    for key, value in kwargs.items():
-        if index != 0:
-            buffer.write(", ")
-            if index == length - 1:
-                buffer.write("and ")
-        buffer.write(f"{key} having value ({value})")
-        index += 1
+
+    def sep(index: int) -> str:
+        if index == 0:
+            return " with"
+
+        if index == length - 1:
+            return ", and"
+
+        return ","
+
+    return [
+        f"{sep(index)} {key} having value ({value})"
+        for index, (key, value) in enumerate(kwargs.items())
+    ]
 
 
 class DioptraError(Exception):
@@ -65,12 +70,13 @@ class DioptraError(Exception):
         self.message: str = message
 
     def to_message(self) -> str:
-        if self.__cause__ is not None:
-            if isinstance(self.__cause__, DioptraError):
-                self.message = f"{self.message} Cause: {self.__cause__.to_message()}"
-            else:
-                self.message = f"{self.message} Cause: {self.__cause__}"
-        return self.message
+        if self.__cause__ is None:
+            return self.message
+
+        if isinstance(self.__cause__, DioptraError):
+            return f"{self.message} Cause: {self.__cause__.to_message()}"
+
+        return f"{self.message} Cause: {self.__cause__}"
 
 
 class EntityDoesNotExistError(DioptraError):
@@ -81,13 +87,18 @@ class EntityDoesNotExistError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str, **kwargs: typing.Any):
-        buffer = StringIO()
-        buffer.write(f"Failed to locate {entity_type} with ")
-        add_attribute_values(buffer, **kwargs)
-        buffer.write(".")
-        super().__init__(buffer.getvalue())
-        self.entity_type = entity_type
+    def __init__(self, entity_type: str | None = None, **kwargs: typing.Any):
+        super().__init__(
+            "".join(
+                [
+                    "Failed to locate ",
+                    "an entity" if entity_type is None else entity_type,
+                    *add_attribute_values(**kwargs),
+                    ".",
+                ]
+            )
+        )
+        self.entity_type = "unknown" if entity_type is None else entity_type
         self.entity_attributes = kwargs
 
 
@@ -101,18 +112,28 @@ class EntityExistsError(DioptraError):
     """
 
     def __init__(self, entity_type: str, existing_id: int, **kwargs: typing.Any):
-        buffer = StringIO()
-        buffer.write(f"The {entity_type} with ")
-        add_attribute_values(buffer, **kwargs)
-        buffer.write(" is not available.")
-
-        super().__init__(buffer.getvalue())
+        super().__init__(
+            "".join(
+                [
+                    f"The {entity_type}",
+                    *add_attribute_values(**kwargs),
+                    " is not available.",
+                ]
+            )
+        )
         self.entity_type = entity_type
         self.entity_attributes = kwargs
         self.existing_id = existing_id
 
 
 class LockError(DioptraError):
+    """
+    Top-level Lock Error.
+
+    Args:
+        message: a message describing the lock error
+    """
+
     def __init__(self, message: str):
         super().__init__(message)
 
@@ -121,12 +142,15 @@ class ReadOnlyLockError(LockError):
     """The type has a read-only lock and cannot be modified."""
 
     def __init__(self, type: str, **kwargs: typing.Any):
-        buffer = StringIO()
-        buffer.write(f"The {type} type with ")
-        add_attribute_values(buffer, **kwargs)
-        buffer.write(" has a read-only lock and cannot be modified.")
-
-        super().__init__(buffer.getvalue())
+        super().__init__(
+            "".join(
+                [
+                    f"The {type} type",
+                    *add_attribute_values(**kwargs),
+                    " has a read-only lock and cannot be modified.",
+                ]
+            )
+        )
         self.entity_type = type
         self.entity_attributes = kwargs
 
@@ -160,8 +184,17 @@ class SearchParseError(DioptraError):
 class DraftDoesNotExistError(DioptraError):
     """The requested draft does not exist."""
 
-    def __init__(self):
-        super().__init__("The requested draft does not exist.")
+    def __init__(self, **kwargs: typing.Any):
+        super().__init__(
+            "".join(
+                [
+                    "The requested draft",
+                    *add_attribute_values(**kwargs),
+                    " does not exist.",
+                ]
+            )
+        )
+        self.entity_attributes = kwargs
 
 
 class DraftAlreadyExistsError(DioptraError):
@@ -184,11 +217,15 @@ class QueryParameterValidationError(DioptraError):
     """Input parameters failed validation."""
 
     def __init__(self, type: str, constraint: str, **kwargs):
-        buffer = StringIO()
-        buffer.write(f"Input parameters for {type} failed {constraint} check for ")
-        add_attribute_values(buffer, **kwargs)
-        buffer.write(".")
-        super().__init__(buffer.getvalue())
+        super().__init__(
+            "".join(
+                [
+                    f"Input parameters for {type} failed {constraint} check",
+                    *add_attribute_values(**kwargs),
+                    ".",
+                ]
+            )
+        )
         self.resource_type = type
         self.constraint = constraint
         self.parameters = kwargs
@@ -227,22 +264,40 @@ class JobMlflowRunAlreadySetError(DioptraError):
         )
 
 
-class EntryPointNotRegisteredToExperimentError(DioptraError):
-    """The requested entry point is not registered to the provided experiment."""
+class EntityDependencyError(DioptraError):
+    """
+    Base Error for dependency problems between entities.
 
-    def __init__(self):
+    Args:
+        message: a message describing the dependecy error
+    """
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class EntityNotRegisteredError(DioptraError):
+    """
+    An entity could not be located based on a relationship with another entity.
+
+    Args:
+        parent_type: the parent or owning type of the relation
+        parent_id: the parent or owning id of the relation
+        child_type: the child or dependent type of the relation
+        child_id: the child or dependent id of the relation
+    """
+
+    def __init__(
+        self, parent_type: str, parent_id: int, child_type: str, child_id: int
+    ):
         super().__init__(
-            "The requested entry point is not registered to the provided " "experiment."
+            f"The requested {child_type} having id ({child_id}) is not registered to "
+            f"the {parent_type} having id ({parent_id})."
         )
-
-
-class QueueNotRegisteredToEntryPointError(DioptraError):
-    """The requested queue is not registered to the provided entry point."""
-
-    def __init__(self):
-        super().__init__(
-            "The requested queue is not registered to the provided entry " "point."
-        )
+        self.parent_type = parent_type
+        self.parent_id = parent_id
+        self.child_type = child_type
+        self.child_id = child_id
 
 
 class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
