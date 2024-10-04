@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-
 """Test suite for experiment operations.
 
 This module contains a set of tests that validate the supported CRUD operations and
