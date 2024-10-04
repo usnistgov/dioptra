@@ -21,6 +21,7 @@ functionalities for the plugin entity. The tests ensure that the plugins can be
 registered, renamed, and deleted as expected through the REST API.
 """
 import textwrap
+from http import HTTPStatus
 from typing import Any, List
 
 import pytest
@@ -28,6 +29,7 @@ from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
+from dioptra.client.client import DioptraClient
 from dioptra.restapi.routes import (
     V1_PLUGIN_FILES_ROUTE,
     V1_PLUGIN_PARAMETER_TYPES_ROUTE,
@@ -35,7 +37,7 @@ from dioptra.restapi.routes import (
     V1_ROOT,
 )
 
-from ..lib import actions, asserts, helpers
+from ..lib import actions, asserts, asserts_client, helpers
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -234,7 +236,7 @@ def assert_plugin_response_contents_matches_expectations(
 
 
 def assert_retrieving_plugin_by_id_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient,
     plugin_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -249,10 +251,8 @@ def assert_retrieving_plugin_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.plugins.get_by_id(plugin_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_plugins_works(
@@ -292,7 +292,10 @@ def assert_retrieving_plugins_works(
         query_string=query_string,
         follow_redirects=True,
     )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.get_json()["data"] == expected
+    )
 
 
 def assert_sorting_plugin_works(
@@ -327,7 +330,7 @@ def assert_sorting_plugin_works(
     response_data = response.get_json()
     plugin_ids = [plugin["id"] for plugin in response_data["data"]]
 
-    assert response.status_code == 200 and plugin_ids == expected
+    assert response.status_code == HTTPStatus.OK and plugin_ids == expected
 
 
 def assert_registering_existing_plugin_name_fails(
@@ -345,7 +348,7 @@ def assert_registering_existing_plugin_name_fails(
     response = actions.register_plugin(
         client, name=name, description="", group_id=group_id
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_plugin_name_matches_expected_name(
@@ -366,7 +369,10 @@ def assert_plugin_name_matches_expected_name(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}",
         follow_redirects=True,
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.get_json()["name"] == expected_name
+    )
 
 
 def assert_plugin_is_not_found(
@@ -386,7 +392,7 @@ def assert_plugin_is_not_found(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}",
         follow_redirects=True,
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_cannot_rename_plugin_with_existing_name(
@@ -411,7 +417,7 @@ def assert_cannot_rename_plugin_with_existing_name(
         new_name=existing_name,
         new_description=existing_description,
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 # -- Assertions Plugin Files -----------------------------------------------------------
@@ -522,7 +528,7 @@ def assert_retrieving_plugin_file_by_id_works(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
         follow_redirects=True,
     )
-    assert response.status_code == 200 and response.get_json() == expected
+    assert response.status_code == HTTPStatus.OK and response.get_json() == expected
 
 
 def assert_retrieving_plugin_files_works(
@@ -557,7 +563,10 @@ def assert_retrieving_plugin_files_works(
         query_string=query_string,
         follow_redirects=True,
     )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.get_json()["data"] == expected
+    )
 
 
 def assert_sorting_plugin_file_works(
@@ -592,7 +601,7 @@ def assert_sorting_plugin_file_works(
 
     response_data = response.get_json()
     plugin_ids = [file["id"] for file in response_data["data"]]
-    assert response.status_code == 200 and plugin_ids == expected
+    assert response.status_code == HTTPStatus.OK and plugin_ids == expected
 
 
 def assert_registering_existing_plugin_filename_fails(
@@ -620,7 +629,7 @@ def assert_registering_existing_plugin_filename_fails(
         contents=contents,
         description=description,
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_plugin_filename_matches_expected_name(
@@ -646,7 +655,8 @@ def assert_plugin_filename_matches_expected_name(
         follow_redirects=True,
     )
     assert (
-        response.status_code == 200 and response.get_json()["filename"] == expected_name
+        response.status_code == HTTPStatus.OK
+        and response.get_json()["filename"] == expected_name
     )
 
 
@@ -678,7 +688,7 @@ def assert_cannot_rename_plugin_file_with_existing_name(
         new_description=existing_description,
         new_contents=existing_contents,
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_plugin_file_is_not_found(
@@ -700,7 +710,7 @@ def assert_plugin_file_is_not_found(
         f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files/{plugin_file_id}",
         follow_redirects=True,
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 # -- Assertions Plugin Tasks -----------------------------------------------------------
@@ -751,7 +761,7 @@ def assert_plugin_task_response_contents_matches_expectations(
 
 
 def test_create_plugin(
-    client: FlaskClient,
+    dioptra_client: DioptraClient,
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -767,10 +777,10 @@ def test_create_plugin(
     description = "The first plugin."
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
-    plugin_response = actions.register_plugin(
-        client, name=name, description=description, group_id=group_id
+    plugin_response = dioptra_client.plugins.create(
+        group_id=group_id, name=name, description=description
     )
-    plugin_expected = plugin_response.get_json()
+    plugin_expected = plugin_response.json()
     assert_plugin_response_contents_matches_expectations(
         response=plugin_expected,
         expected_contents={
@@ -781,7 +791,7 @@ def test_create_plugin(
         },
     )
     assert_retrieving_plugin_by_id_works(
-        client, plugin_id=plugin_expected["id"], expected=plugin_expected
+        dioptra_client, plugin_id=plugin_expected["id"], expected=plugin_expected
     )
 
 
