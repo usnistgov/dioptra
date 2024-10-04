@@ -540,7 +540,7 @@ def registered_experiments(
         name="experiment3",
         group_id=auth_account["default_group_id"],
         description="test description",
-        entrypoint_ids=entrypoint_ids,
+        entrypoint_ids=entrypoint_ids[:1],
     ).get_json()
     return {
         "experiment1": experiment1_response,
@@ -620,8 +620,8 @@ def registered_entrypoints(
         group_id=auth_account["groups"][0]["id"],
         task_graph=task_graph,
         parameters=parameters,
-        plugin_ids=plugin_ids,
-        queue_ids=queue_ids,
+        plugin_ids=[],
+        queue_ids=queue_ids[:1],
     ).get_json()
     return {
         "entrypoint1": entrypoint1_response,
