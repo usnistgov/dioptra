@@ -62,62 +62,62 @@ class DioptraClient(Generic[T]):
 
     @property
     def users(self) -> UsersCollectionClient[T]:
-        """The Dioptra API's /users endpoint."""
+        """The client for managing Dioptra's /users collection."""
         return self._users
 
     @property
     def auth(self) -> AuthCollectionClient[T]:
-        """The Dioptra API's /auth endpoint."""
+        """The client for managing Dioptra's /auth collection."""
         return self._auth
 
     @property
     def queues(self) -> QueuesCollectionClient[T]:
-        """The Dioptra API's /queues endpoint."""
+        """The client for managing Dioptra's /queues collection."""
         return self._queues
 
     @property
     def tags(self) -> TagsCollectionClient[T]:
-        """The Dioptra API's /tags endpoint."""
+        """The client for managing Dioptra's /tags collection."""
         return self._tags
 
     # @property
     # def groups(self) -> GroupsCollectionClient[T]:
-    #     """The Dioptra API's /groups endpoint."""
+    #     """The client for managing Dioptra's /groups collection."""
     #     return self._groups
 
     # @property
     # def plugins(self) -> PluginsCollectionClient[T]:
-    #     """The Dioptra API's /plugins endpoint."""
+    #     """The client for managing Dioptra's /plugins collection."""
     #     return self._plugins
 
     # @property
     # def plugin_parameter_types(self) -> PluginParameterTypesCollectionClient[T]:
-    #     """The Dioptra API's /pluginParameterTypes endpoint."""
+    #     """The client for managing Dioptra's /pluginParameterTypes collection."""
     #     return self._plugin_parameter_types
 
     # @property
     # def experiments(self) -> ExperimentsCollectionClient[T]:
-    #     """The Dioptra API's /experiments endpoint."""
+    #     """The client for managing Dioptra's /experiments collection."""
     #     return self._experiments
 
     # @property
     # def jobs(self) -> JobsCollectionClient[T]:
-    #     """The Dioptra API's /jobs endpoint."""
+    #     """The client for managing Dioptra's /jobs collection."""
     #     return self._jobs
 
     # @property
     # def entrypoints(self) -> EntrypointsCollectionClient[T]:
-    #     """The Dioptra API's /entrypoints endpoint."""
+    #     """The client for managing Dioptra's /entrypoints collection."""
     #     return self._entrypoints
 
     # @property
     # def models(self) -> ModelsCollectionClient[T]:
-    #     """The Dioptra API's /models endpoint."""
+    #     """The client for managing Dioptra's /models collection."""
     #     return self._models
 
     # @property
     # def artifacts(self) -> ArtifactsCollectionClient[T]:
-    #     """The Dioptra API's /artifacts endpoint."""
+    #     """The client for managing Dioptra's /artifacts collection."""
     #     return self._artifacts
 
     def close(self) -> None:

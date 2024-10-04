@@ -36,16 +36,16 @@ T = TypeVar("T")
 
 
 class QueuesCollectionClient(CollectionClient[T]):
-    """The client for interacting with the Dioptra API's queues endpoint.
+    """The client for managing Dioptra's /queues collection.
 
     Attributes:
-        name: The name of the endpoint.
+        name: The name of the collection managed by the client.
     """
 
     name: ClassVar[str] = "queues"
 
     def __init__(self, session: DioptraSession[T]) -> None:
-        """Initialize the QueuesClient instance.
+        """Initialize the QueuesCollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
@@ -73,21 +73,108 @@ class QueuesCollectionClient(CollectionClient[T]):
         self._tags = TagsSubCollectionClient[T](session=session, root_collection=self)
 
     @property
-    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+    def new_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+        """The client for managing the new queue drafts sub-collection.
+
+        Each client method in the sub-collection accepts an arbitrary number of
+        positional arguments called ``*resource_ids``. These are the parent resource IDs
+        that own the new queue drafts sub-collection. Below are examples of how
+        HTTP requests to this sub-collection translate into method calls for an active
+        Python Dioptra Python client called ``client``::
+
+            # GET /api/v1/queues/drafts
+            client.queues.new_drafts.get()
+
+            # GET /api/v1/queues/drafts/1
+            client.queues.new_drafts.get_by_id(draft_id=1)
+
+            # PUT /api/v1/queues/drafts/1
+            client.queues.new_drafts.modify(
+                draft_id=1, name="new-name", description="new-description"
+            )
+
+            # POST /api/v1/queues/drafts
+            client.queues.new_drafts.create(
+                group_id=1, name="name", description="description"
+            )
+
+            # DELETE /api/v1/queues/drafts/1
+            client.queues.new_drafts.delete(draft_id=1)
+        """
         return self._new_resource_drafts
 
     @property
-    def existing_resource_drafts(self) -> ExistingResourceDraftsSubCollectionClient[T]:
+    def existing_drafts(self) -> ExistingResourceDraftsSubCollectionClient[T]:
+        """The client for managing the existing queue drafts sub-collection.
+
+        Each client method in the sub-collection accepts an arbitrary number of
+        positional arguments called ``*resource_ids``. These are the parent resource IDs
+        that own the existing queue drafts sub-collection. Below are examples of how
+        HTTP requests to this sub-collection translate into method calls for an active
+        Python Dioptra Python client called ``client``::
+
+            # GET /api/v1/queues/1/draft
+            client.queues.existing_drafts.get_by_id(1)
+
+            # PUT /api/v1/queues/1/draft
+            client.queues.existing_drafts.modify(
+                1, name="new-name", description="new-description"
+            )
+
+            # POST /api/v1/queues/1/draft
+            client.queues.existing_drafts.create(
+                1, name="name", description="description"
+            )
+
+            # DELETE /api/v1/queues/1/draft
+            client.queues.existing_drafts.delete(1)
+        """
         return self._existing_resource_drafts
 
     @property
     def snapshots(self) -> SnapshotsSubCollectionClient[T]:
-        """The sub-endpoint client for retrieving queue resource snapshots."""
+        """The client for retrieving queue resource snapshots.
+
+        Each client method in the sub-collection accepts an arbitrary number of
+        positional arguments called ``*resource_ids``. These are the parent resource IDs
+        that own the existing queue snapshots sub-collection. Below are examples of how
+        HTTP requests to this sub-collection translate into method calls for an active
+        Python Dioptra Python client called ``client``::
+
+            # GET /api/v1/queues/1/snapshots
+            client.queues.existing_drafts.get_by_id(1)
+
+            # GET /api/v1/queues/1/snapshots/2
+            client.queues.existing_drafts.get_by_id(1, snapshot_id=2)
+        """
         return self._snapshots
 
     @property
     def tags(self) -> TagsSubCollectionClient[T]:
-        """The sub-endpoint client for creating and managing queues tags."""
+        """
+        The client for managing the tags sub-collection owned by the /queues collection.
+
+        Each client method in the sub-collection accepts an arbitrary number of
+        positional arguments called ``*resource_ids``. These are the parent resource IDs
+        that own the tags sub-collection. Below are examples of how HTTP requests to
+        this sub-collection translate into method calls for an active Python Dioptra
+        Python client called ``client``::
+
+            # GET /api/v1/queues/1/tags
+            client.queues.tags.get(1)
+
+            # PUT /api/v1/queues/1/tags
+            client.queues.tags.modify(1, ids=[2, 3])
+
+            # POST /api/v1/queues/1/tags
+            client.queues.tags.modify(1, ids=[2, 3])
+
+            # DELETE /api/v1/queues/1/tags/3
+            client.queues.tags.remove(1, tag_id=3)
+
+            # DELETE /api/v1/queues/1/tags
+            client.queues.tags.remove(1)
+        """
         return self._tags
 
     def get(
@@ -106,6 +193,8 @@ class QueuesCollectionClient(CollectionClient[T]):
                 groups that the user has access to.
             index: The paging index.
             page_length: The maximum number of queues to return in the paged response.
+            sort_by: The field to use to sort the returned list.
+            descending: Sort the returned list in descending order.
             search: Search for queues using the Dioptra API's query language.
 
         Returns:

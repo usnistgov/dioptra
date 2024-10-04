@@ -27,10 +27,10 @@ T = TypeVar("T")
 
 
 class SnapshotsSubCollectionClient(SubCollectionClient[T]):
-    """The sub-endpoint client for retrieving snapshots under an endpoint.
+    """The client for managing a snapshots sub-collection.
 
     Attributes:
-        name: The name of the sub-endpoint.
+        name: The name of the sub-collection managed by the client.
     """
 
     name: ClassVar[str] = "snapshots"
@@ -45,7 +45,8 @@ class SnapshotsSubCollectionClient(SubCollectionClient[T]):
         """Get the list of snapshots for a given resource.
 
         Args:
-            resource_id: The ID of the resource.
+            *resource_ids: The parent resource IDs that own the snapshots
+                sub-collection.
             index: The paging index.
             page_length: The maximum number of snapshots to return in the paged
                 response.
@@ -74,7 +75,8 @@ class SnapshotsSubCollectionClient(SubCollectionClient[T]):
         """Get a snapshot by its ID for a specific resource.
 
         Args:
-            resource_id: The ID of the resource.
+            *resource_ids: The parent resource IDs that own the snapshots
+                sub-collection.
             snapshot_id: The ID of the snapshot.
 
         Returns:

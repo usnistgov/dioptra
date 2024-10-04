@@ -94,12 +94,10 @@ def make_draft_fields_validator(
 
 
 class NewResourceDraftsSubCollectionClient(Generic[T]):
-    """The sub-endpoint client for managing drafts under an endpoint.
+    """The client for managing a new resource drafts sub-collection.
 
     Attributes:
-        name: The name of the sub-endpoint.
-        draft_for_resource_name: The name of the draft sub-endpoint for a specific
-            resource.
+        name: The name of the sub-collection managed by the client.
     """
 
     name: ClassVar[str] = "drafts"
@@ -111,12 +109,18 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         root_collection: CollectionClient[T],
         parent_sub_collections: list[SubCollectionClient[T]] | None = None,
     ) -> None:
-        """Initialize the DraftsSubEndpoint instance.
+        """Initialize the NewResourceDraftsSubCollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
-            parent_endpoint: The parent endpoint client.
             validate_fields_fn: The function to validate the allowed draft fields.
+            root_collection: The client for the root collection that owns this
+                sub-collection.
+            parent_sub_collections: An ordered list of parent sub-collection clients
+                that own this sub-collection and are also owned by the root collection.
+                For example, a client for the hypothetical /col/{id1}/subColA/drafts
+                collection would list the client for subColA as the parent
+                sub-collection.
         """
         self._session = session
         self._validate_fields = validate_fields_fn
@@ -136,6 +140,8 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         """Get the list of endpoint drafts.
 
         Args:
+            *resource_ids: The parent resource IDs that own the new resource drafts
+                sub-collection.
             draft_type: The type of drafts to return: all, existing, or new.
             group_id: The group ID the drafts belong to. If None, return drafts from all
                 groups that the user has access to.
@@ -164,6 +170,8 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         """Get an endpoint draft by its ID.
 
         Args:
+            *resource_ids: The parent resource IDs that own the new resource drafts
+                sub-collection.
             draft_id: The ID of the draft.
 
         Returns:
@@ -177,6 +185,8 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         """Create a new endpoint draft.
 
         Args:
+            *resource_ids: The parent resource IDs that own the new resource drafts
+                sub-collection.
             group_id: The ID for the group that will own the resource when the draft is
                 published.
             **kwargs: The draft fields.
@@ -200,6 +210,8 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         """Modify the endpoint draft matching the provided ID.
 
         Args:
+            *resource_ids: The parent resource IDs that own the new resource drafts
+                sub-collection.
             draft_id: The draft ID.
             **kwargs: The draft fields to modify.
 
@@ -222,6 +234,8 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         """Delete the endpoint draft matching the provided ID.
 
         Args:
+            *resource_ids: The parent resource IDs that own the new resource drafts
+                sub-collection.
             draft_id: The draft ID.
 
         Returns:
@@ -232,6 +246,20 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         )
 
     def build_sub_collection_url(self, *resource_ids: str | int) -> str:
+        """Build a sub-collection URL owned by one or more parent resources.
+
+        Args:
+            *resource_ids: The parent resource IDs that own the sub-collection.
+
+        Returns:
+            The joined sub-collection URL.
+
+        Raises:
+            SubCollectionUrlError: If the number of resource IDs does not match the
+                expected count. For example, a client for the hypothetical
+                /col/{id1}/subColA/{id2}/subColB/drafts sub-collection would expect 2
+                resource IDs.
+        """
         self._validate_resource_ids_count(*resource_ids)
         parent_url_parts: list[str] = [self._root_collection.url]
 
@@ -253,12 +281,10 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
 
 
 class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
-    """The sub-endpoint client for managing drafts under an endpoint.
+    """The client for managing an existing resource drafts sub-collection.
 
     Attributes:
-        name: The name of the sub-endpoint.
-        draft_for_resource_name: The name of the draft sub-endpoint for a specific
-            resource.
+        name: The name of the sub-collection managed by the client.
     """
 
     name: ClassVar[str] = "draft"
@@ -270,12 +296,22 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         root_collection: CollectionClient[T],
         parent_sub_collections: list[SubCollectionClient[T]] | None = None,
     ) -> None:
-        """Initialize the DraftsSubEndpoint instance.
+        """Initialize the ExistingResourceDraftsSubCollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
             parent_endpoint: The parent endpoint client.
             validate_fields_fn: The function to validate the allowed draft fields.
+        Args:
+            session: The Dioptra API session object.
+            validate_fields_fn: The function to validate the allowed draft fields.
+            root_collection: The client for the root collection that owns this
+                sub-collection.
+            parent_sub_collections: An ordered list of parent sub-collection clients
+                that own this sub-collection and are also owned by the root collection.
+                For example, a client for the hypothetical
+                /col/{id1}/subColA/{id2}/draft collection would list the client for
+                subColA as the parent sub-collection.
         """
         super().__init__(
             session,
@@ -288,7 +324,7 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         """Get the draft for a specific endpoint resource.
 
         Args:
-            resource_id: The ID of the endpoint resource.
+            *resource_ids: The parent resource IDs that own the sub-collection.
 
         Returns:
             The response from the Dioptra API.
@@ -299,7 +335,7 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         """Create a draft for a specific endpoint resource.
 
         Args:
-            resource_id: The ID of the endpoint resource.
+            *resource_ids: The parent resource IDs that own the sub-collection.
             **kwargs: The draft fields.
 
         Returns:
@@ -314,7 +350,7 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         """Modify the draft for a specific endpoint resource.
 
         Args:
-            resource_id: The ID of the endpoint resource.
+            *resource_ids: The parent resource IDs that own the sub-collection.
             **kwargs: The draft fields to modify.
 
         Returns:
@@ -329,7 +365,7 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         """Delete the draft for a specific endpoint resource.
 
         Args:
-            resource_id: The ID of the endpoint resource.
+            *resource_ids: The parent resource IDs that own the sub-collection.
 
         Returns:
             The response from the Dioptra API.

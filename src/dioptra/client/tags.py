@@ -27,10 +27,10 @@ T = TypeVar("T")
 
 
 class TagsCollectionClient(CollectionClient[T]):
-    """The client for interacting with the Dioptra API's /tags endpoint.
+    """The client for interacting with the Dioptra API's /tags collection.
 
     Attributes:
-        name: The name of the endpoint.
+        name: The name of the collection.
     """
 
     name: ClassVar[str] = "tags"
@@ -51,6 +51,8 @@ class TagsCollectionClient(CollectionClient[T]):
                 groups that the user has access to.
             index: The paging index.
             page_length: The maximum number of tags to return in the paged response.
+            sort_by: The field to use to sort the returned list.
+            descending: Sort the returned list in descending order.
             search: Search for tags using the Dioptra API's query language.
 
         Returns:
@@ -167,10 +169,10 @@ class TagsCollectionClient(CollectionClient[T]):
 
 
 class TagsSubCollectionClient(SubCollectionClient[T]):
-    """The sub-endpoint client for managing tags under an endpoint.
+    """The client for managing a tags sub-collection.
 
     Attributes:
-        name: The name of the sub-endpoint.
+        name: The name of the sub-collection managed by the client.
     """
 
     name: ClassVar[str] = "tags"
@@ -179,7 +181,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         """Get a list of tags.
 
         Args:
-            resource_id: The ID of an endpoint resource.
+            *resource_ids: The parent resource IDs that own the tags sub-collection.
 
         Returns:
             The response from the Dioptra API.
@@ -198,7 +200,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         delete an individual tag, use the `remove` method.
 
         Args:
-            resource_id: The ID of an endpoint resource.
+            *resource_ids: The parent resource IDs that own the tags sub-collection.
             ids: The list of tag IDs to set on the resource.
 
         Returns:
@@ -220,7 +222,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         ignored.
 
         Args:
-            resource_id: The ID of an endpoint resource.
+            *resource_ids: The parent resource IDs that own the tags sub-collection.
             ids: The list of tag IDs to append to the endpoint resource.
 
         Returns:
@@ -239,7 +241,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         """Remove a tag from an endpoint resource.
 
         Args:
-            resource_id: The ID of an endpoint resource.
+            *resource_ids: The parent resource IDs that own the tags sub-collection.
             tag_id: The ID of the tag to remove from the endpoint resource.
 
         Returns:
@@ -259,7 +261,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         reversed. To remove individual tags, use the `remove` method.
 
         Args:
-            resource_id: The ID of an endpoint resource.
+            *resource_ids: The parent resource IDs that own the tags sub-collection.
 
         Returns:
             The response from the Dioptra API.
