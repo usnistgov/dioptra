@@ -274,7 +274,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         )
 
     def get_by_id(self, plugin_id: str | int, plugin_file_id: str | int) -> T:
-        """Get the plugin matching the provided id.
+        """Get the plugin file matching the provided ids.
 
         Args:
             plugin_id: The id for the plugin that owns the plugin file.
@@ -326,7 +326,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         tasks: list[dict[str, Any]],
         description: str | None = None,
     ) -> T:
-        """Modify the plugin matching the provided id.
+        """Modify a plugin file matching the provided ids.
 
         Args:
             plugin_id: The id for the plugin that owns the plugin file.
