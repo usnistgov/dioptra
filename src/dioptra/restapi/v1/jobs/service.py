@@ -27,25 +27,29 @@ from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError
-from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
-from dioptra.restapi.v1.experiments.service import ExperimentIdService
-from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.queues.service import QueueIdService
-from dioptra.restapi.v1.shared.rq_service import RQServiceV1
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-
-from .errors import (
-    EntryPointNotRegisteredToExperimentError,
-    ExperimentJobDoesNotExistError,
-    JobDoesNotExistError,
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityNotRegisteredError,
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
-    JobSortError,
-    QueueNotRegisteredToEntryPointError,
+    SortParameterValidationError,
 )
+from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entrypoints.service import (
+    RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
+)
+from dioptra.restapi.v1.entrypoints.service import EntrypointIdService
+from dioptra.restapi.v1.experiments.service import (
+    RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
+)
+from dioptra.restapi.v1.experiments.service import ExperimentIdService
+from dioptra.restapi.v1.groups.service import GroupIdService
+from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
+from dioptra.restapi.v1.queues.service import QueueIdService
+from dioptra.restapi.v1.shared.rq_service import RQServiceV1
+from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -125,7 +129,7 @@ class JobService(object):
             The newly created job object.
 
         Raises:
-            JobAlreadyExistsError: If a job with the given name already exists.
+            EntityExistsError: If a job with the given name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -162,12 +166,12 @@ class JobService(object):
         )
 
         if entrypoint_id not in set(experiment_entry_point_ids):
-            log.debug(
-                "Entry point not registered to experiment",
-                entrypoint_id=entrypoint_id,
-                experiment_id=experiment_id,
+            raise EntityNotRegisteredError(
+                EXPERIMENT_RESOURCE_TYPE,
+                experiment_id,
+                ENTRYPOINT_RESOURCE_TYPE,
+                entrypoint_id,
             )
-            raise EntryPointNotRegisteredToExperimentError
 
         # Validate that the provided queue_id is registered to the entrypoint
         parent_entry_point = aliased(models.EntryPoint)
@@ -190,12 +194,9 @@ class JobService(object):
         )
 
         if queue_id not in set(entry_point_queue_ids):
-            log.debug(
-                "Queue not registered to entry point",
-                queue_id=queue_id,
-                entrypoint_id=entrypoint_id,
+            raise EntityNotRegisteredError(
+                ENTRYPOINT_RESOURCE_TYPE, entrypoint_id, QUEUE_RESOURCE_TYPE, queue_id
             )
-            raise QueueNotRegisteredToEntryPointError
 
         # Fetch the validated queue
         queue_dict = cast(
@@ -359,8 +360,7 @@ class JobService(object):
                 sort_column = sort_column.asc()
             jobs_stmt = jobs_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
-            raise JobSortError
+            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
 
         jobs = list(db.session.scalars(jobs_stmt).all())
 
@@ -408,7 +408,7 @@ class JobIdService(object):
             The job object if found, otherwise None.
 
         Raises:
-            JobDoesNotExistError: If the job is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the job is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -427,8 +427,7 @@ class JobIdService(object):
 
         if job is None:
             if error_if_not_found:
-                log.debug("Job not found", job_id=job_id)
-                raise JobDoesNotExistError
+                raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
 
             return None
 
@@ -465,7 +464,7 @@ class JobIdService(object):
         job_resource = db.session.scalars(stmt).first()
 
         if job_resource is None:
-            raise JobDoesNotExistError
+            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type="delete",
@@ -523,8 +522,7 @@ class JobIdStatusService(object):
         job = db.session.scalars(stmt).first()
 
         if job is None:
-            log.debug("Job not found", job_id=job_id)
-            raise JobDoesNotExistError
+            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
 
         return {"status": job.status, "id": job.resource_id}
 
@@ -609,7 +607,7 @@ class ExperimentJobService(object):
             query.
 
         Raises:
-            ExperimentDoesNotExistError: If the experiment is not found.
+            EntityDoesNotExistError: If the experiment is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of jobs for experiment", experiment_id=experiment_id)
@@ -674,8 +672,7 @@ class ExperimentJobService(object):
                 sort_column = sort_column.asc()
             jobs_stmt = jobs_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
-            raise JobSortError
+            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
 
         jobs = list(db.session.scalars(jobs_stmt).all())
 
@@ -721,7 +718,7 @@ class ExperimentJobIdService(object):
             The job object if found, otherwise None.
 
         Raises:
-            ExperimentJobDoesNotExistError: If the job associated with the experiment
+            EntityDoesNotExistError: If the job associated with the experiment
                 is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -733,12 +730,9 @@ class ExperimentJobIdService(object):
         experiment_job = db.session.scalar(experiment_job_stmt)
 
         if experiment_job is None:
-            log.debug(
-                "Experiment Job not found",
-                job_id=job_id,
-                experiment_id=experiment_id,
+            raise EntityDoesNotExistError(
+                RESOURCE_TYPE, job_id=job_id, experiment_id=experiment_id
             )
-            raise ExperimentJobDoesNotExistError
 
         return cast(
             utils.JobDict,
@@ -768,12 +762,9 @@ class ExperimentJobIdService(object):
         experiment_job = db.session.scalar(experiment_job_stmt)
 
         if experiment_job is None:
-            log.debug(
-                "Job associated with experiment not found",
-                job_id=job_id,
-                experiment_id=experiment_id,
+            raise EntityDoesNotExistError(
+                RESOURCE_TYPE, job_id=job_id, experiment_id=experiment_id
             )
-            raise ExperimentJobDoesNotExistError
 
         return self._job_id_service.delete(
             job_id=job_id,

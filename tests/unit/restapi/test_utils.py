@@ -14,42 +14,53 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Error handlers for the artifact endpoints."""
 from __future__ import annotations
 
-from flask_restx import Api
+import pytest
+
+from dioptra.restapi.utils import find_non_unique
 
 
-class ArtifactAlreadyExistsError(Exception):
-    """The queue name already exists."""
-
-
-class ArtifactDoesNotExistError(Exception):
-    """The requested artifact does not exist."""
-
-
-class ArtifactSortError(Exception):
-    """The requested sortBy column is not a sortable field."""
-
-
-def register_error_handlers(api: Api) -> None:
-    @api.errorhandler(ArtifactDoesNotExistError)
-    def handle_artifact_does_not_exist_error(error):
-        return {"message": "Not Found - The requested artifact does not exist"}, 404
-
-    @api.errorhandler(ArtifactAlreadyExistsError)
-    def handle_artifact_already_exists_error(error):
-        return (
-            {
-                "message": "Bad Request - The artifact uri on the registration form "
-                "already exists. Please select another and resubmit."
-            },
-            400,
+def test_find_non_unique():
+    assert (
+        len(
+            find_non_unique(
+                "name",
+                [
+                    {"name": "hello", "foo": "bar"},
+                    {"name": "goodbye", "bar": "foo"},
+                    {"name": "hello", "lo": "behold"},
+                ],
+            )
         )
+        == 1
+    )
 
-    @api.errorhandler(ArtifactSortError)
-    def handle_queue_sort_error(error):
-        return (
-            {"message": "Bad Request - This column can not be sorted."},
-            400,
+    assert (
+        len(
+            find_non_unique(
+                "name",
+                [
+                    {"name": "hello", "foo": "bar"},
+                    {"name": "goodbye", "bar": "none"},
+                    {"name": "today", "lo": "hi"},
+                ],
+            )
         )
+        == 0
+    )
+
+    assert (
+        len(
+            find_non_unique(
+                "name",
+                [
+                    {"name": "hello", "foo": "bar"},
+                    {"name": "goodbye", "bar": "none"},
+                    {"name": "hello", "lo": "behold"},
+                    {"name": "goodbye", "lo": "behold"},
+                ],
+            )
+        )
+        == 2
+    )

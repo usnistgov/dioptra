@@ -260,7 +260,7 @@ def assert_registering_existing_queue_name_fails(
     response = actions.register_queue(
         client, name=name, description="", group_id=group_id
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_queue_name_matches_expected_name(
@@ -352,7 +352,7 @@ def assert_cannot_rename_queue_with_existing_name(
         new_name=existing_name,
         new_description=existing_description,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 # -- Tests -----------------------------------------------------------------------------

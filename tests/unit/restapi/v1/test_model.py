@@ -317,7 +317,7 @@ def assert_registering_existing_model_name_fails(
     response = actions.register_model(
         client, name=name, description="", group_id=group_id
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_model_name_matches_expected_name(
@@ -383,7 +383,7 @@ def assert_cannot_rename_model_with_existing_name(
         new_name=existing_name,
         new_description=existing_description,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_retrieving_model_version_by_version_number_works(

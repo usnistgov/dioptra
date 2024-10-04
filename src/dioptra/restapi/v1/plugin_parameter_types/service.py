@@ -25,19 +25,18 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    PluginParameterTypeMatchesBuiltinTypeError,
+    ReadOnlyLockError,
+    SortParameterValidationError,
+)
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
-
-from .errors import (
-    PluginParameterSortError,
-    PluginParameterTypeAlreadyExistsError,
-    PluginParameterTypeDoesNotExistError,
-    PluginParameterTypeMatchesBuiltinTypeError,
-    PluginParameterTypeReadOnlyLockError,
-)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -107,8 +106,8 @@ class PluginParameterTypeService(object):
         Raises:
             PluginParameterTypeMatchesBuiltinTypeError: If the plugin parameter
                 type name matches a built-in type.
-            PluginParameterTypeAlreadyExistsError: If a plugin parameter type
-                with the given name already exists.
+            EntityExistsError: If a plugin parameter type with the given name already
+                exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -120,18 +119,13 @@ class PluginParameterTypeService(object):
             )
             raise PluginParameterTypeMatchesBuiltinTypeError
 
-        if (
-            self._plugin_parameter_type_name_service.get(
-                name, group_id=group_id, log=log
+        duplicate = self._plugin_parameter_type_name_service.get(
+            name, group_id=group_id, log=log
+        )
+        if duplicate is not None:
+            raise EntityExistsError(
+                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
             )
-            is not None
-        ):
-            log.debug(
-                "Plugin Parameter Type name already exists",
-                name=name,
-                group_id=group_id,
-            )
-            raise PluginParameterTypeAlreadyExistsError
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
@@ -247,8 +241,7 @@ class PluginParameterTypeService(object):
                 sort_column
             )
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
-            raise PluginParameterSortError
+            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
 
         plugin_parameter_types = list(
             db.session.scalars(plugin_parameter_types_stmt).all()
@@ -319,7 +312,7 @@ class PluginParameterTypeIdService(object):
             The plugin parameter type object if found, otherwise None.
 
         Raises:
-            PluginParameterTypeDoesNotExistError: If the plugin parameter type
+            EntityDoesNotExistError: If the plugin parameter type
                 is not found and `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -342,11 +335,9 @@ class PluginParameterTypeIdService(object):
 
         if plugin_parameter_type is None:
             if error_if_not_found:
-                log.debug(
-                    "Plugin Parameter Type not found",
-                    plugin_parameter_type_id=plugin_parameter_type_id,
+                raise EntityDoesNotExistError(
+                    RESOURCE_TYPE, plugin_parameter_type_id=plugin_parameter_type_id
                 )
-                raise PluginParameterTypeDoesNotExistError
 
             return None
 
@@ -393,9 +384,9 @@ class PluginParameterTypeIdService(object):
             The updated plugin parameter type object.
 
         Raises:
-            PluginParameterTypeDoesNotExistError: If the plugin parameter type
+            EntityDoesNotExistError: If the plugin parameter type
                 is not found and `error_if_not_found` is True.
-            PluginParameterTypeAlreadyExistsError: If the plugin parameter type
+            EntityExistsError: If the plugin parameter type
                 name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -411,12 +402,11 @@ class PluginParameterTypeIdService(object):
         group_id = plugin_parameter_type.resource.group_id
 
         if plugin_parameter_type.resource.is_readonly:
-            log.debug(
-                "The Plugin Parameter Type is read-only and cannot be modified",
+            raise ReadOnlyLockError(
+                RESOURCE_TYPE,
                 plugin_parameter_type_id=plugin_parameter_type_id,
                 name=plugin_parameter_type.name,
             )
-            raise PluginParameterTypeReadOnlyLockError
 
         if name.strip().lower() in BUILTIN_TYPES:
             log.debug(
@@ -426,19 +416,14 @@ class PluginParameterTypeIdService(object):
             )
             raise PluginParameterTypeMatchesBuiltinTypeError
 
-        if (
-            name != plugin_parameter_type.name
-            and self._plugin_parameter_type_name_service.get(
+        if name != plugin_parameter_type.name:
+            duplicate = self._plugin_parameter_type_name_service.get(
                 name, group_id=group_id, log=log
             )
-            is not None
-        ):
-            log.debug(
-                "Plugin Parameter Type name already exists",
-                name=name,
-                group_id=group_id,
-            )
-            raise PluginParameterTypeAlreadyExistsError
+            if duplicate is not None:
+                raise EntityExistsError(
+                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+                )
 
         new_plugin_parameter_type = models.PluginTaskParameterType(
             name=name,
@@ -482,14 +467,14 @@ class PluginParameterTypeIdService(object):
         plugin_parameter_type_resource = db.session.scalars(stmt).first()
 
         if plugin_parameter_type_resource is None:
-            raise PluginParameterTypeDoesNotExistError
+            raise EntityDoesNotExistError(
+                RESOURCE_TYPE, plugin_parameter_type_id=plugin_parameter_type_id
+            )
 
         if plugin_parameter_type_resource.is_readonly:
-            log.debug(
-                "The Plugin Parameter Type is read-only and cannot be deleted",
-                plugin_parameter_type_id=plugin_parameter_type_id,
+            raise ReadOnlyLockError(
+                RESOURCE_TYPE, plugin_parameter_type_id=plugin_parameter_type_id
             )
-            raise PluginParameterTypeReadOnlyLockError
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
@@ -530,7 +515,7 @@ class PluginParameterTypeNameService(object):
             The plugin parameter type object if found, otherwise None.
 
         Raises:
-            PluginParameterTypeDoesNotExistError: If the plugin parameter type
+            EntityDoesNotExistError: If the plugin parameter type
                 is not found and `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -555,8 +540,9 @@ class PluginParameterTypeNameService(object):
 
         if plugin_parameter_type is None:
             if error_if_not_found:
-                log.debug("Plugin Parameter Type not found", name=name)
-                raise PluginParameterTypeDoesNotExistError
+                raise EntityDoesNotExistError(
+                    RESOURCE_TYPE, name=name, group_id=group_id
+                )
 
             return None
 

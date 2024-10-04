@@ -29,25 +29,21 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import user_lock_types
-from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    NoCurrentUserError,
+    QueryParameterValidationError,
+    UserPasswordChangeError,
+    UserPasswordError,
+)
 from dioptra.restapi.v1.groups.service import GroupMemberService, GroupNameService
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
 )
 from dioptra.restapi.v1.shared.password_service import PasswordService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-
-from .errors import (
-    NoCurrentUserError,
-    UserDoesNotExistError,
-    UserEmailNotAvailableError,
-    UsernameNotAvailableError,
-    UserPasswordChangeError,
-    UserPasswordChangeSamePasswordError,
-    UserPasswordExpiredError,
-    UserPasswordVerificationError,
-    UserRegistrationError,
-)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -128,17 +124,19 @@ class UserService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         if password != confirm_password:
-            raise UserRegistrationError(
-                "The password and confirmation password did not match."
+            raise QueryParameterValidationError(
+                "password", "equivalence", password="***", confirmation="***"
             )
 
-        if self._user_name_service.get(username, log=log) is not None:
-            log.debug("Username already exists", username=username)
-            raise UsernameNotAvailableError
+        duplicate = self._user_name_service.get(username, log=log)
+        if duplicate is not None:
+            raise EntityExistsError("User", duplicate.user_id, username=username)
 
-        if self._get_user_by_email(email_address, log=log) is not None:
-            log.debug("Email already exists", email_address=email_address)
-            raise UserEmailNotAvailableError
+        duplicate = self._get_user_by_email(email_address, log=log)
+        if duplicate is not None:
+            raise EntityExistsError(
+                "User", duplicate.user_id, email_address=email_address
+            )
 
         hashed_password = self._user_password_service.hash(password, log=log)
         new_user: models.User = models.User(
@@ -237,7 +235,7 @@ class UserService(object):
             The user object if found, otherwise None.
 
         Raises:
-            UserDoesNotExistError: If the user is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the user is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -250,8 +248,7 @@ class UserService(object):
 
         if user is None:
             if error_if_not_found:
-                log.debug("User not found", email_address=email_address)
-                raise UserDoesNotExistError
+                raise EntityDoesNotExistError("User", email_address=email_address)
 
             return None
 
@@ -317,7 +314,7 @@ class UserIdService(object):
             The user object if found, otherwise None.
 
         Raises:
-            UserDoesNotExistError: If the user is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the user is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -328,8 +325,7 @@ class UserIdService(object):
 
         if user is None:
             if error_if_not_found:
-                log.debug("User not found", user_id=user_id)
-                raise UserDoesNotExistError
+                raise EntityDoesNotExistError("User", user_id=user_id)
 
             return None
 
@@ -399,10 +395,9 @@ class UserCurrentService(object):
         Raises:
             NoCurrentUserError: If there is no current user.
         """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
         if not current_user.is_authenticated:
-            log.debug("There is no current user.")
             raise NoCurrentUserError
 
         return cast(models.User, current_user)
@@ -527,7 +522,7 @@ class UserNameService(object):
             The user object if found, otherwise None.
 
         Raises:
-            UserDoesNotExistError: If the user is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the user is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -538,8 +533,7 @@ class UserNameService(object):
 
         if user is None:
             if error_if_not_found:
-                log.debug("User not found", username=username)
-                raise UserDoesNotExistError
+                raise EntityDoesNotExistError("User", username=username)
 
             return None
 
@@ -595,12 +589,10 @@ class UserPasswordService(object):
         )
 
         if not authenticated and error_if_failed:
-            log.debug("Password authentication failed.")
-            raise UserPasswordVerificationError
+            raise UserPasswordError("Password authentication failed.")
 
         if expiration_date < current_timestamp:
-            log.debug("Password expired")
-            raise UserPasswordExpiredError
+            raise UserPasswordError("Password expired.")
 
         return authenticated
 
@@ -637,15 +629,17 @@ class UserPasswordService(object):
         if not self._password_service.verify(
             password=current_password, hashed_password=str(user.password), log=log
         ):
-            raise UserPasswordChangeError
+            raise UserPasswordChangeError("Invalid Current Password.")
 
         if new_password != confirm_new_password:
-            raise UserPasswordChangeError
+            raise UserPasswordChangeError(
+                "Confirmation password does not match new password."
+            )
 
         if self._password_service.verify(
             password=new_password, hashed_password=str(user.password), log=log
         ):
-            raise UserPasswordChangeSamePasswordError
+            raise UserPasswordChangeError("New password matches old password.")
 
         timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         user.password = self._password_service.hash(password=new_password, log=log)

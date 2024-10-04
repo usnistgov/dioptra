@@ -356,7 +356,7 @@ def assert_cannot_rename_plugin_parameter_type_to_existing_name(
         new_structure=new_structure,
         new_description=new_description,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_cannot_delete_invalid_plugin_parameter_type(

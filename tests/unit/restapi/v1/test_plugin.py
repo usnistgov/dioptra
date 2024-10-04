@@ -345,7 +345,7 @@ def assert_registering_existing_plugin_name_fails(
     response = actions.register_plugin(
         client, name=name, description="", group_id=group_id
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_plugin_name_matches_expected_name(
@@ -411,7 +411,7 @@ def assert_cannot_rename_plugin_with_existing_name(
         new_name=existing_name,
         new_description=existing_description,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 # -- Assertions Plugin Files -----------------------------------------------------------
@@ -620,7 +620,7 @@ def assert_registering_existing_plugin_filename_fails(
         contents=contents,
         description=description,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_plugin_filename_matches_expected_name(
@@ -678,7 +678,7 @@ def assert_cannot_rename_plugin_file_with_existing_name(
         new_description=existing_description,
         new_contents=existing_contents,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_plugin_file_is_not_found(
