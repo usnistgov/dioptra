@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Shared assertions for REST API unit tests."""
+from http import HTTPStatus
 from typing import Any
 
 from dioptra.client.drafts import (
@@ -41,7 +42,7 @@ def assert_retrieving_draft_by_resource_id_works(
             does not match the expected response.
     """
     response = drafts_client.get_by_id(*resource_ids)
-    assert response.status_code == 200 and response.json() == expected
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_draft_by_id_works(
@@ -62,7 +63,7 @@ def assert_retrieving_draft_by_id_works(
             does not match the expected response.
     """
     response = drafts_client.get_by_id(*resource_ids, draft_id=draft_id)
-    assert response.status_code == 200 and response.json() == expected
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_drafts_works(
@@ -95,7 +96,7 @@ def assert_retrieving_drafts_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = drafts_client.get(*resource_ids, **query_string)
-    assert response.status_code == 200 and response.json()["data"] == expected
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_creating_another_existing_draft_fails(
@@ -116,7 +117,7 @@ def assert_creating_another_existing_draft_fails(
     response = drafts_client.create(
         *resource_ids, **payload
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_existing_draft_is_not_found(
@@ -133,7 +134,7 @@ def assert_existing_draft_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = drafts_client.get_by_id(*resource_ids)
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_new_draft_is_not_found(
@@ -151,7 +152,7 @@ def assert_new_draft_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = drafts_client.get_by_id(*resource_ids, draft_id=draft_id)
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_retrieving_snapshots_works(
@@ -171,7 +172,7 @@ def assert_retrieving_snapshots_works(
             does not match the expected response.
     """
     response = snapshots_client.get(*resource_ids)
-    assert response.status_code == 200 and response.json()["data"] == expected
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_retrieving_snapshot_by_id_works(
@@ -193,4 +194,4 @@ def assert_retrieving_snapshot_by_id_works(
             does not match the expected response.
     """
     response = snapshots_client.get_by_id(*resource_ids, snapshot_id=snapshot_id)
-    assert response.status_code == 200 and response.json() == expected
+    assert response.status_code == HTTPStatus.OK and response.json() == expected

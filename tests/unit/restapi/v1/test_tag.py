@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the tag entity. The tests ensure that the tags can be
 registered, renamed, deleted, and queried as expected through the REST API.
 """
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -86,7 +87,7 @@ def assert_retrieving_tag_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.tags.get_by_id(tag_id)
-    assert response.status_code == 200 and response.json() == expected
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_tags_works(
@@ -123,7 +124,7 @@ def assert_retrieving_tags_works(
         query_kwargs["page_length"] = paging_info["page_length"]
 
     response = dioptra_client.tags.get(**query_kwargs)
-    assert response.status_code == 200 and response.json()["data"] == expected
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_tag_works(
@@ -169,7 +170,7 @@ def assert_sorting_tag_works(
     response_data = response.json()
     tag_ids = [tag["id"] for tag in response_data["data"]]
 
-    assert response.status_code == 200 and tag_ids == expected
+    assert response.status_code == HTTPStatus.OK and tag_ids == expected
 
 
 def assert_registering_existing_tag_name_fails(
@@ -185,7 +186,7 @@ def assert_registering_existing_tag_name_fails(
         AssertionError: If the response status code is not 400.
     """
     response = dioptra_client.tags.create(group_id=group_id, name=name)
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_tag_name_matches_expected_name(
@@ -203,7 +204,10 @@ def assert_tag_name_matches_expected_name(
             tag does not match the expected name.
     """
     response = dioptra_client.tags.get_by_id(tag_id)
-    assert response.status_code == 200 and response.json()["name"] == expected_name
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
+    )
 
 
 def assert_tag_is_not_found(
@@ -220,7 +224,7 @@ def assert_tag_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.tags.get_by_id(tag_id)
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_cannot_rename_tag_with_existing_name(
@@ -239,7 +243,7 @@ def assert_cannot_rename_tag_with_existing_name(
         AssertionError: If the response status code is not 400.
     """
     response = dioptra_client.tags.modify_by_id(tag_id=tag_id, name=existing_name)
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 # -- Tests -----------------------------------------------------------------------------

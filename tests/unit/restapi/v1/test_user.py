@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the user entity. The tests ensure that the users can be registered,
 modified, and deleted as expected through the REST API.
 """
+from http import HTTPStatus
 from typing import Any
 
 from flask_sqlalchemy import SQLAlchemy
@@ -106,7 +107,7 @@ def assert_retrieving_user_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.users.get_by_id(user_id)
-    assert response.status_code == 200 and response.json() == expected
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_current_user_works(
@@ -129,7 +130,10 @@ def assert_retrieving_current_user_works(
         k: v for k, v in response.json().items() if k not in to_ignore
     }
     expected_filtered = {k: v for k, v in expected.items() if k not in to_ignore}
-    assert response.status_code == 200 and response_info_filtered == expected_filtered
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response_info_filtered == expected_filtered
+    )
 
 
 def assert_retrieving_users_works(
@@ -160,7 +164,7 @@ def assert_retrieving_users_works(
         query_string["pageLength"] = paging_info["page_length"]
 
     response = dioptra_client.users.get(**query_string)
-    assert response.status_code == 200 and response.json()["data"] == expected
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_registering_existing_username_fails(
@@ -175,13 +179,13 @@ def assert_registering_existing_username_fails(
         username: The username to assign to the new user.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 409.
     """
     password = "supersecurepassword"
     response = dioptra_client.users.create(
         username=existing_username, email=non_existing_email, password=password
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_registering_existing_email_fails(
@@ -196,13 +200,13 @@ def assert_registering_existing_email_fails(
         username: The username to assign to the new user.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 409.
     """
     password = "supersecurepassword"
     response = dioptra_client.users.create(
         username=non_existing_username, email=existing_email, password=password
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_user_username_matches_expected_name(
@@ -220,7 +224,10 @@ def assert_user_username_matches_expected_name(
             user does not match the expected name.
     """
     response = dioptra_client.users.get_by_id(user_id)
-    assert response.status_code == 200 and response.json()["name"] == expected_name
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
+    )
 
 
 def assert_current_user_username_matches_expected_name(
@@ -237,7 +244,10 @@ def assert_current_user_username_matches_expected_name(
             user does not match the expected name.
     """
     response = dioptra_client.users.get_current()
-    assert response.status_code == 200 and response.json()["name"] == expected_name
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
+    )
 
 
 def assert_user_is_not_found(
@@ -254,7 +264,7 @@ def assert_user_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.users.get_by_id(user_id)
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_cannot_rename_user_with_existing_username(
@@ -274,7 +284,7 @@ def assert_cannot_rename_user_with_existing_username(
         username=existing_username,
         email="new_email",
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_cannot_rename_user_with_existing_email(
@@ -294,7 +304,7 @@ def assert_cannot_rename_user_with_existing_email(
         username="new_username",
         email=existing_email,
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_login_works(
@@ -312,7 +322,7 @@ def assert_login_works(
     Raises:
         AssertionError: If the response status code is not 200.
     """
-    assert dioptra_client.auth.login(username, password).status_code == 200
+    assert dioptra_client.auth.login(username, password).status_code == HTTPStatus.OK
 
 
 def assert_user_does_not_exist(
@@ -331,7 +341,7 @@ def assert_user_does_not_exist(
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.auth.login(username, password)
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_login_is_unauthorized(
@@ -350,7 +360,7 @@ def assert_login_is_unauthorized(
         AssertionError: If the response status code is not 401.
     """
     response = dioptra_client.auth.login(username, password)
-    assert response.status_code == 401
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
 
 
 def assert_new_password_cannot_be_existing(
@@ -368,17 +378,17 @@ def assert_new_password_cannot_be_existing(
         we assume we are the current user. Defaults to None.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 403.
     """
     # Means we are the current user.
     if user_id is None:
         response = dioptra_client.users.change_current_user_password(password, password)
-        assert response.status_code == 403
+        assert response.status_code == HTTPStatus.FORBIDDEN
     else:
         response = dioptra_client.users.change_password_by_id(
             user_id, password, password
         )
-        assert response.status_code == 403
+        assert response.status_code == HTTPStatus.FORBIDDEN
 
 
 # -- Tests -------------------------------------------------------------

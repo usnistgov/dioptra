@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -115,7 +116,7 @@ def assert_retrieving_queue_by_id_works(
             does not match the expected response.
     """
     response = dioptra_client.queues.get_by_id(queue_id)
-    assert response.status_code == 200 and response.json() == expected
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_queues_works(
@@ -152,7 +153,7 @@ def assert_retrieving_queues_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = dioptra_client.queues.get(**query_string)
-    assert response.status_code == 200 and response.json()["data"] == expected
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_queue_works(
@@ -197,7 +198,7 @@ def assert_sorting_queue_works(
     response = dioptra_client.queues.get(**query_string)
     response_data = response.json()
     queue_ids = [queue["id"] for queue in response_data["data"]]
-    assert response.status_code == 200 and queue_ids == expected
+    assert response.status_code == HTTPStatus.OK and queue_ids == expected
 
 
 def assert_registering_existing_queue_name_fails(
@@ -210,12 +211,12 @@ def assert_registering_existing_queue_name_fails(
         name: The name to assign to the new queue.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 409.
     """
     response = dioptra_client.queues.create(
         group_id=group_id, name=name, description=""
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_queue_name_matches_expected_name(
@@ -233,7 +234,10 @@ def assert_queue_name_matches_expected_name(
             queue does not match the expected name.
     """
     response = dioptra_client.queues.get_by_id(queue_id)
-    assert response.status_code == 200 and response.json()["name"] == expected_name
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
+    )
 
 
 def assert_queue_is_not_found(
@@ -250,7 +254,7 @@ def assert_queue_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.queues.get_by_id(queue_id)
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_queue_is_not_associated_with_entrypoint(
@@ -276,7 +280,7 @@ def assert_queue_is_not_associated_with_entrypoint(
     entrypoint = response.get_json()
     queue_ids = set(queue["id"] for queue in entrypoint["queues"])
 
-    assert response.status_code == 200 and queue_id not in queue_ids
+    assert response.status_code == HTTPStatus.OK and queue_id not in queue_ids
 
 
 def assert_cannot_rename_queue_with_existing_name(
@@ -293,14 +297,14 @@ def assert_cannot_rename_queue_with_existing_name(
         name: The name of an existing queue.
 
     Raises:
-        AssertionError: If the response status code is not 400.
+        AssertionError: If the response status code is not 409.
     """
     response = dioptra_client.queues.modify_by_id(
         queue_id=queue_id,
         name=existing_name,
         description=existing_description,
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 # -- Tests -----------------------------------------------------------------------------
