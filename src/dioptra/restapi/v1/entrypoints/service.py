@@ -619,7 +619,11 @@ class EntrypointIdPluginsService(object):
             for plugin_file in plugin["plugin_files"]
         ]
         existing_entry_point_plugin_files = [
-            entry_point_plugin_file
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_plugin_file.plugin,
+                plugin_file=entry_point_plugin_file.plugin_file,
+            )
             for entry_point_plugin_file in entrypoint.entry_point_plugin_files
             if entry_point_plugin_file.plugin.resource_id not in set(plugin_ids)
         ]
@@ -753,16 +757,29 @@ class EntrypointIdPluginsIdService(object):
             raise EntrypointPluginDoesNotExistError
 
         # create a new snapshot with the plugin removed
+        entrypoint_parameters = [
+            models.EntryPointParameter(
+                name=param.name,
+                default_value=param.default_value,
+                parameter_type=param.parameter_type,
+                parameter_number=param.parameter_number,
+            )
+            for param in entrypoint.parameters
+        ]
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
             description=entrypoint.description,
             task_graph=entrypoint.task_graph,
-            parameters=entrypoint.parameters,
+            parameters=entrypoint_parameters,
             resource=entrypoint.resource,
             creator=current_user,
         )
         new_entrypoint.entry_point_plugin_files = [
-            entry_point_plugin_file
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_plugin_file.plugin,
+                plugin_file=entry_point_plugin_file.plugin_file,
+            )
             for entry_point_plugin_file in entrypoint.entry_point_plugin_files
             if entry_point_plugin_file.plugin.resource_id != plugin_id
         ]
