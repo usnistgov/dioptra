@@ -351,87 +351,19 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     Args:
         api: The main REST |Api| object.
     """
-    log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-    @api.errorhandler(EntityDoesNotExistError)
-    def handle_resource_does_not_exist_error(error: EntityDoesNotExistError):
-        log.debug(
-            "Entity not found", entity_type=error.entity_type, **error.entity_attributes
-        )
-        return error_result(
-            error,
-            http.HTTPStatus.NOT_FOUND,
-            {"entity_type": error.entity_type, **error.entity_attributes},
-        )
+    from dioptra.restapi import v1
 
-    @api.errorhandler(EntityExistsError)
-    def handle_entity_exists_error(error: EntityExistsError):
-        log.debug(
-            "Entity exists",
-            entity_type=error.entity_type,
-            existing_id=error.existing_id,
-            **error.entity_attributes,
-        )
-        return error_result(
-            error,
-            http.HTTPStatus.CONFLICT,
-            {
-                "entity_type": error.entity_type,
-                "existing_id": error.existing_id,
-                "entity_attributes": {**error.entity_attributes},
-            },
-        )
-
-    @api.errorhandler(BackendDatabaseError)
-    def handle_backend_database_error(error: BackendDatabaseError):
-        log.error(error.to_message())
-        return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
-
-    @api.errorhandler(SearchNotImplementedError)
-    def handle_search_not_implemented_error(error: SearchNotImplementedError):
-        log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.NOT_IMPLEMENTED, {})
-
-    @api.errorhandler(SearchParseError)
-    def handle_search_parse_error(error: SearchParseError):
-        log.debug(error.to_message())
-        return error_result(
-            error,
-            http.HTTPStatus.UNPROCESSABLE_ENTITY,
-            {"query": error.args[0], "reason": error.args[1]},
-        )
-
-    @api.errorhandler(DraftDoesNotExistError)
-    def handle_draft_does_not_exist(error: DraftDoesNotExistError):
-        log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.NOT_FOUND, {})
-
-    @api.errorhandler(DraftAlreadyExistsError)
-    def handle_draft_already_exists(error: DraftAlreadyExistsError):
-        log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
-
-    @api.errorhandler(LockError)
-    def handle_lock_error(error: LockError):
-        log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.FORBIDDEN, {})
-
-    @api.errorhandler(NoCurrentUserError)
-    def handle_no_current_user_error(error: NoCurrentUserError):
-        log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
-
-    @api.errorhandler(UserPasswordChangeError)
-    def handle_password_change_error(error: UserPasswordChangeError):
-        log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.FORBIDDEN, {})
-
-    @api.errorhandler(UserPasswordError)
-    def handle_user_password_error(error: UserPasswordError):
-        log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
-
-    @api.errorhandler(DioptraError)
-    def handle_base_error(error: DioptraError):
-        log.debug(error.to_message())
-        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+    register_base_error_handlers(api)
+    v1.artifacts.errors.register_error_handlers(api)
+    v1.entrypoints.errors.register_error_handlers(api)
+    v1.experiments.errors.register_error_handlers(api)
+    v1.groups.errors.register_error_handlers(api)
+    v1.jobs.errors.register_error_handlers(api)
+    v1.models.errors.register_error_handlers(api)
+    v1.plugin_parameter_types.errors.register_error_handlers(api)
+    v1.plugins.errors.register_error_handlers(api)
+    v1.queues.errors.register_error_handlers(api)
+    v1.tags.errors.register_error_handlers(api)
+    v1.users.errors.register_error_handlers(api)
+    v1.workflows.errors.register_error_handlers(api)
