@@ -23,6 +23,7 @@ from structlog.stdlib import BoundLogger
 
 from .auth import AuthCollectionClient
 from .base import DioptraResponseProtocol, DioptraSession
+from .plugins import PluginsCollectionClient
 from .queues import QueuesCollectionClient
 from .tags import TagsCollectionClient
 from .users import UsersCollectionClient
@@ -50,7 +51,7 @@ class DioptraClient(Generic[T]):
         self._queues = QueuesCollectionClient[T](session)
         self._tags = TagsCollectionClient[T](session)
         # self._groups = GroupsCollectionClient[T](session)
-        # self._plugins = PluginsCollectionClient[T](session)
+        self._plugins = PluginsCollectionClient[T](session)
         # self._plugin_parameter_types = (
         #     PluginParameterTypesCollectionClient[T](session)
         # )
@@ -85,10 +86,10 @@ class DioptraClient(Generic[T]):
     #     """The client for managing Dioptra's /groups collection."""
     #     return self._groups
 
-    # @property
-    # def plugins(self) -> PluginsCollectionClient[T]:
-    #     """The client for managing Dioptra's /plugins collection."""
-    #     return self._plugins
+    @property
+    def plugins(self) -> PluginsCollectionClient[T]:
+        """The client for managing Dioptra's /plugins collection."""
+        return self._plugins
 
     # @property
     # def plugin_parameter_types(self) -> PluginParameterTypesCollectionClient[T]:
