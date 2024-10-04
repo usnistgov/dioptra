@@ -104,3 +104,4 @@ def register_error_handlers(api: Api) -> None:
     v1.queues.errors.register_error_handlers(api)
     v1.tags.errors.register_error_handlers(api)
     v1.users.errors.register_error_handlers(api)
+    v1.workflows.errors.register_error_handlers(api)

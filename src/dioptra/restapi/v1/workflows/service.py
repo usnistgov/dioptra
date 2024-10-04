@@ -25,6 +25,7 @@ import yaml
 
 from .lib import package_job_files, views
 from .schema import FileTypes
+from .errors import EntrypointWorkflowValidationIssue
 
 from dioptra.restapi.db import db
 from dioptra.restapi.v1 import utils
@@ -133,7 +134,6 @@ class EntrypointValidateService(object):
         plugins = self._plugin_id_service.get(plugin_ids)
         for plugin in plugins:
             for plugin_file in plugin['plugin_files']:
-                # print(plugin_file.tasks)
                 for task in plugin_file.tasks:
                     input_parameters = task.input_parameters
                     output_parameters = task.output_parameters
@@ -159,16 +159,11 @@ class EntrypointValidateService(object):
             "tasks": tasks,
             "graph": cast(dict[str, Any], yaml.safe_load(task_graph)),
         }
-        print (task_engine_dict)
         valid = is_valid(task_engine_dict)
 
         if valid:
             return {"status": "Success", "valid": valid}
         else:
             issues = validate(task_engine_dict)
-            print(issues)
-            return {
-                "status": "Success", 
-                "valid": valid,
-                # "issues": issues,
-            }
+            log.debug("Entrypoint workflow validation failed", issues=issues)
+            raise EntrypointWorkflowValidationIssue(issues)

@@ -28,6 +28,10 @@ class JobExperimentDoesNotExistError(Exception):
     """The experiment associated with the job does not exist."""
 
 
+class EntrypointWorkflowValidationIssue(Exception):
+    """The entrypoint workflow yaml has issues."""
+
+
 def register_error_handlers(api: Api) -> None:
     @api.errorhandler(JobEntryPointDoesNotExistError)
     def handle_experiment_job_does_not_exist_error(error):
@@ -39,3 +43,10 @@ def register_error_handlers(api: Api) -> None:
             "message": "Not Found - The experiment associated with the job does not "
             "exist"
         }, 404
+
+    @api.errorhandler(EntrypointWorkflowValidationIssue)
+    def handle_entrypoint_workflow_validation_error(error):
+        issues = error.args
+        print (issues)
+        message = "\n".join(str(issue) for issue in issues)
+        return {"message": message}, 422
