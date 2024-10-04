@@ -70,8 +70,24 @@ def assert_entrypoint_workflow_is_valid(
         plugin_ids=plugin_ids,
         entrypoint_parameters=entrypoint_parameters,
     )
-    # print(response.get_json())
     assert response.status_code == 200 and response.get_json()['valid'] == True
+
+
+def assert_entrypoint_workflow_has_errors(
+    client: FlaskClient,
+    task_graph: str,
+    plugin_ids: list[int],
+    entrypoint_parameters: list[dict[str, Any]],
+    expected_message: str,
+) -> None:
+    response = validate_entrypoint_workflow(
+        client,
+        task_graph=task_graph,
+        plugin_ids=plugin_ids,
+        entrypoint_parameters=entrypoint_parameters,
+    )
+    # print(response.get_json()['message'])
+    assert response.status_code == 422 and response.get_json()['message'] == expected_message
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -144,4 +160,243 @@ def test_entrypoint_workflow_validation(
         task_graph=task_graph,
         plugin_ids=plugin_ids,
         entrypoint_parameters=entrypoint_parameters,
+    )
+
+
+def test_entrypoint_workflow_validation_has_semantic_error(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    """"""
+    plugin_response = actions.register_plugin(
+        client,
+        name="hello_world",
+        description="The hello world plugin.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    plugin_file_contents = textwrap.dedent(
+        """"from dioptra import pyplugs
+        
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f'Hello, {name}!'"
+        """
+    )
+    plugin_file_tasks = [
+        {
+            "name": "hello_world",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": 2,
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": 2,
+                },
+            ],
+        },
+    ]
+    plugin_file_response = actions.register_plugin_file(
+        client,
+        plugin_id=plugin_response["id"],
+        filename="tasks.py",
+        description="The task plugin file for hello world.",
+        contents=plugin_file_contents,
+        tasks = plugin_file_tasks,
+    ).get_json()
+    task_graph = textwrap.dedent(
+        """# my entrypoint graph
+        hello_step:
+          hello_wrld:
+            name: $name
+        """
+    ) # task graph is wrong, hello_wrld is not the task plugin
+
+    plugin_ids = [plugin_response["id"]]
+    entrypoint_parameters = [
+        {
+            "name" : "name",
+            "defaultValue": "User",
+            "parameterType": "string",
+        },
+    ]
+    expected_message = "[ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, 'In step \"hello_step\": unrecognized task plugin: hello_wrld')]"
+    assert_entrypoint_workflow_has_errors(
+        client,
+        task_graph=task_graph,
+        plugin_ids=plugin_ids,
+        entrypoint_parameters=entrypoint_parameters,
+        expected_message=expected_message,
+    )
+
+
+def test_entrypoint_workflow_validation_has_schema_error(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    """"""
+    plugin_response = actions.register_plugin(
+        client,
+        name="hello_world",
+        description="The hello world plugin.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    plugin_file_contents = textwrap.dedent(
+        """"from dioptra import pyplugs
+        
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            return f'Hello, {name}!'"
+        """
+    )
+    plugin_file_tasks = [
+        {
+            "name": "hello_world",
+            "inputtParams": [
+                {
+                    "name": "name",
+                    "parameterType": 2,
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "greeting",
+                    "parameterType": 2,
+                },
+            ],
+        },
+    ] # plugin file tasks is wrong, inputtParams is not an accepted feild
+    plugin_file_response = actions.register_plugin_file(
+        client,
+        plugin_id=plugin_response["id"],
+        filename="tasks.py",
+        description="The task plugin file for hello world.",
+        contents=plugin_file_contents,
+        tasks = plugin_file_tasks,
+    ).get_json()
+    task_graph = textwrap.dedent(
+        """# my entrypoint graph
+        hello_step:
+          hello_world:
+            name: $name
+        """
+    )
+
+    plugin_ids = [plugin_response["id"]]
+    entrypoint_parameters = [
+        {
+            "name" : "name",
+            "defaultValue": "User",
+            "parameterType": "string",
+        },
+    ]
+    expected_message = "[ValidationIssue(IssueType.SCHEMA, IssueSeverity.ERROR, 'In tasks section: {} should be non-empty')]"
+    assert_entrypoint_workflow_has_errors(
+        client,
+        task_graph=task_graph,
+        plugin_ids=plugin_ids,
+        entrypoint_parameters=entrypoint_parameters,
+        expected_message=expected_message,
+    )
+
+
+def test_entrypoint_workflow_validation_has_type_error(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+) -> None:
+    """"""
+    plugin_response = actions.register_plugin(
+        client,
+        name="hello_world",
+        description="The hello world plugin.",
+        group_id=auth_account["default_group_id"],
+    ).get_json()
+    plugin_file_contents = textwrap.dedent(
+        """"from dioptra import pyplugs
+        
+        @pyplugs.register
+        def hello_world(name: str) -> str:
+            print(f'Hello, {name}!')
+            return name
+        
+        @pyplugs.register
+        def goodbye(name_: str) -> str:
+            return f'Goodbye, {name_}!'
+        """
+    )
+    plugin_file_tasks = [
+        {
+            "name": "hello_world",
+            "inputParams": [
+                {
+                    "name": "name",
+                    "parameterType": 2,
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "name_",
+                    "parameterType": 2,
+                },
+            ],
+        },
+        {
+            "name": "goodbye",
+            "inputParams": [
+                {
+                    "name": "name_",
+                    "parameterType": 2,
+                    "required": True,
+                },
+            ],
+            "outputParams": [
+                {
+                    "name": "goodbye",
+                    "parameterType": 2,
+                },
+            ],
+        },
+    ]
+    plugin_file_response = actions.register_plugin_file(
+        client,
+        plugin_id=plugin_response["id"],
+        filename="tasks.py",
+        description="The task plugin file for hello world.",
+        contents=plugin_file_contents,
+        tasks = plugin_file_tasks,
+    ).get_json()
+    task_graph = textwrap.dedent(
+        """# my entrypoint graph
+        hello_step:
+          hello_world:
+            name: $name
+          goodbye:
+            greeting: $greeting
+        """
+    )
+
+    plugin_ids = [plugin_response["id"]]
+    entrypoint_parameters = [
+        {
+            "name" : "name",
+            "defaultValue": 2,
+            "parameterType": "string",
+        },
+    ]
+    expected_message = "[ValidationIssue(IssueType.SCHEMA, IssueSeverity.ERROR, 'In tasks section: {} should be non-empty')]"
+    assert_entrypoint_workflow_has_errors(
+        client,
+        task_graph=task_graph,
+        plugin_ids=plugin_ids,
+        entrypoint_parameters=entrypoint_parameters,
+        expected_message=expected_message,
     )
