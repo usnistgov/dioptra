@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from abc import ABC, abstractmethod
+from http import HTTPStatus
 from typing import Any, Callable, Final, Generic, TypeVar, cast
 from urllib.parse import urlparse, urlunparse
 
@@ -135,7 +136,7 @@ def is_not_2xx(status_code: int) -> bool:
     Returns:
         True if the status code is not in the 2xx range, False otherwise.
     """
-    return status_code < 200 or status_code >= 300
+    return status_code < HTTPStatus.OK or status_code >= HTTPStatus.MULTIPLE_CHOICES
 
 
 class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
