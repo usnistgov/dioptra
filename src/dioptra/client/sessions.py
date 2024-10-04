@@ -102,7 +102,7 @@ def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any
         StatusCodeError: If the response status code is not in the 2xx range.
         JSONDecodeError: If the response data cannot be parsed as JSON.
     """
-    if is_not_2xx(response.status_code):
+    if not is_2xx(response.status_code):
         LOGGER.error(
             "HTTP error code returned",
             status_code=response.status_code,
@@ -127,16 +127,16 @@ def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any
     return response_dict
 
 
-def is_not_2xx(status_code: int) -> bool:
-    """Check if the status code is not in the 2xx range.
+def is_2xx(status_code: int) -> bool:
+    """Check if the status code is in the 2xx range.
 
     Args:
         status_code: The HTTP status code to check.
 
     Returns:
-        True if the status code is not in the 2xx range, False otherwise.
+        True if the status code is in the 2xx range, False otherwise.
     """
-    return status_code < HTTPStatus.OK or status_code >= HTTPStatus.MULTIPLE_CHOICES
+    return status_code >= HTTPStatus.OK and status_code < HTTPStatus.MULTIPLE_CHOICES
 
 
 class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
