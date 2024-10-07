@@ -154,28 +154,24 @@
     store.savedForms.experiment = null
   }
 
-  // watch(experiment.value.entrypoints, () => {
-  //   console.log('entrypoint changed!')
-  // })
 
   watch(() => experiment.value.entrypoints, async() => {
+    // check if saved entrypoints are still valid, if not then delete
     if(!store.savedForms?.experiment) return
     if(experiment.value.entrypoints.length === 0) return
-    for (const [index, entrypoint] of experiment.value.entrypoints.entries()) {
-      if(typeof entrypoint === 'number') {
-        const res = await getEntrypoint(entrypoint)
+    for(let index = experiment.value.entrypoints.length - 1; index >= 0; index--) {
+      let entrypoint = experiment.value.entrypoints[index]
+      let id = typeof entrypoint === 'number' ? entrypoint : entrypoint.id
+      try {
+        const res =  await api.getItem('entrypoints', id)
         experiment.value.entrypoints[index] = res.data
-      }
+      } catch(err) {
+        experiment.value.entrypoints.splice(index, 1)
+        console.warn(err)
+      } 
     }
   })
 
-  async function getEntrypoint(entrypointID) {
-    try{
-      return await api.getItem('entrypoints', entrypointID)
-    }catch(err) {
-      console.warn(err)
-    }
-  }
 
   const isEmptyValues = computed(() => {
     return Object.values(experiment.value).every((value) => 

@@ -2,7 +2,6 @@
   <PageTitle 
     title="Create Job"
   />
-  {{ job }}
   <div :class="`row ${isMobile ? '' : 'q-mx-xl'} q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
@@ -27,7 +26,6 @@
               v-model="job.queue"
               clearable
               use-input
-              emit-value
               map-options
               option-label="name"
               option-value="id"
@@ -44,7 +42,7 @@
             <q-select
               outlined
               dense
-              v-model="selectedEntrypoint"
+              v-model="job.entrypoint"
               clearable
               use-input
               map-options
@@ -77,7 +75,7 @@
         </div>
       </fieldset>
     </div>
-    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`" :disabled="selectedEntrypoint === ''">
+    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`" :disabled="job.entrypoint === ''">
       <legend>Values</legend>
       <div class="q-px-xl">
         <BasicTable
@@ -100,6 +98,7 @@
         color="negative" 
         label="Cancel"
         class="q-mr-lg"
+        @click="confirmLeave = true"
       />
       <q-btn  
         @click="submit()" 
@@ -115,17 +114,26 @@
     type="Parameter"
     :name="selectedParam.name"
   />
-
   <EditJobParamDialog 
     v-model="showEditParamDialog"
     :editParam="selectedParam"
     @updateParam="updateParam"
   />
+  <LeaveFormDialog 
+    v-model="showLeaveDialog"
+    type="job"
+    :edit="false"
+    @leaveForm="leaveForm"
+  />
+  <ReturnToFormDialog
+    v-model="showReturnDialog"
+    @cancel="clearForm"
+  />
 </template>
 
 <script setup>
-  import { ref, inject, watch, computed } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { ref, inject, watch, computed, onMounted } from 'vue'
+  import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import EditJobParamDialog from '@/dialogs/EditJobParamDialog.vue'
   import BasicTable from '@/components/BasicTable.vue'
@@ -133,6 +141,11 @@
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
+  import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
+  import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
+  import { useLoginStore } from '@/stores/LoginStore'
+
+  const store = useLoginStore()
 
   const route = useRoute()
   
@@ -148,7 +161,6 @@
     return (/^\d+[hms]$/.test(val)) || "Value must be an integer followed by 'h', 'm', or 's'";
   }
 
-
   const job = ref({
     description: '',
     timeout: '24h',
@@ -156,19 +168,25 @@
     entrypoint: '',
   })
 
-  const selectedEntrypoint = ref('')
+  const valuesChanged = computed(() => {
+    return job.value.description !== '' ||
+           job.value.timeout !== '24h' ||
+           (job.value.queue !== '' && job.value.queue !== null) ||
+           job.value.entrypoint !== ''
+  })
 
   const parameters = ref([])
+
   const computedValue = computed(() => {
     let output = {}
-    if(parameters.value.length === 0) return output
+    if (parameters.value.length === 0) return output
     parameters.value.forEach((param) => {
       output[param.name] = param.value
     })
     return output
   })
 
-  watch(() => selectedEntrypoint.value, (newVal) => {
+  watch(() => job.value.entrypoint, (newVal) => {
     parameters.value = []
     if(Array.isArray(newVal?.parameters)) {
       newVal.parameters.forEach((param) => {
@@ -202,7 +220,8 @@
   }
 
   async function createJob() {
-    job.value.entrypoint = selectedEntrypoint.value.id
+    job.value.queue = job.value.queue.id
+    job.value.entrypoint = job.value.entrypoint.id
     job.value.values = computedValue.value
     console.log('submitting job = ', JSON.parse(JSON.stringify(job.value)))
     try {
@@ -261,6 +280,59 @@
         notify.error(err.response.data.message)
       } 
     })
+  }
+
+  onMounted(async () => {
+    if(store.savedForms.jobs[route.params.id]) {
+      job.value = store.savedForms.jobs[route.params.id]
+      try {
+        await api.getItem('queues', job.value.queue.id)
+      } catch(err) {
+        job.value.queue = ''
+        console.warn(err)
+      }
+      try {
+        await api.getItem('entrypoints', job.value.entrypoint.id)
+      } catch(err) {
+        job.value.entrypoint = ''
+        console.warn(err)
+      }
+      basicInfoForm.value.reset()
+      showReturnDialog.value = true
+    }
+  })
+
+  onBeforeRouteLeave((to, from, next) => {
+    toPath.value = to.path
+    if(confirmLeave.value) {
+      next(true)
+    } else if(valuesChanged.value) {
+      showLeaveDialog.value = true
+    } else {
+      next(true)
+    }
+  })
+
+  const showLeaveDialog = ref(false)
+  const showReturnDialog = ref(false)
+  const confirmLeave = ref(false)
+  const toPath = ref()
+
+  function leaveForm() {
+    store.savedForms.jobs[route.params.id] = job.value
+    confirmLeave.value = true
+    router.push(toPath.value)
+  }
+
+  function clearForm() {
+    job.value = {
+      description: '',
+      queue: '',
+      entrypoint: '',
+      timeout: '24h'
+    }
+    basicInfoForm.value.reset()
+    store.savedForms.jobs[route.params.id] = null
   }
 
 </script>

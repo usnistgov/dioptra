@@ -39,7 +39,9 @@ export const useLoginStore = defineStore('login', () => {
   ])
   
 
-  const savedForms = ref({})
+  const savedForms = ref({
+    jobs: {}
+  })
   
 
   // computed()'s are getters
