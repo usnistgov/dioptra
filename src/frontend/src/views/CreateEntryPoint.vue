@@ -428,12 +428,10 @@
   }
 
   async function checkIfStillValid(type) {
-    console.log('store.savedForms = ', store.savedForms)
     for(let index = store.savedForms.entryPoint[type].length - 1; index >= 0; index--) {
       let id = store.savedForms.entryPoint[type][index].id
       try {
         const res =  await api.getItem(type, id)
-        console.log('ressss = ', res)
       } catch(err) {
         await store.savedForms.entryPoint[type].splice(index, 1)
         console.warn(err)

@@ -61,7 +61,6 @@
           use-input
           use-chips
           multiple
-          emit-value
           map-options
           option-label="name"
           option-value="id"
@@ -154,31 +153,17 @@
     store.savedForms.experiment = null
   }
 
-
-  watch(() => experiment.value.entrypoints, async() => {
-    // check if saved entrypoints are still valid, if not then delete
-    if(!store.savedForms?.experiment) return
-    if(experiment.value.entrypoints.length === 0) return
-    for(let index = experiment.value.entrypoints.length - 1; index >= 0; index--) {
-      let entrypoint = experiment.value.entrypoints[index]
-      let id = typeof entrypoint === 'number' ? entrypoint : entrypoint.id
+  async function checkIfStillValid() {
+    for(let index = store.savedForms.experiment.entrypoints.length - 1; index >= 0; index--) {
+      let id = store.savedForms.experiment.entrypoints[index].id
       try {
         const res =  await api.getItem('entrypoints', id)
-        experiment.value.entrypoints[index] = res.data
       } catch(err) {
-        experiment.value.entrypoints.splice(index, 1)
+        await store.savedForms.experiment.entrypoints.splice(index, 1)
         console.warn(err)
       } 
     }
-  })
-
-
-  const isEmptyValues = computed(() => {
-    return Object.values(experiment.value).every((value) => 
-      (typeof value === 'string' && value === '') || 
-      (Array.isArray(value) && value.length === 0)
-    )
-  })
+  }
 
   const basicInfoForm = ref(null)
 
@@ -207,6 +192,7 @@
       title.value = 'Create Experiment'
       if(store.savedForms?.experiment) {
         showReturnDialog.value = true
+        await checkIfStillValid()
         experiment.value = store.savedForms.experiment
       }
       return
@@ -284,7 +270,7 @@
     toPath.value = to.path
     if(confirmLeave.value) {
       next(true)
-    } else if(!isEmptyValues.value && valuesChanged.value) {
+    } else if(valuesChanged.value) {
       showLeaveDialog.value = true
     } else {
       next(true)
