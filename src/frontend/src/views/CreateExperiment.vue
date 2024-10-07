@@ -246,6 +246,7 @@
     try {
       if(route.params.id === 'new') {
         await api.addItem('experiments', experiment.value)
+        store.savedForms.experiment = null
         notify.success(`Successfully created '${experiment.value.name}'`)
       } else {
         await api.updateItem('experiments', route.params.id, {

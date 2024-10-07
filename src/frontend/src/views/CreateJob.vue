@@ -211,6 +211,7 @@
   function submit() {
     basicInfoForm.value.validate().then(success => {
       if (success) {
+        confirmLeave.value = true
         createJob()
       }
       else {
@@ -227,8 +228,11 @@
     try {
       await api.addJob(route.params.id, job.value)
       notify.success(`Successfully created job`)
+      store.savedForms.jobs[route.params.id] = null
       router.push(`/experiments/${route.params.id}/jobs`)
     } catch(err) {
+      // error shows when reddis isn't installed, but job is still created
+      store.savedForms.jobs[route.params.id] = null
       notify.error(err.response.data.message)
     }
   }
