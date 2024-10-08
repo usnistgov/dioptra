@@ -79,19 +79,19 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             root_collection=root_collection,
             parent_sub_collections=parent_sub_collections,
         )
-        self._new_drafts = NewResourceDraftsSubCollectionClient[T](
+        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
-                draft_fields=PLUGINS_DRAFT_FIELDS,
+                draft_fields=PLUGIN_FILES_DRAFT_FIELDS,
                 resource_name=f"plugin {self.name}",
             ),
             root_collection=root_collection,
             parent_sub_collections=[self],
         )
-        self._existing_drafts = ExistingResourceDraftsSubCollectionClient[T](
+        self._existing_resource_drafts = ExistingResourceDraftsSubCollectionClient[T](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
-                draft_fields=PLUGINS_DRAFT_FIELDS,
+                draft_fields=PLUGIN_FILES_DRAFT_FIELDS,
                 resource_name=f"plugin {self.name}",
             ),
             root_collection=root_collection,
@@ -109,7 +109,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         )
 
     @property
-    def new_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
         """The client for managing the new plugin file drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -119,13 +119,13 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         Python Dioptra Python client called ``client``::
 
             # GET /api/v1/plugins/1/files/drafts
-            client.plugins.files.new_drafts.get(1)
+            client.plugins.files.new_resource_drafts.get(1)
 
             # GET /api/v1/plugins/1/files/drafts/1
-            client.plugins.files.new_drafts.get_by_id(1, draft_id=1)
+            client.plugins.files.new_resource_drafts.get_by_id(1, draft_id=1)
 
             # PUT /api/v1/plugins/1/files/drafts/1
-            client.plugins.files.new_drafts.modify(
+            client.plugins.files.new_resource_drafts.modify(
                 1,
                 draft_id=1,
                 filename="new_name.py",
@@ -135,7 +135,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             )
 
             # POST /api/v1/plugins/1/files/drafts
-            client.plugins.files.new_drafts.create(
+            client.plugins.files.new_resource_drafts.create(
                 1,
                 group_id=1,
                 filename="name.py",
@@ -145,12 +145,12 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             )
 
             # DELETE /api/v1/plugins/1/files/drafts/1
-            client.plugins.files.new_drafts.delete(1, draft_id=1)
+            client.plugins.files.new_resource_drafts.delete(1, draft_id=1)
         """
-        return self._new_drafts
+        return self._new_resource_drafts
 
     @property
-    def existing_drafts(self) -> ExistingResourceDraftsSubCollectionClient[T]:
+    def existing_resource_drafts(self) -> ExistingResourceDraftsSubCollectionClient[T]:
         """The client for managing the existing plugin file drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -160,10 +160,10 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
         active Python Dioptra Python client called ``client``::
 
             # GET /api/v1/plugins/1/files/2/draft
-            client.plugins.files.existing_drafts.get_by_id(1, 2)
+            client.plugins.files.existing_resource_drafts.get_by_id(1, 2)
 
             # PUT /api/v1/plugins/1/files/2/draft
-            client.plugins.files.existing_drafts.modify(
+            client.plugins.files.existing_resource_drafts.modify(
                 1,
                 2,
                 filename="new_name.py",
@@ -173,7 +173,7 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             )
 
             # POST /api/v1/plugins/1/files/2/draft
-            client.plugins.files.existing_drafts.create(
+            client.plugins.files.existing_resource_drafts.create(
                 1,
                 2,
                 filename="name.py",
@@ -183,9 +183,9 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             )
 
             # DELETE /api/v1/plugins/1/files/2/draft
-            client.plugins.files.existing_drafts.delete(1, 2)
+            client.plugins.files.existing_resource_drafts.delete(1, 2)
         """
-        return self._existing_drafts
+        return self._existing_resource_drafts
 
     @property
     def snapshots(self) -> SnapshotsSubCollectionClient[T]:
@@ -395,7 +395,7 @@ class PluginsCollectionClient(CollectionClient[T]):
         self._files = PluginFilesSubCollectionClient[T](
             session=session, root_collection=self
         )
-        self._new_drafts = NewResourceDraftsSubCollectionClient[T](
+        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=PLUGINS_DRAFT_FIELDS,
@@ -403,7 +403,7 @@ class PluginsCollectionClient(CollectionClient[T]):
             ),
             root_collection=self,
         )
-        self._existing_drafts = ExistingResourceDraftsSubCollectionClient[T](
+        self._existing_resource_drafts = ExistingResourceDraftsSubCollectionClient[T](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=PLUGINS_DRAFT_FIELDS,
@@ -422,7 +422,7 @@ class PluginsCollectionClient(CollectionClient[T]):
         return self._files
 
     @property
-    def new_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
         """The client for managing the new plugin drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -432,28 +432,28 @@ class PluginsCollectionClient(CollectionClient[T]):
         Python Dioptra Python client called ``client``::
 
             # GET /api/v1/plugins/drafts
-            client.plugins.new_drafts.get()
+            client.plugins.new_resource_drafts.get()
 
             # GET /api/v1/plugins/drafts/1
-            client.plugins.new_drafts.get_by_id(draft_id=1)
+            client.plugins.new_resource_drafts.get_by_id(draft_id=1)
 
             # PUT /api/v1/plugins/drafts/1
-            client.plugins.new_drafts.modify(
+            client.plugins.new_resource_drafts.modify(
                 draft_id=1, name="new-name", description="new-description"
             )
 
             # POST /api/v1/plugins/drafts
-            client.plugins.new_drafts.create(
+            client.plugins.new_resource_drafts.create(
                 group_id=1, name="name", description="description"
             )
 
             # DELETE /api/v1/plugins/drafts/1
-            client.plugins.new_drafts.delete(draft_id=1)
+            client.plugins.new_resource_drafts.delete(draft_id=1)
         """
-        return self._new_drafts
+        return self._new_resource_drafts
 
     @property
-    def existing_drafts(self) -> ExistingResourceDraftsSubCollectionClient[T]:
+    def existing_resource_drafts(self) -> ExistingResourceDraftsSubCollectionClient[T]:
         """The client for managing the existing plugin drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -463,22 +463,22 @@ class PluginsCollectionClient(CollectionClient[T]):
         Python Dioptra Python client called ``client``::
 
             # GET /api/v1/plugins/1/draft
-            client.plugins.existing_drafts.get_by_id(1)
+            client.plugins.existing_resource_drafts.get_by_id(1)
 
             # PUT /api/v1/plugins/1/draft
-            client.plugins.existing_drafts.modify(
+            client.plugins.existing_resource_drafts.modify(
                 1, name="new-name", description="new-description"
             )
 
             # POST /api/v1/plugins/1/draft
-            client.plugins.existing_drafts.create(
+            client.plugins.existing_resource_drafts.create(
                 1, name="name", description="description"
             )
 
             # DELETE /api/v1/plugins/1/draft
-            client.plugins.existing_drafts.delete(1)
+            client.plugins.existing_resource_drafts.delete(1)
         """
-        return self._existing_drafts
+        return self._existing_resource_drafts
 
     @property
     def snapshots(self) -> SnapshotsSubCollectionClient[T]:
@@ -491,10 +491,10 @@ class PluginsCollectionClient(CollectionClient[T]):
         Python Dioptra Python client called ``client``::
 
             # GET /api/v1/plugins/1/snapshots
-            client.plugins.existing_drafts.get_by_id(1)
+            client.plugins.snapshots.get_by_id(1)
 
             # GET /api/v1/plugins/1/snapshots/2
-            client.plugins.existing_drafts.get_by_id(1, snapshot_id=2)
+            client.plugins.snapshots.get_by_id(1, snapshot_id=2)
         """
         return self._snapshots
 
