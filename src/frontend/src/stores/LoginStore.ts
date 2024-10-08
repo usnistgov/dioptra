@@ -40,7 +40,8 @@ export const useLoginStore = defineStore('login', () => {
   
 
   const savedForms = ref({
-    jobs: {}
+    jobs: {},
+    files: {},
   })
   
 
