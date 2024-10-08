@@ -262,10 +262,10 @@ def attack_patch(
 def augment_patch(
     data_flow: Any,
     adv_data_dir: Union[str, Path],
-    patch_dir: str,
+    patch_dir: Union[str, Path],
     model: Any,
     patch_shape: Tuple,
-    distance_metrics_list: Optional[List[Tuple[str, Callable[..., np.ndarray]]]] = None,
+    distance_metrics: List[Dict[str, str]],
     batch_size: int = 32,
     patch_scale: float = 0.4,
     rotation_max: float = 22.5,
@@ -274,6 +274,7 @@ def augment_patch(
 ):
     '''add patches to a dataset'''
     make_directories([adv_data_dir])
+    distance_metrics_list = get_distance_metric_list(distance_metrics)
     create_adversarial_patch_dataset(
         data_flow=data_flow,
         adv_data_dir=adv_data_dir,

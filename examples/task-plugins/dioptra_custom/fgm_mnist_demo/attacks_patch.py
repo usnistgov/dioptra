@@ -34,7 +34,7 @@ from dioptra.sdk.utilities.decorators import require_package
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 try:
-    from art.attacks.evasion import AdversarialPatch
+    from art.attacks.evasion import AdversarialPatchNumpy
     from art.estimators.classification import TensorFlowV2Classifier
 
 except ImportError:  # pragma: nocover
@@ -82,7 +82,7 @@ def create_adversarial_patches(
         scale_max=scale_max,
         learning_rate=learning_rate,
         max_iter=max_iter,
-        patch_shape=patch_shape,
+        #patch_shape=patch_shape,
     )
 
     # Start by generating adversarial patches.
@@ -139,7 +139,7 @@ def create_adversarial_patch_dataset(
     distance_metrics_list = distance_metrics_list or []
     adv_data_dir = Path(adv_data_dir)
 
-    patch_list = np.load((patch_dir / "patch_list.npy").resolve())
+    patch_list = np.load((Path(patch_dir) / "patch_list.npy").resolve())
 
     attack = _init_patch(
         keras_classifier=keras_classifier,
@@ -147,7 +147,7 @@ def create_adversarial_patch_dataset(
         rotation_max=rotation_max,
         scale_min=scale_min,
         scale_max=scale_max,
-        patch_shape=patch_shape,
+        #patch_shape=patch_shape,
     )
 
     num_images = data_flow.n
@@ -205,8 +205,8 @@ def create_adversarial_patch_dataset(
 
 def _init_patch(
     keras_classifier: TensorFlowV2Classifier, batch_size: int, **kwargs
-) -> AdversarialPatch:
-    attack = AdversarialPatch(
+) -> AdversarialPatchNumpy:
+    attack = AdversarialPatchNumpy(
         classifier=keras_classifier, batch_size=batch_size, **kwargs
     )
     return attack
