@@ -29,7 +29,7 @@
         </div>
       </fieldset>
 
-      <fieldset class="q-mt-xl q-pa-lg" v-if="dataStore.editMode">
+      <fieldset class="q-mt-xl q-pa-lg">
         <legend>Owner Only Options</legend>
         <q-list bordered>
           <q-item>
@@ -123,10 +123,7 @@
   import { ref, inject } from 'vue'
   import BasicTable from '@/components/BasicTable.vue'
   import { useLoginStore } from '@/stores/LoginStore'
-  import { useDataStore } from '@/stores/DataStore.ts'
   import PageTitle from '@/components/PageTitle.vue'
-  
-  const dataStore = useDataStore()
 
   const isMobile = inject('isMobile')
 
