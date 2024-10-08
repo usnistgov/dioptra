@@ -11,6 +11,7 @@
     :hideDeleteBtn="true"
     @request="getUserGroups"
     ref="tableRef"
+    :hideCreateBtn="true"
   >
     <template #body-cell="props">
       <q-td :props="props">
