@@ -289,17 +289,21 @@
   onMounted(async () => {
     if(store.savedForms.jobs[route.params.id]) {
       job.value = store.savedForms.jobs[route.params.id]
-      try {
-        await api.getItem('queues', job.value.queue.id)
-      } catch(err) {
-        job.value.queue = ''
-        console.warn(err)
+      if(job.value.queue && job.value.queue.id) {
+        try {
+          await api.getItem('queues', job.value.queue.id)
+        } catch(err) {
+          job.value.queue = ''
+          console.warn(err)
+        }
       }
-      try {
-        await api.getItem('entrypoints', job.value.entrypoint.id)
-      } catch(err) {
-        job.value.entrypoint = ''
-        console.warn(err)
+      if(job.value.entrypoint && job.value.entrypoint.id) {
+        try {
+          await api.getItem('entrypoints', job.value.entrypoint.id)
+        } catch(err) {
+          job.value.entrypoint = ''
+          console.warn(err)
+        }
       }
       basicInfoForm.value.reset()
       showReturnDialog.value = true
