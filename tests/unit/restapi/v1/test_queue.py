@@ -596,17 +596,17 @@ def test_manage_existing_queue_draft(
         "num_other_drafts": 0,
         "payload": payload,
     }
-    response = dioptra_client.queues.existing_drafts.create(
+    response = dioptra_client.queues.existing_resource_drafts.create(
         queue["id"], **payload
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(response, expected)
     asserts_client.assert_retrieving_draft_by_resource_id_works(
-        dioptra_client.queues.existing_drafts,
+        dioptra_client.queues.existing_resource_drafts,
         queue["id"],
         expected=response,
     )
     asserts_client.assert_creating_another_existing_draft_fails(
-        dioptra_client.queues.existing_drafts, queue["id"], payload=payload
+        dioptra_client.queues.existing_resource_drafts, queue["id"], payload=payload
     )
 
     # test modification
@@ -619,15 +619,15 @@ def test_manage_existing_queue_draft(
         "num_other_drafts": 0,
         "payload": payload,
     }
-    response = dioptra_client.queues.existing_drafts.modify(
+    response = dioptra_client.queues.existing_resource_drafts.modify(
         queue["id"], **payload
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(response, expected)
 
     # test deletion
-    dioptra_client.queues.existing_drafts.delete(queue["id"])
+    dioptra_client.queues.existing_resource_drafts.delete(queue["id"])
     asserts_client.assert_existing_draft_is_not_found(
-        dioptra_client.queues.existing_drafts, queue["id"]
+        dioptra_client.queues.existing_resource_drafts, queue["id"]
     )
 
 
@@ -660,14 +660,14 @@ def test_manage_new_queue_drafts(
         "group_id": group_id,
         "payload": drafts["draft1"],
     }
-    draft1_response = dioptra_client.queues.new_drafts.create(
+    draft1_response = dioptra_client.queues.new_resource_drafts.create(
         group_id=group_id, **drafts["draft1"]
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(
         draft1_response, draft1_expected
     )
     asserts_client.assert_retrieving_draft_by_id_works(
-        dioptra_client.queues.new_drafts,
+        dioptra_client.queues.new_resource_drafts,
         draft_id=draft1_response["id"],
         expected=draft1_response,
     )
@@ -676,19 +676,19 @@ def test_manage_new_queue_drafts(
         "group_id": group_id,
         "payload": drafts["draft2"],
     }
-    draft2_response = dioptra_client.queues.new_drafts.create(
+    draft2_response = dioptra_client.queues.new_resource_drafts.create(
         group_id=group_id, **drafts["draft2"]
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(
         draft2_response, draft2_expected
     )
     asserts_client.assert_retrieving_draft_by_id_works(
-        dioptra_client.queues.new_drafts,
+        dioptra_client.queues.new_resource_drafts,
         draft_id=draft2_response["id"],
         expected=draft2_response,
     )
     asserts_client.assert_retrieving_drafts_works(
-        dioptra_client.queues.new_drafts,
+        dioptra_client.queues.new_resource_drafts,
         expected=[draft1_response, draft2_response],
     )
 
@@ -699,7 +699,7 @@ def test_manage_new_queue_drafts(
         "group_id": group_id,
         "payload": draft1_mod,
     }
-    response = dioptra_client.queues.new_drafts.modify(
+    response = dioptra_client.queues.new_resource_drafts.modify(
         draft_id=draft1_response["id"], **draft1_mod
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(
@@ -707,9 +707,9 @@ def test_manage_new_queue_drafts(
     )
 
     # test deletion
-    dioptra_client.queues.new_drafts.delete(draft_id=draft1_response["id"])
+    dioptra_client.queues.new_resource_drafts.delete(draft_id=draft1_response["id"])
     asserts_client.assert_new_draft_is_not_found(
-        dioptra_client.queues.new_drafts, draft_id=draft1_response["id"]
+        dioptra_client.queues.new_resource_drafts, draft_id=draft1_response["id"]
     )
 
 

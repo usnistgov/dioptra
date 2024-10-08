@@ -51,7 +51,7 @@ class QueuesCollectionClient(CollectionClient[T]):
             session: The Dioptra API session object.
         """
         super().__init__(session)
-        self._new_drafts = NewResourceDraftsSubCollectionClient[T](
+        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=DRAFT_FIELDS,
@@ -59,7 +59,7 @@ class QueuesCollectionClient(CollectionClient[T]):
             ),
             root_collection=self,
         )
-        self._existing_drafts = ExistingResourceDraftsSubCollectionClient[T](
+        self._existing_resource_drafts = ExistingResourceDraftsSubCollectionClient[T](
             session=session,
             validate_fields_fn=make_draft_fields_validator(
                 draft_fields=DRAFT_FIELDS,
@@ -73,7 +73,7 @@ class QueuesCollectionClient(CollectionClient[T]):
         self._tags = TagsSubCollectionClient[T](session=session, root_collection=self)
 
     @property
-    def new_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
         """The client for managing the new queue drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -101,10 +101,10 @@ class QueuesCollectionClient(CollectionClient[T]):
             # DELETE /api/v1/queues/drafts/1
             client.queues.new_drafts.delete(draft_id=1)
         """
-        return self._new_drafts
+        return self._new_resource_drafts
 
     @property
-    def existing_drafts(self) -> ExistingResourceDraftsSubCollectionClient[T]:
+    def existing_resource_drafts(self) -> ExistingResourceDraftsSubCollectionClient[T]:
         """The client for managing the existing queue drafts sub-collection.
 
         Each client method in the sub-collection accepts an arbitrary number of
@@ -129,7 +129,7 @@ class QueuesCollectionClient(CollectionClient[T]):
             # DELETE /api/v1/queues/1/draft
             client.queues.existing_drafts.delete(1)
         """
-        return self._existing_drafts
+        return self._existing_resource_drafts
 
     @property
     def snapshots(self) -> SnapshotsSubCollectionClient[T]:
