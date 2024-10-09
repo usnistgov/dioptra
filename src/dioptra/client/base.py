@@ -380,7 +380,7 @@ class CollectionClient(Generic[T]):
     name: ClassVar[str]
 
     def __init__(self, session: DioptraSession[T]) -> None:
-        """Initialize the Endpoint object.
+        """Initialize the CollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
