@@ -137,7 +137,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         index: int = 0,
         page_length: int = 10,
     ) -> T:
-        """Get the list of endpoint drafts.
+        """Get the list of new resource drafts.
 
         Args:
             *resource_ids: The parent resource IDs that own the new resource drafts
@@ -167,7 +167,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         )
 
     def get_by_id(self, *resource_ids: str | int, draft_id: int) -> T:
-        """Get an endpoint draft by its ID.
+        """Get a new resource draft by its ID.
 
         Args:
             *resource_ids: The parent resource IDs that own the new resource drafts
@@ -182,7 +182,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         )
 
     def create(self, *resource_ids: str | int, group_id: int, **kwargs) -> T:
-        """Create a new endpoint draft.
+        """Create a new resource draft.
 
         Args:
             *resource_ids: The parent resource IDs that own the new resource drafts
@@ -207,7 +207,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         )
 
     def modify(self, *resource_ids: str | int, draft_id: int, **kwargs) -> T:
-        """Modify the endpoint draft matching the provided ID.
+        """Modify the new resource draft matching the provided ID.
 
         Args:
             *resource_ids: The parent resource IDs that own the new resource drafts
@@ -231,7 +231,7 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
         )
 
     def delete(self, *resource_ids: str | int, draft_id: int) -> T:
-        """Delete the endpoint draft matching the provided ID.
+        """Delete the new resource draft matching the provided ID.
 
         Args:
             *resource_ids: The parent resource IDs that own the new resource drafts
@@ -321,7 +321,7 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         self._validate_fields = validate_fields_fn
 
     def get_by_id(self, *resource_ids: str | int) -> T:
-        """Get the draft for a specific endpoint resource.
+        """Get an existing resource draft.
 
         Args:
             *resource_ids: The parent resource IDs that own the sub-collection.
@@ -332,7 +332,7 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         return self._session.get(self.build_sub_collection_url(*resource_ids))
 
     def create(self, *resource_ids: str | int, **kwargs) -> T:
-        """Create a draft for a specific endpoint resource.
+        """Create an existing resource draft.
 
         Args:
             *resource_ids: The parent resource IDs that own the sub-collection.
@@ -347,7 +347,7 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         )
 
     def modify(self, *resource_ids: str | int, **kwargs) -> T:
-        """Modify the draft for a specific endpoint resource.
+        """Modify an existing resource draft.
 
         Args:
             *resource_ids: The parent resource IDs that own the sub-collection.
@@ -362,7 +362,7 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
         )
 
     def delete(self, *resource_ids: str | int) -> T:
-        """Delete the draft for a specific endpoint resource.
+        """Delete an existing resource draft.
 
         Args:
             *resource_ids: The parent resource IDs that own the sub-collection.
