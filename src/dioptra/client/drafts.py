@@ -14,20 +14,17 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from typing import Any, ClassVar, Generic, Protocol, TypeVar
-
-import structlog
-from structlog.stdlib import BoundLogger
+import warnings
+from typing import Any, ClassVar, Generic, Protocol, TypeVar, cast
 
 from .base import (
     CollectionClient,
     DioptraClientError,
     DioptraSession,
+    FieldsValidationError,
     SubCollectionClient,
     SubCollectionUrlError,
 )
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 T = TypeVar("T")
 
@@ -72,21 +69,18 @@ def make_draft_fields_validator(
         if draft_fields != provided_fields:
             invalid_fields = provided_fields - draft_fields
             missing_fields = draft_fields - provided_fields
-            msg: list[str] = [f"Invalid or missing fields for {resource_name} draft."]
+            reason: list[str] = []
 
             if invalid_fields:
-                msg.append(f"Invalid fields: {invalid_fields}")
+                reason.append(f"{invalid_fields} are invalid")
 
             if missing_fields:
-                msg.append(f"Missing fields: {missing_fields}")
+                reason.append(f"{missing_fields} are missing")
 
-            LOGGER.error(
-                "Invalid or missing draft fields.",
-                resource_name=resource_name,
-                invalid_fields=invalid_fields,
-                missing_fields=missing_fields,
+            raise DraftFieldsValidationError(
+                "Invalid or missing fields for resource draft "
+                f"(reason: {', '.join(reason)}): {resource_name}"
             )
-            raise DraftFieldsValidationError(" ".join(msg))
 
         return json_
 
@@ -181,7 +175,9 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
             self.build_sub_collection_url(*resource_ids), str(draft_id)
         )
 
-    def create(self, *resource_ids: str | int, group_id: int, **kwargs) -> T:
+    def create(
+        self, *resource_ids: str | int, group_id: int | None = None, **kwargs
+    ) -> T:
         """Create a new resource draft.
 
         Args:
@@ -195,13 +191,20 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
             The response from the Dioptra API.
 
         Raises:
-            ValueError: If "group" is specified in kwargs.
+            FieldsValidationError: If "group" is specified in kwargs or if group_id is
+                None and the client has no parent sub-collections.
+            DraftFieldsValidationError: If one or more draft fields are invalid or
+                missing.
         """
 
         if "group" in kwargs:
-            raise ValueError('Cannot specify "group" in kwargs')
+            raise FieldsValidationError(
+                "Invalid argument (reason: keyword is reserved): group"
+            )
 
-        data: dict[str, Any] = {"group": group_id} | self._validate_fields(kwargs)
+        data: dict[str, Any] = (  # fmt: skip
+            self._validate_group_id(group_id) | self._validate_fields(kwargs)
+        )
         return self._session.post(
             self.build_sub_collection_url(*resource_ids), json_=data
         )
@@ -219,10 +222,14 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
             The response from the Dioptra API.
 
         Raises:
-            ValueError: If "draftId" is specified in kwargs.
+            FieldsValidationError: If "draftId" is specified in kwargs.
+            DraftFieldsValidationError: If one or more draft fields are invalid or
+                missing.
         """
         if "draftId" in kwargs:
-            raise ValueError('Cannot specify "draftId" in kwargs')
+            raise FieldsValidationError(
+                "Invalid argument (reason: keyword is reserved): draftId"
+            )
 
         return self._session.put(
             self.build_sub_collection_url(*resource_ids),
@@ -269,6 +276,24 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
             parent_url_parts.extend([str(resource_id), parent_sub_collection.name])
 
         return self._session.build_url(*parent_url_parts, self.name)
+
+    def _validate_group_id(self, group_id: int | None) -> dict[str, Any]:
+        if not self._parent_sub_collections:
+            if group_id is None:
+                raise FieldsValidationError(
+                    "Invalid argument (reason: argument cannot be None): group_id"
+                )
+
+            return {"group": group_id}
+
+        if group_id is not None:
+            warnings.warn(
+                '"group_id" argument ignored (reason: creating draft for '
+                "sub-resource where group is known)",
+                stacklevel=2,
+            )
+
+        return cast(dict[str, Any], {})
 
     def _validate_resource_ids_count(self, *resource_ids: str | int) -> None:
         num_resource_ids = len(resource_ids)
@@ -340,6 +365,10 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
 
         Returns:
             The response from the Dioptra API.
+
+        Raises:
+            DraftFieldsValidationError: If one or more draft fields are invalid or
+                missing.
         """
         return self._session.post(
             self.build_sub_collection_url(*resource_ids),
@@ -355,6 +384,10 @@ class ExistingResourceDraftsSubCollectionClient(SubCollectionClient[T]):
 
         Returns:
             The response from the Dioptra API.
+
+        Raises:
+            DraftFieldsValidationError: If one or more draft fields are invalid or
+                missing.
         """
         return self._session.put(
             self.build_sub_collection_url(*resource_ids),
