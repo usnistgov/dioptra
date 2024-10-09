@@ -27,6 +27,7 @@ import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 
+from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE, V1_ROOT
 
@@ -100,7 +101,7 @@ def assert_queue_response_contents_matches_expectations(
 
 
 def assert_retrieving_queue_by_id_works(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     queue_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -120,7 +121,7 @@ def assert_retrieving_queue_by_id_works(
 
 
 def assert_retrieving_queues_works(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     search: str | None = None,
@@ -157,7 +158,7 @@ def assert_retrieving_queues_works(
 
 
 def assert_sorting_queue_works(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[str],
     sort_by: str | None,
     descending: bool | None,
@@ -202,7 +203,7 @@ def assert_sorting_queue_works(
 
 
 def assert_registering_existing_queue_name_fails(
-    dioptra_client: DioptraClient, name: str, group_id: int
+    dioptra_client: DioptraClient[DioptraResponseProtocol], name: str, group_id: int
 ) -> None:
     """Assert that registering a queue with an existing name fails.
 
@@ -220,7 +221,9 @@ def assert_registering_existing_queue_name_fails(
 
 
 def assert_queue_name_matches_expected_name(
-    dioptra_client: DioptraClient, queue_id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    queue_id: int,
+    expected_name: str,
 ) -> None:
     """Assert that the name of a queue matches the expected name.
 
@@ -241,7 +244,7 @@ def assert_queue_name_matches_expected_name(
 
 
 def assert_queue_is_not_found(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     queue_id: int,
 ) -> None:
     """Assert that a queue is not found.
@@ -284,7 +287,7 @@ def assert_queue_is_not_associated_with_entrypoint(
 
 
 def assert_cannot_rename_queue_with_existing_name(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     queue_id: int,
     existing_name: str,
     existing_description: str,
@@ -311,7 +314,7 @@ def assert_cannot_rename_queue_with_existing_name(
 
 
 def test_create_queue(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -346,7 +349,7 @@ def test_create_queue(
 
 
 def test_queue_get_all(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -375,7 +378,7 @@ def test_queue_get_all(
     ],
 )
 def test_queue_sort(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -403,7 +406,7 @@ def test_queue_sort(
 
 
 def test_queue_search_query(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -430,7 +433,7 @@ def test_queue_search_query(
 
 
 def test_queue_group_query(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -453,7 +456,7 @@ def test_queue_group_query(
 
 
 def test_cannot_register_existing_queue_name(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -476,7 +479,7 @@ def test_cannot_register_existing_queue_name(
 
 
 def test_rename_queue(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -534,7 +537,7 @@ def test_rename_queue(
 
 def test_delete_queue_by_id(
     client: FlaskClient,
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -561,7 +564,7 @@ def test_delete_queue_by_id(
 
 
 def test_manage_existing_queue_draft(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -632,7 +635,7 @@ def test_manage_existing_queue_draft(
 
 
 def test_manage_new_queue_drafts(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -714,7 +717,7 @@ def test_manage_new_queue_drafts(
 
 
 def test_manage_queue_snapshots(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -763,7 +766,7 @@ def test_manage_queue_snapshots(
 
 
 def test_tag_queue(
-    dioptra_client: DioptraClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
