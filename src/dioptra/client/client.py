@@ -20,6 +20,7 @@ from typing import Any, Final, Generic, TypeVar
 
 from .auth import AuthCollectionClient
 from .base import DioptraResponseProtocol, DioptraSession
+from .groups import GroupsCollectionClient
 from .plugins import PluginsCollectionClient
 from .queues import QueuesCollectionClient
 from .tags import TagsCollectionClient
@@ -45,7 +46,7 @@ class DioptraClient(Generic[T]):
         self._auth = AuthCollectionClient[T](session)
         self._queues = QueuesCollectionClient[T](session)
         self._tags = TagsCollectionClient[T](session)
-        # self._groups = GroupsCollectionClient[T](session)
+        self._groups = GroupsCollectionClient[T](session)
         self._plugins = PluginsCollectionClient[T](session)
         # self._plugin_parameter_types = (
         #     PluginParameterTypesCollectionClient[T](session)
@@ -76,10 +77,10 @@ class DioptraClient(Generic[T]):
         """The client for managing Dioptra's /tags collection."""
         return self._tags
 
-    # @property
-    # def groups(self) -> GroupsCollectionClient[T]:
-    #     """The client for managing Dioptra's /groups collection."""
-    #     return self._groups
+    @property
+    def groups(self) -> GroupsCollectionClient[T]:
+        """The client for managing Dioptra's /groups collection."""
+        return self._groups
 
     @property
     def plugins(self) -> PluginsCollectionClient[T]:
