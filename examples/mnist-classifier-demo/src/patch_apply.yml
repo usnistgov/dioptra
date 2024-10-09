@@ -1,0 +1,213 @@
+types:
+  path:
+  classifier:
+  artifact:
+  model_list:
+    list: classifier
+  artifact_list:
+    list: artifact
+  path_string:
+    union: [string, path]
+  list_path_string:
+    list: path_string
+  list_integer:
+    list: integer
+  kwargs:
+    mapping: [string, any]
+  kwargs_null:
+    union: [kwargs, "null"]
+  distance_metric_request:
+    mapping: [string, string]
+  distance_metrics_requests:
+    list: distance_metric_request
+  image_size:
+    tuple: [integer, integer, integer]
+  clip_values:
+    tuple: [number, number, number]
+  norm:
+    union: [integer, number, string]
+  str_null:
+    union: [string, "null"]
+  list_str_null:
+    list: str_null
+  num_null:
+    union: [number, "null"]
+  directory_iterator:
+  name_parameters:
+    mapping:
+      name: string
+      parameters:
+        mapping: [string, any]
+  metrics_list:
+    list: name_parameters
+
+parameters:
+  data_dir: /dioptra/data/Mnist/testing
+  image_size: [28, 28, 1]
+  patch_dir: adv_patches
+  adv_patch_tar_name: adversarial_patch.tar.gz
+  adv_data_dir: adv_testing
+  adv_dataset_tar_name: testing_adversarial_patch.tar.gz
+  job_id:
+  model_name: mnist_classifier
+  model_version: -1
+  clip_values: [0, 1]
+  seed: -1
+  rotation_max: 22.5
+  scale_min: 0.1
+  scale_max: 1.0
+  patch_scale: .4
+  patch_shape: [2, 2, 1]
+  batch_size: 10
+
+tasks:
+  load_artifacts_for_job:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_artifacts_for_job
+    inputs:
+      - job_id: string
+      - name: extract_files
+        type: list_path_string
+        required: false
+  load_dataset:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_dataset
+    inputs:
+      - name: ep_seed
+        type: integer
+        required: false
+      - name: data_dir
+        type: string
+        required: false
+      - name: subsets
+        type: list_str_null
+        required: false
+      - name: image_size
+        type: image_size
+        required: false
+      - name: rescale
+        type: number
+        required: false
+      - name: validation_split
+        type: num_null
+        required: false
+      - name: batch_size
+        type: integer
+        required: false
+      - name: label_mode
+        type: string
+        required: false
+      - name: shuffle
+        type: boolean
+        required: false
+    outputs:
+      - training: directory_iterator
+      - validation: directory_iterator
+      - testing: directory_iterator
+
+  load_model:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_model
+    inputs:
+      - name: model_name
+        type: string
+        required: false
+      - name: model_version
+        type: integer
+        required: false
+      - name: imagenet_preprocessing
+        type: boolean
+        required: false
+      - name: art
+        type: boolean
+        required: false
+      - name: image_size
+        type: any
+        required: false
+      - name: classifier_kwargs
+        type: kwargs
+        required: false
+    outputs:
+      classifier: classifier
+
+  augment_patch:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.augment_patch
+    inputs:
+      - data_flow: directory_iterator
+      - adv_data_dir: path_string
+      - patch_dir: path_string
+      - model: any
+      - patch_shape: list_integer
+      - distance_metrics: distance_metrics_requests
+      - batch_size: integer
+      - patch_scale: number
+      - rotation_max: number
+      - scale_min: number
+      - scale_max: number
+
+  save_artifacts_and_models:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.save_artifacts_and_models
+    inputs:
+      - name: artifacts 
+        type: artifact_list
+        required: false
+      - name: models
+        type: model_list
+        required: false
+
+graph:    
+  load:
+    load_artifacts_for_job:
+      job_id: $job_id
+      extract_files: [$adv_patch_tar_name]
+
+  dataset:
+    load_dataset:
+      ep_seed: $seed
+      data_dir: $data_dir
+      subsets: [testing]
+      image_size: $image_size
+      batch_size: $batch_size
+
+  model:
+    load_model:
+      model_name: $model_name
+      model_version: $model_version
+      art: true
+      image_size: $image_size
+      classifier_kwargs:
+        clip_values: $clip_values
+
+  apply_patches:
+    augment_patch:
+      data_flow: $dataset.testing
+      adv_data_dir: $adv_data_dir
+      patch_dir: $patch_dir
+      model: $model
+      patch_shape: $patch_shape
+      distance_metrics:
+        - name: l_infinity_norm
+          func: l_inf_norm
+        - name: l_1_norm
+          func: l_1_norm
+        - name: l_2_norm
+          func: l_2_norm
+        - name: cosine_similarity
+          func: paired_cosine_similarities
+        - name: euclidean_distance
+          func: paired_euclidean_distances
+        - name: manhattan_distance
+          func: paired_manhattan_distances
+        - name: wasserstein_distance
+          func: paired_wasserstein_distances
+      batch_size: $batch_size
+      patch_scale: $patch_scale
+      rotation_max: $rotation_max
+      scale_min: $scale_min
+      scale_max: $scale_max
+
+  save:
+    save_artifacts_and_models:
+      artifacts:
+        - type: tarball
+          adv_data_dir: $adv_data_dir
+          adv_tar_name: $adv_dataset_tar_name
+    dependencies:
+      - apply_patches

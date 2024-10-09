@@ -1,0 +1,203 @@
+types:
+  name_parameters:
+    mapping:
+      name: string
+      parameters:
+        mapping: [string, any]
+  metrics_list:
+    list: name_parameters
+  callbacks_list:
+    list: name_parameters
+  model_list:
+    list: model_def
+  model_def:
+    mapping: [string, any]
+  artifact_list:
+    list: artifact
+  artifact:
+    mapping: [string, any]
+  directory_iterator:
+  image_size:
+    tuple: [integer, integer, integer]
+  classifier:
+  fit_kwargs:
+    mapping: [string, any]
+  fit_kwargs_null:
+    union: [fit_kwargs, "null"]
+  str_null:
+    union: [string, "null"]
+  list_str_null:
+    list: str_null
+  num_null:
+    union: [number, "null"]
+  kwargs:
+    mapping: [string, any]
+
+parameters:
+  seed: -1
+  optimizer_name: Adam
+  learning_rate: 0.001
+  training_dir: /dioptra/data/Mnist/training
+  testing_dir: /dioptra/data/Mnist/testing
+  image_size: [28, 28, 1]
+  validation_split: 0.2
+  batch_size: 32
+  model_architecture: le_net
+  epochs: 30
+  register_model_name: "mnist_classifier"
+
+tasks:
+  load_dataset:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_dataset
+    inputs:
+      - name: ep_seed
+        type: integer
+        required: false
+      - name: data_dir
+        type: string
+        required: false
+      - name: subsets
+        type: list_str_null
+        required: false
+      - name: image_size
+        type: image_size
+        required: false
+      - name: rescale
+        type: number
+        required: false
+      - name: validation_split
+        type: num_null
+        required: false
+      - name: batch_size
+        type: integer
+        required: false
+      - name: label_mode
+        type: string
+        required: false
+      - name: shuffle
+        type: boolean
+        required: false
+    outputs:
+      - training: directory_iterator
+      - validation: directory_iterator
+      - testing: directory_iterator
+
+  create_model:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.create_model
+    inputs:
+      - name: dataset
+        type: directory_iterator
+        required: false
+      - name: model_architecture
+        type: string
+        required: false
+      - name: input_shape
+        type: image_size
+        required: false
+      - name: loss
+        type: string
+        required: false
+      - name: learning_rate
+        type: number
+        required: false
+      - name: optimizer
+        type: string
+        required: false
+      - name: metrics_list
+        type: metrics_list
+    outputs:
+      classifier: classifier
+
+  train:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.train
+    inputs:
+      - estimator: classifier
+      - x: any
+      - name: y
+        type: any
+        required: false
+      - name: callbacks_list
+        type: callbacks_list
+        required: false
+      - name: fit_kwargs
+        type: fit_kwargs_null
+        required: false
+    outputs:
+      classifier: classifier
+
+  compute_metrics:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.compute_metrics
+    inputs:
+      - classifier: classifier
+      - dataset: directory_iterator
+
+  save_artifacts_and_models:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.save_artifacts_and_models
+    inputs:
+      - name: artifacts 
+        type: artifact_list
+        required: false
+      - name: models
+        type: model_list
+        required: false
+      
+graph:    
+  dataset:
+    load_dataset:
+      ep_seed: $seed
+      data_dir: $training_dir
+      subsets: [training, validation, testing]
+      image_size: $image_size
+      validation_split: $validation_split
+      batch_size: $batch_size      
+
+  model:
+    create_model:
+      dataset: $dataset.training
+      model_architecture: $model_architecture
+      input_shape: $image_size
+      learning_rate: $learning_rate
+      optimizer: $optimizer_name
+      metrics_list:
+        - name: CategoricalAccuracy
+          parameters: { name: accuracy }
+        - name: Precision
+          parameters: { name: precision }
+        - name: Recall
+          parameters: { name: recall }
+        - name: AUC
+          parameters: { name: auc }
+    dependencies:
+      - dataset
+
+  trained_model:
+    train:
+      estimator: $model
+      x: $dataset.training
+      callbacks_list:
+        - name: EarlyStopping
+          parameters:
+            monitor: val_loss
+            min_delta: .01
+            patience: 5
+            restore_best_weights: true
+      fit_kwargs:
+        nb_epochs: $epochs
+        validation_data: $dataset.validation
+        verbose: 2
+    dependencies:
+      - model
+
+  metrics:
+    compute_metrics:
+      classifier: $trained_model
+      dataset: $dataset.testing
+    dependencies:
+      - trained_model
+
+  save:
+    save_artifacts_and_models:
+      models:
+        - name: $register_model_name
+          model: $trained_model
+          
