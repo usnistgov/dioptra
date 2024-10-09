@@ -288,10 +288,7 @@ def assert_retrieving_plugins_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = dioptra_client.plugins.get(**query_string)
-    assert (
-        response.status_code == HTTPStatus.OK
-        and response.json()["data"] == expected
-    )
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_plugin_works(
@@ -351,7 +348,9 @@ def assert_registering_existing_plugin_name_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = dioptra_client.plugins.create(group_id=group_id, name=name, description="")
+    response = dioptra_client.plugins.create(
+        group_id=group_id, name=name, description=""
+    )
     assert response.status_code == HTTPStatus.CONFLICT
 
 
@@ -553,10 +552,7 @@ def assert_retrieving_plugin_files_works(
         query_string["page_length"] = paging_info["page_length"]
 
     response = dioptra_client.plugins.files.get(plugin_id=plugin_id, **query_string)
-    assert (
-        response.status_code == HTTPStatus.OK
-        and response.json()["data"] == expected
-    )
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_plugin_file_works(
@@ -846,7 +842,12 @@ def test_plugin_sort(
     expected_ids = [
         registered_plugins[expected_name]["id"] for expected_name in expected
     ]
-    assert_sorting_plugin_works(dioptra_client=dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids)
+    assert_sorting_plugin_works(
+        dioptra_client=dioptra_client,
+        sort_by=sort_by,
+        descending=descending,
+        expected=expected_ids,
+    )
 
 
 def test_plugin_search_query(
@@ -889,7 +890,9 @@ def test_plugin_group_query(
     """
     plugin_expected_list = list(registered_plugins.values())
     assert_retrieving_plugins_works(
-        dioptra_client, expected=plugin_expected_list, group_id=auth_account["groups"][0]["id"]
+        dioptra_client,
+        expected=plugin_expected_list,
+        group_id=auth_account["groups"][0]["id"],
     )
 
 
@@ -943,7 +946,9 @@ def test_rename_plugin(
         description=plugin_to_rename["description"],
     ).json()
     assert_plugin_name_matches_expected_name(
-        dioptra_client, plugin_id=plugin_to_rename["id"], expected_name=updated_plugin_name
+        dioptra_client,
+        plugin_id=plugin_to_rename["id"],
+        expected_name=updated_plugin_name,
     )
 
     plugin_expected_list = [
@@ -959,7 +964,9 @@ def test_rename_plugin(
         description=plugin_to_rename["description"],
     ).json()
     assert_plugin_name_matches_expected_name(
-        dioptra_client, plugin_id=plugin_to_rename["id"], expected_name=updated_plugin_name
+        dioptra_client,
+        plugin_id=plugin_to_rename["id"],
+        expected_name=updated_plugin_name,
     )
     assert_cannot_rename_plugin_with_existing_name(
         dioptra_client,
@@ -1507,7 +1514,12 @@ def test_manage_existing_plugin_file_draft(
     )
 
     # test creation
-    payload = {"filename": filename, "description": description, "contents": contents, "tasks": []}
+    payload = {
+        "filename": filename,
+        "description": description,
+        "contents": contents,
+        "tasks": [],
+    }
     expected = {
         "user_id": auth_account["id"],
         "group_id": plugin_file["group"]["id"],
@@ -1558,7 +1570,9 @@ def test_manage_existing_plugin_file_draft(
         plugin_id, plugin_file["id"]
     )
     asserts_client.assert_existing_draft_is_not_found(
-        dioptra_client.plugins.files.existing_resource_drafts, plugin_id, plugin_file["id"]
+        dioptra_client.plugins.files.existing_resource_drafts,
+        plugin_id,
+        plugin_file["id"],
     )
 
 
@@ -1613,7 +1627,7 @@ def test_manage_new_plugin_file_drafts(
         "payload": drafts["draft1"],
     }
     draft1_response = dioptra_client.plugins.files.new_resource_drafts.create(
-        plugin_id, group_id=group_id, **drafts["draft1"]
+        plugin_id, **drafts["draft1"]
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(
         draft1_response, draft1_expected
@@ -1630,7 +1644,7 @@ def test_manage_new_plugin_file_drafts(
         "payload": drafts["draft2"],
     }
     draft2_response = dioptra_client.plugins.files.new_resource_drafts.create(
-        plugin_id, group_id=group_id, **drafts["draft2"]
+        plugin_id, **drafts["draft2"]
     ).json()
     asserts.assert_draft_response_contents_matches_expectations(
         draft2_response, draft2_expected
@@ -1652,6 +1666,7 @@ def test_manage_new_plugin_file_drafts(
         "filename": "draft_plugin.py",
         "description": "new description",
         "contents": contents,
+        "tasks": [],
     }
     draft1_mod_expected = {
         "user_id": auth_account["id"],
@@ -1670,7 +1685,9 @@ def test_manage_new_plugin_file_drafts(
         plugin_id, draft_id=draft1_response["id"]
     )
     asserts_client.assert_new_draft_is_not_found(
-        dioptra_client.plugins.files.new_resource_drafts, plugin_id, draft_id=draft1_response["id"]
+        dioptra_client.plugins.files.new_resource_drafts,
+        plugin_id,
+        draft_id=draft1_response["id"],
     )
 
 
@@ -1809,15 +1826,11 @@ def test_tag_plugin(
     tags = [tag["id"] for tag in registered_tags.values()]
 
     # test append
-    response = dioptra_client.plugins.tags.append(
-        plugin["id"], ids=[tags[0], tags[1]]
-    )
+    response = dioptra_client.plugins.tags.append(plugin["id"], ids=[tags[0], tags[1]])
     asserts.assert_tags_response_contents_matches_expectations(
         response.json(), [tags[0], tags[1]]
     )
-    response = dioptra_client.plugins.tags.append(
-        plugin["id"], ids=[tags[1], tags[2]]
-    )
+    response = dioptra_client.plugins.tags.append(plugin["id"], ids=[tags[1], tags[2]])
     asserts.assert_tags_response_contents_matches_expectations(
         response.json(), [tags[0], tags[1], tags[2]]
     )
@@ -1838,9 +1851,7 @@ def test_tag_plugin(
     # test delete
     dioptra_client.plugins.tags.remove_all(plugin["id"])
     response = dioptra_client.plugins.tags.get(plugin["id"])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), []
-    )
+    asserts.assert_tags_response_contents_matches_expectations(response.json(), [])
 
 
 def test_tag_plugin_file(
@@ -1875,7 +1886,9 @@ def test_tag_plugin_file(
     )
 
     # test remove
-    dioptra_client.plugins.files.tags.remove(plugin_id, plugin_file["id"], tag_id=tags[1])
+    dioptra_client.plugins.files.tags.remove(
+        plugin_id, plugin_file["id"], tag_id=tags[1]
+    )
     response = dioptra_client.plugins.files.tags.get(plugin_id, plugin_file["id"])
     asserts.assert_tags_response_contents_matches_expectations(
         response.json(), [tags[0], tags[2]]
@@ -1892,6 +1905,4 @@ def test_tag_plugin_file(
     # test delete
     dioptra_client.plugins.files.tags.remove_all(plugin_id, plugin_file["id"])
     response = dioptra_client.plugins.files.tags.get(plugin_id, plugin_file["id"])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), []
-    )
+    asserts.assert_tags_response_contents_matches_expectations(response.json(), [])
