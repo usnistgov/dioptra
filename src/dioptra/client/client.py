@@ -21,6 +21,7 @@ from typing import Any, Final, Generic, TypeVar
 from .auth import AuthCollectionClient
 from .base import DioptraResponseProtocol, DioptraSession
 from .groups import GroupsCollectionClient
+from .plugin_parameter_types import PluginParameterTypesCollectionClient
 from .plugins import PluginsCollectionClient
 from .queues import QueuesCollectionClient
 from .tags import TagsCollectionClient
@@ -48,9 +49,9 @@ class DioptraClient(Generic[T]):
         self._tags = TagsCollectionClient[T](session)
         self._groups = GroupsCollectionClient[T](session)
         self._plugins = PluginsCollectionClient[T](session)
-        # self._plugin_parameter_types = (
-        #     PluginParameterTypesCollectionClient[T](session)
-        # )
+        self._plugin_parameter_types = (
+            PluginParameterTypesCollectionClient[T](session)
+        )
         # self._experiments = ExperimentsCollectionClient[T](session)
         # self._jobs = JobsCollectionClient[T](session)
         # self._entrypoints = EntrypointsCollectionClient[T](session)
@@ -87,10 +88,10 @@ class DioptraClient(Generic[T]):
         """The client for managing Dioptra's /plugins collection."""
         return self._plugins
 
-    # @property
-    # def plugin_parameter_types(self) -> PluginParameterTypesCollectionClient[T]:
-    #     """The client for managing Dioptra's /pluginParameterTypes collection."""
-    #     return self._plugin_parameter_types
+    @property
+    def plugin_parameter_types(self) -> PluginParameterTypesCollectionClient[T]:
+        """The client for managing Dioptra's /pluginParameterTypes collection."""
+        return self._plugin_parameter_types
 
     # @property
     # def experiments(self) -> ExperimentsCollectionClient[T]:
