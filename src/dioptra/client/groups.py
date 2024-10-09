@@ -14,3 +14,66 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from typing import Any, ClassVar, TypeVar
+
+from .base import CollectionClient, DioptraSession
+
+T = TypeVar("T")
+
+
+class GroupsCollectionClient(CollectionClient[T]):
+    """The client for managing Dioptra's /groups collection.
+
+    Attributes:
+        name: The name of the collection managed by the client.
+    """
+
+    name: ClassVar[str] = "groups"
+
+    def __init__(self, session: DioptraSession[T]) -> None:
+        """Initialize the QueuesCollectionClient instance.
+
+        Args:
+            session: The Dioptra API session object.
+        """
+        super().__init__(session)
+
+    def get(
+        self,
+        index: int = 0,
+        page_length: int = 10,
+        search: str | None = None,
+    ) -> T:
+        """Get a list of groups.
+
+        Args:
+            index: The paging index.
+            page_length: The maximum number of groups to return in the paged response.
+            search: Search for groups using the Dioptra API's query language.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        params: dict[str, Any] = {
+            "index": index,
+            "pageLength": page_length,
+        }
+
+        if search is not None:
+            params["search"] = search
+
+        return self._session.get(
+            self.url,
+            params=params,
+        )
+
+    def get_by_id(self, group_id: str | int) -> T:
+        """Get the group matching the provided id.
+
+        Args:
+            group_id: The queue id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(self.url, str(group_id))
