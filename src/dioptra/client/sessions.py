@@ -14,24 +14,24 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import logging
 from abc import ABC, abstractmethod
 from http import HTTPStatus
 from typing import Any, Callable, Final, Generic, TypeVar, cast
 from urllib.parse import urlparse, urlunparse
 
 import requests
-import structlog
-from structlog.stdlib import BoundLogger
 
 from .base import (
     APIConnectionError,
+    DioptraClientError,
     DioptraResponseProtocol,
     DioptraSession,
     JSONDecodeError,
     StatusCodeError,
 )
 
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
+LOGGER = logging.getLogger(__name__)
 
 DIOPTRA_API_VERSION: Final[str] = "v1"
 
@@ -68,22 +68,18 @@ def wrap_request_method(
             APIConnectionError: If the connection to the REST API fails.
         """
         LOGGER.debug(
-            "Request made.",
-            url=url,
-            method=str(func.__name__).upper(),
+            "Request made: url=%s  method=%s",
+            url,
+            str(func.__name__).upper(),
         )
 
         try:
             response = cast(DioptraResponseProtocol, func(url, *args, **kwargs))
 
         except requests.ConnectionError as err:
-            LOGGER.error(
-                "Connection to REST API failed",
-                url=url,
-            )
             raise APIConnectionError(f"Connection failed: {url}") from err
 
-        LOGGER.debug("Response received.", status_code=response.status_code)
+        LOGGER.debug("Response received: status_code=%s", str(response.status_code))
         return response
 
     return wrapper
@@ -103,12 +99,12 @@ def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any
         JSONDecodeError: If the response data cannot be parsed as JSON.
     """
     if not is_2xx(response.status_code):
-        LOGGER.error(
-            "HTTP error code returned",
-            status_code=response.status_code,
-            method=response.request.method,
-            text=response.text,
-            url=response.request.url,
+        LOGGER.debug(
+            "HTTP error code returned: status_code=%s  method=%s  url=%s  text=%s",
+            response.status_code,
+            response.request.method,
+            response.request.url,
+            response.text,
         )
         raise StatusCodeError(f"Error code returned: {response.status_code}")
 
@@ -116,11 +112,11 @@ def convert_response_to_dict(response: DioptraResponseProtocol) -> dict[str, Any
         response_dict = response.json()
 
     except requests.JSONDecodeError as err:
-        LOGGER.error(
-            "Failed to parse HTTP response data as JSON",
-            method=response.request.method,
-            text=response.text,
-            url=response.request.url,
+        LOGGER.debug(
+            "Failed to parse HTTP response data as JSON: method=%s  url=%s  text=%s",
+            response.request.method,
+            response.request.url,
+            response.text,
         )
         raise JSONDecodeError("Failed to parse HTTP response data as JSON") from err
 
@@ -192,7 +188,7 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
             The response from the API.
 
         Raises:
-            ValueError: If an unsupported method is requested.
+            DioptraClientError: If an unsupported method is requested.
         """
         session = self._get_requests_session()
         methods_registry: dict[str, Callable[..., DioptraResponseProtocol]] = {
@@ -204,14 +200,9 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         }
 
         if method_name not in methods_registry:
-            LOGGER.error(
-                "Unsupported method requested. Must be one of "
-                f"{sorted(methods_registry.keys())}.",
-                name=method_name,
-            )
-            raise ValueError(
-                f"Unsupported method requested. Must be one of "
-                f"{sorted(methods_registry.keys())}."
+            raise DioptraClientError(
+                f"Unsupported method requested (reason: must be one of "
+                f"{sorted(methods_registry.keys())}): {method_name}."
             )
 
         method = methods_registry[method_name]
@@ -342,11 +333,7 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
         self.connect()
 
         if self._session is None:
-            LOGGER.error(
-                "Failed to start session connection.",
-                address=self.url,
-            )
-            raise APIConnectionError("Failed to start session connection.")
+            raise APIConnectionError(f"Failed to start session connection: {self.url}")
 
         return self._session
 
