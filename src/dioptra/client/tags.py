@@ -19,9 +19,8 @@ from typing import Any, ClassVar, TypeVar
 import structlog
 from structlog.stdlib import BoundLogger
 
-from .base import CollectionClient, FieldsValidationError, SubCollectionClient
-
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+from .base import CollectionClient, SubCollectionClient
 
 T = TypeVar("T")
 
@@ -208,7 +207,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         """
         return self._session.put(
             self.build_sub_collection_url(*resource_ids),
-            json_={"ids": _validate_ids_argument(ids)},
+            json_={"ids": ids},
         )
 
     def append(
@@ -230,7 +229,7 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
         """
         return self._session.post(
             self.build_sub_collection_url(*resource_ids),
-            json_={"ids": _validate_ids_argument(ids)},
+            json_={"ids": ids},
         )
 
     def remove(
@@ -267,29 +266,3 @@ class TagsSubCollectionClient(SubCollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.delete(self.build_sub_collection_url(*resource_ids))
-
-
-def _validate_ids_argument(ids: list[int]) -> list[int]:
-    """Validate the ids argument for tag operations.
-
-    Args:
-        ids: The list of tag IDs to validate.
-
-    Returns:
-        The validated list of tag IDs.
-
-    Raises:
-        FieldsValidationError: If the `ids` argument is not a list or is an empty list.
-    """
-
-    if not isinstance(ids, list):
-        LOGGER.error('"ids" argument is invalid', reason=f"Not a list: {type(ids)}")
-        raise FieldsValidationError(
-            '"ids" argument is invalid (reason: Not a list): {type(ids)}'
-        )
-
-    if len(ids) == 0:
-        LOGGER.error('"ids" argument is invalid', reason="Empty list")
-        raise FieldsValidationError('"ids" argument is invalid (reason: Empty list)')
-
-    return ids
