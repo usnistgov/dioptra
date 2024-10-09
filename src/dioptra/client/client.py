@@ -18,17 +18,12 @@ import os
 from posixpath import join as urljoin
 from typing import Any, Final, Generic, TypeVar
 
-import structlog
-from structlog.stdlib import BoundLogger
-
 from .auth import AuthCollectionClient
 from .base import DioptraResponseProtocol, DioptraSession
 from .plugins import PluginsCollectionClient
 from .queues import QueuesCollectionClient
 from .tags import TagsCollectionClient
 from .users import UsersCollectionClient
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 DIOPTRA_V1_ROOT: Final[str] = "api/v1"
 ENV_DIOPTRA_API: Final[str] = "DIOPTRA_API"

@@ -16,9 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from typing import Any, ClassVar, Final, TypeVar
 
-import structlog
-from structlog.stdlib import BoundLogger
-
 from .base import (
     CollectionClient,
     DioptraClientError,
@@ -32,8 +29,6 @@ from .drafts import (
 )
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 PLUGINS_DRAFT_FIELDS: Final[set[str]] = {"name", "description"}
 PLUGIN_FILES_DRAFT_FIELDS: Final[set[str]] = {
