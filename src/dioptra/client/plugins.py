@@ -137,7 +137,6 @@ class PluginFilesSubCollectionClient(SubCollectionClient[T]):
             # POST /api/v1/plugins/1/files/drafts
             client.plugins.files.new_resource_drafts.create(
                 1,
-                group_id=1,
                 filename="name.py",
                 contents="",
                 tasks=[],
