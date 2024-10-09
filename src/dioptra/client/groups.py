@@ -31,7 +31,7 @@ class GroupsCollectionClient(CollectionClient[T]):
     name: ClassVar[str] = "groups"
 
     def __init__(self, session: DioptraSession[T]) -> None:
-        """Initialize the QueuesCollectionClient instance.
+        """Initialize the GroupsCollectionClient instance.
 
         Args:
             session: The Dioptra API session object.
@@ -71,7 +71,7 @@ class GroupsCollectionClient(CollectionClient[T]):
         """Get the group matching the provided id.
 
         Args:
-            group_id: The queue id, an integer.
+            group_id: The group id, an integer.
 
         Returns:
             The response from the Dioptra API.
