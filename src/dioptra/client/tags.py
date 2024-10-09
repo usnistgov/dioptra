@@ -16,10 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from typing import Any, ClassVar, TypeVar
 
-import structlog
-from structlog.stdlib import BoundLogger
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
 from .base import CollectionClient, SubCollectionClient
 
 T = TypeVar("T")

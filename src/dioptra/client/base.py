@@ -18,11 +18,6 @@ from abc import ABC, abstractmethod
 from posixpath import join as urljoin
 from typing import Any, ClassVar, Generic, Protocol, TypeVar
 
-import structlog
-from structlog.stdlib import BoundLogger
-
-LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
 T = TypeVar("T")
 
 
