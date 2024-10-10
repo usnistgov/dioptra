@@ -49,9 +49,7 @@ class DioptraClient(Generic[T]):
         self._tags = TagsCollectionClient[T](session)
         self._groups = GroupsCollectionClient[T](session)
         self._plugins = PluginsCollectionClient[T](session)
-        self._plugin_parameter_types = (
-            PluginParameterTypesCollectionClient[T](session)
-        )
+        self._plugin_parameter_types = PluginParameterTypesCollectionClient[T](session)
         # self._experiments = ExperimentsCollectionClient[T](session)
         # self._jobs = JobsCollectionClient[T](session)
         # self._entrypoints = EntrypointsCollectionClient[T](session)

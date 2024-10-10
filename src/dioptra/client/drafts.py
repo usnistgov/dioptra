@@ -202,9 +202,9 @@ class NewResourceDraftsSubCollectionClient(Generic[T]):
                 "Invalid argument (reason: keyword is reserved): group"
             )
 
-        data: dict[str, Any] = (  # fmt: skip
+        data: dict[str, Any] = (
             self._validate_group_id(group_id) | self._validate_fields(kwargs)
-        )
+        )  # fmt: skip
         return self._session.post(
             self.build_sub_collection_url(*resource_ids), json_=data
         )
