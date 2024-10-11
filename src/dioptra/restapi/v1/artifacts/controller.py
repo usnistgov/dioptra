@@ -39,7 +39,6 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
 
 from .schema import (
     ArtifactFilePageSchema,
-    ArtifactFileSchema,
     ArtifactGetQueryParameters,
     ArtifactMutableFieldsSchema,
     ArtifactPageSchema,
@@ -80,7 +79,7 @@ class ArtifactEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET"
         )
-        parsed_query_params = request.parsed_query_params  # noqa: F841
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
         group_id = parsed_query_params["group_id"]
         search_string = unquote(parsed_query_params["search"])
@@ -121,7 +120,7 @@ class ArtifactEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Artifact", request_type="POST"
         )
         log.debug("Request received")
-        parsed_obj = request.parsed_obj  # noqa: F841
+        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
 
         artifact = self._artifact_service.create(
             uri=parsed_obj["uri"],
@@ -189,14 +188,14 @@ class ArtifactIdContentsEndpoint(Resource):
     def __init__(
         self, artifact_id_contents_service: ArtifactIdContentsService, *args, **kwargs
     ) -> None:
-        """Initialize the artifact_id resource.
+        """Initialize the artifact id contents resource.
 
         All arguments are provided via dependency injection.
 
         Args:
             artifact_id_contents_service: A ArtifactIdContentsService object.
         """
-        self._artifact_id_service = artifact_id_contents_service
+        self._artifact_id_contents_service = artifact_id_contents_service
         super().__init__(*args, **kwargs)
 
     @login_required
@@ -207,17 +206,16 @@ class ArtifactIdContentsEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
         )
-        parsed_query_params = request.parsed_query_params  # noqa: F841
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
-        group_id = parsed_query_params["group_id"]
         search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
 
-        artifacts, total_num_artifacts = self._artifact_service.get(
-            group_id=group_id,
+        artifacts, total_num_artifacts = self._artifact_id_contents_service.get(
+            artifact_id=id,
             search_string=search_string,
             page_index=page_index,
             page_length=page_length,
@@ -229,7 +227,7 @@ class ArtifactIdContentsEndpoint(Resource):
             V1_ARTIFACTS_ROUTE,
             build_fn=utils.build_artifact,
             data=artifacts,
-            group_id=group_id,
+            group_id=None,
             query=search_string,
             draft_type=None,
             index=page_index,
