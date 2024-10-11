@@ -308,13 +308,15 @@
     entryPoint.value.plugins.forEach(async(plugin) => {
       let pluginID = typeof plugin === 'object' ? plugin.id : plugin
       try {
-        const res = await api.getFiles(pluginID)
+        const res = await api.getFiles(pluginID, {
+          search: '',
+          rowsPerPage: 0, // get all
+          index: 0
+        })
         console.log('res = ', res)
         res.data.data.forEach((file) => {
           file.tasks.forEach((task) => {
             task.pluginName = file.plugin.name
-            // task.inputParams = task.inputParams.map((input) => input.name)
-            // task.outputParams = task.outputParams.map((output) => output.name)
             tasks.value.push(task)
           })
         })
