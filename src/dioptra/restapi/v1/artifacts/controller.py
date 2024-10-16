@@ -79,7 +79,7 @@ class ArtifactEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET"
         )
-        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+        parsed_query_params = request.parsed_query_params  # noqa: F841
 
         group_id = parsed_query_params["group_id"]
         search_string = unquote(parsed_query_params["search"])
@@ -120,7 +120,7 @@ class ArtifactEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Artifact", request_type="POST"
         )
         log.debug("Request received")
-        parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
+        parsed_obj = request.parsed_obj  # noqa: F841
 
         artifact = self._artifact_service.create(
             uri=parsed_obj["uri"],
@@ -214,25 +214,27 @@ class ArtifactIdContentsEndpoint(Resource):
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
 
-        artifacts, total_num_artifacts = self._artifact_id_contents_service.get(
-            artifact_id=id,
-            search_string=search_string,
-            page_index=page_index,
-            page_length=page_length,
-            sort_by_string=sort_by_string,
-            descending=descending,
-            log=log,
+        artifact_files, total_num_artifact_files = (
+            self._artifact_id_contents_service.get(
+                artifact_id=id,
+                search_string=search_string,
+                page_index=page_index,
+                page_length=page_length,
+                sort_by_string=sort_by_string,
+                descending=descending,
+                log=log,
+            )
         )
         return utils.build_paging_envelope(
             V1_ARTIFACTS_ROUTE,
             build_fn=utils.build_artifact,
-            data=artifacts,
+            data=artifact_files,
             group_id=None,
             query=search_string,
             draft_type=None,
             index=page_index,
             length=page_length,
-            total_num_elements=total_num_artifacts,
+            total_num_elements=total_num_artifact_files,
             sort_by=sort_by_string,
             descending=descending,
         )
