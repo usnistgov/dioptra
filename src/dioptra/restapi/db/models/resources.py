@@ -44,6 +44,7 @@ from dioptra.restapi.db.db import (
     optionalstr,
     text_,
 )
+from dioptra.restapi.db.models.utils import depth_limited_repr
 
 from .constants import resource_lock_types
 from .locks import ResourceLock
@@ -353,6 +354,9 @@ class Resource(db.Model):  # type: ignore[name-defined]
     def __post_init__(self) -> None:
         timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         self.created_on = timestamp
+
+    def __repr__(self):
+        return depth_limited_repr(self)
 
 
 class SharedResource(db.Model):  # type: ignore[name-defined]
