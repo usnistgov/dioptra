@@ -51,7 +51,7 @@ parameters:
   model_name: mnist_classifier
   model_version: -1
   clip_values: [0, 1]
-  batch_size: 32
+  batch_size: 50
   eps: 0.3
   eps_step: 0.1
   minimal: false
@@ -65,6 +65,9 @@ tasks:
     plugin: dioptra_custom.fgm_mnist_demo.plugins.load_artifacts_for_job
     inputs:
       - job_id: string
+      - name: files
+        type: list_path_string
+        required: false
       - name: extract_files
         type: list_path_string
         required: false
@@ -74,7 +77,10 @@ tasks:
       - name: ep_seed
         type: integer
         required: false
-      - name: data_dir
+      - name: training_dir
+        type: string
+        required: false
+      - name: testing_dir
         type: string
         required: false
       - name: subsets
@@ -163,7 +169,8 @@ graph:
   dataset:
     load_dataset:
       ep_seed: $seed
-      data_dir: $adv_data_dir
+      testing_dir: $adv_data_dir
+      batch_size: $batch_size
       subsets: [testing]
       image_size: $image_size
 

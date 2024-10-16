@@ -6,54 +6,47 @@ types:
     list: classifier
   artifact_list:
     list: artifact
+  num_null:
+    union: [number, "null"]
   path_string:
     union: [string, path]
-  kwargs:
-    mapping: [string, any]
-  kwargs_null:
-    union: [kwargs, "null"]
-  distance_metric_request:
-    mapping: [string, string]
-  distance_metrics_requests:
-    list: distance_metric_request
-  image_size:
-    tuple: [integer, integer, integer]
-  clip_values:
-    tuple: [number, number, number]
-  norm:
-    union: [integer, number, string]
+  list_path_string:
+    list: path_string
   str_null:
     union: [string, "null"]
   list_str_null:
     list: str_null
-  num_null:
-    union: [number, "null"]
   directory_iterator:
-  name_parameters:
-    mapping:
-      name: string
-      parameters:
-        mapping: [string, any]
-  metrics_list:
-    list: name_parameters
-
+  kwargs:
+    mapping: [string, any]
+  image_size:
+    tuple: [integer, integer, integer]
+  ndarray:
 parameters:
-  data_dir: /dioptra/data/Mnist/testing
+  run_id: ""
   image_size: [28, 28, 1]
-  adv_tar_name: testing_adversarial_fgm.tar.gz
-  adv_data_dir: adv_testing
-  distance_metrics_filename: distance_metrics.csv
   model_name: mnist_classifier
   model_version: -1
-  clip_values: [0, 1]
-  batch_size: 50
-  eps: 0.3
-  eps_step: 0.1
-  minimal: false
-  norm: "inf"
+  job_id:
+  tar_name: testing_adversarial_fgm.tar.gz
+  data_dir: adv_testing
+  filename: predictions.csv
+  record_actual_class: False
+  record_target_class: False
+  format: csv
   seed: -1
 
 tasks:
+  load_artifacts_for_job:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_artifacts_for_job
+    inputs:
+      - job_id: string
+      - name: files
+        type: list_path_string
+        required: false
+      - name: extract_files
+        type: list_path_string
+        required: false
   load_dataset:
     plugin: dioptra_custom.fgm_mnist_demo.plugins.load_dataset
     inputs:
@@ -107,42 +100,26 @@ tasks:
       - name: art
         type: boolean
         required: false
-      - name: image_size
-        type: any
-        required: false
       - name: classifier_kwargs
         type: kwargs
         required: false
     outputs:
       classifier: classifier
-
-  attack_fgm:
-    plugin: dioptra_custom.fgm_mnist_demo.plugins.attack_fgm
+      
+  predict:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.predict
     inputs:
-      - dataset: any
-      - adv_data_dir: path_string
-      - classifier: any
-      - distance_metrics: distance_metrics_requests
-      - name: rescale
-        type: number
-        required: false
-      - name: batch_size
-        type: integer
-        required: false
-      - name: eps
-        type: number
-        required: false
-      - name: eps_step
-        type: number
-        required: false
-      - name: minimal
+      - classifier: classifier
+      - dataset: directory_iterator
+      - name: show_actual
         type: boolean
         required: false
-      - name: norm
-        type: norm
+      - name: show_target
+        type: boolean
         required: false
     outputs:
-      ret: artifact
+      - predictions: ndarray
+
   save_artifacts_and_models:
     plugin: dioptra_custom.fgm_mnist_demo.plugins.save_artifacts_and_models
     inputs:
@@ -153,61 +130,40 @@ tasks:
         type: model_list
         required: false
 
-graph:    
+graph:
+  load:
+    load_artifacts_for_job:
+      job_id: $job_id
+      extract_files: [$tar_name]
+
   dataset:
     load_dataset:
       ep_seed: $seed
       testing_dir: $data_dir
       subsets: [testing]
       image_size: $image_size
-      batch_size: $batch_size
-
+ 
   model:
     load_model:
       model_name: $model_name
       model_version: $model_version
-      art: true
-      classifier_kwargs:
-        clip_values: $clip_values
 
-
-  fgm:
-    attack_fgm:
-      dataset: $dataset.testing
-      adv_data_dir: $adv_data_dir
+  predictions:
+    predict:
       classifier: $model
-      batch_size: $batch_size
-      eps: $eps
-      eps_step: $eps_step
-      minimal: $minimal
-      norm: $norm
-      distance_metrics:
-        - name: l_infinity_norm
-          func: l_inf_norm
-        - name: l_1_norm
-          func: l_1_norm
-        - name: l_2_norm
-          func: l_2_norm
-        - name: cosine_similarity
-          func: paired_cosine_similarities
-        - name: euclidean_distance
-          func: paired_euclidean_distances
-        - name: manhattan_distance
-          func: paired_manhattan_distances
-        - name: wasserstein_distance
-          func: paired_wasserstein_distances
+      dataset: $dataset.testing
+      show_actual: $record_actual_class
+      show_target: $record_target_class
+    dependencies:
+      - model
 
   save:
     save_artifacts_and_models:
       artifacts:
-        - type: tarball
-          adv_data_dir: $adv_data_dir
-          adv_tar_name: $adv_tar_name
         - type: dataframe
-          data_frame: $fgm
-          file_name: $distance_metrics_filename
-          file_format: csv.gz
+          data_frame: $predictions
+          file_name: $filename
+          file_format: $format
           file_format_kwargs:
-            index: false
     dependencies:
-      - fgm
+      - predictions

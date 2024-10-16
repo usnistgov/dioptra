@@ -63,7 +63,10 @@ tasks:
       - name: ep_seed
         type: integer
         required: false
-      - name: data_dir
+      - name: training_dir
+        type: string
+        required: false
+      - name: testing_dir
         type: string
         required: false
       - name: subsets
@@ -146,7 +149,7 @@ graph:
   dataset:
     load_dataset:
       ep_seed: $seed
-      data_dir: $data_dir
+      testing_dir: $data_dir
       subsets: [testing]
       image_size: $image_size
       batch_size: $batch_size

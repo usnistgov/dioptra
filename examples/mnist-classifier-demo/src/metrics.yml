@@ -1,0 +1,159 @@
+types:
+  path:
+  classifier:
+  artifact:
+  performance_metric:
+    mapping: [string, string]
+  performance_metric_list:
+    list: performance_metric
+  model_list:
+    list: classifier
+  artifact_list:
+    list: artifact
+  num_null:
+    union: [number, "null"]
+  path_string:
+    union: [string, path]
+  list_path_string:
+    list: path_string
+  str_null:
+    union: [string, "null"]
+  list_str_null:
+    list: str_null
+  directory_iterator:
+  directory_iterator_null:
+    union: [directory_iterator, "null"]
+  kwargs:
+    mapping: [string, any]
+  metric_kwargs:
+    mapping: [string, kwargs]
+  image_size:
+    tuple: [integer, integer, integer]
+  ndarray:
+  metric_output:
+    mapping: [string, any]
+parameters:
+  run_id: ""
+  image_size: [28, 28, 1]
+  data_dir: /dioptra/data/Mnist/testing
+  job_id:
+  predictions_filename: predictions.csv
+  predictions_format: csv
+  metrics_filename: metrics.csv
+  metrics_format: csv
+  n_classes: 10
+  seed: -1
+tasks:
+  load_artifacts_for_job:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_artifacts_for_job
+    inputs:
+      - job_id: string
+      - name: files
+        type: list_path_string
+        required: false
+      - name: extract_files
+        type: list_path_string
+        required: false
+    outputs:
+      - paths: list_path_string
+  load_dataset:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_dataset
+    inputs:
+      - name: ep_seed
+        type: integer
+        required: false
+      - name: training_dir
+        type: string
+        required: false
+      - name: testing_dir
+        type: string
+        required: false
+      - name: subsets
+        type: list_str_null
+        required: false
+      - name: image_size
+        type: image_size
+        required: false
+      - name: rescale
+        type: number
+        required: false
+      - name: validation_split
+        type: num_null
+        required: false
+      - name: batch_size
+        type: integer
+        required: false
+      - name: label_mode
+        type: string
+        required: false
+      - name: shuffle
+        type: boolean
+        required: false
+    outputs:
+      - training: directory_iterator
+      - validation: directory_iterator
+      - testing: directory_iterator
+
+  load_predictions:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_predictions
+    inputs:
+      - paths: list_path_string
+      - filename: string
+      - name: format
+        type: string
+        required: false
+      - name: dataset
+        type: directory_iterator_null
+        required: false
+      - name: n_classes
+        type: integer
+        required: false
+    outputs:
+      - y_true: ndarray
+      - y_pred: ndarray
+
+
+  prediction_metrics:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.prediction_metrics
+    inputs:
+      - y_true: ndarray
+      - y_pred: ndarray
+      - metrics_list: performance_metric_list
+      - name: func_kwargs
+        type: metric_kwargs
+        required: false
+    outputs:
+      - metric_results: metric_output
+
+graph:
+  predictions:
+    load_artifacts_for_job:
+      job_id: $job_id
+      files: [$predictions_filename]
+
+  dataset:
+    load_dataset:
+      ep_seed: $seed
+      testing_dir: $data_dir
+      subsets: [testing]
+      image_size: $image_size
+
+  format_predictions:
+    load_predictions:
+      paths: $predictions
+      filename: $predictions_filename
+      format: $predictions_format
+      dataset: $dataset.testing
+      n_classes: $n_classes
+
+  metrics:
+    prediction_metrics:
+      y_true: $format_predictions.y_true
+      y_pred: $format_predictions.y_pred
+      metrics_list:
+        - name: accuracy
+          func: accuracy
+        - name: roc_auc
+          func: roc_auc
+    dependencies:
+      - format_predictions

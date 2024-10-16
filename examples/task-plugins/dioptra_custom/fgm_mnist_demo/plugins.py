@@ -30,7 +30,7 @@ from tensorflow.keras.preprocessing.image import (
 )
 
 from dioptra import pyplugs
-from .tensorflow import get_optimizer, get_model_callbacks, get_performance_metrics, evaluate_metrics_tensorflow
+from .tensorflow import get_optimizer, get_model_callbacks, get_performance_metrics, evaluate_metrics_tensorflow, predict_tensorflow
 from .estimators_keras_classifiers import init_classifier
 from .registry_art import load_wrapped_tensorflow_keras_classifier
 from .registry_mlflow import load_tensorflow_keras_classifier
@@ -38,7 +38,7 @@ from .random_rng import init_rng
 from .random_sample import draw_random_integer
 from .backend_configs_tensorflow import init_tensorflow
 from .tracking_mlflow import log_parameters, log_tensorflow_keras_estimator, log_metrics
-from .data_tensorflow import get_n_classes_from_directory_iterator, create_image_dataset
+from .data_tensorflow import get_n_classes_from_directory_iterator, create_image_dataset, predictions_to_df, df_to_predictions
 from .estimators_methods import fit
 from .mlflow import add_model_to_registry
 from .artifacts_restapi import get_uri_for_model, get_uris_for_job, get_uris_for_artifacts
@@ -48,13 +48,15 @@ from .attacks_fgm import fgm
 from .artifacts_mlflow import upload_directory_as_tarball_artifact, upload_data_frame_artifact, download_all_artifacts
 from .defenses_image_preprocessing import create_defended_dataset
 from .attacks_patch import create_adversarial_patches, create_adversarial_patch_dataset
+from .metrics_performance import get_performance_metric_list, evaluate_metrics_generic
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 @pyplugs.register
 def load_dataset(
     ep_seed: int = 10145783023,
-    data_dir: str = "/dioptra/data/Mnist/testing",
+    training_dir: str = "/dioptra/data/Mnist/training",
+    testing_dir: str = "/dioptra/data/Mnist/testing",
     subsets: List[str] = ['testing'],
     image_size: Tuple[int, int, int] = [28, 28, 1],
     rescale: float = 1.0 / 255,
@@ -72,7 +74,7 @@ def load_dataset(
         'tensorflow_global_seed':global_seed, 
         'dataset_seed':dataset_seed})
     training_dataset = None if "training" not in subsets else create_image_dataset(
-        data_dir=data_dir,
+        data_dir=training_dir,
         subset="training",
         image_size=image_size,
         seed=dataset_seed,
@@ -84,7 +86,7 @@ def load_dataset(
     )
    
     validation_dataset = None if "validation" not in subsets else create_image_dataset(
-        data_dir=data_dir,
+        data_dir=training_dir,
         subset="validation",
         image_size=image_size,
         seed=dataset_seed,
@@ -95,7 +97,7 @@ def load_dataset(
         shuffle=shuffle
     )
     testing_dataset = None if "testing" not in subsets else create_image_dataset(
-        data_dir=data_dir,
+        data_dir=testing_dir,
         subset=None,
         image_size=image_size,
         seed=dataset_seed,
@@ -179,13 +181,21 @@ def save_artifacts_and_models(
             )
 @pyplugs.register
 def load_artifacts_for_job(
-    job_id: str, extract_files: List[str|Path] = None
+    job_id: str, 
+    files: List[str|Path] = None,
+    extract_files: List[str|Path] = None
 ):
+    files = [] if files is None else files
     extract_files = [] if extract_files is None else extract_files
+    files += extract_files # need to download them to be able to extract
+
     uris = get_uris_for_job(job_id)
-    paths = download_all_artifacts(uris, extract_files)
+    paths = download_all_artifacts(uris, files)
     for extract in paths:
-        extract_tarfile(extract)
+        for ef in extract_files:
+            if (ef.endswith(str(ef))):
+                extract_tarfile(extract)
+    return paths
 
 @pyplugs.register
 def load_artifacts(
@@ -289,12 +299,26 @@ def augment_patch(
         scale_max=scale_max
     )
 @pyplugs.register
-def compute_metrics(
+def model_metrics(
     classifier: Any,
     dataset: Any
 ):
     metrics = evaluate_metrics_tensorflow(classifier, dataset)
     log_metrics(metrics)
+    return metrics
+
+@pyplugs.register
+def prediction_metrics(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    metrics_list: List[Dict[str, str]],
+    func_kwargs: Dict[str, Dict[str, Any]] = None
+):
+    func_kwargs = {} if func_kwargs is None else func_kwargs
+    callable_list = get_performance_metric_list(metrics_list)
+    metrics = evaluate_metrics_generic(y_true, y_pred, callable_list, func_kwargs)
+    log_metrics(metrics)
+    return metrics
 
 @pyplugs.register
 def augment_data(
@@ -320,5 +344,38 @@ def augment_data(
     return defended_dataset
 
 @pyplugs.register
-def predict():
-    pass
+def predict(
+    classifier: Any,
+    dataset: Any,
+    show_actual: bool = False,
+    show_target: bool = False,
+):
+    predictions = predict_tensorflow(classifier, dataset)
+    df = predictions_to_df( 
+                            predictions, 
+                            dataset, 
+                            show_actual=show_actual,
+                            show_target=show_target)
+    return df
+
+@pyplugs.register
+def load_predictions(
+    paths: List[str],
+    filename: str,
+    format: str = 'csv',
+    dataset: DirectoryIterator = None,
+    n_classes: int = -1,
+):
+    loc = None
+    for m in paths:
+        if m.endswith(filename):
+            loc = m
+    if (format == 'csv'):
+        df = pd.read_csv(loc)
+    elif (format == 'json'):
+        df = pd.read_json(loc)
+    y_true, y_pred = df_to_predictions(df, dataset, n_classes)
+    return y_true, y_pred
+    
+
+

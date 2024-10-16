@@ -41,13 +41,17 @@ except ImportError:  # pragma: nocover
         package="tensorflow",
     )
 
-
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)
 def evaluate_metrics_tensorflow(classifier, dataset) -> Dict[str, float]:
     result = classifier.evaluate(dataset, verbose=0, return_dict=True)
     return result
 
+@pyplugs.register
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def predict_tensorflow(classifier, dataset) -> Dict[str, float]:
+    result = classifier.predict(dataset, verbose=0)
+    return result
 
 @pyplugs.register
 @require_package("tensorflow", exc_type=TensorflowDependencyError)

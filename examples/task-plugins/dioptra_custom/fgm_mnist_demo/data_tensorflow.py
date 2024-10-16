@@ -26,8 +26,12 @@ from __future__ import annotations
 
 from typing import Optional, Tuple
 
+from typing import Any
 import structlog
+import pandas as pd
+import numpy as np
 from structlog.stdlib import BoundLogger
+
 
 from dioptra import pyplugs
 from dioptra.sdk.exceptions import TensorflowDependencyError
@@ -128,3 +132,48 @@ def get_n_classes_from_directory_iterator(ds: DirectoryIterator) -> int:
         The number of unique labels in the dataset.
     """
     return len(ds.class_indices)
+
+@require_package("tensorflow", exc_type=TensorflowDependencyError)
+def predictions_to_df(
+    predictions: np.ndarray,
+    dataset: DirectoryIterator = None,
+    show_actual: bool = False,
+    show_target: bool = False,
+):
+    n_classes = get_n_classes_from_directory_iterator(dataset)
+
+
+    df = pd.DataFrame(predictions)
+    df.columns = [f'prob_{n}' for n in range(n_classes)] # note: applicable to classification only
+
+    if (show_actual):
+        y_pred = np.argmax(predictions, axis=1)
+        df.insert(0, 'actual', y_pred)
+    if (show_target):
+        y_true = dataset.classes
+        df.insert(0, 'target', y_true)
+
+    df.insert(0, 'id', dataset.filepaths)
+
+    return df
+
+def df_to_predictions(
+    df: pd.DataFrame,
+    dataset: DirectoryIterator = None,
+    n_classes: int = -1,
+):
+    n_classes = get_n_classes_from_directory_iterator(dataset) if dataset is not None else n_classes # get classes from dataset
+    n_classes = df.columns.str.startswith('prob_').sum() if n_classes < 0 else n_classes # count classes manually
+
+    if (set(['actual','target']).issubset(df.columns)):
+        y_pred = df['actual'].to_numpy()
+        y_true = df['target'].to_numpy()
+    else:
+        y_pred = np.argmax(df[[f'prob_{n}' for n in range(n_classes)]].to_numpy(), axis=1)
+        y_true = dataset.classes
+    
+    # generate one hot encoding
+    y_pred = np.eye(n_classes)[y_pred]
+    y_true = np.eye(n_classes)[y_true] 
+
+    return y_true, y_pred

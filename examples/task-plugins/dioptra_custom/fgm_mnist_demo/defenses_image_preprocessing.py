@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union, Any
 
 import mlflow
 import numpy as np
@@ -129,7 +129,6 @@ def create_defended_dataset(
 
     LOGGER.info("Defended image generation complete", defense=def_type)
     _log_distance_metrics(distance_metrics_)
-
     return pd.DataFrame(distance_metrics_)
 
 

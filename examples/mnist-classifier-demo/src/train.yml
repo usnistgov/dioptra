@@ -41,7 +41,7 @@ parameters:
   testing_dir: /dioptra/data/Mnist/testing
   image_size: [28, 28, 1]
   validation_split: 0.2
-  batch_size: 32
+  batch_size: 50
   model_architecture: le_net
   epochs: 30
   register_model_name: "mnist_classifier"
@@ -53,7 +53,10 @@ tasks:
       - name: ep_seed
         type: integer
         required: false
-      - name: data_dir
+      - name: training_dir
+        type: string
+        required: false
+      - name: testing_dir
         type: string
         required: false
       - name: subsets
@@ -125,8 +128,8 @@ tasks:
     outputs:
       classifier: classifier
 
-  compute_metrics:
-    plugin: dioptra_custom.fgm_mnist_demo.plugins.compute_metrics
+  model_metrics:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.model_metrics
     inputs:
       - classifier: classifier
       - dataset: directory_iterator
@@ -145,7 +148,8 @@ graph:
   dataset:
     load_dataset:
       ep_seed: $seed
-      data_dir: $training_dir
+      training_dir: $training_dir
+      testing_dir: $testing_dir
       subsets: [training, validation, testing]
       image_size: $image_size
       validation_split: $validation_split
@@ -189,7 +193,7 @@ graph:
       - model
 
   metrics:
-    compute_metrics:
+    model_metrics:
       classifier: $trained_model
       dataset: $dataset.testing
     dependencies:

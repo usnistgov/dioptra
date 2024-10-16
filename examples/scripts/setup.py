@@ -232,7 +232,10 @@ def delete_all(client):
     for d in client.entrypoints.get_all(pageLength=100000)['data']:
         client.entrypoints.delete_by_id(d['id'])
     for d in client.jobs.get_all(pageLength=100000)['data']:
-        client.jobs.delete_by_id(d['id'])
+        try:
+          client.jobs.delete_by_id(d['id'])
+        except:
+          pass
     for d in client.models.get_all(pageLength=100000)['data']:
         client.models.delete_by_id(d['id'])
     for d in client.plugins.get_all(pageLength=100000)['data']:

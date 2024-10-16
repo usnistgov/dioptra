@@ -32,6 +32,9 @@ tasks:
     plugin: dioptra_custom.fgm_mnist_demo.plugins.load_artifacts_for_job
     inputs:
       - job_id: string
+      - name: files
+        type: list_path_string
+        required: false
       - name: extract_files
         type: list_path_string
         required: false
@@ -41,7 +44,10 @@ tasks:
       - name: ep_seed
         type: integer
         required: false
-      - name: data_dir
+      - name: training_dir
+        type: string
+        required: false
+      - name: testing_dir
         type: string
         required: false
       - name: subsets
@@ -91,8 +97,8 @@ tasks:
     outputs:
       classifier: classifier
       
-  compute_metrics:
-    plugin: dioptra_custom.fgm_mnist_demo.plugins.compute_metrics
+  model_metrics:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.model_metrics
     inputs:
       - classifier: classifier
       - dataset: directory_iterator
@@ -106,7 +112,7 @@ graph:
   dataset:
     load_dataset:
       ep_seed: $seed
-      data_dir: $data_dir
+      testing_dir: $data_dir
       subsets: [testing]
       image_size: $image_size
  
@@ -116,7 +122,7 @@ graph:
       model_version: $model_version
 
   metrics:
-    compute_metrics:
+    model_metrics:
       classifier: $model
       dataset: $dataset.testing
     dependencies:

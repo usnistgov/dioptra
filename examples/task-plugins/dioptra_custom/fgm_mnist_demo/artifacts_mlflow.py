@@ -167,6 +167,51 @@ def upload_data_frame_artifact(
 
     upload_file_as_artifact(artifact_path=df_artifact_path)
 
+def download_df(
+    filename: str,
+    format: str = 'csv',
+    file_format_kwargs: Optional[Dict[str, Any]] = None,
+):
+    def from_format(
+        format: str
+    ) -> Dict[str, Any]:
+        format_funcs = {
+            "csv": {
+                "func": pd.read_csv,
+            },
+            "csv.bz2": {
+                "func": pd.read_csv,
+            },
+            "csv.gz": {
+                "func": pd.read_csv,
+            },
+            "csv.xz": {
+                "func": pd.read_csv,
+            },
+            "feather": {
+                "func": pd.read_feather,
+            },
+            "json": {
+                "func": pd.read_json,
+            },
+            "pickle": {
+                "func": pd.read_pickle,
+            },
+        }
+
+        func: Optional[Dict[str, Any]] = format_funcs.get(format)
+
+        if func is None:
+            raise UnsupportedDataFrameFileFormatError(
+                f"Serializing data frames from the {file_format} format is not supported"
+            )
+        
+        return func
+    format_dict: Dict[str, Any] = from_format(format=format)
+    df_from_format_func: Callable[..., None] = format_dict["func"]
+    df = df_from_format_func(filename, **file_format_kwargs)
+    return df
+
 
 @pyplugs.register
 def upload_directory_as_tarball_artifact(
