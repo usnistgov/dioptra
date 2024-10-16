@@ -42,7 +42,7 @@ class ArtifactRefSchema(ArtifactRefBaseSchema):  # type: ignore
     )
 
 
-class ArtifactFileSchema(Schema):  # type: ignore
+class ArtifactFileSchema(Schema):
     """The schema for the files stored in an Artifact resource."""
 
     relativePath = fields.String(
