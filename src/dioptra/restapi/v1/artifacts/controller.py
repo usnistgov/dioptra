@@ -38,6 +38,7 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
 )
 
 from .schema import (
+    ArtifactFilePageSchema,
     ArtifactGetQueryParameters,
     ArtifactMutableFieldsSchema,
     ArtifactPageSchema,
@@ -46,6 +47,7 @@ from .schema import (
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    ArtifactIdContentsService,
     ArtifactIdService,
     ArtifactService,
 )
@@ -177,6 +179,65 @@ class ArtifactIdEndpoint(Resource):
             ),
         )
         return utils.build_artifact(artifact)
+
+
+@api.route("/<int:id>/contents")
+@api.param("id", "ID for the Artifact resource.")
+class ArtifactIdContentsEndpoint(Resource):
+    @inject
+    def __init__(
+        self, artifact_id_contents_service: ArtifactIdContentsService, *args, **kwargs
+    ) -> None:
+        """Initialize the artifact id contents resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            artifact_id_contents_service: A ArtifactIdContentsService object.
+        """
+        self._artifact_id_contents_service = artifact_id_contents_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=ArtifactGetQueryParameters, api=api)
+    @responds(schema=ArtifactFilePageSchema, api=api)
+    def get(self, id: int):
+        """Gets a list of all files associated with an Artifact resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
+        )
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+
+        search_string = unquote(parsed_query_params["search"])
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+        sort_by_string = parsed_query_params["sort_by"]
+        descending = parsed_query_params["descending"]
+
+        artifact_files, total_num_artifact_files = (
+            self._artifact_id_contents_service.get(
+                artifact_id=id,
+                search_string=search_string,
+                page_index=page_index,
+                page_length=page_length,
+                sort_by_string=sort_by_string,
+                descending=descending,
+                log=log,
+            )
+        )
+        return utils.build_paging_envelope(
+            V1_ARTIFACTS_ROUTE,
+            build_fn=utils.build_artifact,
+            data=artifact_files,
+            group_id=None,
+            query=search_string,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_artifact_files,
+            sort_by=sort_by_string,
+            descending=descending,
+        )
 
 
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
