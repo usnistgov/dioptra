@@ -21,6 +21,7 @@ from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dioptra.restapi.db.db import bigint, datetimetz, db, intpk, text_
+from dioptra.restapi.db.models.utils import depth_limited_repr
 
 if TYPE_CHECKING:
     from .groups import Group
@@ -64,3 +65,6 @@ class Tag(db.Model):  # type: ignore[name-defined]
         timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         self.created_on = timestamp
         self.last_modified_on = timestamp
+
+    def __repr__(self):
+        return depth_limited_repr(self)
