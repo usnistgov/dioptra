@@ -40,7 +40,6 @@ types:
     list: name_parameters
 
 parameters:
-  data_dir: /dioptra/data/Mnist/testing
   image_size: [28, 28, 1]
   job_id:
   adv_tar_name: testing_adversarial_fgm.tar.gz
@@ -52,10 +51,6 @@ parameters:
   model_version: -1
   clip_values: [0, 1]
   batch_size: 50
-  eps: 0.3
-  eps_step: 0.1
-  minimal: false
-  norm: "inf"
   seed: -1
   def_type: spatial_smoothing
   defense_kwargs: {}

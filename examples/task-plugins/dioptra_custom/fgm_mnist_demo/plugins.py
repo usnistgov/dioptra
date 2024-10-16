@@ -318,7 +318,7 @@ def prediction_metrics(
     callable_list = get_performance_metric_list(metrics_list)
     metrics = evaluate_metrics_generic(y_true, y_pred, callable_list, func_kwargs)
     log_metrics(metrics)
-    return metrics
+    return pd.DataFrame(metrics, index=[1])
 
 @pyplugs.register
 def augment_data(
@@ -326,7 +326,7 @@ def augment_data(
     def_data_dir: Union[str, Path],
     image_size: Tuple[int, int, int],
     distance_metrics: List[Dict[str, str]],
-    batch_size: int = 32,
+    batch_size: int = 50,
     def_type: str = "spatial_smoothing",
     defense_kwargs: Optional[Dict[str, Any]] = None,
 ):

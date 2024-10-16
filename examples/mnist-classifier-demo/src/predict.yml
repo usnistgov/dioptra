@@ -23,7 +23,6 @@ types:
     tuple: [integer, integer, integer]
   ndarray:
 parameters:
-  run_id: ""
   image_size: [28, 28, 1]
   model_name: mnist_classifier
   model_version: -1

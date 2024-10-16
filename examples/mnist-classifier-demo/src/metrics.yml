@@ -33,7 +33,6 @@ types:
   metric_output:
     mapping: [string, any]
 parameters:
-  run_id: ""
   image_size: [28, 28, 1]
   data_dir: /dioptra/data/Mnist/testing
   job_id:
@@ -125,6 +124,16 @@ tasks:
     outputs:
       - metric_results: metric_output
 
+  save_artifacts_and_models:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.save_artifacts_and_models
+    inputs:
+      - name: artifacts 
+        type: artifact_list
+        required: false
+      - name: models
+        type: model_list
+        required: false
+
 graph:
   predictions:
     load_artifacts_for_job:
@@ -157,3 +166,14 @@ graph:
           func: roc_auc
     dependencies:
       - format_predictions
+  
+  save:
+    save_artifacts_and_models:
+      artifacts:
+        - type: dataframe
+          data_frame: $metrics
+          file_name: $metrics_filename
+          file_format: $metrics_format
+          file_format_kwargs:
+    dependencies:
+      - metrics
