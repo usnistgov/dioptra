@@ -1,0 +1,189 @@
+types:
+  path:
+  classifier:
+  artifact:
+  model_list:
+    list: classifier
+  artifact_list:
+    list: artifact
+  path_string:
+    union: [string, path]
+  kwargs:
+    mapping: [string, any]
+  kwargs_null:
+    union: [kwargs, "null"]
+  distance_metric_request:
+    mapping: [string, string]
+  distance_metrics_requests:
+    list: distance_metric_request
+  image_size:
+    tuple: [integer, integer, integer]
+  clip_values:
+    tuple: [number, number, number]
+  norm:
+    union: [integer, number, string]
+  str_null:
+    union: [string, "null"]
+  list_str_null:
+    list: str_null
+  num_null:
+    union: [number, "null"]
+  directory_iterator:
+  name_parameters:
+    mapping:
+      name: string
+      parameters:
+        mapping: [string, any]
+  metrics_list:
+    list: name_parameters
+
+parameters:
+  data_dir: /dioptra/data/Mnist/testing
+  image_size: [28, 28, 1]
+  adv_tar_name: adversarial_patch.tar.gz
+  adv_data_dir: adv_patches
+  model_name: mnist_classifier
+  model_version: -1
+  clip_values: [0, 1]
+  seed: -1
+  patch_target: -1
+  num_patch: 1
+  rotation_max: 22.5
+  scale_min: 0.1
+  scale_max: 1.0
+  learning_rate: 5.0
+  max_iter: 500
+  patch_shape: [2, 2, 1]
+  batch_size: 10
+
+tasks:
+  load_dataset:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_dataset
+    inputs:
+      - name: ep_seed
+        type: integer
+        required: false
+      - name: training_dir
+        type: string
+        required: false
+      - name: testing_dir
+        type: string
+        required: false
+      - name: subsets
+        type: list_str_null
+        required: false
+      - name: image_size
+        type: image_size
+        required: false
+      - name: rescale
+        type: number
+        required: false
+      - name: validation_split
+        type: num_null
+        required: false
+      - name: batch_size
+        type: integer
+        required: false
+      - name: label_mode
+        type: string
+        required: false
+      - name: shuffle
+        type: boolean
+        required: false
+    outputs:
+      - training: directory_iterator
+      - validation: directory_iterator
+      - testing: directory_iterator
+
+  load_model:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.load_model
+    inputs:
+      - name: model_name
+        type: string
+        required: false
+      - name: model_version
+        type: integer
+        required: false
+      - name: imagenet_preprocessing
+        type: boolean
+        required: false
+      - name: art
+        type: boolean
+        required: false
+      - name: image_size
+        type: any
+        required: false
+      - name: classifier_kwargs
+        type: kwargs
+        required: false
+    outputs:
+      classifier: classifier
+
+  attack_patch:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.attacks_patch
+    inputs:
+      - data_flow: directory_iterator
+      - adv_data_dir: path_string
+      - model: any
+      - patch_target: integer
+      - num_patch: integer
+      - num_patch_samples: integer
+      - rotation_max: number
+      - scale_min: number
+      - scale_max: number
+      - learning_rate: number
+      - max_iter: integer
+      - patch_shape: any
+
+  save_artifacts_and_models:
+    plugin: dioptra_custom.fgm_mnist_demo.plugins.save_artifacts_and_models
+    inputs:
+      - name: artifacts 
+        type: artifact_list
+        required: false
+      - name: models
+        type: model_list
+        required: false
+
+graph:    
+  dataset:
+    load_dataset:
+      ep_seed: $seed
+      testing_dir: $data_dir
+      subsets: [testing]
+      image_size: $image_size
+      batch_size: $batch_size
+
+  model:
+    load_model:
+      model_name: $model_name
+      model_version: $model_version
+      art: true
+      image_size: $image_size
+      classifier_kwargs:
+        clip_values: $clip_values
+
+
+  gen_patches:
+    attack_patch:
+      data_flow: $dataset.testing
+      adv_data_dir: $adv_data_dir
+      model: $model
+      patch_target: $patch_target
+      num_patch: $num_patch
+      num_patch_samples: $batch_size
+      rotation_max: $rotation_max
+      scale_min: $scale_min
+      scale_max: $scale_max
+      learning_rate: $learning_rate
+      max_iter: $max_iter
+      patch_shape: $patch_shape
+
+  save:
+    save_artifacts_and_models:
+      artifacts:
+        - type: tarball
+          adv_data_dir: $adv_data_dir
+          adv_tar_name: $adv_tar_name
+    dependencies:
+      - gen_patches
