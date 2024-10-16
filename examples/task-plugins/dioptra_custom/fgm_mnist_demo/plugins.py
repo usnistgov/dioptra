@@ -152,7 +152,7 @@ def train(
     fit_kwargs = {} if fit_kwargs is None else fit_kwargs
     callbacks = get_model_callbacks(callbacks_list)
     fit_kwargs['callbacks'] = callbacks
-    trained_model = fit(estimator=estimator, x=x, y=y, fit_kwargs=fit_kwargs)
+    fit(estimator=estimator, x=x, y=y, fit_kwargs=fit_kwargs)
     return estimator
 
 @pyplugs.register    
