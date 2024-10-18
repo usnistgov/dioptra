@@ -18,11 +18,12 @@
 from __future__ import annotations
 
 import uuid
+from pathlib import Path
 from typing import cast
 from urllib.parse import unquote
 
 import structlog
-from flask import request
+from flask import request, send_file
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -38,7 +39,7 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
 )
 
 from .schema import (
-    ArtifactFilePageSchema,
+    ArtifactContentsGetQueryParameters,
     ArtifactGetQueryParameters,
     ArtifactMutableFieldsSchema,
     ArtifactPageSchema,
@@ -199,8 +200,7 @@ class ArtifactIdContentsEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @accepts(query_params_schema=ArtifactGetQueryParameters, api=api)
-    @responds(schema=ArtifactFilePageSchema, api=api)
+    @accepts(query_params_schema=ArtifactContentsGetQueryParameters, api=api)
     def get(self, id: int):
         """Gets a list of all files associated with an Artifact resource."""
         log = LOGGER.new(
@@ -208,35 +208,19 @@ class ArtifactIdContentsEndpoint(Resource):
         )
         parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
-        search_string = unquote(parsed_query_params["search"])
-        page_index = parsed_query_params["index"]
-        page_length = parsed_query_params["page_length"]
-        sort_by_string = parsed_query_params["sort_by"]
-        descending = parsed_query_params["descending"]
+        path = parsed_query_params["path"]
+        download = parsed_query_params["download"]
 
-        artifact_files, total_num_artifact_files = (
-            self._artifact_id_contents_service.get(
-                artifact_id=id,
-                search_string=search_string,
-                page_index=page_index,
-                page_length=page_length,
-                sort_by_string=sort_by_string,
-                descending=descending,
-                log=log,
-            )
+        artifact_file = self._artifact_id_contents_service.get(
+            artifact_id=id,
+            path=path,
+            log=log,
         )
-        return utils.build_paging_envelope(
-            V1_ARTIFACTS_ROUTE,
-            build_fn=utils.build_artifact,
-            data=artifact_files,
-            group_id=None,
-            query=search_string,
-            draft_type=None,
-            index=page_index,
-            length=page_length,
-            total_num_elements=total_num_artifact_files,
-            sort_by=sort_by_string,
-            descending=descending,
+
+        return send_file(
+            path_or_file=artifact_file,
+            as_attachment=download,
+            download_name=Path(path).name,
         )
 
 
