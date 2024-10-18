@@ -85,6 +85,7 @@ class PluginParameterTypeService(object):
         structure: dict[str, Any],
         description: str,
         group_id: int,
+        read_only: bool = False,
         replace_existing: bool = False,
         commit: bool = True,
         **kwargs,
@@ -99,6 +100,7 @@ class PluginParameterTypeService(object):
                 type's structure.
             description: The description of the plugin parameter type.
             group_id: The group that will own the plugin parameter type.
+            read_only: If True, apply a read only lock to the resource
             replace_existing: If True and a resource already exists with this
                 name, delete it instead of raising an exception
             commit: If True, commit the transaction. Defaults to True.
@@ -147,6 +149,13 @@ class PluginParameterTypeService(object):
             resource=resource,
             creator=current_user,
         )
+        if read_only:
+            db.session.add(
+                models.ResourceLock(
+                    resource_lock_type=resource_lock_types.READONLY,
+                    resource=resource,
+                )
+            )
         db.session.add(new_plugin_parameter_type)
 
         if commit:

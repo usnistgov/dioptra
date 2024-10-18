@@ -89,6 +89,7 @@ class PluginService(object):
         name: str,
         description: str,
         group_id: int,
+        read_only: bool = False,
         replace_existing: bool = False,
         commit: bool = True,
         **kwargs,
@@ -100,6 +101,7 @@ class PluginService(object):
                 unique.
             description: The description of the plugin.
             group_id: The group that will own the plugin.
+            read_only: If True, apply a read only lock to the resource
             replace_existing: If True and a resource already exists with this
                 name, delete it instead of raising an exception
             commit: If True, commit the transaction. Defaults to True.
@@ -134,6 +136,13 @@ class PluginService(object):
         new_plugin = models.Plugin(
             name=name, description=description, resource=resource, creator=current_user
         )
+        if read_only:
+            db.session.add(
+                models.ResourceLock(
+                    resource_lock_type=resource_lock_types.READONLY,
+                    resource=resource,
+                )
+            )
         db.session.add(new_plugin)
 
         if commit:
@@ -431,6 +440,14 @@ class PluginIdService(object):
         plugin_files = plugin_dict["plugin_files"]
         group_id = plugin.resource.group_id
 
+        if plugin.resource.is_readonly:
+            log.debug(
+                "The Plugin is read-only and cannot be modified",
+                plugin=plugin.resource_id,
+                name=plugin.name,
+            )
+            raise PluginReadOnlyLockError
+
         if name != plugin.name:
             duplicate = self._plugin_name_service.get(name, group_id=group_id, log=log)
             if duplicate is not None:
@@ -480,6 +497,13 @@ class PluginIdService(object):
 
         if plugin_resource is None:
             raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
+
+        if plugin_resource.is_readonly:
+            log.debug(
+                "The Plugin is read-only and cannot be deleted",
+                plugin_id=plugin_resource.resource_id,
+            )
+            raise PluginReadOnlyLockError
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
@@ -729,6 +753,7 @@ class PluginIdFileService(object):
         description: str,
         tasks: list[dict[str, Any]],
         plugin_id: int,
+        read_only: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginFileDict:
@@ -743,6 +768,7 @@ class PluginIdFileService(object):
             description: The description of the plugin file.
             tasks: The tasks associated with the plugin file.
             plugin_id: The unique id of the plugin containing the plugin file.
+            read_only: If True, apply a read only lock to the resource
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -789,6 +815,14 @@ class PluginIdFileService(object):
         )
 
         new_plugin_file.parents.append(plugin.resource)
+
+        if read_only:
+            db.session.add(
+                models.ResourceLock(
+                    resource_lock_type=resource_lock_types.READONLY,
+                    resource=resource,
+                )
+            )
         db.session.add(new_plugin_file)
 
         _add_plugin_tasks(tasks, plugin_file=new_plugin_file, log=log)
@@ -1135,6 +1169,14 @@ class PluginIdFileIdService(object):
         plugin = plugin_file_dict["plugin"]
         plugin_file = plugin_file_dict["plugin_file"]
 
+        if plugin_file.resource.is_readonly:
+            log.debug(
+                "The Plugin is read-only and cannot be modified",
+                plugin=plugin_file.resource_id,
+                filename=plugin_file.filename,
+            )
+            raise PluginFileReadOnlyLockError
+
         if filename != plugin_file.filename:
             duplicate = self._plugin_file_name_service.get(
                 filename, plugin_id=plugin_id, log=log
@@ -1209,6 +1251,13 @@ class PluginIdFileIdService(object):
                 plugin_id=plugin_id,
                 plugin_file_id=plugin_file_id,
             )
+
+        if plugin_file.resource.is_readonly:
+            log.debug(
+                "The PluginFile is read-only and cannot be deleted",
+                plugin_id=plugin_file.resource_id,
+            )
+            raise PluginFileReadOnlyLockError
 
         plugin_file_id_to_return = plugin_file.resource_id  # to return to user
         db.session.add(
