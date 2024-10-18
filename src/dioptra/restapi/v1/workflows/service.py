@@ -151,7 +151,7 @@ class ResourceImportService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Import resources", group_id=group_id)
 
-        replace_existing = (
+        overwrite = (
             resolve_name_conflicts_strategy
             == ResourceImportResolveNameConflictsStrategy.OVERWRITE
         )
@@ -167,8 +167,6 @@ class ResourceImportService(object):
             elif source_type == ResourceImportSourceTypes.GIT:
                 hash = clone_git_repository(git_url, working_dir)
 
-            log.info(hash=hash, paths=list(working_dir.glob("*")))
-
             config = toml.load(working_dir / config_path)
 
             # validate the config file
@@ -178,118 +176,186 @@ class ResourceImportService(object):
                 schema = json.load(f)
             jsonschema.validate(config, schema)
 
-            # register new plugin param types
-            param_types = {
-                param_type["name"]: self._plugin_parameter_type_service.create(
-                    name=param_type["name"],
-                    description=param_type.get("description", None),
-                    structure=param_type.get("structure", None),
-                    group_id=group_id,
-                    read_only=read_only,
-                    replace_existing=replace_existing,
-                    commit=False,
-                    log=log,
-                )["plugin_task_parameter_type"]
-                for param_type in config.get("plugin_param_types", [])
-            }
-            # retrieve built-ins
-            param_types.update(
-                {
-                    param_type.name: param_type
-                    for param_type in self._builtin_plugin_parameter_type_service.get(
-                        group_id=group_id, error_if_not_found=False, log=log
-                    )
-                }
+            param_types = self._register_plugin_param_types(
+                group_id, config.get("plugin_param_types", []), overwrite, log=log
             )
-            db.session.flush()
-
-            # register new plugins
-            plugin_ids = {}
-            for plugin in config.get("plugins", []):
-                plugin_dict = self._plugin_service.create(
-                    name=Path(plugin["path"]).stem,
-                    description=plugin.get("description", None),
-                    group_id=group_id,
-                    read_only=read_only,
-                    replace_existing=replace_existing,
-                    commit=False,
-                    log=log,
-                )
-                db.session.flush()
-                plugin_ids[plugin_dict["plugin"].name] = plugin_dict[
-                    "plugin"
-                ].resource_id
-
-                tasks = _build_tasks(plugin.get("tasks", []), param_types)
-                for plugin_file_path in Path(plugin["path"]).rglob("*.py"):
-                    filename = str(plugin_file_path.relative_to(plugin["path"]))
-                    contents = plugin_file_path.read_text()
-
-                    self._plugin_id_file_service.create(
-                        filename,
-                        contents=contents,
-                        description=None,
-                        tasks=tasks[filename],
-                        plugin_id=plugin_dict["plugin"].resource_id,
-                        read_only=read_only,
-                        commit=False,
-                        log=log,
-                    )
-
-            # register new entrypoints
-            for entrypoint in config.get("entrypoints", []):
-                contents = Path(entrypoint["path"]).read_text()
-                params = [
-                    {
-                        "name": param["name"],
-                        "parameter_type": param["type"],
-                        "default_value": param.get("default_value", None),
-                    }
-                    for param in entrypoint.get("params", [])
-                ]
-                self._entrypoint_service.create(
-                    name=entrypoint.get("name", Path(entrypoint["path"]).stem),
-                    description=entrypoint.get("description", None),
-                    task_graph=contents,
-                    parameters=params,
-                    plugin_ids=[
-                        plugin_ids[plugin] for plugin in entrypoint.get("plugins", [])
-                    ],
-                    queue_ids=[],
-                    group_id=group_id,
-                    read_only=read_only,
-                    replace_existing=replace_existing,
-                    commit=False,
-                    log=log,
-                )
+            plugins = self._register_plugins(
+                group_id, config.get("plugins", []), param_types, overwrite, log=log
+            )
+            entrypoints = self._register_entrypoints(
+                group_id, config.get("entrypoints", []), plugins, overwrite, log=log
+            )
 
         db.session.commit()
 
-        return {"message": "successfully imported"}
+        return {
+            "message": "successfully imported",
+            "hash": hash,
+            "resources": {
+                "plugins": [plugin.name for plugin in plugins],
+                "plugin_param_types": [param_type.name for param_type in param_types],
+                "entrypoints": [entrypoint.name for entrypoint in entrypoints],
+            },
+        }
 
+    def _register_plugin_param_types(
+        self,
+        group_id: int,
+        param_types_config: dict[str, Any],
+        overwrite: bool,
+        log: BoundLogger,
+    ) -> dict[str, Any]:
+        param_types = dict()
+        for param_type in param_types_config:
+            if overwrite:
+                existing = self._plugin_parameter_type_name_service.get(
+                    param_type["name"], group_id=group_id, log=log
+                )
+                if existing:
+                    self._plugin_parameter_type_service.delete(
+                        plugin_parameter_type_id=existing["id"],
+                        log=log,
+                    )
 
-def _build_tasks(tasks_config, param_types):
-    tasks = defaultdict(list)
-    for task in tasks_config:
-        tasks[task["filename"]].append(
-            {
-                "name": task["name"],
-                "description": task.get("description", None),
-                "input_params": [
-                    {
-                        "name": param["name"],
-                        "parameter_type_id": param_types[param["type"]].resource_id,
-                        "required": param.get("required", False),
-                    }
-                    for param in task["input_params"]
-                ],
-                "output_params": [
-                    {
-                        "name": param["name"],
-                        "parameter_type_id": param_types[param["type"]].resource_id,
-                    }
-                    for param in task["output_params"]
-                ],
-            }
+            param_type["name"] = self._plugin_parameter_type_service.create(
+                name=param_type["name"],
+                description=param_type.get("description", None),
+                structure=param_type.get("structure", None),
+                group_id=group_id,
+                commit=False,
+                log=log,
+            )["plugin_task_parameter_type"]
+
+        db.session.flush()
+
+        return param_types
+
+    def _register_plugins(
+        self,
+        group_id: int,
+        plugins_config: dict[str, Any],
+        param_types: Any,
+        overwrite: bool,
+        log: BoundLogger,
+    ):
+        builtin_param_types = self._builtin_plugin_parameter_type_service.get(
+            group_id=group_id, error_if_not_found=False, log=log
         )
-    return tasks
+        param_types.update(
+            {param_type.name: param_type for param_type in builtin_param_types}
+        )
+
+        plugins = {}
+        for plugin in plugins_config:
+            if overwrite:
+                existing = self._plugin_name_service.get(
+                    Path(plugin["path"]).stem, group_id=group_id
+                )
+                if existing:
+                    self._plugin_id_service.delete(
+                        plugin_id=existing["id"],
+                        log=log,
+                    )
+
+            plugin_dict = self._plugin_service.create(
+                name=Path(plugin["path"]).stem,
+                description=plugin.get("description", None),
+                group_id=group_id,
+                commit=False,
+                log=log,
+            )
+            plugins[plugin_dict["plugin"].name] = plugin_dict["plugin"]
+            db.session.flush()
+
+            tasks = self._build_tasks(plugin.get("tasks", []), param_types)
+            for plugin_file_path in Path(plugin["path"]).rglob("*.py"):
+                filename = str(plugin_file_path.relative_to(plugin["path"]))
+                contents = plugin_file_path.read_text()
+
+                self._plugin_id_file_service.create(
+                    filename,
+                    contents=contents,
+                    description=None,
+                    tasks=tasks[filename],
+                    plugin_id=plugin_dict["plugin"].resource_id,
+                    commit=False,
+                    log=log,
+                )
+
+        db.session.flush()
+
+        return plugins
+
+    def _register_entrypoints(
+        self,
+        group_id: int,
+        entrypoints_config: dict[str, Any],
+        plugins,
+        overwrite: bool,
+        log: BoundLogger,
+    ):
+        entrypoints = dict()
+        for entrypoint in entrypoints_config:
+            if overwrite:
+                existing = self._entrypoint_name_service.get(
+                    entrypoint["name"], group_id=group_id, log=log
+                )
+                if existing is not None:
+                    self.entrypoint_id_service.delete(
+                        entrypoint_id=existing.resource_id
+                    )
+
+            contents = Path(entrypoint["path"]).read_text()
+            params = [
+                {
+                    "name": param["name"],
+                    "parameter_type": param["type"],
+                    "default_value": param.get("default_value", None),
+                }
+                for param in entrypoint.get("params", [])
+            ]
+            plugin_ids = [
+                plugins[plugin].resource_id for plugin in entrypoint.get("plugins", [])
+            ]
+            entrypoint_dict = self._entrypoint_service.create(
+                name=entrypoint.get("name", Path(entrypoint["path"]).stem),
+                description=entrypoint.get("description", None),
+                task_graph=contents,
+                parameters=params,
+                plugin_ids=plugin_ids,
+                queue_ids=[],
+                group_id=group_id,
+                commit=False,
+                log=log,
+            )
+            entrypoints[entrypoint_dict["name"]] = entrypoint_dict["entrypoint"]
+
+        db.session.flush()
+
+        return entrypoints
+
+    def _build_tasks(self, tasks_config, param_types):
+        tasks = defaultdict(list)
+        for task in tasks_config:
+            tasks[task["filename"]].append(
+                {
+                    "name": task["name"],
+                    "description": task.get("description", None),
+                    "input_params": [
+                        {
+                            "name": param["name"],
+                            "parameter_type_id": param_types[param["type"]].resource_id,
+                            "required": param.get("required", False),
+                        }
+                        for param in task["input_params"]
+                    ],
+                    "output_params": [
+                        {
+                            "name": param["name"],
+                            "parameter_type_id": param_types[param["type"]].resource_id,
+                        }
+                        for param in task["output_params"]
+                    ],
+                }
+            )
+        return tasks
