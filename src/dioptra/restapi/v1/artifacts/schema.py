@@ -42,6 +42,23 @@ class ArtifactRefSchema(ArtifactRefBaseSchema):  # type: ignore
     )
 
 
+class ArtifactFileMetadataSchema(Schema):
+    """The schema for the files stored in an Artifact resource."""
+
+    relativePath = fields.String(
+        attribute="relative_path",
+        metadata=dict(description="Relative path to the Artifact URI."),
+    )
+    fileType = fields.String(
+        attribute="file_type",
+        metadata=dict(description="The type of the file."),
+    )
+    fileSize = fields.Integer(
+        attribute="file_size",
+        metadata=dict(description="The size in bytes of the file."),
+    )
+
+
 class ArtifactMutableFieldsSchema(Schema):
     """The fields schema for the mutable data in a Artifact resource."""
 
@@ -69,6 +86,21 @@ class ArtifactSchema(ArtifactMutableFieldsSchema, ArtifactBaseSchema):  # type: 
         metadata=dict(description="URL pointing to the location of the Artifact."),
         required=True,
     )
+    fileType = fields.String(
+        attribute="file_type",
+        metadata=dict(description="The type of the file."),
+    )
+    fileSize = fields.Integer(
+        attribute="file_size",
+        metadata=dict(description="The size in bytes of the file."),
+    )
+    files = fields.Nested(
+        ArtifactFileMetadataSchema,
+        attribute="files",
+        metadata=dict(description="The files contained in an artifact."),
+        many=True,
+        required=False,
+    )
 
 
 class ArtifactPageSchema(BasePageSchema):
@@ -78,6 +110,23 @@ class ArtifactPageSchema(BasePageSchema):
         ArtifactSchema,
         many=True,
         metadata=dict(description="List of Artifact resources in the current page."),
+    )
+
+
+class ArtifactContentsGetQueryParameters(Schema):
+    """A schema for adding artifact contents query parameters to a resource endpoint."""
+
+    path = fields.String(
+        attribute="path",
+        metadata=dict(description="Path of a specific artifact."),
+        load_default=None,
+    )
+    download = fields.Boolean(
+        attribute="download",
+        metadata=dict(
+            description="Determines whether the file will be downloaded or viewed."
+        ),
+        load_default=None,
     )
 
 

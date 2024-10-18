@@ -18,11 +18,12 @@
 from __future__ import annotations
 
 import uuid
+from pathlib import Path
 from typing import cast
 from urllib.parse import unquote
 
 import structlog
-from flask import request
+from flask import request, send_file
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -38,6 +39,7 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
 )
 
 from .schema import (
+    ArtifactContentsGetQueryParameters,
     ArtifactGetQueryParameters,
     ArtifactMutableFieldsSchema,
     ArtifactPageSchema,
@@ -46,6 +48,7 @@ from .schema import (
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    ArtifactIdContentsService,
     ArtifactIdService,
     ArtifactService,
 )
@@ -177,6 +180,48 @@ class ArtifactIdEndpoint(Resource):
             ),
         )
         return utils.build_artifact(artifact)
+
+
+@api.route("/<int:id>/contents")
+@api.param("id", "ID for the Artifact resource.")
+class ArtifactIdContentsEndpoint(Resource):
+    @inject
+    def __init__(
+        self, artifact_id_contents_service: ArtifactIdContentsService, *args, **kwargs
+    ) -> None:
+        """Initialize the artifact id contents resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            artifact_id_contents_service: A ArtifactIdContentsService object.
+        """
+        self._artifact_id_contents_service = artifact_id_contents_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=ArtifactContentsGetQueryParameters, api=api)
+    def get(self, id: int):
+        """Gets a list of all files associated with an Artifact resource."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
+        )
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+
+        path = parsed_query_params["path"]
+        download = parsed_query_params["download"]
+
+        artifact_file = self._artifact_id_contents_service.get(
+            artifact_id=id,
+            path=path,
+            log=log,
+        )
+
+        return send_file(
+            path_or_file=artifact_file,
+            as_attachment=download,
+            download_name=Path(path).name,
+        )
 
 
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
