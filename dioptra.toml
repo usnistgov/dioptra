@@ -1,0 +1,38 @@
+[[plugins]]
+path = "plugins/hello_world"
+description = "A simple plugin used for testing and demonstration purposes."
+
+
+  [[plugins.tasks]]
+  filename = "tasks.py"
+  name = "hello"
+  input_params = [ { name = "name", type = "string", required = true} ]
+  output_params = [ { name = "message", type = "string" } ]
+
+  [[plugins.tasks]]
+  filename = "tasks.py"
+  name = "greet"
+  input_params = [
+    { name = "greeting", type = "string", required = true },
+	  { name = "name", type = "string", required = true },
+  ]
+  output_params = [ { name = "message", type = "string" } ]
+
+  [[plugins.tasks]]
+  filename = "tasks.py"
+  name = "shout"
+  input_params = [ { name = "message", type = "string", required = true} ]
+  output_params = [ { name = "message", type = "string" } ]
+
+[[plugin_param_types]]
+name = "image"
+structure = { list = ["int", "int", "int"] }
+
+[[entrypoints]]
+path = "examples/hello-world.yaml"
+name = "Hello World"
+description = "A simple example using the hello_world plugin."
+params = [
+  { name = "name", type = "string", default_value = "World" }
+]
+plugins = [ "hello_world" ]
