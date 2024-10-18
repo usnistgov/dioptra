@@ -306,6 +306,7 @@ TYPE_MAP_MA_TO_REQPARSE = {
     ma.Decimal: float,
     ma.Dict: dict,
     ma.Email: str,
+    ma.Enum: str,
     FileUpload: FileStorage,
     ma.Float: float,
     ma.Function: str,
