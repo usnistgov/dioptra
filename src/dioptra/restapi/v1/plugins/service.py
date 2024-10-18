@@ -85,7 +85,13 @@ class PluginService(object):
         self._group_id_service = group_id_service
 
     def create(
-        self, name: str, description: str, group_id: int, commit: bool = True, **kwargs
+        self,
+        name: str,
+        description: str,
+        group_id: int,
+        replace_existing: bool = False,
+        commit: bool = True,
+        **kwargs,
     ) -> utils.PluginWithFilesDict:
         """Create a new plugin.
 
@@ -94,6 +100,8 @@ class PluginService(object):
                 unique.
             description: The description of the plugin.
             group_id: The group that will own the plugin.
+            replace_existing: If True and a resource already exists with this
+                name, delete it instead of raising an exception
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -104,14 +112,21 @@ class PluginService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        duplicate = self._plugin_name_service.get(name, group_id=group_id, log=log)
-        if duplicate is not None:
-            raise EntityExistsError(
-                PLUGIN_RESOURCE_TYPE,
-                duplicate.resource_id,
-                name=name,
-                group_id=group_id,
-            )
+        existing = self._plugin_name_service.get(name, group_id=group_id, log=log)
+        if existing is not None:
+            if replace_existing:
+                deleted_resource_lock = models.ResourceLock(
+                    resource_lock_type=resource_lock_types.DELETE,
+                    resource=existing.resource,
+                )
+                db.session.add(deleted_resource_lock)
+            else:
+                raise EntityExistsError(
+                    PLUGIN_RESOURCE_TYPE,
+                    duplicate.resource_id,
+                    name=name,
+                    group_id=group_id,
+                )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 

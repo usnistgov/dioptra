@@ -119,7 +119,6 @@ class ResourceImport(Resource):
         )
         parsed_form = request.parsed_form
 
-        log.info("HERE")
         return self._resource_import_service.import_resources(
             group_id=parsed_form["group_id"],
             source_type=parsed_form["source_type"],

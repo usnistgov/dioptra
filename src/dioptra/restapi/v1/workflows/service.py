@@ -41,7 +41,11 @@ from dioptra.restapi.v1.plugins.service import PluginIdFileService, PluginServic
 from dioptra.sdk.utilities.paths import set_cwd
 
 from .lib import clone_git_repository, package_job_files, views
-from .schema import FileTypes, ResourceImportSourceTypes
+from .schema import (
+    FileTypes,
+    ResourceImportSourceTypes,
+    ResourceImportResolveNameConflictsStrategy,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -147,6 +151,11 @@ class ResourceImportService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Import resources", group_id=group_id)
 
+        replace_existing = (
+            resolve_name_conflicts_strategy
+            == ResourceImportResolveNameConflictsStrategy.OVERWRITE
+        )
+
         with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
             working_dir = Path(tmp_dir)
 
@@ -176,6 +185,7 @@ class ResourceImportService(object):
                     description=param_type.get("description", None),
                     structure=param_type.get("structure", None),
                     group_id=group_id,
+                    replace_existing=replace_existing,
                     commit=False,
                     log=log,
                 )
@@ -199,6 +209,7 @@ class ResourceImportService(object):
                     name=Path(plugin["path"]).stem,
                     description=plugin.get("description", None),
                     group_id=group_id,
+                    replace_existing=replace_existing,
                     commit=False,
                     log=log,
                 )
@@ -219,6 +230,7 @@ class ResourceImportService(object):
                         tasks=tasks[filename],
                         plugin_id=plugin_dict["plugin"].resource_id,
                         commit=False,
+                        log=log,
                     )
 
             # register new entrypoints
@@ -242,6 +254,7 @@ class ResourceImportService(object):
                     ],
                     queue_ids=[],
                     group_id=group_id,
+                    replace_existing=replace_existing,
                     commit=False,
                     log=log,
                 )
