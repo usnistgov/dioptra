@@ -462,3 +462,7 @@ class ArtifactIdService(object):
             )
 
         return utils.ArtifactDict(artifact=new_artifact, has_draft=has_draft)
+
+
+class ArtifactIdContentsService(object):
+    """ """
