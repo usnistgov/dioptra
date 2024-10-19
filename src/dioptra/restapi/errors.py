@@ -28,6 +28,8 @@ from flask import request
 from flask_restx import Api
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi.db.shared_errors import ResourceDeletedError, ResourceNotFoundError
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
@@ -435,3 +437,19 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_base_error(error: DioptraError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+
+    # Temporary, until exception revamp is complete.  These apply to all
+    # resource types, therefore they don't belong with any single family of
+    # endpoints.
+    api.errorhandler(ResourceNotFoundError)(_handle_resource_does_not_exist_error)
+    api.errorhandler(ResourceDeletedError)(_handle_resource_deleted_error)
+
+
+def _handle_resource_does_not_exist_error(error: ResourceNotFoundError):
+    resource_type = error.resource_type or "resource"
+    return {"message": f"Not Found - The requested {resource_type} does not exist"}, 404
+
+
+def _handle_resource_deleted_error(error: ResourceDeletedError):
+    resource_type = error.resource_type or "resource"
+    return {"message": f"Not Found - The requested {resource_type} is deleted"}, 404

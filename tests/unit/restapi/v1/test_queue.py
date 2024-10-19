@@ -207,7 +207,11 @@ def assert_retrieving_queues_works(
         query_string=query_string,
         follow_redirects=True,
     )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    # A sort order was not given in the request, so we must not assume a
+    # particular order in the response.
+    expected = sorted(expected, key=lambda d: d["id"])
+    resp_data = sorted(response.get_json()["data"], key=lambda d: d["id"])
+    assert response.status_code == 200 and resp_data == expected
 
 
 def assert_sorting_queue_works(
