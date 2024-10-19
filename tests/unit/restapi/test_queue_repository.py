@@ -22,7 +22,7 @@ import pytest
 
 import dioptra.restapi.db.models as m
 from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.db.repository.errors import QueueSortError, UnsupportedFilterField
+from dioptra.restapi.errors import SearchParseError, SortParameterValidationError
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.shared_errors import (
     ResourceDeletedError,
@@ -994,7 +994,7 @@ def test_queue_filter_null_field_2(queue_filter_setup, queue_repo):
 
 
 def test_queue_filter_unsupported_sort(queue_repo):
-    with pytest.raises(QueueSortError):
+    with pytest.raises(SortParameterValidationError):
         queue_repo.get_by_filters_paged(
             group=None,
             filters=[],
@@ -1007,7 +1007,7 @@ def test_queue_filter_unsupported_sort(queue_repo):
 
 
 def test_queue_filter_unsupported_field(queue_repo):
-    with pytest.raises(UnsupportedFilterField):
+    with pytest.raises(SearchParseError):
         queue_repo.get_by_filters_paged(
             group=None,
             filters=[{"field": "wrong", "value": ["foo"]}],
