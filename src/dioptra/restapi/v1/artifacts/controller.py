@@ -40,6 +40,7 @@ from dioptra.restapi.v1.shared.snapshots.controller import (
 
 from .schema import (
     ArtifactContentsGetQueryParameters,
+    ArtifactFileSchema,
     ArtifactGetQueryParameters,
     ArtifactMutableFieldsSchema,
     ArtifactPageSchema,
@@ -201,6 +202,7 @@ class ArtifactIdContentsEndpoint(Resource):
 
     @login_required
     @accepts(query_params_schema=ArtifactContentsGetQueryParameters, api=api)
+    @responds(schema=ArtifactFileSchema(many=True), api=api)
     def get(self, id: int):
         """Gets a list of all files associated with an Artifact resource."""
         log = LOGGER.new(
@@ -211,14 +213,17 @@ class ArtifactIdContentsEndpoint(Resource):
         path = parsed_query_params["path"]
         download = parsed_query_params["download"]
 
-        artifact_file = self._artifact_id_contents_service.get(
+        contents, is_dir = self._artifact_id_contents_service.get(
             artifact_id=id,
             path=path,
             log=log,
         )
 
+        if path is None and is_dir:
+            path = f"artifact_{id}.json"
+
         return send_file(
-            path_or_file=artifact_file,
+            path_or_file=contents,
             as_attachment=download,
             download_name=Path(path).name,
         )
