@@ -21,6 +21,8 @@ from marshmallow import Schema, fields
 
 from dioptra.restapi.v1.entrypoints.schema import EntrypointParameterSchema
 
+from dioptra.restapi.v1.entrypoints.schema import EntrypointParameterSchema
+
 
 class FileTypes(Enum):
     TAR_GZ = "tar_gz"
@@ -42,6 +44,29 @@ class JobFilesDownloadQueryParametersSchema(Schema):
         ),
         by_value=True,
         default=FileTypes.TAR_GZ.value,
+    )
+
+
+class EntrypointWorkflowSchema(Schema):
+    """The YAML that represents the Entrypoint Workflow."""
+
+    taskGraph = fields.String(
+        attribute="task_graph",
+        metadata=dict(description="Task graph of the Entrypoint resource."),
+        required=True,
+    )
+    pluginIds = fields.List(
+        fields.Integer(),
+        attribute="plugin_ids",
+        data_key="plugins",
+        metadata=dict(description="List of plugin files for the entrypoint."),
+        load_only=True,
+    )
+    parameters = fields.Nested(
+        EntrypointParameterSchema,
+        attribute="parameters",
+        many=True,
+        metadata=dict(description="List of parameters for the entrypoint."),
     )
 
 
