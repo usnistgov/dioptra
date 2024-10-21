@@ -43,19 +43,33 @@ class ArtifactRefSchema(ArtifactRefBaseSchema):  # type: ignore
 
 
 class ArtifactFileMetadataSchema(Schema):
-    """The schema for the files stored in an Artifact resource."""
+    """The schema for the artifact file metadata."""
 
-    relativePath = fields.String(
-        attribute="relative_path",
-        metadata=dict(description="Relative path to the Artifact URI."),
-    )
     fileType = fields.String(
         attribute="file_type",
         metadata=dict(description="The type of the file."),
+        dump_only=True,
     )
     fileSize = fields.Integer(
         attribute="file_size",
         metadata=dict(description="The size in bytes of the file."),
+        dump_only=True,
+    )
+    fileUrl = fields.Url(
+        attribute="file_url",
+        metadata=dict(description="URL for accessing the contents of the file."),
+        relative=True,
+        dump_only=True,
+    )
+
+
+class ArtifactFileSchema(ArtifactFileMetadataSchema):
+    """The schema for an artifact file."""
+
+    relativePath = fields.String(
+        attribute="relative_path",
+        metadata=dict(description="Relative path to the Artifact URI."),
+        dump_only=True,
     )
 
 
@@ -72,7 +86,7 @@ class ArtifactMutableFieldsSchema(Schema):
 ArtifactBaseSchema = generate_base_resource_schema("Artifact", snapshot=True)
 
 
-class ArtifactSchema(ArtifactMutableFieldsSchema, ArtifactBaseSchema):  # type: ignore
+class ArtifactSchema(ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, ArtifactBaseSchema):  # type: ignore
     """The schema for the data stored in an Artifact resource."""
 
     jobId = fields.Int(
@@ -85,21 +99,6 @@ class ArtifactSchema(ArtifactMutableFieldsSchema, ArtifactBaseSchema):  # type: 
         attribute="uri",
         metadata=dict(description="URL pointing to the location of the Artifact."),
         required=True,
-    )
-    fileType = fields.String(
-        attribute="file_type",
-        metadata=dict(description="The type of the file."),
-    )
-    fileSize = fields.Integer(
-        attribute="file_size",
-        metadata=dict(description="The size in bytes of the file."),
-    )
-    files = fields.Nested(
-        ArtifactFileMetadataSchema,
-        attribute="files",
-        metadata=dict(description="The files contained in an artifact."),
-        many=True,
-        required=False,
     )
 
 
