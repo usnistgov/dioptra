@@ -122,7 +122,6 @@
   <LeaveFormDialog 
     v-model="showLeaveDialog"
     type="job"
-    :edit="false"
     @leaveForm="leaveForm"
   />
   <ReturnToFormDialog
@@ -312,12 +311,12 @@
 
   onBeforeRouteLeave((to, from, next) => {
     toPath.value = to.path
-    if(confirmLeave.value) {
+    if(confirmLeave.value || !valuesChanged.value) {
       next(true)
-    } else if(valuesChanged.value) {
-      showLeaveDialog.value = true
+    } else if(route.params.id === 'new') {
+      leaveForm()
     } else {
-      next(true)
+      showLeaveDialog.value = true
     }
   })
 

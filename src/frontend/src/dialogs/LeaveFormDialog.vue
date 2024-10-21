@@ -7,8 +7,7 @@
     <template #title>Leave <span class="text-capitalize">{{ type }}</span> Form?</template>
     <q-card-section class="q-pt-none">
       You are about to leave the {{ type }} form and have unsaved changes. <br>
-      {{ props.edit ? 'All changes will be lost.' : 'Changes will be temporarily saved.' }}
-      Continue?
+      All changes will be lost.  Continue?
     </q-card-section>
   </DialogComponent>
 </template>
@@ -17,7 +16,7 @@
   import DialogComponent from './DialogComponent.vue'
 
   defineEmits(['leaveForm'])
-  const props = defineProps(['type', 'edit'])
+  const props = defineProps(['type'])
 
   const showDialog = defineModel()
 
