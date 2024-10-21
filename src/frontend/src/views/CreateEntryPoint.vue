@@ -167,6 +167,16 @@
           <template v-slot:before>
             <div class="field-label">Queues:</div>
           </template>  
+          <template v-slot:selected-item="scope">
+            <q-chip
+              :label="scope.opt.name"
+              removable
+              @remove="scope.removeAtIndex(scope.index)"
+              :tabindex="scope.tabindex"
+              color="primary"
+              text-color="white"
+            />
+          </template>
         </q-select>
 
         <q-select
@@ -189,6 +199,40 @@
             <div class="field-label">Plugins:</div>
           </template>  
         </q-select>
+        <div class="row" v-if="route.params.id !== 'new'">
+          <label class="field-label q-pt-xs">Plugins:</label>
+          <div 
+            class="col" 
+            style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px;"
+          >
+            <div
+              v-for="(plugin, i) in entryPoint.plugins"
+              :key="i"
+            >
+              <q-chip
+                :label="plugin.name"
+                color="secondary"
+                text-color="white"
+              >
+                <q-badge
+                  v-if="!plugin.latestSnapshot" 
+                  color="red" 
+                  label="Outdated" 
+                  rounded
+                  class="q-ml-xs"
+                />
+              </q-chip>
+              <q-btn
+                v-if="!plugin.latestSnapshot"
+                round 
+                color="red" 
+                icon="sync"
+                size="sm"
+                @click="syncPlugin(plugin.id, i)"
+              />
+            </div>
+          </div>
+        </div>
       </div>
       
       <TableComponent
@@ -629,4 +673,15 @@
     confirmLeave.value = true
     router.push(toPath.value)
   }
+  async function syncPlugin(pluginID, index) {
+    console.log(pluginID, index)
+    try {
+      const res = await api.getItem('plugins', pluginID)
+      console.log('plugin = ', res)
+      entryPoint.value.plugins[index] = res.data
+    } catch(err) {
+      console.warn(err)
+    }
+  }
+
 </script>

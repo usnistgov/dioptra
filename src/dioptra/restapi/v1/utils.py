@@ -255,6 +255,7 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
     return {
         "id": plugin.resource_id,
         "snapshot_id": plugin.resource_snapshot_id,
+        "latest_snapshot": plugin.resource.latest_snapshot_id == plugin.resource_snapshot_id,
         "name": plugin.name,
         "url": build_url(
             f"{PLUGINS}/{plugin.resource_id}/snapshots/{plugin.resource_snapshot_id}"
@@ -268,6 +269,7 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
                     f"{PLUGINS}/{plugin.resource_id}/{PLUGIN_FILES}/{plugin_file.resource_id}/"
                     f"snapshots/{plugin_file.resource_snapshot_id}"
                 ),
+                "tasks": [build_plugin_task(task) for task in plugin_file.tasks]
             }
             for plugin_file in plugin_files
         ],
