@@ -17,6 +17,8 @@
 """The server-side functions that perform artifact endpoint operations."""
 from __future__ import annotations
 
+import io
+import json
 from typing import Any, Final, cast
 
 import structlog
@@ -466,3 +468,24 @@ class ArtifactIdService(object):
 
 class ArtifactIdContentsService(object):
     """ """
+
+    def get(
+        self,
+        artifact_id: str,
+        path: str,
+        **kwargs,
+    ) -> (io.BytesIO, bool):
+
+        # example:
+        # If the requested location is a directory, contents is a file with the list of
+        # file metadata.
+        is_dir = True
+        contents = io.BytesIO()
+        contents.write(
+            json.dumps(
+                [{"relativePath": "./", "fileType": "json", "fileSize": 0, "url": ""}]
+            ).encode("utf-8")
+        )
+        contents.seek(0)
+
+        return contents, is_dir
