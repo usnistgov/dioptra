@@ -48,6 +48,8 @@ from .schema import (
     JobPageSchema,
     JobSchema,
     JobStatusSchema,
+    MlflowMetricsSchema,
+    MlflowMetricsSnapshotSchema
 )
 from .service import (
     RESOURCE_TYPE,
@@ -56,6 +58,8 @@ from .service import (
     JobIdService,
     JobIdStatusService,
     JobService,
+    JobIdMetricsService,
+    JobIdMetricsSnapshotsService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -201,7 +205,7 @@ class JobIdMlflowrunEndpoint(Resource):
         All arguments are provided via dependency injection.
 
         Args:
-            job_id_service: A JobIdStatusService object.
+            job_id_service: A JobIdMlflowrunService object.
         """
         self._job_id_mlflowrun_service = job_id_mlflowrun_service
         super().__init__(*args, **kwargs)
@@ -239,6 +243,95 @@ class JobIdMlflowrunEndpoint(Resource):
             log=log,
         )
 
+@api.route("/<int:id>/metrics")
+@api.param("id", "ID for the Job resource.")
+class JobIdMetricsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        job_id_metrics_service: JobIdMetricsService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_metrics_service: A JobIdMetricsService object.
+        """
+        self._job_id_metrics_service = job_id_metrics_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=MlflowMetricsSchema(many=True), api=api)
+    def get(self, id: int):
+        """Gets a Job resource's latest metrics."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMetricsEndpoint",
+            request_type="GET",
+            job_id=id,
+        )
+        return self._job_id_metrics_service.get(
+            job_id=id, error_if_not_found=True, log=log
+        )
+
+    @login_required
+    @accepts(schema=MlflowMetricsSchema, api=api)
+    @responds(schema=MlflowMetricsSchema, api=api)
+    def post(self, id: int):
+        """Sets a metric for a Job"""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMetricsEndpoint",
+            request_type="POST",
+            job_id=id,
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        return self._job_id_metrics_service.update(
+            job_id=id,
+            metric_name=parsed_obj["name"],
+            metric_value=parsed_obj["value"],
+            error_if_not_found=True,
+            log=log,
+        )
+
+@api.route("/<int:id>/metrics/<string:name>/snapshots")
+@api.param("id", "ID for the Job resource.")
+@api.param("name", "Name of the metric.")
+class JobIdMetricsSnapshotsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        job_id_metrics_snapshots_service: JobIdMetricsSnapshotsService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_metrics_snapshots_service: A JobIdMetricsSnapshotsService object.
+        """
+        self._job_id_metrics_snapshots_service = job_id_metrics_snapshots_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=MlflowMetricsSnapshotSchema(many=True), api=api)
+    def get(self, id: int, name: str):
+        """Gets a Job resource's latest metrics."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMetricsSnapshotsEndpoint",
+            request_type="GET",
+            job_id=id,
+            metric_name=name
+        )
+        return self._job_id_metrics_snapshots_service.get(
+            job_id=id, metric_name=name, error_if_not_found=True, log=log
+        )
 
 JobSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,

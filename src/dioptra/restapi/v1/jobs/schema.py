@@ -40,6 +40,28 @@ class JobMlflowRunSchema(Schema):
         metadata=dict(description="UUID for the associated Mlflow Run."),
     )
 
+class MlflowMetricsSchema(Schema):
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="The name of the metric."),
+        required=True
+    )
+    value = fields.Float(
+        attribute="value",
+        metadata=dict(description="The value of the metric."),
+        required=True
+    )
+
+class MlflowMetricsSnapshotSchema(MlflowMetricsSchema):
+    step = fields.Integer(
+        attribute="step",
+        metadata=dict(description="The step value for the metric.")
+    )
+
+    timestamp = fields.Integer(
+        attribute="timestamp",
+        metadata=dict(description="The timestamp of the metric in milliseconds.")
+    )
 
 class JobStatusSchema(Schema):
     """The fields schema for the data in a Job status resource."""

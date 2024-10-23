@@ -483,16 +483,12 @@ class JobIdStatusService(object):
     @inject
     def __init__(
         self,
-        job_id_service: JobIdService,
     ) -> None:
         """Initialize the job status service.
 
         All arguments are provided via dependency injection.
-
-        Args:
-            job_id_service: A JobIdService object.
         """
-        self._job_id_service = job_id_service
+        pass
 
     def get(
         self,
@@ -525,6 +521,105 @@ class JobIdStatusService(object):
             raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
 
         return {"status": job.status, "id": job.resource_id}
+
+
+class JobIdMetricsService(object):
+    """The service methods for retrieving the metrics of a job by unique id."""
+
+    @inject
+    def __init__(
+        self,
+    ) -> None:
+        """Initialize the job metrics service.
+
+        All arguments are provided via dependency injection.
+
+        """
+        pass
+
+    def get(
+        self,
+        job_id: int,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Fetch a job's metrics by its unique id.
+
+        Args:
+            job_id: The unique id of the job.
+
+        Returns:
+            The metrics for the requested job if found, otherwise an error message.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get job metrics by id", job_id=job_id)
+        # TODO: replace with mlflow calls
+        job = True
+        if job is None:
+            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
+
+        return [{"name": "accuracy", "value": "1.0"}]
+
+    def update(
+        self,
+        job_id: int,
+        metric_name: str,
+        metric_value: float,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Update a job's metrics by its unique id.
+
+        Args:
+            job_id: The unique id of the job.
+            metric_name: The name of the metric to create or update.
+            metric_value: The value of the metric being updated.
+        Returns:
+            The metric dictionary passed in if successful, otherwise an error message.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Update job metrics by id", job_id=job_id)
+        # TODO: replace with mlflow calls
+        job = True
+        if job is None:
+            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
+
+        return {"name": metric_name, "value": metric_value}
+
+class JobIdMetricsSnapshotsService(object):
+    """The service methods for retrieving the historical metrics of a job by unique id and metric name."""
+
+    @inject
+    def __init__(
+        self,
+    ) -> None:
+        """Initialize the job metrics snapshots service.
+
+        All arguments are provided via dependency injection.
+        """
+        pass
+
+    def get(
+        self,
+        job_id: int,
+        metric_name: str,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Fetch a job's metrics by its unique id and metric name.
+
+        Args:
+            job_id: The unique id of the job.
+            metric_name: The name of the metric.
+
+        Returns:
+            The metric history for the requested job and metric if found, otherwise an error message.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get job metrics by id", job_id=job_id)
+        # TODO: replace with mlflow calls
+        job = True
+        if job is None:
+            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
+
+        return [{"name": metric_name, "value": "1.0", "step": 1, "timestamp": "4241251235"}]
 
 
 class ExperimentJobService(object):
