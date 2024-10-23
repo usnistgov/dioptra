@@ -313,6 +313,7 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
         "url": build_url(
             f"{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}"
         ),
+        "tasks": [build_plugin_task(task) for task in plugin_file.tasks]
     }
 
 
