@@ -42,3 +42,29 @@ class PasswordService(object):
         log.debug("Verifying password")
 
         return cast(bool, self._context.verify(password, hashed_password))
+from typing import cast
+
+import structlog
+from passlib.context import CryptContext
+from structlog.stdlib import BoundLogger
+
+LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+
+class PasswordService(object):
+    def __init__(self, crypt_context: CryptContext) -> None:
+        self._context = crypt_context
+
+    def hash(self, password: str, **kwargs) -> str:
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        log.debug("Hashing password")
+
+        return cast(str, self._context.hash(password))
+
+    def verify(self, password: str, hashed_password: str, **kwargs) -> bool:
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        log.debug("Verifying password")
+
+        return cast(bool, self._context.verify(password, hashed_password))
