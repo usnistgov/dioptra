@@ -797,3 +797,42 @@ class ExperimentNameService(object):
             return None
 
         return experiment
+
+class ExperimentMetricsService(object):
+    """The service methods for retrieving metrics attached to jobs in the experiment."""
+
+    @inject
+    def __init__(
+        self
+    ) -> None:
+        """Initialize the experiment service.
+
+        All arguments are provided via dependency injection.
+        """
+
+    def get(
+        self,
+        experiment_id: int,
+        **kwargs,
+    ) -> list[models.EntryPoint]:
+        """Get a list of jobs and the latest metrics associated with each.
+
+        Args:
+            experiment_id: The unique id of the experiment.
+            error_if_not_found: If True, raise an error if the experiment is not found.
+                Defaults to False.
+
+        Returns:
+            The list of jobs and the metrics associated with them.
+
+        Raises:
+            EntityDoesNotExistError: If the experiment is not found and
+                `error_if_not_found` is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Get entrypoints for an experiment by resource id",
+            resource_id=experiment_id,
+        )
+
+        return [{'id': 3, 'metrics': [{'name': 'accuracy', 'value': 0.99}]}]

@@ -39,6 +39,7 @@ from dioptra.restapi.v1.jobs.schema import (
     JobPageSchema,
     JobSchema,
     JobStatusSchema,
+    JobIdMetricsSchema
 )
 from dioptra.restapi.v1.jobs.service import (
     ExperimentJobIdMlflowrunService,
@@ -75,6 +76,7 @@ from .service import (
     ExperimentIdEntrypointsService,
     ExperimentIdService,
     ExperimentService,
+    ExperimentMetricsService
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -520,6 +522,39 @@ class ExperimentIdJobIdArtifactsEndpoint(Resource):
         )
         return utils.build_artifact(artifact)
 
+@api.route("/<int:id>/metrics")
+@api.param("id", "ID for the Experiment resource.")
+class ExperimentIdMetricsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        experiment_metrics_service: ExperimentMetricsService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the Experiment Metrics resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            experiment_metrics_service: A ExperimentMetricsService object.
+        """
+        self._experiment_metrics_service = experiment_metrics_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=JobIdMetricsSchema(many=True), api=api)
+    def get(self, id: int):
+        """Gets all of the latest metrics for every job in the experiment."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="ExperimentIdMetricsEndpoint",
+            request_type="GET",
+            experiment_id=id,
+        )
+        return self._experiment_metrics_service.get(
+            experiment_id=id, error_if_not_found=True, log=log
+        )
 
 @api.route("/<int:id>/entrypoints")
 @api.param("id", "ID for the Experiment resource.")

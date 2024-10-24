@@ -48,8 +48,8 @@ from .schema import (
     JobPageSchema,
     JobSchema,
     JobStatusSchema,
-    MlflowMetricsSchema,
-    MlflowMetricsSnapshotSchema
+    MetricsSchema,
+    MetricsSnapshotSchema
 )
 from .service import (
     RESOURCE_TYPE,
@@ -264,7 +264,7 @@ class JobIdMetricsEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @responds(schema=MlflowMetricsSchema(many=True), api=api)
+    @responds(schema=MetricsSchema(many=True), api=api)
     def get(self, id: int):
         """Gets a Job resource's latest metrics."""
         log = LOGGER.new(
@@ -278,8 +278,8 @@ class JobIdMetricsEndpoint(Resource):
         )
 
     @login_required
-    @accepts(schema=MlflowMetricsSchema, api=api)
-    @responds(schema=MlflowMetricsSchema, api=api)
+    @accepts(schema=MetricsSchema, api=api)
+    @responds(schema=MetricsSchema, api=api)
     def post(self, id: int):
         """Sets a metric for a Job"""
         log = LOGGER.new(
@@ -319,7 +319,7 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @responds(schema=MlflowMetricsSnapshotSchema(many=True), api=api)
+    @responds(schema=MetricsSnapshotSchema(many=True), api=api)
     def get(self, id: int, name: str):
         """Gets a Job resource's latest metrics."""
         log = LOGGER.new(

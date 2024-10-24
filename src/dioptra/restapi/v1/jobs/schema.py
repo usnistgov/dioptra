@@ -40,7 +40,14 @@ class JobMlflowRunSchema(Schema):
         metadata=dict(description="UUID for the associated Mlflow Run."),
     )
 
-class MlflowMetricsSchema(Schema):
+class JobIdSchema(Schema):
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="ID for the Job resource."),
+        dump_only=True,
+    )
+
+class MetricsSchema(Schema):
     name = fields.String(
         attribute="name",
         metadata=dict(description="The name of the metric."),
@@ -52,7 +59,7 @@ class MlflowMetricsSchema(Schema):
         required=True
     )
 
-class MlflowMetricsSnapshotSchema(MlflowMetricsSchema):
+class MetricsSnapshotSchema(MetricsSchema):
     step = fields.Integer(
         attribute="step",
         metadata=dict(description="The step value for the metric.")
@@ -63,14 +70,17 @@ class MlflowMetricsSnapshotSchema(MlflowMetricsSchema):
         metadata=dict(description="The timestamp of the metric in milliseconds.")
     )
 
-class JobStatusSchema(Schema):
+class JobIdMetricsSchema(JobIdSchema):
+    metrics = fields.Nested(
+        MetricsSchema,
+        attribute="metrics",
+        metadata=dict(description="A list of the latest metrics associated with the job."),
+        many=True
+    )
+
+class JobStatusSchema(JobIdSchema):
     """The fields schema for the data in a Job status resource."""
 
-    id = fields.Integer(
-        attribute="id",
-        metadata=dict(description="ID for the Job resource."),
-        dump_only=True,
-    )
     status = fields.String(
         attribute="status",
         validate=validate.OneOf(
