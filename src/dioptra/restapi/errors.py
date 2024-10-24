@@ -310,6 +310,16 @@ class PluginParameterTypeMatchesBuiltinTypeError(DioptraError):
         )
 
 
+class EntrypointWorkflowYamlValidationError(DioptraError):
+    """The entrypoint workflow yaml has validation errors."""
+
+    def __init__(self):
+        super().__init__(
+            "The entrypoint workflow yaml submitted by the user has "
+            "validation errors."
+        )
+
+
 # User Errors
 class NoCurrentUserError(DioptraError):
     """There is no currently logged-in user."""
