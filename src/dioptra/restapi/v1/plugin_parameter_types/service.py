@@ -85,8 +85,6 @@ class PluginParameterTypeService(object):
         structure: dict[str, Any],
         description: str,
         group_id: int,
-        read_only: bool = False,
-        replace_existing: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> utils.PluginParameterTypeDict:
@@ -100,9 +98,6 @@ class PluginParameterTypeService(object):
                 type's structure.
             description: The description of the plugin parameter type.
             group_id: The group that will own the plugin parameter type.
-            read_only: If True, apply a read only lock to the resource
-            replace_existing: If True and a resource already exists with this
-                name, delete it instead of raising an exception
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -124,20 +119,13 @@ class PluginParameterTypeService(object):
             )
             raise PluginParameterTypeMatchesBuiltinTypeError
 
-        existing = self._plugin_parameter_type_name_service.get(
+        duplicate = self._plugin_parameter_type_name_service.get(
             name, group_id=group_id, log=log
         )
-        if existing is not None:
-            if replace_existing:
-                deleted_resource_lock = models.ResourceLock(
-                    resource_lock_type=resource_lock_types.DELETE,
-                    resource=existing.resource,
-                )
-                db.session.add(deleted_resource_lock)
-            else:
-                raise EntityExistsError(
-                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
-                )
+        if duplicate is not None:
+            raise EntityExistsError(
+                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+            )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
@@ -149,13 +137,6 @@ class PluginParameterTypeService(object):
             resource=resource,
             creator=current_user,
         )
-        if read_only:
-            db.session.add(
-                models.ResourceLock(
-                    resource_lock_type=resource_lock_types.READONLY,
-                    resource=resource,
-                )
-            )
         db.session.add(new_plugin_parameter_type)
 
         if commit:
@@ -630,8 +611,9 @@ class BuiltinPluginParameterTypeService(object):
             retrieved_names = {param_type.name for param_type in plugin_parameter_types}
             missing_names = set(builtin_types) - retrieved_names
             if error_if_not_found:
-                log.debug("Plugin Parameter Type(s) not found", names=missing_names)
-                raise PluginParameterTypeDoesNotExistError
+                raise EntityDoesNotExistError(
+                    RESOURCE_TYPE, missing_names=missing_names
+                )
 
         return plugin_parameter_types
 
