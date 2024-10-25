@@ -94,8 +94,6 @@ class EntrypointService(object):
         plugin_ids: list[int],
         queue_ids: list[int],
         group_id: int,
-        read_only: bool = False,
-        replace_existing: bool = False,
         commit: bool = True,
         **kwargs,
     ) -> utils.EntrypointDict:
@@ -106,9 +104,6 @@ class EntrypointService(object):
                 be unique.
             description: The description of the entrypoint.
             group_id: The group that will own the entrypoint.
-            read_only: If True, apply a read only lock to the resource
-            replace_existing: If True and a resource already exists with this
-                name, delete it instead of raising an exception
             commit: If True, commit the transaction. Defaults to True.
 
         Returns:
@@ -119,18 +114,11 @@ class EntrypointService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        existing = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
-        if existing is not None:
-            if replace_existing:
-                deleted_resource_lock = models.ResourceLock(
-                    resource_lock_type=resource_lock_types.DELETE,
-                    resource=existing.resource,
-                )
-                db.session.add(deleted_resource_lock)
-            else:
-                raise EntityExistsError(
-                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
-                )
+        duplicate = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
+        if duplicate is not None:
+            raise EntityExistsError(
+                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+            )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
         queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
@@ -172,13 +160,6 @@ class EntrypointService(object):
         queue_resources = [queue.resource for queue in queues]
         new_entrypoint.children.extend(plugin_resources + queue_resources)
 
-        if read_only:
-            db.session.add(
-                models.ResourceLock(
-                    resource_lock_type=resource_lock_types.READONLY,
-                    resource=resource,
-                )
-            )
         db.session.add(new_entrypoint)
 
         if commit:
@@ -457,17 +438,10 @@ class EntrypointIdService(object):
 
         entrypoint = entrypoint_dict["entry_point"]
         group_id = entrypoint.resource.group_id
-
-        if entrypoint.resource.is_readonly:
-            log.debug(
-                "The Entrypoint is read-only and cannot be modified",
-                entrypoint_id=entrypoint.resource_id,
-                name=entrypoint.name,
-            )
-            raise EntrypointReadOnlyLockError
-
         if name != entrypoint.name:
-            duplicate = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
+            duplicate = self._entrypoint_name_service.get(
+                name, group_id=group_id, log=log
+            )
             if duplicate is not None:
                 raise EntityExistsError(
                     RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
@@ -544,13 +518,6 @@ class EntrypointIdService(object):
 
         if entrypoint_resource is None:
             raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
-
-        if entrypoint_resource.is_readonly:
-            log.debug(
-                "The Entrypoint is read-only and cannot be deleted",
-                entrypoint_id=entrypoint_resource.resource_id,
-            )
-            raise EntrypointReadOnlyLockError
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
