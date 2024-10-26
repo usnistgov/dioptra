@@ -545,7 +545,7 @@ urllib3==2.2.2
     #   docker
     #   prefect
     #   requests
-werkzeug==3.0.3
+werkzeug==3.0.6
     # via
     #   dioptra (pyproject.toml)
     #   flask
