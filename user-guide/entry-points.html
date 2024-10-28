@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Entry Points &#8212; Dioptra 1.0.0 documentation</title>
+    <title>Entry Points &#8212; Dioptra 1.0.1 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.0.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.0.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -373,7 +373,7 @@ The <a class="reference internal" href="../glossary.html#term-SDK"><span class="
 <p class="admonition-title">Note</p>
 <p>This particular usage for the term <em>entry point</em> <a class="reference external" href="https://mlflow.org/docs/latest/projects.html#overview">originates with the MLFlow library</a>, and we have adopted it for this project since Dioptra uses <a class="reference external" href="https://mlflow.org">MLFlow</a> on the backend to provide job tracking capabilities.</p>
 </div>
-<p>Each implementation of a Testbed entry point requires, at minimum, two separate files, a <a class="reference internal" href="../glossary.html#term-YAML"><span class="xref std std-term">YAML</span></a> formatted <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file, and an executable Python script that can set its internal parameters via command-line options (e.g. <a class="reference external" href="https://docs.python.org/3/library/argparse.html#module-argparse" title="(in Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> and <a class="reference external" href="https://click.palletsprojects.com/en/8.1.x/api/#module-click" title="(in Click v8.1.x)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">click</span></code></a>).
+<p>Each implementation of a Testbed entry point requires, at minimum, two separate files, a <a class="reference internal" href="../glossary.html#term-YAML"><span class="xref std std-term">YAML</span></a> formatted <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file, and an executable Python script that can set its internal parameters via command-line options (e.g. <a class="reference external" href="https://docs.python.org/3/library/argparse.html#module-argparse" title="(in Python v3.13)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> and <a class="reference external" href="https://click.palletsprojects.com/en/stable/api/#module-click" title="(in Click v8.1.x)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">click</span></code></a>).
 These files are the topics of the following sections.</p>
 </section>
 <section id="mlproject-specifications">
@@ -438,13 +438,13 @@ Use this type for programs that can only read local files.</p>
 </dd>
 <dt>uri</dt><dd><p>A <a class="reference internal" href="../glossary.html#term-URI"><span class="xref std std-term">URI</span></a> for data either in a local or distributed storage system.
 Relative paths are converted to absolute paths, as in the <cite>path</cite> type.
-Use this type for programs that know how to read from distributed storage (e.g., programs that use the <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/boto3.html#module-boto3" title="(in Boto3 v1.35.33)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">boto3</span></code></a> package to directly access S3 storage).</p>
+Use this type for programs that know how to read from distributed storage (e.g., programs that use the <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/boto3.html#module-boto3" title="(in Boto3 v1.35.49)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">boto3</span></code></a> package to directly access S3 storage).</p>
 </dd>
 </dl>
 </section>
 <section id="executable-script">
 <h2>Executable Script<a class="headerlink" href="#executable-script" title="Permalink to this headline">#</a></h2>
-<p>The entry point script, in principle, is just an executable Python script that accepts command-line options, so Testbed users can get started quickly by using their pre-existing Python scripts.
+<p>The entry point script, in principle, is just an executable Python script that accepts command-line options, so Testbed users can get started quickly by using their preexisting Python scripts.
 However, if users wish to make use of the Testbed’s powerful job tracking and task plugin capabilities, they will need to adopt the Testbed’s standard for writing entry point scripts outlined in this section.</p>
 <div class="admonition attention">
 <p class="admonition-title">Attention</p>
@@ -453,7 +453,7 @@ Users will have an easier time migrating their scripts to this new approach if t
 </div>
 <section id="setting-parameters">
 <h3>Setting Parameters<a class="headerlink" href="#setting-parameters" title="Permalink to this headline">#</a></h3>
-<p>The <a class="reference external" href="https://click.palletsprojects.com/en/8.1.x/api/#module-click" title="(in Click v8.1.x)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">click</span></code></a> library should be used to create command-line interfaces for their Python scripts and to convert data types that aren’t supported by the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> and <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, for instance).
+<p>The <a class="reference external" href="https://click.palletsprojects.com/en/stable/api/#module-click" title="(in Click v8.1.x)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">click</span></code></a> library should be used to create command-line interfaces for their Python scripts and to convert data types that aren’t supported by the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> and <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, for instance).
 The following is a short example based on the <cite>train</cite> entry point from the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> examples we considered earlier in this guide,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># src/train.py</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -505,7 +505,7 @@ The following is a short example based on the <cite>train</cite> entry point fro
 </pre></div>
 </div>
 <p>Here, Click is validating our inputs by checking if <code class="docutils literal notranslate"><span class="pre">--image-size</span></code> is passed a string and if <code class="docutils literal notranslate"><span class="pre">--data-dir</span></code> points to a directory that exists and is readable.
-We also define a callback function for <code class="docutils literal notranslate"><span class="pre">--image-size</span></code> that will convert a string of comma-separated integers into a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>, i.e. transform <code class="docutils literal notranslate"><span class="pre">&quot;28,28,1&quot;</span></code> into <code class="docutils literal notranslate"><span class="pre">(28,</span> <span class="pre">28,</span> <span class="pre">1)</span></code>.
+We also define a callback function for <code class="docutils literal notranslate"><span class="pre">--image-size</span></code> that will convert a string of comma-separated integers into a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>, i.e. transform <code class="docutils literal notranslate"><span class="pre">&quot;28,28,1&quot;</span></code> into <code class="docutils literal notranslate"><span class="pre">(28,</span> <span class="pre">28,</span> <span class="pre">1)</span></code>.
 The code underneath the <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">&quot;__main__&quot;:</span></code> block at the end ensures that the <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">src/train.py</span></code> command specified in the <code class="docutils literal notranslate"><span class="pre">MLproject</span></code> file will call the <code class="docutils literal notranslate"><span class="pre">train()</span></code> function and use the values passed via the <code class="docutils literal notranslate"><span class="pre">--data-dir</span></code> and <code class="docutils literal notranslate"><span class="pre">--image-size</span></code> command-line options.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
@@ -516,7 +516,7 @@ Testbed users are encouraged to peruse the Click documentation to learn more abo
 </section>
 <section id="mlflow-tracking-runs">
 <h3>MLFlow - Tracking Runs<a class="headerlink" href="#mlflow-tracking-runs" title="Permalink to this headline">#</a></h3>
-<p>Every entry point script needs to invoke <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.start_run" title="(in MLflow v2.17.0rc0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.start_run()</span></code></a> to create an active run context for MLFlow and it should be done near the top of their entry point function.
+<p>Every entry point script needs to invoke <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.start_run" title="(in MLflow v2.17.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.start_run()</span></code></a> to create an active run context for MLFlow and it should be done near the top of their entry point function.
 This context is needed when logging results and artifacts to the MLFlow Tracking service.
 The following example shows how this context would be started in the <code class="docutils literal notranslate"><span class="pre">train()</span></code> function from the previous section.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mlflow</span>
@@ -534,8 +534,8 @@ The following example shows how this context would be started in the <code class
     <span class="k">return</span> <span class="n">state</span>
 </pre></div>
 </div>
-<p>Within this context block, the <code class="docutils literal notranslate"><span class="pre">active_run</span></code> variable will contain a <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.entities.html#mlflow.entities.Run" title="(in MLflow v2.17.0rc0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">mlflow.entities.Run</span></code></a> object that provides metadata about the run that is useful to have available.
-MLFlow functions like <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_param" title="(in MLflow v2.17.0rc0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_param()</span></code></a>, <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_metric" title="(in MLflow v2.17.0rc0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_metric()</span></code></a>, and <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_artifact" title="(in MLflow v2.17.0rc0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_artifact()</span></code></a> will be able to infer the current run automatically and be able to log their data to the appropriate place.
+<p>Within this context block, the <code class="docutils literal notranslate"><span class="pre">active_run</span></code> variable will contain a <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.entities.html#mlflow.entities.Run" title="(in MLflow v2.17.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">mlflow.entities.Run</span></code></a> object that provides metadata about the run that is useful to have available.
+MLFlow functions like <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_param" title="(in MLflow v2.17.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_param()</span></code></a>, <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_metric" title="(in MLflow v2.17.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_metric()</span></code></a>, and <a class="reference external" href="https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.log_artifact" title="(in MLflow v2.17.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">mlflow.log_artifact()</span></code></a> will be able to infer the current run automatically and be able to log their data to the appropriate place.
 Please note that the <code class="docutils literal notranslate"><span class="pre">init_flow()</span></code> function is <a class="reference internal" href="#entry-points-prefect-task-execution"><span class="std std-ref">introduced in the following section</span></a>.</p>
 <p>Testbed users are encouraged to peruse the MLflow Tracking documentation to learn more about the tracking context and the kinds of things you can do when it’s active: <a class="reference external" href="https://mlflow.org/docs/latest/tracking.html">https://mlflow.org/docs/latest/tracking.html</a>.</p>
 </section>

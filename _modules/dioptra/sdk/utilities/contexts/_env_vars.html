@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.sdk.utilities.contexts._redirect_print &#8212; Dioptra 1.0.1 documentation</title>
+    <title>dioptra.sdk.utilities.contexts._env_vars &#8212; Dioptra 1.0.1 documentation</title>
   
   
   
@@ -58,7 +58,7 @@
     <script src="../../../../../_static/smoothNavScroll.js"></script>
     <script src="../../../../../_static/design-tabs.js"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/dioptra/sdk/utilities/contexts/_redirect_print';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/dioptra/sdk/utilities/contexts/_env_vars';</script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
     
@@ -283,54 +283,55 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <h1>Source code for dioptra.sdk.utilities.contexts._redirect_print</h1><div class="highlight"><pre>
-<span></span><span class="c1"># This Software (Dioptra) is being made available as a public service by the</span>
-<span class="c1"># National Institute of Standards and Technology (NIST), an Agency of the United</span>
-<span class="c1"># States Department of Commerce. This software was developed in part by employees of</span>
-<span class="c1"># NIST and in part by NIST contractors. Copyright in portions of this software that</span>
-<span class="c1"># were developed by NIST contractors has been licensed or assigned to NIST. Pursuant</span>
-<span class="c1"># to Title 17 United States Code Section 105, works of NIST employees are not</span>
-<span class="c1"># subject to copyright protection in the United States. However, NIST may hold</span>
-<span class="c1"># international copyright in software created by its employees and domestic</span>
-<span class="c1"># copyright (or licensing rights) in portions of software that were assigned or</span>
-<span class="c1"># licensed to NIST. To the extent that NIST holds copyright in this software, it is</span>
-<span class="c1"># being made available under the Creative Commons Attribution 4.0 International</span>
-<span class="c1"># license (CC BY 4.0). The disclaimers of the CC BY 4.0 license apply to all parts</span>
-<span class="c1"># of the software developed or licensed by NIST.</span>
-<span class="c1">#</span>
-<span class="c1"># ACCESS THE FULL CC BY 4.0 LICENSE HERE:</span>
-<span class="c1"># https://creativecommons.org/licenses/by/4.0/legalcode</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
-
-<span class="kn">import</span> <span class="nn">builtins</span>
+  <h1>Source code for dioptra.sdk.utilities.contexts._env_vars</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span>
-
-<span class="kn">import</span> <span class="nn">structlog</span>
-<span class="kn">from</span> <span class="nn">structlog.stdlib</span> <span class="kn">import</span> <span class="n">BoundLogger</span>
-
-<span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterator</span>
 
 
-<div class="viewcode-block" id="redirect_print"><a class="viewcode-back" href="../../../../../reference/api-sdk/api-utilities.html#dioptra.sdk.utilities.contexts.redirect_print">[docs]</a><span class="nd">@contextmanager</span>
-<span class="k">def</span> <span class="nf">redirect_print</span><span class="p">(</span><span class="n">new_target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IO</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
-    <span class="k">def</span> <span class="nf">new_print</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">sep</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sep&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
-        <span class="n">print_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+<div class="viewcode-block" id="env_vars"><a class="viewcode-back" href="../../../../../reference/api-sdk/api-utilities.html#dioptra.sdk.utilities.contexts.env_vars">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">env_vars</span><span class="p">(</span><span class="n">env_updates</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a context for temporarily updating environment variables.</span>
 
-        <span class="k">if</span> <span class="n">new_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">new_target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">print_str</span><span class="p">)</span>
+<span class="sd">    Args:</span>
+<span class="sd">        env_updates: A dictionary that maps the environment variables (keys) to a new</span>
+<span class="sd">            value. Both the keys and values must be strings.</span>
 
-        <span class="k">return</span> <span class="kc">None</span>
+<span class="sd">    Examples:</span>
+<span class="sd">        The example below shows how to use env_vars to set/update the value of the</span>
+<span class="sd">        environment variable __A within a context block. First, import the os module</span>
+<span class="sd">        and check the current value of __A (we provide a a default value because this</span>
+<span class="sd">        environment variable should not exist).</span>
 
-    <span class="n">original_print</span> <span class="o">=</span> <span class="n">builtins</span><span class="o">.</span><span class="n">print</span>
+<span class="sd">        &gt;&gt;&gt; import os</span>
+<span class="sd">        &gt;&gt;&gt; print(os.getenv(&quot;__A&quot;, &quot;default value of __A&quot;))</span>
+<span class="sd">        default value of __A</span>
+
+<span class="sd">        Next, set up a with statement using env_vars to set a new value for __A confirm</span>
+<span class="sd">        that the update worked.</span>
+
+<span class="sd">        &gt;&gt;&gt; with env_vars({&quot;__A&quot;: &quot;new value of __A&quot;}):</span>
+<span class="sd">        ...     print(os.getenv(&quot;__A&quot;, &quot;default value of A&quot;))</span>
+<span class="sd">        new value of __A</span>
+
+<span class="sd">        Finally, confirm that __A has been restored to its default value after exiting</span>
+<span class="sd">        the with statement.</span>
+
+<span class="sd">        &gt;&gt;&gt; print(os.getenv(&quot;__A&quot;, &quot;default value of __A&quot;))</span>
+<span class="sd">        default value of __A</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This code is adapted from https://stackoverflow.com/a/34333710.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">original_env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">env_updates</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">builtins</span><span class="o">.</span><span class="n">print</span> <span class="o">=</span> <span class="n">new_print</span>
         <span class="k">yield</span>
 
     <span class="k">finally</span><span class="p">:</span>
-        <span class="n">builtins</span><span class="o">.</span><span class="n">print</span> <span class="o">=</span> <span class="n">original_print</span></div>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">original_env</span><span class="p">)</span></div>
 </pre></div>
 
                 </article>

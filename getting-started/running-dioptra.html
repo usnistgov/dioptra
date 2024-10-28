@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Running Dioptra &#8212; Dioptra 1.0.0 documentation</title>
+    <title>Running Dioptra &#8212; Dioptra 1.0.1 documentation</title>
   
   
   
@@ -141,7 +141,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.0.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.0.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -415,7 +415,7 @@ cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/us
 </div>
 <p>Cruft will now run and prompt you to configure the deployment. See the <a class="reference internal" href="#getting-started-running-dioptra-applying-the-template"><span class="std std-ref">Applying the template</span></a> section for detailed description of each prompt.</p>
 <p>We recommend identifying a location to store datasets you will want to use with Dioptra at this point and setting the <code class="docutils literal notranslate"><span class="pre">datasets_directory</span></code> variable accordingly. See the <a class="reference internal" href="acquiring-datasets.html#getting-started-acquiring-datasets"><span class="std std-ref">Downloading the datasets</span></a> section for more details.</p>
-<p>Once you have configured your deployment, continue following the instructions for initialzing and starting your deployment below.</p>
+<p>Once you have configured your deployment, continue following the instructions for initializing and starting your deployment below.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Move into the new folder created by the template. The new folder&#39;s name</span>
 <span class="c1"># is based on the deployment_name variable. The default name for the folder</span>
 <span class="c1"># is dioptra-deployment.</span>
@@ -671,7 +671,7 @@ The following subsections explain how to:</p>
 <li><p>Assign GPUs to specific worker containers</p></li>
 <li><p>Integrate custom containers in the Dioptra deployment</p></li>
 </ul>
-<p>In addition to the above, you may want to further customize the the Docker Compose configuration via the <code class="docutils literal notranslate"><span class="pre">docker-compose.override.yml</span></code> file to suit your needs, such as allocating explicit CPUs you want each container to use.
+<p>In addition to the above, you may want to further customize the Docker Compose configuration via the <code class="docutils literal notranslate"><span class="pre">docker-compose.override.yml</span></code> file to suit your needs, such as allocating explicit CPUs you want each container to use.
 An example template file (<code class="docutils literal notranslate"><span class="pre">docker-compose.override.yml.template</span></code>) is provided as part of the deployment as a starting point.
 This can be copied to <code class="docutils literal notranslate"><span class="pre">docker-compose.override.yml</span></code> and modified.
 See the <a class="reference external" href="https://docs.docker.com/compose/compose-file/">Compose specification documentation</a> for the full list of available options.
