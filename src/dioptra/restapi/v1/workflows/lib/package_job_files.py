@@ -40,6 +40,7 @@ def package_job_files(
     entry_point: models.EntryPoint,
     entry_point_plugin_files: list[models.EntryPointPluginFile],
     job_parameter_values: list[models.EntryPointParameterValue],
+    plugin_parameter_types: list[models.PluginTaskParameterType],
     file_type: FileTypes,
     logger: BoundLogger | None = None,
 ) -> IO[bytes]:
@@ -51,6 +52,8 @@ def package_job_files(
         entry_point: The job's entrypoint.
         entry_point_plugin_files: The job's entrypoint plugin files.
         job_parameter_values: The job's assigned parameter values.
+        plugin_parameter_types: The latest snapshots of the plugin parameter types
+            accessible to the job.
         file_type: The type of file to package the job files into.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
@@ -72,6 +75,7 @@ def package_job_files(
         task_engine_yaml_path = export_task_engine_yaml(
             entrypoint=entry_point,
             entry_point_plugin_files=entry_point_plugin_files,
+            plugin_parameter_types=plugin_parameter_types,
             base_dir=base_dir,
             logger=log,
         )

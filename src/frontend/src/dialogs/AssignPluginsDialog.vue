@@ -93,7 +93,7 @@
 
       // Log after both operations are complete
       emit('refreshTable')
-      notify.success(`Sucessfully updated plugins for  '${props.editObj.name}'`)
+      notify.success(`Successfully updated plugins for  '${props.editObj.name}'`)
       showDialog.value = false
     } catch (err) {
       notify.error("Error in processing plugins: " + err.message);
@@ -124,7 +124,7 @@
       try {
         const res = await api.getData('plugins', {
           search: val,
-          rowsPerPage: 100,
+          rowsPerPage: 0, // get all
           index: 0
         })
         pluginOptions.value = res.data.data

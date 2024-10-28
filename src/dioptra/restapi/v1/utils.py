@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Utility functions to help in building responses from ORM models"""
-from typing import Any, Callable, Final, TypedDict, cast
+from typing import Any, Callable, Final, Optional, TypedDict, cast
 from urllib.parse import urlencode, urlunparse
 
 from marshmallow import Schema
@@ -871,7 +871,9 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
 
 def build_plugin_task(plugin_task: models.PluginTask) -> PluginTaskDict:
     input_params: list[PluginTaskInputParameterDict] = []
-    for input_parameter in plugin_task.input_parameters:
+    for input_parameter in sorted(
+        plugin_task.input_parameters, key=lambda x: x.parameter_number
+    ):
         input_params.append(
             PluginTaskInputParameterDict(
                 name=input_parameter.name,
@@ -883,7 +885,9 @@ def build_plugin_task(plugin_task: models.PluginTask) -> PluginTaskDict:
         )
 
     output_params: list[PluginTaskOutputParameterDict] = []
-    for output_parameter in plugin_task.output_parameters:
+    for output_parameter in sorted(
+        plugin_task.output_parameters, key=lambda x: x.parameter_number
+    ):
         output_params.append(
             PluginTaskOutputParameterDict(
                 name=output_parameter.name,
@@ -990,6 +994,8 @@ def build_paging_envelope(
     index: int,
     length: int,
     total_num_elements: int,
+    sort_by: Optional[str] = None,
+    descending: Optional[bool] = None,
 ) -> dict[str, Any]:
     """Build the paging envelope for a response.
 
@@ -1004,6 +1010,8 @@ def build_paging_envelope(
         index: The index of the current page.
         length: The number of results to return per page.
         total_num_elements: The total number of elements in the collection.
+        sort_by: The name of the column to sort.
+        descending: Boolean indicating whether to sort by descending or not.
 
     Returns:
         The paging envelope for the response.
@@ -1016,6 +1024,8 @@ def build_paging_envelope(
         "index": index,
         "is_complete": is_complete,
         "total_num_results": total_num_elements,
+        "sort_by": sort_by,
+        "descending": descending,
         "first": build_paging_url(
             route_prefix,
             group_id=group_id,

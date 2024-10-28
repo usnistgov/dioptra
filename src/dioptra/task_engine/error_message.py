@@ -220,7 +220,7 @@ def _get_one_of_alternative_names(
             # rare case... would only apply to true/false schemas I think.
             name = "Alternative #" + str(idx + 1)
 
-        # uniquefy names, just in case...
+        # uniquify names, just in case...
         name_count = name_counts[name]
         name_counts[name] += 1
         if name_count == 0:
@@ -259,7 +259,7 @@ def _is_valid_for_sub_schema(
         resolver=jsonschema.validators.RefResolver.from_schema(full_schema),
     )
 
-    return cast(bool, validator.is_valid(sub_instance))
+    return validator.is_valid(sub_instance)
 
 
 def _one_of_too_many_alternatives_satisfied_message_lines(
@@ -280,11 +280,15 @@ def _one_of_too_many_alternatives_satisfied_message_lines(
         in another, with indented lines.
     """
 
-    alt_names = _get_one_of_alternative_names(error.validator_value, schema)
+    # In this specific case, validator_value contains the oneOf alternative
+    # schemas, but the typing is such that mypy can't tell that's the case.
+    alt_schemas = cast(Iterable[Any], error.validator_value)
+
+    alt_names = _get_one_of_alternative_names(alt_schemas, schema)
     error_desc = "Must be exactly one of: {}".format(", ".join(alt_names))
 
     satisfied_alt_names = []
-    for alt_name, alt_schema in zip(alt_names, error.validator_value):
+    for alt_name, alt_schema in zip(alt_names, alt_schemas):
         # Perform a little "mini" validation to determine which alternatives
         # were satisfied, and describe them in the error message.
         if _is_valid_for_sub_schema(schema, alt_schema, error.instance):
@@ -323,9 +327,13 @@ def _one_of_no_alternatives_satisfied_message_lines(
 
     message_lines = []
 
+    # In this specific case, validator_value contains the oneOf alternative
+    # schemas, but the typing is such that mypy can't tell that's the case.
+    alt_schemas = cast(Iterable[Any], error.validator_value)
+
     # First error message line describes the error in basic terms.
 
-    alt_names = _get_one_of_alternative_names(error.validator_value, schema)
+    alt_names = _get_one_of_alternative_names(alt_schemas, schema)
     basic_desc = (
         "Must be exactly one of: {}; all alternatives failed validation."
     ).format(", ".join(alt_names))

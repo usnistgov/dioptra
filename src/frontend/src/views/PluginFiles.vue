@@ -7,10 +7,10 @@
     v-model:selected="selected"
     @edit="router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
-    :showExpand="true"
     @request="getFiles"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="router.push(`/plugins/${route.params.id}/files/new`)"
   >
     <template #body-cell-tasks="props">
       {{ props.row.tasks.length }}
@@ -67,8 +67,8 @@
 
   const fileColumns = [
     { name: 'filename', label: 'Filename', align: 'left', field: 'filename', sortable: true, },
-    { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: false },
-    { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: true, },
+    { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
+    { name: 'tasks', label: 'Tasks', align: 'left', field: 'tasks', sortable: false, },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
   ]
 
@@ -101,7 +101,7 @@
   async function deleteFile() {
     try {
       await api.deleteFile(route.params.id, selected.value[0].id)
-      notify.success(`Sucessfully deleted '${selected.value[0].filename}'`)
+      notify.success(`Successfully deleted '${selected.value[0].filename}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

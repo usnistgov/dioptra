@@ -14,11 +14,11 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Test suite for plugin paramaeter type operations.
+"""Test suite for plugin parameter type operations.
 
 This module contains a set of tests that validate the CRUD operations and additional
-functionalities for the plugin paramaeter type entity. The tests ensure that the plugin
-paramaeter types can be submitted and retrieved as expected through the REST API.
+functionalities for the plugin parameter type entity. The tests ensure that the plugin
+parameter types can be submitted and retrieved as expected through the REST API.
 """
 from typing import Any
 
@@ -126,6 +126,47 @@ def assert_retrieving_plugin_parameter_types_works(
         follow_redirects=True,
     )
     assert response.status_code == 200 and response.get_json()["data"] == expected
+
+
+def assert_sorting_plugin_parameter_type_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Assert that plugin parameter types can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of type ids after sorting.
+          See test_plugin_parameter_type_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    # remove plugin param types created by default before testing
+    names_to_remove = ["any", "string", "integer", "number", "boolean", "null"]
+    filtered_data = [
+        item for item in response_data["data"] if item["name"] not in names_to_remove
+    ]
+
+    param_ids = [param["id"] for param in filtered_data]
+
+    assert response.status_code == 200 and param_ids == expected
 
 
 def assert_retrieving_plugin_parameter_type_by_id_works(
@@ -315,7 +356,7 @@ def assert_cannot_rename_plugin_parameter_type_to_existing_name(
         new_structure=new_structure,
         new_description=new_description,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_cannot_delete_invalid_plugin_parameter_type(
@@ -422,6 +463,66 @@ def test_get_all_plugin_parameter_types(
     plugin_param_type_expected_list = list(registered_plugin_parameter_types.values())
     assert_retrieving_plugin_parameter_types_works(
         client, expected=plugin_param_type_expected_list
+    )
+
+
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        (
+            None,
+            None,
+            ["plugin_param_type1", "plugin_param_type2", "plugin_param_type3"],
+        ),
+        (
+            "name",
+            True,
+            ["plugin_param_type2", "plugin_param_type3", "plugin_param_type1"],
+        ),
+        (
+            "name",
+            False,
+            ["plugin_param_type1", "plugin_param_type3", "plugin_param_type2"],
+        ),
+        (
+            "createdOn",
+            True,
+            ["plugin_param_type3", "plugin_param_type2", "plugin_param_type1"],
+        ),
+        (
+            "createdOn",
+            False,
+            ["plugin_param_type1", "plugin_param_type2", "plugin_param_type3"],
+        ),
+    ],
+)
+def test_plugin_parameter_type_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that plugin param types can be sorted by column.
+
+    Given an authenticated user and registered types, this test validates the following
+    sequence of actions:
+
+    - A user registers three types, "image_shape", "model_output", "model".
+    - The user is able to retrieve a list of all registered types sorted by a column
+      ascending/descending.
+    - The returned list of plugin param types matches the order in the parametrize lists
+      above.
+    """
+
+    expected_ids = [
+        registered_plugin_parameter_types[expected_name]["id"]
+        for expected_name in expected
+    ]
+    assert_sorting_plugin_parameter_type_works(
+        client, sortBy, descending, expected=expected_ids
     )
 
 

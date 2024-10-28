@@ -20,7 +20,8 @@ from typing import IO, Final
 import structlog
 from structlog.stdlib import BoundLogger
 
-from .lib import package_job_files, views
+from .lib import views
+from .lib.package_job_files import package_job_files
 from .schema import FileTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -51,12 +52,16 @@ class JobFilesDownloadService(object):
             job_id=job_id, logger=log
         )
         job_parameter_values = views.get_job_parameter_values(job_id=job_id, logger=log)
+        plugin_parameter_types = views.get_plugin_parameter_types(
+            job_id=job_id, logger=log
+        )
         return package_job_files(
             job_id=job_id,
             experiment=experiment,
             entry_point=entry_point,
             entry_point_plugin_files=entry_point_plugin_files,
             job_parameter_values=job_parameter_values,
+            plugin_parameter_types=plugin_parameter_types,
             file_type=file_type,
             logger=log,
         )

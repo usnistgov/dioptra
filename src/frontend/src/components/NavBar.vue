@@ -1,6 +1,7 @@
 <template>
   <q-toolbar class="bg-primary text-white">
     <q-btn
+      v-if="store.loggedInUser"
       class="lt-lg"
       icon="menu"
       flat
@@ -45,8 +46,8 @@
         </q-list>
       </q-menu>
     </q-btn>
-    <nav class="gt-md">
-      <q-tabs shrink no-caps>
+    <nav v-if="store.loggedInUser" class="gt-md">
+      <q-tabs no-caps>
         <q-route-tab label="Home" to="/" />
         <q-route-tab label="Experiments" to="/experiments" />
         <q-route-tab label="Entrypoints" to="/entrypoints" />
@@ -87,7 +88,7 @@
     <q-icon 
       :name="getIcon()" 
       size="sm" 
-      @click="$q.dark.toggle()"
+      @click="$q.dark.toggle(); setLightDarkPreference()"
       @keyup.enter="$q.dark.toggle()"
       class="q-mr-lg" 
       style="cursor: pointer"
@@ -106,12 +107,10 @@
         v-if="!store.loggedInUser"
         :label="getLabel()" to="/login"
       />
-      <div v-else >
-        <div class="row">
-          <q-tabs shrink no-caps inline-label>
-            <q-route-tab class="gt-md" label="Groups" to="/groups" />
-            <q-route-tab :label="isMobile ? '' : store.loggedInUser.username" to="/login" icon="person" />
-          </q-tabs>
+      <div v-else class="row">
+        <q-tabs no-caps inline-label>
+          <q-route-tab class="gt-md" label="Groups" to="/groups" />
+          <q-route-tab :label="isMobile ? '' : store.loggedInUser.username" to="/login" icon="person" />
           <q-btn-dropdown style="background-color: #CF5C36;" icon="groups" :label="isMobile ? '' : store.loggedInGroup.name" dense class="q-pl-md q-my-xs">
             <q-list>
               <q-item 
@@ -129,7 +128,7 @@
               </q-item>
             </q-list>
           </q-btn-dropdown>
-        </div>
+        </q-tabs>
       </div>
     </q-tabs>
   </q-toolbar>
@@ -151,15 +150,14 @@
 
   const isMobile = inject('isMobile')
 
-  const darkMode = computed(() => {
-    return $q.dark.mode
-  })
-
-
   function getIcon() {
-    if(darkMode.value === 'auto') return 'sym_o_routine'
-    if(darkMode.value) return 'sym_o_dark_mode'
+    if($q.dark.mode === 'auto') return 'sym_o_routine'
+    if($q.dark.mode) return 'sym_o_dark_mode'
     else return 'sym_o_sunny'
+  }
+
+  function setLightDarkPreference(){
+    localStorage.setItem('darkMode', $q.dark.mode)
   }
 
   function getLabel() {
@@ -167,10 +165,14 @@
     else return `${store.loggedInUser}`
   }
 
-  // check login status on mounted and reloads
-  router.beforeEach((to, from) => {
+  router.beforeEach(async(to, from) => {
+    // check login status on mounted and reloads
     if (from === START_LOCATION) {
-      callGetLoginStatus()
+      await callGetLoginStatus()
+    }
+    // redirect to login if logged out
+    if(!store.loggedInUser && to.path !== '/login' && to.path !== '/register') {
+      router.push('/login')
     }
   })
 

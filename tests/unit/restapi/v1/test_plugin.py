@@ -23,6 +23,7 @@ registered, renamed, and deleted as expected through the REST API.
 import textwrap
 from typing import Any, List
 
+import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
@@ -294,6 +295,41 @@ def assert_retrieving_plugins_works(
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
+def assert_sorting_plugin_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Assert that plugins can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of plugins ids after sorting.
+            See test_plugin_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    plugin_ids = [plugin["id"] for plugin in response_data["data"]]
+
+    assert response.status_code == 200 and plugin_ids == expected
+
+
 def assert_registering_existing_plugin_name_fails(
     client: FlaskClient, name: str, group_id: int
 ) -> None:
@@ -309,7 +345,7 @@ def assert_registering_existing_plugin_name_fails(
     response = actions.register_plugin(
         client, name=name, description="", group_id=group_id
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_plugin_name_matches_expected_name(
@@ -375,7 +411,7 @@ def assert_cannot_rename_plugin_with_existing_name(
         new_name=existing_name,
         new_description=existing_description,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 # -- Assertions Plugin Files -----------------------------------------------------------
@@ -461,6 +497,8 @@ def assert_plugin_file_response_contents_matches_expectations(
             assert isinstance(param["parameterType"]["group"]["name"], str)
             assert isinstance(param["parameterType"]["group"]["url"], str)
 
+    assert response["tasks"] == expected_contents["tasks"]
+
 
 def assert_retrieving_plugin_file_by_id_works(
     client: FlaskClient,
@@ -522,6 +560,41 @@ def assert_retrieving_plugin_files_works(
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
+def assert_sorting_plugin_file_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    plugin_id: int,
+    expected: list[str],
+) -> None:
+    """Assert that plugin files can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of plugins ids after sorting.
+            See test_plugin_file_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_PLUGINS_ROUTE}/{plugin_id}/files",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    plugin_ids = [file["id"] for file in response_data["data"]]
+    assert response.status_code == 200 and plugin_ids == expected
+
+
 def assert_registering_existing_plugin_filename_fails(
     client: FlaskClient,
     plugin_id: int,
@@ -547,7 +620,7 @@ def assert_registering_existing_plugin_filename_fails(
         contents=contents,
         description=description,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_plugin_filename_matches_expected_name(
@@ -605,7 +678,7 @@ def assert_cannot_rename_plugin_file_with_existing_name(
         new_description=existing_description,
         new_contents=existing_contents,
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_plugin_file_is_not_found(
@@ -729,6 +802,42 @@ def test_plugin_get_all(
     """
     plugin_expected_list = list(registered_plugins.values())
     assert_retrieving_plugins_works(client, expected=plugin_expected_list)
+
+
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        (None, None, ["plugin1", "plugin2", "plugin3"]),
+        ("name", True, ["plugin2", "plugin3", "plugin1"]),
+        ("name", False, ["plugin1", "plugin3", "plugin2"]),
+        ("createdOn", True, ["plugin3", "plugin2", "plugin1"]),
+        ("createdOn", False, ["plugin1", "plugin2", "plugin3"]),
+    ],
+)
+def test_plugin_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that plugins can be sorted by column.
+
+    Given an authenticated user and registered plugins, this test validates the
+    following sequence of actions:
+
+    - A user registers three plugins, "plugin_one", "plugin_two", "plugin_three".
+    - The user is able to retrieve a list of all registered plugins sorted by a column
+      ascending/descending.
+    - The returned list of plugins matches the order in the parametrize lists above.
+    """
+
+    expected_ids = [
+        registered_plugins[expected_name]["id"] for expected_name in expected
+    ]
+    assert_sorting_plugin_works(client, sortBy, descending, expected=expected_ids)
 
 
 def test_plugin_search_query(
@@ -900,8 +1009,8 @@ def test_register_plugin_file(
         """from dioptra import pyplugs
 
         @pyplugs.register
-        def hello_world(name: str) -> str:
-            return f"Hello, {name}!"
+        def hello_world(given_name: str, family_name: str) -> str:
+            return f"Hello, {given_name} {family_name}!"
         """
     )
     user_id = auth_account["id"]
@@ -910,7 +1019,8 @@ def test_register_plugin_file(
         {
             "name": "hello_world",
             "inputParams": [
-                {"name": "name", "parameterType": string_parameter_type["id"]}
+                {"name": "given_name", "parameterType": string_parameter_type["id"]},
+                {"name": "family_name", "parameterType": string_parameter_type["id"]},
             ],
             "outputParams": [
                 {
@@ -928,14 +1038,25 @@ def test_register_plugin_file(
             "name": "hello_world",
             "inputParams": [
                 {
-                    "name": "name",
+                    "name": "given_name",
                     "parameterType": {
                         "id": string_parameter_type["id"],
                         "group": string_parameter_type["group"],
                         "url": string_url,
                         "name": string_parameter_type["name"],
                     },
-                }
+                    "required": True,
+                },
+                {
+                    "name": "family_name",
+                    "parameterType": {
+                        "id": string_parameter_type["id"],
+                        "group": string_parameter_type["group"],
+                        "url": string_url,
+                        "name": string_parameter_type["name"],
+                    },
+                    "required": True,
+                },
             ],
             "outputParams": [
                 {
@@ -1011,6 +1132,52 @@ def test_plugin_file_get_all(
         client,
         plugin_id=registered_plugin["id"],
         expected=plugin_file_expected_list,
+    )
+
+
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        (None, None, ["plugin_file1", "plugin_file2", "plugin_file3"]),
+        ("filename", True, ["plugin_file2", "plugin_file3", "plugin_file1"]),
+        ("filename", False, ["plugin_file1", "plugin_file3", "plugin_file2"]),
+        ("createdOn", True, ["plugin_file3", "plugin_file2", "plugin_file1"]),
+        ("createdOn", False, ["plugin_file1", "plugin_file2", "plugin_file3"]),
+    ],
+)
+def test_plugin_file_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that plugin files can be sorted by column.
+
+    Given an authenticated user and registered plugin files, this test validates the
+    following sequence of actions:
+
+    - A user registers three plugin files:
+      "plugin_file_one.py",
+      "plugin_file_two.py",
+      "plugin_file_three.py".
+    - The user is able to retrieve a list of all registered plugins files sorted by a
+      column ascending/descending.
+    - The returned list of plugin files matches the order in the parametrize lists
+      above.
+    """
+
+    expected_ids = [
+        registered_plugin_with_files[expected_name]["id"] for expected_name in expected
+    ]
+    assert_sorting_plugin_file_works(
+        client,
+        sortBy,
+        descending,
+        plugin_id=registered_plugin_with_files["plugin"]["id"],
+        expected=expected_ids,
     )
 
 
@@ -1547,8 +1714,8 @@ def test_manage_plugin_snapshots(
 ) -> None:
     """Test that different snapshots of a plugin can be retrieved by the user.
 
-    Given an authenticated user and registered plugins, this test validates the following
-    sequence of actions:
+    Given an authenticated user and registered plugins, this test validates the
+    following sequence of actions:
 
     - The user modifies a plugin
     - The user retrieves information about the original snapshot of the plugin and gets

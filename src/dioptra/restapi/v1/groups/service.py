@@ -27,10 +27,12 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import group_lock_types
-from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+)
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-
-from .errors import GroupDoesNotExistError, GroupNameNotAvailableError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -57,6 +59,8 @@ GROUP_CREATOR_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.Group.name.like(x, escape="/"),
 }
+
+GROUP_TYPE: Final[str] = "group"
 
 
 class GroupService(object):
@@ -104,9 +108,9 @@ class GroupService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        if self._group_name_service.get(name) is not None:
-            log.debug("Group name already exists", name=name)
-            raise GroupNameNotAvailableError
+        duplicate = self._group_name_service.get(name)
+        if duplicate is not None:
+            raise EntityExistsError("group", duplicate.group_id, name=name)
 
         new_group = models.Group(name=name, creator=creator)
         self._group_member_service.create(
@@ -222,7 +226,7 @@ class GroupIdService(object):
             The group object if found, otherwise None.
 
         Raises:
-            UserDoesNotExistError: If the group is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the group is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -233,8 +237,7 @@ class GroupIdService(object):
 
         if group is None:
             if error_if_not_found:
-                log.debug("Group not found", group_id=group_id)
-                raise GroupDoesNotExistError
+                raise EntityDoesNotExistError(GROUP_TYPE, group_id=group_id)
 
             return None
 
@@ -261,7 +264,7 @@ class GroupIdService(object):
             The group object.
 
         Raises:
-            GroupDoesNotExistError: If the group is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the group is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -272,14 +275,13 @@ class GroupIdService(object):
 
         if group is None:
             if error_if_not_found:
-                log.debug("Group not found", group_id=group_id)
-                raise GroupDoesNotExistError
+                raise EntityDoesNotExistError(GROUP_TYPE, group_id=group_id)
 
             return None
 
-        if self._group_name_service.get(name, log=log) is not None:
-            log.debug("Group name already exists", name=name)
-            raise GroupNameNotAvailableError
+        duplicate = self._group_name_service.get(name, log=log)
+        if duplicate is not None:
+            raise EntityExistsError(GROUP_TYPE, duplicate.group_id, name=name)
 
         current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         group.last_modified_on = current_timestamp
@@ -307,7 +309,7 @@ class GroupIdService(object):
         group = db.session.scalars(stmt).first()
 
         if group is None:
-            raise GroupDoesNotExistError
+            raise EntityDoesNotExistError(GROUP_TYPE, group_id=group_id)
 
         name = group.name
 
@@ -339,7 +341,7 @@ class GroupNameService(object):
             The group object if found, otherwise None.
 
         Raises:
-            GroupDoesNotExistError: If the group is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the group is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -350,8 +352,7 @@ class GroupNameService(object):
 
         if group is None:
             if error_if_not_found:
-                log.debug("Group not found", name=name)
-                raise GroupDoesNotExistError
+                raise EntityDoesNotExistError(GROUP_TYPE, name=name)
 
             return None
 

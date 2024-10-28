@@ -66,7 +66,7 @@ Cruft will now run and prompt you to configure the deployment. See the :ref:`App
 
 We recommend identifying a location to store datasets you will want to use with Dioptra at this point and setting the ``datasets_directory`` variable accordingly. See the :ref:`Downloading the datasets <getting-started-acquiring-datasets>` section for more details.
 
-Once you have configured your deployment, continue following the instructions for initialzing and starting your deployment below.
+Once you have configured your deployment, continue following the instructions for initializing and starting your deployment below.
 
 .. code:: sh
 
@@ -337,7 +337,7 @@ The following subsections explain how to:
 - Assign GPUs to specific worker containers
 - Integrate custom containers in the Dioptra deployment
 
-In addition to the above, you may want to further customize the the Docker Compose configuration via the ``docker-compose.override.yml`` file to suit your needs, such as allocating explicit CPUs you want each container to use.
+In addition to the above, you may want to further customize the Docker Compose configuration via the ``docker-compose.override.yml`` file to suit your needs, such as allocating explicit CPUs you want each container to use.
 An example template file (``docker-compose.override.yml.template``) is provided as part of the deployment as a starting point.
 This can be copied to ``docker-compose.override.yml`` and modified.
 See the `Compose specification documentation <https://docs.docker.com/compose/compose-file/>`__ for the full list of available options.

@@ -22,7 +22,7 @@
     />
 
     <q-input 
-      v-model="newTag" 
+      v-model="newTagName" 
       outlined 
       dense 
       label="Add new Tag option" 
@@ -59,7 +59,7 @@
 
   async function getTags() {
     try {
-      const res = await api.getData('tags', {index: 0, rowsPerPage: 50, search: ''})
+      const res = await api.getData('tags', {index: 0, rowsPerPage: 0, search: ''})
       tags.value = res.data.data
       if(props.editObj.tags.length > 0) {
         props.editObj.tags.forEach((tag) => {
@@ -76,7 +76,7 @@
       getTags()
     }
     selectedTagIDs.value = []
-    newTag.value = ''
+    newTagName.value = ''
   })
 
   function toggleTag(id) {
@@ -91,18 +91,19 @@
     }
   }
 
-  const newTag = ref('')
+  const newTagName = ref('')
 
   async function addNewTag() {
-    if(!newTag.value.trim().length) return
+    if(!newTagName.value.trim().length) return
     try {
-      await api.addItem('tags', {
-        name: newTag.value,
+      let res = await api.addItem('tags', {
+        name: newTagName.value,
         group: store.loggedInGroup.id
       })
-      notify.success(`Sucessfully created tag '${newTag.value}'`)
-      newTag.value = ''
-      getTags()
+      notify.success(`Successfully created tag '${newTagName.value}'`)
+      tags.value.push({ name: newTagName.value, id: res.data.id })
+      selectedTagIDs.value.push(res.data.id)
+      newTagName.value = ''
     } catch(err) {
       notify.error(err.response.data.message)
     }
@@ -116,7 +117,7 @@
       } else {
         await api.updateTags(props.type, props.editObj.id, selectedTagIDs.value)
       }
-      notify.success(`Sucessfully updated Tags for '${props.editObj.name || props.editObj.description}'`)
+      notify.success(`Successfully updated Tags for '${props.editObj.name || props.editObj.description}'`)
       emit('refreshTable')
     } catch(err) {
       notify.error(err.response.data.message);

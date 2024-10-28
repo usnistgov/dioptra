@@ -38,12 +38,36 @@ p {
   font-size: 1.2em
 }
 
-.darkLink {
-  color: #579aca
+.body--dark a {
+  color: #51bef4;
+  font-weight: 500;
 }
 
-a:hover {
-  color: #ee9040
+.body--dark {
+  color: #cecece !important;
+}
+
+.body--dark .q-field__messages [role="alert"] {
+  color: #ff5353 !important;
+  font-weight: 500;
+}
+
+.q-notification__message {
+  color: white;
+}
+
+.body--dark .q-tab {
+  color: #e4e4e4;
+}
+
+.body--dark .q-card,
+.body--dark .q-table {
+  color: #cecece;
+}
+
+a:hover,
+a.q-breadcrumbs__el:hover {
+  color: #f27e19 !important;
 }
 
 .q-tab:hover {
@@ -79,12 +103,13 @@ a:hover {
   clip: rect(1px 1px 1px 1px); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
   clip: rect(1px, 1px, 1px, 1px); /*maybe deprecated but we need to support legacy browsers */
   clip-path: inset(50%); /*modern browsers, clip-path works inwards from each corner*/
-  white-space: nowrap; /* added line to stop words getting smushed together (as they go onto seperate lines and some screen readers do not understand line feeds as a space */
+  white-space: nowrap; /* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
 }
 
 h1 {
   font-size: clamp(1rem, 10vw, 4rem) !important;
-  line-height: 1 !important; 
+  line-height: 1 !important;
+  font-weight: 400 !important;
 }
 
 h2 {
@@ -93,25 +118,14 @@ h2 {
   margin-bottom: 0;
 }
 
-.form-title {
-  font-size: clamp(1rem, 10vw, 3rem) !important;
-  font-weight: bold;
-}
-
 .field-label {
   width: 100px;
   font-size: 1rem;
   color: black;
 }
 
-.field-label-short {
-  width: 100px;
-  font-size: 1rem;
-  color: black;
-}
-
 .body--dark .field-label {
-  color: white;
+  color: #cecece;
 }
 
 legend {

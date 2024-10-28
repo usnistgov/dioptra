@@ -14,25 +14,53 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Error handlers for the tag endpoints."""
 from __future__ import annotations
 
-from flask_restx import Api
+import pytest
+
+from dioptra.restapi.utils import find_non_unique
 
 
-class TagAlreadyExistsError(Exception):
-    """The tag name already exists."""
+def test_find_non_unique():
+    assert (
+        len(
+            find_non_unique(
+                "name",
+                [
+                    {"name": "hello", "foo": "bar"},
+                    {"name": "goodbye", "bar": "foo"},
+                    {"name": "hello", "lo": "behold"},
+                ],
+            )
+        )
+        == 1
+    )
 
+    assert (
+        len(
+            find_non_unique(
+                "name",
+                [
+                    {"name": "hello", "foo": "bar"},
+                    {"name": "goodbye", "bar": "none"},
+                    {"name": "today", "lo": "hi"},
+                ],
+            )
+        )
+        == 0
+    )
 
-class TagDoesNotExistError(Exception):
-    """The requested tag does not exist."""
-
-
-def register_error_handlers(api: Api) -> None:
-    @api.errorhandler(TagDoesNotExistError)
-    def handle_tag_does_not_exist_error(error):
-        return {"message": "Not Found - The requested tag does not exist"}, 404
-
-    @api.errorhandler(TagAlreadyExistsError)
-    def handle_tag_already_exists_error(error):
-        return {"message": "Bad Request - The tag name already exists."}, 400
+    assert (
+        len(
+            find_non_unique(
+                "name",
+                [
+                    {"name": "hello", "foo": "bar"},
+                    {"name": "goodbye", "bar": "none"},
+                    {"name": "hello", "lo": "behold"},
+                    {"name": "goodbye", "lo": "behold"},
+                ],
+            )
+        )
+        == 2
+    )

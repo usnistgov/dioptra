@@ -245,7 +245,7 @@ def registered_model_versions(
         client,
         model_id=registered_models["model2"]["id"],
         artifact_id=registered_artifacts["artifact4"]["id"],
-        description="Not retreived.",
+        description="Not retrieved.",
     ).get_json()
     version5_response = actions.register_model_version(
         client,
@@ -578,7 +578,17 @@ def registered_entrypoints(
         {
             "name": "entrypoint_param_3",
             "defaultValue": "/path",
-            "parameterType": "path",
+            "parameterType": "string",
+        },
+        {
+            "name": "entrypoint_param_4",
+            "defaultValue": "1",
+            "parameterType": "integer",
+        },
+        {
+            "name": "entrypoint_param_5",
+            "defaultValue": "['a', 'b', {'c': 1}]",
+            "parameterType": "list",
         },
     ]
     plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
@@ -632,6 +642,7 @@ def registered_jobs(
 ) -> dict[str, Any]:
     # Inline import necessary to prevent circular import
     import dioptra.restapi.v1.shared.rq_service as rq_service
+
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
     queue_id = registered_queues["queue1"]["snapshot"]

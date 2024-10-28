@@ -24,8 +24,22 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
+from .type_coercions import (
+    BOOLEAN_PARAM_TYPE,
+    FLOAT_PARAM_TYPE,
+    INTEGER_PARAM_TYPE,
+    STRING_PARAM_TYPE,
+    coerce_to_type,
+)
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
+EXPLICIT_GLOBAL_TYPES: Final[set[str]] = {
+    STRING_PARAM_TYPE,
+    BOOLEAN_PARAM_TYPE,
+    INTEGER_PARAM_TYPE,
+    FLOAT_PARAM_TYPE,
+}
 YAML_FILE_ENCODING: Final[str] = "utf-8"
 YAML_EXPORT_SETTINGS: Final[dict[str, Any]] = {
     "indent": 2,
@@ -37,6 +51,7 @@ YAML_EXPORT_SETTINGS: Final[dict[str, Any]] = {
 def export_task_engine_yaml(
     entrypoint: models.EntryPoint,
     entry_point_plugin_files: list[models.EntryPointPluginFile],
+    plugin_parameter_types: list[models.PluginTaskParameterType],
     base_dir: Path,
     logger: BoundLogger | None = None,
 ) -> Path:
@@ -45,6 +60,8 @@ def export_task_engine_yaml(
     Args:
         entrypoint: The entrypoint to export.
         entry_point_plugin_files: The entrypoint's plugin files.
+        plugin_parameter_types: The latest snapshots of the plugin parameter types
+            accessible to the entrypoint.
         base_dir: The directory to export the task engine YAML file to.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
@@ -55,7 +72,9 @@ def export_task_engine_yaml(
     log = logger or LOGGER.new()  # noqa: F841
     task_yaml_path = Path(base_dir, entrypoint.name).with_suffix(".yml")
     task_engine_dict = build_task_engine_dict(
-        entrypoint=entrypoint, entry_point_plugin_files=entry_point_plugin_files
+        entrypoint=entrypoint,
+        entry_point_plugin_files=entry_point_plugin_files,
+        plugin_parameter_types=plugin_parameter_types,
     )
 
     with task_yaml_path.open("wt", encoding=YAML_FILE_ENCODING) as f:
@@ -67,6 +86,7 @@ def export_task_engine_yaml(
 def build_task_engine_dict(
     entrypoint: models.EntryPoint,
     entry_point_plugin_files: list[models.EntryPointPluginFile],
+    plugin_parameter_types: list[models.PluginTaskParameterType],
     logger: BoundLogger | None = None,
 ) -> dict[str, Any]:
     """Build a dictionary representation of a task engine YAML file.
@@ -74,6 +94,8 @@ def build_task_engine_dict(
     Args:
         entrypoint: The entrypoint to export.
         entry_point_plugin_files: The entrypoint's plugin files.
+        plugin_parameter_types: The latest snapshots of the plugin parameter types
+            accessible to the entrypoint.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
 
@@ -81,7 +103,9 @@ def build_task_engine_dict(
         A dictionary representation of a task engine YAML file.
     """
     log = logger or LOGGER.new()  # noqa: F841
-    tasks, parameter_types = extract_tasks(entry_point_plugin_files)
+    tasks, parameter_types = extract_tasks(
+        entry_point_plugin_files, plugin_parameter_types=plugin_parameter_types
+    )
     parameters = extract_parameters(entrypoint)
     graph = extract_graph(entrypoint)
     return {
@@ -107,17 +131,32 @@ def extract_parameters(
         A dictionary of the entrypoint's parameters.
     """
     log = logger or LOGGER.new()  # noqa: F841
-    return {param.name: param.default_value for param in entrypoint.parameters}
+    parameters: dict[str, Any] = {}
+    for param in entrypoint.parameters:
+        default_value = param.default_value
+        parameters[param.name] = {
+            "default": coerce_to_type(x=default_value, type_name=param.parameter_type)
+        }
+
+        if param.parameter_type in EXPLICIT_GLOBAL_TYPES:
+            parameters[param.name]["type"] = (
+                _convert_parameter_type_to_task_engine_type(param.parameter_type)
+            )
+
+    return parameters
 
 
 def extract_tasks(
     entry_point_plugin_files: list[models.EntryPointPluginFile],
+    plugin_parameter_types: list[models.PluginTaskParameterType],
     logger: BoundLogger | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Extract the plugin tasks and parameter types from the entrypoint plugin files.
 
     Args:
         entry_point_plugin_files: The entrypoint's plugin files.
+        plugin_parameter_types: The latest snapshots of the plugin parameter types
+            accessible to the entrypoint.
         logger: A structlog logger object to use for logging. A new logger will be
             created if None.
 
@@ -134,8 +173,12 @@ def extract_tasks(
         plugin_file = entry_point_plugin_file.plugin_file
 
         for task in plugin_file.tasks:
-            input_parameters = task.input_parameters
-            output_parameters = task.output_parameters
+            input_parameters = sorted(
+                task.input_parameters, key=lambda x: x.parameter_number
+            )
+            output_parameters = sorted(
+                task.output_parameters, key=lambda x: x.parameter_number
+            )
 
             tasks[task.plugin_task_name] = {
                 "plugin": _build_plugin_field(plugin, plugin_file, task),
@@ -154,6 +197,24 @@ def extract_tasks(
                 name = param.parameter_type.name
                 if name not in BUILTIN_TYPES:
                     parameter_types[name] = param.parameter_type.structure
+
+            # HACK: THIS IS A WORKAROUND THAT VIOLATES IDEMPOTENCE/REPRODUCIBILITY!
+            #
+            # This workaround allows users to create and use parameter types that are
+            # only used indirectly, such as when defining a structured parameter type.
+            # This is a "hack" because the objects in `plugin_parameter_types` are the
+            # latest available snapshots, not the snapshots that were associated with
+            # the plugins when the entrypoint was saved/updated. This is in contrast
+            # with the parameter types accumulated in the previous for loop block, which
+            # are linked to the entrypoint and job by their snapshot id instead of the
+            # resource id. This difference means that the task engine YAML files are not
+            # 100% reproducible, as any changes to an "indirect" plugin parameter type
+            # will be immediately reflected in subsequent download requests made to the
+            # job files workflow.
+            for parameter_type in plugin_parameter_types:
+                name = parameter_type.name
+                if name not in BUILTIN_TYPES and name not in parameter_types:
+                    parameter_types[name] = parameter_type.structure
 
     return tasks, parameter_types
 
@@ -212,3 +273,15 @@ def _build_task_outputs(
         {output_param.name: output_param.parameter_type.name}
         for output_param in output_parameters
     ]
+
+
+def _convert_parameter_type_to_task_engine_type(parameter_type: str) -> Any:
+    conversion_map = {
+        "boolean": "boolean",
+        "string": "string",
+        "float": "number",
+        "integer": "integer",
+        "list": {"list": "any"},
+        "mapping": {"mapping": ["string", "any"]},
+    }
+    return conversion_map[parameter_type]

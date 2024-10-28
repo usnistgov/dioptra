@@ -75,12 +75,16 @@ class TagEndpoint(Resource):
         search_string = unquote(parsed_query_params["search"])
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
+        sort_by_string = parsed_query_params["sort_by"]
+        descending = parsed_query_params["descending"]
 
         tags, total_num_tags = self._tag_service.get(
             group_id=group_id,
             search_string=search_string,
             page_index=page_index,
             page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -93,6 +97,8 @@ class TagEndpoint(Resource):
             index=page_index,
             length=page_length,
             total_num_elements=total_num_tags,
+            sort_by=sort_by_string,
+            descending=descending,
         )
 
     @login_required

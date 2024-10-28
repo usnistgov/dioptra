@@ -227,7 +227,7 @@ def register_tag(
 
 def register_artifact(
     client: FlaskClient,
-    uri: int,
+    uri: str,
     job_id: int,
     group_id: int,
     description: str | None = None,
@@ -752,7 +752,7 @@ def remove_tag(
     resource_id: int,
     tag_id: int,
 ) -> TestResponse:
-    """Remove tag tag from the resource with the provided unique ID.
+    """Remove tag from the resource with the provided unique ID.
 
     Args:
         client: The Flask test client.

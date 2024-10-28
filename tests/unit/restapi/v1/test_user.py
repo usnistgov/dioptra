@@ -21,7 +21,6 @@ registered, modified, and deleted as expected through the REST API.
 """
 from typing import Any
 
-import pytest
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
@@ -288,7 +287,7 @@ def assert_registering_existing_username_fails(
     response = actions.register_user(
         client, existing_username, non_existing_email, password
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_registering_existing_email_fails(
@@ -309,7 +308,7 @@ def assert_registering_existing_email_fails(
     response = actions.register_user(
         client, non_existing_username, existing_email, password
     )
-    assert response.status_code == 400
+    assert response.status_code == 409
 
 
 def assert_user_username_matches_expected_name(
@@ -464,9 +463,9 @@ def assert_login_is_unauthorized(
         password: The password of the user to be logged in.
 
     Raises:
-        AssertionError: If the response status code is not 403.
+        AssertionError: If the response status code is not 401.
     """
-    assert actions.login(client, username, password).status_code == 403
+    assert actions.login(client, username, password).status_code == 401
 
 
 def assert_new_password_cannot_be_existing(
@@ -669,7 +668,7 @@ def test_user_authorization_failure(
     Given an authenticated user, this test validates the following sequence of actions:
 
     - The current attempts to login with an incorrect password.
-    - The user can not log in.
+    - The user cannot log in.
     """
     username = registered_users["user2"]["username"]
     password = registered_users["user2"]["password"] + "incorrect"

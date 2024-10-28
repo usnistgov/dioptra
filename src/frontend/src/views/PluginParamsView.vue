@@ -7,11 +7,11 @@
     v-model:selected="selected"
     @edit="editing = true; editPluginParamType = selected[0]; showAddDialog = true"
     @delete="showDeleteDialog = true"
-    :showExpand="true"
     @request="getPluginParameterTypes"
     ref="tableRef"
     :hideToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="showAddDialog = true"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -89,8 +89,9 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
-    { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: false },
+    { name: 'description', label: 'Description', field: 'description', align: 'left', sortable: true },
+    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
+    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', sortable: false },
   ]
 
@@ -98,7 +99,7 @@
     try {
       console.log('plugin = ', plugin)
       const res = await api.addItem('pluginParameterTypes', plugin)
-      notify.success(`Sucessfully created '${res.data.name}'`)
+      notify.success(`Successfully created '${res.data.name}'`)
       tableRef.value.refreshTable()
     } catch(err) {
       notify.error(err.response.data.message)
@@ -108,7 +109,7 @@
   async function updatePluginParamType(id, name, description, structure) {
     try {
       const res = await api.updateItem('pluginParameterTypes', id, {name, description, structure})
-      notify.success(`Sucessfully updated '${res.data.name}'`)
+      notify.success(`Successfully updated '${res.data.name}'`)
       tableRef.value.refreshTable()
       selected.value = []
     } catch(err) {
@@ -119,7 +120,7 @@
   async function deletePlugin() {
     try {
       await api.deleteItem('pluginParameterTypes', selected.value[0].id)
-      notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+      notify.success(`Successfully deleted '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

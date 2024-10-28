@@ -7,10 +7,10 @@
     v-model:selected="selected"
     @edit="editing = true; showAddEditDialog = true"
     @delete="showDeleteDialog = true"
-    :showExpand="true"
     @request="getArtifacts"
     ref="tableRef"
     :hideDeleteBtn="true"
+    :hideCreateBtn="true"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -94,9 +94,10 @@ async function getArtifacts(pagination) {
 }
 
 const columns = [
-  { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: false },
-  { name: 'group', label: 'Group', align: 'left', field: 'group', sortable: true },
+  { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: true },
   { name: 'uri', label: 'uri', align: 'left', field: 'uri', sortable: true },
+  { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
+  { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
   // { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
 ]
 
@@ -108,7 +109,7 @@ async function addArtifact(name, group, description) {
       group
     })
     showAddEditDialog.value = false
-    notify.success(`Sucessfully created '${res.data.name}'`)
+    notify.success(`Successfully created '${res.data.name}'`)
     tableRef.value.refreshTable()
   } catch(err) {
     notify.error(err.response.data.message)
@@ -118,7 +119,7 @@ async function addArtifact(name, group, description) {
 async function deleteModel() {
   try {
     await api.deleteItem('models', selected.value[0].id)
-    notify.success(`Sucessfully deleted '${selected.value[0].name}'`)
+    notify.success(`Successfully deleted '${selected.value[0].name}'`)
     showDeleteDialog.value = false
     selected.value = []
     tableRef.value.refreshTable()
@@ -137,7 +138,7 @@ const tableRef = ref(null)
 async function updateArtifact(id, description) {
   try {
     await api.updateItem('artifacts', id, { description })
-    notify.success(`Sucessfully updated artifact`)
+    notify.success(`Successfully updated artifact`)
     showAddEditDialog.value = false
     selected.value = []
     tableRef.value.refreshTable()
@@ -157,7 +158,7 @@ async function submitTags(selectedTagIDs) {
   showTagsDialog.value = false
   try {
     await api.updateTags('artifacts', editObjTags.value.id, selectedTagIDs)
-    notify.success(`Sucessfully updated Tags for '${editObjTags.value.name}'`)
+    notify.success(`Successfully updated Tags for '${editObjTags.value.name}'`)
     tableRef.value.refreshTable()
   } catch(err) {
     console.log('err = ', err)

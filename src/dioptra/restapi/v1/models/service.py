@@ -27,17 +27,16 @@ from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    SortParameterValidationError,
+)
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.artifacts.service import ArtifactIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-
-from .errors import (
-    ModelAlreadyExistsError,
-    ModelDoesNotExistError,
-    ModelVersionDoesNotExistError,
-)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -49,6 +48,12 @@ MODEL_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
 }
 MODEL_VERSION_SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "description": lambda x: models.MlModelVersion.description.like(x, escape="/"),
+}
+MODEL_SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": models.MlModel.name,
+    "createdOn": models.MlModel.created_on,
+    "lastModifiedOn": models.Resource.last_modified_on,
+    "description": models.MlModel.description,
 }
 
 
@@ -93,13 +98,15 @@ class ModelService(object):
             The newly created model object.
 
         Raises:
-            ModelAlreadyExistsError: If a model with the given name already exists.
+            EntityExistsError: If a model with the given name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        if self._model_name_service.get(name, group_id=group_id, log=log) is not None:
-            log.debug("Model name already exists", name=name, group_id=group_id)
-            raise ModelAlreadyExistsError
+        duplicate = self._model_name_service.get(name, group_id=group_id, log=log)
+        if duplicate is not None:
+            raise EntityExistsError(
+                MODEL_RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+            )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
@@ -132,6 +139,8 @@ class ModelService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> Any:
         """Fetch a list of models, optionally filtering by search string and paging
@@ -142,6 +151,8 @@ class ModelService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of models to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of models and the total number of models matching
@@ -200,6 +211,17 @@ class ModelService(object):
             .offset(page_index)
             .limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in MODEL_SORTABLE_FIELDS:
+            sort_column = MODEL_SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            latest_ml_models_stmt = latest_ml_models_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in MODEL_SORTABLE_FIELDS:
+            raise SortParameterValidationError(MODEL_RESOURCE_TYPE, sort_by_string)
+
         ml_models = db.session.scalars(latest_ml_models_stmt).all()
 
         # extract list of model ids
@@ -301,7 +323,7 @@ class ModelIdService(object):
             The model object if found, otherwise None.
 
         Raises:
-            ModelDoesNotExistError: If the model is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the model is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -321,8 +343,7 @@ class ModelIdService(object):
 
         if ml_model is None:
             if error_if_not_found:
-                log.debug("Model not found", model_id=model_id)
-                raise ModelDoesNotExistError
+                raise EntityDoesNotExistError(MODEL_RESOURCE_TYPE, model_id=model_id)
 
             return None
 
@@ -379,9 +400,9 @@ class ModelIdService(object):
             The updated model object.
 
         Raises:
-            ModelDoesNotExistError: If the model is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the model is not found and `error_if_not_found`
                 is True.
-            ModelAlreadyExistsError: If the model name already exists.
+            EntityExistsError: If the model name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -390,9 +411,6 @@ class ModelIdService(object):
         )
 
         if ml_model_dict is None:
-            if error_if_not_found:
-                raise ModelDoesNotExistError
-
             return None
 
         ml_model = ml_model_dict["ml_model"]
@@ -400,13 +418,15 @@ class ModelIdService(object):
         has_draft = ml_model_dict["has_draft"]
 
         group_id = ml_model.resource.group_id
-        if (
-            name != ml_model.name
-            and self._model_name_service.get(name, group_id=group_id, log=log)
-            is not None
-        ):
-            log.debug("Model name already exists", name=name, group_id=group_id)
-            raise ModelAlreadyExistsError
+        if name != ml_model.name:
+            duplicate = self._model_name_service.get(name, group_id=group_id, log=log)
+            if duplicate is not None:
+                raise EntityExistsError(
+                    MODEL_RESOURCE_TYPE,
+                    duplicate.resource_id,
+                    name=name,
+                    group_id=group_id,
+                )
 
         new_ml_model = models.MlModel(
             name=name,
@@ -448,7 +468,7 @@ class ModelIdService(object):
         model_resource = db.session.scalars(stmt).first()
 
         if model_resource is None:
-            raise ModelDoesNotExistError
+            raise EntityDoesNotExistError(MODEL_RESOURCE_TYPE, model_id=model_id)
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type="delete",
@@ -569,7 +589,7 @@ class ModelIdVersionsService(object):
                 None.
 
         Raises:
-            ResourceDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the resource is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -680,11 +700,11 @@ class ModelIdVersionsNumberService(object):
             The requested version the resource object if found, otherwise None.
 
         Raises:
-            ResourceDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the resource is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Get resource snaphot by id", model_id=model_id)
+        log.debug("Get resource snapshot by id", model_id=model_id)
 
         ml_model_dict = self._model_id_service.get(
             model_id, error_if_not_found=error_if_not_found, log=log
@@ -710,8 +730,11 @@ class ModelIdVersionsNumberService(object):
 
         if latest_version is None:
             if error_if_not_found:
-                log.debug("Model version not found", version_number=version_number)
-                raise ModelVersionDoesNotExistError
+                raise EntityDoesNotExistError(
+                    MODEL_VERSION_RESOURCE_TYPE,
+                    model_id=model_id,
+                    version_number=version_number,
+                )
 
             return None
 
@@ -741,9 +764,9 @@ class ModelIdVersionsNumberService(object):
             The updated model object.
 
         Raises:
-            ModelDoesNotExistError: If the model is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the model is not found and `error_if_not_found`
                 is True.
-            ModelAlreadyExistsError: If the model name already exists.
+            EntityExistsError: If the model name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -802,7 +825,7 @@ class ModelNameService(object):
             The model object if found, otherwise None.
 
         Raises:
-            ModelDoesNotExistError: If the model is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the model is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -823,8 +846,9 @@ class ModelNameService(object):
 
         if ml_model is None:
             if error_if_not_found:
-                log.debug("Model not found", name=name)
-                raise ModelDoesNotExistError
+                raise EntityDoesNotExistError(
+                    MODEL_RESOURCE_TYPE, name=name, group_id=group_id
+                )
 
             return None
 

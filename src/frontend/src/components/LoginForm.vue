@@ -1,8 +1,8 @@
 <template>
   <q-card bordered class="q-pa-lg" style="min-width: 40%;">
     <q-card-section class="text-center">
-        <h1 class="form-title" style="margin-top: 0; margin-bottom: 0;">Login</h1>
-        <p>Login below to access all API endpoints</p>
+        <h1 class="q-mt-none q-mb-sm">Login</h1>
+        <p>Sign in to access the Dioptra UI</p>
     </q-card-section>
     <q-form @submit="submit()">
       <q-input

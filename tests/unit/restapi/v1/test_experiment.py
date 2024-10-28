@@ -251,6 +251,41 @@ def assert_retrieving_all_experiments_works(
     assert response.status_code == 200 and response.get_json()["data"] == expected
 
 
+def assert_sorting_experiment_works(
+    client: FlaskClient,
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Assert that experiments can be sorted by column ascending/descending.
+
+    Args:
+        client: The Flask test client.
+        expected: The expected order of experiment ids after sorting.
+            See test_experiment_sort for expected orders.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the API response
+            does not match the expected response.
+    """
+
+    query_string: dict[str, Any] = {}
+
+    query_string["sortBy"] = sortBy
+    query_string["descending"] = descending
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}",
+        query_string=query_string,
+        follow_redirects=True,
+    )
+
+    response_data = response.get_json()
+    experiment_ids = [experiment["id"] for experiment in response_data["data"]]
+
+    assert response.status_code == 200 and experiment_ids == expected
+
+
 def assert_experiment_name_matches_expected_name(
     client: FlaskClient, experiment_id: int, expected_name: str
 ) -> None:
@@ -366,6 +401,42 @@ def test_experiment_get_all(
     assert_retrieving_all_experiments_works(client, expected=experiment_expected_list)
 
 
+@pytest.mark.parametrize(
+    "sortBy, descending , expected",
+    [
+        (None, None, ["experiment1", "experiment2", "experiment3"]),
+        ("name", True, ["experiment3", "experiment2", "experiment1"]),
+        ("name", False, ["experiment1", "experiment2", "experiment3"]),
+        ("createdOn", True, ["experiment3", "experiment2", "experiment1"]),
+        ("createdOn", False, ["experiment1", "experiment2", "experiment3"]),
+    ],
+)
+def test_experiment_sort(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    sortBy: str,
+    descending: bool,
+    expected: list[str],
+) -> None:
+    """Test that experiments can be sorted by column.
+
+    Given an authenticated user and registered experiments, this test validates the
+      following sequence of actions:
+
+    - A user registers three experiments: "experiment1", "experiment2", "experiment3".
+    - The user is able to retrieve a list of all registered experiments sorted by a
+      column ascending/descending.
+    - The returned list of experiments matches the order in the parametrize lists above.
+    """
+
+    expected_ids = [
+        registered_experiments[expected_name]["id"] for expected_name in expected
+    ]
+    assert_sorting_experiment_works(client, sortBy, descending, expected=expected_ids)
+
+
 def test_experiment_search_query(
     client: FlaskClient,
     db: SQLAlchemy,
@@ -378,7 +449,7 @@ def test_experiment_search_query(
         following sequence of actions:
 
     - The user is able to retrieve a list of all registered experiments with a name
-      that countains 'experiment'.
+      that contains 'experiment'.
     - The returned list of experiments matches the expected matches from the query.
     """
     experiment1_expected = registered_experiments["experiment1"]
@@ -564,7 +635,7 @@ def test_experiment_get_entrypoints(
     )
 
 
-@pytest.mark.skip(reason="entrypoints not yet implmented")
+@pytest.mark.skip(reason="entrypoints not yet implemented")
 # @pytest.mark.parametrize(
 #     "initial_entrypoints",
 #     "new_entrypoints",
@@ -631,7 +702,7 @@ def test_experiment_add_entrypoints(
     )
 
 
-@pytest.mark.skip(reason="entrypoints not yet implmented")
+@pytest.mark.skip(reason="entrypoints not yet implemented")
 # @pytest.mark.parametrize(
 #     "initial_entrypoints", "new_entrypoints", "expected_entrypoints",
 #     [
@@ -697,7 +768,7 @@ def test_experiment_modify_entrypoints(
     )
 
 
-@pytest.mark.skip(reason="entrypoints not yet implmented")
+@pytest.mark.skip(reason="entrypoints not yet implemented")
 # @pytest.mark.parametrize(
 #     "initial_entrypoints", "entrypoints_to_remove", "expected_entrypoints",
 #     [
@@ -774,7 +845,8 @@ def test_manage_existing_experiment_draft(
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
 ) -> None:
-    """Test that a draft of an existing experiment can be created and managed by the user
+    """Test that a draft of an existing experiment can be created and managed by the
+        user
 
     Given an authenticated user and registered experiments, this test validates the
     following sequence of actions:

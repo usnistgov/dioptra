@@ -27,16 +27,25 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    SortParameterValidationError,
+)
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
-from .errors import TagAlreadyExistsError, TagDoesNotExistError
-
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
+RESOURCE_TYPE: Final[str] = "tag"
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
     "name": lambda x: models.Tag.name.like(x),
+}
+SORTABLE_FIELDS: Final[dict[str, Any]] = {
+    "name": models.Tag.name,
+    "createdOn": models.Tag.created_on,
+    "lastModifiedOn": models.Tag.last_modified_on,
 }
 
 
@@ -80,14 +89,16 @@ class TagService(object):
             The newly created tag object.
 
         Raises:
-            TagAlreadyExistsError: If a tag with the given name already exists.
-            GroupDoesNotExistError: If the group with the provided ID does not exist.
+            EntityExistsError: If a tag with the given name already exists.
+            EntityDoesNotExistError: If the group with the provided ID does not exist.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        if self._tag_name_service.get(name, group_id=group_id, log=log) is not None:
-            log.debug("Tag name already exists", name=name, group_id=group_id)
-            raise TagAlreadyExistsError
+        duplicate = self._tag_name_service.get(name, group_id=group_id, log=log)
+        if duplicate is not None:
+            raise EntityExistsError(
+                RESOURCE_TYPE, duplicate.tag_id, name=name, group_id=group_id
+            )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
@@ -108,6 +119,8 @@ class TagService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        sort_by_string: str,
+        descending: bool,
         **kwargs,
     ) -> tuple[list[models.Tag], int]:
         """Fetch a list of tags, optionally filtering by search string and paging
@@ -118,6 +131,8 @@ class TagService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of tags to be returned.
+            sort_by_string: The name of the column to sort.
+            descending: Boolean indicating whether to sort by descending or not.
 
         Returns:
             A tuple containing a list of tags and the total number of tags matching
@@ -154,6 +169,17 @@ class TagService(object):
         tags_stmt = (
             select(models.Tag).where(*filters).offset(page_index).limit(page_length)
         )
+
+        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
+            sort_column = SORTABLE_FIELDS[sort_by_string]
+            if descending:
+                sort_column = sort_column.desc()
+            else:
+                sort_column = sort_column.asc()
+            tags_stmt = tags_stmt.order_by(sort_column)
+        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
+            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
+
         tags = list(db.session.scalars(tags_stmt).all())
 
         return tags, total_num_tags
@@ -193,7 +219,7 @@ class TagIdService(object):
             The tag object if found, otherwise None.
 
         Raises:
-            TagDoesNotExistError: If the tag is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the tag is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -204,8 +230,7 @@ class TagIdService(object):
 
         if tag is None:
             if error_if_not_found:
-                log.debug("Tag not found", tag_id=tag_id)
-                raise TagDoesNotExistError
+                raise EntityDoesNotExistError(RESOURCE_TYPE, tag_id=tag_id)
 
             return None
 
@@ -233,9 +258,9 @@ class TagIdService(object):
             The updated tag object.
 
         Raises:
-            TagDoesNotExistError: If the tag is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the tag is not found and `error_if_not_found`
                 is True.
-            TagAlreadyExistsError: If the tag name already exists.
+            EntityExistsError: If the tag name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -245,12 +270,12 @@ class TagIdService(object):
             return None
 
         group_id = tag.group_id
-        if (
-            name != tag.name
-            and self._tag_name_service.get(name, group_id=group_id, log=log) is not None
-        ):
-            log.debug("Tag name already exists", name=name, group_id=group_id)
-            raise TagAlreadyExistsError
+        if name != tag.name:
+            duplicate = self._tag_name_service.get(name, group_id=group_id, log=log)
+            if duplicate is not None:
+                raise EntityExistsError(
+                    RESOURCE_TYPE, duplicate.tag_id, name=name, group_id=group_id
+                )
 
         current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
         tag.name = name
@@ -280,7 +305,7 @@ class TagIdService(object):
             The tag object if found, otherwise None.
 
         Raises:
-            TagDoesNotExistError: If the tag is not found.
+            EntityDoesNotExistError: If the tag is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get tag by id", tag_id=tag_id)
@@ -289,8 +314,7 @@ class TagIdService(object):
         tag = db.session.scalar(stmt)
 
         if tag is None:
-            log.debug("Tag not found", tag_id=tag_id)
-            raise TagDoesNotExistError
+            raise EntityDoesNotExistError(RESOURCE_TYPE, tag_id=tag_id)
 
         tag_id = tag.tag_id
         db.session.delete(tag)
@@ -339,7 +363,7 @@ class TagIdResourcesService(object):
             The tag object if found, otherwise None.
 
         Raises:
-            TagDoesNotExistError: If the tag is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the tag is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -350,8 +374,7 @@ class TagIdResourcesService(object):
 
         if tag is None:
             if error_if_not_found:
-                log.debug("Tag not found", tag_id=tag_id)
-                raise TagDoesNotExistError
+                raise EntityDoesNotExistError(RESOURCE_TYPE, tag_id=tag_id)
 
             return None
 
@@ -409,7 +432,7 @@ class TagNameService(object):
             The tag object if found, otherwise None.
 
         Raises:
-            TagDoesNotExistError: If the tag is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the tag is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -423,8 +446,9 @@ class TagNameService(object):
 
         if tag is None:
             if error_if_not_found:
-                log.debug("Tag not found", name=name)
-                raise TagDoesNotExistError
+                raise EntityDoesNotExistError(
+                    RESOURCE_TYPE, name=name, group_id=group_id
+                )
 
             return None
 

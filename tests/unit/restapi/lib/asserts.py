@@ -24,9 +24,7 @@ from dioptra.restapi.routes import V1_ROOT
 from . import actions, helpers
 
 
-def assert_base_resource_contents_match_expectations(
-    response: dict[str, Any]
-) -> None:
+def assert_base_resource_contents_match_expectations(response: dict[str, Any]) -> None:
     assert isinstance(response["id"], int)
     assert isinstance(response["snapshot"], int)
     assert isinstance(response["createdOn"], str)

@@ -128,11 +128,24 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
   const res = await axios.get(`/api/${type}/${showDrafts ? 'drafts/' : ''}`, {
     params: {
       index: pagination.index,
-      pageLength: pagination.rowsPerPage,
+      pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
       search: urlEncode(pagination.search),
-      draftType: showDrafts ? 'new' : ''
+      draftType: showDrafts ? 'new' : '',
+      sortBy: pagination.sortBy,
+      descending: pagination.descending,
     },
   })
+
+  // if GET ALL (rowsPerPage = 0), then keep on getting next page until there is no next
+  if(pagination.rowsPerPage === 0 && res.data.next) {
+    let nextUrl = res.data.next.replace("/v1", "")
+    while (nextUrl) {
+      const response = await axios.get(nextUrl)
+      res.data.data.push(...response.data.data)
+      nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
+    }
+  }
+
   if(showDrafts && res.data.data) {
     res.data.data.forEach((obj: any) => {
       Object.assign(obj, obj.payload)
@@ -143,13 +156,26 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
 }
 
 export async function getJobs(id: number, pagination: Pagination) {
-  return await axios.get(`/api/experiments/${id}/jobs`, {
+  const res = await axios.get(`/api/experiments/${id}/jobs`, {
     params: {
       index: pagination.index,
-      pageLength: pagination.rowsPerPage,
+      pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
       search: urlEncode(pagination.search),
+      sortBy: pagination.sortBy,
+      descending: pagination.descending,
     }
   })
+
+  // if GET ALL (rowsPerPage = 0), then keep on getting next page until there is no next
+  if(pagination.rowsPerPage === 0 && res.data.next) {
+    let nextUrl = res.data.next.replace("/v1", "")
+    while (nextUrl) {
+      const response = await axios.get(nextUrl)
+      res.data.data.push(...response.data.data)
+      nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
+    }
+  }
+  return res
 }
 
 function urlEncode(string: string) {
@@ -226,13 +252,26 @@ export async function deleteDraft<T extends ItemType>(type: T, draftId: number) 
 }
 
 export async function getFiles(id: number, pagination: Pagination) {
-  return await axios.get(`/api/plugins/${id}/files`, {
+  const res =  await axios.get(`/api/plugins/${id}/files`, {
     params: {
       index: pagination.index,
-      pageLength: pagination.rowsPerPage,
-      search: urlEncode(pagination.search)
+      pageLength: pagination.rowsPerPage === 0 ? 100 : pagination.rowsPerPage,  // 0 means GET ALL
+      search: urlEncode(pagination.search),
+      sortBy: pagination.sortBy,
+      descending: pagination.descending,
     }
   })
+
+  // if GET ALL (rowsPerPage = 0), then keep on getting next page until there is no next
+  if(pagination.rowsPerPage === 0 && res.data.next) {
+    let nextUrl = res.data.next.replace("/v1", "")
+    while (nextUrl) {
+      const response = await axios.get(nextUrl)
+      res.data.data.push(...response.data.data)
+      nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
+    }
+  }
+  return res
 }
 
 export async function getFile(pluginID: string, fileID: string) {

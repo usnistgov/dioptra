@@ -11,6 +11,7 @@
     :hideEditBtn="true"
     :showExpand="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="router.push(`/experiments/${route.params.id}/jobs/new`)"
   >
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}
@@ -75,7 +76,7 @@
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
   import { ref } from 'vue'
-  import { useRoute } from 'vue-router'
+  import { useRoute, useRouter } from 'vue-router'
   import PageTitle from '@/components/PageTitle.vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
@@ -85,12 +86,13 @@
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 
   const route = useRoute()
+  const router = useRouter()
 
   const columns = [
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
-    { name: 'id', label: 'Job ID', align: 'left', field: 'id', sortable: true, },
-    { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: true, },
-    { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: true, },
+    { name: 'id', label: 'Job ID', align: 'left', field: 'id', sortable: false, },
+    { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: false, },
+    { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: false, },
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
   ]
@@ -143,7 +145,7 @@
       } else {
         // await api.deleteDraft('queues', selected.value[0].id)
       }
-      notify.success(`Sucessfully deleted '${selected.value[0].description}'`)
+      notify.success(`Successfully deleted '${selected.value[0].description}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

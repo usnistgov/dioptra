@@ -78,7 +78,7 @@ api: Namespace = Namespace("Plugins", description="Plugins endpoint")
 
 
 # WARNING: Do not move the PluginFile Snapshots sub-endpoint definitions.
-# They must be declared first because of an issue related interations with the schemas.
+# They must be declared first because of an issue related interactions with the schemas.
 PluginFileSnapshotsResource = generate_nested_resource_snapshots_endpoint(
     api=api,
     resource_model=models.PluginFile,
@@ -127,12 +127,16 @@ class PluginEndpoint(Resource):
         search_string = parsed_query_params["search"]
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
+        sort_by_string = parsed_query_params["sort_by"]
+        descending = parsed_query_params["descending"]
 
         plugins, total_num_plugins = self._plugin_service.get(
             group_id=group_id,
             search_string=search_string,
             page_index=page_index,
             page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -145,6 +149,8 @@ class PluginEndpoint(Resource):
             index=page_index,
             length=page_length,
             total_num_elements=total_num_plugins,
+            sort_by=sort_by_string,
+            descending=descending,
         )
 
     @login_required
@@ -261,12 +267,16 @@ class PluginIdFilesEndpoint(Resource):
         search_string = parsed_query_params["search"]
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
+        sort_by_string = parsed_query_params["sort_by"]
+        descending = parsed_query_params["descending"]
 
         plugin_files, total_num_plugin_files = self._plugin_id_file_service.get(
             plugin_id=id,
             search_string=search_string,
             page_index=page_index,
             page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
             log=log,
         )
 
@@ -280,6 +290,8 @@ class PluginIdFilesEndpoint(Resource):
             index=page_index,
             length=page_length,
             total_num_elements=total_num_plugin_files,
+            sort_by=sort_by_string,
+            descending=descending,
         )
 
     @login_required

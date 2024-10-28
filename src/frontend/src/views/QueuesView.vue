@@ -12,6 +12,7 @@
     ref="tableRef"
     :showToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="showQueueDialog = true"
   >
     <template #body-cell-hasDraft="props">
       <q-btn
@@ -89,11 +90,10 @@
 
   const columns = [
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    // { name: 'id', label: 'Queue ID', align: 'left', field: 'id', sortable: true },
-    // { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', format: val => `${formatDate(val)}`, sortable: true },
-    // { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', format: val => `${formatDate(val)}`, sortable: true },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true },
-    { name: 'hasDraft', label: 'hasDraft', align: 'left', field: 'hasDraft', sortable: true },
+    { name: 'hasDraft', label: 'hasDraft', align: 'left', field: 'hasDraft', sortable: false },
+    { name: 'createdOn', label: 'Created On', align: 'left', field: 'createdOn', sortable: true },
+    { name: 'lastModifiedOn', label: 'Last Modified', align: 'left', field: 'lastModifiedOn', sortable: true },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
   ]
 
@@ -123,7 +123,7 @@
     try {
       if(id) await api.addDraft('queues', params, id)
       else await api.addItem('queues', params)
-      notify.success(`Sucessfully created '${name}'`)
+      notify.success(`Successfully created '${name}'`)
       showQueueDialog.value = false
       showDraftDialog.value = false
       tableRef.value.refreshTable()
@@ -142,7 +142,7 @@
     }
     try {
       await api.addDraft('queues', params, id)
-      notify.success(`Sucessfully created draft '${name}'`)
+      notify.success(`Successfully created draft '${name}'`)
       showQueueDialog.value = false
       tableRef.value.refreshTable()
     } catch(err) {
@@ -157,7 +157,7 @@
       } else {
         await api.updateItem('queues', id, { name, description })
       }
-      notify.success(`Sucessfully updated Queue '${name}'`)
+      notify.success(`Successfully updated Queue '${name}'`)
       showQueueDialog.value = false
       showDraftDialog.value = false
       selected.value = []
@@ -170,19 +170,12 @@
   async function updateDraftLinkedToQueue(queueId, name, description) {
     try {
       await api.updateDraftLinkedtoQueue(queueId, name, description)
-      notify.success(`Sucessfully updated '${name}'`)
+      notify.success(`Successfully updated '${name}'`)
       showDraftDialog.value = false
     } catch(err) {
       notify.error(err.response.data.message)
     }
   }
-
-  function formatDate(dateString) {
-    const options = { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true }
-    return new Date(dateString).toLocaleString('en-US', options)
-  }
-
-
 
   const editing = ref(false)
 
@@ -197,7 +190,7 @@
       } else {
         await api.deleteDraft('queues', selected.value[0].id)
       }
-      notify.success(`Sucessfully deleted Queue '${selected.value[0].name}'`)
+      notify.success(`Successfully deleted Queue '${selected.value[0].name}'`)
       showDeleteDialog.value = false
       selected.value = []
       tableRef.value.refreshTable()

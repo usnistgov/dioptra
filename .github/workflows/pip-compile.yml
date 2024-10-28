@@ -91,7 +91,7 @@ jobs:
         run: |
           python3 -m tox run -e py311-linux-${{ matrix.architecture }}-${{ matrix.requirements }}
 
-      - name: run tox (MacOS, Python 3.11)
+      - name: run tox (macOS, Python 3.11)
         if: ${{ (matrix.os == 'macos-13' || matrix.os == 'macos-latest') && matrix.python-version == '3.11' }}
         run: |
           python3 -m tox run -e py311-macos-${{ matrix.architecture }}-${{ matrix.requirements }}

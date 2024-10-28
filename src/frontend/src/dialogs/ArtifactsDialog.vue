@@ -111,7 +111,7 @@
         description: description.value,
       })
       showDialog.value = false
-      notify.success(`Sucessfully created artifact for Job ID: ${props.jobId}`)
+      notify.success(`Successfully created artifact for Job ID: ${props.jobId}`)
     } catch(err) {
       notify.error(err.response.data.message)
     } 

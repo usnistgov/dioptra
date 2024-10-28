@@ -62,7 +62,7 @@ def _define_query_grammar() -> pp.ParserElement:
         (escape | pp.Word(pp.printables + " ", exclude_chars='\\?*"\n'))[1, ...]
     )
 
-    # The search strings are a sequence of one ore more valid characters and wildcards
+    # The search strings are a sequence of one or more valid characters and wildcards
     unquoted_search_word = (unquoted_word | wildcard)[1, ...]
     unquoted_search_string = (unquoted_words | wildcard)[1, ...]
     sgl_quoted_search_string = (

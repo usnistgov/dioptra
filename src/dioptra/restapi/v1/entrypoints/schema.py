@@ -23,6 +23,7 @@ from dioptra.restapi.v1.schemas import (
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    SortByGetQueryParametersSchema,
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
@@ -95,7 +96,9 @@ class EntrypointParameterSchema(Schema):
         attribute="parameter_type",
         metadata=dict(description="Data type of the Entrypoint parameter."),
         required=True,
-        validate=validate.OneOf(["string", "float", "path", "uri"]),
+        validate=validate.OneOf(
+            ["string", "float", "integer", "boolean", "list", "mapping"]
+        ),
     )
 
 
@@ -227,5 +230,6 @@ class EntrypointGetQueryParameters(
     PagingQueryParametersSchema,
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
+    SortByGetQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /entrypoints endpoint."""

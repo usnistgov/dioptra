@@ -23,9 +23,10 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 
+from .type_coercions import GlobalParameterType, coerce_to_type
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-FLOAT_PARAM_TYPE: Final[str] = "float"
 JSON_FILE_ENCODING: Final[str] = "utf-8"
 
 
@@ -47,27 +48,15 @@ def export_job_parameters(
     log = logger or LOGGER.new()  # noqa: F841
     job_params_json_path = Path(base_dir, "parameters").with_suffix(".json")
 
-    job_parameters: dict[str, str | int | float | None] = {}
+    job_parameters: dict[str, GlobalParameterType] = {}
     for param_value in job_param_values:
-        if param_value.parameter.parameter_type == FLOAT_PARAM_TYPE:
-            job_parameters[param_value.parameter.name] = _convert_to_number(
-                param_value.value
-            )
-
-        else:
-            job_parameters[param_value.parameter.name] = param_value.value
+        value = coerce_to_type(
+            x=param_value.value,
+            type_name=param_value.parameter.parameter_type,
+        )
+        job_parameters[param_value.parameter.name] = value
 
     with job_params_json_path.open("wt", encoding=JSON_FILE_ENCODING) as f:
         json.dump(job_parameters, f, indent=2)
 
     return job_params_json_path
-
-
-def _convert_to_number(number: str | None) -> int | float | None:
-    if number is None:
-        return None
-
-    if number.isnumeric():
-        return int(number)
-
-    return float(number)
