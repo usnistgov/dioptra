@@ -20,7 +20,6 @@ from sqlalchemy import ForeignKeyConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dioptra.restapi.db.db import bigint, intpk, text_
-from dioptra.restapi.db.models.utils import depth_limited_repr
 
 from .resources import ResourceSnapshot
 
@@ -55,6 +54,3 @@ class Queue(ResourceSnapshot):
     __mapper_args__ = {
         "polymorphic_identity": "queue",
     }
-
-    def __repr__(self):
-        return depth_limited_repr(self)
