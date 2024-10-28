@@ -559,13 +559,16 @@ class JobIdMetricsService(object):
         
         run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)['mlflow_run_id']
         client = MlflowClient()
-        run = client.get_run(run_id.hex)
+
+        try:
+            run = client.get_run(run_id.hex)
+        except:
+            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex)
+
         metrics = [{
             'name': metric,
             'value': run.data.metrics[metric]
         } for metric in run.data.metrics.keys()]
-        #if job is None:
-        #    raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
 
         return metrics
 
@@ -587,10 +590,14 @@ class JobIdMetricsService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Update job metrics by id", job_id=job_id)
-        # TODO: replace with mlflow calls
-        job = True
-        if job is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
+
+        from mlflow.tracking import MlflowClient
+        from uuid import UUID
+
+        run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)['mlflow_run_id']
+        client = MlflowClient()
+
+        client.log_metric(run_id.hex, key=metric_name, value=metric_value)
 
         return {"name": metric_name, "value": metric_value}
 
@@ -636,7 +643,12 @@ class JobIdMetricsSnapshotsService(object):
 
         run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)['mlflow_run_id']
         client = MlflowClient()
-        history = client.get_metric_history(run_id=run_id.hex, key=metric_name)
+
+        try:
+            history = client.get_metric_history(run_id=run_id.hex, key=metric_name)
+        except:
+            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex)
+
         
         metrics_page = [{
             'name': metric.key,
@@ -646,6 +658,7 @@ class JobIdMetricsSnapshotsService(object):
         } for metric in history[page_index * page_length:(page_index + 1) * page_length]]
         
         return metrics_page, len(history)
+
 
 class ExperimentJobService(object):
     """The service methods for submitting and retrieving jobs within an experiment
@@ -1176,6 +1189,7 @@ class JobIdMlflowrunService(object):
 
         return {"mlflow_run_id": job.mlflow_run.mlflow_run_id}
 
+
 class ExperimentMetricsService(object):
     """The service methods for retrieving metrics attached to jobs in the experiment."""
 
@@ -1201,7 +1215,7 @@ class ExperimentMetricsService(object):
         sort_by_string: str,
         descending: bool,
         **kwargs,
-    ) -> list[models.EntryPoint]:
+    ):
         """Get a list of jobs and the latest metrics associated with each.
 
         Args:
@@ -1218,7 +1232,7 @@ class ExperimentMetricsService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
-            "Get entrypoints for an experiment by resource id",
+            "Get metrics for all jobs for an experiment by resource id",
             resource_id=experiment_id,
         )
 
@@ -1230,9 +1244,9 @@ class ExperimentMetricsService(object):
                                                 descending=descending,
                                                 **kwargs
                                             )
+
         job_ids = [job['job'].resource_id for job in jobs]
-        print("DEBUG:")
-        print("job_ids", job_ids)
+        
         metrics_for_jobs = [ 
             {
                 'id': job_id,
