@@ -44,12 +44,13 @@ from dioptra.restapi.v1.shared.tags.controller import (
 
 from .schema import (
     JobGetQueryParameters,
+    MetricsSnapshotsGetQueryParameters,
     JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
     JobStatusSchema,
     MetricsSchema,
-    MetricsSnapshotSchema
+    MetricsSnapshotPageSchema
 )
 from .service import (
     RESOURCE_TYPE,
@@ -273,6 +274,7 @@ class JobIdMetricsEndpoint(Resource):
             request_type="GET",
             job_id=id,
         )
+        
         return self._job_id_metrics_service.get(
             job_id=id, error_if_not_found=True, log=log
         )
@@ -319,9 +321,10 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @responds(schema=MetricsSnapshotSchema(many=True), api=api)
+    @accepts(query_params_schema=MetricsSnapshotsGetQueryParameters, api=api)
+    @responds(schema=MetricsSnapshotPageSchema(), api=api)
     def get(self, id: int, name: str):
-        """Gets a Job resource's latest metrics."""
+        """Gets a Job resource's metric history."""
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="JobIdMetricsSnapshotsEndpoint",
@@ -329,9 +332,27 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
             job_id=id,
             metric_name=name
         )
-        return self._job_id_metrics_snapshots_service.get(
-            job_id=id, metric_name=name, error_if_not_found=True, log=log
+        parsed_query_params = request.parsed_query_params  # type: ignore
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+        metrics_page, total_num_metrics = self._job_id_metrics_snapshots_service.get(
+            job_id=id, metric_name=name, page_index=page_index, page_length=page_length, error_if_not_found=True, log=log
         )
+
+        return utils.build_paging_envelope(
+            f"/jobs/{id}/metrics/{name}/snapshots",
+            build_fn=utils.build_metrics_snapshots,
+            data=metrics_page,
+            group_id=None,
+            query=None,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_metrics,
+            sort_by=None,
+            descending=None,
+        )
+
 
 JobSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,

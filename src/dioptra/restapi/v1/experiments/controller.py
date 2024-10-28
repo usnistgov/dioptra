@@ -39,13 +39,14 @@ from dioptra.restapi.v1.jobs.schema import (
     JobPageSchema,
     JobSchema,
     JobStatusSchema,
-    JobIdMetricsSchema
+    ExperimentJobsMetricsSchema
 )
 from dioptra.restapi.v1.jobs.service import (
     ExperimentJobIdMlflowrunService,
     ExperimentJobIdService,
     ExperimentJobIdStatusService,
     ExperimentJobService,
+    ExperimentMetricsService
 )
 from dioptra.restapi.v1.schemas import IdListSchema, IdStatusResponseSchema
 from dioptra.restapi.v1.shared.drafts.controller import (
@@ -68,6 +69,7 @@ from .schema import (
     ExperimentMutableFieldsSchema,
     ExperimentPageSchema,
     ExperimentSchema,
+    ExperimentMetricsGetQueryParameters,
 )
 from .service import (
     RESOURCE_TYPE,
@@ -76,8 +78,9 @@ from .service import (
     ExperimentIdEntrypointsService,
     ExperimentIdService,
     ExperimentService,
-    ExperimentMetricsService
 )
+
+
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -543,7 +546,8 @@ class ExperimentIdMetricsEndpoint(Resource):
         super().__init__(*args, **kwargs)
 
     @login_required
-    @responds(schema=JobIdMetricsSchema(many=True), api=api)
+    @accepts(query_params_schema=ExperimentMetricsGetQueryParameters, api=api)
+    @responds(schema=ExperimentJobsMetricsSchema, api=api)
     def get(self, id: int):
         """Gets all of the latest metrics for every job in the experiment."""
         log = LOGGER.new(
@@ -552,9 +556,40 @@ class ExperimentIdMetricsEndpoint(Resource):
             request_type="GET",
             experiment_id=id,
         )
-        return self._experiment_metrics_service.get(
-            experiment_id=id, error_if_not_found=True, log=log
+
+        parsed_query_params = request.parsed_query_params  # type: ignore
+        search_string = unquote(parsed_query_params["search"])
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+        sort_by_string = unquote(parsed_query_params["sort_by"])
+        descending = parsed_query_params["descending"]
+
+
+        jobs_metrics, total_num_jobs = self._experiment_metrics_service.get(
+            experiment_id=id, 
+            search_string=search_string,
+            page_index=page_index, 
+            page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
+            error_if_not_found=True, 
+            log=log
         )
+        
+        return utils.build_paging_envelope(
+            f"/experiments/{id}/metrics",
+            build_fn=utils.build_metrics_snapshots,
+            data=jobs_metrics,
+            group_id=None,
+            query=None,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_jobs,
+            sort_by=None,
+            descending=None,
+        )
+
 
 @api.route("/<int:id>/entrypoints")
 @api.param("id", "ID for the Experiment resource.")

@@ -116,6 +116,13 @@ class ExperimentPageSchema(BasePageSchema):
         metadata=dict(description="List of Experiment resources in the current page."),
     )
 
+class ExperimentMetricsGetQueryParameters(
+    PagingQueryParametersSchema,
+    SearchQueryParametersSchema,
+    SortByGetQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /experiments/{id}/metrics"""
+
 
 class ExperimentGetQueryParameters(
     PagingQueryParametersSchema,

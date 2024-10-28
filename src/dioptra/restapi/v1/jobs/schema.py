@@ -70,6 +70,13 @@ class MetricsSnapshotSchema(MetricsSchema):
         metadata=dict(description="The timestamp of the metric in milliseconds.")
     )
 
+class MetricsSnapshotPageSchema(BasePageSchema):
+    data = fields.Nested(
+        MetricsSnapshotSchema,
+        many=True,
+        metadata=dict(description="List of Metric Snapshots in the current page."),
+    )
+
 class JobIdMetricsSchema(JobIdSchema):
     metrics = fields.Nested(
         MetricsSchema,
@@ -77,6 +84,13 @@ class JobIdMetricsSchema(JobIdSchema):
         metadata=dict(description="A list of the latest metrics associated with the job."),
         many=True
     )
+class ExperimentJobsMetricsSchema(BasePageSchema):
+    data = fields.Nested(
+        JobIdMetricsSchema,
+        many=True,
+        metadata=dict(description="List of metrics for each job in the experiment"),
+    )
+
 
 class JobStatusSchema(JobIdSchema):
     """The fields schema for the data in a Job status resource."""
@@ -185,6 +199,10 @@ class JobPageSchema(BasePageSchema):
         metadata=dict(description="List of Job resources in the current page."),
     )
 
+class MetricsSnapshotsGetQueryParameters(
+    PagingQueryParametersSchema,
+):
+    """The query parameters for the GET method of the /jobs/{id}/metrics/{name}/snapshots"""
 
 class JobGetQueryParameters(
     PagingQueryParametersSchema,
