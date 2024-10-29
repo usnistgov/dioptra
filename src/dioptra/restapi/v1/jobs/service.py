@@ -22,6 +22,7 @@ from typing import Any, Final, cast
 import structlog
 from flask_login import current_user
 from injector import inject
+from mlflow.exceptions import MlflowException
 from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
@@ -551,24 +552,27 @@ class JobIdMetricsService(object):
         Returns:
             The metrics for the requested job if found, otherwise an error message.
         """
-        from mlflow.tracking import MlflowClient
         from uuid import UUID
+
+        from mlflow.tracking import MlflowClient
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
-        
-        run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)['mlflow_run_id']
+
+        run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
+            "mlflow_run_id"
+        ]
         client = MlflowClient()
 
         try:
             run = client.get_run(run_id.hex)
-        except:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex)
+        except MlflowException as e:
+            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
 
-        metrics = [{
-            'name': metric,
-            'value': run.data.metrics[metric]
-        } for metric in run.data.metrics.keys()]
+        metrics = [
+            {"name": metric, "value": run.data.metrics[metric]}
+            for metric in run.data.metrics.keys()
+        ]
 
         return metrics
 
@@ -591,25 +595,31 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Update job metrics by id", job_id=job_id)
 
-        from mlflow.tracking import MlflowClient
         from uuid import UUID
 
-        run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)['mlflow_run_id']
-        client = MlflowClient()
+        from mlflow.tracking import MlflowClient
 
+        run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
+            "mlflow_run_id"
+        ]
+        client = MlflowClient()
         client.log_metric(run_id.hex, key=metric_name, value=metric_value)
+
+        # this is here just to raise an error if the run does not exist
+        try:
+            run = client.get_run(run_id.hex)  # noqa: F841
+        except MlflowException as e:
+            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
 
         return {"name": metric_name, "value": metric_value}
 
 
 class JobIdMetricsSnapshotsService(object):
-    """The service methods for retrieving the historical metrics of a job by unique id and metric name."""
+    """The service methods for retrieving the historical metrics of a
+    job by unique id and metric name."""
 
     @inject
-    def __init__(
-        self,
-        job_id_mlflowrun_service: JobIdMlflowrunService
-    ) -> None:
+    def __init__(self, job_id_mlflowrun_service: JobIdMlflowrunService) -> None:
         """Initialize the job metrics snapshots service.
 
         All arguments are provided via dependency injection.
@@ -629,34 +639,45 @@ class JobIdMetricsSnapshotsService(object):
         Args:
             job_id: The unique id of the job.
             metric_name: The name of the metric.
-
+            page_index: The index of the first page to be returned.
+            page_length: The maximum number of experiments to be returned.
         Returns:
-            The metric history for the requested job and metric if found, otherwise an error message.
+            The metric history for the requested job and metric if found,
+            otherwise an error message.
         """
-        from mlflow.tracking import MlflowClient
         from uuid import UUID
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Get job metric history by id and name",
-                   job_id=job_id,
-                   metric_name=metric_name)
-        
 
-        run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)['mlflow_run_id']
+        from mlflow.tracking import MlflowClient
+
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Get job metric history by id and name",
+            job_id=job_id,
+            metric_name=metric_name,
+        )
+
+        run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
+            "mlflow_run_id"
+        ]
         client = MlflowClient()
 
         try:
             history = client.get_metric_history(run_id=run_id.hex, key=metric_name)
-        except:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex)
+        except MlflowException as e:
+            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
 
-        
-        metrics_page = [{
-            'name': metric.key,
-            'value': metric.value,
-            'step': metric.step,
-            'timestamp': metric.timestamp
-        } for metric in history[page_index * page_length:(page_index + 1) * page_length]]
-        
+        metrics_page = [
+            {
+                "name": metric.key,
+                "value": metric.value,
+                "step": metric.step,
+                "timestamp": metric.timestamp,
+            }
+            for metric in history[
+                page_index * page_length : (page_index + 1) * page_length
+            ]
+        ]
+
         return metrics_page, len(history)
 
 
@@ -1236,21 +1257,20 @@ class ExperimentMetricsService(object):
             resource_id=experiment_id,
         )
 
-        jobs, num_jobs = self._experiment_jobs_service.get(experiment_id, 
-                                                search_string=search_string,
-                                                page_index=page_index, 
-                                                page_length=page_length,
-                                                sort_by_string=sort_by_string,
-                                                descending=descending,
-                                                **kwargs
-                                            )
+        jobs, num_jobs = self._experiment_jobs_service.get(
+            experiment_id,
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
+            **kwargs,
+        )
 
-        job_ids = [job['job'].resource_id for job in jobs]
-        
-        metrics_for_jobs = [ 
-            {
-                'id': job_id,
-                'metrics' : self._job_id_metrics_service.get(job_id) 
-            } for job_id in job_ids
+        job_ids = [job["job"].resource_id for job in jobs]
+
+        metrics_for_jobs = [
+            {"id": job_id, "metrics": self._job_id_metrics_service.get(job_id)}
+            for job_id in job_ids
         ]
         return metrics_for_jobs, num_jobs

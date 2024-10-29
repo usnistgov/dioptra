@@ -35,18 +35,18 @@ from dioptra.restapi.v1.artifacts.service import JobArtifactService
 from dioptra.restapi.v1.entrypoints.schema import EntrypointRefSchema
 from dioptra.restapi.v1.jobs.schema import (
     ExperimentJobGetQueryParameters,
+    ExperimentJobsMetricsSchema,
     JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
     JobStatusSchema,
-    ExperimentJobsMetricsSchema
 )
 from dioptra.restapi.v1.jobs.service import (
     ExperimentJobIdMlflowrunService,
     ExperimentJobIdService,
     ExperimentJobIdStatusService,
     ExperimentJobService,
-    ExperimentMetricsService
+    ExperimentMetricsService,
 )
 from dioptra.restapi.v1.schemas import IdListSchema, IdStatusResponseSchema
 from dioptra.restapi.v1.shared.drafts.controller import (
@@ -66,10 +66,10 @@ from dioptra.restapi.v1.shared.tags.controller import (
 from .schema import (
     ExperimentDraftSchema,
     ExperimentGetQueryParameters,
+    ExperimentMetricsGetQueryParameters,
     ExperimentMutableFieldsSchema,
     ExperimentPageSchema,
     ExperimentSchema,
-    ExperimentMetricsGetQueryParameters,
 )
 from .service import (
     RESOURCE_TYPE,
@@ -79,8 +79,6 @@ from .service import (
     ExperimentIdService,
     ExperimentService,
 )
-
-
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -525,6 +523,7 @@ class ExperimentIdJobIdArtifactsEndpoint(Resource):
         )
         return utils.build_artifact(artifact)
 
+
 @api.route("/<int:id>/metrics")
 @api.param("id", "ID for the Experiment resource.")
 class ExperimentIdMetricsEndpoint(Resource):
@@ -564,18 +563,17 @@ class ExperimentIdMetricsEndpoint(Resource):
         sort_by_string = unquote(parsed_query_params["sort_by"])
         descending = parsed_query_params["descending"]
 
-
         jobs_metrics, total_num_jobs = self._experiment_metrics_service.get(
-            experiment_id=id, 
+            experiment_id=id,
             search_string=search_string,
-            page_index=page_index, 
+            page_index=page_index,
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
-            error_if_not_found=True, 
-            log=log
+            error_if_not_found=True,
+            log=log,
         )
-        
+
         return utils.build_paging_envelope(
             f"/experiments/{id}/metrics",
             build_fn=utils.build_metrics_snapshots,

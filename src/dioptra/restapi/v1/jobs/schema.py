@@ -40,6 +40,7 @@ class JobMlflowRunSchema(Schema):
         metadata=dict(description="UUID for the associated Mlflow Run."),
     )
 
+
 class JobIdSchema(Schema):
     id = fields.Integer(
         attribute="id",
@@ -47,28 +48,30 @@ class JobIdSchema(Schema):
         dump_only=True,
     )
 
+
 class MetricsSchema(Schema):
     name = fields.String(
         attribute="name",
         metadata=dict(description="The name of the metric."),
-        required=True
+        required=True,
     )
     value = fields.Float(
         attribute="value",
         metadata=dict(description="The value of the metric."),
-        required=True
+        required=True,
     )
+
 
 class MetricsSnapshotSchema(MetricsSchema):
     step = fields.Integer(
-        attribute="step",
-        metadata=dict(description="The step value for the metric.")
+        attribute="step", metadata=dict(description="The step value for the metric.")
     )
 
     timestamp = fields.Integer(
         attribute="timestamp",
-        metadata=dict(description="The timestamp of the metric in milliseconds.")
+        metadata=dict(description="The timestamp of the metric in milliseconds."),
     )
+
 
 class MetricsSnapshotPageSchema(BasePageSchema):
     data = fields.Nested(
@@ -77,13 +80,18 @@ class MetricsSnapshotPageSchema(BasePageSchema):
         metadata=dict(description="List of Metric Snapshots in the current page."),
     )
 
+
 class JobIdMetricsSchema(JobIdSchema):
     metrics = fields.Nested(
         MetricsSchema,
         attribute="metrics",
-        metadata=dict(description="A list of the latest metrics associated with the job."),
-        many=True
+        metadata=dict(
+            description="A list of the latest metrics associated with the job."
+        ),
+        many=True,
     )
+
+
 class ExperimentJobsMetricsSchema(BasePageSchema):
     data = fields.Nested(
         JobIdMetricsSchema,
@@ -199,10 +207,13 @@ class JobPageSchema(BasePageSchema):
         metadata=dict(description="List of Job resources in the current page."),
     )
 
+
 class MetricsSnapshotsGetQueryParameters(
     PagingQueryParametersSchema,
 ):
-    """The query parameters for the GET method of the /jobs/{id}/metrics/{name}/snapshots"""
+    """The query parameters for the GET method of the
+    /jobs/{id}/metrics/{name}/snapshots endpoint."""
+
 
 class JobGetQueryParameters(
     PagingQueryParametersSchema,

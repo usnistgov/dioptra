@@ -113,6 +113,7 @@ class JobDict(TypedDict):
     artifacts: list[models.Artifact]
     has_draft: bool | None
 
+
 class ModelWithVersionDict(TypedDict):
     ml_model: models.MlModel
     version: models.MlModelVersion | None
@@ -629,17 +630,20 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
 
     return data
 
+
 def build_metrics_snapshots(metrics_snapshots_dict: dict[str, Any]) -> dict[str, Any]:
     """Build a Metrics Snapshot response dictionary.
 
     Args:
-        metrics_snapshots_dict: The Metrics Snapshots object to convert into a dictionary.
+        metrics_snapshots_dict: The Metrics Snapshots object to convert
+        into a dictionary.
 
     Returns:
         The Metric Snapshots response dictionary.
     """
     # no changes currently
-    return metrics_snapshots_dict 
+    return metrics_snapshots_dict
+
 
 def build_job(job_dict: JobDict) -> dict[str, Any]:
     """Build a Job response dictionary.

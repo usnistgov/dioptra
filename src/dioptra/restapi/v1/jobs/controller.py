@@ -44,23 +44,23 @@ from dioptra.restapi.v1.shared.tags.controller import (
 
 from .schema import (
     JobGetQueryParameters,
-    MetricsSnapshotsGetQueryParameters,
     JobMlflowRunSchema,
     JobPageSchema,
     JobSchema,
     JobStatusSchema,
     MetricsSchema,
-    MetricsSnapshotPageSchema
+    MetricsSnapshotPageSchema,
+    MetricsSnapshotsGetQueryParameters,
 )
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    JobIdMetricsService,
+    JobIdMetricsSnapshotsService,
     JobIdMlflowrunService,
     JobIdService,
     JobIdStatusService,
     JobService,
-    JobIdMetricsService,
-    JobIdMetricsSnapshotsService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -244,6 +244,7 @@ class JobIdMlflowrunEndpoint(Resource):
             log=log,
         )
 
+
 @api.route("/<int:id>/metrics")
 @api.param("id", "ID for the Job resource.")
 class JobIdMetricsEndpoint(Resource):
@@ -274,7 +275,7 @@ class JobIdMetricsEndpoint(Resource):
             request_type="GET",
             job_id=id,
         )
-        
+
         return self._job_id_metrics_service.get(
             job_id=id, error_if_not_found=True, log=log
         )
@@ -298,6 +299,7 @@ class JobIdMetricsEndpoint(Resource):
             error_if_not_found=True,
             log=log,
         )
+
 
 @api.route("/<int:id>/metrics/<string:name>/snapshots")
 @api.param("id", "ID for the Job resource.")
@@ -330,13 +332,18 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
             resource="JobIdMetricsSnapshotsEndpoint",
             request_type="GET",
             job_id=id,
-            metric_name=name
+            metric_name=name,
         )
         parsed_query_params = request.parsed_query_params  # type: ignore
         page_index = parsed_query_params["index"]
         page_length = parsed_query_params["page_length"]
         metrics_page, total_num_metrics = self._job_id_metrics_snapshots_service.get(
-            job_id=id, metric_name=name, page_index=page_index, page_length=page_length, error_if_not_found=True, log=log
+            job_id=id,
+            metric_name=name,
+            page_index=page_index,
+            page_length=page_length,
+            error_if_not_found=True,
+            log=log,
         )
 
         return utils.build_paging_envelope(
