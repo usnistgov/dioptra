@@ -543,7 +543,7 @@ class JobIdMetricsService(object):
         self,
         job_id: int,
         **kwargs,
-    ) -> dict[str, Any]:
+    ) -> list[dict[str, Any]]:
         """Fetch a job's metrics by its unique id.
 
         Args:
@@ -633,7 +633,7 @@ class JobIdMetricsSnapshotsService(object):
         page_index: int,
         page_length: int,
         **kwargs,
-    ) -> dict[str, Any]:
+    ) -> tuple[list[dict[str, Any]], int]:
         """Fetch a job's metrics by its unique id and metric name.
 
         Args:
