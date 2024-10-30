@@ -30,7 +30,7 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE, V1_JOBS_ROUTE, V1_ROOT
 
-from ..lib import actions, asserts, helpers, mock_rq
+from ..lib import actions, asserts, helpers, mock_mlflow, mock_rq
 
 # -- Actions ---------------------------------------------------------------------------
 
@@ -301,6 +301,81 @@ def assert_job_status_matches_expectations(
     assert response.status_code == 200 and response.get_json()["status"] == expected
 
 
+def assert_job_mlflowrun_matches_expectations(
+    client: FlaskClient, job_id: int, expected: str
+) -> None:
+    import uuid
+
+    response = client.get(
+        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}/mlflowRun",
+        follow_redirects=True,
+    )
+    assert (
+        response.status_code == 200
+        and uuid.UUID(response.get_json()["mlflowRunId"]).hex == expected
+    )
+
+
+def assert_job_mlflowrun_already_set(
+    client: FlaskClient, job_id: int, mlflow_run_id: str
+) -> None:
+    payload = {"mlflowRunId": mlflow_run_id}
+    response = client.post(
+        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}/mlflowRun",
+        json=payload,
+        follow_redirects=True,
+    )
+    assert (
+        response.status_code == 400
+        and response.get_json()["error"] == "JobMlflowRunAlreadySetError"
+    )
+
+
+def assert_job_metrics_matches_expectations(
+    client: FlaskClient, job_id: int, expected: list[dict[str, Any]]
+) -> None:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}/metrics",
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and response.get_json() == expected
+
+
+def assert_experiment_metrics_matches_expectations(
+    client: FlaskClient, experiment_id: int, expected: list[dict[str, Any]]
+) -> None:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}/metrics",
+        follow_redirects=True,
+    )
+    assert response.status_code == 200 and response.get_json()["data"] == expected
+
+
+def assert_job_metrics_snapshots_matches_expectations(
+    client: FlaskClient, job_id: int, metric_name: str, expected: list[dict[str, Any]]
+) -> None:
+    response = client.get(
+        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}/metrics/{metric_name}/snapshots",
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+
+    history = response.get_json()["data"]
+
+    assert all(
+        [
+            "name" in m and "value" in m and "timestamp" in m and "step" in m
+            for m in history
+        ]
+    )
+    assert all(
+        [
+            any([e["name"] == m["name"] and e["value"] == e["value"] for e in expected])
+            for m in history
+        ]
+    )
+
+
 # -- Tests -----------------------------------------------------------------------------
 
 
@@ -398,6 +473,132 @@ def test_create_job(
     """
     assert_retrieving_job_by_id_works(
         client, job_id=job_response["id"], expected=job_response
+    )
+
+
+def test_mlflowrun(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    registered_mlflowrun_incomplete: dict[str, Any],
+):
+    import uuid
+
+    job_uuid = uuid.uuid4().hex
+
+    # explicitly use job3 because we did not set a mlflowrun on this job
+
+    mlflowrun_response = actions.post_mlflowrun(  # noqa: F841
+        client=client, job_id=registered_jobs["job3"]["id"], mlflow_run_id=job_uuid
+    ).get_json()
+
+    assert_job_mlflowrun_matches_expectations(
+        client, job_id=registered_jobs["job3"]["id"], expected=job_uuid
+    )
+
+    assert_job_mlflowrun_already_set(
+        client=client, job_id=registered_jobs["job1"]["id"], mlflow_run_id=job_uuid
+    )
+
+
+def test_metrics(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    registered_mlflowrun: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    import mlflow.exceptions
+    import mlflow.tracking
+
+    monkeypatch.setattr(mlflow.tracking, "MlflowClient", mock_mlflow.MockMlflowClient)
+    monkeypatch.setattr(
+        mlflow.exceptions, "MlflowException", mock_mlflow.MockMlflowException
+    )
+
+    experiment_id = registered_experiments["experiment1"]["snapshot"]
+    job1_id = registered_jobs["job1"]["id"]
+    job2_id = registered_jobs["job2"]["id"]
+    job3_id = registered_jobs["job3"]["id"]
+
+    print(registered_experiments["experiment1"])
+    print(job1_id, job2_id)
+    metric_response = actions.post_metrics(  # noqa: F841
+        client=client,
+        job_id=job1_id,
+        metric_name="accuracy",
+        metric_value=4.0,
+    ).get_json()
+
+    assert_job_metrics_matches_expectations(
+        client, job_id=job1_id, expected=[{"name": "accuracy", "value": 4.0}]
+    )
+
+    metric_response = actions.post_metrics(  # noqa: F841
+        client=client,
+        job_id=job1_id,
+        metric_name="accuracy",
+        metric_value=4.1,
+    ).get_json()
+
+    metric_response = actions.post_metrics(  # noqa: F841
+        client=client,
+        job_id=job1_id,
+        metric_name="accuracy",
+        metric_value=4.2,
+    ).get_json()
+
+    metric_response = actions.post_metrics(  # noqa: F841
+        client=client,
+        job_id=job1_id,
+        metric_name="roc_auc",
+        metric_value=0.99,
+    ).get_json()
+
+    metric_response = actions.post_metrics(  # noqa: F841
+        client=client,
+        job_id=job2_id,
+        metric_name="job_2_metric",
+        metric_value=0.11,
+    ).get_json()
+
+    assert_job_metrics_matches_expectations(
+        client,
+        job_id=job1_id,
+        expected=[
+            {"name": "accuracy", "value": 4.2},
+            {"name": "roc_auc", "value": 0.99},
+        ],
+    )
+
+    assert_experiment_metrics_matches_expectations(
+        client,
+        experiment_id=experiment_id,
+        expected=[
+            {
+                "id": job1_id,
+                "metrics": [
+                    {"name": "accuracy", "value": 4.2},
+                    {"name": "roc_auc", "value": 0.99},
+                ],
+            },
+            {"id": job2_id, "metrics": [{"name": "job_2_metric", "value": 0.11}]},
+            {"id": job3_id, "metrics": []},
+        ],
+    )
+
+    assert_job_metrics_snapshots_matches_expectations(
+        client,
+        job_id=registered_jobs["job1"]["id"],
+        metric_name="accuracy",
+        expected=[
+            {"name": "accuracy", "value": 4.2},
+            {"name": "accuracy", "value": 4.1},
+            {"name": "accuracy", "value": 4.0},
+        ],
     )
 
 
