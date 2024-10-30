@@ -711,7 +711,7 @@ class PluginIdFileService(object):
         self,
         filename: str,
         contents: str,
-        description: str,
+        description: str | None,
         tasks: list[dict[str, Any]],
         plugin_id: int,
         commit: bool = True,

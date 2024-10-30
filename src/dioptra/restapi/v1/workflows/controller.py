@@ -125,7 +125,6 @@ class ResourceImport(Resource):
             git_url=parsed_form.get("git_url", None),
             archive_file=request.files.get("archiveFile", None),
             config_path=parsed_form["config_path"],
-            read_only=parsed_form["read_only"],
             resolve_name_conflicts_strategy=parsed_form[
                 "resolve_name_conflicts_strategy"
             ],

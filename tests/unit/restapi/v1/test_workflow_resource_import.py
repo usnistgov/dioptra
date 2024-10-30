@@ -52,11 +52,10 @@ def resource_import(
     """
 
     payload = {
-        "groupId": group_id,
+        "group": group_id,
         "sourceType": "upload",
         "archiveFile": (resources_tar_file, "upload.tar.gz"),
         "configPath": "dioptra.toml",
-        "readOnly": read_only,
         "resolveNameConflictsStrategy": resolve_name_conflict_strategy,
     }
 
