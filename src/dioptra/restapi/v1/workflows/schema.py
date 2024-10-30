@@ -60,7 +60,7 @@ class ResourceImportSchema(Schema):
 
     groupId = fields.Integer(
         attribute="group_id",
-        # data_key="group",
+        data_key="group",
         metadata=dict(
             description="ID of the Group that will own the imported resources."
         ),
@@ -96,11 +96,6 @@ class ResourceImportSchema(Schema):
         attribute="config_path",
         metdata=dict(description="The path to the toml configuration file."),
         load_default="dioptra.toml",
-    )
-    readOnly = fields.Bool(
-        attribute="read_only",
-        metadata=dict(description="Whether imported resources should be readonly."),
-        load_default=False,
     )
     resolveNameConflictsStrategy = fields.Enum(
         ResourceImportResolveNameConflictsStrategy,

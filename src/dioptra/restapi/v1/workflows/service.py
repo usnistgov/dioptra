@@ -32,12 +32,24 @@ from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db
-from dioptra.restapi.v1.entrypoints.service import EntrypointService
+from dioptra.restapi.errors import DioptraError
+from dioptra.restapi.v1.entrypoints.service import (
+    EntrypointIdService,
+    EntrypointNameService,
+    EntrypointService,
+)
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
+    PluginParameterTypeIdService,
+    PluginParameterTypeNameService,
     PluginParameterTypeService,
 )
-from dioptra.restapi.v1.plugins.service import PluginIdFileService, PluginService
+from dioptra.restapi.v1.plugins.service import (
+    PluginIdFileService,
+    PluginIdService,
+    PluginNameService,
+    PluginService,
+)
 from dioptra.sdk.utilities.paths import set_cwd
 
 from .lib import clone_git_repository, package_job_files, views
@@ -99,29 +111,48 @@ class ResourceImportService(object):
     def __init__(
         self,
         plugin_service: PluginService,
+        plugin_id_service: PluginIdService,
+        plugin_name_service: PluginNameService,
         plugin_id_file_service: PluginIdFileService,
         plugin_parameter_type_service: PluginParameterTypeService,
+        plugin_parameter_type_id_service: PluginParameterTypeIdService,
+        plugin_parameter_type_name_service: PluginParameterTypeNameService,
         builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
         entrypoint_service: EntrypointService,
+        entrypoint_id_service: EntrypointIdService,
+        entrypoint_name_service: EntrypointNameService,
     ) -> None:
         """Initialize the resource import service.
 
         All arguments are provided via dependency injection.
 
         Args:
+            plugin_service: A PluginService object,
             plugin_name_service: A PluginNameService object.
+            plugin_id_service: A PluginIdService object.
             plugin_id_file_service: A PluginIdFileService object.
             plugin_parameter_type_service: A PluginParameterTypeService object.
-            builtin_plugin_parameter_type_service: A BuiltinPluginParameterTypeService object.
-            entrypoint_service: A EntrypointService object.
+            plugin_parameter_type_id_service: A PluginParameterTypeIdService object.
+            plugin_parameter_type_name_service: A PluginParameterTypeNameService object.
+            builtin_plugin_parameter_type_service: A BuiltinPluginParameterTypeService
+                object.
+            entrypoint_service: An EntrypointService object.
+            entrypoint_id_service: An EntrypointIdService object.
+            entrypoint_name_service: An EntrypointNameService object.
         """
         self._plugin_service = plugin_service
+        self._plugin_id_service = plugin_id_service
+        self._plugin_name_service = plugin_name_service
         self._plugin_id_file_service = plugin_id_file_service
         self._plugin_parameter_type_service = plugin_parameter_type_service
+        self._plugin_parameter_type_id_service = plugin_parameter_type_id_service
+        self._plugin_parameter_type_name_service = plugin_parameter_type_name_service
         self._builtin_plugin_parameter_type_service = (
             builtin_plugin_parameter_type_service
         )
         self._entrypoint_service = entrypoint_service
+        self._entrypoint_id_service = entrypoint_id_service
+        self._entrypoint_name_service = entrypoint_name_service
 
     def import_resources(
         self,
@@ -130,7 +161,6 @@ class ResourceImportService(object):
         git_url: str | None,
         archive_file: FileStorage | None,
         config_path: str,
-        read_only: bool,
         resolve_name_conflicts_strategy: str,
         **kwargs,
     ) -> dict[str, Any]:
@@ -141,7 +171,6 @@ class ResourceImportService(object):
             source_type: The source to import from (either "upload" or "git")
             git_url: The url to the git repository if source_type is "git"
             archive_file: The contents of the upload if source_type is "upload"
-            read_only: Whether to apply a readonly lock to all imported resources
             resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
                 Either "fail" or "overwrite"
 
@@ -163,11 +192,16 @@ class ResourceImportService(object):
                 bytes = archive_file.stream.read()
                 with tarfile.open(fileobj=BytesIO(bytes), mode="r:*") as tar:
                     tar.extractall(path=working_dir, filter="data")
-                hash = sha256(bytes).hexdigest()
+                hash = str(sha256(bytes).hexdigest())
             elif source_type == ResourceImportSourceTypes.GIT:
                 hash = clone_git_repository(git_url, working_dir)
 
-            config = toml.load(working_dir / config_path)
+            try:
+                config = toml.load(working_dir / config_path)
+            except Exception as e:
+                raise DioptraError(
+                    f"Failed to load resource import config from {config_path}."
+                ) from e
 
             # validate the config file
             with open(
@@ -192,19 +226,27 @@ class ResourceImportService(object):
             "message": "successfully imported",
             "hash": hash,
             "resources": {
-                "plugins": [plugin.name for plugin in plugins],
-                "plugin_param_types": [param_type.name for param_type in param_types],
-                "entrypoints": [entrypoint.name for entrypoint in entrypoints],
+                "plugins": list(plugins.keys()),
+                "plugin_param_types": list(param_types.keys()),
+                "entrypoints": list(entrypoints.keys()),
             },
         }
 
     def _register_plugin_param_types(
         self,
         group_id: int,
-        param_types_config: dict[str, Any],
+        param_types_config: list[dict[str, Any]],
         overwrite: bool,
         log: BoundLogger,
     ) -> dict[str, Any]:
+        """
+        Registers a list PluginParameterTypes.
+
+        Args:
+            group_id: The identifier
+        Returns:
+            A dictionary mapping PluginParameterType name to the ORM object
+        """
         param_types = dict()
         for param_type in param_types_config:
             if overwrite:
@@ -212,19 +254,22 @@ class ResourceImportService(object):
                     param_type["name"], group_id=group_id, log=log
                 )
                 if existing:
-                    self._plugin_parameter_type_service.delete(
-                        plugin_parameter_type_id=existing["id"],
+                    self._plugin_parameter_type_id_service.delete(
+                        plugin_parameter_type_id=existing.resource_id,
                         log=log,
                     )
 
-            param_type["name"] = self._plugin_parameter_type_service.create(
+            param_type_dict = self._plugin_parameter_type_service.create(
                 name=param_type["name"],
                 description=param_type.get("description", None),
                 structure=param_type.get("structure", None),
                 group_id=group_id,
                 commit=False,
                 log=log,
-            )["plugin_task_parameter_type"]
+            )
+            param_types[param_type["name"]] = param_type_dict[
+                "plugin_task_parameter_type"
+            ]
 
         db.session.flush()
 
@@ -233,11 +278,12 @@ class ResourceImportService(object):
     def _register_plugins(
         self,
         group_id: int,
-        plugins_config: dict[str, Any],
+        plugins_config: list[dict[str, Any]],
         param_types: Any,
         overwrite: bool,
         log: BoundLogger,
     ):
+        param_types = param_types.copy()
         builtin_param_types = self._builtin_plugin_parameter_type_service.get(
             group_id=group_id, error_if_not_found=False, log=log
         )
@@ -253,7 +299,7 @@ class ResourceImportService(object):
                 )
                 if existing:
                     self._plugin_id_service.delete(
-                        plugin_id=existing["id"],
+                        plugin_id=existing.resource_id,
                         log=log,
                     )
 
@@ -289,7 +335,7 @@ class ResourceImportService(object):
     def _register_entrypoints(
         self,
         group_id: int,
-        entrypoints_config: dict[str, Any],
+        entrypoints_config: list[dict[str, Any]],
         plugins,
         overwrite: bool,
         log: BoundLogger,
@@ -301,7 +347,7 @@ class ResourceImportService(object):
                     entrypoint["name"], group_id=group_id, log=log
                 )
                 if existing is not None:
-                    self.entrypoint_id_service.delete(
+                    self._entrypoint_id_service.delete(
                         entrypoint_id=existing.resource_id
                     )
 
@@ -328,13 +374,17 @@ class ResourceImportService(object):
                 commit=False,
                 log=log,
             )
-            entrypoints[entrypoint_dict["name"]] = entrypoint_dict["entrypoint"]
+            entrypoints[entrypoint_dict["entry_point"].name] = entrypoint_dict[
+                "entry_point"
+            ]
 
         db.session.flush()
 
         return entrypoints
 
-    def _build_tasks(self, tasks_config, param_types):
+    def _build_tasks(
+        self, tasks_config: list[dict[str, Any]], param_types: list[dict[str, str]]
+    ) -> dict[str, list]:
         tasks = defaultdict(list)
         for task in tasks_config:
             tasks[task["filename"]].append(

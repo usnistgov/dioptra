@@ -571,8 +571,8 @@ class BuiltinPluginParameterTypeService(object):
         group_id: int,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> models.PluginTaskParameterType | None:
-        """Fetch a list of plugin parameter types by their names.
+    ) -> list[models.PluginTaskParameterType]:
+        """Fetch a list of builtin plugin parameter types.
 
         Args:
             group_id: The the group id of the plugin parameter type.
