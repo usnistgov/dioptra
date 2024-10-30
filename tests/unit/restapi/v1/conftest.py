@@ -15,20 +15,20 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
+import tarfile
 import textwrap
 from collections.abc import Iterator
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any, cast
 
 import pytest
-import tarfile
 import toml
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from injector import Injector
 from pytest import MonkeyPatch
-from tempfile import NamedTemporaryFile
 
 from ..lib import actions, mock_rq
 

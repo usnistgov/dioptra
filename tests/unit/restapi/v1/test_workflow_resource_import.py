@@ -21,15 +21,15 @@ functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
 
-from typing import Any
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import Any
+
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import V1_ROOT, V1_WORKFLOWS_ROUTE
-
 
 # -- Actions ---------------------------------------------------------------------------
 
