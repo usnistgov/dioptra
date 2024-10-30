@@ -3,7 +3,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-def clone_git_repository(url: str, dir: Path):
+def clone_git_repository(url: str, dir: Path) -> str:
     parsed_url = urlparse(url)
     git_branch = parsed_url.fragment or None
     git_paths = parsed_url.params or None
@@ -11,7 +11,7 @@ def clone_git_repository(url: str, dir: Path):
 
     git_sparse_args = ["--filter=blob:none", "--no-checkout", "--depth=1"]
     git_branch_args = ["-b", git_branch] if git_branch else []
-    clone_cmd = ["git", "clone", *git_sparse_args, *git_branch_args, git_url, dir]
+    clone_cmd = ["git", "clone", *git_sparse_args, *git_branch_args, git_url, str(dir)]
     clone_result = subprocess.run(clone_cmd, capture_output=True, text=True)
 
     if clone_result.returncode != 0:
@@ -45,9 +45,9 @@ def clone_git_repository(url: str, dir: Path):
     hash_result = subprocess.run(hash_cmd, cwd=dir, capture_output=True, text=True)
 
     if hash_result.returncode != 0:
-        raise subprocess.CalledProcessError
+        raise subprocess.CalledProcessError(hash_result.returncode, hash_result.stderr)
 
-    return hash
+    return str(hash)
 
 
 if __name__ == "__main__":
