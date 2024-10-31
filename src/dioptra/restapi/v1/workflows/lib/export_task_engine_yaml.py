@@ -88,6 +88,16 @@ def build_task_engine_dict_for_validation(
     parameters: dict[str, Any],
     task_graph: str,
 ) -> dict[str, Any]:
+    """Build a dictionary representation of a task engine YAML file.
+
+    Args:
+        plugins: The entrypoint's plugin files.
+        parameters: The entrypoint parameteres.
+        task_graph: The task graph of the entrypoint.
+
+    Returns:
+        The task engine dictionary.
+    """
     tasks: dict[str, Any] = {}
     parameter_types: dict[str, Any] = {}
     for plugin in plugins:
