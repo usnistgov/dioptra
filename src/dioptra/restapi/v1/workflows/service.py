@@ -86,7 +86,7 @@ class JobFilesDownloadService(object):
 
 
 class EntrypointValidateService(object):
-    """"""
+    """The service for handling requests with entrypoint workflow yamls."""
 
     @inject
     def __init__(
@@ -114,15 +114,15 @@ class EntrypointValidateService(object):
         """Validate a entrypoint workflow before the entrypoint is created.
 
         Args:
-            task_graph:
-            plugin_ids: 
-            parameters: 
+            task_graph: The proposed task graph of a new entrypoint resource.
+            plugin_ids: A list of plugin files for the new entrypoint.
+            parameters: A list of parameters for the new entrypoint.
 
         Returns:
-            
+            A success response and a indicator that states the entrypoint worklflow yaml is valid.
 
         Raises:
-            
+            EntrpointWorkflowYamlValidationError: If the entrypoint worklflow yaml is not valid.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Validate a entrypoint workflow", task_graph=task_graph, plugin_ids=plugin_ids, entrypoint_parameters=entrypoint_parameters)
