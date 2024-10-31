@@ -83,6 +83,43 @@ def export_task_engine_yaml(
     return task_yaml_path
 
 
+def build_task_engine_dict_for_validation(
+    plugins: list[Any],
+    parameters: dict[str, Any],
+    task_graph: str,
+) -> dict[str, Any]:
+    tasks: dict[str, Any] = {}
+    parameter_types: dict[str, Any] = {}
+    for plugin in plugins:
+        for plugin_file in plugin['plugin_files']:
+            for task in plugin_file.tasks:
+                input_parameters = task.input_parameters
+                output_parameters = task.output_parameters
+                tasks[task.plugin_task_name] = {
+                    "plugin": _build_plugin_field(plugin['plugin'], plugin_file, task),
+                }
+                if input_parameters:
+                    tasks[task.plugin_task_name]["inputs"] = _build_task_inputs(
+                        input_parameters
+                    )
+                if output_parameters:
+                    tasks[task.plugin_task_name]["outputs"] = _build_task_outputs(
+                        output_parameters
+                    )
+                for param in input_parameters + output_parameters:
+                    name = param.parameter_type.name
+                    if name not in BUILTIN_TYPES:
+                        parameter_types[name] = param.parameter_type.structure
+
+    task_engine_dict = {
+        "types": parameter_types,
+        "parameters": parameters,
+        "tasks": tasks,
+        "graph": cast(dict[str, Any], yaml.safe_load(task_graph)),
+    }
+    return task_engine_dict
+
+
 def build_task_engine_dict(
     entrypoint: models.EntryPoint,
     entry_point_plugin_files: list[models.EntryPointPluginFile],

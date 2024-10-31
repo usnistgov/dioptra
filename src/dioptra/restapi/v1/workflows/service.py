@@ -24,6 +24,7 @@ import yaml
 
 from .lib import views
 from .lib.package_job_files import package_job_files
+from .lib.export_task_engine_yaml import build_task_engine_dict_for_validation
 from .schema import FileTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -39,11 +40,6 @@ from dioptra.restapi.v1.workflows.lib.export_task_engine_yaml import extract_tas
 from dioptra.task_engine.validation import (
     validate, 
     is_valid,
-)
-from dioptra.restapi.v1.workflows.lib.export_task_engine_yaml import (
-    _build_plugin_field,
-    _build_task_inputs,
-    _build_task_outputs,
 )
 
 
@@ -128,37 +124,12 @@ class EntrypointValidateService(object):
         log.debug("Validate a entrypoint workflow", task_graph=task_graph, plugin_ids=plugin_ids, entrypoint_parameters=entrypoint_parameters)
 
         parameters = {param['name']: param['default_value'] for param in entrypoint_parameters}
-
-        tasks: dict[str, Any] = {}
-        parameter_types: dict[str, Any] = {}
         plugins = self._plugin_id_service.get(plugin_ids)
-        for plugin in plugins:
-            for plugin_file in plugin['plugin_files']:
-                for task in plugin_file.tasks:
-                    input_parameters = task.input_parameters
-                    output_parameters = task.output_parameters
-                    tasks[task.plugin_task_name] = {
-                        "plugin": _build_plugin_field(plugin['plugin'], plugin_file, task),
-                    }
-                    if input_parameters:
-                        tasks[task.plugin_task_name]["inputs"] = _build_task_inputs(
-                            input_parameters
-                        )
-                    if output_parameters:
-                        tasks[task.plugin_task_name]["outputs"] = _build_task_outputs(
-                            output_parameters
-                        )
-                    for param in input_parameters + output_parameters:
-                        name = param.parameter_type.name
-                        if name not in BUILTIN_TYPES:
-                            parameter_types[name] = param.parameter_type.structure
-
-        task_engine_dict = {
-            "types": parameter_types,
-            "parameters": parameters,
-            "tasks": tasks,
-            "graph": cast(dict[str, Any], yaml.safe_load(task_graph)),
-        }
+        task_engine_dict = build_task_engine_dict_for_validation(
+            plugins=plugins, 
+            parameters=parameters, 
+            task_graph=task_graph
+        )
         valid = is_valid(task_engine_dict)
 
         if valid:
