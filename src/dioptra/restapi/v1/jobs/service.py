@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 from typing import Any, Final, cast
+from uuid import UUID
 
 import structlog
 from flask_login import current_user
@@ -26,7 +27,6 @@ from mlflow.exceptions import MlflowException
 from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
-from uuid import UUID
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import (
