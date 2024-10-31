@@ -1220,53 +1220,38 @@ def test_manage_existing_plugin_draft(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     plugin = registered_plugins["plugin1"]
-    name = "draft"
-    new_name = "draft2"
     description = "description"
+    draft = {"name": "draft", "description": description}
+    draft_mod = {"name": "draft2", "description": description}
 
-    # test creation
-    payload = {"name": name, "description": description}
-    expected = {
+    # Expected responses
+    draft_expected = {
         "user_id": auth_account["id"],
         "group_id": plugin["group"]["id"],
         "resource_id": plugin["id"],
         "resource_snapshot_id": plugin["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft,
     }
-    response = dioptra_client.plugins.existing_resource_drafts.create(
-        plugin["id"], **payload
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-    asserts_client.assert_retrieving_draft_by_resource_id_works(
+    draft_mod_expected = {
+        "user_id": auth_account["id"],
+        "group_id": plugin["group"]["id"],
+        "resource_id": plugin["id"],
+        "resource_snapshot_id": plugin["snapshot"],
+        "num_other_drafts": 0,
+        "payload": draft_mod,
+    }
+
+    # Run routine: existing resource drafts tests
+    routines.run_existing_resource_drafts_tests(
         dioptra_client.plugins.existing_resource_drafts,
         plugin["id"],
-        expected=response,
-    )
-    asserts_client.assert_creating_another_existing_draft_fails(
-        dioptra_client.plugins.existing_resource_drafts, plugin["id"], payload=payload
-    )
-
-    # test modification
-    payload = {"name": new_name, "description": description}
-    expected = {
-        "user_id": auth_account["id"],
-        "group_id": plugin["group"]["id"],
-        "resource_id": plugin["id"],
-        "resource_snapshot_id": plugin["snapshot"],
-        "num_other_drafts": 0,
-        "payload": payload,
-    }
-    response = dioptra_client.plugins.existing_resource_drafts.modify(
-        plugin["id"], **payload
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-
-    # test deletion
-    dioptra_client.plugins.existing_resource_drafts.delete(plugin["id"])
-    asserts_client.assert_existing_draft_is_not_found(
-        dioptra_client.plugins.existing_resource_drafts, plugin["id"]
+        draft=draft,
+        draft_mod=draft_mod,
+        draft_expected=draft_expected,
+        draft_mod_expected=draft_mod_expected,
     )
 
 
@@ -1287,68 +1272,40 @@ def test_manage_new_plugin_drafts(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     group_id = auth_account["groups"][0]["id"]
     drafts: dict[str, Any] = {
         "draft1": {"name": "plugin1", "description": "new plugin"},
         "draft2": {"name": "plugin2", "description": None},
     }
+    draft1_mod = {"name": "draft1", "description": "new description"}
 
-    # test creation
+    # Expected responses
     draft1_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft1"],
     }
-    draft1_response = dioptra_client.plugins.new_resource_drafts.create(
-        group_id=group_id, **drafts["draft1"]
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected
-    )
-    asserts_client.assert_retrieving_draft_by_id_works(
-        dioptra_client.plugins.new_resource_drafts,
-        draft_id=draft1_response["id"],
-        expected=draft1_response,
-    )
     draft2_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft2"],
     }
-    draft2_response = dioptra_client.plugins.new_resource_drafts.create(
-        group_id=group_id, **drafts["draft2"]
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected
-    )
-    asserts_client.assert_retrieving_draft_by_id_works(
-        dioptra_client.plugins.new_resource_drafts,
-        draft_id=draft2_response["id"],
-        expected=draft2_response,
-    )
-    asserts_client.assert_retrieving_drafts_works(
-        dioptra_client.plugins.new_resource_drafts,
-        expected=[draft1_response, draft2_response],
-    )
-
-    # test modification
-    draft1_mod = {"name": "draft1", "description": "new description"}
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": draft1_mod,
     }
-    response = dioptra_client.plugins.new_resource_drafts.modify(
-        draft_id=draft1_response["id"], **draft1_mod
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected
-    )
 
-    # test deletion
-    dioptra_client.plugins.new_resource_drafts.delete(draft_id=draft1_response["id"])
-    asserts_client.assert_new_draft_is_not_found(
-        dioptra_client.plugins.new_resource_drafts, draft_id=draft1_response["id"]
+    # Run routine: new resource drafts tests
+    routines.run_new_resource_drafts_tests(
+        dioptra_client.plugins.new_resource_drafts,
+        drafts=drafts,
+        draft1_mod=draft1_mod,
+        draft1_expected=draft1_expected,
+        draft2_expected=draft2_expected,
+        draft1_mod_expected=draft1_mod_expected,
+        group_id=group_id,
     )
 
 
