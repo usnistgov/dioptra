@@ -26,6 +26,7 @@ from mlflow.exceptions import MlflowException
 from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
+from uuid import UUID
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import (
@@ -552,8 +553,6 @@ class JobIdMetricsService(object):
         Returns:
             The metrics for the requested job if found, otherwise an error message.
         """
-        from uuid import UUID
-
         from mlflow.tracking import MlflowClient
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -594,8 +593,6 @@ class JobIdMetricsService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Update job metrics by id", job_id=job_id)
-
-        from uuid import UUID
 
         from mlflow.tracking import MlflowClient
 
@@ -645,8 +642,6 @@ class JobIdMetricsSnapshotsService(object):
             The metric history for the requested job and metric if found,
             otherwise an error message.
         """
-        from uuid import UUID
-
         from mlflow.tracking import MlflowClient
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
