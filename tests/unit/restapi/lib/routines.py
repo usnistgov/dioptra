@@ -17,7 +17,10 @@
 from typing import Any
 
 from dioptra.client.base import DioptraResponseProtocol
-from dioptra.client.drafts import NewResourceDraftsSubCollectionClient
+from dioptra.client.drafts import (
+    ExistingResourceDraftsSubCollectionClient,
+    NewResourceDraftsSubCollectionClient,
+)
 
 from . import asserts, asserts_client
 
@@ -77,3 +80,34 @@ def run_new_resource_drafts_tests(
     asserts_client.assert_new_draft_is_not_found(
         client, *resource_ids, draft_id=draft1_response["id"]
     )
+
+
+def run_existing_resource_drafts_tests(
+    client: ExistingResourceDraftsSubCollectionClient[DioptraResponseProtocol],
+    *resource_ids: str | int,
+    draft: dict[str, Any],
+    draft_mod: dict[str, Any],
+    draft_expected: dict[str, Any],
+    draft_mod_expected: dict[str, Any],
+) -> None:
+    # Creation operation tests
+    response = client.create(*resource_ids, **draft).json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        response, draft_expected
+    )
+    asserts_client.assert_retrieving_draft_by_resource_id_works(
+        client, *resource_ids, expected=response
+    )
+    asserts_client.assert_creating_another_existing_draft_fails(
+        client, *resource_ids, payload=draft
+    )
+
+    # Modify operation tests
+    response = client.modify(*resource_ids, **draft_mod).json()
+    asserts.assert_draft_response_contents_matches_expectations(
+        response, draft_mod_expected
+    )
+
+    # Delete operation tests
+    client.delete(*resource_ids)
+    asserts_client.assert_existing_draft_is_not_found(client, *resource_ids)
