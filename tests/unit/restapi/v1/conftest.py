@@ -700,7 +700,9 @@ def resources_tar_file():
         tar.add(root_dir / "hello-world.yaml", arcname="examples/hello-world.yaml")
     f.seek(0)
 
-    return f
+    yield f
+
+    f.close()
 
 
 @pytest.fixture
