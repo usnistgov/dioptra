@@ -31,7 +31,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
-from dioptra.restapi.db import db
+from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import DioptraError
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
@@ -238,15 +238,21 @@ class ResourceImportService(object):
         param_types_config: list[dict[str, Any]],
         overwrite: bool,
         log: BoundLogger,
-    ) -> dict[str, Any]:
+    ) -> dict[str, models.PluginTaskParameterType]:
         """
-        Registers a list PluginParameterTypes.
+        Registers a list of PluginParameterTypes.
 
         Args:
-            group_id: The identifier
+            group_id: The identifier of the group that will manage imported resources
+            param_types_config: A list of dictionaries describing a plugin param types
+            overwrite: Whether imported resources should replace existing resources with
+                a conflicting name
+
         Returns:
-            A dictionary mapping PluginParameterType name to the ORM object
+            A dictionary mapping newly registered PluginParameterType names to the ORM
+            object
         """
+
         param_types = dict()
         for param_type in param_types_config:
             if overwrite:
@@ -279,10 +285,24 @@ class ResourceImportService(object):
         self,
         group_id: int,
         plugins_config: list[dict[str, Any]],
-        param_types: Any,
+        param_types: dict[str, models.PluginTaskParameterType],
         overwrite: bool,
         log: BoundLogger,
-    ):
+    ) -> dict[str, models.PluginTaskParameterType]:
+        """
+        Registers a list of Plugins and their PluginFiles.
+
+        Args:
+            group_id: The identifier of the group that will manage imported resources
+            plugins_config: A list of dictionaries describing a plugin and its tasks
+            param_types: A dictionary mapping param type name to the ORM object
+            overwrite: Whether imported resources should replace existing resources with
+                a conflicting name
+
+        Returns:
+            A dictionary mapping newly registered Plugin names to the ORM objects
+        """
+
         param_types = param_types.copy()
         builtin_param_types = self._builtin_plugin_parameter_type_service.get(
             group_id=group_id, error_if_not_found=False, log=log
@@ -339,7 +359,21 @@ class ResourceImportService(object):
         plugins,
         overwrite: bool,
         log: BoundLogger,
-    ):
+    ) -> dict[str, models.EntryPoint]:
+        """
+        Registers a list of Entrypoints
+
+        Args:
+            group_id: The identifier of the group that will manage imported resources
+            entrypoints_config: A list of dictionaries describing entrypoints
+            plugins: A dictionary mapping Plugin names to the ORM objects
+            overwrite: Whether imported resources should replace existing resources with
+                a conflicting name
+
+        Returns:
+            A dictionary mapping newly registered Entrypoint names to ORM object
+        """
+
         entrypoints = dict()
         for entrypoint in entrypoints_config:
             if overwrite:
@@ -383,8 +417,21 @@ class ResourceImportService(object):
         return entrypoints
 
     def _build_tasks(
-        self, tasks_config: list[dict[str, Any]], param_types: list[dict[str, str]]
+        self,
+        tasks_config: list[dict[str, Any]],
+        param_types: dict[str, models.PluginTaskParameterType],
     ) -> dict[str, list]:
+        """
+        Builds dictionaries describing plugin tasks from a configuration file
+
+        Args:
+            tasks_config: A list of dictionaries describing plugin tasks
+            param_types: A dictionary mapping param type name to the ORM object
+
+        Returns:
+            A dictionary mapping PluginFile name to a list of tasks
+        """
+
         tasks = defaultdict(list)
         for task in tasks_config:
             tasks[task["filename"]].append(
