@@ -32,9 +32,6 @@ from pytest import MonkeyPatch
 
 from ..lib import actions, mock_rq
 
-# TODO: figure out if thesre is a better way to do this
-DIOPTRA_ROOT = Path(__file__).parent.parent.parent.parent.parent
-
 
 @pytest.fixture
 def app(dependency_modules: list[Any]) -> Iterator[Flask]:
@@ -694,18 +691,13 @@ def registered_jobs(
 
 @pytest.fixture
 def resources_tar_file():
+    root_dir = Path(__file__).absolute().parent / "resource_import_files"
+
     f = NamedTemporaryFile(suffix=".tar.gz")
     with tarfile.open(fileobj=f, mode="w:gz") as tar:
-        tar.add(DIOPTRA_ROOT / "dioptra.toml", arcname="dioptra.toml")
-        tar.add(
-            DIOPTRA_ROOT / "plugins/hello_world",
-            arcname="plugins/hello_world",
-            recursive=True,
-        )
-        tar.add(
-            DIOPTRA_ROOT / "examples/hello-world.yaml",
-            arcname="examples/hello-world.yaml",
-        )
+        tar.add(root_dir / "dioptra.toml", arcname="dioptra.toml")
+        tar.add(root_dir / "hello_world", arcname="plugins/hello_world", recursive=True)
+        tar.add(root_dir / "hello-world.yaml", arcname="examples/hello-world.yaml")
     f.seek(0)
 
     return f
@@ -713,4 +705,5 @@ def resources_tar_file():
 
 @pytest.fixture
 def resources_import_config():
-    return toml.load(DIOPTRA_ROOT / "dioptra.toml")
+    root_dir = Path(__file__).absolute().parent / "resource_import_files"
+    return toml.load(root_dir / "dioptra.toml")
