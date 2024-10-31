@@ -29,7 +29,7 @@ from flask_sqlalchemy import SQLAlchemy
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
-from ..lib import asserts, asserts_client, helpers
+from ..lib import asserts, asserts_client, helpers, routines
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -822,6 +822,7 @@ def test_manage_new_plugin_parameter_type_drafts(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     group_id = auth_account["groups"][0]["id"]
     drafts = {
         "draft1": {
@@ -835,66 +836,34 @@ def test_manage_new_plugin_parameter_type_drafts(
             "structure": None,
         },
     }
+    draft1_mod = {"name": "draft1", "description": "new description", "structure": None}
 
-    # test creation
+    # Expected responses
     draft1_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft1"],
     }
-    draft1_response = dioptra_client.plugin_parameter_types.new_resource_drafts.create(
-        group_id=group_id, **drafts["draft1"]
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected
-    )
-    asserts_client.assert_retrieving_draft_by_id_works(
-        dioptra_client.plugin_parameter_types.new_resource_drafts,
-        draft_id=draft1_response["id"],
-        expected=draft1_response,
-    )
     draft2_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft2"],
     }
-    draft2_response = dioptra_client.plugin_parameter_types.new_resource_drafts.create(
-        group_id=group_id, **drafts["draft2"]
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected
-    )
-    asserts_client.assert_retrieving_draft_by_id_works(
-        dioptra_client.plugin_parameter_types.new_resource_drafts,
-        draft_id=draft2_response["id"],
-        expected=draft2_response,
-    )
-    asserts_client.assert_retrieving_drafts_works(
-        dioptra_client.plugin_parameter_types.new_resource_drafts,
-        expected=[draft1_response, draft2_response],
-    )
-
-    # test modification
-    draft1_mod = {"name": "draft1", "description": "new description", "structure": None}
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": draft1_mod,
     }
-    response = dioptra_client.plugin_parameter_types.new_resource_drafts.modify(
-        draft_id=draft1_response["id"], **draft1_mod
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected
-    )
 
-    # test deletion
-    dioptra_client.plugin_parameter_types.new_resource_drafts.delete(
-        draft_id=draft1_response["id"]
-    )
-    asserts_client.assert_new_draft_is_not_found(
+    # Run routine: new resource drafts tests
+    routines.run_new_resource_drafts_tests(
         dioptra_client.plugin_parameter_types.new_resource_drafts,
-        draft_id=draft1_response["id"],
+        drafts=drafts,
+        draft1_mod=draft1_mod,
+        draft1_expected=draft1_expected,
+        draft2_expected=draft2_expected,
+        draft1_mod_expected=draft1_mod_expected,
+        group_id=group_id,
     )
 
 
