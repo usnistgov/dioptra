@@ -752,58 +752,42 @@ def test_manage_existing_plugin_parameter_type_draft(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     plugin_param_type = registered_plugin_parameter_types["plugin_param_type1"]
     name = "draft"
     new_name = "draft2"
     description = "description"
 
     # test creation
-    payload = {"name": name, "description": description, "structure": None}
-    expected = {
+    draft = {"name": name, "description": description, "structure": None}
+    draft_mod = {"name": new_name, "description": description, "structure": None}
+
+    # Expected responses
+    draft_expected = {
         "user_id": auth_account["id"],
         "group_id": plugin_param_type["group"]["id"],
         "resource_id": plugin_param_type["id"],
         "resource_snapshot_id": plugin_param_type["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft,
     }
-    response = dioptra_client.plugin_parameter_types.existing_resource_drafts.create(
-        plugin_param_type["id"], **payload
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-    asserts_client.assert_retrieving_draft_by_resource_id_works(
-        dioptra_client.plugin_parameter_types.existing_resource_drafts,
-        plugin_param_type["id"],
-        expected=response,
-    )
-    asserts_client.assert_creating_another_existing_draft_fails(
-        dioptra_client.plugin_parameter_types.existing_resource_drafts,
-        plugin_param_type["id"],
-        payload=payload,
-    )
-
-    # test modification
-    payload = {"name": new_name, "description": description, "structure": None}
-    expected = {
+    draft_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": plugin_param_type["group"]["id"],
         "resource_id": plugin_param_type["id"],
         "resource_snapshot_id": plugin_param_type["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft_mod,
     }
-    response = dioptra_client.plugin_parameter_types.existing_resource_drafts.modify(
-        plugin_param_type["id"], **payload
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
 
-    # test deletion
-    dioptra_client.plugin_parameter_types.existing_resource_drafts.delete(
-        plugin_param_type["id"]
-    )
-    asserts_client.assert_existing_draft_is_not_found(
+    # Run routine: existing resource drafts tests
+    routines.run_existing_resource_drafts_tests(
         dioptra_client.plugin_parameter_types.existing_resource_drafts,
         plugin_param_type["id"],
+        draft=draft,
+        draft_mod=draft_mod,
+        draft_expected=draft_expected,
+        draft_mod_expected=draft_mod_expected,
     )
 
 

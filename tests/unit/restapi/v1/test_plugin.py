@@ -1374,10 +1374,9 @@ def test_manage_existing_plugin_file_draft(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     plugin_id = registered_plugin_with_files["plugin"]["id"]
     plugin_file = registered_plugin_with_files["plugin_file1"]
-    filename = "main.py"
-    new_filename = "hello_world.py"
     description = "hello world plugin"
     contents = textwrap.dedent(
         """from dioptra import pyplugs
@@ -1387,67 +1386,46 @@ def test_manage_existing_plugin_file_draft(
             return f"Hello, {name}!"
         """
     )
-
-    # test creation
-    payload = {
-        "filename": filename,
+    draft = {
+        "filename": "main.py",
         "description": description,
         "contents": contents,
         "tasks": [],
     }
-    expected = {
+    draft_mod = {
+        "filename": "hello_world.py",
+        "description": description,
+        "contents": contents,
+        "tasks": [],
+    }
+
+    # Expected responses
+    draft_expected = {
         "user_id": auth_account["id"],
         "group_id": plugin_file["group"]["id"],
         "resource_id": plugin_file["id"],
         "resource_snapshot_id": plugin_file["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft,
     }
-    response = dioptra_client.plugins.files.existing_resource_drafts.create(
-        plugin_id, plugin_file["id"], **payload
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-    asserts_client.assert_retrieving_draft_by_resource_id_works(
-        dioptra_client.plugins.files.existing_resource_drafts,
-        plugin_id,
-        plugin_file["id"],
-        expected=response,
-    )
-    asserts_client.assert_creating_another_existing_draft_fails(
-        dioptra_client.plugins.files.existing_resource_drafts,
-        plugin_id,
-        plugin_file["id"],
-        payload=payload,
-    )
-
-    # test modification
-    payload = {
-        "filename": new_filename,
-        "description": description,
-        "contents": contents,
-        "tasks": [],
-    }
-    expected = {
+    draft_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": plugin_file["group"]["id"],
         "resource_id": plugin_file["id"],
         "resource_snapshot_id": plugin_file["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft_mod,
     }
-    response = dioptra_client.plugins.files.existing_resource_drafts.modify(
-        plugin_id, plugin_file["id"], **payload
-    ).json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
 
-    # test deletion
-    dioptra_client.plugins.files.existing_resource_drafts.delete(
-        plugin_id, plugin_file["id"]
-    )
-    asserts_client.assert_existing_draft_is_not_found(
+    # Run routine: existing resource drafts tests
+    routines.run_existing_resource_drafts_tests(
         dioptra_client.plugins.files.existing_resource_drafts,
         plugin_id,
         plugin_file["id"],
+        draft=draft,
+        draft_mod=draft_mod,
+        draft_expected=draft_expected,
+        draft_mod_expected=draft_mod_expected,
     )
 
 
