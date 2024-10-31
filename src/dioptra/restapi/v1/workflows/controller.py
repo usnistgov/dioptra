@@ -25,8 +25,8 @@ from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from .schema import FileTypes, JobFilesDownloadQueryParametersSchema
-from .service import JobFilesDownloadService
+from .schema import FileTypes, JobFilesDownloadQueryParametersSchema, EntrypointWorkflowSchema
+from .service import JobFilesDownloadService, EntrypointValidateService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -77,4 +77,39 @@ class JobFilesDownloadEndpoint(Resource):
             as_attachment=True,
             mimetype=mimetype[parsed_query_params["file_type"]],
             download_name=download_name[parsed_query_params["file_type"]],
+        )
+
+
+@api.route("/entrypointValidate")
+class EntrypointValidateEndpoint(Resource):
+    @inject
+    def __init__(
+        self, entrypoint_validate_service: EntrypointValidateService, *args, **kwargs
+    ) -> None:
+        """Initialize the workflow resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_validate_service: A EntrypointValidateService object.
+        """
+        self._entrypoint_validate_service = entrypoint_validate_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(schema=EntrypointWorkflowSchema, api=api)
+    def post(self):
+        """Validates the workflow for a entrypoint."""  # noqa: B950
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()), resource="Workflows", request_type="POST"
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        task_graph = parsed_obj["task_graph"]
+        plugin_ids = parsed_obj["plugin_ids"]
+        parameters = parsed_obj["parameters"]
+        return self._entrypoint_validate_service.validate(
+            task_graph=task_graph,
+            plugin_ids=plugin_ids,
+            entrypoint_parameters=parameters,
+            log=log,
         )
