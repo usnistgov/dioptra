@@ -55,7 +55,11 @@
                 icon="sync"
                 size="sm"
                 @click="syncPlugin(plugin.id, i)"
-              />
+              >
+                <q-tooltip>
+                  Sync to latest version of plugin
+                </q-tooltip>
+              </q-btn>
           </div>
         </div>
       </template>
