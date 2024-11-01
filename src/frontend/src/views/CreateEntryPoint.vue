@@ -199,7 +199,7 @@
             <div class="field-label">Plugins:</div>
           </template>  
         </q-select>
-        <div class="row" v-if="route.params.id !== 'new'">
+        <div class="row" v-if="route.params.id !== 'new' && entryPoint.plugins.length > 0">
           <label class="field-label q-pt-xs">Plugins:</label>
           <div 
             class="col" 
@@ -379,26 +379,16 @@
 
   watch(() => entryPoint.value.plugins, () => {
     tasks.value = []
-    entryPoint.value.plugins.forEach(async(plugin) => {
-      let pluginID = typeof plugin === 'object' ? plugin.id : plugin
-      try {
-        const res = await api.getFiles(pluginID, {
-          search: '',
-          rowsPerPage: 0, // get all
-          index: 0
+    entryPoint.value.plugins.forEach((plugin) => {
+      if (typeof plugin === 'number') return
+      const pluginName = plugin.name
+      plugin.files.forEach((file) => {
+        file.tasks.forEach((task) => {
+          tasks.value.push({ ...task, pluginName: pluginName })
         })
-        console.log('res = ', res)
-        res.data.data.forEach((file) => {
-          file.tasks.forEach((task) => {
-            task.pluginName = file.plugin.name
-            tasks.value.push(task)
-          })
-        })
-      } catch(err) {
-        console.warn(err)
-      }
+      })
     })
-  })
+  }, { deep: true })
 
   const parameter = reactive({
     name: '',
@@ -549,6 +539,7 @@
           parameters: entryPoint.value.parameters,
           queues: entryPoint.value.queues,
         })
+        await api.addPluginsToEntrypoint(route.params.id, pluginsToUpdate.value)
         notify.success(`Successfully updated '${entryPoint.value.name}'`)
       }
     } catch(err) {
@@ -615,7 +606,6 @@
   }
 
   function addToTaskGraph(task) {
-    console.log('task = ', task)
     let string = `<step-name>:\n  ${task.name}:`
     task.inputParams.forEach((param) => {
       string += `\n    ${param.name}: <input-value>`
@@ -673,12 +663,14 @@
     confirmLeave.value = true
     router.push(toPath.value)
   }
+
+  const pluginsToUpdate = ref([])
+
   async function syncPlugin(pluginID, index) {
-    console.log(pluginID, index)
     try {
       const res = await api.getItem('plugins', pluginID)
-      console.log('plugin = ', res)
-      entryPoint.value.plugins[index] = res.data
+      entryPoint.value.plugins.splice(index, 1, res.data)
+      pluginsToUpdate.value.push(pluginID)
     } catch(err) {
       console.warn(err)
     }

@@ -26,17 +26,38 @@
         <div class="field-label">Plugins:</div>
       </template>
       <template v-slot:selected>
-        <q-chip
-          v-for="(plugin, i) in selectedPlugins"
-          :key="plugin.id"
-          removable
-          color="secondary"
-          text-color="white"
-          class="q-my-none q-ml-xs q-mr-none"
-          @remove="selectedPlugins.splice(i, 1)"
-        >
-          {{ plugin.name }}
-        </q-chip>
+        <div >
+          <div
+            v-for="(plugin, i) in selectedPlugins"
+            :key="plugin.id"
+            :class="i > 0 ? 'q-mt-xs' : ''"
+            >
+              <q-chip
+                removable
+                color="secondary"
+                text-color="white"
+                class="q-ml-xs "
+                @remove="selectedPlugins.splice(i, 1)"
+              >
+                {{ plugin.name }}
+                <q-badge
+                  v-if="!plugin.latestSnapshot" 
+                  color="red" 
+                  label="Outdated" 
+                  rounded
+                  class="q-ml-xs"
+                />
+              </q-chip>
+              <q-btn
+                v-if="!plugin.latestSnapshot"
+                round 
+                color="red" 
+                icon="sync"
+                size="sm"
+                @click="syncPlugin(plugin.id, i)"
+              />
+          </div>
+        </div>
       </template>
     </q-select>
   </DialogComponent>
@@ -70,7 +91,7 @@
   })
 
   async function submitPlugins() {
-    let pluginsToAdd = []
+    let pluginsToAdd = [...pluginsToUpdate.value]
     let pluginsToRemove = []
 
     selectedPluginIds.value.forEach((plugin) => {
@@ -84,40 +105,20 @@
         pluginsToRemove.push(plugin)
       }
     })
-
     try {
-      // Wait for all add and remove operations to finish
-      const addPromise = (pluginsToAdd.length > 0) ? addPlugins(pluginsToAdd) : Promise.resolve()
-      const removePromises = pluginsToRemove.map(plugin => removePlugin(plugin))
-      await Promise.all([addPromise, ...removePromises]);
-
-      // Log after both operations are complete
-      emit('refreshTable')
+      if(pluginsToAdd.length > 0) {
+        await api.addPluginsToEntrypoint(props.editObj.id, pluginsToAdd) 
+      }
+      for(const plugin of pluginsToRemove) {
+        await api.removePluginFromEntrypoint(props.editObj.id, plugin)
+      }
       notify.success(`Successfully updated plugins for  '${props.editObj.name}'`)
       showDialog.value = false
+      emit('refreshTable')
     } catch (err) {
       notify.error("Error in processing plugins: " + err.message);
     }
   }
-
-
-  async function addPlugins(pluginsToAdd) {
-    try {
-      await api.addPluginsToEntrypoint(props.editObj.id, pluginsToAdd)
-    } catch(err) {
-      console.log('err =  ', err)
-      notify.error(err.response.data.message);
-    }
-  }
-
-  async function removePlugin(plugin) {
-    try {
-      await api.removePluginFromEntrypoint(props.editObj.id, plugin)
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
-
 
   async function getPlugins(val = '', update) {
     update(async () => {
@@ -127,11 +128,24 @@
           rowsPerPage: 0, // get all
           index: 0
         })
-        pluginOptions.value = res.data.data
+        console.log('res = ', res)
+        pluginOptions.value = res.data.data.filter((plugin) => !selectedPluginIds.value.includes(plugin.id))
       } catch(err) {
         notify.error(err.response.data.message)
       } 
     })
+  }
+
+  const pluginsToUpdate = ref([])
+
+  async function syncPlugin(pluginID, index) {
+    try {
+      const res = await api.getItem('plugins', pluginID)
+      selectedPlugins.value.splice(index, 1, res.data)
+      pluginsToUpdate.value.push(pluginID)
+    } catch(err) {
+      console.warn(err)
+    }
   }
 
 </script>
