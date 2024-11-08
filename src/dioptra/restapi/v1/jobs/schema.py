@@ -64,12 +64,14 @@ class MetricsSchema(Schema):
 
 class MetricsSnapshotSchema(MetricsSchema):
     step = fields.Integer(
-        attribute="step", metadata=dict(description="The step value for the metric.")
+        attribute="step", metadata=dict(description="The step value for the metric."),
+        required=False,
     )
 
     timestamp = fields.Integer(
         attribute="timestamp",
         metadata=dict(description="The timestamp of the metric in milliseconds."),
+        required=False,
     )
 
 

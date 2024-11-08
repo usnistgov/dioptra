@@ -580,6 +580,8 @@ class JobIdMetricsService(object):
         job_id: int,
         metric_name: str,
         metric_value: float,
+        metric_step: int | None = None,
+        metric_timestamp: int | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         """Update a job's metrics by its unique id.
@@ -596,11 +598,14 @@ class JobIdMetricsService(object):
 
         from mlflow.tracking import MlflowClient
 
-        run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
+        run_id: UUID | None = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
             "mlflow_run_id"
         ]
+
+        if run_id is None:
+            raise EntityDoesNotExistError("MlFlowRun", run_id=None)
+        
         client = MlflowClient()
-        client.log_metric(run_id.hex, key=metric_name, value=metric_value)
 
         # this is here just to raise an error if the run does not exist
         try:
@@ -608,6 +613,7 @@ class JobIdMetricsService(object):
         except MlflowException as e:
             raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
 
+        client.log_metric(run_id.hex, key=metric_name, value=metric_value, step=metric_step, timestamp=metric_timestamp)
         return {"name": metric_name, "value": metric_value}
 
 

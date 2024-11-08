@@ -49,6 +49,7 @@ from .schema import (
     JobSchema,
     JobStatusSchema,
     MetricsSchema,
+    MetricsSnapshotSchema,
     MetricsSnapshotPageSchema,
     MetricsSnapshotsGetQueryParameters,
 )
@@ -281,8 +282,8 @@ class JobIdMetricsEndpoint(Resource):
         )
 
     @login_required
-    @accepts(schema=MetricsSchema, api=api)
-    @responds(schema=MetricsSchema, api=api)
+    @accepts(schema=MetricsSnapshotSchema, api=api)
+    @responds(schema=MetricsSnapshotSchema, api=api)
     def post(self, id: int):
         """Sets a metric for a Job"""
         log = LOGGER.new(
@@ -296,6 +297,8 @@ class JobIdMetricsEndpoint(Resource):
             job_id=id,
             metric_name=parsed_obj["name"],
             metric_value=parsed_obj["value"],
+            metric_step=parsed_obj["step"] if "step" in parsed_obj else None,
+            metric_timestamp=parsed_obj["timestamp"] if "timestamp" in parsed_obj else None,
             error_if_not_found=True,
             log=log,
         )
@@ -347,7 +350,7 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
         )
 
         return utils.build_paging_envelope(
-            f"/jobs/{id}/metrics/{name}/snapshots",
+            f"jobs/{id}/metrics/{name}/snapshots",
             build_fn=utils.build_metrics_snapshots,
             data=metrics_page,
             group_id=None,
