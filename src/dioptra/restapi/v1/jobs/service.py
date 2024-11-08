@@ -598,13 +598,13 @@ class JobIdMetricsService(object):
 
         from mlflow.tracking import MlflowClient
 
-        run_id: UUID | None = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
-            "mlflow_run_id"
-        ]
+        run_id: UUID | None = self._job_id_mlflowrun_service.get(
+            job_id=job_id, **kwargs
+        )["mlflow_run_id"]
 
         if run_id is None:
             raise EntityDoesNotExistError("MlFlowRun", run_id=None)
-        
+
         client = MlflowClient()
 
         # this is here just to raise an error if the run does not exist
@@ -613,7 +613,13 @@ class JobIdMetricsService(object):
         except MlflowException as e:
             raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
 
-        client.log_metric(run_id.hex, key=metric_name, value=metric_value, step=metric_step, timestamp=metric_timestamp)
+        client.log_metric(
+            run_id.hex,
+            key=metric_name,
+            value=metric_value,
+            step=metric_step,
+            timestamp=metric_timestamp,
+        )
         return {"name": metric_name, "value": metric_value}
 
 
@@ -1270,8 +1276,15 @@ class ExperimentMetricsService(object):
 
         job_ids = [job["job"].resource_id for job in jobs]
 
-        metrics_for_jobs = [
-            {"id": job_id, "metrics": self._job_id_metrics_service.get(job_id)}
-            for job_id in job_ids
-        ]
+        metrics_for_jobs = []
+        for job_id in job_ids:
+            # avoid raising an error for just one job failing
+
+            try:
+                metrics = self._job_id_metrics_service.get(job_id)
+            except:
+                metrics = []
+
+            metrics_for_jobs += [{"id": job_id, "metrics": metrics}]
+
         return metrics_for_jobs, num_jobs

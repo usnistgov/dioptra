@@ -49,8 +49,8 @@ from .schema import (
     JobSchema,
     JobStatusSchema,
     MetricsSchema,
-    MetricsSnapshotSchema,
     MetricsSnapshotPageSchema,
+    MetricsSnapshotSchema,
     MetricsSnapshotsGetQueryParameters,
 )
 from .service import (
@@ -298,7 +298,9 @@ class JobIdMetricsEndpoint(Resource):
             metric_name=parsed_obj["name"],
             metric_value=parsed_obj["value"],
             metric_step=parsed_obj["step"] if "step" in parsed_obj else None,
-            metric_timestamp=parsed_obj["timestamp"] if "timestamp" in parsed_obj else None,
+            metric_timestamp=(
+                parsed_obj["timestamp"] if "timestamp" in parsed_obj else None
+            ),
             error_if_not_found=True,
             log=log,
         )
