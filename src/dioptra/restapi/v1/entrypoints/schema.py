@@ -45,6 +45,13 @@ class EntrypointPluginFileSchema(Schema):
         attribute="snapshot_id",
         metadata=dict(description="Snapshot ID for the PluginFile resource."),
     )
+    latestSnapshot = fields.Boolean(
+        attribute="latest_snapshot",
+        metadata=dict(
+            description=f"Whether or not the {filename} resource is the latest version."
+        ),
+        dump_only=True,
+    )
     url = fields.Url(
         attribute="url",
         metadata=dict(description="URL for accessing the full PluginFile snapshot."),
