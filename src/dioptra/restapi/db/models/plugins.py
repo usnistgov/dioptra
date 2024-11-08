@@ -102,6 +102,22 @@ class PluginFile(ResourceSnapshot):
     }
 
 
+class PluginPluginFile(db.Model):  # type: ignore[name-defined]
+    __tablename__ = "plugin_plugin_files"
+
+    # Database fields
+    plugin_resource_snapshot_id: Mapped[intpk] = mapped_column(
+        ForeignKey("plugins.resource_snapshot_id"), init=False
+    )
+    plugin_file_resource_snapshot_id: Mapped[intpk] = mapped_column(
+        ForeignKey("plugin_files.resource_snapshot_id"), init=False
+    )
+
+    # Relationships
+    plugin: Mapped["Plugin"] = relationship(lazy="joined")
+    plugin_file: Mapped["PluginFile"] = relationship(lazy="joined")
+
+
 class PluginTask(db.Model):  # type: ignore[name-defined]
     __tablename__ = "plugin_tasks"
 
