@@ -15,7 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
-"""A task plugin module demonstrating basic ML regression training/testing."""
+"""A task plugin module demonstrating basic ML regression/classification training/testing."""
 
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ from __future__ import annotations
 import random
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import numpy as np
 import pandas as pd
 
 from .create_features import feature_func_map
@@ -121,16 +122,17 @@ def make_data_splits(
 
 
 def train_predictive_model(
-    model_type: str,
+    model_class: str,
     df: pd.DataFrame,
     target_var: str,
     indep_vars: List[str] | None = None,
+    model_type: "regression" | "classification" | None = None,
     hyperparameters: Dict = {},
 ) -> PredictiveModel:
     """Given hyperparameters and train data, fits a predictive model.
 
     Args:
-        model_type: the string key value which maps to a PredictiveModel in
+        model_class: the string key value which maps to a PredictiveModel in
             the model_map dictionary
         df: the training dataframe
         target_var: the column name for the target/lable variable in df
@@ -138,6 +140,8 @@ def train_predictive_model(
             to all variables (besides the label)
         hyperparameters: a dictionary of hyperparameters with key names
             matching those of the underlying sklearn model
+        model_type: a string that indicates if the model is a regression or
+            classification model. Some models will accept None
 
     Returns:
         An instance of the PredictiveModel class to be used for downstream
@@ -152,7 +156,9 @@ def train_predictive_model(
     X = df[indep_vars]
     y = df[target_var]
 
-    model = model_map[model_type](hyperparameters)
+    model = model_map[model_class](
+        model_type=model_type, hyperparameters=hyperparameters
+    )
 
     model.fit(X, y)
 
@@ -165,6 +171,7 @@ def evaluate_model(
     metrics: List[str],
     target_var: str,
     indep_vars: List[str] | None = None,
+    **kwargs,
 ) -> Dict[Any]:
     """Given a model and a dataset, compute ML evaluation metrics.
 
@@ -182,17 +189,8 @@ def evaluate_model(
 
     metrics = ensure_list(metrics)
 
-    indep_vars = (
-        [col for col in df.columns if col != "target_var"]
-        if indep_vars is None
-        else indep_vars
-    )
-    X = df[indep_vars]
-    y_true = df[target_var]
-    y_pred = model.predict(X)
-
     out = {}
     for metric in metrics:
-        out[metric] = metric_map[metric](y_true, y_pred)
+        out[metric] = metric_map[metric](model, df, target_var, indep_vars, **kwargs)
 
     return out
