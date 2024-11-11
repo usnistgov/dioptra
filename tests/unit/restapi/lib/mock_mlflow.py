@@ -59,7 +59,7 @@ class MockMlflowClient(object):
         return run
 
     def log_metric(
-        self, id: str, key: str, value: float, timestamp: Optional[int] = None
+        self, id: str, key: str, value: float, step: Optional[int] = None, timestamp: Optional[int] = None
     ):
         if id not in active_runs:
             active_runs[id] = []
@@ -69,17 +69,13 @@ class MockMlflowClient(object):
             MockMlflowMetric(
                 key=key,
                 value=value,
-                step=self.get_step_for(id, key),
+                step=0 if step is None else step,
                 timestamp=timestamp,
             )
         ]
 
     def get_metric_history(self, run_id: str, key: str):
         return [metric for metric in active_runs[run_id] if metric.key == key]
-
-    def get_step_for(self, id: str, metric: str):
-        metric_steps = [run.step for run in active_runs[id] if run.key == metric]
-        return 0 if metric_steps == [] else max(metric_steps) + 1
 
 
 class MockMlflowRun(object):

@@ -572,7 +572,7 @@ class JobIdMetricsService(object):
                     {"name": metric, "value": run.data.metrics[metric]}
                     for metric in run.data.metrics.keys()
                 ]
-            except MlflowException as e:
+            except MlflowException:
                 metrics = []
 
         return metrics
@@ -665,9 +665,9 @@ class JobIdMetricsSnapshotsService(object):
             metric_name=metric_name,
         )
 
-        run_id: UUID | None = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
-            "mlflow_run_id"
-        ]
+        run_id: UUID | None = self._job_id_mlflowrun_service.get(
+            job_id=job_id, **kwargs
+        )["mlflow_run_id"]
         client = MlflowClient()
 
         if run_id is None:
