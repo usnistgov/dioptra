@@ -563,15 +563,17 @@ class JobIdMetricsService(object):
         ]
         client = MlflowClient()
 
-        try:
-            run = client.get_run(run_id.hex)
-        except MlflowException as e:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
-
-        metrics = [
-            {"name": metric, "value": run.data.metrics[metric]}
-            for metric in run.data.metrics.keys()
-        ]
+        if run_id is None:
+            metrics = []
+        else:
+            try:
+                run = client.get_run(run_id.hex)
+                metrics = [
+                    {"name": metric, "value": run.data.metrics[metric]}
+                    for metric in run.data.metrics.keys()
+                ]
+            except MlflowException as e:
+                metrics = []
 
         return metrics
 
@@ -604,22 +606,22 @@ class JobIdMetricsService(object):
 
         if run_id is None:
             raise EntityDoesNotExistError("MlFlowRun", run_id=None)
+        else:
+            client = MlflowClient()
 
-        client = MlflowClient()
+            # this is here just to raise an error if the run does not exist
+            try:
+                run = client.get_run(run_id.hex)  # noqa: F841
+            except MlflowException as e:
+                raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
 
-        # this is here just to raise an error if the run does not exist
-        try:
-            run = client.get_run(run_id.hex)  # noqa: F841
-        except MlflowException as e:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
-
-        client.log_metric(
-            run_id.hex,
-            key=metric_name,
-            value=metric_value,
-            step=metric_step,
-            timestamp=metric_timestamp,
-        )
+            client.log_metric(
+                run_id.hex,
+                key=metric_name,
+                value=metric_value,
+                step=metric_step,
+                timestamp=metric_timestamp,
+            )
         return {"name": metric_name, "value": metric_value}
 
 
@@ -663,10 +665,13 @@ class JobIdMetricsSnapshotsService(object):
             metric_name=metric_name,
         )
 
-        run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
+        run_id: UUID | None = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
             "mlflow_run_id"
         ]
         client = MlflowClient()
+
+        if run_id is None:
+            raise EntityDoesNotExistError("MlFlowRun", run_id=None)
 
         try:
             history = client.get_metric_history(run_id=run_id.hex, key=metric_name)
@@ -1276,15 +1281,8 @@ class ExperimentMetricsService(object):
 
         job_ids = [job["job"].resource_id for job in jobs]
 
-        metrics_for_jobs = []
-        for job_id in job_ids:
-            # avoid raising an error for just one job failing
-
-            try:
-                metrics = self._job_id_metrics_service.get(job_id)
-            except:
-                metrics = []
-
-            metrics_for_jobs += [{"id": job_id, "metrics": metrics}]
-
+        metrics_for_jobs = [
+            {"id": job_id, "metrics": self._job_id_metrics_service.get(job_id)}
+            for job_id in job_ids
+        ]
         return metrics_for_jobs, num_jobs
