@@ -40,8 +40,11 @@ from dioptra.restapi.db.repository.utils import (
     get_group_id,
     get_resource_id,
 )
-from dioptra.restapi.db.shared_errors import ResourceError
-from dioptra.restapi.errors import EntityExistsError, SortParameterValidationError
+from dioptra.restapi.errors import (
+    EntityExistsError,
+    MismatchedResourceTypeError,
+    SortParameterValidationError,
+)
 
 
 class QueueRepository:
@@ -70,6 +73,18 @@ class QueueRepository:
 
         Args:
             queue: The queue to create
+
+        Raises:
+            EntityExistsError: if the queue resource or snapshot already
+                exists, or the queue name collides with another queue in the
+                same group
+            EntityDoesNotExistError: if the group owner or user creator does
+                not exist
+            EntityDeletedError: if the queue, its creator, or its group owner
+                is deleted
+            UserNotInGroupError: if the user creator is not a member of the
+                group who will own the resource
+            MismatchedResourceTypeError: if the resource type is not "queue"
         """
 
         # Consistency rules:
@@ -99,9 +114,7 @@ class QueueRepository:
             )
 
         if queue.resource.resource_type != "queue":
-            raise Exception(
-                f'Queue resource type must be "queue": {queue.resource.resource_type}'
-            )
+            raise MismatchedResourceTypeError("queue", queue.resource.resource_type)
 
         self.session.add(queue)
 
@@ -111,6 +124,19 @@ class QueueRepository:
 
         Args:
             queue: A Queue object with the desired snapshot settings
+
+        Raises:
+            EntityDoesNotExistError: if the queue resource or snapshot creator
+                user does not exist
+            EntityExistsError: if the snapshot already exists, or this new
+                snapshot's queue name collides with another queue in the same
+                group
+            EntityDeletedError: if the queue or snapshot creator user are
+                deleted
+            UserNotInGroupError: if the snapshot creator user is not a member
+                of the group who owns the queue
+            MismatchedResourceTypeError: if the snapshot's resource's type is
+                not "queue"
         """
         # Consistency rules:
         # - Latest-snapshot queue names must be unique within the owning group
@@ -126,9 +152,7 @@ class QueueRepository:
         assert_user_in_group(self.session, queue.creator, queue.resource.owner)
 
         if queue.resource.resource_type != "queue":
-            raise Exception(
-                f'Queue resource type must be "queue": {queue.resource.resource_type}'
-            )
+            raise MismatchedResourceTypeError("queue", queue.resource.resource_type)
 
         # In case the name is changing in this snapshot, ensure uniqueness with
         # respect to the owning group.  We must allow repeated queue names
@@ -170,16 +194,12 @@ class QueueRepository:
         Args:
             queue: A Queue object or resource_id primary key value identifying
                 a queue resource
+
+        Raises:
+            EntityDoesNotExistError: if the queue does not exist
         """
 
-        try:
-            delete_resource(self.session, queue)
-        except ResourceError as e:
-            # if an integer ID was passed, the exception here won't include
-            # the resource type, so ensure it's set
-            if not e.resource_type:
-                e.resource_type = "queue"
-            raise
+        delete_resource(self.session, queue)
 
     def get(
         self,
@@ -265,6 +285,10 @@ class QueueRepository:
 
         Returns:
             A queue, or None if one was not found
+
+        Raises:
+            EntityDoesNotExistError: if the given group does not exist
+            EntityDeletedError: if the given group is deleted
         """
 
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
@@ -331,7 +355,8 @@ class QueueRepository:
 
         count_stmt = (
             sa.select(sa.func.count())
-            .select_from(Queue, Resource)
+            .select_from(Queue)
+            .join(Resource)
             .where(Queue.resource_snapshot_id == Resource.latest_snapshot_id)
         )
 

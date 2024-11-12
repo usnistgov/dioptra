@@ -28,7 +28,6 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
-from dioptra.restapi.db.shared_errors import ResourceDeletedError, ResourceNotFoundError
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1 import utils
@@ -213,12 +212,13 @@ class QueueIdService(object):
 
         if not queue:
             if error_if_not_found:
-                raise ResourceNotFoundError(queue_id, "queue")
+                raise EntityDoesNotExistError("queue", resource_id=queue_id)
             else:
                 return None
         elif queue.resource.is_deleted:
             if error_if_not_found:
-                raise ResourceDeletedError(queue_id, "queue")
+                # treat "deleted" as if "not found"?
+                raise EntityDoesNotExistError("queue", resource_id=queue_id)
             else:
                 return None
 
@@ -274,12 +274,13 @@ class QueueIdService(object):
 
         if not queue:
             if error_if_not_found:
-                raise ResourceNotFoundError(queue_id, "queue")
+                raise EntityDoesNotExistError("queue", resource_id=queue_id)
             else:
                 return None
         elif queue.resource.is_deleted:
             if error_if_not_found:
-                raise ResourceDeletedError(queue_id, "queue")
+                # treat "deleted" as if "not found"?
+                raise EntityDoesNotExistError("queue", resource_id=queue_id)
             else:
                 return None
 
@@ -379,7 +380,7 @@ class QueueIdsService(object):
                 queue.resource_id for queue in queues
             )
             log.debug("Queue not found", queue_ids=list(queue_ids_missing))
-            raise ResourceNotFoundError(queue_ids_missing, "queue")
+            raise EntityDoesNotExistError("queue", resource_ids=queue_ids_missing)
 
         return list(queues)
 

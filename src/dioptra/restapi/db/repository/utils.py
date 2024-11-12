@@ -37,12 +37,13 @@ from dioptra.restapi.db.models.constants import (
     resource_lock_types,
     user_lock_types,
 )
-from dioptra.restapi.db.shared_errors import (
-    ResourceDeletedError,
-    ResourceExistsError,
-    ResourceNotFoundError,
+from dioptra.restapi.errors import (
+    EntityDeletedError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    SearchParseError,
+    UserNotInGroupError,
 )
-from dioptra.restapi.errors import EntityExistsError, SearchParseError
 
 # General ORM-using code ought to be compatible with "plain" SQLAlchemy or
 # flask_sqlalchemy's ORM sessions (the latter are of generic type
@@ -330,7 +331,7 @@ def assert_user_exists(
     """
     Check whether the given user exists in the database.  This function accepts
     a policy value expressing the caller's preference with respect to deleted
-    users.  A deleted user may be treated as either existing or non-existing:
+    users:
 
         ANY: Check whether the user exists in the database at all (deletion
              state doesn't matter)
@@ -344,17 +345,18 @@ def assert_user_exists(
         deletion_policy: One of the DeletionPolicy enum values
 
     Raises:
-        Exception: if the user is not found, relative to deletion policy
+        EntityDoesNotExistError: if the user does not exist in the database
+            (deleted or not)
+        EntityExistsError: if the user exists and is not deleted, but policy
+            was to find a deleted user
+        EntityDeletedError: if the user is deleted, but policy was to find
+            a non-deleted user
     """
     existence_result = user_exists(session, user)
 
     user_id = get_user_id(user)
-    if isinstance(user, int):
-        obj_id = str(user_id)
-    else:
-        obj_id = f"{user_id}/{user.username}"
 
-    _assert_exists(deletion_policy, existence_result, "User", obj_id)
+    _assert_exists(deletion_policy, existence_result, "user", user_id, user_id=user_id)
 
 
 def assert_group_exists(
@@ -363,7 +365,7 @@ def assert_group_exists(
     """
     Check whether the given group exists in the database.  This function accepts
     a policy value expressing the caller's preference with respect to deleted
-    groups.  A deleted group may be treated as either existing or non-existing:
+    groups:
 
         ANY: Check whether the group exists in the database at all (deletion
              state doesn't matter)
@@ -377,17 +379,24 @@ def assert_group_exists(
         deletion_policy: One of the DeletionPolicy enum values
 
     Raises:
-        Exception: if the group is not found, relative to deletion policy
+        EntityDoesNotExistError: if the group does not exist in the database
+            (deleted or not)
+        EntityExistsError: if the group exists and is not deleted, but policy
+            was to find a deleted group
+        EntityDeletedError: if the group is deleted, but policy was to find
+            a non-deleted group
     """
     existence_result = group_exists(session, group)
 
     group_id = get_group_id(group)
-    if isinstance(group, int):
-        obj_id = str(group_id)
-    else:
-        obj_id = f"{group_id}/{group.name}"
 
-    _assert_exists(deletion_policy, existence_result, "Group", obj_id)
+    _assert_exists(
+        deletion_policy,
+        existence_result,
+        "group",
+        group_id,
+        group_id=group_id,
+    )
 
 
 def assert_resource_exists(
@@ -414,11 +423,12 @@ def assert_resource_exists(
         deletion_policy: One of the DeletionPolicy enum values
 
     Raises:
-        ResourceNotFoundError: if the resource is not found (even deleted)
-        ResourceDeletedError: if the resource exists and is deleted, an
-            error with respect to the NOT_DELETED policy
-        ResourceExistsError: if the resource exists and is not deleted, an
-            error with respect to the DELETED policy
+        EntityDoesNotExistError: if the resource does not exist in the database
+            (deleted or not)
+        EntityExistsError: if the resource exists and is not deleted, but
+            policy was to find a deleted resource
+        EntityDeletedError: if the resource is deleted, but policy was to find
+            a non-deleted resource
     """
     existence_result = resource_exists(session, resource)
 
@@ -428,16 +438,13 @@ def assert_resource_exists(
     else:
         resource_type = resource.resource_type
 
-    if existence_result is ExistenceResult.DOES_NOT_EXIST:
-        raise ResourceNotFoundError(resource_id, resource_type)
-
-    elif existence_result is ExistenceResult.EXISTS:
-        if deletion_policy is DeletionPolicy.DELETED:
-            raise ResourceExistsError(resource_id, resource_type)
-
-    elif existence_result is ExistenceResult.DELETED:
-        if deletion_policy is DeletionPolicy.NOT_DELETED:
-            raise ResourceDeletedError(resource_id, resource_type)
+    _assert_exists(
+        deletion_policy,
+        existence_result,
+        resource_type,
+        resource_id,
+        resource_id=resource_id,
+    )
 
 
 def assert_snapshot_exists(
@@ -453,14 +460,13 @@ def assert_snapshot_exists(
         snapshot: A snapshot object
 
     Raises:
-        Exception if the snapshot doesn't exist
+        EntityDoesNotExistError: if the snapshot doesn't exist
     """
 
     if not snapshot_exists(session, snapshot):
-        snapshot_id = str(snapshot.resource_snapshot_id or "<no-ID>")
-        snapshot_type = snapshot.resource_type or "<no-type>"
-
-        raise Exception(f"{snapshot_type} snapshot not found: {snapshot_id}")
+        raise EntityDoesNotExistError(
+            snapshot.resource_type, resource_snapshot_id=snapshot.resource_snapshot_id
+        )
 
 
 def assert_user_does_not_exist(
@@ -469,7 +475,7 @@ def assert_user_does_not_exist(
     """
     Check whether the given user exists in the database.  This function accepts
     a policy value expressing the caller's preference with respect to deleted
-    users.  A deleted user may be treated as either existing or non-existing:
+    users:
 
         ANY: Ensure the user does not exist in the database at all (deletion
              state doesn't matter).  Same as user_exists(...) == DOES_NOT_EXIST
@@ -484,17 +490,22 @@ def assert_user_does_not_exist(
         deletion_policy: One of the DeletionPolicy enum values
 
     Raises:
-        Exception: if the user is found, relative to deletion policy
+        EntityExistsError: if the user exists and is not deleted but
+            policy is NOT_DELETED or ANY
+        EntityDeletedError: if the user exists and is deleted but policy is
+            DELETED or ANY
     """
     existence_result = user_exists(session, user)
 
     user_id = get_user_id(user)
-    if isinstance(user, int):
-        obj_id = str(user_id)
-    else:
-        obj_id = f"{user_id}/{user.username}"
 
-    _assert_does_not_exist(deletion_policy, existence_result, "User", obj_id)
+    _assert_does_not_exist(
+        deletion_policy,
+        existence_result,
+        "user",
+        user_id,
+        user_id=user_id,
+    )
 
 
 def assert_group_does_not_exist(
@@ -503,7 +514,7 @@ def assert_group_does_not_exist(
     """
     Check whether the given group exists in the database.  This function accepts
     a policy value expressing the caller's preference with respect to deleted
-    groups.  A deleted group may be treated as either existing or non-existing:
+    groups:
 
         ANY: Ensure the group does not exist in the database at all (deletion
              state doesn't matter).  Same as group_exists(...) == DOES_NOT_EXIST
@@ -518,17 +529,22 @@ def assert_group_does_not_exist(
         deletion_policy: One of the DeletionPolicy enum values
 
     Raises:
-        Exception: if the group is found, relative to deletion policy
+        EntityExistsError: if the group exists and is not deleted but
+            policy is NOT_DELETED or ANY
+        EntityDeletedError: if the group exists and is deleted but policy is
+            DELETED or ANY
     """
     existence_result = group_exists(session, group)
 
     group_id = get_group_id(group)
-    if isinstance(group, int):
-        obj_id = str(group_id)
-    else:
-        obj_id = f"{group_id}/{group.name}"
 
-    _assert_does_not_exist(deletion_policy, existence_result, "Group", obj_id)
+    _assert_does_not_exist(
+        deletion_policy,
+        existence_result,
+        "group",
+        group_id,
+        group_id=group_id,
+    )
 
 
 def assert_resource_does_not_exist(
@@ -555,10 +571,10 @@ def assert_resource_does_not_exist(
         deletion_policy: One of the DeletionPolicy enum values
 
     Raises:
-        ResourceExistsError: if the resource is found and is not deleted, an
-            error with respect to policies ANY and NOT_DELETED
-        ResourceDeletedError: if the resource is found and is deleted, an
-            error with respect to policies ANY and DELETED
+        EntityExistsError: if the resource exists and is not deleted but
+            policy is NOT_DELETED or ANY
+        EntityDeletedError: if the resource exists and is deleted but policy is
+            DELETED or ANY
     """
     existence_result = resource_exists(session, resource)
 
@@ -568,16 +584,13 @@ def assert_resource_does_not_exist(
     else:
         resource_type = resource.resource_type
 
-    if existence_result is ExistenceResult.EXISTS:
-        if deletion_policy is not DeletionPolicy.DELETED:
-            raise ResourceExistsError(resource_id, resource_type)
-
-    elif existence_result is ExistenceResult.DELETED:
-        if deletion_policy is not DeletionPolicy.NOT_DELETED:
-            raise ResourceDeletedError(resource_id, resource_type)
-
-    # else: ExistenceResult.DOES_NOT_EXIST.  deletion policy doesn't matter in
-    # this case; the object does not exist at all.
+    _assert_does_not_exist(
+        deletion_policy,
+        existence_result,
+        resource_type,
+        resource_id,
+        resource_id=resource_id,
+    )
 
 
 def assert_snapshot_does_not_exist(
@@ -593,21 +606,23 @@ def assert_snapshot_does_not_exist(
         snapshot: A snapshot object
 
     Raises:
-        Exception: if the snapshot exists
+        EntityExistsError: if the snapshot exists
     """
 
-    snapshot_id = str(snapshot.resource_snapshot_id or "<no-ID>")
-    snapshot_type = snapshot.resource_type or "<no-type>"
-
     if snapshot_exists(session, snapshot):
-        raise Exception(f"{snapshot_type} snapshot exists: {snapshot_id}")
+        raise EntityExistsError(
+            snapshot.resource_type,
+            snapshot.resource_snapshot_id,
+            resource_snapshot_id=snapshot.resource_snapshot_id,
+        )
 
 
 def _assert_exists(
     deletion_policy: DeletionPolicy,
     existence_result: ExistenceResult,
-    obj_type: str,
-    obj_id: str,
+    obj_type: str | None,
+    obj_id: int | None,
+    **kwargs,
 ) -> None:
     """
     Common code for checking existence relative to deletion policy.
@@ -615,28 +630,44 @@ def _assert_exists(
     Args:
         deletion_policy: One of the DeletionPolicy enum values
         existence_result: One of the ExistenceResult enum values
-        obj_type: Brief word(s) to describe the kind of object (e.g. a
-            "user", "queue", etc), used in error messages
-        obj_id: Brief word(s) to identify the particular object being checked,
-            e.g. an ID, name, etc, used in error messages
+        obj_type: Brief word(s) to describe the kind of object which was
+            searched for (e.g. a "user", "queue", etc), or None if not known
+        obj_id: A primary key value identifying the object which was searched
+            for, or None if it did not have an ID
+        kwargs: additional descriptive names and values describing the object
+            which was searched for
+
+    Raises:
+        EntityDoesNotExistError: if the entity does not exist in the database
+            (deleted or not)
+        EntityExistsError: if the entity exists and is not deleted, but policy
+            was to find a deleted entity
+        EntityDeletedError: if the entity is deleted, but policy was to find
+            a non-deleted entity
     """
     if existence_result is ExistenceResult.DOES_NOT_EXIST:
-        raise Exception(f"{obj_type} does not exist: {obj_id}")
+        raise EntityDoesNotExistError(obj_type, **kwargs)
 
     elif existence_result is ExistenceResult.EXISTS:
+        # An object which exists (in the db) must have a non-null ID.  So at
+        # this point, obj_id must not be None.
+        assert obj_id is not None
         if deletion_policy is DeletionPolicy.DELETED:
-            raise Exception(f"{obj_type} exists, not deleted: {obj_id}")
+            raise EntityExistsError(obj_type, obj_id, **kwargs)
 
     elif existence_result is ExistenceResult.DELETED:
+        # Same as above; deleted objects are in the DB too.
+        assert obj_id is not None
         if deletion_policy is DeletionPolicy.NOT_DELETED:
-            raise Exception(f"{obj_type} is deleted: {obj_id}")
+            raise EntityDeletedError(obj_type, obj_id, **kwargs)
 
 
 def _assert_does_not_exist(
     deletion_policy: DeletionPolicy,
     existence_result: ExistenceResult,
-    obj_type: str,
-    obj_id: str,
+    obj_type: str | None,
+    obj_id: int | None,
+    **kwargs,
 ):
     """
     Common code for checking non-existence relative to deletion policy.
@@ -644,18 +675,33 @@ def _assert_does_not_exist(
     Args:
         deletion_policy: One of the DeletionPolicy enum values
         existence_result: One of the ExistenceResult enum values
-        obj_type: Brief word(s) to describe the kind of object (e.g. a
-            "user", "queue", etc), used in error messages
-        obj_id: Brief word(s) to identify the particular object being checked,
-            e.g. an ID, name, etc, used in error messages
+        obj_type: Brief word(s) to describe the kind of object which was
+            searched for (e.g. a "user", "queue", etc), or None if not known
+        obj_id: A primary key value identifying the object which was searched
+            for, or None if it did not have an ID
+        kwargs: additional descriptive names and values describing the object
+            which was searched for
+
+    Raises:
+        EntityExistsError: if the entity exists and is not deleted but
+            policy is NOT_DELETED or ANY, meaning we want to ensure the entity
+            is either deleted or non-existent
+        EntityDeletedError: if the entity exists and is deleted but policy is
+            DELETED or ANY, meaning we want to ensure the entity is either
+            existing and not deleted, or non-existent
     """
     if existence_result is ExistenceResult.EXISTS:
+        # An object which exists (in the db) must have a non-null ID.  So at
+        # this point, obj_id must not be None.
+        assert obj_id is not None
         if deletion_policy is not DeletionPolicy.DELETED:
-            raise Exception(f"{obj_type} exists, not deleted: {obj_id}")
+            raise EntityExistsError(obj_type, obj_id, **kwargs)
 
     elif existence_result is ExistenceResult.DELETED:
+        # Same as above; deleted objects are in the DB too.
+        assert obj_id is not None
         if deletion_policy is not DeletionPolicy.NOT_DELETED:
-            raise Exception(f"{obj_type} exists (deleted): {obj_id}")
+            raise EntityDeletedError(obj_type, obj_id, **kwargs)
 
     # else: ExistenceResult.DOES_NOT_EXIST.  deletion policy doesn't matter in
     # this case; the object does not exist at all.
@@ -676,7 +722,7 @@ def assert_user_in_group(
         group: An existing group
 
     Raises:
-        Exception: if the given user is not in the given group
+        UserNotInGroupError: if the given user is not in the given group
     """
 
     # Assume existence checks on user and group were already done, so they are
@@ -684,9 +730,7 @@ def assert_user_in_group(
     membership = session.get(GroupMember, (user.user_id, group.group_id))
 
     if not membership:
-        raise Exception(
-            f"User ({user.user_id}/{user.username}) is not in group ({group.group_id}/{group.name})"  # noqa: B950
-        )
+        raise UserNotInGroupError(user.user_id, group.group_id)
 
 
 def check_user_collision(session: CompatibleSession[S], user: User) -> None:
@@ -699,10 +743,8 @@ def check_user_collision(session: CompatibleSession[S], user: User) -> None:
         user: A User object
 
     Raises:
-        UsernameNotAvailableError: if the given user's username collides with
-            an existing user's username
-        UserEmailNotAvailableError: If the given user's email address collides
-            with an existing user's email address
+        EntityExistsError: if the given user's username or email address
+            collides with an existing/deleted user
     """
 
     stmt = sa.select(User.user_id).where(User.username == user.username)
@@ -767,7 +809,7 @@ def delete_resource(
             value
 
     Raises:
-        ResourceNotFoundError: if the resource does not exist
+        EntityDoesNotExistError: if the resource does not exist
     """
 
     exists_result = resource_exists(session, resource)
@@ -775,7 +817,7 @@ def delete_resource(
     if exists_result is ExistenceResult.DOES_NOT_EXIST:
         resource_id = get_resource_id(resource)
         resource_type = None if isinstance(resource, int) else resource.resource_type
-        raise ResourceNotFoundError(resource_id, resource_type)
+        raise EntityDoesNotExistError(resource_type, resource_id=resource_id)
 
     elif exists_result is ExistenceResult.EXISTS:
 
@@ -843,7 +885,8 @@ def construct_sql_query_filters(
         terms were given.
 
     Raises:
-        SearchParseError: If a search string cannot be parsed.
+        SearchParseError: if parsed_search_terms includes a field which is
+            not supported (i.e. not None and not in searchable_fields)
     """
     filter_fns: Iterable[SearchFieldCallback]
 

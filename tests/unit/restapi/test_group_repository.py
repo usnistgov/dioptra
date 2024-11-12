@@ -18,7 +18,15 @@ import pytest
 
 from dioptra.restapi.db.models import Group, GroupMember, User
 from dioptra.restapi.db.repository.utils import DeletionPolicy
-from dioptra.restapi.errors import EntityExistsError
+from dioptra.restapi.errors import (
+    EntityDeletedError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    GroupNeedsAManagerError,
+    GroupNeedsAUserError,
+    UserNeedsAGroupError,
+    UserNotInGroupError,
+)
 
 
 def test_group_create_with_existing_user(group_repo, account, db):
@@ -70,14 +78,14 @@ def test_group_create_with_new_user(group_repo, db):
 
 def test_group_create_exists(group_repo, account):
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         group_repo.create(account.group)
 
     # A similar test: create a new group object but set its ID to a
     # value which has already been used.
     new_group = Group("new group", account.user)
     new_group.group_id = account.group.group_id
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         group_repo.create(new_group)
 
 
@@ -121,7 +129,7 @@ def test_group_create_creator_deleted(group_repo, user_repo, account, db):
     db.session.commit()
 
     g2 = Group("group2", u2)
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDeletedError):
         group_repo.create(g2)
 
 
@@ -139,7 +147,7 @@ def test_group_delete_not_exist(group_repo):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.delete(g2)
 
 
@@ -254,7 +262,7 @@ def test_group_num_members(group_repo, user_repo, account, db):
 def test_group_num_members_not_exist(group_repo, account):
     g2 = Group("group2", account.user)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.num_members(g2)
 
 
@@ -277,7 +285,7 @@ def test_group_num_managers(group_repo, user_repo, account, db):
 def test_group_num_managers_not_exist(group_repo, account):
     g2 = Group("group2", account.user)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.num_managers(g2)
 
 
@@ -306,10 +314,10 @@ def test_group_add_manager_not_exist(group_repo, account):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.add_manager(g2, account.user)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.add_manager(account.group, u2)
 
 
@@ -320,13 +328,13 @@ def test_group_add_manager_not_member(group_repo, account, db):
     db.session.commit()
 
     # user2 is in group2, not account.group
-    with pytest.raises(Exception):
+    with pytest.raises(UserNotInGroupError):
         group_repo.add_manager(account.group, u2)
 
 
 def test_group_remove_manager_one_group_one_manager(group_repo, account):
 
-    with pytest.raises(Exception):
+    with pytest.raises(GroupNeedsAManagerError):
         group_repo.remove_manager(account.group, account.user)
 
 
@@ -360,10 +368,10 @@ def test_group_remove_manager_not_exist(group_repo, account):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.remove_manager(account.group, u2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.remove_manager(g2, account.user)
 
 
@@ -395,16 +403,16 @@ def test_group_add_member_not_exist(group_repo, account):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.add_member(g2, account.user)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.add_member(account.group, u2)
 
 
 def test_group_remove_member_one_group_one_user(group_repo, account, db):
 
-    with pytest.raises(Exception):
+    with pytest.raises(GroupNeedsAUserError):
         group_repo.remove_member(account.group, account.user)
 
 
@@ -416,7 +424,7 @@ def test_group_remove_member_group_too_small(group_repo, account, db):
 
     # Now, member is in two groups, but can't be removed from either since it
     # would make the groups empty.
-    with pytest.raises(Exception):
+    with pytest.raises(GroupNeedsAUserError):
         group_repo.remove_member(account.group, account.user)
 
 
@@ -434,7 +442,7 @@ def test_group_remove_member_too_few_memberships(group_repo, account, db):
     # now, the group has enough members, but neither user has enough
     # memberships for them to be removable from the group.
 
-    with pytest.raises(Exception):
+    with pytest.raises(UserNeedsAGroupError):
         group_repo.remove_member(account.group, account.user)
 
 
@@ -486,8 +494,8 @@ def test_group_remove_member_not_exist(group_repo, account):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.remove_member(account.group, u2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         group_repo.remove_member(g2, account.user)

@@ -32,13 +32,21 @@ from dioptra.restapi.db.repository.utils import (
     assert_group_does_not_exist,
     assert_group_exists,
     assert_user_exists,
+    assert_user_in_group,
     check_user_collision,
     construct_sql_query_filters,
     get_group_id,
     group_exists,
     user_exists,
 )
-from dioptra.restapi.errors import EntityExistsError
+from dioptra.restapi.errors import (
+    EntityDeletedError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    GroupNeedsAManagerError,
+    GroupNeedsAUserError,
+    UserNeedsAGroupError,
+)
 
 GROUP_CREATOR_MANAGER_PERMISSIONS: Final[dict[str, bool]] = {
     "owner": True,
@@ -70,7 +78,13 @@ class GroupRepository:
             group: A group object representing the new group
 
         Raises:
-            Exception: if the group already exists
+            EntityExistsError: if the group already exists, the group name
+                collides with an existing/deleted group, or the group's
+                creator/initial user does not exist (so it must be created),
+                but that user's name or email address collides with an existing
+                user
+            EntityDeletedError: if the group is deleted, or the group's
+                creator/initial user is deleted
         """
 
         # Consistency rules:
@@ -101,9 +115,10 @@ class GroupRepository:
             check_user_collision(self.session, group.creator)
         elif user_exists_result is ExistenceResult.DELETED:
             # Should probably enforce this until instructed otherwise
-            raise Exception(
-                "Group creator (user) must not have been deleted: "
-                + group.creator.user_id
+            raise EntityDeletedError(
+                "user",
+                group.creator.user_id,
+                user_id=group.creator.user_id,
             )
 
         # Creator is always the first group member.
@@ -125,18 +140,15 @@ class GroupRepository:
             group: The group to delete
 
         Raises:
-            Exception: if the group does not exist
+            EntityDoesNotExistError: if the group does not exist
         """
 
         # TODO: This is very simple, so far.  Do we remove group members?  What
         #     about owned resources?
 
-        # Perhaps I could have implemented this entirely via group_exists(),
-        # but using the assert_* call does give me the standardized exception
-        # and error message when the group does not exist.
-        assert_group_exists(self.session, group, DeletionPolicy.ANY)
-
         exists_result = group_exists(self.session, group)
+        if exists_result is ExistenceResult.DOES_NOT_EXIST:
+            raise EntityDoesNotExistError("group", group_id=group.group_id)
 
         if exists_result is ExistenceResult.EXISTS:
             lock = GroupLock(GroupLockTypes.DELETE, group)
@@ -277,7 +289,8 @@ class GroupRepository:
             A member count
 
         Raises:
-            Exception: if the group does not exist
+            EntityDoesNotExistError: if the group does not exist
+            EntityDeletedError: if the group is deleted
         """
 
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
@@ -311,7 +324,8 @@ class GroupRepository:
             A manager count
 
         Raises:
-            Exception: if the group does not exist
+            EntityDoesNotExistError: if the group does not exist
+            EntityDeletedError: if the group is deleted
         """
 
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
@@ -351,8 +365,9 @@ class GroupRepository:
             The resulting GroupManager object (new or old)
 
         Raises:
-            Exception: If the user or group do not exist, or if the user to
-                be made manager is not a group member
+            EntityDoesNotExistError: if the group or user does not exist
+            EntityDeletedError: if the group or user is deleted
+            UserNotInGroupError: if the user is not a member of the group
         """
 
         # Consistency rule:
@@ -360,13 +375,7 @@ class GroupRepository:
 
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
         assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
-
-        member = self.session.get(GroupMember, (user.user_id, group.group_id))
-        if not member:
-            raise Exception(
-                f"Not a group member: user {user.user_id}/{user.username},"
-                f" group {group.group_id}/{group.name}"
-            )
+        assert_user_in_group(self.session, user, group)
 
         manager = self.session.get(GroupManager, (user.user_id, group.group_id))
 
@@ -390,8 +399,10 @@ class GroupRepository:
             user: A user
 
         Raises:
-            Exception: if either user or group does not exist, or if removal
-                would leave the group without any managers
+            EntityDoesNotExistError: if the group or user does not exist
+            EntityDeletedError: if the group or user is deleted
+            GroupNeedsAManagerError: if removal would leave the group without
+                any managers
         """
 
         # Consistency rule:
@@ -404,10 +415,7 @@ class GroupRepository:
 
         if num_managers == 1:
             if group.managers[0].user_id == user.user_id:
-                raise Exception(
-                    f"Can't remove user {user.user_id} from managers of group"
-                    f" {group.group_id}: group would have no managers"
-                )
+                raise GroupNeedsAManagerError(user.user_id, group.group_id)
             # else: the given user is not a manager of the group; nothing to do
 
         else:
@@ -443,7 +451,8 @@ class GroupRepository:
             The resulting GroupMember object (new or old)
 
         Raises:
-            Exception: If the user or group do not exist
+            EntityDoesNotExistError: if the group or user does not exist
+            EntityDeletedError: if the group or user is deleted
         """
 
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
@@ -473,14 +482,17 @@ class GroupRepository:
             user: A user
 
         Raises:
-            Exception: if either the user or group does not exist, or if
-                removal would leave either the group userless or the user
-                groupless.
+            EntityDoesNotExistError: if the group or user does not exist
+            EntityDeletedError: if the group or user is deleted
+            GroupNeedsAUserError: if removal would leave the group userless
+            UserNeedsAGroupError: if removal would leave the user groupless
         """
 
         # Consistency rules:
         # - A group must have at least one member
         # - A user must be in at least one group
+
+        # TODO: ensure the member being removed is not also manager
 
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
         assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
@@ -489,10 +501,7 @@ class GroupRepository:
 
         if num_members == 1:
             if group.members[0].user_id == user.user_id:
-                raise Exception(
-                    f"Can't remove user {user.user_id} from group"
-                    f" {group.group_id}: group would have no members"
-                )
+                raise GroupNeedsAUserError(user.user_id, group.group_id)
             # else: the given user is not in the group; nothing to do
         else:
 
@@ -507,10 +516,7 @@ class GroupRepository:
 
             if num_groups == 1:
                 if user.group_memberships[0].group_id == group.group_id:
-                    raise Exception(
-                        f"Can't remove user {user.user_id} from group"
-                        f" {group.group_id}: user would belong to no groups"
-                    )
+                    raise UserNeedsAGroupError(user.user_id, group.group_id)
                 # else: the given user is not in the group; nothing to do
             else:
 

@@ -19,8 +19,10 @@ import pytest
 import dioptra.restapi.db.models as models
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.db.shared_errors import (
-    ResourceDeletedError, ResourceExistsError, ResourceNotFoundError
+from dioptra.restapi.errors import (
+    EntityDeletedError,
+    EntityDoesNotExistError,
+    EntityExistsError,
 )
 
 
@@ -57,32 +59,32 @@ def test_assert_user_exists(db, account):
     utils.assert_user_exists(db.session, account.user, utils.DeletionPolicy.NOT_DELETED)
     utils.assert_user_exists(db.session, account.user, utils.DeletionPolicy.ANY)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         utils.assert_user_exists(db.session, account.user, utils.DeletionPolicy.DELETED)
 
 
 def test_assert_user_exists_not_exists(db, account):
     user2 = models.User("user2", "password2", "user2@example.org")
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_user_exists(db.session, user2, utils.DeletionPolicy.NOT_DELETED)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_user_exists(db.session, user2, utils.DeletionPolicy.DELETED)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_user_exists(db.session, user2, utils.DeletionPolicy.ANY)
 
     # Also try with bad ID
     user2.user_id = 999999
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_user_exists(db.session, user2, utils.DeletionPolicy.NOT_DELETED)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_user_exists(db.session, user2, utils.DeletionPolicy.DELETED)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_user_exists(db.session, user2, utils.DeletionPolicy.ANY)
 
 
@@ -92,7 +94,7 @@ def test_assert_user_exists_deleted(db, account):
     db.session.add_all((user2, user_delete_lock))
     db.session.commit()
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDeletedError):
         utils.assert_user_exists(db.session, user2, utils.DeletionPolicy.NOT_DELETED)
 
     utils.assert_user_exists(db.session, user2, utils.DeletionPolicy.DELETED)
@@ -137,7 +139,7 @@ def test_assert_group_exists(db, account):
     )
     utils.assert_group_exists(db.session, account.group, utils.DeletionPolicy.ANY)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         utils.assert_group_exists(
             db.session, account.group, utils.DeletionPolicy.DELETED
         )
@@ -147,25 +149,25 @@ def test_assert_group_exists_not_exists(db, account):
     user2 = models.User("user2", "password2", "group2@example.org")
     group2 = models.Group("group2", user2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_group_exists(db.session, group2, utils.DeletionPolicy.NOT_DELETED)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_group_exists(db.session, group2, utils.DeletionPolicy.DELETED)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_group_exists(db.session, group2, utils.DeletionPolicy.ANY)
 
     # Also try with bad ID
     group2.group_id = 999999
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_group_exists(db.session, group2, utils.DeletionPolicy.NOT_DELETED)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_group_exists(db.session, group2, utils.DeletionPolicy.DELETED)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_group_exists(db.session, group2, utils.DeletionPolicy.ANY)
 
 
@@ -176,7 +178,7 @@ def test_assert_group_exists_deleted(db, account):
     db.session.add_all((group2, user2, group_delete_lock))
     db.session.commit()
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDeletedError):
         utils.assert_group_exists(db.session, group2, utils.DeletionPolicy.NOT_DELETED)
 
     utils.assert_group_exists(db.session, group2, utils.DeletionPolicy.DELETED)
@@ -184,7 +186,7 @@ def test_assert_group_exists_deleted(db, account):
 
 
 def test_assert_user_does_not_exist_user_exists(db, account):
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         utils.assert_user_does_not_exist(
             db.session, account.user, utils.DeletionPolicy.NOT_DELETED
         )
@@ -193,7 +195,7 @@ def test_assert_user_does_not_exist_user_exists(db, account):
         db.session, account.user, utils.DeletionPolicy.DELETED
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         utils.assert_user_does_not_exist(
             db.session, account.user, utils.DeletionPolicy.ANY
         )
@@ -228,17 +230,17 @@ def test_assert_user_does_not_exist_user_deleted(db, account):
         db.session, user2, utils.DeletionPolicy.NOT_DELETED
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDeletedError):
         utils.assert_user_does_not_exist(
             db.session, user2, utils.DeletionPolicy.DELETED
         )
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDeletedError):
         utils.assert_user_does_not_exist(db.session, user2, utils.DeletionPolicy.ANY)
 
 
 def test_assert_group_does_not_exist_group_exists(db, account):
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         utils.assert_group_does_not_exist(
             db.session, account.group, utils.DeletionPolicy.NOT_DELETED
         )
@@ -247,7 +249,7 @@ def test_assert_group_does_not_exist_group_exists(db, account):
         db.session, account.group, utils.DeletionPolicy.DELETED
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         utils.assert_group_does_not_exist(
             db.session, account.group, utils.DeletionPolicy.ANY
         )
@@ -284,12 +286,12 @@ def test_assert_group_does_not_exist_group_deleted(db, account):
         db.session, group2, utils.DeletionPolicy.NOT_DELETED
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDeletedError):
         utils.assert_group_does_not_exist(
             db.session, group2, utils.DeletionPolicy.DELETED
         )
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDeletedError):
         utils.assert_group_does_not_exist(db.session, group2, utils.DeletionPolicy.ANY)
 
 
@@ -330,36 +332,36 @@ def test_assert_resource_exists(db, fake_data, account):
     utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.NOT_DELETED)
     utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.ANY)
 
-    with pytest.raises(ResourceExistsError):
+    with pytest.raises(EntityExistsError):
         utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.DELETED)
 
 
 def test_assert_resource_exists_not_exists(db, fake_data, account):
     queue = fake_data.queue(account.user, account.group)
 
-    with pytest.raises(ResourceNotFoundError):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_resource_exists(
             db.session, queue, utils.DeletionPolicy.NOT_DELETED
         )
 
-    with pytest.raises(ResourceNotFoundError):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.ANY)
 
-    with pytest.raises(ResourceNotFoundError):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.DELETED)
 
     # Also try with bad ID
     queue.resource_snapshot_id = 999999
 
-    with pytest.raises(ResourceNotFoundError):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_resource_exists(
             db.session, queue, utils.DeletionPolicy.NOT_DELETED
         )
 
-    with pytest.raises(ResourceNotFoundError):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.ANY)
 
-    with pytest.raises(ResourceNotFoundError):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_resource_exists(db.session, queue, utils.DeletionPolicy.DELETED)
 
 
@@ -372,7 +374,7 @@ def test_assert_resource_exists_deleted(db, fake_data, account):
     db.session.add(lock)
     db.session.commit()
 
-    with pytest.raises(ResourceDeletedError):
+    with pytest.raises(EntityDeletedError):
         utils.assert_resource_exists(
             db.session, queue, utils.DeletionPolicy.NOT_DELETED
         )
@@ -387,12 +389,12 @@ def test_assert_resource_does_not_exist_resource_exists(db, fake_data, account):
     db.session.add(queue)
     db.session.commit()
 
-    with pytest.raises(ResourceExistsError):
+    with pytest.raises(EntityExistsError):
         utils.assert_resource_does_not_exist(
             db.session, queue, utils.DeletionPolicy.NOT_DELETED
         )
 
-    with pytest.raises(ResourceExistsError):
+    with pytest.raises(EntityExistsError):
         utils.assert_resource_does_not_exist(
             db.session, queue, utils.DeletionPolicy.ANY
         )
@@ -442,12 +444,12 @@ def test_assert_resource_does_not_exist_resource_deleted(db, fake_data, account)
         db.session, queue, utils.DeletionPolicy.NOT_DELETED
     )
 
-    with pytest.raises(ResourceDeletedError):
+    with pytest.raises(EntityDeletedError):
         utils.assert_resource_does_not_exist(
             db.session, queue, utils.DeletionPolicy.ANY
         )
 
-    with pytest.raises(ResourceDeletedError):
+    with pytest.raises(EntityDeletedError):
         utils.assert_resource_does_not_exist(
             db.session, queue, utils.DeletionPolicy.DELETED
         )
@@ -483,7 +485,7 @@ def test_assert_snapshot_exists(db, fake_data, account):
 def test_assert_snapshot_exists_not_exists(db, fake_data, account):
     queue = fake_data.queue(account.user, account.group)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         utils.assert_snapshot_exists(db.session, queue)
 
 
@@ -492,7 +494,7 @@ def test_assert_snapshot_does_not_exist(db, fake_data, account):
     db.session.add(queue)
     db.session.commit()
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         utils.assert_snapshot_does_not_exist(db.session, queue)
 
 
@@ -521,5 +523,5 @@ def test_delete_resource(db, account, fake_data):
 def test_delete_resource_not_exists(db, account, fake_data):
     queue = fake_data.queue(account.user, account.group)
 
-    with pytest.raises(ResourceNotFoundError):
+    with pytest.raises(EntityDoesNotExistError):
         utils.delete_resource(db.session, queue)

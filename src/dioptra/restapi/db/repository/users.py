@@ -39,6 +39,7 @@ from dioptra.restapi.db.repository.utils import (
     get_user_id,
     user_exists,
 )
+from dioptra.restapi.errors import EntityDoesNotExistError
 
 
 class UserRepository:
@@ -75,8 +76,10 @@ class UserRepository:
             share_write: share_write permission
 
         Raises:
-            Exception: If group does not exist, user already exists, or
-                user is invalid (e.g. has a colliding username)
+            EntityDoesNotExistError: If group does not exist
+            EntityExistsError: If user already exists, or the name or email
+                collides with an existing user
+            EntityDeletedError: If the user or group are deleted
         """
 
         # Consistency rules:
@@ -109,20 +112,17 @@ class UserRepository:
             user: The user to delete
 
         Raises:
-            Exception: if the user does not exist
+            EntityDoesNotExistError: if the user does not exist
         """
 
         # TODO: This is very simple, so far.  Do we remove group memberships?
         #     What about owned resource snapshots?
 
-        # Perhaps I could have implemented this entirely via user_exists(),
-        # but using the assert_* call does give me the standardized exception
-        # and error message when the user does not exist.
-        assert_user_exists(self.session, user, DeletionPolicy.ANY)
-
         exists_result = user_exists(self.session, user)
+        if exists_result is ExistenceResult.DOES_NOT_EXIST:
+            raise EntityDoesNotExistError("user", user_id=user.user_id)
 
-        if exists_result is ExistenceResult.EXISTS:
+        elif exists_result is ExistenceResult.EXISTS:
             lock = UserLock(UserLockTypes.DELETE, user)
             self.session.add(lock)
 
@@ -309,7 +309,8 @@ class UserRepository:
             the given user does not belong to the given group
 
         Raises:
-            Exception: if either the user or group does not exist
+            EntityDoesNotExistError: if either the user or group does not exist
+            EntityDeletedError: if either the user or group is deleted
         """
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
         assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
@@ -336,7 +337,8 @@ class UserRepository:
             the given user is not a manager of the given group
 
         Raises:
-            Exception: if either the user or group does not exist
+            EntityDoesNotExistError: if either the user or group does not exist
+            EntityDeletedError: if either the user or group is deleted
         """
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
         assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)

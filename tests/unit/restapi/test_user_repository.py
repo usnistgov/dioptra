@@ -20,7 +20,7 @@ import pytest
 
 from dioptra.restapi.db.models import Group, GroupMember, User
 from dioptra.restapi.db.repository.utils import DeletionPolicy, assert_user_exists
-from dioptra.restapi.errors import EntityExistsError
+from dioptra.restapi.errors import EntityDoesNotExistError, EntityExistsError
 
 
 def test_user_create(user_repo, account, db):
@@ -42,12 +42,12 @@ def test_user_create_group_not_exist(user_repo, account, db):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         user_repo.create(u2, g2)
 
 
 def test_user_create_user_already_exists(user_repo, account, db):
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         user_repo.create(account.user, account.group)
 
 
@@ -76,7 +76,7 @@ def test_user_delete(user_repo, account, db):
 def test_user_delete_not_exists(user_repo, account):
 
     u2 = User("user2", "password2", "user2@example.org")
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         user_repo.delete(u2)
 
 
@@ -395,13 +395,13 @@ def test_user_get_member_permissions_not_exist(user_repo, account):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         user_repo.get_member_permissions(u2, account.group.group_id)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         user_repo.get_member_permissions(account.user.user_id, g2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         user_repo.get_member_permissions(u2, g2)
 
 
@@ -427,10 +427,10 @@ def test_user_get_manager_permissions_not_exist(user_repo, account):
     u2 = User("user2", "password2", "user2@example.org")
     g2 = Group("group2", u2)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         user_repo.get_manager_permissions(u2, account.group)
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         user_repo.get_manager_permissions(account.user.user_id, g2)
 
 

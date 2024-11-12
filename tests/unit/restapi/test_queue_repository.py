@@ -22,12 +22,15 @@ import pytest
 
 import dioptra.restapi.db.models as m
 from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.errors import SearchParseError, SortParameterValidationError
 from dioptra.restapi.db.repository.utils import DeletionPolicy
-from dioptra.restapi.db.shared_errors import (
-    ResourceDeletedError,
-    ResourceExistsError,
-    ResourceNotFoundError,
+from dioptra.restapi.errors import (
+    EntityDeletedError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    MismatchedResourceTypeError,
+    SearchParseError,
+    SortParameterValidationError,
+    UserNotInGroupError,
 )
 
 
@@ -169,7 +172,7 @@ def test_queue_create_queue_exists(queue_repo, account, db, fake_data):
     db.session.add(queue)
     db.session.commit()
 
-    with pytest.raises(ResourceExistsError):
+    with pytest.raises(EntityExistsError):
         queue_repo.create(queue)
 
 
@@ -182,7 +185,7 @@ def test_queue_create_queue_exists_deleted(queue_repo, account, db, fake_data):
     db.session.add(queue_lock)
     db.session.commit()
 
-    with pytest.raises(ResourceDeletedError):
+    with pytest.raises(EntityDeletedError):
         queue_repo.create(queue)
 
 
@@ -191,7 +194,7 @@ def test_queue_create_user_not_exists(queue_repo, account, db, fake_data):
     resource = m.Resource("queue", account.group)
     queue = m.Queue("description", resource, u2, "a queue")
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         queue_repo.create(queue)
 
 
@@ -200,7 +203,7 @@ def test_queue_create_group_not_exist(queue_repo, account, db, fake_data):
     resource = m.Resource("queue", g2)
     queue = m.Queue("description", resource, account.user, "a queue")
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityDoesNotExistError):
         queue_repo.create(queue)
 
 
@@ -213,7 +216,7 @@ def test_queue_create_user_not_member(queue_repo, account, db, fake_data):
 
     resource = m.Resource("queue", g2)
     queue = m.Queue("description", resource, account.user, "a queue")
-    with pytest.raises(Exception):
+    with pytest.raises(UserNotInGroupError):
         queue_repo.create(queue)
 
 
@@ -225,7 +228,7 @@ def test_queue_create_name_collision(queue_repo, account, db, fake_data):
     queue2 = fake_data.queue(account.user, account.group)
     queue2.name = queue1.name
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         queue_repo.create(queue2)
 
 
@@ -233,7 +236,7 @@ def test_queue_create_wrong_resource_type(queue_repo, account, db, fake_data):
     experiment_resource = m.Resource("experiment", account.group)
     queue = m.Queue("description", experiment_resource, account.user, "name")
 
-    with pytest.raises(Exception):
+    with pytest.raises(MismatchedResourceTypeError):
         queue_repo.create(queue)
 
 
@@ -511,7 +514,7 @@ def test_queue_create_snapshot_snap_exists(queue_repo, account, db, fake_data):
     queue_repo.create(queue_snap1)
     db.session.commit()
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         queue_repo.create_snapshot(queue_snap1)
 
 
@@ -520,7 +523,7 @@ def test_queue_create_snapshot_resource_not_exists(queue_repo, account):
     other_resource = m.Resource("queue", account.group)
     queue_snap2 = m.Queue("description", other_resource, account.user, "name")
 
-    with pytest.raises(ResourceNotFoundError):
+    with pytest.raises(EntityDoesNotExistError):
         queue_repo.create_snapshot(queue_snap2)
 
 
@@ -540,7 +543,7 @@ def test_queue_create_snapshot_creator_not_member(queue_repo, account, db, fake_
         queue_snap1.description, queue_snap1.resource, u2, queue_snap1.name
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(UserNotInGroupError):
         queue_repo.create_snapshot(queue_snap2)
 
 
@@ -561,7 +564,7 @@ def test_queue_create_snapshot_name_collision(queue_repo, account, db, fake_data
         queue1_snap1.name,
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(EntityExistsError):
         queue_repo.create_snapshot(queue2_snap2)
 
     # Create a queue in a different group which has the same name as a queue in
@@ -597,7 +600,7 @@ def test_queue_create_snapshot_wrong_resource_type(queue_repo, account, db, fake
     queue_snap2 = m.Queue(
         queue_snap1.description, experiment.resource, account.user, experiment.name
     )
-    with pytest.raises(Exception):
+    with pytest.raises(MismatchedResourceTypeError):
         queue_repo.create_snapshot(queue_snap2)
 
 
@@ -740,7 +743,7 @@ def test_queue_delete(queue_repo, db, queue_snap_setup):
 def test_queue_delete_not_exist(queue_repo, account, fake_data):
     queue = fake_data.queue(account.user, account.group)
 
-    with pytest.raises(ResourceNotFoundError):
+    with pytest.raises(EntityDoesNotExistError):
         queue_repo.delete(queue)
 
 
