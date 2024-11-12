@@ -1597,35 +1597,13 @@ def test_tag_plugin(
 
     """
     plugin = registered_plugins["plugin1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = dioptra_client.plugins.tags.append(plugin["id"], ids=[tags[0], tags[1]])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[0], tags[1]]
+    routines.run_resource_tag_tests(
+        dioptra_client.plugins.tags,
+        plugin["id"],
+        tag_ids=tag_ids,
     )
-    response = dioptra_client.plugins.tags.append(plugin["id"], ids=[tags[1], tags[2]])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[0], tags[1], tags[2]]
-    )
-
-    # test remove
-    dioptra_client.plugins.tags.remove(plugin["id"], tag_id=tags[1])
-    response = dioptra_client.plugins.tags.get(plugin["id"])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[0], tags[2]]
-    )
-
-    # test modify
-    response = dioptra_client.plugins.tags.modify(plugin["id"], ids=[tags[1], tags[2]])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[1], tags[2]]
-    )
-
-    # test delete
-    dioptra_client.plugins.tags.remove_all(plugin["id"])
-    response = dioptra_client.plugins.tags.get(plugin["id"])
-    asserts.assert_tags_response_contents_matches_expectations(response.json(), [])
 
 
 def test_tag_plugin_file(
@@ -1643,40 +1621,11 @@ def test_tag_plugin_file(
     """
     plugin_id = registered_plugin_with_files["plugin"]["id"]
     plugin_file = registered_plugin_with_files["plugin_file1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = dioptra_client.plugins.files.tags.append(
-        plugin_id, plugin_file["id"], ids=[tags[0], tags[1]]
+    routines.run_resource_tag_tests(
+        dioptra_client.plugins.files.tags,
+        plugin_id,
+        plugin_file["id"],
+        tag_ids=tag_ids,
     )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[0], tags[1]]
-    )
-    response = dioptra_client.plugins.files.tags.append(
-        plugin_id, plugin_file["id"], ids=[tags[1], tags[2]]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[0], tags[1], tags[2]]
-    )
-
-    # test remove
-    dioptra_client.plugins.files.tags.remove(
-        plugin_id, plugin_file["id"], tag_id=tags[1]
-    )
-    response = dioptra_client.plugins.files.tags.get(plugin_id, plugin_file["id"])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[0], tags[2]]
-    )
-
-    # test modify
-    response = dioptra_client.plugins.files.tags.modify(
-        plugin_id, plugin_file["id"], ids=[tags[1], tags[2]]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[1], tags[2]]
-    )
-
-    # test delete
-    dioptra_client.plugins.files.tags.remove_all(plugin_id, plugin_file["id"])
-    response = dioptra_client.plugins.files.tags.get(plugin_id, plugin_file["id"])
-    asserts.assert_tags_response_contents_matches_expectations(response.json(), [])

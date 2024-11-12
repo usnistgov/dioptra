@@ -919,40 +919,10 @@ def test_tag_plugin_parameter_type(
     validates the following sequence of actions:
     """
     plugin_param_type = registered_plugin_parameter_types["plugin_param_type1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = dioptra_client.plugin_parameter_types.tags.append(
-        plugin_param_type["id"], ids=[tags[0], tags[1]]
+    routines.run_resource_tag_tests(
+        dioptra_client.plugin_parameter_types.tags,
+        plugin_param_type["id"],
+        tag_ids=tag_ids,
     )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[0], tags[1]]
-    )
-    response = dioptra_client.plugin_parameter_types.tags.append(
-        plugin_param_type["id"], ids=[tags[1], tags[2]]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[0], tags[1], tags[2]]
-    )
-
-    # test remove
-    dioptra_client.plugin_parameter_types.tags.remove(
-        plugin_param_type["id"], tag_id=tags[1]
-    )
-    response = dioptra_client.plugin_parameter_types.tags.get(plugin_param_type["id"])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[0], tags[2]]
-    )
-
-    # test modify
-    response = dioptra_client.plugin_parameter_types.tags.modify(
-        plugin_param_type["id"], ids=[tags[1], tags[2]]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[1], tags[2]]
-    )
-
-    # test delete
-    dioptra_client.plugin_parameter_types.tags.remove_all(plugin_param_type["id"])
-    response = dioptra_client.plugin_parameter_types.tags.get(plugin_param_type["id"])
-    asserts.assert_tags_response_contents_matches_expectations(response.json(), [])

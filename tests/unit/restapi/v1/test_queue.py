@@ -740,32 +740,10 @@ def test_tag_queue(
 
     """
     queue = registered_queues["queue1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = dioptra_client.queues.tags.append(queue["id"], ids=tags[:2])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), tags[:2]
+    routines.run_resource_tag_tests(
+        dioptra_client.queues.tags,
+        queue["id"],
+        tag_ids=tag_ids,
     )
-    response = dioptra_client.queues.tags.append(queue["id"], ids=tags[1:3])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), tags[:3]
-    )
-
-    # test remove
-    dioptra_client.queues.tags.remove(queue["id"], tag_id=tags[1])
-    response = dioptra_client.queues.tags.get(queue["id"])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), [tags[0], tags[2]]
-    )
-
-    # test modify
-    response = dioptra_client.queues.tags.modify(queue["id"], ids=tags[1:3])
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.json(), tags[1:3]
-    )
-
-    # test delete
-    dioptra_client.queues.tags.remove_all(queue["id"])
-    response = dioptra_client.queues.tags.get(queue["id"])
-    asserts.assert_tags_response_contents_matches_expectations(response.json(), [])

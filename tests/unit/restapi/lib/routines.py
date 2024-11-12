@@ -21,6 +21,7 @@ from dioptra.client.drafts import (
     ExistingResourceDraftsSubCollectionClient,
     NewResourceDraftsSubCollectionClient,
 )
+from dioptra.client.tags import TagsSubCollectionClient
 
 from . import asserts, asserts_client
 
@@ -111,3 +112,37 @@ def run_existing_resource_drafts_tests(
     # Delete operation tests
     client.delete(*resource_ids)
     asserts_client.assert_existing_draft_is_not_found(client, *resource_ids)
+
+
+def run_resource_tag_tests(
+    client: TagsSubCollectionClient[DioptraResponseProtocol],
+    *resource_ids: str | int,
+    tag_ids: list[int],
+) -> None:
+    # Append operation tests
+    response = client.append(*resource_ids, ids=[tag_ids[0], tag_ids[1]])
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.json(), [tag_ids[0], tag_ids[1]]
+    )
+    response = client.append(*resource_ids, ids=[tag_ids[1], tag_ids[2]])
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.json(), [tag_ids[0], tag_ids[1], tag_ids[2]]
+    )
+
+    # Remove operation tests
+    client.remove(*resource_ids, tag_id=tag_ids[1])
+    response = client.get(*resource_ids)
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.json(), [tag_ids[0], tag_ids[2]]
+    )
+
+    # Modify operation tests
+    response = client.modify(*resource_ids, ids=[tag_ids[1], tag_ids[2]])
+    asserts.assert_tags_response_contents_matches_expectations(
+        response.json(), [tag_ids[1], tag_ids[2]]
+    )
+
+    # Delete operation tests
+    client.remove_all(*resource_ids)
+    response = client.get(*resource_ids)
+    asserts.assert_tags_response_contents_matches_expectations(response.json(), [])
