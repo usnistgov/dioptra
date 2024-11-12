@@ -1490,29 +1490,13 @@ def test_manage_plugin_snapshots(
         name=plugin_to_rename["name"] + "modified",
         description=plugin_to_rename["description"],
     ).json()
-    modified_plugin.pop("hasDraft")
-    modified_plugin.pop("files")
-    plugin_to_rename.pop("hasDraft")
-    plugin_to_rename.pop("files")
-    plugin_to_rename["latestSnapshot"] = False
-    plugin_to_rename["lastModifiedOn"] = modified_plugin["lastModifiedOn"]
-    asserts_client.assert_retrieving_snapshot_by_id_works(
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
         dioptra_client.plugins.snapshots,
-        plugin_to_rename["id"],
-        snapshot_id=plugin_to_rename["snapshot"],
-        expected=plugin_to_rename,
-    )
-    asserts_client.assert_retrieving_snapshot_by_id_works(
-        dioptra_client.plugins.snapshots,
-        modified_plugin["id"],
-        snapshot_id=modified_plugin["snapshot"],
-        expected=modified_plugin,
-    )
-    expected_snapshots = [plugin_to_rename, modified_plugin]
-    asserts_client.assert_retrieving_snapshots_works(
-        dioptra_client.plugins.snapshots,
-        plugin_to_rename["id"],
-        expected=expected_snapshots,
+        resource_to_rename=plugin_to_rename.copy(),
+        modified_resource=modified_plugin.copy(),
+        drop_additional_fields=["files"],
     )
 
 
@@ -1554,32 +1538,14 @@ def test_manage_plugin_file_snapshots(
         tasks=[],
         description=plugin_file_to_rename["description"],
     ).json()
-    modified_plugin_file.pop("hasDraft")
-    modified_plugin_file.pop("plugin")
-    plugin_file_to_rename.pop("hasDraft")
-    plugin_file_to_rename.pop("plugin")
-    plugin_file_to_rename["latestSnapshot"] = False
-    plugin_file_to_rename["lastModifiedOn"] = modified_plugin_file["lastModifiedOn"]
-    asserts_client.assert_retrieving_snapshot_by_id_works(
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
         dioptra_client.plugins.files.snapshots,
         plugin_id,
-        plugin_file_to_rename["id"],
-        snapshot_id=plugin_file_to_rename["snapshot"],
-        expected=plugin_file_to_rename,
-    )
-    asserts_client.assert_retrieving_snapshot_by_id_works(
-        dioptra_client.plugins.files.snapshots,
-        plugin_id,
-        modified_plugin_file["id"],
-        snapshot_id=modified_plugin_file["snapshot"],
-        expected=modified_plugin_file,
-    )
-    expected_snapshots = [plugin_file_to_rename, modified_plugin_file]
-    asserts_client.assert_retrieving_snapshots_works(
-        dioptra_client.plugins.files.snapshots,
-        plugin_id,
-        plugin_file_to_rename["id"],
-        expected=expected_snapshots,
+        resource_to_rename=plugin_file_to_rename.copy(),
+        modified_resource=modified_plugin_file.copy(),
+        drop_additional_fields=["plugin"],
     )
 
 
@@ -1599,6 +1565,7 @@ def test_tag_plugin(
     plugin = registered_plugins["plugin1"]
     tag_ids = [tag["id"] for tag in registered_tags.values()]
 
+    # Run routine: resource tag tests
     routines.run_resource_tag_tests(
         dioptra_client.plugins.tags,
         plugin["id"],
@@ -1623,6 +1590,7 @@ def test_tag_plugin_file(
     plugin_file = registered_plugin_with_files["plugin_file1"]
     tag_ids = [tag["id"] for tag in registered_tags.values()]
 
+    # Run routine: resource tag tests
     routines.run_resource_tag_tests(
         dioptra_client.plugins.files.tags,
         plugin_id,

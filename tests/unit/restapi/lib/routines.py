@@ -21,6 +21,7 @@ from dioptra.client.drafts import (
     ExistingResourceDraftsSubCollectionClient,
     NewResourceDraftsSubCollectionClient,
 )
+from dioptra.client.snapshots import SnapshotsSubCollectionClient
 from dioptra.client.tags import TagsSubCollectionClient
 
 from . import asserts, asserts_client
@@ -112,6 +113,55 @@ def run_existing_resource_drafts_tests(
     # Delete operation tests
     client.delete(*resource_ids)
     asserts_client.assert_existing_draft_is_not_found(client, *resource_ids)
+
+
+def run_resource_snapshots_tests(
+    client: SnapshotsSubCollectionClient[DioptraResponseProtocol],
+    *resource_ids: str | int,
+    resource_to_rename: dict[str, Any],
+    modified_resource: dict[str, Any],
+    drop_additional_fields: list[str] | None = None,
+):
+    # Remove hasDraft field that isn't present on the snapshot responses
+    modified_resource.pop("hasDraft")
+    resource_to_rename.pop("hasDraft")
+
+    # If exclude_additional_fields is provided, remove those fields from the expected
+    # responses
+    if drop_additional_fields:
+        for field in drop_additional_fields:
+            modified_resource.pop(field)
+            resource_to_rename.pop(field)
+
+    # Modify the first resource snapshot fields since a second snapshot was created
+    resource_to_rename["latestSnapshot"] = False
+    resource_to_rename["lastModifiedOn"] = modified_resource["lastModifiedOn"]
+
+    # Validate retrieval of first snapshot
+    asserts_client.assert_retrieving_snapshot_by_id_works(
+        client,
+        *resource_ids,
+        resource_to_rename["id"],
+        snapshot_id=resource_to_rename["snapshot"],
+        expected=resource_to_rename,
+    )
+
+    # Validate retrieval of second snapshot
+    asserts_client.assert_retrieving_snapshot_by_id_works(
+        client,
+        *resource_ids,
+        modified_resource["id"],
+        snapshot_id=modified_resource["snapshot"],
+        expected=modified_resource,
+    )
+
+    # Validate retrieval of all snapshots
+    asserts_client.assert_retrieving_snapshots_works(
+        client,
+        *resource_ids,
+        resource_to_rename["id"],
+        expected=[resource_to_rename, modified_resource],
+    )
 
 
 def run_resource_tag_tests(

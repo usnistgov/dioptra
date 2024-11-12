@@ -702,27 +702,12 @@ def test_manage_queue_snapshots(
         name=queue_to_rename["name"] + "modified",
         description=queue_to_rename["description"],
     ).json()
-    modified_queue.pop("hasDraft")
-    queue_to_rename.pop("hasDraft")
-    queue_to_rename["latestSnapshot"] = False
-    queue_to_rename["lastModifiedOn"] = modified_queue["lastModifiedOn"]
-    asserts_client.assert_retrieving_snapshot_by_id_works(
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
         dioptra_client.queues.snapshots,
-        queue_to_rename["id"],
-        snapshot_id=queue_to_rename["snapshot"],
-        expected=queue_to_rename,
-    )
-    asserts_client.assert_retrieving_snapshot_by_id_works(
-        dioptra_client.queues.snapshots,
-        modified_queue["id"],
-        snapshot_id=modified_queue["snapshot"],
-        expected=modified_queue,
-    )
-    expected_snapshots = [queue_to_rename, modified_queue]
-    asserts_client.assert_retrieving_snapshots_works(
-        dioptra_client.queues.snapshots,
-        queue_to_rename["id"],
-        expected=expected_snapshots,
+        resource_to_rename=queue_to_rename.copy(),
+        modified_resource=modified_queue.copy(),
     )
 
 
@@ -742,6 +727,7 @@ def test_tag_queue(
     queue = registered_queues["queue1"]
     tag_ids = [tag["id"] for tag in registered_tags.values()]
 
+    # Run routine: resource tag tests
     routines.run_resource_tag_tests(
         dioptra_client.queues.tags,
         queue["id"],

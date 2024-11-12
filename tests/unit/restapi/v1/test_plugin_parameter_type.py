@@ -880,29 +880,12 @@ def test_manage_plugin_parameter_type_snapshots(
         description=plugin_param_type_to_rename["description"],
         structure=plugin_param_type_to_rename["structure"],
     ).json()
-    modified_plugin_param_type.pop("hasDraft")
-    plugin_param_type_to_rename.pop("hasDraft")
-    plugin_param_type_to_rename["latestSnapshot"] = False
-    plugin_param_type_to_rename["lastModifiedOn"] = modified_plugin_param_type[
-        "lastModifiedOn"
-    ]
-    asserts_client.assert_retrieving_snapshot_by_id_works(
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
         dioptra_client.plugin_parameter_types.snapshots,
-        plugin_param_type_to_rename["id"],
-        snapshot_id=plugin_param_type_to_rename["snapshot"],
-        expected=plugin_param_type_to_rename,
-    )
-    asserts_client.assert_retrieving_snapshot_by_id_works(
-        dioptra_client.plugin_parameter_types.snapshots,
-        modified_plugin_param_type["id"],
-        snapshot_id=modified_plugin_param_type["snapshot"],
-        expected=modified_plugin_param_type,
-    )
-    expected_snapshots = [plugin_param_type_to_rename, modified_plugin_param_type]
-    asserts_client.assert_retrieving_snapshots_works(
-        dioptra_client.plugin_parameter_types.snapshots,
-        plugin_param_type_to_rename["id"],
-        expected=expected_snapshots,
+        resource_to_rename=plugin_param_type_to_rename,
+        modified_resource=modified_plugin_param_type,
     )
 
 
@@ -921,6 +904,7 @@ def test_tag_plugin_parameter_type(
     plugin_param_type = registered_plugin_parameter_types["plugin_param_type1"]
     tag_ids = [tag["id"] for tag in registered_tags.values()]
 
+    # Run routine: resource tag tests
     routines.run_resource_tag_tests(
         dioptra_client.plugin_parameter_types.tags,
         plugin_param_type["id"],
