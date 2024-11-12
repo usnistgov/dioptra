@@ -14,3 +14,324 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from typing import Any, ClassVar, Final, TypeVar
+
+from .base import CollectionClient, DioptraSession
+from .drafts import (
+    ExistingResourceDraftsSubCollectionClient,
+    NewResourceDraftsSubCollectionClient,
+    make_draft_fields_validator,
+)
+from .snapshots import SnapshotsSubCollectionClient
+from .tags import TagsSubCollectionClient
+
+DRAFT_FIELDS: Final[set[str]] = {
+    "name",
+    "description",
+    "taskGraph",
+    "parameters",
+    "queues",
+    "plugins",
+}
+
+T = TypeVar("T")
+
+
+class EntrypointsCollectionClient(CollectionClient[T]):
+    """The client for managing Dioptra's /entrypoints collection.
+
+    Attributes:
+        name: The name of the collection managed by the client.
+    """
+
+    name: ClassVar[str] = "entrypoints"
+
+    def __init__(self, session: DioptraSession[T]) -> None:
+        """Initialize the EntrypointsCollectionClient instance.
+
+        Args:
+            session: The Dioptra API session object.
+        """
+        super().__init__(session)
+        self._new_resource_drafts = NewResourceDraftsSubCollectionClient[T](
+            session=session,
+            validate_fields_fn=make_draft_fields_validator(
+                draft_fields=DRAFT_FIELDS,
+                resource_name=self.name,
+            ),
+            root_collection=self,
+        )
+        self._existing_resource_drafts = ExistingResourceDraftsSubCollectionClient[T](
+            session=session,
+            validate_fields_fn=make_draft_fields_validator(
+                draft_fields=DRAFT_FIELDS,
+                resource_name=self.name,
+            ),
+            root_collection=self,
+        )
+        self._snapshots = SnapshotsSubCollectionClient[T](
+            session=session, root_collection=self
+        )
+        self._tags = TagsSubCollectionClient[T](session=session, root_collection=self)
+
+    @property
+    def new_resource_drafts(self) -> NewResourceDraftsSubCollectionClient[T]:
+        """The client for managing the new entrypoint drafts sub-collection.
+
+        Each client method in the sub-collection accepts an arbitrary number of
+        positional arguments called ``*resource_ids``. These are the parent resource IDs
+        that own the new entrypoint drafts sub-collection. Below are examples of how
+        HTTP requests to this sub-collection translate into method calls for an active
+        Python Dioptra Python client called ``client``::
+
+            # GET /api/v1/entrypoints/drafts
+            client.entrypoints.new_drafts.get()
+
+            # GET /api/v1/entrypoints/drafts/1
+            client.entrypoints.new_drafts.get_by_id(draft_id=1)
+
+            # PUT /api/v1/entrypoints/drafts/1
+            client.entrypoints.new_drafts.modify(
+                draft_id=1, name="new-name", description="new-description"
+            )
+
+            # POST /api/v1/entrypoints/drafts
+            client.entrypoints.new_drafts.create(
+                group_id=1, name="name", description="description"
+            )
+
+            # DELETE /api/v1/entrypoints/drafts/1
+            client.entrypoints.new_drafts.delete(draft_id=1)
+        """
+        return self._new_resource_drafts
+
+    @property
+    def existing_resource_drafts(self) -> ExistingResourceDraftsSubCollectionClient[T]:
+        """The client for managing the existing entrypoint drafts sub-collection.
+
+        Each client method in the sub-collection accepts an arbitrary number of
+        positional arguments called ``*resource_ids``. These are the parent resource IDs
+        that own the existing entrypoint drafts sub-collection. Below are examples of
+        how HTTP requests to this sub-collection translate into method calls for an
+        active Python Dioptra Python client called ``client``::
+
+            # GET /api/v1/entrypoints/1/draft
+            client.entrypoints.existing_drafts.get_by_id(1)
+
+            # PUT /api/v1/entrypoints/1/draft
+            client.entrypoints.existing_drafts.modify(
+                1, name="new-name", description="new-description"
+            )
+
+            # POST /api/v1/entrypoints/1/draft
+            client.entrypoints.existing_drafts.create(
+                1, name="name", description="description"
+            )
+
+            # DELETE /api/v1/entrypoints/1/draft
+            client.entrypoints.existing_drafts.delete(1)
+        """
+        return self._existing_resource_drafts
+
+    @property
+    def snapshots(self) -> SnapshotsSubCollectionClient[T]:
+        """The client for retrieving entrypoint resource snapshots.
+
+        Each client method in the sub-collection accepts an arbitrary number of
+        positional arguments called ``*resource_ids``. These are the parent resource IDs
+        that own the existing entrypoint snapshots sub-collection. Below are examples of
+        how HTTP requests to this sub-collection translate into method calls for an
+        active Python Dioptra Python client called ``client``::
+
+            # GET /api/v1/entrypoints/1/snapshots
+            client.entrypoints.existing_drafts.get_by_id(1)
+
+            # GET /api/v1/entrypoints/1/snapshots/2
+            client.entrypoints.existing_drafts.get_by_id(1, snapshot_id=2)
+        """
+        return self._snapshots
+
+    @property
+    def tags(self) -> TagsSubCollectionClient[T]:
+        """
+        The client for managing the tags sub-collection owned by the /entrypoints
+        collection.
+
+        Each client method in the sub-collection accepts an arbitrary number of
+        positional arguments called ``*resource_ids``. These are the parent resource IDs
+        that own the tags sub-collection. Below are examples of how HTTP requests to
+        this sub-collection translate into method calls for an active Python Dioptra
+        Python client called ``client``::
+
+            # GET /api/v1/entrypoints/1/tags
+            client.entrypoints.tags.get(1)
+
+            # PUT /api/v1/entrypoints/1/tags
+            client.entrypoints.tags.modify(1, ids=[2, 3])
+
+            # POST /api/v1/entrypoints/1/tags
+            client.entrypoints.tags.modify(1, ids=[2, 3])
+
+            # DELETE /api/v1/entrypoints/1/tags/3
+            client.entrypoints.tags.remove(1, tag_id=3)
+
+            # DELETE /api/v1/entrypoints/1/tags
+            client.entrypoints.tags.remove(1)
+        """
+        return self._tags
+
+    def get(
+        self,
+        group_id: int | None = None,
+        index: int = 0,
+        page_length: int = 10,
+        sort_by: str | None = None,
+        descending: bool | None = None,
+        search: str | None = None,
+    ) -> T:
+        """Get a list of entrypoints.
+
+        Args:
+            group_id: The group ID the entrypoints belong to. If None, return
+                entrypoints from all groups that the user has access to.
+            index: The paging index.
+            page_length: The maximum number of entrypoints to return in the paged
+                response.
+            sort_by: The field to use to sort the returned list.
+            descending: Sort the returned list in descending order.
+            search: Search for entrypoints using the Dioptra API's query language.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        params: dict[str, Any] = {
+            "index": index,
+            "pageLength": page_length,
+        }
+
+        if sort_by is not None:
+            params["sortBy"] = sort_by
+
+        if descending is not None:
+            params["descending"] = descending
+
+        if search is not None:
+            params["search"] = search
+
+        if group_id is not None:
+            params["groupId"] = group_id
+
+        return self._session.get(
+            self.url,
+            params=params,
+        )
+
+    def get_by_id(self, entrypoint_id: str | int) -> T:
+        """Get the entrypoint matching the provided id.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(self.url, str(entrypoint_id))
+
+    def create(
+        self,
+        group_id: int,
+        name: str,
+        task_graph: str,
+        description: str | None = None,
+        parameters: list[dict[str, Any]] | None = None,
+        queues: list[int] | None = None,
+        plugins: list[int] | None = None,
+    ) -> T:
+        """Creates a entrypoint.
+
+        Args:
+            group_id: The ID of the group that will own the entrypoint.
+            name: The name of the new entrypoint.
+            task_graph: The task graph for the new entrypoint as a YAML-formatted
+                string.
+            description: The description of the new entrypoint. Optional, defaults to
+                None.
+            parameters: The list of parameters for the new entrypoint. Optional,
+                defaults to None.
+            queues: A list of queue IDs to associate with the new entrypoint. Optional,
+                defaults to None.
+            plugins: A list of plugin IDs to associate with the new entrypoint.
+                Optional, defaults to None.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        json_: dict[str, Any] = {
+            "group": group_id,
+            "name": name,
+            "taskGraph": task_graph,
+        }
+
+        if description is not None:
+            json_["description"] = description
+
+        if parameters is not None:
+            json_["parameters"] = parameters
+
+        if queues is not None:
+            json_["queues"] = queues
+
+        if plugins is not None:
+            json_["plugins"] = plugins
+
+        return self._session.post(self.url, json_=json_)
+
+    def modify_by_id(
+        self,
+        entrypoint_id: str | int,
+        name: str,
+        task_graph: str,
+        description: str | None,
+        parameters: list[dict[str, Any]] | None,
+        queues: list[int] | None,
+    ) -> T:
+        """Modify the entrypoint matching the provided id.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+            name: The new name of the entrypoint.
+            task_graph: The new task graph for the entrypoint as a YAML-formatted
+                string.
+            description: The new description of the entrypoint. To remove the
+                description, pass None.
+            parameters: The new list of parameters for the entrypoint. To remove all
+                parameters, pass None.
+            queues: The new list of queue IDs to associate with the entrypoint. To
+                remove all associated queues, pass None.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        json_: dict[str, Any] = {"name": name, "taskGraph": task_graph}
+
+        if description is not None:
+            json_["description"] = description
+
+        if parameters is not None:
+            json_["parameters"] = parameters
+
+        if queues is not None:
+            json_["queues"] = queues
+
+        return self._session.put(self.url, str(entrypoint_id), json_=json_)
+
+    def delete_by_id(self, entrypoint_id: str | int) -> T:
+        """Delete the entrypoint matching the provided id.
+
+        Args:
+            entrypoint_id: The entrypoint id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.delete(self.url, str(entrypoint_id))
