@@ -31,30 +31,11 @@ from werkzeug.test import TestResponse
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
-from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE, V1_JOBS_ROUTE, V1_ROOT
+from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE, V1_ROOT
 
 from ..lib import actions, asserts, helpers, mock_rq, routines
 
 # -- Actions ---------------------------------------------------------------------------
-
-
-def delete_job(
-    client: FlaskClient,
-    job_id: int,
-) -> TestResponse:
-    """Delete a job using the API.
-
-    Args:
-        client: The Flask test client.
-        job_id: The id of the job to delete.
-
-    Returns:
-        The response from the API.
-    """
-    return client.delete(
-        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}",
-        follow_redirects=True,
-    )
 
 
 def modify_job_status(
@@ -78,25 +59,6 @@ def modify_job_status(
     return client.put(
         f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}/jobs/{job_id}/status",
         json=payload,
-        follow_redirects=True,
-    )
-
-
-def get_job(
-    client: FlaskClient,
-    job_id: int,
-) -> TestResponse:
-    """Get a job using the API.
-
-    Args:
-        client: The Flask test client.
-        job_id: The id of the job to get.
-
-    Returns:
-        The response from the API.
-    """
-    return client.get(
-        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}",
         follow_redirects=True,
     )
 
