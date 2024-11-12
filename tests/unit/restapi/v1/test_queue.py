@@ -31,7 +31,7 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE, V1_ROOT
 
-from ..lib import asserts, asserts_client, helpers, routines
+from ..lib import helpers, routines
 
 # -- Assertions ------------------------------------------------------------------------
 
