@@ -411,6 +411,20 @@ class GroupNeedsAManagerError(DioptraError):
         self.group_id = group_id
 
 
+class UserIsManagerError(DioptraError):
+    """User can't be removed from a group because he is a group manager."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = (
+            f"Can't remove manager {user_id} from group {group_id}: "
+            "user is a group manager"
+        )
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
 class MismatchedResourceTypeError(DioptraError):
     """A snapshot was associated with a resource of the wrong type"""
 

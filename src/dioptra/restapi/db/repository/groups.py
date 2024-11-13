@@ -45,6 +45,7 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     GroupNeedsAManagerError,
     GroupNeedsAUserError,
+    UserIsManagerError,
     UserNeedsAGroupError,
 )
 
@@ -520,8 +521,18 @@ class GroupRepository:
                 # else: the given user is not in the group; nothing to do
             else:
 
-                # User has more than one group membership, so we are free to
-                # remove them from this group.
+                # User has more than one group membership, so removal is not
+                # prevented for that reason.  If they are a manager, we prevent
+                # removal to ensure all managers are members and there is at
+                # least one manager.  A user must be demoted from managership
+                # before they may be removed from the group.
+
+                managership = self.session.get(
+                    GroupManager, (user.user_id, group.group_id)
+                )
+                if managership:
+                    raise UserIsManagerError(user.user_id, group.group_id)
+
                 member = self.session.get(GroupMember, (user.user_id, group.group_id))
                 if member:
                     self.session.delete(member)

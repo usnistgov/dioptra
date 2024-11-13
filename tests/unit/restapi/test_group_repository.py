@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import pytest
 
-from dioptra.restapi.db.models import Group, GroupMember, User
+from dioptra.restapi.db.models import Group, GroupManager, GroupMember, User
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.errors import (
     EntityDeletedError,
@@ -24,6 +24,7 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     GroupNeedsAManagerError,
     GroupNeedsAUserError,
+    UserIsManagerError,
     UserNeedsAGroupError,
     UserNotInGroupError,
 )
@@ -474,20 +475,46 @@ def test_group_remove_member_ok(group_repo, account, db, fake_data):
     db.session.add_all((account2.user, account2.group))
     db.session.commit()
 
-    # Two users in two groups; we should now be able to remove a user.
+    # Two users in two groups; we should now be able to remove a non-manager
+    # user.
 
-    group_repo.remove_member(account.group, account.user)
+    group_repo.remove_member(account.group, account2.user)
     db.session.commit()
 
     check_member = db.session.get(
-        GroupMember, (account.user.user_id, account.group.group_id)
+        GroupMember, (account2.user.user_id, account.group.group_id)
     )
     assert check_member is None
     assert not any(
-        member.user_id == account.user.user_id for member in account.group.members
+        member.user_id == account2.user.user_id for member in account.group.members
     )
     assert len(account.group.members) == 1
     assert len(account2.group.members) == 2
+
+
+def test_group_remove_member_manager(group_repo, account, db, fake_data):
+    account2 = fake_data.account()
+
+    account2.group.members.append(
+        GroupMember(
+            read=True, write=True, share_read=True, share_write=True, user=account.user
+        )
+    )
+
+    account.group.members.append(
+        GroupMember(
+            read=True, write=True, share_read=True, share_write=True, user=account2.user
+        )
+    )
+
+    db.session.add_all((account2.user, account2.group))
+    db.session.commit()
+
+    # Two users in two groups; we can remove non-manager members, but we should
+    # not be able to remove manager members.
+
+    with pytest.raises(UserIsManagerError):
+        group_repo.remove_member(account.group, account.user)
 
 
 def test_group_remove_member_not_exist(group_repo, account):
