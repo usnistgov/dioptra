@@ -9,10 +9,11 @@ def clone_git_repository(url: str, dir: Path) -> str:
     git_paths = parsed_url.params or None
     git_url = parsed_url._replace(fragment="", params="").geturl()
 
+    git_env = ["GIT_TERMINAL_PROMPT=0"]
     git_sparse_args = ["--filter=blob:none", "--no-checkout", "--depth=1"]
     git_branch_args = ["-b", git_branch] if git_branch else []
     clone_cmd = ["git", "clone", *git_sparse_args, *git_branch_args, git_url, str(dir)]
-    clone_result = subprocess.run(clone_cmd, capture_output=True, text=True)
+    clone_result = subprocess.run(git_env + clone_cmd, capture_output=True, text=True)
 
     if clone_result.returncode != 0:
         raise subprocess.CalledProcessError(
