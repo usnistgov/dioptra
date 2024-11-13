@@ -341,6 +341,12 @@ class QueueRepository:
         Returns:
             A 2-tuple including the page of queues and total count of matching
             queues which exist
+
+        Raises:
+            SearchParseError: if filters includes a non-searchable field
+            SortParameterValidationError: if sort_by is a non-sortable field
+            EntityDoesNotExistError: if the given group does not exist
+            EntityDeletedError: if the given group is deleted
         """
         sql_filter = construct_sql_query_filters(filters, self.SEARCHABLE_FIELDS)
         if sort_by:
