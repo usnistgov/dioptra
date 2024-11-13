@@ -69,7 +69,7 @@ class MetricsSchema(Schema):
     )
 
 
-class MetricsSnapshotSchema(MetricsSchema):
+class MetricsSnapshotSchema(Schema):
     name = fields.String(
         attribute="name",
         metadata=dict(description="The name of the metric."),
