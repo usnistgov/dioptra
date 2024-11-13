@@ -20,6 +20,7 @@ from collections.abc import Iterator
 from typing import Any, cast
 
 import pytest
+import uuid
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
@@ -692,9 +693,6 @@ def registered_mlflowrun(
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> dict[str, Any]:
-    # Inline import necessary to prevent circular import
-    import uuid
-
     mlflowruns = {"job1": uuid.uuid4(), "job2": uuid.uuid4(), "job3": uuid.uuid4()}
 
     responses = actions.post_mlflowruns(
@@ -711,9 +709,6 @@ def registered_mlflowrun_incomplete(
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
 ) -> dict[str, Any]:
-    # Inline import necessary to prevent circular import
-    import uuid
-
     mlflowruns = {
         "job1": uuid.uuid4(),
         "job2": uuid.uuid4(),
