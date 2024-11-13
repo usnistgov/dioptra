@@ -487,13 +487,15 @@ class GroupRepository:
             EntityDeletedError: if the group or user is deleted
             GroupNeedsAUserError: if removal would leave the group userless
             UserNeedsAGroupError: if removal would leave the user groupless
+            UserIsManagerError: if there are sufficient members and memberships
+                to remove the user, but the user is a manager of the group
         """
 
         # Consistency rules:
         # - A group must have at least one member
+        # - A group must have at least one manager
+        # - A group manager must be a member
         # - A user must be in at least one group
-
-        # TODO: ensure the member being removed is not also manager
 
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
         assert_user_exists(self.session, user, DeletionPolicy.NOT_DELETED)
