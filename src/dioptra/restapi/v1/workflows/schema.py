@@ -112,12 +112,3 @@ class ResourceImportSchema(Schema):
             and "git_url" not in data
         ):
             raise ValidationError({"gitUrl": "field required when sourceType is 'git'"})
-
-        # 'upload' is not in data
-        # if (
-        # data["source_type"] == ResourceImportSourceTypes.UPLOAD
-        # and "data" not in data
-        # ):
-        # raise ValidationError(
-        # {"data": "field required when sourceType is 'upload'"}
-        # )
