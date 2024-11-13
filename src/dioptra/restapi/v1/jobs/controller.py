@@ -50,7 +50,6 @@ from .schema import (
     JobStatusSchema,
     MetricsSchema,
     MetricsSnapshotPageSchema,
-    MetricsSnapshotSchema,
     MetricsSnapshotsGetQueryParameters,
 )
 from .service import (
@@ -282,8 +281,8 @@ class JobIdMetricsEndpoint(Resource):
         )
 
     @login_required
-    @accepts(schema=MetricsSnapshotSchema, api=api)
-    @responds(schema=MetricsSnapshotSchema, api=api)
+    @accepts(schema=MetricsSchema, api=api)
+    @responds(schema=MetricsSchema, api=api)
     def post(self, id: int):
         """Sets a metric for a Job"""
         log = LOGGER.new(
@@ -297,10 +296,7 @@ class JobIdMetricsEndpoint(Resource):
             job_id=id,
             metric_name=parsed_obj["name"],
             metric_value=parsed_obj["value"],
-            metric_step=parsed_obj["step"] if "step" in parsed_obj else None,
-            metric_timestamp=(
-                parsed_obj["timestamp"] if "timestamp" in parsed_obj else None
-            ),
+            metric_step=parsed_obj["step"],
             error_if_not_found=True,
             log=log,
         )

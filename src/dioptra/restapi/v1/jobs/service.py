@@ -583,7 +583,6 @@ class JobIdMetricsService(object):
         metric_name: str,
         metric_value: float,
         metric_step: int | None = None,
-        metric_timestamp: int | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         """Update a job's metrics by its unique id.
@@ -620,7 +619,6 @@ class JobIdMetricsService(object):
                 key=metric_name,
                 value=metric_value,
                 step=metric_step,
-                timestamp=metric_timestamp,
             )
         return {"name": metric_name, "value": metric_value}
 

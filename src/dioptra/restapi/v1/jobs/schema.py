@@ -60,19 +60,31 @@ class MetricsSchema(Schema):
         metadata=dict(description="The value of the metric."),
         required=True,
     )
-
-
-class MetricsSnapshotSchema(MetricsSchema):
     step = fields.Integer(
         attribute="step",
         metadata=dict(description="The step value for the metric."),
+        load_only=True,
         required=False,
+        load_default=0,
     )
 
+
+class MetricsSnapshotSchema(MetricsSchema):
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="The name of the metric."),
+    )
+    value = fields.Float(
+        attribute="value",
+        metadata=dict(description="The value of the metric."),
+    )
+    step = fields.Integer(
+        attribute="step",
+        metadata=dict(description="The step value for the metric."),
+    )
     timestamp = fields.Integer(
         attribute="timestamp",
         metadata=dict(description="The timestamp of the metric in milliseconds."),
-        required=False,
     )
 
 
