@@ -190,11 +190,17 @@ class ResourceImportService(object):
 
             if source_type == ResourceImportSourceTypes.UPLOAD:
                 bytes = archive_file.stream.read()
-                with tarfile.open(fileobj=BytesIO(bytes), mode="r:*") as tar:
-                    tar.extractall(path=working_dir, filter="data")
+                try:
+                    with tarfile.open(fileobj=BytesIO(bytes), mode="r:*") as tar:
+                        tar.extractall(path=working_dir, filter="data")
+                except Exception as e:
+                    raise DioptraError("Failed to read uploaded tarfile") from e
                 hash = str(sha256(bytes).hexdigest())
-            elif source_type == ResourceImportSourceTypes.GIT:
-                hash = clone_git_repository(git_url, working_dir)
+            else:
+                try:
+                    hash = clone_git_repository(git_url, working_dir)
+                except Exception as e:
+                    raise DioptraError("Failed to clone repository") from e
 
             try:
                 config = toml.load(working_dir / config_path)
