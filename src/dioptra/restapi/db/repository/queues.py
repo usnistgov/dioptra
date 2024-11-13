@@ -212,7 +212,7 @@ class QueueRepository:
         Args:
             resource_ids: A single or iterable of queue resource IDs
             deletion_policy: Whether to look at deleted queues, non-deleted
-                queue, or all queues
+                queues, or all queues
 
         Returns:
             A Queue/list of Queue objects, or None/empty list if none were
@@ -255,7 +255,7 @@ class QueueRepository:
         Args:
             snapshot_id: The ID of a queue snapshot
             deletion_policy: Whether to look at deleted queues, non-deleted
-                queue, or all queues
+                queues, or all queues
 
         Returns:
             A Queue object, or None if one was not found with the given ID
@@ -281,7 +281,7 @@ class QueueRepository:
             group: A group/group ID, to disambiguate same-named queues across
                 groups
             deletion_policy: Whether to look at deleted queues, non-deleted
-                queue, or all queues
+                queues, or all queues
 
         Returns:
             A queue, or None if one was not found
@@ -336,7 +336,7 @@ class QueueRepository:
             descending: Whether to sort in descending order; only applicable
                 if sort_by is given
             deletion_policy: Whether to look at deleted queues, non-deleted
-                queue, or all queues
+                queues, or all queues
 
         Returns:
             A 2-tuple including the page of queues and total count of matching
