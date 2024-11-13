@@ -55,7 +55,7 @@ including a Plugin, PluginParameterType, and Entrypoint.
       # input parameter names must match the Python function definition
       # types are plugin parameter types and are matched by name
       input_params = [ { name = "name", type = "string", required = true} ]
-      output_params = [ { name = "message", type = "string" } ]
+      output_params = [ { name = "message", type = "message" } ]
 
       [[plugins.tasks]]
       filename = "tasks.py"
@@ -64,19 +64,17 @@ including a Plugin, PluginParameterType, and Entrypoint.
         { name = "greeting", type = "string", required = true },
         { name = "name", type = "string", required = true },
       ]
-      output_params = [ { name = "message", type = "string" } ]
+      output_params = [ { name = "message", type = "message" } ]
 
       [[plugins.tasks]]
       filename = "tasks.py"
       name = "shout"
-      input_params = [ { name = "message", type = "string", required = true} ]
-      output_params = [ { name = "message", type = "string" } ]
+      input_params = [ { name = "message", type = "message", required = true} ]
+      output_params = [ { name = "message", type = "message" } ]
 
     # PluginParameterTypes are fully described in the TOML
     [[plugin_param_types]]
-    name = "image"
-    # an optional structure for the type
-    structure = { list = ["int", "int", "int"] }
+    name = "message"
 
     # Entrypoints point to a task graph yaml and include metadata for registering them in Dioptra
     [[entrypoints]]
