@@ -41,6 +41,7 @@ from dioptra.restapi.v1.plugins.service import PluginIdsService
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdsService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.workflows.service import EntrypointValidateService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 PLUGIN_RESOURCE_TYPE: Final[str] = "entry_point_plugin"
@@ -69,6 +70,7 @@ class EntrypointService(object):
         plugin_ids_service: PluginIdsService,
         queue_ids_service: QueueIdsService,
         group_id_service: GroupIdService,
+        entrypoint_validate_service: EntrypointValidateService,
     ) -> None:
         """Initialize the entrypoint service.
 
@@ -84,6 +86,7 @@ class EntrypointService(object):
         self._plugin_ids_service = plugin_ids_service
         self._queue_ids_service = queue_ids_service
         self._group_id_service = group_id_service
+        self._entrypoint_validate_service = entrypoint_validate_service
 
     def create(
         self,
@@ -119,6 +122,12 @@ class EntrypointService(object):
             raise EntityExistsError(
                 RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
             )
+        
+        self._entrypoint_validate_service.validate(
+            task_graph=task_graph,
+            plugin_ids=plugin_ids,
+            entrypoint_parameters=parameters,
+        )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
         queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
@@ -312,6 +321,7 @@ class EntrypointIdService(object):
         self,
         entrypoint_name_service: EntrypointNameService,
         queue_ids_service: QueueIdsService,
+        entrypoint_validate_service: EntrypointValidateService,
     ) -> None:
         """Initialize the entrypoint service.
 
@@ -323,6 +333,7 @@ class EntrypointIdService(object):
         """
         self._entrypoint_name_service = entrypoint_name_service
         self._queue_ids_service = queue_ids_service
+        self._entrypoint_validate_service = entrypoint_validate_service
 
     def get(
         self,
@@ -484,6 +495,13 @@ class EntrypointIdService(object):
         )
         queue_resources = [queue.resource for queue in queues]
         new_entrypoint.children = plugin_resources + queue_resources
+
+        plugin_ids = [plugin_id for plugin_id in plugin_resources]
+        self._entrypoint_validate_service.validate(
+            task_graph=task_graph,
+            plugin_ids=plugin_ids,
+            entrypoint_parameters=parameters,
+        )
 
         db.session.add(new_entrypoint)
 
