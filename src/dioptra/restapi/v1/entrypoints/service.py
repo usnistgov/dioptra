@@ -496,7 +496,7 @@ class EntrypointIdService(object):
         queue_resources = [queue.resource for queue in queues]
         new_entrypoint.children = plugin_resources + queue_resources
 
-        plugin_ids = [plugin_id for plugin_id in plugin_resources]
+        plugin_ids = [plugin.plugin.resource_id for plugin in new_entrypoint.entry_point_plugin_files]
         self._entrypoint_validate_service.validate(
             task_graph=task_graph,
             plugin_ids=plugin_ids,
