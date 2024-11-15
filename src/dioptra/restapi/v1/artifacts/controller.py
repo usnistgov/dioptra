@@ -32,6 +32,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE
+from dioptra.restapi.utils import as_api_parser, as_parameters_schema_list
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
@@ -73,7 +74,6 @@ class ArtifactEndpoint(Resource):
         self._artifact_service = artifact_service
         super().__init__(*args, **kwargs)
 
-    @login_required
     @accepts(query_params_schema=ArtifactGetQueryParameters, api=api)
     @responds(schema=ArtifactPageSchema, api=api)
     def get(self):
@@ -114,6 +114,14 @@ class ArtifactEndpoint(Resource):
         )
 
     @login_required
+    @api.expect(
+        as_api_parser(
+            api,
+            as_parameters_schema_list(
+                ArtifactSchema, operation="load", location="form"
+            ),
+        )
+    )
     @accepts(schema=ArtifactSchema, api=api)
     @responds(schema=ArtifactSchema, api=api)
     def post(self):
@@ -122,13 +130,15 @@ class ArtifactEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Artifact", request_type="POST"
         )
         log.debug("Request received")
-        parsed_obj = request.parsed_obj  # noqa: F841
+        parsed_form = request.parsed_form  # noqa: F841
 
         artifact = self._artifact_service.create(
-            uri=parsed_obj["uri"],
-            description=parsed_obj["description"],
-            group_id=parsed_obj["group_id"],
-            job_id=parsed_obj["job_id"],
+            artifact_name=parsed_form["artifact_name"],
+            artifact_file=request.files.get("artifactFile", None),
+            artifact_type=parsed_form["artifact_type"],
+            description=parsed_form["description"],
+            group_id=parsed_form["group_id"],
+            job_id=parsed_form["job_id"],
             log=log,
         )
         return utils.build_artifact(artifact)
@@ -216,6 +226,7 @@ class ArtifactIdContentsEndpoint(Resource):
         contents, is_dir = self._artifact_id_contents_service.get(
             artifact_id=id,
             path=path,
+            download=download,
             log=log,
         )
 
