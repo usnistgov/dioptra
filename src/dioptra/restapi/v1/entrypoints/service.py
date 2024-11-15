@@ -62,8 +62,6 @@ SORTABLE_FIELDS: Final[dict[str, Any]] = {
 class EntrypointService(object):
     """The service methods for creating and managing entrypoints."""
 
-    from dioptra.restapi.v1.workflows.service import EntrypointValidateService
-
     @inject
     def __init__(
         self,
