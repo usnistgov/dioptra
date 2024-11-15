@@ -452,5 +452,5 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         return error_result(
             error, 
             http.HTTPStatus.UNPROCESSABLE_ENTITY, 
-            {"issues": [{"type": issue.type, "severity": issue.severity, "message": issue.message} for issue in error.args[0]]}
+            {"issues": [{"type": str(issue.type), "severity": str(issue.severity), "message": issue.message} for issue in error.args[0]]}
         )
