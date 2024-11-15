@@ -16,6 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Artifact resources."""
 from marshmallow import Schema, fields
+from dioptra.restapi.custom_schema_fields import FileUpload
 
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
@@ -95,9 +96,23 @@ class ArtifactSchema(ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, Ar
         metadata=dict(description="id of the job that produced this Artifact"),
         required=True,
     )
-    uri = fields.String(
-        attribute="uri",
-        metadata=dict(description="URL pointing to the location of the Artifact."),
+    artifactName = fields.String(
+        attribute="artifact_name",
+        metadata=dict(description="The file name of the Artifact."),
+        required=True,
+    )
+    artifactFile = FileUpload(
+        attribute="artifact_file",
+        metadata=dict(
+            type="file",
+            format="binary",
+            description="The artifact file.",
+        ),
+        required=True,
+    )
+    artifactType = fields.String(
+        attribute="artifact_type",
+        metadata=dict(description="Indicates what type of artifact this is (file or dir)."),
         required=True,
     )
 

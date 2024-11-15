@@ -17,27 +17,38 @@
 """The server-side functions that perform artifact endpoint operations."""
 from __future__ import annotations
 
-import io
 import json
-from typing import Any, Final, cast
+import mlflow
+import requests
+import os
+import tarfile
+from io import BytesIO
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Any, Final, Union, cast
 
 import structlog
 from flask_login import current_user
 from injector import inject
 from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
+from posixpath import join as urljoin
+from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import (
+    DioptraError,
     BackendDatabaseError,
     EntityDoesNotExistError,
     EntityExistsError,
+    QueryParameterValidationError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.jobs.service import ExperimentJobIdService, JobIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.sdk.utilities.paths import set_cwd
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -79,7 +90,9 @@ class ArtifactService(object):
 
     def create(
         self,
-        uri: str,
+        artifact_name: str,
+        artifact_file: FileStorage | None,
+        artifact_type: str,
         description: str,
         group_id: int,
         job_id: int,
@@ -89,7 +102,9 @@ class ArtifactService(object):
         """Create a new artifact.
 
         Args:
-            uri: The uri of the artifact. This must be globally unique.
+            artifact_name: Name of the Artifact.
+            artifact_file: The contents of the Artifact file.
+            artifact_type: Either file or dir.
             description: The description of the artifact.
             group_id: The group that will own the artifact.
             commit: If True, commit the transaction. Defaults to True.
@@ -103,15 +118,39 @@ class ArtifactService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        duplicate = self._artifact_uri_service.get(uri, log=log)
-        if duplicate is not None:
-            raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=uri)
-
         job_dict = cast(
             utils.JobDict,
             self._job_id_service.get(job_id, error_if_not_found=True, log=log),
         )
         job = job_dict["job"]
+        job_artifacts = job_dict["artifacts"]
+
+        if artifact_file is None:
+            raise DioptraError("Failed to read uploaded file.")
+        
+        #check the job's artifacts for one with a matching name
+        duplicate = _get_duplicate_artifact(job_artifacts, artifact_name)
+
+        if duplicate is not None:
+            raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=duplicate.uri)
+
+        with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
+            working_dir = Path(tmp_dir)
+            bytes = artifact_file.stream.read()
+            
+            temp_file_path = os.path.join(working_dir, artifact_name)
+            try:
+                with open (temp_file_path, "wb") as temp_file:
+                    temp_file.write(bytes)
+            except Exception as e:
+                raise DioptraError("Failed to write file.") from e
+
+        if artifact_type == 'file':
+            mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
+            uri = _upload_file_as_artifact(temp_file_path)
+        else:
+            #TODO: put it in a tar then upload, since its a dir
+            uri = ""
 
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
 
@@ -471,21 +510,231 @@ class ArtifactIdContentsService(object):
 
     def get(
         self,
-        artifact_id: str,
-        path: str,
+        artifact_id: int,
+        path: str | None,
+        download: bool = False,
         **kwargs,
-    ) -> (io.BytesIO, bool):
-
-        # example:
-        # If the requested location is a directory, contents is a file with the list of
-        # file metadata.
-        is_dir = True
-        contents = io.BytesIO()
-        contents.write(
-            json.dumps(
-                [{"relativePath": "./", "fileType": "json", "fileSize": 0, "url": ""}]
-            ).encode("utf-8")
+    ) -> Any:
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get artifact contents by artifact id", artifact_id=artifact_id)
+        
+        artifact_stmt = (
+            select(models.Artifact)
+            .join(models.Resource)
+            .where(
+                models.Artifact.resource_id == artifact_id,
+                models.Artifact.resource_snapshot_id
+                == models.Resource.latest_snapshot_id,
+                models.Resource.is_deleted == False,  # noqa: E712
+            )
         )
-        contents.seek(0)
+        artifact = db.session.scalar(artifact_stmt)
+        if artifact is None:
+            raise EntityDoesNotExistError(RESOURCE_TYPE, artifact_id=artifact_id)
 
+        artifact_url = os.path.normpath(artifact.uri)
+
+        sanitized_path = None
+        if path is not None:
+            if '..' in path:
+                raise QueryParameterValidationError(RESOURCE_TYPE, constraint="invalid path query parameter") 
+            sanitized_path = os.path.normpath(path) #TODO: expand on cleaning the path
+
+        if not os.path.exists(artifact_url):
+            raise DioptraError(f'An artifact file with path "{artifact_url}" already exists.')
+        
+        contents = BytesIO()
+        is_dir = os.path.isdir(artifact_url)
+        
+        if is_dir:
+            if sanitized_path is None:
+                #Since there is no path, either return an artifact file dir listing, or 
+                #a tar of the dir structure if download is True
+                contents = self._get_artifact_file_list(artifact_url, download)
+            else:
+                #get the file contents
+                contents = self._get_artifact_file_contents(artifact_url, sanitized_path, is_dir)
+        else:
+            #this is a file
+            if sanitized_path is not None:
+                raise QueryParameterValidationError(RESOURCE_TYPE, constraint="Invalid path query parameter") 
+            else:
+                #get the file contents
+                contents = self._get_artifact_file_contents(artifact_url, sanitized_path, is_dir)
+                
         return contents, is_dir
+
+    def _get_artifact_zip_file(
+        self,
+        full_path: str,
+    ) -> BytesIO:
+            zip_name = os.path.basename(full_path)
+            contents = BytesIO()
+
+            with tarfile.open(fileobj=contents, mode='w') as tar:
+                for file_path in full_path:
+                    tar.add(file_path, arcname=zip_name)
+
+            contents.seek(0)
+            return contents
+
+    def _get_artifact_file_contents(
+        self, 
+        artifact_url: str, 
+        sanitized_path: str | None,
+        download: bool = False,
+    ) -> Any:
+
+        if sanitized_path is not None:
+            full_path = os.path.join(artifact_url, sanitized_path)
+        else:
+            full_path = artifact_url
+
+        is_dir = os.path.isdir(full_path)
+
+        if not is_dir:
+            with open(full_path, 'rb') as file:
+                file_contents = file.read()
+                contents = BytesIO(file_contents)
+                contents.seek(0)
+        #since it is a dir, either return a tar or return a file list
+        else:
+            if download is True:
+                contents = self._get_artifact_zip_file(full_path)
+            else:
+                contents = self._get_artifact_file_list(artifact_url, download)
+        return contents
+
+    def _get_artifact_file_list(self, 
+        artifact_url: str, 
+        download: bool
+    ) -> list[Any] | BytesIO:
+
+        contents = []
+        relative_path = ""
+
+        if download is True:
+            return self._get_artifact_zip_file(artifact_url)
+
+        for path, dir_names, file_names in os.walk(artifact_url):
+            for file_name in file_names:
+                full_path = os.path.join(path, file_name)
+                file_size = os.path.getsize(full_path)
+                relative_path = full_path.replace(artifact_url, '/')
+
+                contents.append({
+                    "relativePath": relative_path, 
+                    "fileSize": file_size, 
+                    "url": full_path
+                })
+
+            for dir_name in dir_names:
+                full_path = os.path.join(path, dir_name)
+                file_size = os.path.getsize(full_path)
+                relative_path = full_path.replace(artifact_url, '/')
+
+                contents.append({
+                    "relativePath": relative_path, 
+                    "fileSize": file_size, 
+                    "url": full_path
+                })
+
+        return contents
+
+def _get_duplicate_artifact(job_artifacts, new_artifact_name) -> models.Artifact | None:
+    for artifact in job_artifacts:
+        existing_artifact_name = os.path.basename(artifact.uri)
+        if new_artifact_name == existing_artifact_name:
+            return artifact
+        
+    return None
+
+
+def _get_logged_in_session():
+    session = requests.Session()
+    url = "http://localhost:5000/api/v1"
+    # url = "http://dioptra-deployment-restapi:5000/api/v1"
+
+    login = _post(session, url, {
+            'username':os.environ['DIOPTRA_WORKER_USERNAME'], 
+            'password':os.environ['DIOPTRA_WORKER_PASSWORD']},
+            'auth', 'login')
+    LOGGER.info("login request sent", response=str(login))
+
+    return session, url
+
+def _post(session, endpoint, data, *features):
+    _debug_request(urljoin(endpoint, *features), "POST", data)
+    return _make_request(session, "post", endpoint, data, *features)
+
+def _upload_artifact_to_restapi(source_uri, job_id):
+    session, url = _get_logged_in_session()
+
+    artifact = _post(session, url, {"group": 1, "description": f"artifact for job {job_id}", "job": str(job_id), "uri": source_uri}, 'artifacts')
+    LOGGER.info("artifact", response=artifact) 
+
+
+def _upload_file_as_artifact(artifact_path: Union[str, Path]) -> str:
+    """Uploads a file as an artifact of the active MLFlow run.
+
+    Args:
+        artifact_path: The location of the file to be uploaded.
+
+    See Also:
+        - :py:func:`mlflow.log_artifact`
+    """
+    artifact_path = Path(artifact_path)
+    mlflow.log_artifact(str(artifact_path))
+    uri = mlflow.get_artifact_uri(str(artifact_path.name))
+    _upload_artifact_to_restapi(uri, os.environ['__JOB_ID'])
+    LOGGER.info("Artifact uploaded for current MLFlow run", filename=artifact_path.name)
+    return uri
+
+def _debug_request(url, method, data=None):
+    LOGGER.debug("Request made.", url=url, method=method, data=data)
+
+def _debug_response(json):
+    LOGGER.debug("Response received.", json=json)
+
+def _make_request(session, method_name, endpoint, data, *features):
+    url = urljoin(endpoint, *features)
+    method = getattr(session, method_name)
+    response=''
+    try:
+        if data:
+            response = method(url, json=data)
+        else:
+            response = method(url)
+        if response.status_code != 200:
+            raise StatusCodeError()
+        json = response.json()
+        _debug_response(json=json)
+        return json
+    except (requests.ConnectionError, StatusCodeError, requests.JSONDecodeError) as e:
+        _handle_error(session, url, method_name.upper(), data, response, e)
+
+def _handle_error(session, url, method, data, response, error):
+    if type(error) is requests.ConnectionError:
+        restapi = os.environ["DIOPTRA_RESTAPI_URI"]
+        message = (
+            f"Could not connect to the REST API. Is the server running at {restapi}?"
+        )
+        LOGGER.error(message, url=url, method=method, data=data, response=response)
+        raise APIConnectionError(message)
+    if type(error) is StatusCodeError:
+        message = f"Error code {response.status_code} returned."
+        LOGGER.error(message, url=url, method=method, data=data, response=response)
+        raise StatusCodeError(message)
+    if type(error) is requests.JSONDecodeError:
+        message = "JSON response could not be decoded."
+        LOGGER.error(message, url=url, method=method, data=data, response=response)
+        raise JSONDecodeError(message)
+    
+class APIConnectionError(Exception):
+    """Class for connection errors"""
+
+class StatusCodeError(Exception):
+    """Class for status code errors"""
+
+class JSONDecodeError(Exception):
+    """Class for JSON decode errors"""
