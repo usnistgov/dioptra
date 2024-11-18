@@ -98,7 +98,7 @@ class ArtifactSchema(ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, Ar
     )
     artifactName = fields.String(
         attribute="artifact_name",
-        metadata=dict(description="The file name of the Artifact."),
+        metadata=dict(description="The name of the Artifact."),
         required=True,
     )
     artifactFile = FileUpload(
@@ -108,7 +108,7 @@ class ArtifactSchema(ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, Ar
             format="binary",
             description="The artifact file.",
         ),
-        required=True,
+        required=False,
     )
     artifactType = fields.String(
         attribute="artifact_type",
