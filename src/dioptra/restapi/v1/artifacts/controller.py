@@ -122,7 +122,7 @@ class ArtifactEndpoint(Resource):
             ),
         )
     )
-    @accepts(schema=ArtifactSchema, api=api)
+    @accepts(form_schema=ArtifactSchema, api=api)
     @responds(schema=ArtifactSchema, api=api)
     def post(self):
         """Creates an Artifact resource."""
