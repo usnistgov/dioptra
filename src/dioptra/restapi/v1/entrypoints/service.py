@@ -145,16 +145,15 @@ class EntrypointService(object):
             creator=current_user,
         )
 
-        entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
                 plugin=plugin["plugin"],
-                plugin_file=plugin_file,
             )
             for plugin in plugins
-            for plugin_file in plugin["plugin_files"]
         ]
-        new_entrypoint.entry_point_plugin_files = entry_point_plugin_files
+
+        new_entrypoint.entry_point_plugins = entry_point_plugins
 
         plugin_resources = [plugin["plugin"].resource for plugin in plugins]
         queue_resources = [queue.resource for queue in queues]
@@ -467,19 +466,18 @@ class EntrypointIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        new_entrypoint.entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        new_entrypoint.entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
-                plugin=entry_point_plugin_file.plugin,
-                plugin_file=entry_point_plugin_file.plugin_file,
+                plugin=entry_point_plugin.plugin,
             )
-            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+            for entry_point_plugin in entrypoint.entry_point_plugins
         ]
 
         plugin_resources = list(
             {
                 plugin.plugin.resource_id: plugin.plugin.resource
-                for plugin in new_entrypoint.entry_point_plugin_files
+                for plugin in new_entrypoint.entry_point_plugins
             }.values()
         )
         queue_resources = [queue.resource for queue in queues]
@@ -630,34 +628,31 @@ class EntrypointIdPluginsService(object):
             creator=current_user,
         )
 
-        new_entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        new_entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
                 plugin=plugin["plugin"],
-                plugin_file=plugin_file,
             )
             for plugin in self._plugin_ids_service.get(
                 plugin_ids, error_if_not_found=True
             )
-            for plugin_file in plugin["plugin_files"]
         ]
-        existing_entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        existing_entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
-                plugin=entry_point_plugin_file.plugin,
-                plugin_file=entry_point_plugin_file.plugin_file,
+                plugin=entry_point_plugin.plugin,
             )
-            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
-            if entry_point_plugin_file.plugin.resource_id not in set(plugin_ids)
+            for entry_point_plugin in entrypoint.entry_point_plugins
+            if entry_point_plugin.plugin.resource_id not in set(plugin_ids)
         ]
-        new_entrypoint.entry_point_plugin_files = (
-            existing_entry_point_plugin_files + new_entry_point_plugin_files
+        new_entrypoint.entry_point_plugins = (
+            existing_entry_point_plugins + new_entry_point_plugins
         )
 
         plugin_resources = list(
             {
                 plugin.plugin.resource_id: plugin.plugin.resource
-                for plugin in new_entrypoint.entry_point_plugin_files
+                for plugin in new_entrypoint.entry_point_plugins
             }.values()
         )
         queue_resources = [
@@ -728,20 +723,27 @@ class EntrypointIdPluginsIdService(object):
         )["entry_point"]
 
         plugins = {
-            entry_point_plugin_file.plugin.resource_id: entry_point_plugin_file.plugin
-            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+            entry_point_plugin.plugin.resource_id: entry_point_plugin.plugin
+            for entry_point_plugin in entrypoint.entry_point_plugins
         }
         if plugin_id not in plugins:
             raise EntityDoesNotExistError(
                 PLUGIN_RESOURCE_TYPE, entrypoint_id=entrypoint_id, plugin_id=plugin_id
             )
 
-        plugin = utils.PluginWithFilesDict(
-            plugin=plugins[plugin_id], plugin_files=[], has_draft=None
+        plugin_files_stmt = (
+            select(models.PluginFile)
+            .where(
+                models.PluginFile.plugin_id
+                == plugin_id
+            )
         )
-        for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
-            if entry_point_plugin_file.plugin.resource_id == plugin_id:
-                plugin["plugin_files"].append(entry_point_plugin_file.plugin_file)
+        plugin_files = db.session.scalars(plugin_files_stmt).unique().all()
+
+        # Construct the PluginWithFilesDict
+        plugin = utils.PluginWithFilesDict(
+            plugin=plugins[plugin_id], plugin_files=plugin_files, has_draft=None
+        )
 
         return plugin
 
@@ -775,7 +777,7 @@ class EntrypointIdPluginsIdService(object):
         )["entry_point"]
 
         plugin_ids = set(
-            plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugin_files
+            plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugins
         )
         if plugin_id not in plugin_ids:
             raise EntityDoesNotExistError(
@@ -800,14 +802,13 @@ class EntrypointIdPluginsIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        new_entrypoint.entry_point_plugin_files = [
-            models.EntryPointPluginFile(
+        new_entrypoint.entry_point_plugins = [
+            models.EntryPointPlugin(
                 entry_point=new_entrypoint,
-                plugin=entry_point_plugin_file.plugin,
-                plugin_file=entry_point_plugin_file.plugin_file,
+                plugin=entry_point_plugin.plugin,
             )
-            for entry_point_plugin_file in entrypoint.entry_point_plugin_files
-            if entry_point_plugin_file.plugin.resource_id != plugin_id
+            for entry_point_plugin in entrypoint.entry_point_plugins
+            if entry_point_plugin.plugin.resource_id != plugin_id
         ]
 
         # remove the plugin resource dependency association
@@ -1194,13 +1195,25 @@ def _get_entrypoint_plugin_snapshots(
     entrypoint: models.EntryPoint,
 ) -> list[utils.PluginWithFilesDict]:
     plugins_dict = {
-        entry_point_plugin_file.plugin.resource_id: utils.PluginWithFilesDict(
-            plugin=entry_point_plugin_file.plugin, plugin_files=[], has_draft=False
+        entry_point_plugin.plugin.resource_id: utils.PluginWithFilesDict(
+            plugin=entry_point_plugin.plugin, plugin_files=[], has_draft=False
         )
-        for entry_point_plugin_file in entrypoint.entry_point_plugin_files
+        for entry_point_plugin in entrypoint.entry_point_plugins
     }
-    for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
-        resource_id = entry_point_plugin_file.plugin.resource_id
-        plugin_file = entry_point_plugin_file.plugin_file
-        plugins_dict[resource_id]["plugin_files"].append(plugin_file)
+    for entry_point_plugin in entrypoint.entry_point_plugins:
+        resource_id = entry_point_plugin.plugin.resource_id
+        plugin_files = db.session.scalars(
+            select(models.PluginFile)
+            .join(models.PluginPluginFile, 
+                models.PluginPluginFile.plugin_file_resource_snapshot_id
+                == models.PluginFile.resource_snapshot_id
+            )
+            .where(
+              models.PluginPluginFile.plugin_resource_snapshot_id 
+              == entry_point_plugin.plugin.resource_snapshot_id
+            )
+        ).all()
+
+        plugins_dict[resource_id]["plugin_files"].extend(plugin_files)
+
     return list(plugins_dict.values())
