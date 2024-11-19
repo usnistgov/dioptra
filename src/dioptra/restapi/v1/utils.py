@@ -20,8 +20,10 @@ from urllib.parse import urlencode, urlunparse
 
 from marshmallow import Schema
 
-from dioptra.restapi.db import models
+from dioptra.restapi.db import models, db
 from dioptra.restapi.routes import V1_ROOT
+
+from sqlalchemy import select
 
 ARTIFACTS: Final[str] = "artifacts"
 ENTRYPOINTS: Final[str] = "entrypoints"
@@ -586,17 +588,20 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     queues = entrypoint_dict.get("queues", None)
     has_draft = entrypoint_dict.get("has_draft", None)
 
-    plugins_dict = {
-        entry_point_plugin_file.plugin.resource_id: PluginWithFilesDict(
-            plugin=entry_point_plugin_file.plugin, plugin_files=[], has_draft=False
+    plugins = [
+        PluginWithFilesDict(
+            plugin=entry_point_plugin.plugin,
+            plugin_files=db.session.scalars(
+                select(models.PluginFile)
+                .where(
+                    models.PluginFile.plugin_id
+                    == entry_point_plugin.plugin.resource_id
+                )
+            ).unique().all(),
+            has_draft=False,
         )
-        for entry_point_plugin_file in entrypoint.entry_point_plugin_files
-    }
-    for entry_point_plugin_file in entrypoint.entry_point_plugin_files:
-        resource_id = entry_point_plugin_file.plugin.resource_id
-        plugin_file = entry_point_plugin_file.plugin_file
-        plugins_dict[resource_id]["plugin_files"].append(plugin_file)
-    plugins = list(plugins_dict.values())
+        for entry_point_plugin in entrypoint.entry_point_plugins
+    ]
 
     data = {
         "id": entrypoint.resource_id,
