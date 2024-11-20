@@ -24,23 +24,11 @@ import yaml
 
 from .lib import views
 from .lib.package_job_files import package_job_files
-from .lib.export_task_engine_yaml import build_task_engine_dict_for_validation
 from .schema import FileTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 RESOURCE_TYPE: Final[str] = "workflow"
-
-from dioptra.restapi.db import db
-from dioptra.restapi.errors import EntrpointWorkflowYamlValidationError
-from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.plugins.service import PluginIdFileService, PluginIdsService
-from dioptra.task_engine.type_registry import BUILTIN_TYPES
-from dioptra.restapi.v1.workflows.lib.export_task_engine_yaml import extract_tasks
-from dioptra.task_engine.validation import (
-    validate, 
-    is_valid,
-)
 
 
 class JobFilesDownloadService(object):
@@ -79,62 +67,3 @@ class JobFilesDownloadService(object):
             file_type=file_type,
             logger=log,
         )
-
-
-class EntrypointValidateService(object):
-    """The service for handling requests with entrypoint workflow yamls."""
-
-    @inject
-    def __init__(
-        self,
-        plugin_id_service: PluginIdsService,
-        plugin_id_file_service: PluginIdFileService,
-    ) -> None:
-        """Initialize the entrypoint service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            plugin_ids_service: A PluginIdsService object.
-        """
-        self._plugin_id_service = plugin_id_service
-        self._plugin_id_file_service = plugin_id_file_service
-
-    def validate(
-        self, 
-        task_graph: str, 
-        plugin_ids: list[int], 
-        entrypoint_parameters: list[dict[str, Any]],
-        **kwargs,
-    ) -> dict[str, Any]:
-        """Validate a entrypoint workflow before the entrypoint is created.
-
-        Args:
-            task_graph: The proposed task graph of a new entrypoint resource.
-            plugin_ids: A list of plugin files for the new entrypoint.
-            parameters: A list of parameters for the new entrypoint.
-
-        Returns:
-            A success response and a indicator that states the entrypoint worklflow yaml is valid.
-
-        Raises:
-            EntrpointWorkflowYamlValidationError: If the entrypoint worklflow yaml is not valid.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Validate a entrypoint workflow", task_graph=task_graph, plugin_ids=plugin_ids, entrypoint_parameters=entrypoint_parameters)
-
-        parameters = {param['name']: param['default_value'] for param in entrypoint_parameters}
-        plugins = self._plugin_id_service.get(plugin_ids)
-        task_engine_dict = build_task_engine_dict_for_validation(
-            plugins=plugins, 
-            parameters=parameters, 
-            task_graph=task_graph
-        )
-        valid = is_valid(task_engine_dict)
-
-        if valid:
-            return {"status": "Success", "valid": valid}
-        else:
-            issues = validate(task_engine_dict)
-            log.debug("Entrypoint workflow validation failed", issues=issues)
-            raise EntrpointWorkflowYamlValidationError(issues)

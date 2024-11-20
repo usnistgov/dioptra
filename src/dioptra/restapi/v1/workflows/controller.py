@@ -26,7 +26,8 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from .schema import FileTypes, JobFilesDownloadQueryParametersSchema, EntrypointWorkflowSchema
-from .service import JobFilesDownloadService, EntrypointValidateService
+from .service import JobFilesDownloadService
+from dioptra.restapi.v1.entrypoints.service import EntrypointValidateService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
