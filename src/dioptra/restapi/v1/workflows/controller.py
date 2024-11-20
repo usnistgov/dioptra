@@ -83,6 +83,8 @@ class JobFilesDownloadEndpoint(Resource):
 
 @api.route("/entrypointValidate")
 class EntrypointValidateEndpoint(Resource):
+    """Wrapper endpoint to expose entrypoint validation service."""
+
     @inject
     def __init__(
         self, entrypoint_validate_service: EntrypointValidateService, *args, **kwargs

@@ -38,7 +38,7 @@ from dioptra.restapi.errors import (
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.plugins.service import PluginIdFileService, PluginIdsService
+from dioptra.restapi.v1.plugins.service import PluginIdsService
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdsService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
@@ -1268,7 +1268,6 @@ class EntrypointValidateService(object):
     def __init__(
         self,
         plugin_id_service: PluginIdsService,
-        plugin_id_file_service: PluginIdFileService,
     ) -> None:
         """Initialize the entrypoint service.
 
@@ -1278,7 +1277,6 @@ class EntrypointValidateService(object):
             plugin_ids_service: A PluginIdsService object.
         """
         self._plugin_id_service = plugin_id_service
-        self._plugin_id_file_service = plugin_id_file_service
 
     def validate(
         self, 
