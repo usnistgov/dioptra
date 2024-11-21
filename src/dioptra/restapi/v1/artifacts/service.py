@@ -25,7 +25,7 @@ import tarfile
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Final, Union, cast
+from typing import Any, Final, List, Union, cast
 
 import structlog
 from flask_login import current_user
@@ -128,7 +128,14 @@ class ArtifactService(object):
         if artifact_file is None:
             raise DioptraError("Failed to read uploaded file.")
         
+        artifact_file_name = artifact_file.filename
+        if artifact_file_name is None:
+            raise DioptraError("Invalid file name to be uploaded.")
+        
         #check the job's artifacts for one with a matching name
+        # TODO: Currently, this checks the artifact name against the existing file names, 
+        # which won't work. Need to decide on using the provided artifact_name for the file,
+        # or removing the artifact_name parameter entirely.
         duplicate = _get_duplicate_artifact(job_artifacts, artifact_name)
 
         if duplicate is not None:
@@ -138,19 +145,24 @@ class ArtifactService(object):
             working_dir = Path(tmp_dir)
             bytes = artifact_file.stream.read()
             
-            temp_file_path = os.path.join(working_dir, artifact_name)
+            temp_file_path = os.path.join(working_dir, artifact_file_name)
             try:
                 with open (temp_file_path, "wb") as temp_file:
                     temp_file.write(bytes)
             except Exception as e:
                 raise DioptraError("Failed to write file.") from e
 
-        if artifact_type == 'file':
-            mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
-            uri = _upload_file_as_artifact(temp_file_path)
-        else:
-            #TODO: put it in a tar then upload, since its a dir
-            uri = ""
+            if artifact_type == 'file':
+                mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
+                uri = _upload_file_as_artifact(
+                    artifact_path=temp_file_path, 
+                    group_id=group_id, 
+                    job_id=job_id, 
+                    description=description
+                    )
+            else:
+                #TODO: put it in a tar file then upload, since its a dir
+                uri = ""
 
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
 
@@ -540,8 +552,9 @@ class ArtifactIdContentsService(object):
                 raise QueryParameterValidationError(RESOURCE_TYPE, constraint="invalid path query parameter") 
             sanitized_path = os.path.normpath(path) #TODO: expand on cleaning the path
 
-        if not os.path.exists(artifact_url):
-            raise DioptraError(f'An artifact file with path "{artifact_url}" already exists.')
+        # TODO: Need to check MLFlow for the specified artifact
+        # if not os.path.exists(artifact_url):
+            # raise DioptraError(f'An artifact file with path "{artifact_url}" does not exist.')
         
         contents = BytesIO()
         is_dir = os.path.isdir(artifact_url)
@@ -562,7 +575,7 @@ class ArtifactIdContentsService(object):
                 #get the file contents
                 contents = self._get_artifact_file_contents(artifact_url, sanitized_path, is_dir)
                 
-        return contents, is_dir
+        return contents, is_dir, os.path.basename(artifact_url)
 
     def _get_artifact_zip_file(
         self,
@@ -589,6 +602,9 @@ class ArtifactIdContentsService(object):
             full_path = os.path.join(artifact_url, sanitized_path)
         else:
             full_path = artifact_url
+
+        downloaded_artifact = _download_all_artifacts(uris=[full_path])
+        full_path = downloaded_artifact[0]
 
         is_dir = os.path.isdir(full_path)
 
@@ -649,6 +665,22 @@ def _get_duplicate_artifact(job_artifacts, new_artifact_name) -> models.Artifact
         
     return None
 
+def _download_all_artifacts(uris: List[str]) -> List[str]:
+    download_paths = []
+    for uri in uris:
+        try:
+            download_path: str = mlflow.artifacts.download_artifacts(
+                artifact_uri=uri
+            )
+            LOGGER.info(
+                "Artifact downloaded from MLFlow run",
+                artifact_path=download_path
+            )
+            download_paths += [download_path]
+        except:
+            raise FileNotFoundError(f'The specified file with uri {uri} could not be downloaded.')
+    return download_paths
+
 
 def _get_logged_in_session():
     session = requests.Session()
@@ -667,14 +699,14 @@ def _post(session, endpoint, data, *features):
     _debug_request(urljoin(endpoint, *features), "POST", data)
     return _make_request(session, "post", endpoint, data, *features)
 
-def _upload_artifact_to_restapi(source_uri, job_id):
+def _upload_artifact_to_restapi(source_uri, group_id: int, job_id: int, description: str):
     session, url = _get_logged_in_session()
 
-    artifact = _post(session, url, {"group": 1, "description": f"artifact for job {job_id}", "job": str(job_id), "uri": source_uri}, 'artifacts')
+    artifact = _post(session, url, {"group": str(group_id), "description": f"{description}", "job": str(job_id), "uri": source_uri}, 'artifacts')
     LOGGER.info("artifact", response=artifact) 
 
 
-def _upload_file_as_artifact(artifact_path: Union[str, Path]) -> str:
+def _upload_file_as_artifact(artifact_path: Union[str, Path], group_id: int, job_id: int, description: str) -> str:
     """Uploads a file as an artifact of the active MLFlow run.
 
     Args:
@@ -686,7 +718,7 @@ def _upload_file_as_artifact(artifact_path: Union[str, Path]) -> str:
     artifact_path = Path(artifact_path)
     mlflow.log_artifact(str(artifact_path))
     uri = mlflow.get_artifact_uri(str(artifact_path.name))
-    _upload_artifact_to_restapi(uri, os.environ['__JOB_ID'])
+    #_upload_artifact_to_restapi(uri, group_id, job_id, description)
     LOGGER.info("Artifact uploaded for current MLFlow run", filename=artifact_path.name)
     return uri
 
