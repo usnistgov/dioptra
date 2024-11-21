@@ -223,7 +223,7 @@ class ArtifactIdContentsEndpoint(Resource):
         path = parsed_query_params["path"]
         download = parsed_query_params["download"]
 
-        contents, is_dir = self._artifact_id_contents_service.get(
+        contents, is_dir, artifact_name = self._artifact_id_contents_service.get(
             artifact_id=id,
             path=path,
             download=download,
@@ -231,12 +231,16 @@ class ArtifactIdContentsEndpoint(Resource):
         )
 
         if path is None and is_dir:
-            path = f"artifact_{id}.json"
+            path = Path(f"artifact_{id}.json").name
+        elif path is None:
+            path = artifact_name
+        else:
+            path = Path(path).name
 
         return send_file(
             path_or_file=contents,
             as_attachment=download,
-            download_name=Path(path).name,
+            download_name=path,
         )
 
 
