@@ -133,7 +133,6 @@ class ArtifactEndpoint(Resource):
         parsed_form = request.parsed_form  # noqa: F841
 
         artifact = self._artifact_service.create(
-            artifact_name=parsed_form["artifact_name"],
             artifact_file=request.files.get("artifactFile", None),
             artifact_type=parsed_form["artifact_type"],
             description=parsed_form["description"],
