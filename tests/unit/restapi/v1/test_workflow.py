@@ -29,7 +29,7 @@ from werkzeug.test import TestResponse
 
 from dioptra.restapi.routes import V1_WORKFLOWS_ROUTE, V1_ROOT
 
-from ..lib import actions, asserts, helpers
+from ..lib import actions
 
 
 # -- Actions ---------------------------------------------------------------------------

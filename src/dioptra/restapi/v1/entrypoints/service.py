@@ -33,7 +33,6 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     QueryParameterNotUniqueError,
     SortParameterValidationError,
-    EntrpointWorkflowYamlValidationError,
 )
 from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
@@ -42,8 +41,7 @@ from dioptra.restapi.v1.plugins.service import PluginIdsService
 from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdsService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-from dioptra.restapi.v1.workflows.lib.export_task_engine_yaml import build_task_engine_dict_for_validation
-from dioptra.task_engine.validation import validate
+from dioptra.restapi.v1.shared.entrypoint_validate_service import EntrypointValidateService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 PLUGIN_RESOURCE_TYPE: Final[str] = "entry_point_plugin"
@@ -90,7 +88,6 @@ class EntrypointService(object):
         self._queue_ids_service = queue_ids_service
         self._group_id_service = group_id_service
 
-    # add here
     def create(
         self,
         name: str,
@@ -406,7 +403,6 @@ class EntrypointIdService(object):
             entry_point=entrypoint, queues=queues, has_draft=has_draft
         )
 
-    # add here
     def modify(
         self,
         entrypoint_id: int,
@@ -509,13 +505,6 @@ class EntrypointIdService(object):
         queue_resources = [queue.resource for queue in queues]
         new_entrypoint.children = plugin_resources + queue_resources
 
-        # plugin_ids = [plugin.plugin.resource_id for plugin in new_entrypoint.entry_point_plugin_files]
-        # self._entrypoint_validate_service.validate(
-        #     task_graph=task_graph,
-        #     plugin_ids=plugin_ids,
-        #     entrypoint_parameters=parameters,
-        # )
-
         db.session.add(new_entrypoint)
 
         if commit:
@@ -614,7 +603,6 @@ class EntrypointIdPluginsService(object):
 
         return _get_entrypoint_plugin_snapshots(entrypoint["entry_point"])
 
-    # add here
     def append(
         self,
         entrypoint_id: int,
@@ -798,7 +786,6 @@ class EntrypointIdPluginsIdService(object):
 
         return plugin
 
-    # add here
     def delete(
         self,
         entrypoint_id: int,
@@ -1259,62 +1246,6 @@ class EntrypointNameService(object):
             return None
 
         return entrypoint
-
-
-class EntrypointValidateService(object):
-    """The service for handling requests with entrypoint workflow yamls."""
-
-    @inject
-    def __init__(
-        self,
-        plugin_id_service: PluginIdsService,
-    ) -> None:
-        """Initialize the entrypoint service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            plugin_ids_service: A PluginIdsService object.
-        """
-        self._plugin_id_service = plugin_id_service
-
-    def validate(
-        self, 
-        task_graph: str, 
-        plugin_ids: list[int], 
-        entrypoint_parameters: list[dict[str, Any]],
-        **kwargs,
-    ) -> dict[str, Any]:
-        """Validate a entrypoint workflow before the entrypoint is created.
-
-        Args:
-            task_graph: The proposed task graph of a new entrypoint resource.
-            plugin_ids: A list of plugin files for the new entrypoint.
-            parameters: A list of parameters for the new entrypoint.
-
-        Returns:
-            A success response and a indicator that states the entrypoint worklflow yaml is valid.
-
-        Raises:
-            EntrpointWorkflowYamlValidationError: If the entrypoint worklflow yaml is not valid.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Validate a entrypoint workflow", task_graph=task_graph, plugin_ids=plugin_ids, entrypoint_parameters=entrypoint_parameters)
-
-        parameters = {param['name']: param['default_value'] for param in entrypoint_parameters}
-        plugins = self._plugin_id_service.get(plugin_ids)
-        task_engine_dict = build_task_engine_dict_for_validation(
-            plugins=plugins, 
-            parameters=parameters, 
-            task_graph=task_graph
-        )
-
-        issues = validate(task_engine_dict)
-
-        if not issues:
-            return {"status": "Success", "valid": True}
-        else:
-            raise EntrpointWorkflowYamlValidationError(issues)
 
 
 def _get_entrypoint_plugin_snapshots(

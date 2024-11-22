@@ -27,7 +27,8 @@ from structlog.stdlib import BoundLogger
 
 from .schema import FileTypes, JobFilesDownloadQueryParametersSchema, EntrypointWorkflowSchema
 from .service import JobFilesDownloadService
-from dioptra.restapi.v1.entrypoints.service import EntrypointValidateService
+
+from dioptra.restapi.v1.shared.entrypoint_validate_service import EntrypointValidateService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -83,7 +84,7 @@ class JobFilesDownloadEndpoint(Resource):
 
 @api.route("/entrypointValidate")
 class EntrypointValidateEndpoint(Resource):
-    """Wrapper endpoint to expose entrypoint validation service."""
+    """Wrapper endpoint to expose shared entrypoint validation service."""
 
     @inject
     def __init__(

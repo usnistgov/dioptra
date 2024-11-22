@@ -20,7 +20,6 @@ from typing import IO, Final, Any, cast
 import structlog
 from structlog.stdlib import BoundLogger
 from injector import inject
-import yaml
 
 from .lib import views
 from .lib.package_job_files import package_job_files
