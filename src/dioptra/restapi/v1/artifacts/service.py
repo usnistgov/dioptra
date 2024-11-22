@@ -90,7 +90,6 @@ class ArtifactService(object):
 
     def create(
         self,
-        artifact_name: str,
         artifact_file: FileStorage | None,
         artifact_type: str,
         description: str,
@@ -132,11 +131,8 @@ class ArtifactService(object):
         if artifact_file_name is None:
             raise DioptraError("Invalid file name to be uploaded.")
         
-        #check the job's artifacts for one with a matching name
-        # TODO: Currently, this checks the artifact name against the existing file names, 
-        # which won't work. Need to decide on using the provided artifact_name for the file,
-        # or removing the artifact_name parameter entirely.
-        duplicate = _get_duplicate_artifact(job_artifacts, artifact_name)
+        #check the job's artifacts for a file with a matching name
+        duplicate = _get_duplicate_artifact(job_artifacts, artifact_file_name)
 
         if duplicate is not None:
             raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=duplicate.uri)
