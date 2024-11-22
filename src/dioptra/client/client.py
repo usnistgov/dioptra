@@ -20,6 +20,7 @@ from typing import Any, Final, Generic, TypeVar
 
 from .auth import AuthCollectionClient
 from .base import DioptraResponseProtocol, DioptraSession
+from .entrypoints import EntrypointsCollectionClient
 from .groups import GroupsCollectionClient
 from .jobs import JobsCollectionClient
 from .plugin_parameter_types import PluginParameterTypesCollectionClient
@@ -53,7 +54,7 @@ class DioptraClient(Generic[T]):
         self._plugin_parameter_types = PluginParameterTypesCollectionClient[T](session)
         # self._experiments = ExperimentsCollectionClient[T](session)
         self._jobs = JobsCollectionClient[T](session)
-        # self._entrypoints = EntrypointsCollectionClient[T](session)
+        self._entrypoints = EntrypointsCollectionClient[T](session)
         # self._models = ModelsCollectionClient[T](session)
         # self._artifacts = ArtifactsCollectionClient[T](session)
 
@@ -102,10 +103,10 @@ class DioptraClient(Generic[T]):
         """The client for managing Dioptra's /jobs collection."""
         return self._jobs
 
-    # @property
-    # def entrypoints(self) -> EntrypointsCollectionClient[T]:
-    #     """The client for managing Dioptra's /entrypoints collection."""
-    #     return self._entrypoints
+    @property
+    def entrypoints(self) -> EntrypointsCollectionClient[T]:
+        """The client for managing Dioptra's /entrypoints collection."""
+        return self._entrypoints
 
     # @property
     # def models(self) -> ModelsCollectionClient[T]:
