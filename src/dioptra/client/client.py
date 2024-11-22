@@ -21,6 +21,7 @@ from typing import Any, Final, Generic, TypeVar
 from .auth import AuthCollectionClient
 from .base import DioptraResponseProtocol, DioptraSession
 from .entrypoints import EntrypointsCollectionClient
+from .experiments import ExperimentsCollectionClient
 from .groups import GroupsCollectionClient
 from .jobs import JobsCollectionClient
 from .plugin_parameter_types import PluginParameterTypesCollectionClient
@@ -52,7 +53,7 @@ class DioptraClient(Generic[T]):
         self._groups = GroupsCollectionClient[T](session)
         self._plugins = PluginsCollectionClient[T](session)
         self._plugin_parameter_types = PluginParameterTypesCollectionClient[T](session)
-        # self._experiments = ExperimentsCollectionClient[T](session)
+        self._experiments = ExperimentsCollectionClient[T](session)
         self._jobs = JobsCollectionClient[T](session)
         self._entrypoints = EntrypointsCollectionClient[T](session)
         # self._models = ModelsCollectionClient[T](session)
@@ -93,10 +94,10 @@ class DioptraClient(Generic[T]):
         """The client for managing Dioptra's /pluginParameterTypes collection."""
         return self._plugin_parameter_types
 
-    # @property
-    # def experiments(self) -> ExperimentsCollectionClient[T]:
-    #     """The client for managing Dioptra's /experiments collection."""
-    #     return self._experiments
+    @property
+    def experiments(self) -> ExperimentsCollectionClient[T]:
+        """The client for managing Dioptra's /experiments collection."""
+        return self._experiments
 
     @property
     def jobs(self) -> JobsCollectionClient[T]:
