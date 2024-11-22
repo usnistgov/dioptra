@@ -24,12 +24,10 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
-from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE, V1_ROOT
 
 from ..lib import helpers, routines
 
@@ -261,7 +259,7 @@ def assert_queue_is_not_found(
 
 
 def assert_queue_is_not_associated_with_entrypoint(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     entrypoint_id: int,
     queue_id: int,
 ) -> None:
@@ -276,13 +274,9 @@ def assert_queue_is_not_associated_with_entrypoint(
         AssertionError: If the response status code is not 200 or if the queue id
             is in the list of queues associated with the entrypoint.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_ENTRYPOINTS_ROUTE}/{entrypoint_id}",
-        follow_redirects=True,
-    )
-    entrypoint = response.get_json()
+    response = dioptra_client.entrypoints.get_by_id(entrypoint_id)
+    entrypoint = response.json()
     queue_ids = set(queue["id"] for queue in entrypoint["queues"])
-
     assert response.status_code == HTTPStatus.OK and queue_id not in queue_ids
 
 
@@ -536,7 +530,6 @@ def test_rename_queue(
 
 
 def test_delete_queue_by_id(
-    client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
@@ -559,7 +552,7 @@ def test_delete_queue_by_id(
     dioptra_client.queues.delete_by_id(queue_to_delete["id"])
     assert_queue_is_not_found(dioptra_client, queue_id=queue_to_delete["id"])
     assert_queue_is_not_associated_with_entrypoint(
-        client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
+        dioptra_client, entrypoint_id=entrypoint["id"], queue_id=queue_to_delete["id"]
     )
 
 
