@@ -96,11 +96,6 @@ class ArtifactSchema(ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, Ar
         metadata=dict(description="id of the job that produced this Artifact"),
         required=True,
     )
-    artifactName = fields.String(
-        attribute="artifact_name",
-        metadata=dict(description="The name of the Artifact."),
-        required=True,
-    )
     artifactFile = FileUpload(
         attribute="artifact_file",
         metadata=dict(
