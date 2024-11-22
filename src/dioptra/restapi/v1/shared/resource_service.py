@@ -22,29 +22,27 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db
-
-from dioptra.restapi.v1.artifacts.service import ArtifactService, ArtifactIdService
+from dioptra.restapi.v1.artifacts.service import ArtifactIdService, ArtifactService
 from dioptra.restapi.v1.entrypoints.service import (
-    EntrypointService,
     EntrypointIdService,
+    EntrypointService,
 )
 from dioptra.restapi.v1.experiments.service import (
-    ExperimentService,
     ExperimentIdService,
+    ExperimentService,
 )
-from dioptra.restapi.v1.models.service import ModelService, ModelIdService
+from dioptra.restapi.v1.models.service import ModelIdService, ModelService
 from dioptra.restapi.v1.plugin_parameter_types.service import (
-    PluginParameterTypeService,
     PluginParameterTypeIdService,
+    PluginParameterTypeService,
 )
 from dioptra.restapi.v1.plugins.service import (
-    PluginService,
+    PluginIdFileIdService,
     PluginIdFileService,
     PluginIdService,
-    PluginIdFileIdService,
+    PluginService,
 )
-from dioptra.restapi.v1.queues.service import QueueService, QueueIdService
-
+from dioptra.restapi.v1.queues.service import QueueIdService, QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

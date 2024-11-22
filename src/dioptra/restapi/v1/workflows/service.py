@@ -21,16 +21,16 @@ import structlog
 from injector import inject
 from structlog.stdlib import BoundLogger
 
-from .lib import views
-from .lib.package_job_files import package_job_files
-from .schema import FileTypes
-
 from dioptra.restapi.db import db
 from dioptra.restapi.errors import EntityDoesNotExistError
 from dioptra.restapi.v1.shared.resource_service import (
     ResourceIdService,
     ResourceService,
 )
+
+from .lib import views
+from .lib.package_job_files import package_job_files
+from .schema import FileTypes
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
