@@ -226,36 +226,20 @@ class PluginService(object):
 
         plugins = db.session.scalars(latest_plugins_stmt).all()
 
-        # extract list of plugin ids
-        plugin_ids = [plugin.resource_id for plugin in plugins]
-
-        # Build CTE that retrieves all snapshot ids for the list of plugin files
-        # associated with retrieved plugins
-        parent_plugin = aliased(models.Plugin)
-        plugin_file_snapshot_ids_cte = (
-            select(models.PluginFile.resource_snapshot_id)
-            .join(
-                models.resource_dependencies_table,
-                models.PluginFile.resource_id
-                == models.resource_dependencies_table.c.child_resource_id,
+        plugins_dict: dict[int, utils.PluginWithFilesDict] = {
+            plugin.resource_id: utils.PluginWithFilesDict(
+                plugin=plugin, 
+                plugin_files=[],
+                has_draft=False
             )
-            .join(
-                parent_plugin,
-                parent_plugin.resource_id
-                == models.resource_dependencies_table.c.parent_resource_id,
-            )
-            .where(parent_plugin.resource_id.in_(plugin_ids))
-            .cte()
-        )
+            for plugin in plugins
+        }
 
         # get the latest plugin file snapshots associated with the retrieved plugins
         latest_plugin_files_stmt = (
             select(models.PluginFile)
             .join(models.Resource)
             .where(
-                models.PluginFile.resource_snapshot_id.in_(
-                    select(plugin_file_snapshot_ids_cte)
-                ),
                 models.Resource.latest_snapshot_id
                 == models.PluginFile.resource_snapshot_id,
                 models.Resource.is_deleted == False,  # noqa: E712
@@ -263,13 +247,6 @@ class PluginService(object):
         )
         plugin_files = db.session.scalars(latest_plugin_files_stmt).unique().all()
 
-        # build a dictionary structure to re-associate plugins and plugin files
-        plugins_dict: dict[int, utils.PluginWithFilesDict] = {
-            plugin.resource_id: utils.PluginWithFilesDict(
-                plugin=plugin, plugin_files=[], has_draft=False
-            )
-            for plugin in plugins
-        }
         for plugin_file in plugin_files:
             plugins_dict[plugin_file.plugin_id]["plugin_files"].append(plugin_file)
 
@@ -359,6 +336,8 @@ class PluginIdService(object):
             )
         )
         plugin_files = list(db.session.scalars(latest_plugin_files_stmt).unique().all())
+        # plugin_files = list construction thing
+
 
         drafts_stmt = (
             select(models.DraftResource.draft_resource_id)
@@ -434,6 +413,13 @@ class PluginIdService(object):
         )
         db.session.add(new_plugin)
 
+        for plugin_file in plugin_files:
+            plugin_plugin_file = models.PluginPluginFile(
+                plugin=new_plugin,
+                plugin_file=plugin_file
+            )
+            db.session.add(plugin_plugin_file)
+
         if commit:
             db.session.commit()
             log.debug(
@@ -466,15 +452,29 @@ class PluginIdService(object):
         if plugin_resource is None:
             raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
+
+        from dioptra.restapi.v1.plugins.service import PluginIdFileService
+        plugin_id_file_service = PluginIdFileService(
+            plugin_file_name_service=None,
+            group_id_service=None,
+            plugin_id_service=self,
+        )
+        plugin_file_ids = plugin_id_file_service.delete(plugin_id=plugin_id)["id"]
+
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
             resource=plugin_resource,
         )
         db.session.add(deleted_resource_lock)
         db.session.commit()
-        log.debug("Plugin deleted", plugin_id=plugin_id)
 
-        return {"status": "Success", "id": [plugin_id]}
+        log.debug(
+            "Plugin and associated files deleted",
+            plugin_id=plugin_id,
+            plugin_file_ids=plugin_file_ids,
+        )
+
+        return {"status": "Success", "plugin_id": plugin_id, "file_ids": plugin_file_ids}
 
 
 class PluginIdsService(object):
@@ -775,6 +775,8 @@ class PluginIdFileService(object):
 
         new_plugin_file.parents.append(plugin.resource)
         db.session.add(new_plugin_file)
+
+        _update_plugin_and_file_snapshots(plugin, new_plugin_file)
 
         _add_plugin_tasks(tasks, plugin_file=new_plugin_file, log=log)
 
@@ -1141,6 +1143,8 @@ class PluginIdFileIdService(object):
         )
         db.session.add(updated_plugin_file)
 
+        _update_plugin_and_file_snapshots(plugin, updated_plugin_file)
+
         _add_plugin_tasks(tasks, plugin_file=updated_plugin_file, log=log)
 
         if commit:
@@ -1194,6 +1198,15 @@ class PluginIdFileIdService(object):
                 plugin_id=plugin_id,
                 plugin_file_id=plugin_file_id,
             )
+        
+        plugin_file_dict = self.get(
+            plugin_id=plugin_id,
+            plugin_file_id=plugin_file_id,
+        )
+
+        plugin = plugin_file_dict["plugin"]
+        
+        _update_plugin_and_file_snapshots(plugin, plugin_file)
 
         plugin_file_id_to_return = plugin_file.resource_id  # to return to user
         db.session.add(
@@ -1333,3 +1346,42 @@ def _add_plugin_tasks(
             log=log,
         )
         db.session.add(plugin_task)
+
+    
+def _update_plugin_and_file_snapshots(
+    plugin: models.Plugin,
+    plugin_file: models.PluginFile,
+    delete: bool = False,
+) -> None:
+
+    # add snapshot for plugin
+    new_plugin = models.Plugin(
+        name=plugin.name,
+        description=plugin.description,
+        resource=plugin.resource,
+        creator=current_user,
+    )
+    db.session.add(new_plugin)
+
+    if delete:
+        return
+
+    # add snapshot for existing plugin_plugin_files
+    for plugin_plugin_file in plugin.plugin_plugin_files:
+        if (
+            plugin_plugin_file.plugin_resource_snapshot_id == plugin.resource_snapshot_id and 
+            plugin_plugin_file.plugin_file.resource_id != plugin_file.resource_id
+        ):
+            existing_plugin_plugin_file = models.PluginPluginFile(
+              plugin=new_plugin,
+              plugin_file=plugin_plugin_file.plugin_file
+            )
+            db.session.add(existing_plugin_plugin_file)
+
+    # add snapshot for new plugin_plugin_file
+    new_plugin_plugin_file = models.PluginPluginFile(
+        plugin=new_plugin,
+        plugin_file=plugin_file
+    )
+    db.session.add(new_plugin_plugin_file)
+

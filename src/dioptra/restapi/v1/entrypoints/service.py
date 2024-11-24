@@ -1212,7 +1212,7 @@ def _get_entrypoint_plugin_snapshots(
               models.PluginPluginFile.plugin_resource_snapshot_id 
               == entry_point_plugin.plugin.resource_snapshot_id
             )
-        ).all()
+        ).unique().all()
 
         plugins_dict[resource_id]["plugin_files"].extend(plugin_files)
 
