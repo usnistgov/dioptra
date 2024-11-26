@@ -1206,7 +1206,7 @@ class PluginIdFileIdService(object):
 
         plugin = plugin_file_dict["plugin"]
         
-        _update_plugin_and_file_snapshots(plugin, plugin_file)
+        _update_plugin_and_file_snapshots(plugin, plugin_file, delete=True)
 
         plugin_file_id_to_return = plugin_file.resource_id  # to return to user
         db.session.add(
@@ -1353,6 +1353,7 @@ def _update_plugin_and_file_snapshots(
     plugin_file: models.PluginFile,
     delete: bool = False,
 ) -> None:
+    # use this method when creating, modifying, or deleting plugin files.
 
     # add snapshot for plugin
     new_plugin = models.Plugin(
@@ -1362,9 +1363,6 @@ def _update_plugin_and_file_snapshots(
         creator=current_user,
     )
     db.session.add(new_plugin)
-
-    if delete:
-        return
 
     # add snapshot for existing plugin_plugin_files
     for plugin_plugin_file in plugin.plugin_plugin_files:
@@ -1377,6 +1375,9 @@ def _update_plugin_and_file_snapshots(
               plugin_file=plugin_plugin_file.plugin_file
             )
             db.session.add(existing_plugin_plugin_file)
+
+    if delete:
+        return
 
     # add snapshot for new plugin_plugin_file
     new_plugin_plugin_file = models.PluginPluginFile(
