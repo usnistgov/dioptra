@@ -18,6 +18,7 @@
 from marshmallow import Schema, fields, validate
 
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
+from dioptra.restapi.v1.plugins.schema import PluginTaskSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -48,6 +49,12 @@ class EntrypointPluginFileSchema(Schema):
         attribute="url",
         metadata=dict(description="URL for accessing the full PluginFile snapshot."),
         relative=True,
+    )
+    tasks = fields.Nested(
+        PluginTaskSchema,
+        attribute="tasks",
+        metadata=dict(description="Tasks associated with the PluginFile resource."),
+        many=True,
     )
 
 
