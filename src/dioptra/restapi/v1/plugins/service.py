@@ -235,17 +235,11 @@ class PluginService(object):
             for plugin in plugins
         }
 
-        # get the latest plugin file snapshots associated with the retrieved plugins
-        latest_plugin_files_stmt = (
-            select(models.PluginFile)
-            .join(models.Resource)
-            .where(
-                models.Resource.latest_snapshot_id
-                == models.PluginFile.resource_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        plugin_files = db.session.scalars(latest_plugin_files_stmt).unique().all()
+        plugin_files = [
+          plugin_plugin_file.plugin_file
+          for plugin in plugins
+          for plugin_plugin_file in plugin.plugin_plugin_files
+        ]
 
         for plugin_file in plugin_files:
             plugins_dict[plugin_file.plugin_id]["plugin_files"].append(plugin_file)
@@ -325,19 +319,7 @@ class PluginIdService(object):
 
             return None
 
-        latest_plugin_files_stmt = (
-            select(models.PluginFile)
-            .join(models.Resource)
-            .where(
-                models.PluginFile.plugin_id == plugin_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.PluginFile.resource_snapshot_id,
-            )
-        )
-        plugin_files = list(db.session.scalars(latest_plugin_files_stmt).unique().all())
-        # plugin_files = list construction thing
-
+        plugin_files = [plugin_plugin_file.plugin_file for plugin_plugin_file in plugin.plugin_plugin_files]
 
         drafts_stmt = (
             select(models.DraftResource.draft_resource_id)
