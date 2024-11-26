@@ -132,7 +132,9 @@ postgres = [
 worker = [
     "async_timeout",
     "adversarial-robustness-toolbox>=1.9.0",
+    "heart-library>=0.4.2",
     "imgaug>=0.4.0",
+    "maite>=0.6.0",
     "matplotlib",
     "nrtk>=0.3.0",
     "opencv-python",
