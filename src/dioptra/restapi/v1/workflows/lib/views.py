@@ -163,3 +163,45 @@ def get_plugin_parameter_types(
         )
     )
     return list(db.session.scalars(plugin_parameter_types_stmt).all())
+
+
+def get_resource(
+    resource_id: int, logger: BoundLogger | None = None
+) -> models.Resource | None:
+    """Run a query to get a resource
+
+    Args:
+        resource_id: The identifier of the Resource
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The retrieved DraftResource ORM object
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    resource_stmt = select(models.DraftResource).where(
+        models.Resource.resource_id == resource_id
+    )
+    return db.session.scalar(resource_stmt)
+
+
+def get_draft_resource(
+    draft_id: int, logger: BoundLogger | None = None
+) -> models.DraftResource | None:
+    """Run a query to get the draft of a resource
+
+    Args:
+        draft_id: The identifier of the DraftResource
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The retrieved DraftResource ORM object
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    draft_stmt = select(models.DraftResource).where(
+        models.DraftResource.draft_resource_id == draft_id
+    )
+    return db.session.scalar(draft_stmt)
