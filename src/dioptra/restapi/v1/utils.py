@@ -252,9 +252,16 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
     plugin = plugin_with_files["plugin"]
     plugin_files = plugin_with_files["plugin_files"]
 
+    # Determine if any file does not have the latest snapshot
+    any_file_not_latest = any(
+        plugin_file.resource.latest_snapshot_id != plugin_file.resource_snapshot_id
+        for plugin_file in plugin_files
+    )
+
     return {
         "id": plugin.resource_id,
         "snapshot_id": plugin.resource_snapshot_id,
+        "latest_snapshot": plugin.resource.latest_snapshot_id == plugin.resource_snapshot_id and not any_file_not_latest,
         "name": plugin.name,
         "url": build_url(
             f"{PLUGINS}/{plugin.resource_id}/snapshots/{plugin.resource_snapshot_id}"
@@ -263,11 +270,13 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
             {
                 "id": plugin_file.resource_id,
                 "snapshot_id": plugin_file.resource_snapshot_id,
+                "latest_snapshot": plugin_file.resource.latest_snapshot_id == plugin_file.resource_snapshot_id,
                 "filename": plugin_file.filename,
                 "url": build_url(
                     f"{PLUGINS}/{plugin.resource_id}/{PLUGIN_FILES}/{plugin_file.resource_id}/"
                     f"snapshots/{plugin_file.resource_snapshot_id}"
                 ),
+                "tasks": [build_plugin_task(task) for task in plugin_file.tasks]
             }
             for plugin_file in plugin_files
         ],
@@ -311,6 +320,7 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
         "url": build_url(
             f"{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}"
         ),
+        "tasks": [build_plugin_task(task) for task in plugin_file.tasks]
     }
 
 

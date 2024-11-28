@@ -29,21 +29,6 @@
         EMPTY
       </span>
     </template>
-    <template #body-cell-parameterNames="props">
-      <label v-for="(param, i) in props.row.parameters" :key="i">
-        {{ param.name }} <br>
-      </label>
-    </template>
-    <template #body-cell-parameterTypes="props">
-      <label v-for="(param, i) in props.row.parameters" :key="i">
-        {{ param.parameterType }} <br>
-      </label>
-    </template>
-    <template #body-cell-defaultValues="props">
-      <label v-for="(param, i) in props.row.parameters" :key="i">
-        {{ param.defaultValue }} <br>
-      </label>
-    </template>
     <template #expandedSlot="{ row }">
       <CodeEditor v-model="row.taskGraph" language="yaml" />
     </template>
@@ -55,6 +40,13 @@
         text-color="white"
       >
         {{ plugin.name }}
+        <q-badge
+          v-if="!plugin.latestSnapshot" 
+          color="red" 
+          label="Outdated" 
+          rounded
+          class="q-ml-xs"
+        />
       </q-chip>
       <q-btn
         round
@@ -127,9 +119,6 @@
     { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
     { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: false, },
-    { name: 'parameterNames', label: 'Parameter Name(s)', align: 'left', sortable: false },
-    { name: 'parameterTypes', label: 'Parameter Type(s)', align: 'left', field: 'parameterTypes', sortable: false },
-    { name: 'defaultValues', label: 'Default Values', align: 'left', field: 'defaultValues', sortable: false },
     { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
     { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: false },
   ]
