@@ -111,13 +111,39 @@ class EntityExistsError(DioptraError):
         kwargs: the attribute value pairs used to request the entity
     """
 
-    def __init__(self, entity_type: str, existing_id: int, **kwargs: typing.Any):
+    def __init__(self, entity_type: str | None, existing_id: int, **kwargs: typing.Any):
         super().__init__(
             "".join(
                 [
-                    f"The {entity_type}",
+                    "The ",
+                    "entity" if entity_type is None else entity_type,
                     *add_attribute_values(**kwargs),
                     " is not available.",
+                ]
+            )
+        )
+        self.entity_type = entity_type
+        self.entity_attributes = kwargs
+        self.existing_id = existing_id
+
+
+class EntityDeletedError(DioptraError):
+    """
+    The requested entity has been deleted.
+    Args:
+        entity_type: the entity type name (e.g. "group" or "queue")
+        existing_id: the id of the deleted entity
+        kwargs: the attribute value pairs used to request the entity
+    """
+
+    def __init__(self, entity_type: str | None, existing_id: int, **kwargs: typing.Any):
+        super().__init__(
+            "".join(
+                [
+                    "The ",
+                    "entity" if entity_type is None else entity_type,
+                    *add_attribute_values(**kwargs),
+                    " is deleted.",
                 ]
             )
         )
@@ -330,6 +356,84 @@ class UserPasswordError(DioptraError):
 
     def __init__(self, message: str):
         super().__init__(message)
+
+
+class UserNotInGroupError(DioptraError):
+    """A given user is not in a given group."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = f"User {user_id} is not in group {group_id}"
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
+class GroupNeedsAUserError(DioptraError):
+    """A group must have at least one user; it can't be empty."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = (
+            f"Can't remove user {user_id} from group {group_id}: "
+            "group would have no users"
+        )
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
+class UserNeedsAGroupError(DioptraError):
+    """A user must be in at least one group; it can't be groupless."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = (
+            f"Can't remove user {user_id} from group {group_id}: "
+            "user would have no groups"
+        )
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
+class GroupNeedsAManagerError(DioptraError):
+    """A group must have at least one manager."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = (
+            f"Can't remove manager {user_id} from group {group_id}: "
+            "group would have no managers"
+        )
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
+class UserIsManagerError(DioptraError):
+    """User can't be removed from a group because he is a group manager."""
+
+    def __init__(self, user_id: int, group_id: int) -> None:
+        msg = (
+            f"Can't remove manager {user_id} from group {group_id}: "
+            "user is a group manager"
+        )
+        super().__init__(msg)
+
+        self.user_id = user_id
+        self.group_id = group_id
+
+
+class MismatchedResourceTypeError(DioptraError):
+    """A snapshot was associated with a resource of the wrong type"""
+
+    def __init__(self, expected_type: str, found_type: str) -> None:
+        msg = f"Expected resource type {expected_type!r}: {found_type}"
+        super().__init__(msg)
+
+        self.expected_type = expected_type
+        self.found_type = found_type
 
 
 def error_result(

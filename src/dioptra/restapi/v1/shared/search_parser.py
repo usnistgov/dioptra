@@ -108,15 +108,20 @@ def parse_search_text(search_text: str) -> list[dict]:
             field. The value is a list of strings that represent the search value.
     """
 
-    parsed_search = DIOPTRA_QUERY_GRAMMAR.parse_string(
-        search_text, parse_all=True
-    ).as_list()
-    formatted_result = []
-    for term in parsed_search:
-        if len(term) > 1 and isinstance(term[1], list):
-            formatted_result.append({"field": term[0], "value": term[1]})
-        else:
-            formatted_result.append({"field": None, "value": term})
+    formatted_result: list[dict]
+    if not search_text:
+        formatted_result = []
+
+    else:
+        parsed_search = DIOPTRA_QUERY_GRAMMAR.parse_string(
+            search_text, parse_all=True
+        ).as_list()
+        formatted_result = []
+        for term in parsed_search:
+            if len(term) > 1 and isinstance(term[1], list):
+                formatted_result.append({"field": term[0], "value": term[1]})
+            else:
+                formatted_result.append({"field": None, "value": term})
     return formatted_result
 
 
