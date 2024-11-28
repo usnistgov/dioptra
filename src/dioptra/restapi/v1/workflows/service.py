@@ -15,10 +15,11 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform workflows endpoint operations."""
-from typing import IO, Final
+from typing import IO, Final, Any, cast
 
 import structlog
 from structlog.stdlib import BoundLogger
+from injector import inject
 
 from .lib import views
 from .lib.package_job_files import package_job_files

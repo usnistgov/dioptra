@@ -20,12 +20,12 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import EntityDoesNotExistError
-from dioptra.restapi.v1.entrypoints.service import (
-    RESOURCE_TYPE as ENTRYPONT_RESOURCE_TYPE,
-)
-from dioptra.restapi.v1.experiments.service import (
-    RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
-)
+# from dioptra.restapi.v1.entrypoints.service import (
+#     RESOURCE_TYPE as ENTRYPONT_RESOURCE_TYPE,
+# )
+# from dioptra.restapi.v1.experiments.service import (
+#     RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
+# )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -43,6 +43,10 @@ def get_entry_point(
     Returns:
         The entrypoint for the job.
     """
+    from dioptra.restapi.v1.entrypoints.service import (
+        RESOURCE_TYPE as ENTRYPONT_RESOURCE_TYPE,
+    )
+
     log = logger or LOGGER.new()  # noqa: F841
 
     entry_point_stmt = (
@@ -69,6 +73,10 @@ def get_experiment(job_id: int, logger: BoundLogger | None = None) -> models.Exp
     Returns:
         The experiment containing the job.
     """
+    from dioptra.restapi.v1.experiments.service import (
+        RESOURCE_TYPE as EXPERIMENT_RESOURCE_TYPE,
+    )
+
     log = logger or LOGGER.new()  # noqa: F841
 
     experiment_stmt = (
