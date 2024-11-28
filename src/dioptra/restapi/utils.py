@@ -150,7 +150,7 @@ def create_parameters_schema(
         location = "files"
 
     parameters_schema = ParametersSchema(
-        name=cast(str, field.name),
+        name=cast(str, field.data_key or field.name),
         type=parameter_type,
         location=location,
         required=field.required,
@@ -306,6 +306,7 @@ TYPE_MAP_MA_TO_REQPARSE = {
     ma.Decimal: float,
     ma.Dict: dict,
     ma.Email: str,
+    ma.Enum: str,
     FileUpload: FileStorage,
     ma.Float: float,
     ma.Function: str,

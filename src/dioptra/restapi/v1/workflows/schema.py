@@ -17,7 +17,9 @@
 """The schemas for serializing/deserializing Workflow resources."""
 from enum import Enum
 
-from marshmallow import Schema, fields
+from marshmallow import Schema, ValidationError, fields, validates_schema
+
+from dioptra.restapi.custom_schema_fields import FileUpload
 
 
 class FileTypes(Enum):
@@ -41,3 +43,72 @@ class JobFilesDownloadQueryParametersSchema(Schema):
         by_value=True,
         default=FileTypes.TAR_GZ.value,
     )
+
+
+class ResourceImportSourceTypes(Enum):
+    GIT = "git"
+    UPLOAD = "upload"
+
+
+class ResourceImportResolveNameConflictsStrategy(Enum):
+    FAIL = "fail"
+    OVERWRITE = "overwrite"
+
+
+class ResourceImportSchema(Schema):
+    """The request schema for importing resources"""
+
+    groupId = fields.Integer(
+        attribute="group_id",
+        data_key="group",
+        metadata=dict(
+            description="ID of the Group that will own the imported resources."
+        ),
+        required=True,
+    )
+    sourceType = fields.Enum(
+        ResourceImportSourceTypes,
+        attribute="source_type",
+        metadata=dict(description="The source of the resources to import."),
+        by_value=True,
+        required=True,
+    )
+    gitUrl = fields.String(
+        attribute="git_url",
+        metadata=dict(
+            description="The URL of the git repository containing resources to import. "
+            "A git branch can optionally be specified by appending #BRANCH_NAME. "
+            "Used when sourceType is 'git'."
+        ),
+        required=False,
+    )
+    archiveFile = FileUpload(
+        attribute="archive_file",
+        metadata=dict(
+            type="file",
+            format="binary",
+            description="The archive file containing resources to import (.tar.gz). "
+            "Used when sourceType is 'upload'.",
+        ),
+        required=False,
+    )
+    configPath = fields.String(
+        attribute="config_path",
+        metdata=dict(description="The path to the toml configuration file."),
+        load_default="dioptra.toml",
+    )
+    resolveNameConflictsStrategy = fields.Enum(
+        ResourceImportResolveNameConflictsStrategy,
+        attribute="resolve_name_conflicts_strategy",
+        metadata=dict(description="Strategy for resolving resource name conflicts"),
+        by_value=True,
+        load_default=ResourceImportResolveNameConflictsStrategy.FAIL.value,
+    )
+
+    @validates_schema
+    def validate_source(self, data, **kwargs):
+        if (
+            data["source_type"] == ResourceImportSourceTypes.GIT
+            and "git_url" not in data
+        ):
+            raise ValidationError({"gitUrl": "field required when sourceType is 'git'"})

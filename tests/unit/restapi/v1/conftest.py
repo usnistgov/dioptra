@@ -15,12 +15,15 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
+import tarfile
 import textwrap
 from collections.abc import Iterator
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any, cast
 
 import pytest
+import toml
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
@@ -684,3 +687,25 @@ def registered_jobs(
         "job2": job2_response,
         "job3": job3_response,
     }
+
+
+@pytest.fixture
+def resources_tar_file():
+    root_dir = Path(__file__).absolute().parent / "resource_import_files"
+
+    f = NamedTemporaryFile(suffix=".tar.gz")
+    with tarfile.open(fileobj=f, mode="w:gz") as tar:
+        tar.add(root_dir / "dioptra.toml", arcname="dioptra.toml")
+        tar.add(root_dir / "hello_world", arcname="plugins/hello_world", recursive=True)
+        tar.add(root_dir / "hello-world.yaml", arcname="examples/hello-world.yaml")
+    f.seek(0)
+
+    yield f
+
+    f.close()
+
+
+@pytest.fixture
+def resources_import_config():
+    root_dir = Path(__file__).absolute().parent / "resource_import_files"
+    return toml.load(root_dir / "dioptra.toml")
