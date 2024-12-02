@@ -138,6 +138,10 @@ class EntrypointSnapshotRefSchema(EntrypointSnapshotRefBaseSchema):  # type: ign
         attribute="name",
         metadata=dict(description="Name of the Entrypoint resource."),
     )
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="id of the Entrypoint resource."),
+    )
 
 
 class EntrypointMutableFieldsSchema(Schema):
