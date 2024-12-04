@@ -8,6 +8,74 @@
         <legend>Basic Info</legend>
         <div class="q-ma-lg">
           <q-form ref="basicInfoForm" greedy>
+            <q-select
+              outlined
+              dense
+              v-model="job.experiment"
+              clearable
+              option-label="name"
+              input-debounce="100"
+              :options="experiments"
+              @filter="getExperiments"
+              :rules="[requiredRule]"
+              :disable="Object.hasOwn(route.params, 'id')"
+              class="q-mb-sm"
+              @update:model-value="job.entrypoint = ''; job.queue = ''; basicInfoForm.reset()"
+            >
+              <template v-slot:before>
+                <div class="field-label">Experiment:</div>
+              </template>  
+            </q-select>
+            <q-select
+              outlined
+              dense
+              v-model="job.entrypoint"
+              clearable
+              option-label="name"
+              option-value="id"
+              input-debounce="100"
+              :options="entrypoints"
+              @filter="getEntrypoints"
+              :rules="[requiredRule]"
+              class="q-mb-sm"
+              :hint="!job.experiment ? 'Select experiment first' : ''"
+              :disable="!job.experiment"
+              @update:model-value="job.queue = ''; basicInfoForm.reset()"
+            >
+              <template v-slot:before>
+                <div class="field-label">Entrypoint:</div>
+              </template>  
+            </q-select>
+            <q-select
+              outlined
+              dense
+              v-model="job.queue"
+              clearable
+              option-label="name"
+              input-debounce="100"
+              :options="queues"
+              @filter="getQueues"
+              :rules="[requiredRule]"
+              class="q-mb-sm"
+              :hint="queueHint"
+              :disable="!job.entrypoint"
+            >
+              <template v-slot:before>
+                <div class="field-label">Queue:</div>
+              </template>  
+            </q-select>
+            <q-input
+              outlined 
+              v-model="job.timeout" 
+              dense
+              aria-required="true"
+              class="q-mb-sm"
+              :rules="[timeUnitRule]"
+            >
+              <template v-slot:before>
+                <div class="field-label">Timeout:</div>
+              </template>  
+            </q-input>
             <q-input 
               outlined 
               dense 
@@ -19,57 +87,6 @@
               <template v-slot:before>
                 <label :class="`field-label`">Description:</label>
               </template>
-            </q-input>
-            <q-select
-              outlined
-              dense
-              v-model="job.queue"
-              clearable
-              use-input
-              map-options
-              option-label="name"
-              option-value="id"
-              input-debounce="100"
-              :options="queues"
-              @filter="getQueues"
-              :rules="[requiredRule]"
-              class="q-mb-sm"
-            >
-              <template v-slot:before>
-                <div class="field-label">Queue:</div>
-              </template>  
-            </q-select>
-            <q-select
-              outlined
-              dense
-              v-model="job.entrypoint"
-              clearable
-              use-input
-              map-options
-              option-label="name"
-              option-value="id"
-              input-debounce="100"
-              :options="entrypoints"
-              @filter="getEntrypoints"
-              :rules="[requiredRule]"
-              class="q-mb-sm"
-              hint="Select Entrypoint in order to edit values on the right"
-            >
-              <template v-slot:before>
-                <div class="field-label">Entrypoint:</div>
-              </template>  
-            </q-select>
-            <q-input
-              outlined 
-              v-model="job.timeout" 
-              dense
-              aria-required="true"
-              class="q-mb-lg"
-              :rules="[timeUnitRule]"
-            >
-              <template v-slot:before>
-                <div class="field-label">Timeout:</div>
-              </template>  
             </q-input>
           </q-form>
         </div>
@@ -94,7 +111,7 @@
 
   <div :class="`${isMobile ? '' : 'q-mx-xl'} float-right q-mb-lg`">
       <q-btn  
-        :to="`/experiments/${route.params.id}/jobs`"
+        :to="expJobOrAllJobs === 'allJobs' ? `/jobs` : `/experiments/${route.params.id}/jobs`"
         color="negative" 
         label="Cancel"
         class="q-mr-lg"
@@ -159,6 +176,7 @@
     timeout: '24h',
     queue: '',
     entrypoint: '',
+    experiment: ''
   })
 
   const valuesChanged = computed(() => {
@@ -213,15 +231,26 @@
     })
   }
 
+  const expJobOrAllJobs = computed(() => {
+    // determine if experiment job form or all jobs form, when saving form
+    if(Object.hasOwn(route.params, 'id')) {
+      return route.params.id
+    } else {
+      return 'allJobs'
+    }
+  })
+
   async function createJob() {
     job.value.queue = job.value.queue.id
     job.value.entrypoint = job.value.entrypoint.id
     job.value.values = computedValue.value  
     try {
-      await api.addJob(route.params.id, job.value)
+      const { experiment, ...jobWithoutExperiment } = job.value
+      await api.addJob(job.value.experiment.id, jobWithoutExperiment)
+      // await api.addJob(experiment.value.id, job.value)
       notify.success(`Successfully created job`)
-      store.savedForms.jobs[route.params.id] = null
-      router.push(`/experiments/${route.params.id}/jobs`)
+      store.savedForms.jobs[expJobOrAllJobs.value] = null
+      router.push(expJobOrAllJobs.value === 'allJobs' ? `/jobs` : `/experiments/${route.params.id}/jobs`)
     } catch(err) {
       // error shows when reddis isn't installed, but job is still created
       store.savedForms.jobs[route.params.id] = null
@@ -245,8 +274,30 @@
     showEditParamDialog.value = false
   }
 
+  // const experiment = ref()
+  const experiments = ref([])
   const queues = ref([])
   const entrypoints = ref([])
+
+  async function getExperiments(val = '', update) {
+    update(async () => {
+      try {
+        const res = await api.getData('experiments', {
+          search: val,
+          rowsPerPage: 0, // get all
+          index: 0
+        })
+        experiments.value = res.data.data
+      } catch(err) {
+        notify.error(err.response.data.message)
+      } 
+    })
+  }
+
+  const allowableQueueIds = computed(() => {
+    if(job.value.entrypoint === '') return []
+    return job.value.entrypoint.queues.map((q) => q.id)
+  })
 
   async function getQueues(val = '', update) {
     update(async () => {
@@ -256,12 +307,19 @@
           rowsPerPage: 0, // get all
           index: 0
         })
-        queues.value = res.data.data
+        queues.value = res.data.data.filter((q) =>
+          allowableQueueIds.value.includes(q.id)
+        )
       } catch(err) {
         notify.error(err.response.data.message)
       } 
     })
   }
+
+  const allowableEntrypointIds = computed(() => {
+    if(job.value.experiment === '') return []
+    return job.value.experiment.entrypoints.map((ep) => ep.id)
+  }) 
 
   async function getEntrypoints(val = '', update) {
     update(async () => {
@@ -271,16 +329,40 @@
           rowsPerPage: 0, // get all
           index: 0
         })
-        entrypoints.value = res.data.data
+        entrypoints.value = res.data.data.filter((ep) => 
+          allowableEntrypointIds.value.includes(ep.id)
+        )
       } catch(err) {
         notify.error(err.response.data.message)
       } 
     })
   }
 
+  async function getExperiment() {
+    if(Object.hasOwn(route.params, 'id')) {
+      try {
+        const res = await api.getItem('experiments', route.params.id)
+        job.value.experiment = res.data
+      } catch(err) {
+        console.warn(err)
+      }
+    }
+  }
+
   onMounted(async () => {
-    if(store.savedForms.jobs[route.params.id]) {
-      job.value = store.savedForms.jobs[route.params.id]
+    await getExperiment()
+
+    if(store.savedForms.jobs[expJobOrAllJobs.value]) {
+      job.value = store.savedForms.jobs[expJobOrAllJobs.value]
+      // check if saved values are still valid
+      if(job.value.experiment && job.value.experiment.id) {
+        try {
+          await api.getItem('experiments', job.value.experiment.id)
+        } catch(err) {
+          job.value.experiment = ''
+          console.warn(err)
+        }
+      }
       if(job.value.queue && job.value.queue.id) {
         try {
           await api.getItem('queues', job.value.queue.id)
@@ -305,12 +387,12 @@
   onBeforeRouteLeave((to, from, next) => {
     toPath.value = to.path
     if(!valuesChanged.value) {
-      store.savedForms.jobs[route.params.id] = null
+      store.savedForms.jobs[expJobOrAllJobs.value] = null
       next(true)
     } else if(confirmLeave.value) {
       next(true)
     } else {
-      store.savedForms.jobs[route.params.id] = job.value
+      store.savedForms.jobs[expJobOrAllJobs.value] = job.value
       next(true)
     }
   })
@@ -319,15 +401,23 @@
   const confirmLeave = ref(false)
   const toPath = ref()
 
-  function clearForm() {
+  async function clearForm() {
     job.value = {
+      experiment: '',
       description: '',
       queue: '',
       entrypoint: '',
       timeout: '24h'
     }
     basicInfoForm.value.reset()
-    store.savedForms.jobs[route.params.id] = null
+    store.savedForms.jobs[expJobOrAllJobs.value] = null
+    await getExperiment()
   }
+
+  const queueHint = computed(() => {
+    if(!job.value.experiment) return 'Select experiment and entrypoint first'
+    if(!job.value.entrypoint) return 'Select entrypoint first'
+    return ''
+  })
 
 </script>
