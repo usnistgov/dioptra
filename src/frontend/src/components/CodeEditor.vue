@@ -7,6 +7,7 @@
       :indent-with-tab="true"
       :tab-size="2"
       :extensions="extensions"
+      :disabled="readOnly"
       @ready="handleReady"
       @update="highlightPlaceholder"
       :style="{ 'min-height': '250px', 'max-height': '70vh',
@@ -30,7 +31,6 @@
   import { linter, lintGutter } from "@codemirror/lint"
   import parser from "js-yaml"
   import { python } from '@codemirror/lang-python'
-  import { EditorState } from '@codemirror/state'
   import { CompletionContext, autocompletion, startCompletion } from '@codemirror/autocomplete'
   import YAML from 'yaml'
 
@@ -173,7 +173,6 @@
       oneDark,
       yamlLinter,
       lintGutter(),
-      EditorState.readOnly.of(props.readOnly),
       autocompletion({ override: [myCompletions] }),
     ]
   })

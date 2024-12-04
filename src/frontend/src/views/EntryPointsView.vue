@@ -45,7 +45,7 @@
       </label>
     </template>
     <template #expandedSlot="{ row }">
-      <CodeEditor v-model="row.taskGraph" language="yaml" />
+      <CodeEditor v-model="row.taskGraph" language="yaml" :readOnly="true" />
     </template>
     <template #body-cell-plugins="props">
       <q-chip
