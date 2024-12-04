@@ -11,8 +11,11 @@
     ref="tableRef"
     :hideEditBtn="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
-    :hideCreateBtn="true"
+    @create="router.push('/jobs/new')"
   >
+    <template #body-cell-experiment="props">
+      {{ props.row.experiment.name }}
+    </template>
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}
     </template>
@@ -61,6 +64,7 @@
   const columns = [
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
     { name: 'id', label: 'Job ID', align: 'left', field: 'id', sortable: false, },
+    { name: 'experiment', label: 'Experiment', align: 'left', field: 'experiment', sortable: false, },
     { name: 'entrypoint', label: 'Entrypoint', align: 'left', field: 'entrypoint', sortable: false, },
     { name: 'queue', label: 'Queue', align: 'left', field: 'queue', sortable: false, },
     { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
