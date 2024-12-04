@@ -107,8 +107,8 @@ class ArtifactSchema(ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, Ar
     )
     artifactType = fields.String(
         attribute="artifact_type",
-        validate=validate.OneOf(['file', 'dir']),
-        metadata=dict(description="Indicates what type of artifact this is (file or dir)."),
+        validate=validate.OneOf(['file', 'dir', 'archive']),
+        metadata=dict(description="Indicates what type of artifact this is (file or dir or archive)."),
         required=True,
     )
 
