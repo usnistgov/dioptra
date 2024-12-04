@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import json
+import zipfile
 import mlflow
 import requests
 import os
@@ -137,28 +138,24 @@ class ArtifactService(object):
         if duplicate is not None:
             raise EntityExistsError(RESOURCE_TYPE, duplicate.resource_id, uri=duplicate.uri)
 
-        with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
-            working_dir = Path(tmp_dir)
-            bytes = artifact_file.stream.read()
-            
-            temp_file_path = os.path.join(working_dir, artifact_file_name)
-            try:
-                with open (temp_file_path, "wb") as temp_file:
-                    temp_file.write(bytes)
-            except Exception as e:
-                raise DioptraError("Failed to write file.") from e
+        
+        if artifact_type == 'file':
+            with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
+                working_dir = Path(tmp_dir)
+                artifact_bytes = artifact_file.stream.read()
+                temp_file_path = os.path.join(working_dir, artifact_file_name)
+                try:
+                    with open (temp_file_path, "wb") as temp_file:
+                        temp_file.write(artifact_bytes)
+                except Exception as e:
+                    raise DioptraError("Failed to write temp file.") from e
 
-            if artifact_type == 'file':
-                mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
-                uri = _upload_file_as_artifact(
-                    artifact_path=temp_file_path, 
-                    group_id=group_id, 
-                    job_id=job_id, 
-                    description=description
-                    )
-            else:
-                #TODO: put it in a tar file then upload, since its a dir
-                uri = ""
+                uri = _upload_file_as_artifact(artifact_path=temp_file_path)
+        elif artifact_type == 'dir' or artifact_type == 'archive':
+            uri = _upload_archive_as_artifact(artifact_file, artifact_file_name)
+            
+        else:
+            raise DioptraError('Wrong artifact_type was provided.')
 
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
 
@@ -702,7 +699,7 @@ def _upload_artifact_to_restapi(source_uri, group_id: int, job_id: int, descript
     LOGGER.info("artifact", response=artifact) 
 
 
-def _upload_file_as_artifact(artifact_path: Union[str, Path], group_id: int, job_id: int, description: str) -> str:
+def _upload_file_as_artifact(artifact_path: Union[str, Path]) -> str:
     """Uploads a file as an artifact of the active MLFlow run.
 
     Args:
@@ -717,6 +714,48 @@ def _upload_file_as_artifact(artifact_path: Union[str, Path], group_id: int, job
     #_upload_artifact_to_restapi(uri, group_id, job_id, description)
     LOGGER.info("Artifact uploaded for current MLFlow run", filename=artifact_path.name)
     return uri
+
+def _upload_archive_as_artifact(
+        artifact_archive: FileStorage, 
+        artifact_file_name: str
+    ) -> str:
+    """Uploads the files of an archive as an artifact of the active MLFlow run.
+    
+    Args: 
+        artifact_archive: The contents of the archive to be uploaded.
+        artifact_file_name: The name of the archive file.
+    """
+    with TemporaryDirectory() as temp_dir, set_cwd(temp_dir):
+        # create the name for the top level directory for the artifacts
+        # based on the artifact archive without any extensions
+        top_dir_name, _, _ = artifact_file_name.partition('.')
+
+        # create a top level directory to hold archive contents
+        outer_dir = os.path.join(temp_dir, top_dir_name)
+
+        # extract the archive to the temp folder and upload the contents to MLFlow
+        if tarfile.is_tarfile(artifact_archive.stream):
+            with tarfile.open(fileobj=artifact_archive.stream, mode='r:*') as tar_file:
+                tar_file.extractall(path=outer_dir)
+                mlflow.log_artifacts(local_dir=outer_dir, artifact_path=top_dir_name)
+                uri = mlflow.get_artifact_uri(top_dir_name)
+        elif zipfile.is_zipfile(artifact_archive.stream):
+            with zipfile.ZipFile(artifact_archive.stream, mode='r') as zip_file:
+                # An extra temp directory with name __MACOSX is sometimes created
+                # when unpacking a .zip file created on macOS. Do not unpack these 
+                # temp files/directories to avoid uploading them to MLFlow.
+                macos_temp_name = '__MACOSX/'
+                for entry in zip_file.infolist():
+                    if not entry.filename.startswith(macos_temp_name):
+                        zip_file.extract(entry)
+                    
+                mlflow.log_artifacts(local_dir=outer_dir, artifact_path=top_dir_name)
+                uri = mlflow.get_artifact_uri(outer_dir)
+        else:
+            raise DioptraError(f"The provdided file archive ({artifact_file_name}) is an invalid archive type.")
+
+        LOGGER.info("Artifact folder uploaded for current MLFlow run", filename=outer_dir)
+        return uri
 
 def _debug_request(url, method, data=None):
     LOGGER.debug("Request made.", url=url, method=method, data=data)
