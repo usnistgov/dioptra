@@ -43,6 +43,8 @@ export const useLoginStore = defineStore('login', () => {
     jobs: {},
     files: {},
   })
+
+  const triggerPopup = ref(false)
   
 
   // computed()'s are getters
@@ -50,5 +52,5 @@ export const useLoginStore = defineStore('login', () => {
   // function()'s are actions
   
 
-  return { loggedInUser, loggedInGroup, groups, users, savedForms };
+  return { loggedInUser, loggedInGroup, groups, users, savedForms, triggerPopup };
 })

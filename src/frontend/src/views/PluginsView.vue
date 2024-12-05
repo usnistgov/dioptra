@@ -82,6 +82,9 @@
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import { useLoginStore } from '@/stores/LoginStore.ts'
+
+  const store = useLoginStore()
 
   const router = useRouter()
 
@@ -90,6 +93,11 @@
   const showDeleteDialog = ref(false)
   const showTagsDialog = ref(false)
   const editObjTags = ref({})
+
+  if(store.triggerPopup) {
+    showPluginDialog.value = true
+    store.triggerPopup = false
+  }
 
   const plugins = ref([])
 

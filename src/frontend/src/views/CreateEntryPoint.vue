@@ -240,11 +240,10 @@
 
   <div class="float-right q-mb-lg">
     <q-btn  
-      to="/entrypoints"
       color="negative" 
       label="Cancel"
       class="q-mr-lg"
-      @click="confirmLeave = true"
+      @click="confirmLeave = true; router.back()"
     />
     <q-btn  
       @click="submit()" 

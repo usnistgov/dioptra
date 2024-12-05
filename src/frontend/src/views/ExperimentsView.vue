@@ -32,29 +32,7 @@
     </template>
   </TableComponent>
 
-  <q-btn 
-    class="fixedButton"
-    round
-    color="primary"
-    icon="add"
-    size="lg"
-  >
-    <span class="sr-only">Create a new Experiment</span>
-    <q-tooltip>
-      Create a new Experiment
-    </q-tooltip>
-    <q-menu anchor="top middle" self="bottom middle">
-      <q-list >
-        <q-item clickable to="/experiments/new">
-          <q-item-section>Create Experiment</q-item-section>
-        </q-item>
-        <q-separator />
-        <q-item clickable to="/entrypoints/new">
-          <q-item-section>Create Entry Point</q-item-section>
-        </q-item>
-      </q-list>
-    </q-menu>
-  </q-btn>
+  <CreateButton />
 
   <DeleteDialog 
     v-model="showDeleteDialog"
@@ -80,6 +58,7 @@
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import PageTitle from '@/components/PageTitle.vue'
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+  import CreateButton from '@/components/CreateButton.vue'
   
   const router = useRouter()
 
