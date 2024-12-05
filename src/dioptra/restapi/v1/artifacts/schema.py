@@ -16,8 +16,8 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Artifact resources."""
 from marshmallow import Schema, fields, validate
-from dioptra.restapi.custom_schema_fields import FileUpload
 
+from dioptra.restapi.custom_schema_fields import FileUpload
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -107,8 +107,10 @@ class ArtifactSchema(ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, Ar
     )
     artifactType = fields.String(
         attribute="artifact_type",
-        validate=validate.OneOf(['file', 'dir', 'archive']),
-        metadata=dict(description="Indicates what type of artifact this is (file or dir or archive)."),
+        validate=validate.OneOf(["file", "dir", "archive"]),
+        metadata=dict(
+            description="Indicates what type of artifact this is (file or dir or archive)."
+        ),
         required=True,
     )
 
