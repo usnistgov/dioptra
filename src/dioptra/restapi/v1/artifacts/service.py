@@ -775,7 +775,7 @@ def _upload_archive_as_artifact(
                         zip_file.extract(entry)
 
                 mlflow.log_artifacts(local_dir=outer_dir, artifact_path=top_dir_name)
-                uri = mlflow.get_artifact_uri(outer_dir)
+                uri = mlflow.get_artifact_uri(top_dir_name)
         else:
             raise DioptraError(
                 f"The provdided file archive ({artifact_file_name}) is an invalid archive type."
