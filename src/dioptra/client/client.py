@@ -18,6 +18,7 @@ import os
 from posixpath import join as urljoin
 from typing import Any, Final, Generic, TypeVar
 
+from .artifacts import ArtifactsCollectionClient
 from .auth import AuthCollectionClient
 from .base import DioptraResponseProtocol, DioptraSession
 from .entrypoints import EntrypointsCollectionClient
@@ -57,7 +58,7 @@ class DioptraClient(Generic[T]):
         self._jobs = JobsCollectionClient[T](session)
         self._entrypoints = EntrypointsCollectionClient[T](session)
         # self._models = ModelsCollectionClient[T](session)
-        # self._artifacts = ArtifactsCollectionClient[T](session)
+        self._artifacts = ArtifactsCollectionClient[T](session)
 
     @property
     def users(self) -> UsersCollectionClient[T]:
@@ -114,10 +115,10 @@ class DioptraClient(Generic[T]):
     #     """The client for managing Dioptra's /models collection."""
     #     return self._models
 
-    # @property
-    # def artifacts(self) -> ArtifactsCollectionClient[T]:
-    #     """The client for managing Dioptra's /artifacts collection."""
-    #     return self._artifacts
+    @property
+    def artifacts(self) -> ArtifactsCollectionClient[T]:
+        """The client for managing Dioptra's /artifacts collection."""
+        return self._artifacts
 
     def close(self) -> None:
         """Close the client's connection to the API."""
