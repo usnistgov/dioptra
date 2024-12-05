@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import zipfile
+from flask import send_from_directory
 import mlflow
 import requests
 import os
@@ -537,49 +538,56 @@ class ArtifactIdContentsService(object):
         if artifact is None:
             raise EntityDoesNotExistError(RESOURCE_TYPE, artifact_id=artifact_id)
 
-        artifact_url = os.path.normpath(artifact.uri)
+        artifact_full_path = os.path.normpath(artifact.uri)
+        artifact_base_url = artifact.uri
 
         sanitized_path = None
         if path is not None:
             if '..' in path:
                 raise QueryParameterValidationError(RESOURCE_TYPE, constraint="invalid path query parameter") 
             sanitized_path = os.path.normpath(path) #TODO: expand on cleaning the path
+            artifact_full_path = os.path.join(artifact_base_url, sanitized_path)
 
         # TODO: Need to check MLFlow for the specified artifact
-        # if not os.path.exists(artifact_url):
-            # raise DioptraError(f'An artifact file with path "{artifact_url}" does not exist.')
+        # artifact_list = mlflow.artifacts.list_artifacts(artifact_full_path)
+        # if artifact_list is None or len(artifact_list) == 0:
+        #     raise DioptraError(f'An artifact file with path "{artifact_full_path}" does not exist.')
         
         contents = BytesIO()
-        is_dir = os.path.isdir(artifact_url)
+
+        with TemporaryDirectory() as temp_dir, set_cwd(temp_dir):
+            try:
+                temp_artifact_path = mlflow.artifacts._download_artifact_from_uri(artifact_full_path, output_path=temp_dir)
         
-        if is_dir:
-            if sanitized_path is None:
-                #Since there is no path, either return an artifact file dir listing, or 
-                #a tar of the dir structure if download is True
-                contents = self._get_artifact_file_list(artifact_url, download)
-            else:
-                #get the file contents
-                contents = self._get_artifact_file_contents(artifact_url, sanitized_path, is_dir)
-        else:
-            #this is a file
-            if sanitized_path is not None:
-                raise QueryParameterValidationError(RESOURCE_TYPE, constraint="Invalid path query parameter") 
-            else:
-                #get the file contents
-                contents = self._get_artifact_file_contents(artifact_url, sanitized_path, is_dir)
-                
-        return contents, is_dir, os.path.basename(artifact_url)
+                is_dir = os.path.isdir(temp_artifact_path)
+            
+                if is_dir:
+                    # Get the artifact contents as an archive
+                    if download is True:
+                        contents = self._get_artifact_zip_file(artifact_base_url)
+                    # If a download is not requested, get a file listing of the full artifact 
+                    else:
+                        contents = self._get_artifact_file_list(temp_artifact_path)
+                else:
+                    # TODO: When download is True, give the path to download from rather 
+                    # than the file contents for display
+
+                    contents = self._get_artifact_file_contents(artifact_full_path, temp_artifact_path)
+            except:
+                raise FileNotFoundError(f'An artifact file with path "{artifact_full_path}" does not exist.')
+        return contents, is_dir, os.path.basename(artifact_full_path)
 
     def _get_artifact_zip_file(
         self,
         full_path: str,
     ) -> BytesIO:
             zip_name = os.path.basename(full_path)
-            contents = BytesIO()
 
-            with tarfile.open(fileobj=contents, mode='w') as tar:
-                for file_path in full_path:
-                    tar.add(file_path, arcname=zip_name)
+            with TemporaryDirectory() as temp_dir, set_cwd(temp_dir):
+                temp_artifact = mlflow.artifacts.download_artifacts(artifact_uri=full_path, dst_path=temp_dir)
+                contents = BytesIO()
+                with tarfile.open(fileobj=contents, mode='w') as tar:
+                    tar.add(temp_artifact, arcname=zip_name)
 
             contents.seek(0)
             return contents
@@ -587,43 +595,24 @@ class ArtifactIdContentsService(object):
     def _get_artifact_file_contents(
         self, 
         artifact_url: str, 
-        sanitized_path: str | None,
-        download: bool = False,
-    ) -> Any:
+        temp_artifact_path: str,
+    ) -> BytesIO:
 
-        if sanitized_path is not None:
-            full_path = os.path.join(artifact_url, sanitized_path)
-        else:
-            full_path = artifact_url
+        contents = BytesIO()
 
-        downloaded_artifact = _download_all_artifacts(uris=[full_path])
-        full_path = downloaded_artifact[0]
-
-        is_dir = os.path.isdir(full_path)
-
-        if not is_dir:
-            with open(full_path, 'rb') as file:
-                file_contents = file.read()
-                contents = BytesIO(file_contents)
-                contents.seek(0)
-        #since it is a dir, either return a tar or return a file list
-        else:
-            if download is True:
-                contents = self._get_artifact_zip_file(full_path)
-            else:
-                contents = self._get_artifact_file_list(artifact_url, download)
+        with open(temp_artifact_path, 'rb') as file:
+            file_contents = file.read()
+            contents = BytesIO(file_contents)
+            contents.seek(0)
         return contents
 
     def _get_artifact_file_list(self, 
         artifact_url: str, 
-        download: bool
     ) -> list[Any] | BytesIO:
 
         contents = []
         relative_path = ""
 
-        if download is True:
-            return self._get_artifact_zip_file(artifact_url)
 
         for path, dir_names, file_names in os.walk(artifact_url):
             for file_name in file_names:
