@@ -155,6 +155,24 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
   return res
 }
 
+export async function getSnapshots<T extends ItemType>(type: T, id: number) {
+  const res =  await axios.get(`/api/${type}/${id}/snapshots`, {
+    params: {
+      pageLength: 100
+    }
+  })
+
+  if(res.data.next) {
+    let nextUrl = res.data.next.replace("/v1", "")
+    while (nextUrl) {
+      const response = await axios.get(nextUrl)
+      res.data.data.push(...response.data.data)
+      nextUrl = response.data.next ? response.data.next.replace("/v1", "") : null
+    }
+  }
+  return res
+}
+
 export async function getJobs(id: number, pagination: Pagination) {
   const res = await axios.get(`/api/experiments/${id}/jobs`, {
     params: {
