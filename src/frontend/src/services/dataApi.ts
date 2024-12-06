@@ -155,6 +155,10 @@ export async function getData<T extends ItemType>(type: T, pagination: Paginatio
   return res
 }
 
+export async function getSnapshots<T extends ItemType>(type: T, id: number) {
+  return await axios.get(`/api/${type}/${id}/snapshots`)
+}
+
 export async function getJobs(id: number, pagination: Pagination) {
   const res = await axios.get(`/api/experiments/${id}/jobs`, {
     params: {
