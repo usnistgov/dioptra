@@ -49,6 +49,10 @@ class ExperimentSnapshotRefSchema(ExperimentSnapshotRefBaseSchema):  # type: ign
         attribute="name",
         metadata=dict(description="Name of the Experiment resource."),
     )
+    id = fields.Integer(
+        attribute="id",
+        metadata=dict(description="id of the Experiment resource."),
+    )
 
 
 class ExperimentMutableFieldsSchema(Schema):
