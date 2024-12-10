@@ -21,24 +21,24 @@ import json
 import os
 import tarfile
 import time
-from tkinter import NO
 import zipfile
 from io import BytesIO
 from pathlib import Path
 from posixpath import join as urljoin
 from tempfile import TemporaryDirectory
+from tkinter import NO
 from typing import Any, Final, List, Union, cast
 
 import art
-from flask_migrate import current
 import mlflow
-from numpy import full
 import requests
-from scipy.fft import dst
 import structlog
 from flask import send_from_directory
 from flask_login import current_user
+from flask_migrate import current
 from injector import inject
+from numpy import full
+from scipy.fft import dst
 from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
 from traitlets import Bool
@@ -563,12 +563,14 @@ class ArtifactIdContentsService(object):
         # TODO: Need to check MLFlow for the specified artifact
         artifact_list = mlflow.artifacts.list_artifacts(artifact_uri=artifact_full_path)
         if artifact_list is None:
-            raise DioptraError(f'An artifact file with path "{artifact_full_path}" does not exist in MLFlow.')
-        
+            raise DioptraError(
+                f'An artifact file with path "{artifact_full_path}" does not exist in MLFlow.'
+            )
+
         is_dir = True
         if len(artifact_list) == 0:
             is_dir = False
-        
+
         with TemporaryDirectory() as tmp_dst_dir, set_cwd(tmp_dst_dir):
             if is_dir:
                 if download is True:
@@ -577,8 +579,8 @@ class ArtifactIdContentsService(object):
                 else:
                     # If a download is not requested, get a file listing of the full artifact
                     contents = self._get_artifact_file_list(
-                        artifact_uri=artifact_full_path, 
-                        current_uri=artifact_full_path, 
+                        artifact_uri=artifact_full_path,
+                        current_uri=artifact_full_path,
                         artifact_list=artifact_list,
                         subfolder_path="",
                     )
@@ -599,8 +601,8 @@ class ArtifactIdContentsService(object):
         contents = BytesIO()
 
         with TemporaryDirectory() as temp_dir, set_cwd(temp_dir):
-            temp_artifact = _download_all_artifacts(uris=
-                [full_path], dst_path=temp_dir 
+            temp_artifact = _download_all_artifacts(
+                uris=[full_path], dst_path=temp_dir
             )[0]
 
             # TODO: Determine a wait time for the artifacts to download
@@ -615,8 +617,10 @@ class ArtifactIdContentsService(object):
             if os.path.isdir(temp_artifact):
                 with tarfile.open(fileobj=contents, mode="w") as tar:
                     tar.add(temp_artifact, arcname=zip_name)
-            else: 
-                raise FileNotFoundError(f'The directory at path {temp_artifact} does not exist.')
+            else:
+                raise FileNotFoundError(
+                    f"The directory at path {temp_artifact} does not exist."
+                )
 
         contents.seek(0)
         return contents
@@ -626,8 +630,8 @@ class ArtifactIdContentsService(object):
         artifact_url: str,
         destination_dir: str,
     ) -> BytesIO:
-        temp_artifact_path = _download_all_artifacts(uris=
-            [artifact_url], dst_path=destination_dir 
+        temp_artifact_path = _download_all_artifacts(
+            uris=[artifact_url], dst_path=destination_dir
         )[0]
 
         with open(temp_artifact_path, "rb") as file:
@@ -649,13 +653,17 @@ class ArtifactIdContentsService(object):
 
         for artifact in artifact_list:
             if artifact.is_dir:
-                new_artifact_path = os.path.join(current_uri, os.path.basename(artifact.path))
-                new_artifact_list = mlflow.artifacts.list_artifacts(artifact_uri=new_artifact_path)
+                new_artifact_path = os.path.join(
+                    current_uri, os.path.basename(artifact.path)
+                )
+                new_artifact_list = mlflow.artifacts.list_artifacts(
+                    artifact_uri=new_artifact_path
+                )
                 if new_artifact_list is None:
                     raise DioptraError(
                         f'An artifact file with path "{current_uri}" does not exist in MLFlow.'
                     )
-                
+
                 # If it is empty, it means it is a directory with no contents
                 if len(new_artifact_list) == 0:
                     relative_path = current_uri.replace(artifact_uri, "/")
@@ -679,14 +687,16 @@ class ArtifactIdContentsService(object):
                             artifact_uri=artifact_uri,
                             current_uri=new_artifact_path,
                             artifact_list=new_artifact_list,
-                            subfolder_path=relative_path
+                            subfolder_path=relative_path,
                         )
                     )
             else:
                 # Else it is a file
                 if subfolder_path:
                     # Keep track of the subfolder depth to properly build the relative path
-                    relative_path = os.path.join(subfolder_path, os.path.basename(artifact.path))
+                    relative_path = os.path.join(
+                        subfolder_path, os.path.basename(artifact.path)
+                    )
                 else:
                     # Remove the artifact name, since it is not needed in relative path
                     artifact_name = os.path.basename(artifact_uri)
@@ -701,7 +711,8 @@ class ArtifactIdContentsService(object):
                     }
                 )
         return contents
-        
+
+
 def _get_duplicate_artifact(job_artifacts, new_artifact_name) -> models.Artifact | None:
     for artifact in job_artifacts:
         existing_artifact_name = os.path.basename(artifact.uri)
@@ -715,7 +726,9 @@ def _download_all_artifacts(uris: List[str], dst_path: str) -> List[str]:
     download_paths = []
     for uri in uris:
         try:
-            download_path: str = mlflow.artifacts.download_artifacts(artifact_uri=uri, dst_path=dst_path)
+            download_path: str = mlflow.artifacts.download_artifacts(
+                artifact_uri=uri, dst_path=dst_path
+            )
             LOGGER.info(
                 "Artifact downloaded from MLFlow run", artifact_path=download_path
             )
