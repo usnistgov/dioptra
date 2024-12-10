@@ -31,11 +31,13 @@ def assert_base_resource_contents_match_expectations(response: dict[str, Any]) -
     assert isinstance(response["id"], int)
     assert isinstance(response["snapshot"], int)
     assert isinstance(response["createdOn"], str)
+    assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
 
     assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["snapshotCreatedOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
 
 

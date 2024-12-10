@@ -67,6 +67,13 @@ def generate_base_resource_schema(name: str, snapshot: bool) -> type[Schema]:
             ),
             dump_only=True,
         ),
+        "snapshotCreatedOn": fields.DateTime(
+            attribute="snapshot_created_on",
+            metadata=dict(
+                description=f"Timestamp when the {name} resource snapshot was created."
+            ),
+            dump_only=True,
+        ),
         "lastModifiedOn": fields.DateTime(
             attribute="last_modified_on",
             metadata=dict(
