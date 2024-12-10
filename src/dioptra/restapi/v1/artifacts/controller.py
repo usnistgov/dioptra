@@ -17,8 +17,8 @@
 """The module defining the endpoints for Artifact resources."""
 from __future__ import annotations
 
-from io import BytesIO
 import uuid
+from io import BytesIO
 from pathlib import Path
 from typing import cast
 from urllib.parse import unquote
@@ -238,10 +238,10 @@ class ArtifactIdContentsEndpoint(Resource):
             path = Path(path).name
 
         return send_file(
-                path_or_file=contents,
-                as_attachment=download,
-                download_name=path,
-            )
+            path_or_file=contents,
+            as_attachment=download,
+            download_name=path,
+        )
 
 
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
