@@ -16,8 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from __future__ import annotations
 
-import pytest
-
 from dioptra.restapi.utils import find_non_unique
 
 
