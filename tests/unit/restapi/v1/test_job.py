@@ -54,6 +54,7 @@ def assert_job_response_contents_matches_expectations(
         "id",
         "snapshot",
         "createdOn",
+        "snapshotCreatedOn",
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",

@@ -56,6 +56,7 @@ def assert_model_response_contents_matches_expectations(
         "user",
         "versions",
         "createdOn",
+        "snapshotCreatedOn",
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",

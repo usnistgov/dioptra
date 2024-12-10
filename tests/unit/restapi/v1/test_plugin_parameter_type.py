@@ -322,6 +322,7 @@ def assert_plugin_parameter_type_content_matches_expectations(
         "group",
         "user",
         "createdOn",
+        "snapshotCreatedOn",
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",
@@ -339,6 +340,7 @@ def assert_plugin_parameter_type_content_matches_expectations(
     assert isinstance(response["structure"], (dict, type(None)))
     assert isinstance(response["description"], (str, type(None)))
     assert isinstance(response["createdOn"], str)
+    assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
@@ -348,6 +350,7 @@ def assert_plugin_parameter_type_content_matches_expectations(
     assert response["description"] == expected_contents["description"]
 
     assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["snapshotCreatedOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
 
     # Validate the UserRef structure

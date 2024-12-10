@@ -53,6 +53,7 @@ def assert_experiment_response_contents_matches_expectations(
         "group",
         "user",
         "createdOn",
+        "snapshotCreatedOn",
         "lastModifiedOn",
         "latestSnapshot",
         "hasDraft",
@@ -69,6 +70,7 @@ def assert_experiment_response_contents_matches_expectations(
     assert isinstance(response["name"], str)
     assert isinstance(response["description"], str)
     assert isinstance(response["createdOn"], str)
+    assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
 
@@ -76,6 +78,7 @@ def assert_experiment_response_contents_matches_expectations(
     assert response["description"] == expected_contents["description"]
 
     assert helpers.is_iso_format(response["createdOn"])
+    assert helpers.is_iso_format(response["snapshotCreatedOn"])
     assert helpers.is_iso_format(response["lastModifiedOn"])
 
     # Validate the UserRef structure

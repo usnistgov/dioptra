@@ -546,6 +546,7 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         "group": build_group_ref(experiment.resource.owner),
         "created_on": experiment.resource.created_on,
         "last_modified_on": experiment.resource.last_modified_on,
+        "snapshot_created_on": experiment.created_on,
         "latest_snapshot": experiment.resource.latest_snapshot_id
         == experiment.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in experiment.tags],
@@ -608,6 +609,7 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
         "group": build_group_ref(entrypoint.resource.owner),
         "created_on": entrypoint.resource.created_on,
         "last_modified_on": entrypoint.resource.last_modified_on,
+        "snapshot_created_on": entrypoint.created_on,
         "latest_snapshot": entrypoint.resource.latest_snapshot_id
         == entrypoint.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in entrypoint.tags],
@@ -675,6 +677,7 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
         "entrypoint": build_entrypoint_snapshot_ref(job.entry_point_job.entry_point),
         "created_on": job.resource.created_on,
         "last_modified_on": job.resource.last_modified_on,
+        "snapshot_created_on": job.created_on,
         "latest_snapshot": job.resource.latest_snapshot_id == job.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in job.tags],
     }
@@ -725,6 +728,7 @@ def build_model(model_dict: ModelWithVersionDict) -> dict[str, Any]:
         "group": build_group_ref(model.resource.owner),
         "created_on": model.resource.created_on,
         "last_modified_on": model.resource.last_modified_on,
+        "snapshot_created_on": model.created_on,
         "latest_snapshot": model.resource.latest_snapshot_id
         == model.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in model.tags],
@@ -772,6 +776,7 @@ def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
         "group": build_group_ref(artifact.resource.owner),
         "created_on": artifact.resource.created_on,
         "last_modified_on": artifact.resource.last_modified_on,
+        "snapshot_created_on": artifact.created_on,
         "latest_snapshot": artifact.resource.latest_snapshot_id
         == artifact.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in artifact.tags],
@@ -804,6 +809,7 @@ def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
         "group": build_group_ref(queue.resource.owner),
         "created_on": queue.resource.created_on,
         "last_modified_on": queue.resource.last_modified_on,
+        "snapshot_created_on": queue.created_on,
         "latest_snapshot": queue.resource.latest_snapshot_id
         == queue.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in queue.tags],
@@ -837,6 +843,7 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
         "group": build_group_ref(plugin.resource.owner),
         "created_on": plugin.resource.created_on,
         "last_modified_on": plugin.resource.last_modified_on,
+        "snapshot_created_on": plugin.created_on,
         "latest_snapshot": plugin.resource.latest_snapshot_id
         == plugin.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in plugin.tags],
@@ -867,6 +874,7 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
         "group": build_group_ref(plugin_file.resource.owner),
         "created_on": plugin_file.resource.created_on,
         "last_modified_on": plugin_file.resource.last_modified_on,
+        "snapshot_created_on": plugin_file.created_on,
         "latest_snapshot": plugin_file.resource.latest_snapshot_id
         == plugin_file.resource_snapshot_id,
         "contents": plugin_file.contents,
@@ -943,6 +951,7 @@ def build_plugin_parameter_type(
         "group": build_group_ref(plugin_parameter_type.resource.owner),
         "created_on": plugin_parameter_type.resource.created_on,
         "last_modified_on": plugin_parameter_type.resource.last_modified_on,
+        "snapshot_created_on": plugin_parameter_type.created_on,
         "latest_snapshot": plugin_parameter_type.resource.latest_snapshot_id
         == plugin_parameter_type.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in plugin_parameter_type.tags],
