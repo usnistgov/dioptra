@@ -19,11 +19,10 @@ from typing import Any, Callable, Final, Optional, TypedDict, cast
 from urllib.parse import urlencode, urlunparse
 
 from marshmallow import Schema
-
-from dioptra.restapi.db import models, db
-from dioptra.restapi.routes import V1_ROOT
-
 from sqlalchemy import select
+
+from dioptra.restapi.db import db, models
+from dioptra.restapi.routes import V1_ROOT
 
 ARTIFACTS: Final[str] = "artifacts"
 ENTRYPOINTS: Final[str] = "entrypoints"
@@ -258,7 +257,8 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
     return {
         "id": plugin.resource_id,
         "snapshot_id": plugin.resource_snapshot_id,
-        "latest_snapshot": plugin.resource.latest_snapshot_id == plugin.resource_snapshot_id,
+        "latest_snapshot": plugin.resource.latest_snapshot_id
+        == plugin.resource_snapshot_id,
         "name": plugin.name,
         "url": build_url(
             f"{PLUGINS}/{plugin.resource_id}/snapshots/{plugin.resource_snapshot_id}"
@@ -272,7 +272,7 @@ def build_entrypoint_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str,
                     f"{PLUGINS}/{plugin.resource_id}/{PLUGIN_FILES}/{plugin_file.resource_id}/"
                     f"snapshots/{plugin_file.resource_snapshot_id}"
                 ),
-                "tasks": [build_plugin_task(task) for task in plugin_file.tasks]
+                "tasks": [build_plugin_task(task) for task in plugin_file.tasks],
             }
             for plugin_file in plugin_files
         ],
@@ -316,7 +316,7 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
         "url": build_url(
             f"{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}"
         ),
-         "tasks": [build_plugin_task(task) for task in plugin_file.tasks]
+        "tasks": [build_plugin_task(task) for task in plugin_file.tasks],
     }
 
 
@@ -597,16 +597,10 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
     plugins = [
         PluginWithFilesDict(
             plugin=entry_point_plugin.plugin,
-            plugin_files=[plugin_plugin_file.plugin_file for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files])
+            plugin_files=[file for file in entry_point_plugin.plugin.plugin_files],
+        )
         for entry_point_plugin in entrypoint.entry_point_plugins
     ]
-
-    # plugins = [
-    #     PluginWithFilesDict(
-    #         plugin=entry_point_plugin.plugin,
-    #         plugin_files=[file for file in entry_point_plugin.plugin.plugin_files])
-    #     for entry_point_plugin in entrypoint.entry_point_plugins
-    # ]
 
     data = {
         "id": entrypoint.resource_id,

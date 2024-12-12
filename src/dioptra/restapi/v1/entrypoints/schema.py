@@ -17,8 +17,8 @@
 """The schemas for serializing/deserializing Entrypoint resources."""
 from marshmallow import Schema, fields, validate
 
-from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.plugins.schema import PluginTaskSchema
+from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
