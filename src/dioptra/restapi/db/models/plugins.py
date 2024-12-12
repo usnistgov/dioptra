@@ -41,16 +41,13 @@ class Plugin(ResourceSnapshot):
     name: Mapped[text_] = mapped_column(nullable=False, index=True)
 
     # Relationships
-    plugin_plugin_files: Mapped[list["PluginPluginFile"]] = relationship(
-        init=False, back_populates="plugin"
+    plugin_files: Mapped[list["PluginFile"]] = relationship(
+        "PluginFile",
+        secondary="plugin_plugin_files",
+        primaryjoin="Plugin.resource_snapshot_id == PluginPluginFile.plugin_resource_snapshot_id",
+        secondaryjoin="PluginPluginFile.plugin_file_resource_snapshot_id == PluginFile.resource_snapshot_id",
+        init=False,
     )
-    # plugin_files: Mapped[list["PluginFile"]] = relationship(
-    #     "PluginFile",
-    #     secondary="plugin_plugin_files",
-    #     primaryjoin="Plugin.resource_snapshot_id == PluginPluginFile.plugin_resource_snapshot_id",
-    #     secondaryjoin="PluginPluginFile.plugin_file_resource_snapshot_id == PluginFile.resource_snapshot_id",
-    #     init=False
-    # )
 
     # Additional settings
     __table_args__ = (  # type: ignore[assignment]

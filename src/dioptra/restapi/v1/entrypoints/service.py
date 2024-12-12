@@ -722,30 +722,19 @@ class EntrypointIdPluginsIdService(object):
             ),
         )["entry_point"]
 
-        plugins = {
+        plugin = {
             entry_point_plugin.plugin.resource_id: entry_point_plugin.plugin
             for entry_point_plugin in entrypoint.entry_point_plugins
-        }
-        if plugin_id not in plugins:
+        }.get(plugin_id, None)
+
+        if plugin is None:
             raise EntityDoesNotExistError(
                 PLUGIN_RESOURCE_TYPE, entrypoint_id=entrypoint_id, plugin_id=plugin_id
             )
 
-        plugin_files_stmt = (
-            select(models.PluginFile)
-            .where(
-                models.PluginFile.plugin_id
-                == plugin_id
-            )
+        return utils.PluginWithFilesDict(
+            plugin=plugin, plugin_files=plugin.plugin_files, has_draft=None
         )
-        plugin_files = db.session.scalars(plugin_files_stmt).unique().all()
-
-        # Construct the PluginWithFilesDict
-        plugin = utils.PluginWithFilesDict(
-            plugin=plugins[plugin_id], plugin_files=plugin_files, has_draft=None
-        )
-
-        return plugin
 
     def delete(
         self,
@@ -1194,26 +1183,15 @@ class EntrypointNameService(object):
 def _get_entrypoint_plugin_snapshots(
     entrypoint: models.EntryPoint,
 ) -> list[utils.PluginWithFilesDict]:
-    plugins_dict = {
-        entry_point_plugin.plugin.resource_id: utils.PluginWithFilesDict(
-            plugin=entry_point_plugin.plugin, plugin_files=[], has_draft=False
+    plugins = [
+        utils.PluginWithFilesDict(
+            plugin=entry_point_plugin.plugin,
+            plugin_files=[
+                plugin_file for plugin_file in entry_point_plugin.plugin.plugin_files
+            ],
+            has_draft=False,
         )
         for entry_point_plugin in entrypoint.entry_point_plugins
-    }
-    for entry_point_plugin in entrypoint.entry_point_plugins:
-        resource_id = entry_point_plugin.plugin.resource_id
-        plugin_files = db.session.scalars(
-            select(models.PluginFile)
-            .join(models.PluginPluginFile, 
-                models.PluginPluginFile.plugin_file_resource_snapshot_id
-                == models.PluginFile.resource_snapshot_id
-            )
-            .where(
-              models.PluginPluginFile.plugin_resource_snapshot_id 
-              == entry_point_plugin.plugin.resource_snapshot_id
-            )
-        ).unique().all()
+    ]
 
-        plugins_dict[resource_id]["plugin_files"].extend(plugin_files)
-
-    return list(plugins_dict.values())
+    return plugins

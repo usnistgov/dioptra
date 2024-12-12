@@ -228,21 +228,10 @@ class PluginService(object):
 
         plugins_dict: dict[int, utils.PluginWithFilesDict] = {
             plugin.resource_id: utils.PluginWithFilesDict(
-                plugin=plugin, 
-                plugin_files=[],
-                has_draft=False
+                plugin=plugin, plugin_files=plugin.plugin_files, has_draft=False
             )
             for plugin in plugins
         }
-
-        plugin_files = [
-          plugin_plugin_file.plugin_file
-          for plugin in plugins
-          for plugin_plugin_file in plugin.plugin_plugin_files
-        ]
-
-        for plugin_file in plugin_files:
-            plugins_dict[plugin_file.plugin_id]["plugin_files"].append(plugin_file)
 
         drafts_stmt = select(
             models.DraftResource.payload["resource_id"].as_string().cast(Integer)
@@ -319,8 +308,6 @@ class PluginIdService(object):
 
             return None
 
-        plugin_files = [plugin_plugin_file.plugin_file for plugin_plugin_file in plugin.plugin_plugin_files]
-
         drafts_stmt = (
             select(models.DraftResource.draft_resource_id)
             .where(
@@ -334,7 +321,7 @@ class PluginIdService(object):
         has_draft = db.session.scalar(drafts_stmt)
 
         return utils.PluginWithFilesDict(
-            plugin=plugin, plugin_files=plugin_files, has_draft=has_draft
+            plugin=plugin, plugin_files=plugin.plugin_files, has_draft=has_draft
         )
 
     def modify(
@@ -397,8 +384,7 @@ class PluginIdService(object):
 
         for plugin_file in plugin_files:
             plugin_plugin_file = models.PluginPluginFile(
-                plugin=new_plugin,
-                plugin_file=plugin_file
+                plugin=new_plugin, plugin_file=plugin_file
             )
             db.session.add(plugin_plugin_file)
 
@@ -434,8 +420,8 @@ class PluginIdService(object):
         if plugin_resource is None:
             raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
-
         from dioptra.restapi.v1.plugins.service import PluginIdFileService
+
         plugin_id_file_service = PluginIdFileService(
             plugin_file_name_service=None,
             group_id_service=None,
@@ -456,7 +442,11 @@ class PluginIdService(object):
             plugin_file_ids=plugin_file_ids,
         )
 
-        return {"status": "Success", "plugin_id": plugin_id, "file_ids": plugin_file_ids}
+        return {
+            "status": "Success",
+            "plugin_id": plugin_id,
+            "file_ids": plugin_file_ids,
+        }
 
 
 class PluginIdsService(object):
@@ -1180,14 +1170,14 @@ class PluginIdFileIdService(object):
                 plugin_id=plugin_id,
                 plugin_file_id=plugin_file_id,
             )
-        
+
         plugin_file_dict = self.get(
             plugin_id=plugin_id,
             plugin_file_id=plugin_file_id,
         )
 
         plugin = plugin_file_dict["plugin"]
-        
+
         _update_plugin_and_file_snapshots(plugin, plugin_file, delete=True)
 
         plugin_file_id_to_return = plugin_file.resource_id  # to return to user
@@ -1329,7 +1319,7 @@ def _add_plugin_tasks(
         )
         db.session.add(plugin_task)
 
-    
+
 def _update_plugin_and_file_snapshots(
     plugin: models.Plugin,
     plugin_file: models.PluginFile,
@@ -1347,24 +1337,17 @@ def _update_plugin_and_file_snapshots(
     db.session.add(new_plugin)
 
     # add snapshot for existing plugin_plugin_files
-    for plugin_plugin_file in plugin.plugin_plugin_files:
-        if (
-            plugin_plugin_file.plugin_resource_snapshot_id == plugin.resource_snapshot_id and 
-            plugin_plugin_file.plugin_file.resource_id != plugin_file.resource_id
-        ):
-            existing_plugin_plugin_file = models.PluginPluginFile(
-              plugin=new_plugin,
-              plugin_file=plugin_plugin_file.plugin_file
-            )
-            db.session.add(existing_plugin_plugin_file)
+    for existing_plugin_file in plugin.plugin_files:
+        if existing_plugin_file.resource_id == plugin_file.resource_id:
+            continue
 
-    if delete:
-        return
+        plugin_plugin_file = models.PluginPluginFile(
+            plugin=new_plugin, plugin_file=existing_plugin_file
+        )
+        db.session.add(plugin_plugin_file)
 
-    # add snapshot for new plugin_plugin_file
-    new_plugin_plugin_file = models.PluginPluginFile(
-        plugin=new_plugin,
-        plugin_file=plugin_file
-    )
-    db.session.add(new_plugin_plugin_file)
-
+    if not delete:  # add snapshot for new plugin_plugin_file
+        new_plugin_plugin_file = models.PluginPluginFile(
+            plugin=new_plugin, plugin_file=plugin_file
+        )
+        db.session.add(new_plugin_plugin_file)
