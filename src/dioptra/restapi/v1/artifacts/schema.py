@@ -87,7 +87,11 @@ class ArtifactMutableFieldsSchema(Schema):
 ArtifactBaseSchema = generate_base_resource_schema("Artifact", snapshot=True)
 
 
-class ArtifactSchema(ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, ArtifactBaseSchema):  # type: ignore
+class ArtifactSchema(
+    ArtifactFileMetadataSchema,
+    ArtifactMutableFieldsSchema,
+    ArtifactBaseSchema
+):  # type: ignore
     """The schema for the data stored in an Artifact resource."""
 
     jobId = fields.Int(
@@ -109,7 +113,8 @@ class ArtifactSchema(ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, Ar
         attribute="artifact_type",
         validate=validate.OneOf(["file", "dir", "archive"]),
         metadata=dict(
-            description="Indicates what type of artifact this is (file or dir or archive)."
+            description="Indicates what type of \
+            artifact this is (file or dir or archive)."
         ),
         required=True,
     )
@@ -131,13 +136,6 @@ class ArtifactContentsGetQueryParameters(Schema):
     path = fields.String(
         attribute="path",
         metadata=dict(description="Path of a specific artifact."),
-        load_default=None,
-    )
-    download = fields.Boolean(
-        attribute="download",
-        metadata=dict(
-            description="Determines whether the file will be downloaded or viewed."
-        ),
         load_default=None,
     )
 
