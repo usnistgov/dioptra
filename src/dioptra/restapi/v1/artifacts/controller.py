@@ -18,7 +18,6 @@
 from __future__ import annotations
 
 import uuid
-from io import BytesIO
 from pathlib import Path
 from typing import cast
 from urllib.parse import unquote
@@ -166,10 +165,13 @@ class ArtifactIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
         )
-        artifact = cast(
-            models.Artifact,
-            self._artifact_id_service.get(id, error_if_not_found=True, log=log),
-        )
+        
+        artifact = self._artifact_id_service.get(id, error_if_not_found=True, log=log)
+        
+        if type(artifact) is str:
+            return artifact
+
+        artifact = cast(models.Artifact, artifact)
         return utils.build_artifact(artifact)
 
     @login_required
@@ -221,12 +223,10 @@ class ArtifactIdContentsEndpoint(Resource):
         parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
         path = parsed_query_params["path"]
-        download = parsed_query_params["download"]
 
-        contents, is_dir, artifact_name = self._artifact_id_contents_service.get(
+        contents, is_dir, artifact_name, mimetype = self._artifact_id_contents_service.get(
             artifact_id=id,
             path=path,
-            download=download,
             log=log,
         )
 
@@ -239,7 +239,8 @@ class ArtifactIdContentsEndpoint(Resource):
 
         return send_file(
             path_or_file=contents,
-            as_attachment=download,
+            mimetype=mimetype,
+            as_attachment=False,
             download_name=path,
         )
 

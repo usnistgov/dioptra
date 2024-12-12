@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import json
+import mimetypes
 import os
 import tarfile
 import time
@@ -414,7 +415,7 @@ class ArtifactIdService(object):
         artifact_id: int,
         error_if_not_found: bool = False,
         **kwargs,
-    ) -> utils.ArtifactDict | None:
+    ) -> utils.ArtifactDict | str | None:
         """Fetch a artifact by its unique id.
 
         Args:
@@ -423,7 +424,8 @@ class ArtifactIdService(object):
                 Defaults to False.
 
         Returns:
-            The artifact object if found, otherwise None.
+            The artifact object if found, otherwise None, or a directory listing if 
+            multiple artifact files exist.
 
         Raises:
             EntityDoesNotExistError: If the artifact is not found and
@@ -462,7 +464,23 @@ class ArtifactIdService(object):
         )
         has_draft = db.session.scalar(drafts_stmt)
 
-        return utils.ArtifactDict(artifact=artifact, has_draft=has_draft)
+        single_artifact = utils.ArtifactDict(artifact=artifact, has_draft=has_draft)
+
+        artifact_list = mlflow.artifacts.list_artifacts(artifact_uri=artifact.uri)
+        if artifact_list is None:
+            raise DioptraError(
+                f'An artifact file with path "{artifact.uri}" does not exist in MLFlow.'
+            )
+        artifact_listing = _get_artifact_file_list(
+            artifact_uri=artifact.uri,
+            current_uri=artifact.uri,
+            artifact_list=artifact_list,
+            subfolder_path="",
+        )
+        if len(artifact_listing) > 0:
+            return json.dumps(artifact_listing)
+
+        return single_artifact
 
     def modify(
         self,
@@ -527,7 +545,6 @@ class ArtifactIdContentsService(object):
         self,
         artifact_id: int,
         path: str | None,
-        download: bool = False,
         **kwargs,
     ) -> Any:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -560,7 +577,7 @@ class ArtifactIdContentsService(object):
             sanitized_path = os.path.normpath(path)  # TODO: expand on cleaning the path
             artifact_full_path = os.path.join(artifact_base_uri, sanitized_path)
 
-        # TODO: Need to check MLFlow for the specified artifact
+        # Check MLFlow for the specified artifact
         artifact_list = mlflow.artifacts.list_artifacts(artifact_uri=artifact_full_path)
         if artifact_list is None:
             raise DioptraError(
@@ -573,25 +590,19 @@ class ArtifactIdContentsService(object):
 
         with TemporaryDirectory() as tmp_dst_dir, set_cwd(tmp_dst_dir):
             if is_dir:
-                if download is True:
-                    # Get the artifact contents as an archive
-                    contents = self._get_artifact_zip_file(artifact_base_uri)
-                else:
-                    # If a download is not requested, get a file listing of the full artifact
-                    contents = self._get_artifact_file_list(
-                        artifact_uri=artifact_full_path,
-                        current_uri=artifact_full_path,
-                        artifact_list=artifact_list,
-                        subfolder_path="",
-                    )
+                contents = self._get_artifact_zip_file(artifact_base_uri)
             else:
-                # Else it is a file
-                # TODO: When download is True, give the path to download from rather
-                # than the file contents for display
                 contents = self._get_artifact_file_contents(
                     artifact_full_path, tmp_dst_dir
                 )
-        return contents, is_dir, os.path.basename(artifact_full_path)
+            
+            artifact_name = os.path.basename(artifact_full_path) 
+            if is_dir:
+                artifact_name += '.tar.gz'
+                
+            mimetype = mimetypes.guess_type(artifact_name)[0]
+
+        return contents, is_dir, os.path.basename(artifact_full_path), mimetype
 
     def _get_artifact_zip_file(
         self,
@@ -640,67 +651,32 @@ class ArtifactIdContentsService(object):
             contents.seek(0)
         return contents
 
-    def _get_artifact_file_list(
-        self,
-        artifact_uri: str,
-        current_uri: str,
-        artifact_list: list[Any],
-        subfolder_path: str,
-    ) -> list[Any]:
+def _get_artifact_file_list(
+    artifact_uri: str,
+    current_uri: str,
+    artifact_list: list[Any],
+    subfolder_path: str,
+) -> list[Any]:
 
-        contents = []
-        relative_path = ""
+    contents = []
+    relative_path = ""
 
-        for artifact in artifact_list:
-            if artifact.is_dir:
-                new_artifact_path = os.path.join(
-                    current_uri, os.path.basename(artifact.path)
+    for artifact in artifact_list:
+        if artifact.is_dir:
+            new_artifact_path = os.path.join(
+                current_uri, os.path.basename(artifact.path)
+            )
+            new_artifact_list = mlflow.artifacts.list_artifacts(
+                artifact_uri=new_artifact_path
+            )
+            if new_artifact_list is None:
+                raise DioptraError(
+                    f'An artifact file with path "{current_uri}" does not exist in MLFlow.'
                 )
-                new_artifact_list = mlflow.artifacts.list_artifacts(
-                    artifact_uri=new_artifact_path
-                )
-                if new_artifact_list is None:
-                    raise DioptraError(
-                        f'An artifact file with path "{current_uri}" does not exist in MLFlow.'
-                    )
 
-                # If it is empty, it means it is a directory with no contents
-                if len(new_artifact_list) == 0:
-                    relative_path = current_uri.replace(artifact_uri, "/")
-
-                    contents.append(
-                        {
-                            "relativePath": relative_path,
-                            "fileSize": artifact.file_size,
-                            "is_dir": artifact.is_dir,
-                            "url": artifact_uri,
-                        }
-                    )
-
-                # If the directory has file(s), recurse
-                else:
-                    relative_path = new_artifact_path.replace(artifact_uri + "/", "")
-
-                    # Recurse into the subdirectory
-                    contents.extend(
-                        self._get_artifact_file_list(
-                            artifact_uri=artifact_uri,
-                            current_uri=new_artifact_path,
-                            artifact_list=new_artifact_list,
-                            subfolder_path=relative_path,
-                        )
-                    )
-            else:
-                # Else it is a file
-                if subfolder_path:
-                    # Keep track of the subfolder depth to properly build the relative path
-                    relative_path = os.path.join(
-                        subfolder_path, os.path.basename(artifact.path)
-                    )
-                else:
-                    # Remove the artifact name, since it is not needed in relative path
-                    artifact_name = os.path.basename(artifact_uri)
-                    relative_path = artifact.path.replace(artifact_name + "/", "")
+            # If it is empty, it means it is a directory with no contents
+            if len(new_artifact_list) == 0:
+                relative_path = current_uri.replace(artifact_uri, "/")
 
                 contents.append(
                     {
@@ -710,7 +686,41 @@ class ArtifactIdContentsService(object):
                         "url": artifact_uri,
                     }
                 )
-        return contents
+
+            # If the directory has file(s), recurse
+            else:
+                relative_path = new_artifact_path.replace(artifact_uri + "/", "")
+
+                # Recurse into the subdirectory
+                contents.extend(
+                    _get_artifact_file_list(
+                        artifact_uri=artifact_uri,
+                        current_uri=new_artifact_path,
+                        artifact_list=new_artifact_list,
+                        subfolder_path=relative_path,
+                    )
+                )
+        else:
+            # Else it is a file
+            if subfolder_path:
+                # Keep track of the subfolder depth to properly build the relative path
+                relative_path = os.path.join(
+                    subfolder_path, os.path.basename(artifact.path)
+                )
+            else:
+                # Remove the artifact name, since it is not needed in relative path
+                artifact_name = os.path.basename(artifact_uri)
+                relative_path = artifact.path.replace(artifact_name + "/", "")
+
+            contents.append(
+                {
+                    "relativePath": relative_path,
+                    "fileSize": artifact.file_size,
+                    "is_dir": artifact.is_dir,
+                    "url": artifact_uri,
+                }
+            )
+    return contents
 
 
 def _get_duplicate_artifact(job_artifacts, new_artifact_name) -> models.Artifact | None:
