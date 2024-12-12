@@ -331,6 +331,11 @@ class UserPasswordError(DioptraError):
     def __init__(self, message: str):
         super().__init__(message)
 
+class MLFlowError(DioptraError):
+    """MLFlow Error."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
 
 def error_result(
     error: DioptraError, status: http.HTTPStatus, detail: dict[str, typing.Any]
@@ -431,7 +436,14 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
 
+    @api.errorhandler(MLFlowError)
+    def handle_mlflow_error(error: MLFlowError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
+
     @api.errorhandler(DioptraError)
     def handle_base_error(error: DioptraError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+    
+

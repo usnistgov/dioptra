@@ -37,6 +37,7 @@ from dioptra.restapi.errors import (
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
     SortParameterValidationError,
+    MLFlowError
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entrypoints.service import (
@@ -558,10 +559,15 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        run_id: UUID = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
+        run_id: UUID | None = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
             "mlflow_run_id"
         ]
-        client = MlflowClient()
+
+        try:
+            client = MlflowClient()
+        except MlflowException as e:
+            raise MLFlowError(e.message)
+
 
         if run_id is None:
             metrics = []
@@ -606,7 +612,10 @@ class JobIdMetricsService(object):
         if run_id is None:
             raise EntityDoesNotExistError("MlFlowRun", run_id=None)
         else:
-            client = MlflowClient()
+            try:
+                client = MlflowClient()
+            except MlflowException as e:
+                raise MLFlowError(e.message)
 
             # this is here just to raise an error if the run does not exist
             try:
@@ -614,12 +623,16 @@ class JobIdMetricsService(object):
             except MlflowException as e:
                 raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
 
-            client.log_metric(
-                run_id.hex,
-                key=metric_name,
-                value=metric_value,
-                step=metric_step,
-            )
+            try:
+                client.log_metric(
+                    run_id.hex,
+                    key=metric_name,
+                    value=metric_value,
+                    step=metric_step,
+                )
+            except MlflowException as e:
+                raise MLFlowError(e.message)
+
         return {"name": metric_name, "value": metric_value}
 
 
@@ -666,7 +679,11 @@ class JobIdMetricsSnapshotsService(object):
         run_id: UUID | None = self._job_id_mlflowrun_service.get(
             job_id=job_id, **kwargs
         )["mlflow_run_id"]
-        client = MlflowClient()
+
+        try:
+            client = MlflowClient()
+        except MlflowException as e:
+            raise MLFlowError(e.message)
 
         if run_id is None:
             raise EntityDoesNotExistError("MlFlowRun", run_id=None)
@@ -674,7 +691,10 @@ class JobIdMetricsSnapshotsService(object):
         try:
             history = client.get_metric_history(run_id=run_id.hex, key=metric_name)
         except MlflowException as e:
-            raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
+            raise MLFlowError(e.message) from e
+
+        if history == []:
+            raise EntityDoesNotExistError("Metric not found", name=metric_name)
 
         metrics_page = [
             {
