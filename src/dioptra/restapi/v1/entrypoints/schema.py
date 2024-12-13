@@ -18,6 +18,7 @@
 from marshmallow import Schema, fields, validate
 
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
+from dioptra.restapi.v1.plugins.schema import PluginTaskSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
@@ -44,10 +45,23 @@ class EntrypointPluginFileSchema(Schema):
         attribute="snapshot_id",
         metadata=dict(description="Snapshot ID for the PluginFile resource."),
     )
+    latestSnapshot = fields.Boolean(
+        attribute="latest_snapshot",
+        metadata=dict(
+            description=f"Whether or not the {filename} resource is the latest version."
+        ),
+        dump_only=True,
+    )
     url = fields.Url(
         attribute="url",
         metadata=dict(description="URL for accessing the full PluginFile snapshot."),
         relative=True,
+    )
+    tasks = fields.Nested(
+        PluginTaskSchema,
+        attribute="tasks",
+        metadata=dict(description="Tasks associated with the PluginFile resource."),
+        many=True,
     )
 
 
@@ -65,6 +79,13 @@ class EntrypointPluginSchema(Schema):
     snapshotId = fields.Integer(
         attribute="snapshot_id",
         metadata=dict(description="Snapshot ID for the Plugin resource."),
+    )
+    latestSnapshot = fields.Boolean(
+        attribute="latest_snapshot",
+        metadata=dict(
+            description=f"Whether or not the {name} resource is the latest version."
+        ),
+        dump_only=True,
     )
     url = fields.Url(
         attribute="url",
