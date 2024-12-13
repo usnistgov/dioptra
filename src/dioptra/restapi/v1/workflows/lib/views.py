@@ -121,6 +121,7 @@ def get_entry_point_plugin_files(
             entry_point_plugins_stmt
         )
     )
+
     return list(db.session.scalars(entry_point_plugin_files_stmt).unique().all())
 
 

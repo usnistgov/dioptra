@@ -392,6 +392,11 @@ def test_create_job(
     expected_contents: The raw data passed to actions.py::register_job() as *args
       *Note: group_id is given as an arg for registration in the service layer
     """
+
+    queue_snapshot_id = registered_queues["queue1"]["snapshot"]
+    experiment_snapshot_id = registered_experiments["experiment1"]["snapshot"]
+    entrypoint_snapshot_id = registered_entrypoints["entrypoint1"]["snapshot"]
+
     for param in registered_entrypoints["entrypoint1"]["parameters"][1:]:
         values[param["name"]] = param["defaultValue"]
 
@@ -403,9 +408,9 @@ def test_create_job(
             "values": values,
             "user_id": auth_account["id"],
             "group_id": registered_experiments["experiment1"]["group"]["id"],
-            "queue_id": queue_id,
-            "experiment_id": experiment_id,
-            "entrypoint_id": entrypoint_id,
+            "queue_id": queue_snapshot_id,
+            "experiment_id": experiment_snapshot_id,
+            "entrypoint_id": entrypoint_snapshot_id,
         },
     )
 

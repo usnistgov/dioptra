@@ -97,7 +97,7 @@ def assert_experiment_ref_contents_matches_expectations(
     assert_base_resource_ref_contents_matches_expectations(
         resource=experiment, expected_group_id=expected_group_id
     )
-    assert experiment["id"] == expected_experiment_id
+    assert experiment["snapshotId"] == expected_experiment_id
 
 
 def assert_entrypoint_ref_contents_matches_expectations(
@@ -109,7 +109,7 @@ def assert_entrypoint_ref_contents_matches_expectations(
     assert_base_resource_ref_contents_matches_expectations(
         resource=entrypoint, expected_group_id=expected_group_id
     )
-    assert entrypoint["id"] == expected_entrypoint_id
+    assert entrypoint["snapshotId"] == expected_entrypoint_id
 
 
 def assert_draft_response_contents_matches_expectations(
