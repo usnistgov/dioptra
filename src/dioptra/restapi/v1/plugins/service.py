@@ -420,20 +420,28 @@ class PluginIdService(object):
         if plugin_resource is None:
             raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
-        from dioptra.restapi.v1.plugins.service import PluginIdFileService
-
-        plugin_id_file_service = PluginIdFileService(
-            plugin_file_name_service=None,
-            group_id_service=None,
-            plugin_id_service=self,
-        )
-        plugin_file_ids = plugin_id_file_service.delete(plugin_id=plugin_id)["id"]
-
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
             resource=plugin_resource,
         )
         db.session.add(deleted_resource_lock)
+
+        plugin_file_resources = [
+            child
+            for child in plugin_resource.children
+            if child.resource_type == PLUGIN_FILE_RESOURCE_TYPE
+        ]
+        plugin_file_ids = [
+            plugin_file_resource.resource_id
+            for plugin_file_resource in plugin_file_resources
+        ]
+        for plugin_file_resource in plugin_file_resources:
+            deleted_resource_lock = models.ResourceLock(
+                resource_lock_type=resource_lock_types.DELETE,
+                resource=plugin_file_resource,
+            )
+            db.session.add(deleted_resource_lock)
+
         db.session.commit()
 
         log.debug(
