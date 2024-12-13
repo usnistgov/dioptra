@@ -44,8 +44,10 @@ class Plugin(ResourceSnapshot):
     plugin_files: Mapped[list["PluginFile"]] = relationship(
         "PluginFile",
         secondary="plugin_plugin_files",
-        primaryjoin="Plugin.resource_snapshot_id == PluginPluginFile.plugin_resource_snapshot_id",
-        secondaryjoin="PluginPluginFile.plugin_file_resource_snapshot_id == PluginFile.resource_snapshot_id",
+        primaryjoin="Plugin.resource_snapshot_id == "
+        "PluginPluginFile.plugin_resource_snapshot_id",
+        secondaryjoin="PluginPluginFile.plugin_file_resource_snapshot_id == "
+        "PluginFile.resource_snapshot_id",
         init=False,
     )
 
