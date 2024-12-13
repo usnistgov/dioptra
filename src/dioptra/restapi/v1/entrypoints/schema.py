@@ -76,9 +76,8 @@ class EntrypointPluginSchema(Schema):
     latestSnapshot = fields.Boolean(
         attribute="latest_snapshot",
         metadata=dict(
-            description=f"Whether or not the {name} resource is the latest version."
+            description=f"Whether or not the Plugin is the latest version."
         ),
-        dump_only=True,
     )
     url = fields.Url(
         attribute="url",
