@@ -25,7 +25,7 @@ from .resources import ResourceSnapshot
 
 if TYPE_CHECKING:
     from .jobs import EntryPointJob
-    from .plugins import Plugin, PluginFile
+    from .plugins import Plugin
     from .resources import Resource
 
 

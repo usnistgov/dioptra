@@ -19,9 +19,8 @@ from typing import Any, Callable, Final, Optional, TypedDict, cast
 from urllib.parse import urlencode, urlunparse
 
 from marshmallow import Schema
-from sqlalchemy import select
 
-from dioptra.restapi.db import db, models
+from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ROOT
 
 ARTIFACTS: Final[str] = "artifacts"
@@ -597,6 +596,7 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
         PluginWithFilesDict(
             plugin=entry_point_plugin.plugin,
             plugin_files=[file for file in entry_point_plugin.plugin.plugin_files],
+            has_draft=False,
         )
         for entry_point_plugin in entrypoint.entry_point_plugins
     ]
