@@ -1143,12 +1143,19 @@ class PluginIdFileIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=plugin_id, resource_type=PLUGIN_RESOURCE_TYPE, is_deleted=False
+        plugin_stmt = (
+            select(models.Plugin)
+            .join(models.Resource)
+            .where(
+                models.Plugin.resource_id == plugin_id,
+                models.Resource.is_deleted == False,  # noqa: E712
+                models.Resource.latest_snapshot_id
+                == models.Plugin.resource_snapshot_id,
+            )
         )
+        plugin = db.session.scalar(plugin_stmt)
 
-        plugin_resource = db.session.scalar(stmt)
-        if plugin_resource is None:
+        if plugin is None:
             raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
         plugin_file_stmt = (
@@ -1170,13 +1177,6 @@ class PluginIdFileIdService(object):
                 plugin_id=plugin_id,
                 plugin_file_id=plugin_file_id,
             )
-
-        plugin_file_dict = self.get(
-            plugin_id=plugin_id,
-            plugin_file_id=plugin_file_id,
-        )
-
-        plugin = plugin_file_dict["plugin"]
 
         _update_plugin_and_file_snapshots(plugin, plugin_file, delete=True)
 
