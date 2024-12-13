@@ -346,9 +346,9 @@ def test_create_job(
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
     description = "The new job."
-    queue_id = registered_queues["queue1"]["snapshot"]
-    experiment_id = registered_experiments["experiment1"]["snapshot"]
-    entrypoint_id = registered_entrypoints["entrypoint1"]["snapshot"]
+    queue_id = registered_queues["queue1"]["id"]
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
     values = {
         registered_entrypoints["entrypoint1"]["parameters"][0]["name"]: "new_value",
     }
@@ -372,6 +372,11 @@ def test_create_job(
     expected_contents: The raw data passed to actions.py::register_job() as *args
       *Note: group_id is given as an arg for registration in the service layer
     """
+
+    queue_snapshot_id = registered_queues["queue1"]["snapshot"]
+    experiment_snapshot_id = registered_experiments["experiment1"]["snapshot"]
+    entrypoint_snapshot_id = registered_entrypoints["entrypoint1"]["snapshot"]
+
     for param in registered_entrypoints["entrypoint1"]["parameters"][1:]:
         values[param["name"]] = param["defaultValue"]
     assert_job_response_contents_matches_expectations(
@@ -382,9 +387,9 @@ def test_create_job(
             "values": values,
             "user_id": auth_account["id"],
             "group_id": registered_experiments["experiment1"]["group"]["id"],
-            "queue_id": queue_id,
-            "experiment_id": experiment_id,
-            "entrypoint_id": entrypoint_id,
+            "queue_id": queue_snapshot_id,
+            "experiment_id": experiment_snapshot_id,
+            "entrypoint_id": entrypoint_snapshot_id,
         },
     )
 
@@ -559,7 +564,7 @@ def test_modify_job_status(
     """
     job_to_change_status = registered_jobs["job1"]
     job_id = job_to_change_status["id"]
-    experiment_id = job_to_change_status["experiment"]["snapshotId"]
+    experiment_id = job_to_change_status["experiment"]["id"]
     new_status = "started"
     modify_job_status(
         client=client,
@@ -596,7 +601,7 @@ def test_manage_job_snapshots(
     modify_job_status(
         client,
         job_id=job_to_change_status["id"],
-        experiment_id=job_to_change_status["experiment"]["snapshotId"],
+        experiment_id=job_to_change_status["experiment"]["id"],
         new_status="started",
     )
     modified_job = get_job(client, job_id=job_id).get_json()

@@ -50,7 +50,7 @@ YAML_EXPORT_SETTINGS: Final[dict[str, Any]] = {
 
 def export_task_engine_yaml(
     entrypoint: models.EntryPoint,
-    entry_point_plugin_files: list[models.EntryPointPluginFile],
+    entry_point_plugin_files: list[models.PluginPluginFile],
     plugin_parameter_types: list[models.PluginTaskParameterType],
     base_dir: Path,
     logger: BoundLogger | None = None,
@@ -85,7 +85,7 @@ def export_task_engine_yaml(
 
 def build_task_engine_dict(
     entrypoint: models.EntryPoint,
-    entry_point_plugin_files: list[models.EntryPointPluginFile],
+    entry_point_plugin_files: list[models.PluginPluginFile],
     plugin_parameter_types: list[models.PluginTaskParameterType],
     logger: BoundLogger | None = None,
 ) -> dict[str, Any]:
@@ -147,7 +147,7 @@ def extract_parameters(
 
 
 def extract_tasks(
-    entry_point_plugin_files: list[models.EntryPointPluginFile],
+    entry_point_plugin_files: list[models.PluginPluginFile],
     plugin_parameter_types: list[models.PluginTaskParameterType],
     logger: BoundLogger | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:

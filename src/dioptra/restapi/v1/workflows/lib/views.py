@@ -86,7 +86,7 @@ def get_experiment(job_id: int, logger: BoundLogger | None = None) -> models.Exp
 
 def get_entry_point_plugin_files(
     job_id: int, logger: BoundLogger | None = None
-) -> list[models.EntryPointPluginFile]:
+) -> list[models.PluginPluginFile]:
     """Run a query to get the plugin files for an entrypoint.
 
     Args:
@@ -106,10 +106,22 @@ def get_entry_point_plugin_files(
             models.EntryPointJob.job_resource_id == job_id,
         )
     )
-    entry_point_plugin_files_stmt = select(models.EntryPointPluginFile).where(
-        models.EntryPointPluginFile.entry_point_resource_snapshot_id
-        == entry_point_resource_snapshot_id_stmt.scalar_subquery(),
+
+    # Get plugins linked to the entry point
+    entry_point_plugins_stmt = select(
+        models.EntryPointPlugin.plugin_resource_snapshot_id
+    ).where(
+        models.EntryPointPlugin.entry_point_resource_snapshot_id
+        == entry_point_resource_snapshot_id_stmt.scalar_subquery()
     )
+
+    # Get plugin files linked to these plugins
+    entry_point_plugin_files_stmt = select(models.PluginPluginFile).where(
+        models.PluginPluginFile.plugin_resource_snapshot_id.in_(
+            entry_point_plugins_stmt
+        )
+    )
+
     return list(db.session.scalars(entry_point_plugin_files_stmt).unique().all())
 
 
