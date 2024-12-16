@@ -88,9 +88,7 @@ ArtifactBaseSchema = generate_base_resource_schema("Artifact", snapshot=True)
 
 
 class ArtifactSchema(
-    ArtifactFileMetadataSchema,
-    ArtifactMutableFieldsSchema,
-    ArtifactBaseSchema
+    ArtifactFileMetadataSchema, ArtifactMutableFieldsSchema, ArtifactBaseSchema
 ):  # type: ignore
     """The schema for the data stored in an Artifact resource."""
 
