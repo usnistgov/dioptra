@@ -206,6 +206,26 @@ class DraftAlreadyExistsError(DioptraError):
         self.resource_id = id
 
 
+class DraftResourceModificationsCommitError(DioptraError):
+    """The draft modifications to a resource could not be committed"""
+
+    def __init__(
+        self,
+        resource_type: str,
+        resource_id: int,
+        draft: dict,
+        previous_snapshot: dict,
+        current_snapshot: dict,
+    ):
+        super().__init__(
+            f"Draft modifications for a [{resource_type}] with id: {resource_id} "
+            "could not be commited."
+        )
+        self.draft = draft
+        self.previous_snapshot = previous_snapshot
+        self.current_snapshot = current_snapshot
+
+
 class SortParameterValidationError(DioptraError):
     """The sort parameters are not valid."""
 
@@ -410,6 +430,21 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_draft_already_exists(error: DraftAlreadyExistsError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+
+    @api.errorhandler(DraftAlreadyExistsError)
+    def handle_draft_resource_modifications_commit_error(
+        error: DraftResourceModificationsCommitError,
+    ):
+        log.debug(error.to_message())
+        return error_result(
+            error,
+            http.HTTPStatus.BAD_REQUEST,
+            {
+                "draft": error.draft,
+                "previous_snapshot": error.previous_snapshot,
+                "current_snapshot": error.current_snapshot,
+            },
+        )
 
     @api.errorhandler(LockError)
     def handle_lock_error(error: LockError):

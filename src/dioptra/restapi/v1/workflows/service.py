@@ -21,8 +21,13 @@ import structlog
 from injector import inject
 from structlog.stdlib import BoundLogger
 
+from dioptra.restapi import utils
 from dioptra.restapi.db import db
-from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.errors import (
+    DraftDoesNotExistError,
+    DraftResourceModificationsCommitError,
+    EntityDoesNotExistError,
+)
 from dioptra.restapi.v1.shared.resource_service import (
     ResourceIdService,
     ResourceService,
@@ -109,9 +114,7 @@ class DraftCommitService(object):
 
         draft = views.get_draft_resource(draft_id, logger=log)
         if draft is None:
-            raise EntityDoesNotExistError()
-
-        breakpoint()
+            raise DraftDoesNotExistError(draft_resource_id=draft_id)
 
         if draft.payload["resource_id"] is None:
             resource = self._resource_service.create(
@@ -121,26 +124,56 @@ class DraftCommitService(object):
                 commit=False,
                 log=log,
             )
-        else:  # the draft is based off of an existing resource
-            resource = views.get_resource(draft.resource_id)
+        else:  # the draft contains modifications to an existing resource
+            resource = views.get_latest_resource_snapshot(
+                draft.resource_type, draft.resource_id
+            )
             if resource is None:
-                raise Exception
-
-            if draft.resource_snapshot_id != resource.latest_snapshot_id:
-                return {
-                    "draft": None,
-                    "previous_snapshot": None,
-                    "current_snapshot": None,
-                }
-            else:
-                resource = self._resource_service.modify(
-                    resource_id=draft.resource_id,
-                    resource_type=draft.resource_type,
-                    resource_data=draft.payload["resource_data"],
-                    group_id=draft.group_id,
-                    commit=False,
-                    log=log,
+                raise EntityDoesNotExistError(
+                    draft.resource_type, resource_id=draft.resource_id
                 )
+
+            # if the underlying resource was modified since the draft was created,
+            # raise an error with the information necessary to reconcile the draft.
+            if draft.resource_snapshot_id != resource.latest_snapshot_id:
+                prev_snapshot = views.get_resource_snapshot(
+                    draft.resource_type, draft.resource_snapshot_id
+                )
+                if prev_snapshot is None:
+                    raise EntityDoesNotExistError(
+                        draft.resource_type, snapshot_id=draft.resource_snapshot_id
+                    )
+
+                curr_snapshot = views.get_resource_snapshot(
+                    draft.resource_type, resource.latest_snapshot_id
+                )
+                if curr_snapshot is None:
+                    raise EntityDoesNotExistError(
+                        draft.resource_type, resource_id=draft.resource_id
+                    )
+
+                raise DraftResourceModificationsCommitError(
+                    resource_type=draft.resource_type,
+                    resource_id=draft.resource_id,
+                    draft=utils.build_resource(
+                        draft.resource_type, {draft.resource_type: draft}
+                    ),
+                    previous_snapshot=utils.build_resource(
+                        draft.resource_type, prev_snapshot
+                    ),
+                    current_snapshot=utils.build_resource(
+                        draft.resource_type, curr_snapshot
+                    ),
+                )
+
+            resource = self._resource_service.modify(
+                resource_id=draft.resource_id,
+                resource_type=draft.resource_type,
+                resource_data=draft.payload["resource_data"],
+                group_id=draft.group_id,
+                commit=False,
+                log=log,
+            )
 
         db.session.delete(draft)
 

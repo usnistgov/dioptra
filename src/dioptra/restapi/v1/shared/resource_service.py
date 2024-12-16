@@ -20,8 +20,9 @@ from __future__ import annotations
 import structlog
 from injector import inject
 from structlog.stdlib import BoundLogger
+from typing import Any
 
-from dioptra.restapi.db import db
+from dioptra.restapi.errors import DioptraError
 from dioptra.restapi.v1.artifacts.service import ArtifactIdService, ArtifactService
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
@@ -72,12 +73,12 @@ class ResourceService(object):
 
         self._services = {
             "artifact": artifact_service,
-            "entrypoint": entrypoint_service,
+            "entry_point": entrypoint_service,
             "experiment": experiment_service,
             "model": model_service,
             "plugin": plugin_service,
             "plugin_file": plugin_id_file_service,
-            "plugin_parameter_type": plugin_parameter_type_service,
+            "plugin_task_parameter_type": plugin_parameter_type_service,
             "queue": queue_service,
         }
 
@@ -88,7 +89,7 @@ class ResourceService(object):
         group_id: int,
         commit: bool = True,
         **kwargs,
-    ):
+    ) -> dict[str, Any]:
         """Create a new queue.
 
         Args:
@@ -106,7 +107,10 @@ class ResourceService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        self._services[resource_type].create(
+        if resource_type not in self._services:
+            raise DioptraError(f"Invalid resource type: {resource_type}")
+
+        return self._services[resource_type].create(
             group_id=group_id, **resource_data, commit=commit, log=log
         )
 
@@ -125,7 +129,7 @@ class ResourceIdService(object):
         plugin_id_file_id_service: PluginIdFileIdService,
         plugin_parameter_type_id_service: PluginParameterTypeIdService,
         queue_id_service: QueueIdService,
-    ) -> db.Model:
+    ) -> None:
         """Initialize the resource id service.
 
         All arguments are provided via dependency injection.
@@ -145,7 +149,7 @@ class ResourceIdService(object):
             "queue": queue_id_service,
         }
 
-    def create(
+    def modify(
         self,
         resource_id: int,
         resource_type: str,
@@ -153,7 +157,7 @@ class ResourceIdService(object):
         group_id: int,
         commit: bool = True,
         **kwargs,
-    ):
+    ) -> dict[str, Any]:
         """Create a new queue.
 
         Args:
@@ -171,7 +175,9 @@ class ResourceIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        resource_dict = self._services[resource_type].modify(
+        if resource_type not in self._services:
+            raise DioptraError(f"Invalid resource type: {resource_type}")
+
+        return self._services[resource_type].modify(
             resource_id, group_id=group_id, **resource_data, commit=commit, log=log
         )
-        return resource_dict[resource_type]
