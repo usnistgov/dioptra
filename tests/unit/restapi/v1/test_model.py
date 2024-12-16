@@ -20,95 +20,16 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the model entity. The tests ensure that the models can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
-
+from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_MODELS_ROUTE, V1_ROOT
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 
-from ..lib import actions, asserts, helpers
-
-# -- Actions ---------------------------------------------------------------------------
-
-
-def modify_model(
-    client: FlaskClient,
-    model_id: int,
-    new_name: str,
-    new_description: str | None,
-) -> TestResponse:
-    """Rename a model using the API.
-
-    Args:
-        client: The Flask test client.
-        model_id: The id of the model to rename.
-        new_name: The new name to assign to the model.
-        new_description: The new description to assign to the model.
-        new_artifact_id: The new artifact to assign to the model.
-
-    Returns:
-        The response from the API.
-    """
-    payload = {
-        "name": new_name,
-        "description": new_description,
-    }
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def delete_model_with_id(
-    client: FlaskClient,
-    model_id: int,
-) -> TestResponse:
-    """Delete a model using the API.
-
-    Args:
-        client: The Flask test client.
-        model_id: The id of the model to delete.
-
-    Returns:
-        The response from the API.
-    """
-
-    return client.delete(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}",
-        follow_redirects=True,
-    )
-
-
-def modify_model_version(
-    client: FlaskClient,
-    model_id: int,
-    version_number: int,
-    new_description: str | None,
-) -> TestResponse:
-    """Change the description of a model version using the API.
-
-    Args:
-        client: The Flask test client.
-        model_id: The id of the model to rename.
-        new_description: The new description to assign to the model.
-
-    Returns:
-        The response from the API.
-    """
-    payload = {"description": new_description}
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}/versions/{version_number}",
-        json=payload,
-        follow_redirects=True,
-    )
-
+from ..lib import asserts, helpers, routines
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -205,7 +126,7 @@ def assert_model_version_response_contents_matches_expectations(
 
 
 def assert_retrieving_model_by_id_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     model_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -220,14 +141,12 @@ def assert_retrieving_model_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.models.get_by_id(model_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_models_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     search: str | None = None,
@@ -250,28 +169,27 @@ def assert_retrieving_models_works(
     query_string: dict[str, Any] = {}
 
     if group_id is not None:
-        query_string["groupId"] = group_id
+        query_string["group_id"] = group_id
 
     if search is not None:
         query_string["search"] = search
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
+        query_string["page_length"] = paging_info["page_length"]
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    response = dioptra_client.models.get(**query_string)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_model_works(
-    client: FlaskClient,
-    sortBy: str,
-    descending: bool,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that models can be sorted by column ascending/descending.
 
@@ -287,23 +205,32 @@ def assert_sorting_model_works(
 
     query_string: dict[str, Any] = {}
 
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
+    if descending is not None:
+        query_string["descending"] = descending
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
+    if sort_by is not None:
+        query_string["sort_by"] = sort_by
 
-    response_data = response.get_json()
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.models.get(**query_string)
+    response_data = response.json()
     model_ids = [model["id"] for model in response_data["data"]]
-
-    assert response.status_code == 200 and model_ids == expected
+    assert response.status_code == HTTPStatus.OK and model_ids == expected
 
 
 def assert_registering_existing_model_name_fails(
-    client: FlaskClient, name: str, group_id: int
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    name: str,
+    group_id: int,
 ) -> None:
     """Assert that registering a model with an existing name fails.
 
@@ -314,14 +241,16 @@ def assert_registering_existing_model_name_fails(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = actions.register_model(
-        client, name=name, description="", group_id=group_id
+    response = dioptra_client.models.create(
+        group_id=group_id, name=name, description=""
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_model_name_matches_expected_name(
-    client: FlaskClient, model_id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    model_id: int,
+    expected_name: str,
 ) -> None:
     """Assert that the name of a model matches the expected name.
 
@@ -334,15 +263,15 @@ def assert_model_name_matches_expected_name(
         AssertionError: If the response status code is not 200 or if the name of the
             model does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}",
-        follow_redirects=True,
+    response = dioptra_client.models.get_by_id(model_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
 
 
 def assert_model_is_not_found(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     model_id: int,
 ) -> None:
     """Assert that a model is not found.
@@ -354,15 +283,12 @@ def assert_model_is_not_found(
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 404
+    response = dioptra_client.models.get_by_id(model_id)
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_cannot_rename_model_with_existing_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     model_id: int,
     existing_name: str,
     existing_description: str,
@@ -377,17 +303,19 @@ def assert_cannot_rename_model_with_existing_name(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = modify_model(
-        client=client,
+    response = dioptra_client.models.modify_by_id(
         model_id=model_id,
-        new_name=existing_name,
-        new_description=existing_description,
+        name=existing_name,
+        description=existing_description,
     )
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_retrieving_model_version_by_version_number_works(
-    client: FlaskClient, model_id: int, version_number: int, expected: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    model_id: int,
+    version_number: int,
+    expected: dict[str, Any],
 ) -> None:
     """Assert that retrieving a model version by id works.
 
@@ -401,15 +329,14 @@ def assert_retrieving_model_version_by_version_number_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}/versions/{version_number}",
-        follow_redirects=True,
+    response = dioptra_client.models.versions.get_by_id(
+        model_id=model_id, version_number=version_number
     )
-    assert response.status_code == 200 and response.get_json() == expected
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_model_versions_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     model_id: int,
     expected: dict[str, Any],
     search: str | None = None,
@@ -423,18 +350,14 @@ def assert_retrieving_model_versions_works(
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
+        query_string["page_length"] = paging_info["page_length"]
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}/versions",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    response = dioptra_client.models.versions.get(model_id=model_id, **query_string)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_model_version_description_matches_expected_description(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     model_id: int,
     version_number: int,
     expected_description: str,
@@ -451,13 +374,12 @@ def assert_model_version_description_matches_expected_description(
         AssertionError: If the response status code is not 200 or if the name of the
             model does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_MODELS_ROUTE}/{model_id}/versions/{version_number}",
-        follow_redirects=True,
+    response = dioptra_client.models.versions.get_by_id(
+        model_id=model_id, version_number=version_number
     )
     assert (
-        response.status_code == 200
-        and response.get_json()["description"] == expected_description
+        response.status_code == HTTPStatus.OK
+        and response.json()["description"] == expected_description
     )
 
 
@@ -465,7 +387,7 @@ def assert_model_version_description_matches_expected_description(
 
 
 def test_create_model(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -474,11 +396,10 @@ def test_create_model(
     description = "The first model."
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
-    model_response = actions.register_model(
-        client, name=name, group_id=group_id, description=description
+    model_response = dioptra_client.models.create(
+        group_id=group_id, name=name, description=description
     )
-
-    model_expected = model_response.get_json()
+    model_expected = model_response.json()
     assert_model_response_contents_matches_expectations(
         response=model_expected,
         expected_contents={
@@ -490,14 +411,13 @@ def test_create_model(
             "latest_version": None,
         },
     )
-
     assert_retrieving_model_by_id_works(
-        client, model_id=model_expected["id"], expected=model_expected
+        dioptra_client, model_id=model_expected["id"], expected=model_expected
     )
 
 
 def test_model_get_all(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -512,11 +432,11 @@ def test_model_get_all(
     - The returned list of models matches the full list of registered models.
     """
     model_expected_list = list(registered_models.values())
-    assert_retrieving_models_works(client, expected=model_expected_list)
+    assert_retrieving_models_works(dioptra_client, expected=model_expected_list)
 
 
 @pytest.mark.parametrize(
-    "sortBy, descending , expected",
+    "sort_by, descending , expected",
     [
         (None, None, ["model1", "model2", "model3"]),
         ("name", True, ["model1", "model3", "model2"]),
@@ -526,11 +446,11 @@ def test_model_get_all(
     ],
 )
 def test_model_sort(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
-    sortBy: str,
+    sort_by: str,
     descending: bool,
     expected: list[str],
 ) -> None:
@@ -548,11 +468,13 @@ def test_model_sort(
     expected_ids = [
         registered_models[expected_name]["id"] for expected_name in expected
     ]
-    assert_sorting_model_works(client, sortBy, descending, expected=expected_ids)
+    assert_sorting_model_works(
+        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids
+    )
 
 
 def test_model_search_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -567,18 +489,22 @@ def test_model_search_query(
     """
     model_expected_list = list(registered_models.values())[:2]
     assert_retrieving_models_works(
-        client, expected=model_expected_list, search="description:*model*"
+        dioptra_client, expected=model_expected_list, search="description:*model*"
     )
     model_expected_list = list(registered_models.values())[:1]
     assert_retrieving_models_works(
-        client, expected=model_expected_list, search="*model*, name:*tensorflow*"
+        dioptra_client,
+        expected=model_expected_list,
+        search="*model*, name:*tensorflow*",
     )
     model_expected_list = list(registered_models.values())
-    assert_retrieving_models_works(client, expected=model_expected_list, search="*")
+    assert_retrieving_models_works(
+        dioptra_client, expected=model_expected_list, search="*"
+    )
 
 
 def test_model_group_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -594,14 +520,14 @@ def test_model_group_query(
     """
     model_expected_list = list(registered_models.values())
     assert_retrieving_models_works(
-        client,
+        dioptra_client,
         expected=model_expected_list,
         group_id=auth_account["groups"][0]["id"],
     )
 
 
 def test_cannot_register_existing_model_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -617,14 +543,14 @@ def test_cannot_register_existing_model_name(
     existing_model = registered_models["model1"]
 
     assert_registering_existing_model_name_fails(
-        client,
+        dioptra_client,
         name=existing_model["name"],
         group_id=existing_model["group"]["id"],
     )
 
 
 def test_rename_model(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -648,34 +574,32 @@ def test_rename_model(
     model_to_rename = registered_models["model1"]
     existing_model = registered_models["model2"]
 
-    modified_model = modify_model(
-        client,
+    modified_model = dioptra_client.models.modify_by_id(
         model_id=model_to_rename["id"],
-        new_name=updated_model_name,
-        new_description=model_to_rename["description"],
-    ).get_json()
+        name=updated_model_name,
+        description=model_to_rename["description"],
+    ).json()
     assert_model_name_matches_expected_name(
-        client, model_id=model_to_rename["id"], expected_name=updated_model_name
+        dioptra_client, model_id=model_to_rename["id"], expected_name=updated_model_name
     )
     model_expected_list = [
         modified_model,
         registered_models["model2"],
         registered_models["model3"],
     ]
-    assert_retrieving_models_works(client, expected=model_expected_list)
+    assert_retrieving_models_works(dioptra_client, expected=model_expected_list)
 
-    modified_model = modify_model(
-        client,
+    modified_model = dioptra_client.models.modify_by_id(
         model_id=model_to_rename["id"],
-        new_name=updated_model_name,
-        new_description=model_to_rename["description"],
-    ).get_json()
+        name=updated_model_name,
+        description=model_to_rename["description"],
+    ).json()
     assert_model_name_matches_expected_name(
-        client, model_id=model_to_rename["id"], expected_name=updated_model_name
+        dioptra_client, model_id=model_to_rename["id"], expected_name=updated_model_name
     )
 
     assert_cannot_rename_model_with_existing_name(
-        client,
+        dioptra_client,
         model_id=model_to_rename["id"],
         existing_name=existing_model["name"],
         existing_description=model_to_rename["description"],
@@ -683,7 +607,7 @@ def test_rename_model(
 
 
 def test_delete_model_by_id(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -699,12 +623,12 @@ def test_delete_model_by_id(
     """
     model_to_delete = registered_models["model1"]
 
-    delete_model_with_id(client, model_id=model_to_delete["id"])
-    assert_model_is_not_found(client, model_id=model_to_delete["id"])
+    dioptra_client.models.delete_by_id(model_to_delete["id"])
+    assert_model_is_not_found(dioptra_client, model_id=model_to_delete["id"])
 
 
 def test_manage_existing_model_draft(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -724,64 +648,47 @@ def test_manage_existing_model_draft(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     model = registered_models["model1"]
     name = "draft"
     new_name = "draft2"
     description = "description"
 
     # test creation
-    payload = {"name": name, "description": description}
-    expected = {
+    draft = {"name": name, "description": description}
+    draft_mod = {"name": new_name, "description": description}
+
+    # Expected responses
+    draft_expected = {
         "user_id": auth_account["id"],
         "group_id": model["group"]["id"],
         "resource_id": model["id"],
         "resource_snapshot_id": model["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft,
     }
-    response = actions.create_existing_resource_draft(
-        client, resource_route=V1_MODELS_ROUTE, resource_id=model["id"], payload=payload
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-    asserts.assert_retrieving_draft_by_resource_id_works(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        resource_id=model["id"],
-        expected=response,
-    )
-    asserts.assert_creating_another_existing_draft_fails(
-        client, resource_route=V1_MODELS_ROUTE, resource_id=model["id"]
-    )
-
-    # test modification
-    payload = {"name": new_name, "description": description}
-    expected = {
+    draft_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": model["group"]["id"],
         "resource_id": model["id"],
         "resource_snapshot_id": model["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft_mod,
     }
-    response = actions.modify_existing_resource_draft(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        resource_id=model["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
 
-    # test deletion
-    actions.delete_existing_resource_draft(
-        client, resource_route=V1_MODELS_ROUTE, resource_id=model["id"]
-    )
-    asserts.assert_existing_draft_is_not_found(
-        client, resource_route=V1_MODELS_ROUTE, resource_id=model["id"]
+    # Run routine: existing resource drafts tests
+    routines.run_existing_resource_drafts_tests(
+        dioptra_client.models.modify_resource_drafts,
+        model["id"],
+        draft=draft,
+        draft_mod=draft_mod,
+        draft_expected=draft_expected,
+        draft_mod_expected=draft_mod_expected,
     )
 
 
 def test_manage_new_model_drafts(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -797,87 +704,45 @@ def test_manage_new_model_drafts(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     group_id = auth_account["groups"][0]["id"]
     drafts = {
         "draft1": {"name": "model1", "description": "new model"},
         "draft2": {"name": "model2", "description": None},
     }
+    draft1_mod = {"name": "draft1", "description": "new description"}
 
-    # test creation
+    # Expected responses
     draft1_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft1"],
     }
-    draft1_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft1"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        draft_id=draft1_response["id"],
-        expected=draft1_response,
-    )
     draft2_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft2"],
     }
-    draft2_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft2"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        draft_id=draft2_response["id"],
-        expected=draft2_response,
-    )
-    asserts.assert_retrieving_drafts_works(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        expected=[draft1_response, draft2_response],
-    )
-
-    # test modification
-    draft1_mod = {"name": "draft1", "description": "new description"}
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": draft1_mod,
     }
-    response = actions.modify_new_resource_draft(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        draft_id=draft1_response["id"],
-        payload=draft1_mod,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected
-    )
 
-    # test deletion
-    actions.delete_new_resource_draft(
-        client, resource_route=V1_MODELS_ROUTE, draft_id=draft1_response["id"]
-    )
-    asserts.assert_new_draft_is_not_found(
-        client, resource_route=V1_MODELS_ROUTE, draft_id=draft1_response["id"]
+    # Run routine: existing resource drafts tests
+    routines.run_new_resource_drafts_tests(
+        dioptra_client.queues.new_resource_drafts,
+        drafts=drafts,
+        draft1_mod=draft1_mod,
+        draft1_expected=draft1_expected,
+        draft2_expected=draft2_expected,
+        draft1_mod_expected=draft1_mod_expected,
+        group_id=group_id,
     )
 
 
 def test_manage_model_snapshots(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -897,43 +762,24 @@ def test_manage_model_snapshots(
       response
     """
     model_to_rename = registered_models["model1"]
-    modified_model = modify_model(
-        client,
+    modified_model = dioptra_client.models.modify_by_id(
         model_id=model_to_rename["id"],
-        new_name=model_to_rename["name"] + "modified",
-        new_description=model_to_rename["description"],
-    ).get_json()
+        name=model_to_rename["name"] + "modified",
+        description=model_to_rename["description"],
+    ).json()
     modified_model["latestVersion"] = None
     modified_model["versions"] = []
-    modified_model.pop("hasDraft")
-    model_to_rename.pop("hasDraft")
-    model_to_rename["latestSnapshot"] = False
-    model_to_rename["lastModifiedOn"] = modified_model["lastModifiedOn"]
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        resource_id=model_to_rename["id"],
-        snapshot_id=model_to_rename["snapshot"],
-        expected=model_to_rename,
-    )
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        resource_id=modified_model["id"],
-        snapshot_id=modified_model["snapshot"],
-        expected=modified_model,
-    )
-    expected_snapshots = [model_to_rename, modified_model]
-    asserts.assert_retrieving_snapshots_works(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        resource_id=model_to_rename["id"],
-        expected=expected_snapshots,
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
+        dioptra_client.models.snapshots,
+        resource_to_rename=model_to_rename.copy(),
+        modified_resource=modified_model.copy(),
     )
 
 
 def test_tag_model(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -958,65 +804,21 @@ def test_tag_model(
       the gets the expected response of no tags
     """
     model = registered_models["model1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = actions.append_tags(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        resource_id=model["id"],
-        tag_ids=[tags[0], tags[1]],
+    # Run routine: resource tag tests
+    routines.run_resource_tag_tests(
+        dioptra_client.models.tags,
+        model["id"],
+        tag_ids=tag_ids,
     )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1]]
-    )
-    response = actions.append_tags(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        resource_id=model["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1], tags[2]]
-    )
-
-    # test remove
-    actions.remove_tag(
-        client, resource_route=V1_MODELS_ROUTE, resource_id=model["id"], tag_id=tags[1]
-    )
-    response = actions.get_tags(
-        client, resource_route=V1_MODELS_ROUTE, resource_id=model["id"]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[2]]
-    )
-
-    # test modify
-    response = actions.modify_tags(
-        client,
-        resource_route=V1_MODELS_ROUTE,
-        resource_id=model["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[1], tags[2]]
-    )
-
-    # test delete
-    response = actions.remove_tags(
-        client, resource_route=V1_MODELS_ROUTE, resource_id=model["id"]
-    )
-    response = actions.get_tags(
-        client, resource_route=V1_MODELS_ROUTE, resource_id=model["id"]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])
 
 
 # -- Tests Model Versions --------------------------------------------------------------
 
 
 def test_create_model_version(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -1036,9 +838,9 @@ def test_create_model_version(
     model_id = registered_models["model1"]["id"]
     artifact_id = registered_artifacts["artifact1"]["id"]
     description = "The model version."
-    model_version_response = actions.register_model_version(
-        client, model_id=model_id, artifact_id=artifact_id, description=description
-    ).get_json()
+    model_version_response = dioptra_client.models.versions.create(
+        model_id=model_id, artifact_id=artifact_id, description=description
+    ).json()
 
     assert_model_version_response_contents_matches_expectations(
         response=model_version_response,
@@ -1050,7 +852,7 @@ def test_create_model_version(
     )
 
     assert_retrieving_model_version_by_version_number_works(
-        client,
+        dioptra_client,
         model_id=model_id,
         version_number=model_version_response["versionNumber"],
         expected=model_version_response,
@@ -1058,7 +860,7 @@ def test_create_model_version(
 
 
 def test_model_versions_get_all(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -1075,12 +877,12 @@ def test_model_versions_get_all(
     model_id = registered_models["model1"]["id"]
     model_version_expected_list = list(registered_model_versions.values())[::4]
     assert_retrieving_model_versions_works(
-        client, model_id=model_id, expected=model_version_expected_list
+        dioptra_client, model_id=model_id, expected=model_version_expected_list
     )
 
 
 def test_model_version_search_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -1098,7 +900,7 @@ def test_model_version_search_query(
     model_id = registered_models["model1"]["id"]
     model_version_expected_list = list(registered_model_versions.values())[::4]
     assert_retrieving_model_versions_works(
-        client,
+        dioptra_client,
         model_id=model_id,
         expected=model_version_expected_list,
         search="description:*version*",
@@ -1106,7 +908,7 @@ def test_model_version_search_query(
     model_id = registered_models["model2"]["id"]
     model_version_expected_list = list(registered_model_versions.values())[1:-3]
     assert_retrieving_model_versions_works(
-        client,
+        dioptra_client,
         model_id=model_id,
         expected=model_version_expected_list,
         search="description:*version*",
@@ -1116,7 +918,7 @@ def test_model_version_search_query(
         list(registered_model_versions.values())[n] for n in (1, 3)
     ]
     assert_retrieving_model_versions_works(
-        client,
+        dioptra_client,
         model_id=model_id,
         expected=model_version_expected_list,
         search="*",
@@ -1124,7 +926,7 @@ def test_model_version_search_query(
 
 
 def test_modify_model_version(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -1135,14 +937,13 @@ def test_modify_model_version(
         "versionNumber"
     ]
     new_description = "The new description"
-    modify_model_version(
-        client,
+    dioptra_client.models.versions.modify_by_id(
         model_id=model_id,
         version_number=model_version_number_to_modify,
-        new_description=new_description,
+        description=new_description,
     )
     assert_model_version_description_matches_expected_description(
-        client,
+        dioptra_client,
         model_id=model_id,
         version_number=model_version_number_to_modify,
         expected_description=new_description,
