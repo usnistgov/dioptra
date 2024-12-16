@@ -54,7 +54,7 @@ def assert_group_ref_contents_matches_expectations(
     assert group["id"] == expected_group_id
 
 
-def assert_tag_ref_contents_matches_expectations(tags: dict[str, Any]) -> None:
+def assert_tag_ref_contents_matches_expectations(tags: list[dict[str, Any]]) -> None:
     for tag in tags:
         assert isinstance(tag["id"], int)
         assert isinstance(tag["name"], str)
@@ -325,7 +325,7 @@ def assert_retrieving_snapshots_works(
     client: FlaskClient,
     resource_route: str,
     resource_id: int,
-    expected: dict[str, Any],
+    expected: list[dict[str, Any]],
 ) -> None:
     """Assert that retrieving a queue by id works.
 

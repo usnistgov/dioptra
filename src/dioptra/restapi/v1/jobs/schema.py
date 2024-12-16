@@ -41,14 +41,83 @@ class JobMlflowRunSchema(Schema):
     )
 
 
-class JobStatusSchema(Schema):
-    """The fields schema for the data in a Job status resource."""
-
+class JobIdSchema(Schema):
     id = fields.Integer(
         attribute="id",
         metadata=dict(description="ID for the Job resource."),
         dump_only=True,
     )
+
+
+class MetricsSchema(Schema):
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="The name of the metric."),
+        required=True,
+    )
+    value = fields.Float(
+        attribute="value",
+        metadata=dict(description="The value of the metric."),
+        required=True,
+    )
+    step = fields.Integer(
+        attribute="step",
+        metadata=dict(description="The step value for the metric."),
+        load_only=True,
+        required=False,
+        load_default=0,
+    )
+
+
+class MetricsSnapshotSchema(Schema):
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="The name of the metric."),
+    )
+    value = fields.Float(
+        attribute="value",
+        metadata=dict(description="The value of the metric."),
+    )
+    step = fields.Integer(
+        attribute="step",
+        metadata=dict(description="The step value for the metric."),
+    )
+    timestamp = fields.Integer(
+        attribute="timestamp",
+        metadata=dict(description="The timestamp of the metric in milliseconds."),
+    )
+
+
+class MetricsSnapshotPageSchema(BasePageSchema):
+    data = fields.Nested(
+        MetricsSnapshotSchema,
+        many=True,
+        metadata=dict(description="List of Metric Snapshots in the current page."),
+    )
+
+
+class JobIdMetricsSchema(JobIdSchema):
+    metrics = fields.Nested(
+        MetricsSchema,
+        attribute="metrics",
+        metadata=dict(
+            description="A list of the latest metrics associated with the job."
+        ),
+        many=True,
+    )
+
+
+class ExperimentJobsMetricsSchema(BasePageSchema):
+    data = fields.Nested(
+        JobIdMetricsSchema,
+        many=True,
+        metadata=dict(description="List of metrics for each job in the experiment"),
+    )
+
+
+class JobStatusSchema(JobIdSchema):
+    """The fields schema for the data in a Job status resource."""
+
     status = fields.String(
         attribute="status",
         validate=validate.OneOf(
@@ -152,6 +221,13 @@ class JobPageSchema(BasePageSchema):
         many=True,
         metadata=dict(description="List of Job resources in the current page."),
     )
+
+
+class MetricsSnapshotsGetQueryParameters(
+    PagingQueryParametersSchema,
+):
+    """The query parameters for the GET method of the
+    /jobs/{id}/metrics/{name}/snapshots endpoint."""
 
 
 class JobGetQueryParameters(
