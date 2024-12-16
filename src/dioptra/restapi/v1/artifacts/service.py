@@ -616,22 +616,8 @@ class ArtifactIdContentsService(object):
                 uris=[full_path], dst_path=temp_dir
             )[0]
 
-            # TODO: Determine a wait time for the artifacts to download
-            wait_time = 10
-            counter = 0
-            while not os.path.exists(temp_artifact):
-                time.sleep(1)
-                counter += 1
-                if counter >= wait_time:
-                    break
-
-            if os.path.isdir(temp_artifact):
-                with tarfile.open(fileobj=contents, mode="w") as tar:
-                    tar.add(temp_artifact, arcname=zip_name)
-            else:
-                raise FileNotFoundError(
-                    f"The directory at path {temp_artifact} does not exist."
-                )
+            with tarfile.open(fileobj=contents, mode="w") as tar:
+                tar.add(temp_artifact, arcname=zip_name)
 
         contents.seek(0)
         return contents
@@ -743,8 +729,12 @@ def _download_all_artifacts(uris: List[str], dst_path: str) -> List[str]:
                 "Artifact downloaded from MLFlow run", artifact_path=download_path
             )
             download_paths += [download_path]
-        except:
+        except FileNotFoundError as e:
             raise FileNotFoundError(
+                f"The specified file with uri {uri} could not be found.", e
+            )
+        except:
+            raise DioptraError(
                 f"The specified file with uri {uri} could not be downloaded."
             )
     return download_paths
