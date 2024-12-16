@@ -315,6 +315,14 @@ export async function removePluginFromEntrypoint(entrypointId: string, pluginId:
   return await axios.delete(`/api/entrypoints/${entrypointId}/plugins/${pluginId}`)
 }
 
+export async function addEntrypointsToExperiment(id: string, ids: number[]) {
+  return await axios.post(`/api/experiments/${id}/entrypoints`, {ids})
+}
+
+export async function removeEntrypointFromExperiment(experimentId: string, entrypointId: number) {
+  return await axios.delete(`/api/experiments/${experimentId}/entrypoints/${entrypointId}`)
+}
+
 export async function getVersions(id: string,) {
   return await axios.get(`/api/models/${id}/versions`)
 }

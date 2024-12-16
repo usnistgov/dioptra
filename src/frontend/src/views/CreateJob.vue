@@ -37,15 +37,39 @@
               :options="entrypoints"
               @filter="getEntrypoints"
               :rules="[requiredRule]"
-              class="q-mb-sm"
-              :hint="!job.experiment ? 'Select experiment first' : ''"
-              :disable="!job.experiment"
+              :class="entrypointField?.hasError && allowableEntrypointIds.length === 0 ? '' : 'q-mb-sm'"
+              :disable="!job.experiment || allowableEntrypointIds.length === 0"
               @update:model-value="job.queue = ''; basicInfoForm.reset()"
+              ref="entrypointField"
             >
               <template v-slot:before>
                 <div class="field-label">Entrypoint:</div>
               </template>  
+              <template v-slot:hint>
+                <span v-if="!job.experiment">Select experiment first</span>
+                <span v-else-if="allowableEntrypointIds.length === 0">
+                  {{ job.experiment.name }} has no Entrypoints, add one 
+                  <span 
+                    style="color: blue; text-decoration: underline; cursor: pointer;"
+                    @click="showAssignEntrypointDialog = true"
+                  >
+                    here
+                  </span>
+                </span>
+              </template>
             </q-select>
+            <span 
+              v-if="entrypointField?.hasError && allowableEntrypointIds.length === 0"
+              style="display: inline-block; margin-left: 118px; font-size: 11px; color: rgba(0, 0, 0, 0.54); margin-bottom: 6px;"
+            >
+              {{ job.experiment.name }} has no Entrypoints, add one 
+              <a 
+                style="color: blue; text-decoration: underline; cursor: pointer;"
+                @click="showAssignEntrypointDialog = true"
+              >
+                here
+              </a>
+            </span>
             <q-select
               outlined
               dense
@@ -57,12 +81,24 @@
               @filter="getQueues"
               :rules="[requiredRule]"
               class="q-mb-sm"
-              :hint="queueHint"
-              :disable="!job.entrypoint"
+              :disable="!job.entrypoint || allowableQueueIds.length === 0"
             >
               <template v-slot:before>
                 <div class="field-label">Queue:</div>
-              </template>  
+              </template>
+              <template v-slot:hint>
+                <span v-if="!job.experiment && !job.entrypoint">Select Experiment and Entrypoint first</span>
+                <span v-else-if="!job.entrypoint">Select Entrypoint first</span>
+                <span v-else-if="allowableQueueIds.length === 0">
+                  {{ job.entrypoint.name }} has no Queues, add one 
+                  <span 
+                    style="color: blue; text-decoration: underline; cursor: pointer;"
+                    @click="showAssignEntrypointDialog = true"
+                  >
+                    here
+                  </span>
+                </span>
+              </template>
             </q-select>
             <q-input
               outlined 
@@ -140,6 +176,11 @@
     v-model="showReturnDialog"
     @cancel="clearForm"
   />
+  <AssignEntrypointsDialog
+    v-model="showAssignEntrypointDialog"
+    :experiment="job.experiment"
+    @getExperiment="getExperiment(job.experiment.id); basicInfoForm.reset();"
+  />
 </template>
 
 <script setup>
@@ -154,6 +195,7 @@
   import PageTitle from '@/components/PageTitle.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
   import { useLoginStore } from '@/stores/LoginStore'
+  import AssignEntrypointsDialog from '@/dialogs/AssignEntrypointsDialog.vue'
 
   const store = useLoginStore()
 
@@ -338,19 +380,21 @@
     })
   }
 
-  async function getExperiment() {
-    if(Object.hasOwn(route.params, 'id')) {
-      try {
-        const res = await api.getItem('experiments', route.params.id)
-        job.value.experiment = res.data
-      } catch(err) {
-        console.warn(err)
-      }
+  async function getExperiment(id) {
+    if(!id) return
+    try {
+      const res = await api.getItem('experiments', id)
+      console.log('exp = ', res.data)
+      job.value.experiment = res.data
+    } catch(err) {
+      console.warn(err)
     }
   }
 
   onMounted(async () => {
-    await getExperiment()
+    if(Object.hasOwn(route.params, 'id')) {
+      await getExperiment(route.params.id)
+    }
 
     if(store.savedForms.jobs[expJobOrAllJobs.value]) {
       job.value = store.savedForms.jobs[expJobOrAllJobs.value]
@@ -419,5 +463,9 @@
     if(!job.value.entrypoint) return 'Select entrypoint first'
     return ''
   })
+
+  const showAssignEntrypointDialog = ref(false)
+
+  const entrypointField = ref()
 
 </script>
