@@ -165,9 +165,9 @@ class ArtifactIdEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
         )
-        
+
         artifact = self._artifact_id_service.get(id, error_if_not_found=True, log=log)
-        
+
         if type(artifact) is str:
             return artifact
 
@@ -224,10 +224,12 @@ class ArtifactIdContentsEndpoint(Resource):
 
         path = parsed_query_params["path"]
 
-        contents, is_dir, artifact_name, mimetype = self._artifact_id_contents_service.get(
-            artifact_id=id,
-            path=path,
-            log=log,
+        contents, is_dir, artifact_name, mimetype = (
+            self._artifact_id_contents_service.get(
+                artifact_id=id,
+                path=path,
+                log=log,
+            )
         )
 
         if path is None and is_dir:

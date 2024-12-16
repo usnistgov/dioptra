@@ -21,28 +21,20 @@ import json
 import mimetypes
 import os
 import tarfile
-import time
 import zipfile
 from io import BytesIO
 from pathlib import Path
 from posixpath import join as urljoin
 from tempfile import TemporaryDirectory
-from tkinter import NO
 from typing import Any, Final, List, Union, cast
 
-import art
 import mlflow
 import requests
 import structlog
-from flask import send_from_directory
 from flask_login import current_user
-from flask_migrate import current
 from injector import inject
-from numpy import full
-from scipy.fft import dst
 from sqlalchemy import Integer, func, select
 from structlog.stdlib import BoundLogger
-from traitlets import Bool
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
@@ -424,7 +416,7 @@ class ArtifactIdService(object):
                 Defaults to False.
 
         Returns:
-            The artifact object if found, otherwise None, or a directory listing if 
+            The artifact object if found, otherwise None, or a directory listing if
             multiple artifact files exist.
 
         Raises:
@@ -581,7 +573,8 @@ class ArtifactIdContentsService(object):
         artifact_list = mlflow.artifacts.list_artifacts(artifact_uri=artifact_full_path)
         if artifact_list is None:
             raise DioptraError(
-                f'An artifact file with path "{artifact_full_path}" does not exist in MLFlow.'
+                f'An artifact file with path "{artifact_full_path}" does not '
+                'exist in MLFlow.'
             )
 
         is_dir = True
@@ -595,11 +588,11 @@ class ArtifactIdContentsService(object):
                 contents = self._get_artifact_file_contents(
                     artifact_full_path, tmp_dst_dir
                 )
-            
-            artifact_name = os.path.basename(artifact_full_path) 
+
+            artifact_name = os.path.basename(artifact_full_path)
             if is_dir:
-                artifact_name += '.tar.gz'
-                
+                artifact_name += ".tar.gz"
+
             mimetype = mimetypes.guess_type(artifact_name)[0]
 
         return contents, is_dir, os.path.basename(artifact_full_path), mimetype
@@ -637,6 +630,7 @@ class ArtifactIdContentsService(object):
             contents.seek(0)
         return contents
 
+
 def _get_artifact_file_list(
     artifact_uri: str,
     current_uri: str,
@@ -657,7 +651,8 @@ def _get_artifact_file_list(
             )
             if new_artifact_list is None:
                 raise DioptraError(
-                    f'An artifact file with path "{current_uri}" does not exist in MLFlow.'
+                    f'An artifact file with path "{current_uri}" does not '
+                    'exist in MLFlow.'
                 )
 
             # If it is empty, it means it is a directory with no contents
@@ -731,12 +726,8 @@ def _download_all_artifacts(uris: List[str], dst_path: str) -> List[str]:
             download_paths += [download_path]
         except FileNotFoundError as e:
             raise FileNotFoundError(
-                f"The specified file with uri {uri} could not be found.", e
-            )
-        except:
-            raise DioptraError(
-                f"The specified file with uri {uri} could not be downloaded."
-            )
+                f"The specified file with uri {uri} could not be found."
+            ) from e
     return download_paths
 
 
@@ -838,7 +829,8 @@ def _upload_archive_as_artifact(
                 uri = mlflow.get_artifact_uri(top_dir_name)
         else:
             raise DioptraError(
-                f"The provdided file archive ({artifact_file_name}) is an invalid archive type."
+                f'The provdided file archive ({artifact_file_name}) is an '
+                'invalid archive type.'
             )
 
         LOGGER.info(
