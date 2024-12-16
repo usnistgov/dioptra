@@ -380,6 +380,73 @@ def assert_entrypoint_must_have_unique_param_names(
     assert response.status_code == HTTPStatus.CONFLICT
 
 
+def assert_retrieving_all_queues_for_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    expected: list[Any],
+) -> None:
+    response = dioptra_client.entrypoints.queues.get(entrypoint_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [queue_ref["id"] for queue_ref in response.json()] == expected
+    )
+
+
+def assert_append_queues_to_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    queue_ids: list[int],
+    expected: list[Any],
+) -> None:
+    response = dioptra_client.entrypoints.queues.create(
+        entrypoint_id=entrypoint_id, queue_ids=queue_ids
+    )
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [queue_ref["id"] for queue_ref in response.json()] == expected
+    )
+
+
+def assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    expected: list[int],
+) -> None:
+    response = dioptra_client.entrypoints.plugins.get(entrypoint_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [plugin_snapshot["id"] for plugin_snapshot in response.json()] == expected
+    )
+
+
+def assert_append_plugins_to_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    plugin_ids: list[int],
+    expected: list[int],
+) -> None:
+    response = dioptra_client.entrypoints.plugins.create(
+        entrypoint_id=entrypoint_id, plugin_ids=plugin_ids
+    )
+    response_json = response.json()
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [plugin_snapshot["id"] for plugin_snapshot in response_json] == expected
+    )
+
+
+def assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    plugin_id: int,
+    expected: int,
+) -> None:
+    response = dioptra_client.entrypoints.plugins.get_by_id(
+        entrypoint_id=entrypoint_id, plugin_id=plugin_id
+    )
+    assert response.status_code == HTTPStatus.OK and response.json()["id"] == expected
+
+
 # -- Tests -----------------------------------------------------------------------------
 
 
@@ -957,4 +1024,214 @@ def test_tag_entrypoint(
         dioptra_client.entrypoints.tags,
         entrypoint["id"],
         tag_ids=tag_ids,
+    )
+
+
+def test_get_all_queues_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that queues associated with entrypoints can be retrieved.
+    Given an authenticated user, registered entrypoints, and registered queues,
+    this test validates the following sequence of actions:
+    - A user retrieves a list of all queue refs associated with the entrypoints.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+    assert_retrieving_all_queues_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_queue_ids,
+    )
+
+
+def test_append_queues_to_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that queues can be appended to entrypoints.
+    Given an authenticated user, registered entrypoints, and registered queues,
+    this test validates the following sequence of actions:
+    - A user adds new queue to the list of associated queues with the entrypoint.
+    - A user can then retreive the new list that includes all old and new queues refs.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    queue_ids_to_append = [
+        queue["id"] for queue in list(registered_queues.values())[1:]
+    ]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+    assert_append_queues_to_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        queue_ids=queue_ids_to_append,
+        expected=expected_queue_ids,
+    )
+
+
+def test_modify_queues_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that the list of associated queues with entrypoints can be modified.
+    Given an authenticated user, registered entrypoints, and registered queues,
+    this test validates the following sequence of actions:
+    - A user modifies the list of queues associated with an entrypoint.
+    - A user retrieves the list of all the new queues associated with the experiemnts.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())]
+    dioptra_client.entrypoints.queues.modify_by_id(
+        entrypoint_id=entrypoint_id, queue_ids=expected_queue_ids
+    )
+    assert_retrieving_all_queues_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_queue_ids,
+    )
+
+
+def test_delete_all_queues_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that the list of all associated queues can be deleted from a entrypoint.
+    Given an authenticated user and registered entrypoints, this test validates the
+    following sequence of actions:
+    - A user deletes the list of associated queues with the entrypoint.
+    - A user retrieves an empty list of associated queues with the entrypoint.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    dioptra_client.entrypoints.queues.delete(entrypoint_id)
+    assert_retrieving_all_queues_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
+    )
+
+
+def test_delete_queue_by_id_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that queues associated with the entrypoint can be deleted by id.
+    Given an authenticated user, registered entrypoints, and registered queues,
+    this test validates the following sequence of actions:
+    - A user deletes an associated queue with the entrypoint.
+    - A user retrieves a list of associated queues that does not include the deleted.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    queue_id_to_delete = registered_queues["queue1"]["id"]
+    expected_queue_ids = [queue["id"] for queue in list(registered_queues.values())[1:]]
+    dioptra_client.entrypoints.queues.delete_by_id(
+        entrypoint_id=entrypoint_id, queue_id=queue_id_to_delete
+    )
+    assert_retrieving_all_queues_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_queue_ids,
+    )
+
+
+def test_get_plugin_snapshots_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that plugins associated with entrypoints can be retrieved.
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user retrieves a list of all plugin refs associated with the entrypoints.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    expected_plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=expected_plugin_ids,
+    )
+
+
+def test_append_plugins_to_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that plugins can be appended to entrypoints.
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user adds new plugin to the list of associated plugins with the entrypoint.
+    - A user can then retreive the new list that includes all old and new plugins refs.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    expected_plugin_ids = [registered_plugin_with_files["plugin"]["id"]]
+    assert_append_plugins_to_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        plugin_ids=expected_plugin_ids,
+        expected=expected_plugin_ids,
+    )
+
+
+def test_get_plugin_snapshot_by_id_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that plugins associated with entrypoints can be retrieved by id.
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user retrieves a plugin ref associated with the entrypoints by its id.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    expected_plugin_id = registered_plugin_with_files["plugin"]["id"]
+    assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        plugin_id=expected_plugin_id,
+        expected=expected_plugin_id,
+    )
+
+
+def test_delete_plugin_snapshot_by_id_for_entrypoint(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that plugins associated with the entrypoint can be deleted by id.
+    Given an authenticated user, registered entrypoints, and registered plugins,
+    this test validates the following sequence of actions:
+    - A user deletes an associated plugin with the entrypoint.
+    - A user retrieves a list of associated plugins that does not include the deleted.
+    """
+    entrypoint_id = registered_entrypoints["entrypoint1"]["id"]
+    plugin_id_to_delete = registered_plugin_with_files["plugin"]["id"]
+    dioptra_client.entrypoints.plugins.delete_by_id(
+        entrypoint_id=entrypoint_id, plugin_id=plugin_id_to_delete
+    )
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
     )

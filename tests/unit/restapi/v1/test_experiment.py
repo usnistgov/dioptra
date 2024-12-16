@@ -273,6 +273,34 @@ def assert_experiment_is_not_found(
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
+def assert_retrieving_all_entrypoints_for_experiment_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    experiment_id: int,
+    expected: list[int],
+) -> None:
+    response = dioptra_client.experiments.entrypoints.get(experiment_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [entrypoint_ref["id"] for entrypoint_ref in response.json()] == expected
+    )
+
+
+def assert_append_entrypoints_to_experiment_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    experiment_id: int,
+    entrypoint_ids: list[int],
+    expected: list[int],
+) -> None:
+    response = dioptra_client.experiments.entrypoints.create(
+        experiment_id=experiment_id,
+        entrypoint_ids=entrypoint_ids,
+    )
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [entrypoint_ref["id"] for entrypoint_ref in response.json()] == expected
+    )
+
+
 # -- Tests -----------------------------------------------------------------------------
 
 
@@ -956,4 +984,129 @@ def test_tag_experiment(
         dioptra_client.experiments.tags,
         experiment["id"],
         tag_ids=tag_ids,
+    )
+
+
+def test_get_all_entrypoints_for_experiment(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that entrypoints associated with experiments can be retrieved.
+    Given an authenticated user, registered experiments, and registered entrypoints,
+    this test validates the following sequence of actions:
+    - A user retrieves a list of all entrypoint refs associated with the experiment.
+    """
+    experiment_id = registered_experiments["experiment1"]["id"]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())
+    ]
+    assert_retrieving_all_entrypoints_for_experiment_works(
+        dioptra_client,
+        experiment_id=experiment_id,
+        expected=expected_entrypoint_ids,
+    )
+
+
+def test_append_entrypoints_to_experiment(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that entrypoints can be appended to experiments.
+    Given an authenticated user, registered experiments, and registered entrypoints,
+    this test validates the following sequence of actions:
+    - A user adds new entrypoint to the list of associated entrypoints with the experiment.
+    - A user can then retreive the new list that includes all old and new entrypoint refs.
+    """
+    experiment_id = registered_experiments["experiment3"]["id"]
+    entrypoint_ids_to_append = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())[1:]
+    ]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())
+    ]
+    assert_append_entrypoints_to_experiment_works(
+        dioptra_client,
+        experiment_id=experiment_id,
+        entrypoint_ids=entrypoint_ids_to_append,
+        expected=expected_entrypoint_ids,
+    )
+
+
+def test_modify_entrypoints_for_experiments(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that the list of associated entrypoints with experiments can be modified.
+    Given an authenticated user, registered experiments, and registered entrypoints,
+    this test validates the following sequence of actions:
+    - A user modifies the list of entrypoints associated with an experiment.
+    - A user retrieves the list of all the new entrypoints associated with the experiemnts.
+    """
+    experiment_id = registered_experiments["experiment3"]["id"]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())
+    ]
+    dioptra_client.experiments.entrypoints.modify_by_id(
+        experiment_id=experiment_id, entrypoint_ids=expected_entrypoint_ids
+    )
+    assert_retrieving_all_entrypoints_for_experiment_works(
+        dioptra_client,
+        experiment_id=experiment_id,
+        expected=expected_entrypoint_ids,
+    )
+
+
+def test_delete_all_entrypoints_for_experiment(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that the list of all associated entrypoints can be deleted from a experiment.
+    Given an authenticated user and registered experiments, this test validates the
+    following sequence of actions:
+    - A user deletes the list of associated entrypoints with the experiment.
+    - A user retrieves an empty list of associated entrypoints with the experiment.
+    """
+    experiment_id = registered_experiments["experiment1"]["id"]
+    dioptra_client.experiments.entrypoints.delete(experiment_id=experiment_id)
+    assert_retrieving_all_entrypoints_for_experiment_works(
+        dioptra_client, experiment_id=experiment_id, expected=[]
+    )
+
+
+def test_delete_entrypoints_by_id_for_experiment(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that entrypoints associated with the experiments can be deleted by id.
+    Given an authenticated user, registered experiments, and registered entrypoints,
+    this test validates the following sequence of actions:
+    - A user deletes an associated entrypoint with the experiment.
+    - A user retrieves a list of associated entrypoints that does not include the deleted.
+    """
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_to_delete = registered_entrypoints["entrypoint1"]["id"]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())[1:]
+    ]
+    dioptra_client.experiments.entrypoints.delete_by_id(
+        experiment_id=experiment_id, entrypoint_id=entrypoint_to_delete
+    )
+    assert_retrieving_all_entrypoints_for_experiment_works(
+        dioptra_client,
+        experiment_id=experiment_id,
+        expected=expected_entrypoint_ids,
     )
