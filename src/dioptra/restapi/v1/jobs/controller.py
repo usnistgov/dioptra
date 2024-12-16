@@ -27,9 +27,11 @@ from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
+from marshmallow import ValidationError, validate
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.errors import QueryParameterValidationError
 from dioptra.restapi.routes import V1_JOBS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
@@ -325,9 +327,21 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
 
     @login_required
     @accepts(query_params_schema=MetricsSnapshotsGetQueryParameters, api=api)
-    @responds(schema=MetricsSnapshotPageSchema(), api=api)
+    @responds(schema=MetricsSnapshotPageSchema, api=api)
     def get(self, id: int, name: str):
         """Gets a Job resource's metric history."""
+
+        valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+        alphanum = validate.ContainsOnly(valid)
+        nonempty = validate.Length(min=1)
+        both = validate.And(alphanum, nonempty)
+        try:
+            both(name)
+        except ValidationError as e:
+            raise QueryParameterValidationError(
+                "metric name", "alphanumeric", name=name, allowed_chars=valid
+            ) from e
+
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="JobIdMetricsSnapshotsEndpoint",

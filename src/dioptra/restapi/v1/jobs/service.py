@@ -36,8 +36,8 @@ from dioptra.restapi.errors import (
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
+    MLFlowError,
     SortParameterValidationError,
-    MLFlowError
 )
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entrypoints.service import (
@@ -559,15 +559,14 @@ class JobIdMetricsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job metrics by id", job_id=job_id)
 
-        run_id: UUID | None = self._job_id_mlflowrun_service.get(job_id=job_id, **kwargs)[
-            "mlflow_run_id"
-        ]
+        run_id: UUID | None = self._job_id_mlflowrun_service.get(
+            job_id=job_id, **kwargs
+        )["mlflow_run_id"]
 
         try:
             client = MlflowClient()
         except MlflowException as e:
-            raise MLFlowError(e.message)
-
+            raise MLFlowError(e.message) from e
 
         if run_id is None:
             metrics = []
@@ -615,7 +614,7 @@ class JobIdMetricsService(object):
             try:
                 client = MlflowClient()
             except MlflowException as e:
-                raise MLFlowError(e.message)
+                raise MLFlowError(e.message) from e
 
             # this is here just to raise an error if the run does not exist
             try:
@@ -631,7 +630,7 @@ class JobIdMetricsService(object):
                     step=metric_step,
                 )
             except MlflowException as e:
-                raise MLFlowError(e.message)
+                raise MLFlowError(e.message) from e
 
         return {"name": metric_name, "value": metric_value}
 
@@ -683,7 +682,7 @@ class JobIdMetricsSnapshotsService(object):
         try:
             client = MlflowClient()
         except MlflowException as e:
-            raise MLFlowError(e.message)
+            raise MLFlowError(e.message) from e
 
         if run_id is None:
             raise EntityDoesNotExistError("MlFlowRun", run_id=None)
