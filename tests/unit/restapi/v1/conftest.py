@@ -17,7 +17,7 @@
 """Fixtures representing resources needed for test suites"""
 import textwrap
 from collections.abc import Iterator
-from pathlib import Path
+from http import HTTPStatus
 from typing import Any, cast
 
 import pytest
@@ -75,7 +75,7 @@ def auth_account(
     login_response = actions.login(
         client, username=user_info["username"], password=user_info["password"]
     )
-    if login_response.status_code != 200:
+    if login_response.status_code != HTTPStatus.OK:
         raise ValueError("User login failed.")
     return user_info
 
