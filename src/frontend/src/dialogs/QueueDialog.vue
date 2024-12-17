@@ -74,24 +74,29 @@
       <!-- this is the history col -->
       <q-card 
         v-if="history" 
-        style="width: 300px; max-height: 263px; overflow: auto;"
+        style="width: 210px; max-height: 263px; overflow: auto;"
         flat
         bordered
         class="q-ml-sm col"
       >
         <q-list bordered separator>
           <q-item
-            v-for="snapshot in snapshots"
+            v-for="(snapshot, i) in snapshots"
             tag="label" 
             v-ripple
+            dense
+            clickable
+            @click="loadSnapshot(snapshot, i)"
+            @keydown="keydown"
+            :class="`${getSelectedColor(selectedSnapshotIndex === i)} cursor-pointer` " 
           >
-            <q-item-section avatar>
+            <!-- <q-item-section avatar>
               <q-radio
                 v-model="selectedSnapshot"
                 :val="snapshot"
                 @update:model-value="loadSnapshot(snapshot)"
               />
-            </q-item-section>
+            </q-item-section> -->
             <q-item-section>
               <q-item-label>
                 {{
@@ -113,7 +118,6 @@
                   text-color="white"
                 />
               </q-item-label>
-              <q-item-label caption>{{ snapshot.name }}</q-item-label>
             </q-item-section>
           </q-item>
         </q-list>
@@ -123,10 +127,11 @@
 </template>
 
 <script setup>
-  import { ref, watch } from 'vue'
+  import { ref, watch, computed } from 'vue'
   import DialogComponent from './DialogComponent.vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
   import * as api from '@/services/dataApi'
+  import { useQuasar } from 'quasar'
 
   const store = useLoginStore()
 
@@ -143,7 +148,8 @@
   const group = ref('')
   const description = ref('')
 
-  function loadSnapshot(snapshot) {
+  function loadSnapshot(snapshot, index) {
+    selectedSnapshotIndex.value = index
     name.value = snapshot.name
     group.value = snapshot.group
     description.value = snapshot.description
@@ -154,15 +160,12 @@
       name.value = props.editQueue.name
       description.value = props.editQueue.description
       group.value = props.editQueue.group
-
-      if(props.editQueue) {
-        getSnapshots()
-      }
     }
     else {
       name.value = ''
       description.value = ''
       history.value = false
+      snapshots.value = []
     }
   })
 
@@ -188,6 +191,7 @@
 
   const snapshots = ref([])
   const selectedSnapshot = ref()
+  const selectedSnapshotIndex = ref()
 
   async function getSnapshots() {
     try {
@@ -195,18 +199,47 @@
       snapshots.value = res.data.data.reverse()
       console.log('snapshots = ', snapshots.value)
       selectedSnapshot.value = snapshots.value[0]
+      selectedSnapshotIndex.value = 0
     } catch(err) {
       console.warn(err)
     }
   }
 
   watch(history, (newVal) => {
-    if(!newVal) {
+    if(newVal) {
+      getSnapshots()
+    } else {
+      selectedSnapshotIndex.value = 0
       name.value = props.editQueue.name
       description.value = props.editQueue.description
       group.value = props.editQueue.group
     }
   })
+
+  const $q = useQuasar()
+
+  const darkMode = computed(() => {
+    if($q.dark.mode === 'auto') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+    }
+    return $q.dark.mode
+  })
+
+  function getSelectedColor(selected) {
+    if(darkMode.value && selected) return 'bg-deep-purple-10'
+    else if(selected) return 'bg-blue-grey-2'
+  }
+
+  function keydown(event) {
+    if(event.key === 'ArrowUp' && selectedSnapshotIndex.value > 0) {
+      const newIndex = selectedSnapshotIndex.value - 1
+      loadSnapshot(snapshots.value[newIndex], newIndex)
+    }
+    else if(event.key === 'ArrowDown' && selectedSnapshotIndex.value < snapshots.value.length - 1) {
+      const newIndex = selectedSnapshotIndex.value + 1
+      loadSnapshot(snapshots.value[newIndex], newIndex)
+    }
+  }
 
 
 </script>
