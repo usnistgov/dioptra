@@ -163,3 +163,89 @@ def get_plugin_parameter_types(
         )
     )
     return list(db.session.scalars(plugin_parameter_types_stmt).all())
+
+
+def get_resource(
+    resource_id: int, logger: BoundLogger | None = None
+) -> models.Resource | None:
+    """Run a query to get a resource
+
+    Args:
+        resource_id: The identifier of the Resource
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The retrieved DraftResource ORM object
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    resource_stmt = select(models.DraftResource).where(
+        models.Resource.resource_id == resource_id
+    )
+    return db.session.scalar(resource_stmt)
+
+
+def get_latest_resource_snapshot(
+    resource_type: str, resource_id: int, logger: BoundLogger | None = None
+) -> models.ResourceSnapshot:
+    """Run a query to get the latest snapshot for a resource
+
+    Args:
+        resource_type: The type of Resource.
+        resource_id: The ID of resource to get the latest snapshot of.
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The experiment containing the job.
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    snapshot_model = {
+        "artifact": models.Artifact,
+        "entry_point": models.EntryPoint,
+        "experiment": models.Experiment,
+        "model": models.MlModel,
+        "plugin": models.Plugin,
+        "plugin_file": models.PluginFile,
+        "plugin_task_parameter_type": models.PluginTaskParameterType,
+        "queue": models.Queue,
+    }.get(resource_type, None)
+
+    snapshot_stmt = (
+        select(snapshot_model)
+        .join(models.Resource)
+        .where(
+            snapshot_model.resource_id == resource_id,
+            models.Resource.is_deleted == False,  # noqa: E712
+            models.Resource.latest_snapshot_id == snapshot_model.resource_snapshot_id,
+        )
+    )
+    snapshot = db.session.scalar(snapshot_stmt)
+
+    if snapshot is None:
+        raise EntityDoesNotExistError(resource_type, resource_id=resource_id)
+
+    return snapshot
+
+
+def get_draft_resource(
+    draft_id: int, logger: BoundLogger | None = None
+) -> models.DraftResource | None:
+    """Run a query to get the draft of a resource
+
+    Args:
+        draft_id: The identifier of the DraftResource
+        logger: A structlog logger object to use for logging. A new logger will be
+            created if None.
+
+    Returns:
+        The retrieved DraftResource ORM object
+    """
+    log = logger or LOGGER.new()  # noqa: F841
+
+    draft_stmt = select(models.DraftResource).where(
+        models.DraftResource.draft_resource_id == draft_id
+    )
+    return db.session.scalar(draft_stmt)

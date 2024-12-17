@@ -523,6 +523,32 @@ def build_group(group: models.Group) -> dict[str, Any]:
     }
 
 
+def build_resource(resource_type: str, resource_dict: dict) -> dict[str, Any]:
+    """Build a Resource response dictionary.
+
+    Args:
+        resource_type: The type of the resource.
+        resource_dict: The resource object to convert into a Resource response
+            dictionary.
+
+    Returns:
+        The Resource response dictionary.
+    """
+
+    build_fns = {
+        "artifact": build_artifact,
+        "entry_point": build_entrypoint,
+        "experiment": build_experiment,
+        "model": build_model,
+        "plugin": build_plugin,
+        "plugin_file": build_plugin_file,
+        "plugin_task_parameter_type": build_plugin_parameter_type,
+        "queue": build_queue,
+    }
+
+    return build_fns[resource_type](resource_dict)
+
+
 def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
     """Build an Experiment response dictionary.
 

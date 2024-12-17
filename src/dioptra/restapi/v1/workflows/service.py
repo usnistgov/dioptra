@@ -18,7 +18,20 @@
 from typing import IO, Final
 
 import structlog
+from injector import inject
 from structlog.stdlib import BoundLogger
+
+from dioptra.restapi import utils
+from dioptra.restapi.db import db
+from dioptra.restapi.errors import (
+    DraftDoesNotExistError,
+    DraftResourceModificationsCommitError,
+    EntityDoesNotExistError,
+)
+from dioptra.restapi.v1.shared.resource_service import (
+    ResourceIdService,
+    ResourceService,
+)
 
 from .lib import views
 from .lib.package_job_files import package_job_files
@@ -65,3 +78,105 @@ class JobFilesDownloadService(object):
             file_type=file_type,
             logger=log,
         )
+
+
+class DraftCommitService(object):
+    """The service methods for commiting a Draft as a new ResourceSnapshot."""
+
+    @inject
+    def __init__(
+        self,
+        resource_service: ResourceService,
+        resource_id_service: ResourceIdService,
+    ) -> None:
+        """Initialize the queue service.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            resource_service: A ResourceService object.
+            resource_id_service: A ResourceIdService object.
+        """
+        self._resource_service = resource_service
+        self._resource_id_service = resource_id_service
+
+    def commit_draft(self, draft_id: int, **kwargs) -> dict:
+        """Commit the Draft as a new ResourceSnapshot
+
+        Args:
+            draft_id: The identifier of the draft.
+
+        Returns:
+            The packaged job files returned as a named temporary file.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("commit draft", draft_id=draft_id)
+
+        draft = views.get_draft_resource(draft_id, logger=log)
+        if draft is None:
+            raise DraftDoesNotExistError(draft_resource_id=draft_id)
+
+        if draft.payload["resource_id"] is None:
+            resource = self._resource_service.create(
+                resource_type=draft.resource_type,
+                resource_data=draft.payload["resource_data"],
+                group_id=draft.group_id,
+                commit=False,
+                log=log,
+            )
+        else:  # the draft contains modifications to an existing resource
+            resource = views.get_latest_resource_snapshot(
+                draft.resource_type, draft.resource_id
+            )
+            if resource is None:
+                raise EntityDoesNotExistError(
+                    draft.resource_type, resource_id=draft.resource_id
+                )
+
+            # if the underlying resource was modified since the draft was created,
+            # raise an error with the information necessary to reconcile the draft.
+            if draft.resource_snapshot_id != resource.latest_snapshot_id:
+                prev_snapshot = views.get_resource_snapshot(
+                    draft.resource_type, draft.resource_snapshot_id
+                )
+                if prev_snapshot is None:
+                    raise EntityDoesNotExistError(
+                        draft.resource_type, snapshot_id=draft.resource_snapshot_id
+                    )
+
+                curr_snapshot = views.get_resource_snapshot(
+                    draft.resource_type, resource.latest_snapshot_id
+                )
+                if curr_snapshot is None:
+                    raise EntityDoesNotExistError(
+                        draft.resource_type, resource_id=draft.resource_id
+                    )
+
+                raise DraftResourceModificationsCommitError(
+                    resource_type=draft.resource_type,
+                    resource_id=draft.resource_id,
+                    draft=utils.build_resource(
+                        draft.resource_type, {draft.resource_type: draft}
+                    ),
+                    previous_snapshot=utils.build_resource(
+                        draft.resource_type, prev_snapshot
+                    ),
+                    current_snapshot=utils.build_resource(
+                        draft.resource_type, curr_snapshot
+                    ),
+                )
+
+            resource = self._resource_service.modify(
+                resource_id=draft.resource_id,
+                resource_type=draft.resource_type,
+                resource_data=draft.payload["resource_data"],
+                group_id=draft.group_id,
+                commit=False,
+                log=log,
+            )
+
+        db.session.delete(draft)
+
+        db.session.commit()
+
+        return resource

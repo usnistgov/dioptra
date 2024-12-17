@@ -41,3 +41,7 @@ class JobFilesDownloadQueryParametersSchema(Schema):
         by_value=True,
         default=FileTypes.TAR_GZ.value,
     )
+
+
+class DraftCommitSchema(Schema):
+    """The response schema for the draftCommit workflow request."""
