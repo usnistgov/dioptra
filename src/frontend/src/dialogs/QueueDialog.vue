@@ -5,7 +5,7 @@
     @emitSubmit="emitAddOrEdit"
     @emitSaveDraft="saveDraft"
     :hideDraftBtn="editQueue ? true : false"
-    :showHistoryToggle="editQueue"
+    :showHistoryToggle="editQueue && !Object.hasOwn(editQueue, 'payload')"
     :disableConfirm="history"
   >
     <template #title>
