@@ -430,14 +430,19 @@
     try {
       const res = await api.getFile(route.params.id, route.params.fileId)
       console.log('getFile = ', res)
-      pluginFile.value = res.data
+      pluginFile.value = {
+        filename: res.data.filename,
+        contents: res.data.contents,
+        tasks: res.data.tasks,
+        description: res.data.description
+      }
       title.value = `Edit ${res.data.filename}`
-      pluginFile.value.tasks = res.data.tasks
       pluginFile.value.tasks.forEach((task) => {
-        [...task.inputParams, ... task.outputParams].forEach((param) => {
+        [...task.inputParams, ...task.outputParams].forEach((param) => {
           param.parameterType = param.parameterType.id
         })
       })
+      initialCopy.value = JSON.parse(JSON.stringify(pluginFile.value))
     } catch(err) {
       notify.error(err.response.data.message)
     } 
