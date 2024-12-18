@@ -18,13 +18,28 @@
               :options="experiments"
               @filter="getExperiments"
               :rules="[requiredRule]"
-              :disable="Object.hasOwn(route.params, 'id')"
+              :disable="Object.hasOwn(route.params, 'id') || (!Object.hasOwn(route.params, 'id') && experiments.length === 0)"
               class="q-mb-sm"
+              :class="{'error': experimentError}"
               @update:model-value="job.entrypoint = ''; job.queue = ''; basicInfoForm.reset()"
             >
               <template v-slot:before>
                 <div class="field-label">Experiment:</div>
-              </template>  
+              </template>
+              <template v-slot:hint>
+                <span 
+                  v-if="!Object.hasOwn(route.params, 'id') && experiments.length === 0"
+                  :style="{ 'color': experimentError ? '#C10015' : 'grey' }"
+                >
+                  No existing Experiments.  Create one
+                  <router-link
+                    style="color: blue;  text-decoration: underline; cursor: pointer"
+                    to="/experiments/new"
+                  >
+                    here
+                  </router-link>
+                </span>
+              </template>
             </q-select>
             <q-select
               outlined
@@ -37,7 +52,8 @@
               :options="entrypoints"
               @filter="getEntrypoints"
               :rules="[requiredRule]"
-              :class="entrypointField?.hasError && allowableEntrypointIds.length === 0 ? '' : 'q-mb-sm'"
+              class="q-mb-sm"
+              :class="{ 'error': entrypointError }"
               :disable="!job.experiment || allowableEntrypointIds.length === 0"
               @update:model-value="job.queue = ''; basicInfoForm.reset()"
               ref="entrypointField"
@@ -47,8 +63,23 @@
               </template>  
               <template v-slot:hint>
                 <span v-if="!job.experiment">Select experiment first</span>
-                <span v-else-if="allowableEntrypointIds.length === 0">
-                  {{ job.experiment.name }} has no Entrypoints, add one 
+                <span 
+                  v-else-if="allEntrypoints.length === 0"
+                  :style="{ 'color': entrypointError ? '#C10015' : 'grey' }"
+                >
+                  No existing Entrypoints.  Create one
+                  <router-link
+                    style="color: blue;  text-decoration: underline; cursor: pointer"
+                    to="/entrypoints/new"
+                  >
+                    here
+                  </router-link>
+                </span>
+                <span 
+                  v-else-if="allowableEntrypointIds.length === 0"
+                  :style="{ 'color': entrypointError ? '#C10015' : 'grey' }"
+                >
+                  {{ job.experiment.name }} has no Entrypoints, add 
                   <span 
                     style="color: blue; text-decoration: underline; cursor: pointer;"
                     @click="showAssignEntrypointDialog = true"
@@ -58,18 +89,6 @@
                 </span>
               </template>
             </q-select>
-            <span 
-              v-if="entrypointField?.hasError && allowableEntrypointIds.length === 0"
-              style="display: inline-block; margin-left: 118px; font-size: 11px; color: rgba(0, 0, 0, 0.54); margin-bottom: 6px;"
-            >
-              {{ job.experiment.name }} has no Entrypoints, add one 
-              <a 
-                style="color: blue; text-decoration: underline; cursor: pointer;"
-                @click="showAssignEntrypointDialog = true"
-              >
-                here
-              </a>
-            </span>
             <q-select
               outlined
               dense
@@ -81,6 +100,7 @@
               @filter="getQueues"
               :rules="[requiredRule]"
               class="q-mb-sm"
+              :class="{ 'error': queueError }"
               :disable="!job.entrypoint || allowableQueueIds.length === 0"
             >
               <template v-slot:before>
@@ -89,8 +109,20 @@
               <template v-slot:hint>
                 <span v-if="!job.experiment && !job.entrypoint">Select Experiment and Entrypoint first</span>
                 <span v-else-if="!job.entrypoint">Select Entrypoint first</span>
-                <span v-else-if="allowableQueueIds.length === 0">
-                  {{ job.entrypoint.name }} has no Queues, add one 
+                <span v-else-if="allQueues.length === 0" :style="{ 'color': queueError ? '#C10015' : 'grey' }">
+                  No current Queues.  Create one
+                  <router-link
+                    style="color: blue;  text-decoration: underline; cursor: pointer"
+                    to="/queues"
+                  >
+                    here
+                  </router-link>
+                </span>
+                <span 
+                  v-else-if="allowableQueueIds.length === 0"
+                  :style="{ 'color': queueError ? '#C10015' : 'grey' }"
+                  >
+                  {{ job.entrypoint.name }} has no Queues, add 
                   <span 
                     style="color: blue; text-decoration: underline; cursor: pointer;"
                     @click="showAssignEntrypointDialog = true"
@@ -252,6 +284,22 @@
     }
   })
 
+  watch(() => job.value.experiment, async (newVal) => {
+    if(newVal) {
+      await getEntrypoints()
+    } else {
+      entrypointError.value = false
+    }
+  })
+
+  watch(() => job.value.entrypoint, async (newVal) => {
+    if(newVal) {
+      await getQueues()
+    } else {
+      queueError.value = false
+    }
+  })
+
   const basicInfoForm = ref(null)
 
   const columns = [
@@ -261,9 +309,23 @@
     // { name: 'actions', label: 'Actions', align: 'center',  },
   ]
 
+  const experimentError = ref(false)
+  const entrypointError = ref(false)
+  const queueError = ref(false)
+
   function submit() {
     basicInfoForm.value.validate().then(success => {
-      if (success) {
+      // quasar doesn't validate disabled fields, need to manually do it below
+      if(!job.experiment && experiments.value.length === 0 && !Object.hasOwn(route.params, 'id')) {
+        experimentError.value = true
+      }
+      if(job.value.experiment && !job.value.entrypoint && (allEntrypoints.value.length === 0 || allowableEntrypointIds.value.length === 0)) {
+        entrypointError.value = true
+      }
+      if(job.value.entrypoint && !job.value.queue && (allQueues.value.length === 0 || allowableQueueIds.value.length === 0)) {
+        queueError.value = true
+      }
+      if(success && job.experiment && job.entrypoint && job.queue) {
         confirmLeave.value = true
         createJob()
       }
@@ -319,21 +381,31 @@
   // const experiment = ref()
   const experiments = ref([])
   const queues = ref([])
+  const allQueues = ref([])
   const entrypoints = ref([])
+  const allEntrypoints = ref([])
 
   async function getExperiments(val = '', update) {
-    update(async () => {
+    const fetchData = async () => {
       try {
         const res = await api.getData('experiments', {
           search: val,
           rowsPerPage: 0, // get all
           index: 0
-        })
+        });
         experiments.value = res.data.data
-      } catch(err) {
+      } catch (err) {
         notify.error(err.response.data.message)
-      } 
-    })
+      }
+    }
+
+    if (update) {
+      // when used by the dropdown
+      await update(fetchData)
+    } else {
+      // when used by watcher
+      await fetchData()
+    }
   }
 
   const allowableQueueIds = computed(() => {
@@ -342,20 +414,29 @@
   })
 
   async function getQueues(val = '', update) {
-    update(async () => {
+    const fetchData = async () => {
       try {
         const res = await api.getData('queues', {
           search: val,
           rowsPerPage: 0, // get all
           index: 0
         })
+        allQueues.value = res.data.data
         queues.value = res.data.data.filter((q) =>
           allowableQueueIds.value.includes(q.id)
         )
       } catch(err) {
         notify.error(err.response.data.message)
       } 
-    })
+    }
+
+    if (update) {
+      // when used by the dropdown
+      await update(fetchData)
+    } else {
+      // when used by mounted
+      await fetchData()
+    }
   }
 
   const allowableEntrypointIds = computed(() => {
@@ -363,21 +444,34 @@
     return job.value.experiment.entrypoints.map((ep) => ep.id)
   }) 
 
+  watch(() => allowableEntrypointIds.value, (newVal) => {
+    if(newVal.length > 0) entrypointError.value = false
+  })
+
   async function getEntrypoints(val = '', update) {
-    update(async () => {
+    const fetchData = async () => {
       try {
         const res = await api.getData('entrypoints', {
           search: val,
           rowsPerPage: 0, // get all
           index: 0
         })
+        allEntrypoints.value = res.data.data
         entrypoints.value = res.data.data.filter((ep) => 
           allowableEntrypointIds.value.includes(ep.id)
         )
       } catch(err) {
         notify.error(err.response.data.message)
       } 
-    })
+    }
+
+    if (update) {
+      // when used by the dropdown
+      await update(fetchData)
+    } else {
+      // when used by mounted
+      await fetchData()
+    }
   }
 
   async function getExperiment(id) {
@@ -394,6 +488,8 @@
   onMounted(async () => {
     if(Object.hasOwn(route.params, 'id')) {
       await getExperiment(route.params.id)
+    } else {
+      await getExperiments()
     }
 
     if(store.savedForms.jobs[expJobOrAllJobs.value]) {
@@ -469,3 +565,10 @@
   const entrypointField = ref()
 
 </script>
+
+
+<style scoped>
+  .error :deep(.q-field__control) {
+    border: 2px solid #C10015 !important;
+  }
+</style>
