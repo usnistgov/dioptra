@@ -62,8 +62,8 @@ class MetricsSchema(Schema):
         validate=validate.Regexp(
             ALLOWED_METRIC_NAME_REGEX,
             error=(
-                "'{input}' is not a compatible name for a metric."
-                "A metric name must start with a letter or underscore,"
+                "'{input}' is not a compatible name for a metric. "
+                "A metric name must start with a letter or underscore, "
                 "followed by letters, numbers, or underscores. In "
                 "addition, '_' is not a valid metric name."
             ),

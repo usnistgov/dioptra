@@ -265,6 +265,14 @@ def assert_job_mlflowrun_already_set(
     )
 
 
+def assert_job_metrics_validation_error(
+    dioptra_client: DioptraClient[DioptraResponseProtocol], job_id: int, metric_name: str, metric_value: float
+) -> None:
+    response = dioptra_client.jobs.append_metric_by_id(job_id=job_id, metric_name=metric_name, metric_value=metric_value)
+    assert (
+        response.status_code == 400
+    )
+
 def assert_job_metrics_matches_expectations(
     dioptra_client: DioptraClient[DioptraResponseProtocol], job_id: int, expected: list[dict[str, Any]]
 ) -> None:
@@ -498,6 +506,34 @@ def test_metrics(
             {"name": "accuracy", "value": 4.2},
             {"name": "roc_auc", "value": 0.99},
         ],
+    )
+
+    assert_job_metrics_validation_error (
+        dioptra_client,
+        job_id=job1_id,
+        metric_name="!+_",
+        metric_value=4.0,
+    )
+
+    assert_job_metrics_validation_error (
+        dioptra_client,
+        job_id=job1_id,
+        metric_name="!!!!!",
+        metric_value=4.0,
+    )
+
+    assert_job_metrics_validation_error (
+        dioptra_client,
+        job_id=job1_id,
+        metric_name="$23",
+        metric_value=4.0,
+    )
+
+    assert_job_metrics_validation_error (
+        dioptra_client,
+        job_id=job1_id,
+        metric_name="abcdefghijk(lmnop)",
+        metric_value=4.0,
     )
 
     assert_experiment_metrics_matches_expectations(

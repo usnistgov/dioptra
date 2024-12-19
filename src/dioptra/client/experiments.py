@@ -703,14 +703,15 @@ class ExperimentsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.delete(self.url, str(experiment_id))
-    
-    def get_metrics_by_id(self, 
-                        experiment_id: str | int,
-                        index: int = 0,
-                        page_length: int = 10,
-                        sort_by: str | None = None,
-                        descending: bool | None = None,
-                        search: str | None = None,
+
+    def get_metrics_by_id(
+        self,
+        experiment_id: str | int,
+        index: int = 0,
+        page_length: int = 10,
+        sort_by: str | None = None,
+        descending: bool | None = None,
+        search: str | None = None,
     ) -> T:
         """Get the metrics for the jobs in this experiment.
 
@@ -746,4 +747,3 @@ class ExperimentsCollectionClient(CollectionClient[T]):
             params["search"] = search
 
         return self._session.get(self.url, str(experiment_id), METRICS, params=params)
-    

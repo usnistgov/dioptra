@@ -205,7 +205,7 @@ class JobsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.get(self.url, str(job_id), STATUS)
-    
+
     def get_metrics_by_id(self, job_id: str | int) -> T:
         """Gets all the latest metrics for a job.
 
@@ -217,11 +217,12 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, str(job_id), METRICS)
 
-    def append_metric_by_id(self, 
-        job_id: str | int, 
-        metric_name: str, 
-        metric_value: float, 
-        metric_step: int | None = None
+    def append_metric_by_id(
+        self,
+        job_id: str | int,
+        metric_name: str,
+        metric_value: float,
+        metric_step: int | None = None,
     ) -> T:
         """Posts a new metric to a job.
 
@@ -246,8 +247,8 @@ class JobsCollectionClient(CollectionClient[T]):
 
     def get_metrics_snapshots_by_id(
         self,
-        job_id: str | int, 
-        metric_name: str | int, 
+        job_id: str | int,
+        metric_name: str | int,
         index: int = 0,
         page_length: int = 10,
     ) -> T:
@@ -266,5 +267,6 @@ class JobsCollectionClient(CollectionClient[T]):
             "index": index,
             "pageLength": page_length,
         }
-        return self._session.get(self.url, str(job_id), METRICS, metric_name, SNAPSHOTS, params=params)
-
+        return self._session.get(
+            self.url, str(job_id), METRICS, metric_name, SNAPSHOTS, params=params
+        )
