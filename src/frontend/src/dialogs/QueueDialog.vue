@@ -74,7 +74,7 @@
       <!-- this is the history col -->
       <q-card 
         v-if="history" 
-        style="width: 210px; max-height: 263px; overflow: auto;"
+        style="width: 220px; max-height: 263px; overflow: auto;"
         flat
         bordered
         class="q-ml-sm col"
