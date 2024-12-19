@@ -32,10 +32,7 @@
                   :style="{ 'color': experimentError ? '#C10015' : 'grey' }"
                 >
                   No existing Experiments.  Create one
-                  <router-link
-                    style="color: blue;  text-decoration: underline; cursor: pointer"
-                    to="/experiments/new"
-                  >
+                  <router-link to="/experiments/new">
                     here
                   </router-link>
                 </span>
@@ -68,10 +65,7 @@
                   :style="{ 'color': entrypointError ? '#C10015' : 'grey' }"
                 >
                   No existing Entrypoints.  Create one
-                  <router-link
-                    style="color: blue;  text-decoration: underline; cursor: pointer"
-                    to="/entrypoints/new"
-                  >
+                  <router-link to="/entrypoints/new">
                     here
                   </router-link>
                 </span>
@@ -80,12 +74,9 @@
                   :style="{ 'color': entrypointError ? '#C10015' : 'grey' }"
                 >
                   {{ job.experiment.name }} has no Entrypoints, add 
-                  <span 
-                    style="color: blue; text-decoration: underline; cursor: pointer;"
-                    @click="showAppendEntrypointDialog = true"
-                  >
+                  <a href="#" @click="showAppendEntrypointDialog = true">
                     here
-                  </span>
+                  </a>
                 </span>
               </template>
             </q-select>
@@ -111,10 +102,7 @@
                 <span v-else-if="!job.entrypoint">Select Entrypoint first</span>
                 <span v-else-if="allQueues.length === 0" :style="{ 'color': queueError ? '#C10015' : 'grey' }">
                   No current Queues.  Create one
-                  <router-link
-                    style="color: blue;  text-decoration: underline; cursor: pointer"
-                    to="/queues"
-                  >
+                  <router-link to="/queues">
                     here
                   </router-link>
                 </span>
@@ -123,12 +111,9 @@
                   :style="{ 'color': queueError ? '#C10015' : 'grey' }"
                   >
                   {{ job.entrypoint.name }} has no Queues, add 
-                  <span 
-                    style="color: blue; text-decoration: underline; cursor: pointer;"
-                    @click="showAppendQueueDialog = true"
-                  >
+                  <a href="#" @click="showAppendQueueDialog = true">
                     here
-                  </span>
+                  </a>
                 </span>
               </template>
             </q-select>
