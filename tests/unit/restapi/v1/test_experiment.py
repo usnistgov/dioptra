@@ -14,76 +14,22 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-
 """Test suite for experiment operations.
 
 This module contains a set of tests that validate the supported CRUD operations and
 additional functionalities for the experiment entity. The tests ensure that the
 experiments can be registered, retrieved, and deleted as expected through the REST API.
 """
-
+from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_EXPERIMENTS_ROUTE, V1_ROOT
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 
-from ..lib import actions, asserts, helpers
-
-# -- Actions ---------------------------------------------------------------------------
-
-
-def modify_experiment(
-    client: FlaskClient,
-    experiment_id: int,
-    new_name: str,
-    new_entrypoints: list[int],
-    new_description: str,
-) -> TestResponse:
-    """Modify an experiment using the API.
-
-    Args:
-        client: The Flask test client.
-        experiment_id: The id of the experiment to modify.
-        new_name: The new name to assign to the experiment.
-        new_entrypoints: The new entrypoints to associate with the experiment.
-        new_description: The new description to assign to the experiment.
-
-    Returns:
-        The response from the API.
-    """
-
-    payload = {
-        "name": new_name,
-        "entrypoints": new_entrypoints,
-        "description": new_description,
-    }
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}",
-        json=payload,
-        follow_redirects=True,
-    )
-
-
-def delete_experiment_with_id(client: FlaskClient, experiment_id: int) -> TestResponse:
-    """Delete an experiment using the API.
-
-    Args:
-        client: The Flask test client.
-        experiment_id: The id of the experiment to delete.
-
-    Returns:
-        The response from the API.
-    """
-    return client.delete(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}",
-        follow_redirects=True,
-    )
-
+from ..lib import helpers, routines
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -161,7 +107,7 @@ def assert_experiment_response_contents_matches_expectations(
 
 
 def assert_retrieving_experiment_by_id_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     experiment_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -176,14 +122,12 @@ def assert_retrieving_experiment_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.experiments.get_by_id(experiment_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_experiment_entrypoints_matches_expected_entrypoints(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     experiment_id: int,
     expected_entrypoints: dict[str, Any],
 ) -> None:
@@ -199,19 +143,18 @@ def assert_experiment_entrypoints_matches_expected_entrypoints(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 200
+    response = dioptra_client.experiments.get_by_id(experiment_id)
     response_entrypoints = [
-        entrypoint["id"] for entrypoint in response.get_json()["entrypoints"]
+        entrypoint["id"] for entrypoint in response.json()["entrypoints"]
     ]
-    assert response_entrypoints == expected_entrypoints
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response_entrypoints == expected_entrypoints
+    )
 
 
 def assert_retrieving_all_experiments_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     search: str | None = None,
@@ -230,32 +173,30 @@ def assert_retrieving_all_experiments_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-
     query_string: dict[str, Any] = {}
 
     if group_id is not None:
-        query_string["groupId"] = group_id
+        query_string["group_id"] = group_id
 
     if search is not None:
         query_string["search"] = search
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
+        query_string["page_length"] = paging_info["page_length"]
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    response = dioptra_client.experiments.get(**query_string)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_experiment_works(
-    client: FlaskClient,
-    sortBy: str,
-    descending: bool,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that experiments can be sorted by column ascending/descending.
 
@@ -268,26 +209,34 @@ def assert_sorting_experiment_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-
     query_string: dict[str, Any] = {}
 
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
+    if descending is not None:
+        query_string["descending"] = descending
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
+    if sort_by is not None:
+        query_string["sort_by"] = sort_by
 
-    response_data = response.get_json()
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.experiments.get(**query_string)
+    response_data = response.json()
     experiment_ids = [experiment["id"] for experiment in response_data["data"]]
-
-    assert response.status_code == 200 and experiment_ids == expected
+    assert response.status_code == HTTPStatus.OK and experiment_ids == expected
 
 
 def assert_experiment_name_matches_expected_name(
-    client: FlaskClient, experiment_id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    experiment_id: int,
+    expected_name: str,
 ) -> None:
     """Assert that the name of an experiment matches the expected name.
 
@@ -300,15 +249,15 @@ def assert_experiment_name_matches_expected_name(
         AssertionError: If the response status code is not 200 or if the name of the
             experiment does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}",
-        follow_redirects=True,
+    response = dioptra_client.experiments.get_by_id(experiment_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
 
 
 def assert_experiment_is_not_found(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     experiment_id: int,
 ) -> None:
     """Assert that an experiment is not found.
@@ -320,18 +269,43 @@ def assert_experiment_is_not_found(
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_EXPERIMENTS_ROUTE}/{experiment_id}",
-        follow_redirects=True,
+    response = dioptra_client.experiments.get_by_id(experiment_id)
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def assert_retrieving_all_entrypoints_for_experiment_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    experiment_id: int,
+    expected: list[int],
+) -> None:
+    response = dioptra_client.experiments.entrypoints.get(experiment_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [entrypoint_ref["id"] for entrypoint_ref in response.json()] == expected
     )
-    assert response.status_code == 404
+
+
+def assert_append_entrypoints_to_experiment_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    experiment_id: int,
+    entrypoint_ids: list[int],
+    expected: list[int],
+) -> None:
+    response = dioptra_client.experiments.entrypoints.create(
+        experiment_id=experiment_id,
+        entrypoint_ids=entrypoint_ids,
+    )
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [entrypoint_ref["id"] for entrypoint_ref in response.json()] == expected
+    )
 
 
 # -- Tests -----------------------------------------------------------------------------
 
 
 def test_create_experiment(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -350,13 +324,12 @@ def test_create_experiment(
     group_id = auth_account["default_group_id"]
     description = "test description"
 
-    experiment1_response = actions.register_experiment(
-        client,
-        name=name,
+    experiment1_response = dioptra_client.experiments.create(
         group_id=group_id,
+        name=name,
         description=description,
     )
-    experiment1_expected = experiment1_response.get_json()
+    experiment1_expected = experiment1_response.json()
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_expected,
         expected_contents={
@@ -367,14 +340,14 @@ def test_create_experiment(
         },
     )
     assert_retrieving_experiment_by_id_works(
-        client,
+        dioptra_client,
         experiment_id=experiment1_expected["id"],
         expected=experiment1_expected,
     )
 
 
 def test_experiment_get_all(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -398,7 +371,9 @@ def test_experiment_get_all(
         experiment3_expected,
     ]
 
-    assert_retrieving_all_experiments_works(client, expected=experiment_expected_list)
+    assert_retrieving_all_experiments_works(
+        dioptra_client, expected=experiment_expected_list
+    )
 
 
 @pytest.mark.parametrize(
@@ -412,7 +387,7 @@ def test_experiment_get_all(
     ],
 )
 def test_experiment_sort(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -434,11 +409,13 @@ def test_experiment_sort(
     expected_ids = [
         registered_experiments[expected_name]["id"] for expected_name in expected
     ]
-    assert_sorting_experiment_works(client, sortBy, descending, expected=expected_ids)
+    assert_sorting_experiment_works(
+        dioptra_client, sort_by=sortBy, descending=descending, expected=expected_ids
+    )
 
 
 def test_experiment_search_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -462,26 +439,26 @@ def test_experiment_search_query(
     ]
 
     assert_retrieving_all_experiments_works(
-        client,
+        dioptra_client,
         expected=experiment_expected_list,
         search="description:*description*",
     )
 
     assert_retrieving_all_experiments_works(
-        client,
+        dioptra_client,
         expected=experiment_expected_list,
         search="name:*experiment*",
     )
 
     assert_retrieving_all_experiments_works(
-        client,
+        dioptra_client,
         expected=experiment_expected_list,
         search="*",
     )
 
 
 def test_experiment_group_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -506,14 +483,14 @@ def test_experiment_group_query(
     ]
 
     assert_retrieving_all_experiments_works(
-        client,
+        dioptra_client,
         expected=experiment_expected_list,
         group_id=auth_account["default_group_id"],
     )
 
 
 def test_experiment_get_by_id(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -529,14 +506,14 @@ def test_experiment_get_by_id(
     experiment2_expected = registered_experiments["experiment2"]
 
     assert_retrieving_experiment_by_id_works(
-        client,
+        dioptra_client,
         experiment_id=experiment2_expected["id"],
         expected=experiment2_expected,
     )
 
 
 def test_rename_experiment(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -553,22 +530,21 @@ def test_rename_experiment(
     updated_experiment_name = "experiment0"
     experiment_to_rename = registered_experiments["experiment1"]
     existing_description = experiment_to_rename["description"]
-    modify_experiment(
-        client,
+    dioptra_client.experiments.modify_by_id(
         experiment_id=experiment_to_rename["id"],
-        new_name=updated_experiment_name,
-        new_description=existing_description,
-        new_entrypoints=[],  # TODO use existing entrypoints
+        name=updated_experiment_name,
+        description=existing_description,
+        entrypoints=[],
     )
     assert_experiment_name_matches_expected_name(
-        client,
+        dioptra_client,
         experiment_id=experiment_to_rename["id"],
         expected_name=updated_experiment_name,
     )
 
 
 def test_delete_experiment_by_id(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -583,12 +559,14 @@ def test_delete_experiment_by_id(
       and the response indicates it is no longer found.
     """
     experiment_to_delete = registered_experiments["experiment3"]
-    delete_experiment_with_id(client, experiment_id=experiment_to_delete["id"])
-    assert_experiment_is_not_found(client, experiment_id=experiment_to_delete["id"])
+    dioptra_client.experiments.delete_by_id(experiment_to_delete["id"])
+    assert_experiment_is_not_found(
+        dioptra_client, experiment_id=experiment_to_delete["id"]
+    )
 
 
 def test_experiment_get_entrypoints(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -607,14 +585,13 @@ def test_experiment_get_entrypoints(
     group_id = auth_account["default_group_id"]
     description = "test description"
     entrypoints = [registered_entrypoints["entrypoint1"]["id"]]
-    registration_response = actions.register_experiment(
-        client,
-        name=name,
+    registration_response = dioptra_client.experiments.create(
         group_id=group_id,
-        entrypoint_ids=entrypoints,
+        name=name,
         description=description,
+        entrypoints=entrypoints,
     )
-    experiment_json = registration_response.get_json()
+    experiment_json = registration_response.json()
     experiment_id = experiment_json["id"]
 
     assert_experiment_response_contents_matches_expectations(
@@ -629,7 +606,7 @@ def test_experiment_get_entrypoints(
     )
 
     assert_experiment_entrypoints_matches_expected_entrypoints(
-        client,
+        dioptra_client,
         experiment_id=experiment_id,
         expected_entrypoints=entrypoints,
     )
@@ -637,17 +614,15 @@ def test_experiment_get_entrypoints(
 
 @pytest.mark.skip(reason="entrypoints not yet implemented")
 # @pytest.mark.parametrize(
-#     "initial_entrypoints",
-#     "new_entrypoints",
-#     "expected_entrypoints",
+#     "initial_entrypoints, new_entrypoints, expected_entrypoints",
 #     [
 #         ([1, 2, 3], [4], [1, 2, 3, 4]),
 #         ([], [1, 2], [1, 2]),
 #         ([1, 2, 3], [2], [1, 2, 3]),
-#     ]
+#     ],
 # )
 def test_experiment_add_entrypoints(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     initial_entrypoints: list[int],
@@ -669,14 +644,13 @@ def test_experiment_add_entrypoints(
     user_id = auth_account["id"]
     group_id = auth_account["default_group_id"]
 
-    experiment1_response = actions.register_experiment(
-        client,
-        name=name,
+    experiment1_response = dioptra_client.experiments.create(
         group_id=group_id,
-        entrypoints=initial_entrypoints,
+        name=name,
         description=description,
+        entrypoints=initial_entrypoints,
     )
-    experiment1_json = experiment1_response.get_json()
+    experiment1_json = experiment1_response.json()
     experiment_id = experiment1_json["id"]
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_json,
@@ -689,22 +663,22 @@ def test_experiment_add_entrypoints(
         },
     )
 
-    modify_experiment(
-        client,
-        experiment_id=experiment1_json["id"],
-        new_name=name,
-        new_description=description,
-        new_entrypoints=initial_entrypoints + new_entrypoints,
+    dioptra_client.experiments.modify_by_id(
+        experiment_id=experiment_id,
+        name=name,
+        description=description,
+        entrypoints=initial_entrypoints + new_entrypoints,
     )
-
     assert_experiment_entrypoints_matches_expected_entrypoints(
-        client, experiment_id=experiment_id, expected_entrypoints=expected_entrypoints
+        dioptra_client,
+        experiment_id=experiment_id,
+        expected_entrypoints=expected_entrypoints,
     )
 
 
 @pytest.mark.skip(reason="entrypoints not yet implemented")
 # @pytest.mark.parametrize(
-#     "initial_entrypoints", "new_entrypoints", "expected_entrypoints",
+#     "initial_entrypoints, new_entrypoints, expected_entrypoints",
 #     [
 #         ([1, 2, 3], [4, 5], [4, 5]),
 #         ([1, 2, 3], [2, 3, 4], [2, 3, 4]),
@@ -712,7 +686,7 @@ def test_experiment_add_entrypoints(
 #     ],
 # )
 def test_experiment_modify_entrypoints(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     initial_entrypoints: list[int],
@@ -734,14 +708,13 @@ def test_experiment_modify_entrypoints(
     user_id = auth_account["id"]
     group_id = auth_account["default_group_id"]
 
-    experiment1_response = actions.register_experiment(
-        client,
-        name=name,
+    experiment1_response = dioptra_client.experiments.create(
         group_id=group_id,
-        entrypoints=initial_entrypoints,
+        name=name,
         description=description,
+        entrypoints=initial_entrypoints,
     )
-    experiment1_json = experiment1_response.get_json()
+    experiment1_json = experiment1_response.json()
     experiment_id = experiment1_json["id"]
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_json,
@@ -753,16 +726,15 @@ def test_experiment_modify_entrypoints(
             "description": description,
         },
     )
-    modify_experiment(
-        client,
-        experiment_id=experiment_id,
-        new_name=name,
-        new_entrypoints=new_entrypoints,
-        new_description=description,
-    )
 
+    dioptra_client.experiments.modify_by_id(
+        experiment_id=experiment_id,
+        name=name,
+        description=description,
+        entrypoints=new_entrypoints,
+    )
     assert_experiment_entrypoints_matches_expected_entrypoints(
-        client,
+        dioptra_client,
         experiment_id=experiment_id,
         expected_entrypoints=expected_entrypoints,
     )
@@ -770,7 +742,7 @@ def test_experiment_modify_entrypoints(
 
 @pytest.mark.skip(reason="entrypoints not yet implemented")
 # @pytest.mark.parametrize(
-#     "initial_entrypoints", "entrypoints_to_remove", "expected_entrypoints",
+#     "initial_entrypoints, entrypoints_to_remove, expected_entrypoints",
 #     [
 #         ([1, 2, 3], [2, 3], [3]),
 #         ([1, 2, 3], [4], [1, 2, 3]),
@@ -778,7 +750,7 @@ def test_experiment_modify_entrypoints(
 #     ]
 # )
 def test_experiment_remove_entrypoints(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     initial_entrypoints: list[int],
@@ -799,14 +771,13 @@ def test_experiment_remove_entrypoints(
     user_id = auth_account["id"]
     group_id = auth_account["default_group_id"]
 
-    experiment1_response = actions.register_experiment(
-        client,
-        name=name,
+    experiment1_response = dioptra_client.experiments.create(
         group_id=group_id,
-        entrypoints=initial_entrypoints,
+        name=name,
         description=description,
+        entrypoints=initial_entrypoints,
     )
-    experiment1_json = experiment1_response.get_json()
+    experiment1_json = experiment1_response.json()
     experiment_id = experiment1_json["id"]
     assert_experiment_response_contents_matches_expectations(
         response=experiment1_json,
@@ -824,23 +795,21 @@ def test_experiment_remove_entrypoints(
         if entry not in entrypoints_to_remove:
             updated_entrypoints.append(entry)
 
-    modify_experiment(
-        client,
+    dioptra_client.experiments.modify_by_id(
         experiment_id=experiment_id,
-        new_name=name,
-        new_entrypoints=updated_entrypoints,
-        new_description=description,
+        name=name,
+        description=description,
+        entrypoints=updated_entrypoints,
     )
-
     assert_experiment_entrypoints_matches_expected_entrypoints(
-        client,
+        dioptra_client,
         experiment_id=experiment_id,
         expected_entrypoints=expected_entrypoints,
     )
 
 
 def test_manage_existing_experiment_draft(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -861,67 +830,47 @@ def test_manage_existing_experiment_draft(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     experiment = registered_experiments["experiment1"]
     name = "draft"
     new_name = "draft2"
     description = "description"
 
     # test creation
-    payload = {"name": name, "description": description, "entrypoints": [1]}
-    expected = {
+    draft = {"name": name, "description": description, "entrypoints": [1]}
+    draft_mod = {"name": new_name, "description": description, "entrypoints": [3, 2]}
+
+    # Expected responses
+    draft_expected = {
         "user_id": auth_account["id"],
         "group_id": experiment["group"]["id"],
         "resource_id": experiment["id"],
         "resource_snapshot_id": experiment["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft,
     }
-    response = actions.create_existing_resource_draft(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        resource_id=experiment["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-    asserts.assert_retrieving_draft_by_resource_id_works(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        resource_id=experiment["id"],
-        expected=response,
-    )
-    asserts.assert_creating_another_existing_draft_fails(
-        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
-    )
-
-    # test modification
-    payload = {"name": new_name, "description": description, "entrypoints": [3, 2]}
-    expected = {
+    draft_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": experiment["group"]["id"],
         "resource_id": experiment["id"],
         "resource_snapshot_id": experiment["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft_mod,
     }
-    response = actions.modify_existing_resource_draft(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        resource_id=experiment["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
 
-    # test deletion
-    actions.delete_existing_resource_draft(
-        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
-    )
-    asserts.assert_existing_draft_is_not_found(
-        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
+    # Run routine: existing resource drafts tests
+    routines.run_existing_resource_drafts_tests(
+        dioptra_client.experiments.modify_resource_drafts,
+        experiment["id"],
+        draft=draft,
+        draft_mod=draft_mod,
+        draft_expected=draft_expected,
+        draft_mod_expected=draft_mod_expected,
     )
 
 
 def test_manage_new_experiment_drafts(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -937,6 +886,7 @@ def test_manage_new_experiment_drafts(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     group_id = auth_account["groups"][0]["id"]
     drafts = {
         "draft1": {
@@ -946,82 +896,39 @@ def test_manage_new_experiment_drafts(
         },
         "draft2": {"name": "experiment2", "description": None, "entrypoints": [3, 4]},
     }
+    draft1_mod = {"name": "draft1", "description": "new description", "entrypoints": []}
 
-    # test creation
+    # Expected responses
     draft1_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft1"],
     }
-    draft1_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft1"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        draft_id=draft1_response["id"],
-        expected=draft1_response,
-    )
     draft2_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft2"],
     }
-    draft2_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft2"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        draft_id=draft2_response["id"],
-        expected=draft2_response,
-    )
-    asserts.assert_retrieving_drafts_works(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        expected=[draft1_response, draft2_response],
-    )
-
-    # test modification
-    draft1_mod = {"name": "draft1", "description": "new description", "entrypoints": []}
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": draft1_mod,
     }
-    response = actions.modify_new_resource_draft(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        draft_id=draft1_response["id"],
-        payload=draft1_mod,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected
-    )
 
-    # test deletion
-    actions.delete_new_resource_draft(
-        client, resource_route=V1_EXPERIMENTS_ROUTE, draft_id=draft1_response["id"]
-    )
-    asserts.assert_new_draft_is_not_found(
-        client, resource_route=V1_EXPERIMENTS_ROUTE, draft_id=draft1_response["id"]
+    # Run routine: existing resource drafts tests
+    routines.run_new_resource_drafts_tests(
+        dioptra_client.experiments.new_resource_drafts,
+        drafts=drafts,
+        draft1_mod=draft1_mod,
+        draft1_expected=draft1_expected,
+        draft2_expected=draft2_expected,
+        draft1_mod_expected=draft1_mod_expected,
+        group_id=group_id,
     )
 
 
 def test_manage_experiment_snapshots(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -1040,37 +947,24 @@ def test_manage_experiment_snapshots(
       response
     """
     experiment_to_rename = registered_experiments["experiment1"]
-    modified_experiment = modify_experiment(
-        client,
+    modified_experiment = dioptra_client.experiments.modify_by_id(
         experiment_id=experiment_to_rename["id"],
-        new_name=experiment_to_rename["name"] + "modified",
-        new_description=experiment_to_rename["description"],
-        new_entrypoints=[],  # TODO use existing entrypoints
-    ).get_json()
-    modified_experiment.pop("hasDraft")
-    modified_experiment.pop("entrypoints")
-    experiment_to_rename.pop("hasDraft")
-    experiment_to_rename.pop("entrypoints")
-    experiment_to_rename["latestSnapshot"] = False
-    experiment_to_rename["lastModifiedOn"] = modified_experiment["lastModifiedOn"]
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        resource_id=experiment_to_rename["id"],
-        snapshot_id=experiment_to_rename["snapshot"],
-        expected=experiment_to_rename,
-    )
-    expected_snapshots = [experiment_to_rename, modified_experiment]
-    asserts.assert_retrieving_snapshots_works(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        resource_id=experiment_to_rename["id"],
-        expected=expected_snapshots,
+        name=experiment_to_rename["name"] + "modified",
+        description=experiment_to_rename["description"],
+        entrypoints=[],
+    ).json()
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
+        dioptra_client.experiments.snapshots,
+        resource_to_rename=experiment_to_rename.copy(),
+        modified_resource=modified_experiment.copy(),
+        drop_additional_fields=["entrypoints"],
     )
 
 
 def test_tag_experiment(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -1083,58 +977,136 @@ def test_tag_experiment(
 
     """
     experiment = registered_experiments["experiment1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = actions.append_tags(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        resource_id=experiment["id"],
-        tag_ids=[tags[0], tags[1]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1]]
-    )
-    response = actions.append_tags(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        resource_id=experiment["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1], tags[2]]
+    # Run routine: resource tag tests
+    routines.run_resource_tag_tests(
+        dioptra_client.experiments.tags,
+        experiment["id"],
+        tag_ids=tag_ids,
     )
 
-    # test remove
-    actions.remove_tag(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        resource_id=experiment["id"],
-        tag_id=tags[1],
-    )
-    response = actions.get_tags(
-        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[2]]
+
+def test_get_all_entrypoints_for_experiment(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that entrypoints associated with experiments can be retrieved.
+    Given an authenticated user, registered experiments, and registered entrypoints,
+    this test validates the following sequence of actions:
+    - A user retrieves a list of all entrypoint refs associated with the experiment.
+    """
+    experiment_id = registered_experiments["experiment1"]["id"]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())
+    ]
+    assert_retrieving_all_entrypoints_for_experiment_works(
+        dioptra_client,
+        experiment_id=experiment_id,
+        expected=expected_entrypoint_ids,
     )
 
-    # test modify
-    response = actions.modify_tags(
-        client,
-        resource_route=V1_EXPERIMENTS_ROUTE,
-        resource_id=experiment["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[1], tags[2]]
+
+def test_append_entrypoints_to_experiment(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that entrypoints can be appended to experiments.
+    Given an authenticated user, registered experiments, and registered entrypoints,
+    this test validates the following sequence of actions:
+    - A user adds new entrypoint to the list of associated entrypoints with the experiment.
+    - A user can then retreive the new list that includes all old and new entrypoint refs.
+    """
+    experiment_id = registered_experiments["experiment3"]["id"]
+    entrypoint_ids_to_append = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())[1:]
+    ]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())
+    ]
+    assert_append_entrypoints_to_experiment_works(
+        dioptra_client,
+        experiment_id=experiment_id,
+        entrypoint_ids=entrypoint_ids_to_append,
+        expected=expected_entrypoint_ids,
     )
 
-    # test delete
-    response = actions.remove_tags(
-        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
+
+def test_modify_entrypoints_for_experiments(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that the list of associated entrypoints with experiments can be modified.
+    Given an authenticated user, registered experiments, and registered entrypoints,
+    this test validates the following sequence of actions:
+    - A user modifies the list of entrypoints associated with an experiment.
+    - A user retrieves the list of all the new entrypoints associated with the experiemnts.
+    """
+    experiment_id = registered_experiments["experiment3"]["id"]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())
+    ]
+    dioptra_client.experiments.entrypoints.modify_by_id(
+        experiment_id=experiment_id, entrypoint_ids=expected_entrypoint_ids
     )
-    response = actions.get_tags(
-        client, resource_route=V1_EXPERIMENTS_ROUTE, resource_id=experiment["id"]
+    assert_retrieving_all_entrypoints_for_experiment_works(
+        dioptra_client,
+        experiment_id=experiment_id,
+        expected=expected_entrypoint_ids,
     )
-    asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])
+
+
+def test_delete_all_entrypoints_for_experiment(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that the list of all associated entrypoints can be deleted from a experiment.
+    Given an authenticated user and registered experiments, this test validates the
+    following sequence of actions:
+    - A user deletes the list of associated entrypoints with the experiment.
+    - A user retrieves an empty list of associated entrypoints with the experiment.
+    """
+    experiment_id = registered_experiments["experiment1"]["id"]
+    dioptra_client.experiments.entrypoints.delete(experiment_id=experiment_id)
+    assert_retrieving_all_entrypoints_for_experiment_works(
+        dioptra_client, experiment_id=experiment_id, expected=[]
+    )
+
+
+def test_delete_entrypoints_by_id_for_experiment(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that entrypoints associated with the experiments can be deleted by id.
+    Given an authenticated user, registered experiments, and registered entrypoints,
+    this test validates the following sequence of actions:
+    - A user deletes an associated entrypoint with the experiment.
+    - A user retrieves a list of associated entrypoints that does not include the deleted.
+    """
+    experiment_id = registered_experiments["experiment1"]["id"]
+    entrypoint_to_delete = registered_entrypoints["entrypoint1"]["id"]
+    expected_entrypoint_ids = [
+        entrypoint["id"] for entrypoint in list(registered_entrypoints.values())[1:]
+    ]
+    dioptra_client.experiments.entrypoints.delete_by_id(
+        experiment_id=experiment_id, entrypoint_id=entrypoint_to_delete
+    )
+    assert_retrieving_all_entrypoints_for_experiment_works(
+        dioptra_client,
+        experiment_id=experiment_id,
+        expected=expected_entrypoint_ids,
+    )
