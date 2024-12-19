@@ -15,6 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Job resources."""
+import re
+
 from marshmallow import Schema, fields, validate
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
@@ -27,6 +29,9 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
+
+ALLOWED_METRIC_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
+
 
 JobRefSchema = generate_base_resource_ref_schema("Job")
 JobSnapshotRefSchema = generate_base_resource_ref_schema("Job", keep_snapshot_id=True)
@@ -54,6 +59,14 @@ class MetricsSchema(Schema):
         attribute="name",
         metadata=dict(description="The name of the metric."),
         required=True,
+        validate=validate.Regexp(
+            ALLOWED_METRIC_NAME_REGEX,
+            error=(
+                "'{input}' is not a compatible name for a metric."
+                "A metric name must start with a letter or underscore,"
+                "followed by letters, numbers, or underscores. In "
+                "addition, '_' is not a valid metric name."
+            ),
     )
     value = fields.Float(
         attribute="value",

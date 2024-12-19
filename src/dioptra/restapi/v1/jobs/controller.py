@@ -330,18 +330,6 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
     @responds(schema=MetricsSnapshotPageSchema, api=api)
     def get(self, id: int, name: str):
         """Gets a Job resource's metric history."""
-
-        valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-        alphanum = validate.ContainsOnly(valid)
-        nonempty = validate.Length(min=1)
-        both = validate.And(alphanum, nonempty)
-        try:
-            both(name)
-        except ValidationError as e:
-            raise QueryParameterValidationError(
-                "metric name", "alphanumeric", name=name, allowed_chars=valid
-            ) from e
-
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
             resource="JobIdMetricsSnapshotsEndpoint",
