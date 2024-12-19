@@ -222,17 +222,24 @@ jobs:
       - name: install dos2unix tool
         run: sudo apt install -y dos2unix
 
-      - name: download all the compiled requirements files
+      - name: download all the compiled requirements files - x86-64
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          pattern: py*
+          merge-multiple: true
+
+      - name: download all the compiled requirements files - aarch64
+        uses: actions/download-artifact@v4
+        with:
+          pattern: requirements-*
+          merge-multiple: true
 
       - name: standardize and consolidate files into venvs directory
         run: |
-          find artifacts -type f -name "*requirements*.txt" -exec chmod 0644 {} \;
-          find artifacts -type f -name "*requirements*.txt" -exec dos2unix {} \;
+          find . -type f -name "*requirements*.txt" -exec chmod 0644 {} \;
+          find . -type f -name "*requirements*.txt" -exec dos2unix {} \;
           mkdir venvs
-          mv artifacts/**/*.txt venvs
+          mv *.txt venvs
 
       - name: archive the consolidated requirements files
         uses: actions/upload-artifact@v4

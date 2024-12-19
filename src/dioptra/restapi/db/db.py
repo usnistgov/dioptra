@@ -34,6 +34,8 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass, mapped_column
 
+from dioptra.restapi.db.models.utils import depth_limited_repr
+
 from .custom_types import GUID, TZDateTime
 
 intpk = Annotated[
@@ -79,10 +81,13 @@ def _set_sqlite_pragma(
         cursor.close()
 
 
-class Base(DeclarativeBase, MappedAsDataclass):
+class Base(DeclarativeBase, MappedAsDataclass, repr=False):
     """The base ORM class."""
 
     metadata = metadata_obj
+
+    def __repr__(self):
+        return depth_limited_repr(self)
 
 
 db = SQLAlchemy(model_class=Base)

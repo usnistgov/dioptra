@@ -155,7 +155,7 @@
           use-input
           use-chips
           multiple
-          emit-value
+
           map-options
           option-label="name"
           option-value="id"
@@ -177,7 +177,7 @@
           use-input
           use-chips
           multiple
-          emit-value
+
           map-options
           option-label="name"
           option-value="id"
@@ -244,6 +244,7 @@
       color="negative" 
       label="Cancel"
       class="q-mr-lg"
+      @click="confirmLeave = true"
     />
     <q-btn  
       @click="submit()" 
@@ -258,18 +259,26 @@
     type="Parameter"
     :name="selectedParam.name"
   />
-
   <EditParamDialog 
     v-model="showEditParamDialog"
     :editParam="selectedParam"
     @updateParam="updateParam"
+  />
+  <LeaveFormDialog 
+    v-model="showLeaveDialog"
+    type="entrypoint"
+    @leaveForm="leaveForm"
+  />
+  <ReturnToFormDialog
+    v-model="showReturnDialog"
+    @cancel="clearForm"
   />
 </template>
 
 <script setup>
   import { ref, inject, reactive, watch, computed } from 'vue'
   import { useLoginStore } from '@/stores/LoginStore.ts'
-  import { useRouter } from 'vue-router'
+  import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import DeleteDialog from '@/dialogs/DeleteDialog.vue'
   import CodeEditor from '@/components/CodeEditor.vue'
   import EditParamDialog from '@/dialogs/EditParamDialog.vue'
@@ -278,6 +287,8 @@
   import * as notify from '../notify'
   import PageTitle from '@/components/PageTitle.vue'
   import TableComponent from '@/components/TableComponent.vue'
+  import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
+  import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
 
   const route = useRoute()
   
@@ -299,6 +310,25 @@
     taskGraph: '',
     queues: [],
     plugins: []
+  })
+
+  const initialCopy = ref({
+    name: '',
+    group: '',
+    description: '',
+    parameters: [],
+    taskGraph: '',
+    queues: [],
+    plugins: []
+  })
+
+  const valuesChanged = computed(() => {
+    for (const key in initialCopy.value) {
+      if(JSON.stringify(initialCopy.value[key]) !== JSON.stringify(entryPoint.value[key])) {
+        return true
+      }
+    }
+    return false
   })
 
   const tasks = ref([])
@@ -371,20 +401,43 @@
   ]
 
   const title = ref('')
+  const showReturnDialog = ref(false)
+
   getEntrypoint()
+
   async function getEntrypoint() {
     if(route.params.id === 'new') {
       title.value = 'Create Entrypoint'
+      if(store.savedForms?.entryPoint) {
+        showReturnDialog.value = true
+        await checkIfStillValid('queues')
+        await checkIfStillValid('plugins')
+        entryPoint.value = store.savedForms.entryPoint
+        initialCopy.value = JSON.parse(JSON.stringify(store.savedForms.entryPoint))
+      }
       return
     }
     try {
       const res = await api.getItem('entrypoints', route.params.id)
       entryPoint.value = res.data
+      initialCopy.value = JSON.parse(JSON.stringify(entryPoint.value))
       title.value = `Edit ${res.data.name}`
       console.log('entryPoint = ', entryPoint.value)
     } catch(err) {
       notify.error(err.response.data.message)
     } 
+  }
+
+  async function checkIfStillValid(type) {
+    for(let index = store.savedForms.entryPoint[type].length - 1; index >= 0; index--) {
+      let id = store.savedForms.entryPoint[type][index].id
+      try {
+        const res =  await api.getItem(type, id)
+      } catch(err) {
+        await store.savedForms.entryPoint[type].splice(index, 1)
+        console.warn(err)
+      } 
+    }
   }
 
 
@@ -419,6 +472,7 @@
     }
     basicInfoForm.value.validate().then(success => {
       if (success && taskGraphError.value === '') {
+        confirmLeave.value = true
         addOrModifyEntrypoint()
       }
       else {
@@ -433,9 +487,15 @@
         array[index] = queue.id
       }
     })
+    entryPoint.value.plugins.forEach((plugin, index, array) => {
+      if(typeof plugin === 'object') {
+        array[index] = plugin.id
+      }
+    })
     try {
       if (route.params.id === 'new') {
         await api.addItem('entrypoints', entryPoint.value)
+        store.savedForms.entryPoint = null
         notify.success(`Successfully created '${entryPoint.value.name}'`)
       } else {
         await api.updateItem('entrypoints', route.params.id, {
@@ -524,4 +584,49 @@
     }
   }
 
+  const showLeaveDialog = ref(false)
+  const confirmLeave = ref(false)
+  const toPath = ref()
+
+  onBeforeRouteLeave((to, from, next) => {
+    toPath.value = to.path
+    if(confirmLeave.value || !valuesChanged.value) {
+      next(true)
+    } else if(route.params.id === 'new') {
+      leaveForm()
+    } else {
+      showLeaveDialog.value = true
+    }
+  })
+
+  function clearForm() {
+    entryPoint.value = {
+      name: '',
+      group: '',
+      description: '',
+      parameters: [],
+      taskGraph: '',
+      queues: [],
+      plugins: []
+    }
+    basicInfoForm.value.reset()
+    store.savedForms.entryPoint = null
+  }
+
+  const isEmptyValues = computed(() => {
+    return Object.values(entryPoint.value).every((value) => 
+      (typeof value === 'string' && value === '') || 
+      (Array.isArray(value) && value.length === 0)
+    )
+  })
+
+  function leaveForm() {
+    if(isEmptyValues.value) {
+      store.savedForms.entryPoint = null
+    } else if(route.params.id === 'new') {
+      store.savedForms.entryPoint = entryPoint.value
+    }
+    confirmLeave.value = true
+    router.push(toPath.value)
+  }
 </script>

@@ -18,22 +18,13 @@ import importlib
 import os
 import tarfile
 import tempfile
-import uuid
 from pathlib import Path
-from typing import Final, cast
-from urllib.parse import urlencode, urlparse, urlunparse
+from typing import Final
 
-import requests
 import structlog
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.routes import (
-    V1_AUTH_ROUTE,
-    V1_EXPERIMENTS_ROUTE,
-    V1_JOBS_ROUTE,
-    V1_ROOT,
-    V1_WORKFLOWS_ROUTE,
-)
+from dioptra.client import connect_json_dioptra_client
 from dioptra.sdk.utilities.contexts import sys_path_dirs
 from dioptra.sdk.utilities.paths import set_cwd
 
@@ -43,94 +34,6 @@ ENV_DIOPTRA_API: Final[str] = "DIOPTRA_API"
 ENV_DIOPTRA_WORKER_USERNAME: Final[str] = "DIOPTRA_WORKER_USERNAME"
 ENV_DIOPTRA_WORKER_PASSWORD: Final[str] = "DIOPTRA_WORKER_PASSWORD"
 ENV_MLFLOW_S3_ENDPOINT_URL: Final[str] = "MLFLOW_S3_ENDPOINT_URL"
-
-DOWNLOAD_CHUNK_SIZE: Final[int] = 10 * 1024
-TAR_GZ_FILE_TYPE: Final[str] = "tar_gz"
-TAR_GZ_EXTENSION: Final[str] = ".tar.gz"
-
-JOB_FILES_DOWNLOAD_ENDPOINT: Final[str] = f"{V1_WORKFLOWS_ROUTE}/jobFilesDownload"
-
-
-class SimpleDioptraClient(object):
-    def __init__(self, username: str, password: str, api_url: str):
-        self._api_scheme, self._api_netloc = self._extract_scheme_and_netloc(api_url)
-        self._username = username
-        self._password = password
-        self._session: requests.Session | None = None
-
-    @property
-    def session(self) -> requests.Session:
-        if self._session is None:
-            self.login()
-
-        return cast(requests.Session, self._session)
-
-    def login(self) -> None:
-        if self._session is None:
-            self._session = requests.Session()
-
-        response = self._session.post(
-            self._build_url(f"{V1_AUTH_ROUTE}/login"),
-            json={"username": self._username, "password": self._password},
-        )
-        response.raise_for_status()
-
-    def download_job_files(self, job_id: int, output_dir: Path) -> Path:
-        url = self._build_url(
-            JOB_FILES_DOWNLOAD_ENDPOINT,
-            query_params={"jobId": str(job_id), "fileType": TAR_GZ_FILE_TYPE},
-        )
-        job_files_path = (output_dir / "job_files").with_suffix(TAR_GZ_EXTENSION)
-        with (
-            self.session.get(url, stream=True) as response,
-            job_files_path.open(mode="wb") as f,
-        ):
-            for chunk in response.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE):
-                f.write(chunk)
-
-        return job_files_path
-
-    def set_job_status(self, job_id: int, experiment_id: int, status: str) -> None:
-        url = self._build_url(
-            f"{V1_EXPERIMENTS_ROUTE}/{experiment_id}/jobs/{job_id}/status"
-        )
-        response = self.session.put(url, json={"status": status})
-        response.raise_for_status()
-
-    def set_job_mlflow_run_id(
-        self, job_id: int, mlflow_run_id: str | uuid.UUID
-    ) -> None:
-        url = self._build_url(f"{V1_JOBS_ROUTE}/{job_id}/mlflowRun")
-        payload = {
-            "mlflowRunId": (
-                mlflow_run_id.hex
-                if isinstance(mlflow_run_id, uuid.UUID)
-                else mlflow_run_id
-            )
-        }
-        response = self.session.post(url, json=payload)
-        response.raise_for_status()
-
-    def _build_url(
-        self, endpoint: str, query_params: dict[str, str] | None = None
-    ) -> str:
-        query_params = query_params or {}
-
-        return urlunparse(
-            (
-                self._api_scheme,
-                self._api_netloc,
-                f"/{V1_ROOT}/{endpoint}",
-                "",
-                urlencode(query_params),
-                "",
-            )
-        )
-
-    @staticmethod
-    def _extract_scheme_and_netloc(api_url: str) -> tuple[str, str]:
-        parsed_api_url = urlparse(url=api_url)
-        return parsed_api_url.scheme, parsed_api_url.netloc
 
 
 def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
@@ -154,19 +57,24 @@ def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
             f"{ENV_DIOPTRA_WORKER_PASSWORD} environment variable is not set"
         )
 
-    if (api_url := os.getenv(ENV_DIOPTRA_API)) is None:
-        log.error(f"{ENV_DIOPTRA_API} environment variable is not set")
-        raise ValueError(f"{ENV_DIOPTRA_API} environment variable is not set")
-
     # Instantiate a Dioptra client and login using worker's authentication details
-    client = SimpleDioptraClient(username=username, password=password, api_url=api_url)
+    try:
+        client = connect_json_dioptra_client()
+
+    except ValueError:
+        log.error(f"{ENV_DIOPTRA_API} environment variable is not set")
+        raise ValueError(f"{ENV_DIOPTRA_API} environment variable is not set") from None
+
+    client.auth.login(username=username, password=password)
 
     # Set Dioptra Job status to "started"
-    client.set_job_status(job_id=job_id, experiment_id=experiment_id, status="started")
+    client.experiments.jobs.set_status(
+        experiment_id=experiment_id, job_id=job_id, status="started"
+    )
 
     if os.getenv(ENV_MLFLOW_S3_ENDPOINT_URL) is None:
-        client.set_job_status(
-            job_id=job_id, experiment_id=experiment_id, status="failed"
+        client.experiments.jobs.set_status(
+            experiment_id=experiment_id, job_id=job_id, status="failed"
         )
         log.error(f"{ENV_MLFLOW_S3_ENDPOINT_URL} environment variable is not set")
         raise ValueError(
@@ -181,13 +89,13 @@ def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
 
         # Use client to download the job files for the provided job_id
         try:
-            job_files_package = client.download_job_files(
+            job_files_package = client.workflows.download_job_files(
                 job_id=job_id, output_dir=working_dir
             )
 
         except Exception as e:
-            client.set_job_status(
-                job_id=job_id, experiment_id=experiment_id, status="failed"
+            client.experiments.jobs.set_status(
+                experiment_id=experiment_id, job_id=job_id, status="failed"
             )
             log.exception("Could not download job files")
             raise e
@@ -198,8 +106,8 @@ def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
                 tar.extractall(path=working_dir, filter="data")
 
         except Exception as e:
-            client.set_job_status(
-                job_id=job_id, experiment_id=experiment_id, status="failed"
+            client.experiments.jobs.set_status(
+                experiment_id=experiment_id, job_id=job_id, status="failed"
             )
             log.exception("Could not extract from tar file")
             raise e
@@ -210,8 +118,8 @@ def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
                 run_dioptra_job = importlib.import_module(run_dioptra_job_path.stem)
 
         except Exception as e:
-            client.set_job_status(
-                job_id=job_id, experiment_id=experiment_id, status="failed"
+            client.experiments.jobs.set_status(
+                experiment_id=experiment_id, job_id=job_id, status="failed"
             )
             log.exception("Could not import run_dioptra_job.py")
             raise e
@@ -224,13 +132,13 @@ def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
                 dioptra_client=client,
                 logger=log,
             )
-            client.set_job_status(
-                job_id=job_id, experiment_id=experiment_id, status="finished"
+            client.experiments.jobs.set_status(
+                experiment_id=experiment_id, job_id=job_id, status="finished"
             )
 
         except Exception as e:
-            client.set_job_status(
-                job_id=job_id, experiment_id=experiment_id, status="failed"
+            client.experiments.jobs.set_status(
+                experiment_id=experiment_id, job_id=job_id, status="failed"
             )
             log.exception("Error running job")
             raise e
