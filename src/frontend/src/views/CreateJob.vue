@@ -82,7 +82,7 @@
                   {{ job.experiment.name }} has no Entrypoints, add 
                   <span 
                     style="color: blue; text-decoration: underline; cursor: pointer;"
-                    @click="showAssignEntrypointDialog = true"
+                    @click="showAppendEntrypointDialog = true"
                   >
                     here
                   </span>
@@ -125,7 +125,7 @@
                   {{ job.entrypoint.name }} has no Queues, add 
                   <span 
                     style="color: blue; text-decoration: underline; cursor: pointer;"
-                    @click="showAssignEntrypointDialog = true"
+                    @click="showAppendQueueDialog = true"
                   >
                     here
                   </span>
@@ -208,10 +208,19 @@
     v-model="showReturnDialog"
     @cancel="clearForm"
   />
-  <AssignEntrypointsDialog
-    v-model="showAssignEntrypointDialog"
-    :experiment="job.experiment"
-    @getExperiment="getExperiment(job.experiment.id); basicInfoForm.reset();"
+  <AppendResource
+    v-model="showAppendEntrypointDialog"
+    parentResourceType="experiments"
+    childResourceType="entrypoints"
+    :parentResourceObj="job.experiment"
+    @submit="getExperiment(job.experiment.id); basicInfoForm.reset();"
+  />
+  <AppendResource
+    v-model="showAppendQueueDialog"
+    parentResourceType="entrypoints"
+    childResourceType="queues"
+    :parentResourceObj="job.entrypoint"
+    @submit="getEntrypoint(job.entrypoint.id); basicInfoForm.reset();"
   />
 </template>
 
@@ -227,7 +236,7 @@
   import PageTitle from '@/components/PageTitle.vue'
   import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
   import { useLoginStore } from '@/stores/LoginStore'
-  import AssignEntrypointsDialog from '@/dialogs/AssignEntrypointsDialog.vue'
+  import AppendResource from '@/dialogs/AppendResource.vue'
 
   const store = useLoginStore()
 
@@ -325,7 +334,7 @@
       if(job.value.entrypoint && !job.value.queue && (allQueues.value.length === 0 || allowableQueueIds.value.length === 0)) {
         queueError.value = true
       }
-      if(success && job.experiment && job.entrypoint && job.queue) {
+      if(success && job.value.experiment && job.value.entrypoint && job.value.queue) {
         confirmLeave.value = true
         createJob()
       }
@@ -345,13 +354,15 @@
   })
 
   async function createJob() {
-    job.value.queue = job.value.queue.id
-    job.value.entrypoint = job.value.entrypoint.id
-    job.value.values = computedValue.value  
+    const payload = {
+      description: job.value.description,
+      queue: job.value.queue.id,
+      entrypoint: job.value.entrypoint.id,
+      values: computedValue.value,
+      timeout: job.value.timeout
+    }  
     try {
-      const { experiment, ...jobWithoutExperiment } = job.value
-      await api.addJob(job.value.experiment.id, jobWithoutExperiment)
-      // await api.addJob(experiment.value.id, job.value)
+      await api.addJob(job.value.experiment.id, payload)
       notify.success(`Successfully created job`)
       store.savedForms.jobs[expJobOrAllJobs.value] = null
       router.push(expJobOrAllJobs.value === 'allJobs' ? `/jobs` : `/experiments/${route.params.id}/jobs`)
@@ -409,7 +420,8 @@
   }
 
   const allowableQueueIds = computed(() => {
-    if(job.value.entrypoint === '') return []
+    if(!job.value.entrypoint) return []
+    console.log('job.value = ', job.value)
     return job.value.entrypoint.queues.map((q) => q.id)
   })
 
@@ -440,12 +452,16 @@
   }
 
   const allowableEntrypointIds = computed(() => {
-    if(job.value.experiment === '') return []
+    if(!job.value.experiment) return []
     return job.value.experiment.entrypoints.map((ep) => ep.id)
   }) 
 
   watch(() => allowableEntrypointIds.value, (newVal) => {
     if(newVal.length > 0) entrypointError.value = false
+  })
+
+  watch(() => allowableQueueIds.value, (newVal) => {
+    if(newVal.length > 0) queueError.value = false
   })
 
   async function getEntrypoints(val = '', update) {
@@ -485,6 +501,17 @@
     }
   }
 
+  async function getEntrypoint(id) {
+    if(!id) return
+    try {
+      const res = await api.getItem('entrypoints', id)
+      console.log('entrypoint = ', res.data)
+      job.value.entrypoint = res.data
+    } catch(err) {
+      console.warn(err)
+    }
+  }
+
   onMounted(async () => {
     if(Object.hasOwn(route.params, 'id')) {
       await getExperiment(route.params.id)
@@ -499,7 +526,8 @@
         try {
           await api.getItem('experiments', job.value.experiment.id)
         } catch(err) {
-          job.value.experiment = ''
+          // job.value.experiment = ''
+          clearForm()
           console.warn(err)
         }
       }
@@ -520,7 +548,9 @@
         }
       }
       basicInfoForm.value.reset()
-      showReturnDialog.value = true
+      if(job.value.experiment && job.value.experiment.id) {
+        showReturnDialog.value = true
+      }
     }
   })
 
@@ -543,15 +573,17 @@
 
   async function clearForm() {
     job.value = {
-      experiment: '',
       description: '',
       queue: '',
       entrypoint: '',
       timeout: '24h'
     }
+    if(!Object.hasOwn(route.params, 'id')) {
+      job.value.experiment = ''
+    }
     basicInfoForm.value.reset()
     store.savedForms.jobs[expJobOrAllJobs.value] = null
-    await getExperiment()
+    await getExperiment(route.params.id)
   }
 
   const queueHint = computed(() => {
@@ -560,7 +592,8 @@
     return ''
   })
 
-  const showAssignEntrypointDialog = ref(false)
+  const showAppendEntrypointDialog = ref(false)
+  const showAppendQueueDialog = ref(false)
 
   const entrypointField = ref()
 

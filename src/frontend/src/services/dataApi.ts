@@ -315,12 +315,12 @@ export async function removePluginFromEntrypoint(entrypointId: string, pluginId:
   return await axios.delete(`/api/entrypoints/${entrypointId}/plugins/${pluginId}`)
 }
 
-export async function addEntrypointsToExperiment(id: string, ids: number[]) {
-  return await axios.post(`/api/experiments/${id}/entrypoints`, {ids})
+export async function appendResource<T extends ItemType>(parentResourceType: T, parentResourceId: number, childResourceType: T, ids: number[]) {
+  return await axios.post(`/api/${parentResourceType}/${parentResourceId}/${childResourceType}`, {ids})
 }
 
-export async function removeEntrypointFromExperiment(experimentId: string, entrypointId: number) {
-  return await axios.delete(`/api/experiments/${experimentId}/entrypoints/${entrypointId}`)
+export async function removeResourceFromResource<T extends ItemType>(parentResourceType: T, parentResourceId: number, childResourceType: T, id: number) {
+  return await axios.delete(`/api/${parentResourceType}/${parentResourceId}/${childResourceType}/${id}`)
 }
 
 export async function getVersions(id: string,) {
