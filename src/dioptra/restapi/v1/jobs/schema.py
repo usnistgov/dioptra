@@ -15,6 +15,8 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Job resources."""
+import re
+
 from marshmallow import Schema, fields, validate
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
@@ -27,6 +29,9 @@ from dioptra.restapi.v1.schemas import (
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
+
+ALLOWED_METRIC_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # noqa: B950; fmt: skip
+
 
 JobRefSchema = generate_base_resource_ref_schema("Job")
 JobSnapshotRefSchema = generate_base_resource_ref_schema("Job", keep_snapshot_id=True)
@@ -41,14 +46,93 @@ class JobMlflowRunSchema(Schema):
     )
 
 
-class JobStatusSchema(Schema):
-    """The fields schema for the data in a Job status resource."""
-
+class JobIdSchema(Schema):
     id = fields.Integer(
         attribute="id",
         metadata=dict(description="ID for the Job resource."),
         dump_only=True,
     )
+
+
+class MetricsSchema(Schema):
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="The name of the metric."),
+        required=True,
+        validate=validate.Regexp(
+            ALLOWED_METRIC_NAME_REGEX,
+            error=(
+                "'{input}' is not a compatible name for a metric. "
+                "A metric name must start with a letter or underscore, "
+                "followed by letters, numbers, or underscores. In "
+                "addition, '_' is not a valid metric name."
+            ),
+        ),
+    )
+
+    value = fields.Float(
+        attribute="value",
+        metadata=dict(description="The value of the metric."),
+        required=True,
+    )
+    step = fields.Integer(
+        attribute="step",
+        metadata=dict(description="The step value for the metric."),
+        load_only=True,
+        required=False,
+        load_default=0,
+    )
+
+
+class MetricsSnapshotSchema(Schema):
+    name = fields.String(
+        attribute="name",
+        metadata=dict(description="The name of the metric."),
+    )
+    value = fields.Float(
+        attribute="value",
+        metadata=dict(description="The value of the metric."),
+    )
+    step = fields.Integer(
+        attribute="step",
+        metadata=dict(description="The step value for the metric."),
+    )
+    timestamp = fields.Integer(
+        attribute="timestamp",
+        metadata=dict(description="The timestamp of the metric in milliseconds."),
+    )
+
+
+class MetricsSnapshotPageSchema(BasePageSchema):
+    data = fields.Nested(
+        MetricsSnapshotSchema,
+        many=True,
+        metadata=dict(description="List of Metric Snapshots in the current page."),
+    )
+
+
+class JobIdMetricsSchema(JobIdSchema):
+    metrics = fields.Nested(
+        MetricsSchema,
+        attribute="metrics",
+        metadata=dict(
+            description="A list of the latest metrics associated with the job."
+        ),
+        many=True,
+    )
+
+
+class ExperimentJobsMetricsSchema(BasePageSchema):
+    data = fields.Nested(
+        JobIdMetricsSchema,
+        many=True,
+        metadata=dict(description="List of metrics for each job in the experiment"),
+    )
+
+
+class JobStatusSchema(JobIdSchema):
+    """The fields schema for the data in a Job status resource."""
+
     status = fields.String(
         attribute="status",
         validate=validate.OneOf(
@@ -152,6 +236,13 @@ class JobPageSchema(BasePageSchema):
         many=True,
         metadata=dict(description="List of Job resources in the current page."),
     )
+
+
+class MetricsSnapshotsGetQueryParameters(
+    PagingQueryParametersSchema,
+):
+    """The query parameters for the GET method of the
+    /jobs/{id}/metrics/{name}/snapshots endpoint."""
 
 
 class JobGetQueryParameters(

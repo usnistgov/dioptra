@@ -18,10 +18,12 @@
 from __future__ import annotations
 
 from typing import Any, Final, cast
+from uuid import UUID
 
 import structlog
 from flask_login import current_user
 from injector import inject
+from mlflow.exceptions import MlflowException
 from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
@@ -34,6 +36,7 @@ from dioptra.restapi.errors import (
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
+    MLFlowError,
     SortParameterValidationError,
 )
 from dioptra.restapi.v1 import utils
@@ -483,16 +486,12 @@ class JobIdStatusService(object):
     @inject
     def __init__(
         self,
-        job_id_service: JobIdService,
     ) -> None:
         """Initialize the job status service.
 
         All arguments are provided via dependency injection.
-
-        Args:
-            job_id_service: A JobIdService object.
         """
-        self._job_id_service = job_id_service
+        pass
 
     def get(
         self,
@@ -525,6 +524,190 @@ class JobIdStatusService(object):
             raise EntityDoesNotExistError(RESOURCE_TYPE, job_id=job_id)
 
         return {"status": job.status, "id": job.resource_id}
+
+
+class JobIdMetricsService(object):
+    """The service methods for retrieving the metrics of a job by unique id."""
+
+    @inject
+    def __init__(
+        self,
+        job_id_mlflowrun_service: JobIdMlflowrunService,
+    ) -> None:
+        """Initialize the job metrics service.
+
+        All arguments are provided via dependency injection.
+
+        """
+        self._job_id_mlflowrun_service = job_id_mlflowrun_service
+
+    def get(
+        self,
+        job_id: int,
+        **kwargs,
+    ) -> list[dict[str, Any]]:
+        """Fetch a job's metrics by its unique id.
+
+        Args:
+            job_id: The unique id of the job.
+
+        Returns:
+            The metrics for the requested job if found, otherwise an error message.
+        """
+        from mlflow.tracking import MlflowClient
+
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get job metrics by id", job_id=job_id)
+
+        run_id: UUID | None = self._job_id_mlflowrun_service.get(
+            job_id=job_id, **kwargs
+        )["mlflow_run_id"]
+
+        try:
+            client = MlflowClient()
+        except MlflowException as e:
+            raise MLFlowError(e.message) from e
+
+        if run_id is None:
+            metrics = []
+        else:
+            try:
+                run = client.get_run(run_id.hex)
+                metrics = [
+                    {"name": metric, "value": run.data.metrics[metric]}
+                    for metric in run.data.metrics.keys()
+                ]
+            except MlflowException:
+                metrics = []
+
+        return metrics
+
+    def update(
+        self,
+        job_id: int,
+        metric_name: str,
+        metric_value: float,
+        metric_step: int | None = None,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Update a job's metrics by its unique id.
+
+        Args:
+            job_id: The unique id of the job.
+            metric_name: The name of the metric to create or update.
+            metric_value: The value of the metric being updated.
+        Returns:
+            The metric dictionary passed in if successful, otherwise an error message.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Update job metrics by id", job_id=job_id)
+
+        from mlflow.tracking import MlflowClient
+
+        run_id: UUID | None = self._job_id_mlflowrun_service.get(
+            job_id=job_id, **kwargs
+        )["mlflow_run_id"]
+
+        if run_id is None:
+            raise EntityDoesNotExistError("MlFlowRun", run_id=None)
+        else:
+            try:
+                client = MlflowClient()
+            except MlflowException as e:
+                raise MLFlowError(e.message) from e
+
+            # this is here just to raise an error if the run does not exist
+            try:
+                run = client.get_run(run_id.hex)  # noqa: F841
+            except MlflowException as e:
+                raise EntityDoesNotExistError("MlFlowRun", run_id=run_id.hex) from e
+
+            try:
+                client.log_metric(
+                    run_id.hex,
+                    key=metric_name,
+                    value=metric_value,
+                    step=metric_step,
+                )
+            except MlflowException as e:
+                raise MLFlowError(e.message) from e
+
+        return {"name": metric_name, "value": metric_value}
+
+
+class JobIdMetricsSnapshotsService(object):
+    """The service methods for retrieving the historical metrics of a
+    job by unique id and metric name."""
+
+    @inject
+    def __init__(self, job_id_mlflowrun_service: JobIdMlflowrunService) -> None:
+        """Initialize the job metrics snapshots service.
+
+        All arguments are provided via dependency injection.
+        """
+        self._job_id_mlflowrun_service = job_id_mlflowrun_service
+
+    def get(
+        self,
+        job_id: int,
+        metric_name: str,
+        page_index: int,
+        page_length: int,
+        **kwargs,
+    ) -> tuple[list[dict[str, Any]], int]:
+        """Fetch a job's metrics by its unique id and metric name.
+
+        Args:
+            job_id: The unique id of the job.
+            metric_name: The name of the metric.
+            page_index: The index of the first page to be returned.
+            page_length: The maximum number of experiments to be returned.
+        Returns:
+            The metric history for the requested job and metric if found,
+            otherwise an error message.
+        """
+        from mlflow.tracking import MlflowClient
+
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Get job metric history by id and name",
+            job_id=job_id,
+            metric_name=metric_name,
+        )
+
+        run_id: UUID | None = self._job_id_mlflowrun_service.get(
+            job_id=job_id, **kwargs
+        )["mlflow_run_id"]
+
+        try:
+            client = MlflowClient()
+        except MlflowException as e:
+            raise MLFlowError(e.message) from e
+
+        if run_id is None:
+            raise EntityDoesNotExistError("MlFlowRun", run_id=None)
+
+        try:
+            history = client.get_metric_history(run_id=run_id.hex, key=metric_name)
+        except MlflowException as e:
+            raise MLFlowError(e.message) from e
+
+        if history == []:
+            raise EntityDoesNotExistError("Metric not found", name=metric_name)
+
+        metrics_page = [
+            {
+                "name": metric.key,
+                "value": metric.value,
+                "step": metric.step,
+                "timestamp": metric.timestamp,
+            }
+            for metric in history[
+                page_index * page_length : (page_index + 1) * page_length
+            ]
+        ]
+
+        return metrics_page, len(history)
 
 
 class ExperimentJobService(object):
@@ -993,7 +1176,7 @@ class JobIdMlflowrunService(object):
             job_id: The unique id of the job.
 
         Returns:
-            The status message job object if found, otherwise an error message.
+            The MlflowRun id of the job object if found, otherwise an error message.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
@@ -1055,3 +1238,68 @@ class JobIdMlflowrunService(object):
             )
 
         return {"mlflow_run_id": job.mlflow_run.mlflow_run_id}
+
+
+class ExperimentMetricsService(object):
+    """The service methods for retrieving metrics attached to jobs in the experiment."""
+
+    @inject
+    def __init__(
+        self,
+        experiment_jobs_service: ExperimentJobService,
+        job_id_metrics_service: JobIdMetricsService,
+    ) -> None:
+        """Initialize the experiment service.
+
+        All arguments are provided via dependency injection.
+        """
+        self._job_id_metrics_service = job_id_metrics_service
+        self._experiment_jobs_service = experiment_jobs_service
+
+    def get(
+        self,
+        experiment_id: int,
+        search_string: str,
+        page_index: int,
+        page_length: int,
+        sort_by_string: str,
+        descending: bool,
+        **kwargs,
+    ):
+        """Get a list of jobs and the latest metrics associated with each.
+
+        Args:
+            experiment_id: The unique id of the experiment.
+            error_if_not_found: If True, raise an error if the experiment is not found.
+                Defaults to False.
+
+        Returns:
+            The list of jobs and the metrics associated with them.
+
+        Raises:
+            EntityDoesNotExistError: If the experiment is not found and
+                `error_if_not_found` is True.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "Get metrics for all jobs for an experiment by resource id",
+            resource_id=experiment_id,
+        )
+
+        jobs, num_jobs = self._experiment_jobs_service.get(
+            experiment_id,
+            search_string=search_string,
+            page_index=page_index,
+            page_length=page_length,
+            sort_by_string=sort_by_string,
+            descending=descending,
+            **kwargs,
+        )
+
+        job_ids = [job["job"].resource_id for job in jobs]
+
+        metrics_for_jobs = [
+            {"id": job_id, "metrics": self._job_id_metrics_service.get(job_id)}
+            for job_id in job_ids
+        ]
+        return metrics_for_jobs, num_jobs
