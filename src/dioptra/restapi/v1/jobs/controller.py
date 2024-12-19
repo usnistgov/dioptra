@@ -27,11 +27,9 @@ from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
-from marshmallow import ValidationError, validate
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
-from dioptra.restapi.errors import QueryParameterValidationError
 from dioptra.restapi.routes import V1_JOBS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema

@@ -67,7 +67,9 @@ class MetricsSchema(Schema):
                 "followed by letters, numbers, or underscores. In "
                 "addition, '_' is not a valid metric name."
             ),
+        ),
     )
+
     value = fields.Float(
         attribute="value",
         metadata=dict(description="The value of the metric."),

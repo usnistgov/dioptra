@@ -217,7 +217,7 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, str(job_id), METRICS)
 
-    def create_metric_by_id(self, 
+    def append_metric_by_id(self, 
         job_id: str | int, 
         metric_name: str, 
         metric_value: float, 
