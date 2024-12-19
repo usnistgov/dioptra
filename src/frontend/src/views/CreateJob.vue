@@ -352,8 +352,8 @@
       store.savedForms.jobs[expJobOrAllJobs.value] = null
       router.push(expJobOrAllJobs.value === 'allJobs' ? `/jobs` : `/experiments/${route.params.id}/jobs`)
     } catch(err) {
-      // error shows when reddis isn't installed, but job is still created
-      store.savedForms.jobs[route.params.id] = null
+      // error shows when redis isn't installed, but job is still created
+      store.savedForms.jobs[expJobOrAllJobs.value] = null
       notify.error(err.response.data.message)
     }
   }
@@ -406,7 +406,6 @@
 
   const allowableQueueIds = computed(() => {
     if(!job.value.entrypoint) return []
-    console.log('job.value = ', job.value)
     return job.value.entrypoint.queues.map((q) => q.id)
   })
 
@@ -479,7 +478,7 @@
     if(!id) return
     try {
       const res = await api.getItem('experiments', id)
-      console.log('exp = ', res.data)
+      console.log('getExperiment = ', res.data)
       job.value.experiment = res.data
     } catch(err) {
       console.warn(err)
@@ -507,28 +506,40 @@
     if(store.savedForms.jobs[expJobOrAllJobs.value]) {
       job.value = store.savedForms.jobs[expJobOrAllJobs.value]
       // check if saved values are still valid
+      // load latest version of each resource
+      // if a child is no longer linked to parent resource, discard
       if(job.value.experiment && job.value.experiment.id) {
         try {
-          await api.getItem('experiments', job.value.experiment.id)
+          const res = await api.getItem('experiments', job.value.experiment.id)
+          job.value.experiment = res.data
         } catch(err) {
-          // job.value.experiment = ''
           clearForm()
-          console.warn(err)
-        }
-      }
-      if(job.value.queue && job.value.queue.id) {
-        try {
-          await api.getItem('queues', job.value.queue.id)
-        } catch(err) {
-          job.value.queue = ''
           console.warn(err)
         }
       }
       if(job.value.entrypoint && job.value.entrypoint.id) {
         try {
-          await api.getItem('entrypoints', job.value.entrypoint.id)
+          const res = await api.getItem('entrypoints', job.value.entrypoint.id)
+          if(allowableEntrypointIds.value.includes(res.data.id)) {
+            job.value.entrypoint = res.data
+          } else {
+            job.value.entrypoint = ''
+          }
         } catch(err) {
           job.value.entrypoint = ''
+          console.warn(err)
+        }
+      }
+      if(job.value.queue && job.value.queue.id) {
+        try {
+          const res = await api.getItem('queues', job.value.queue.id)
+          if(allowableQueueIds.value.includes(res.data.id)) {
+            job.value.queue = res.data
+          } else {
+            job.value.queue = ''
+          }
+        } catch(err) {
+          job.value.queue = ''
           console.warn(err)
         }
       }
