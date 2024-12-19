@@ -200,6 +200,7 @@
       console.log('snapshots = ', snapshots.value)
       selectedSnapshot.value = snapshots.value[0]
       selectedSnapshotIndex.value = 0
+      loadSnapshot(snapshots.value[0], 0)
     } catch(err) {
       console.warn(err)
     }
