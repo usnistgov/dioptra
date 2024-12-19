@@ -15,6 +15,3 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The groups endpoint subpackage."""
-from . import errors
-
-__all__ = ["errors"]

@@ -14,7 +14,7 @@
     dense
     v-model:pagination="pagination"
     @request="onRequest"
-    :rows-per-page-options="[5,10,15,20,25,50]"
+    :rows-per-page-options="[5,10,15,20,25,50,0]"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
@@ -102,13 +102,43 @@
     </template>
 
     <template #top-right>
-      <q-btn v-if="!hideEditBtn" color="secondary" icon="edit" label="Edit" class="q-mr-lg" @click="$emit('edit')"  :disabled="!selected?.length" />
-      <q-btn v-if="!hideDeleteBtn" color="negative" icon="sym_o_delete" label="Delete" class="q-mr-lg"  @click="$emit('delete')" :disabled="!selected?.length" />
-      <q-input v-if="!hideSearch" v-model="filter" debounce="300" dense placeholder="Search" outlined>
-          <template #append>
-            <q-icon name="search" />
-          </template>
-        </q-input>
+      <q-btn
+        v-if="!hideCreateBtn" 
+        color="primary" 
+        icon="add" 
+        label="Create" 
+        class="q-mr-lg" 
+        @click="$emit('create')"
+      />
+      <q-btn 
+        v-if="!hideEditBtn" 
+        color="secondary" 
+        icon="edit" 
+        label="Edit" 
+        class="q-mr-lg" 
+        @click="$emit('edit')"  
+        :disabled="!selected?.length" 
+      />
+      <q-btn 
+        v-if="!hideDeleteBtn" 
+        color="negative" 
+        icon="sym_o_delete" 
+        label="Delete" class="q-mr-lg"
+        @click="$emit('delete')" 
+        :disabled="!selected?.length" 
+      />
+      <q-input 
+        v-if="!hideSearch" 
+        v-model="filter" 
+        debounce="300" 
+        dense 
+        placeholder="Search" 
+        outlined
+      >
+        <template #append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
       <caption v-if="props.rightCaption" class="text-caption">
         {{ props.rightCaption }}
       </caption>
@@ -135,8 +165,27 @@
   
   const isMobile = inject('isMobile')
 
-  const props = defineProps(['columns', 'rows', 'title', 'showExpand', 'hideEditBtn', 'hideDeleteBtn', 'showToggleDraft', 'hideSearch', 'disableSelect', 'rightCaption'])
-  const emit = defineEmits(['edit', 'delete', 'request', 'expand', 'editTags'])
+  const props = defineProps([
+    'columns', 
+    'rows', 
+    'title', 
+    'showExpand',
+    'hideCreateBtn',
+    'hideEditBtn', 
+    'hideDeleteBtn', 
+    'showToggleDraft', 
+    'hideSearch', 
+    'disableSelect', 
+    'rightCaption'
+  ])
+  const emit = defineEmits([
+    'edit', 
+    'delete', 
+    'request', 
+    'expand', 
+    'editTags', 
+    'create'
+  ])
 
   const finalColumns = computed(() => {
     let defaultColumns = [ ...props.columns ]

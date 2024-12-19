@@ -11,6 +11,7 @@
     :hideEditBtn="true"
     :showExpand="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="router.push(`/experiments/${route.params.id}/jobs/new`)"
   >
     <template #body-cell-entrypoint="props">
       {{ props.row.entrypoint.name }}
@@ -75,7 +76,7 @@
 <script setup>
   import TableComponent from '@/components/TableComponent.vue'
   import { ref } from 'vue'
-  import { useRoute } from 'vue-router'
+  import { useRoute, useRouter } from 'vue-router'
   import PageTitle from '@/components/PageTitle.vue'
   import * as api from '@/services/dataApi'
   import * as notify from '../notify'
@@ -85,6 +86,7 @@
   import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
 
   const route = useRoute()
+  const router = useRouter()
 
   const columns = [
     { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },

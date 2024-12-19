@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from . import errors
 from .controller import api
 
-__all__ = ["api", "errors"]
+__all__ = ["api"]

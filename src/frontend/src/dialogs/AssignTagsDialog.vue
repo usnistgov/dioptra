@@ -59,7 +59,7 @@
 
   async function getTags() {
     try {
-      const res = await api.getData('tags', {index: 0, rowsPerPage: 50, search: ''})
+      const res = await api.getData('tags', {index: 0, rowsPerPage: 0, search: ''})
       tags.value = res.data.data
       if(props.editObj.tags.length > 0) {
         props.editObj.tags.forEach((tag) => {

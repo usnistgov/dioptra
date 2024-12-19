@@ -31,9 +31,8 @@ from dioptra.restapi.errors import (
     BackendDatabaseError,
     DraftAlreadyExistsError,
     DraftDoesNotExistError,
-    ResourceDoesNotExistError,
+    EntityDoesNotExistError,
 )
-from dioptra.restapi.v1.groups.errors import GroupDoesNotExistError
 from dioptra.restapi.v1.groups.service import GroupIdService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -159,7 +158,7 @@ class ResourceDraftsService(object):
             The newly created draft object.
 
         Raises:
-            GroupDoesNotExistError: If the group with the provided ID does not exist.
+            EntityDoesNotExistError: If the group with the provided ID does not exist.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -173,7 +172,9 @@ class ResourceDraftsService(object):
             )
             resource = db.session.scalar(stmt)
             if resource is None:
-                raise GroupDoesNotExistError
+                raise EntityDoesNotExistError(
+                    self._resource_type, resource_id=base_resource_id
+                )
             group = resource.owner
 
         draft_payload = {
@@ -249,8 +250,7 @@ class ResourceDraftsIdService(object):
 
         if draft is None:
             if error_if_not_found:
-                log.debug("Draft not found", draft_resource_id=draft_id)
-                raise DraftDoesNotExistError
+                raise DraftDoesNotExistError(draft_resource_id=draft_id)
 
             return None
 
@@ -371,8 +371,7 @@ class ResourceIdDraftService(object):
 
         if draft is None:
             if error_if_not_found:
-                log.debug("Draft not found", resource_id=resource_id)
-                raise DraftDoesNotExistError
+                raise DraftDoesNotExistError(resource_id=resource_id)
 
             return None, num_other_drafts
 
@@ -407,11 +406,11 @@ class ResourceIdDraftService(object):
         resource = db.session.scalars(stmt).first()
 
         if resource is None:
-            raise ResourceDoesNotExistError
+            raise EntityDoesNotExistError(self._resource_type, resource_id=resource_id)
 
         existing_draft, num_other_drafts = self.get(resource_id, log=log)
         if existing_draft:
-            raise DraftAlreadyExistsError
+            raise DraftAlreadyExistsError(self._resource_type, resource_id)
 
         draft_payload = {
             "resource_data": payload,

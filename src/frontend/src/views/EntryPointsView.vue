@@ -13,6 +13,7 @@
     @request="getEntrypoints"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="router.push('/entrypoints/new')"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -44,7 +45,7 @@
       </label>
     </template>
     <template #expandedSlot="{ row }">
-      <CodeEditor v-model="row.taskGraph" language="yaml" />
+      <CodeEditor v-model="row.taskGraph" language="yaml" :readOnly="true" />
     </template>
     <template #body-cell-plugins="props">
       <q-chip

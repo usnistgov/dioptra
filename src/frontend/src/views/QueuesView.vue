@@ -12,6 +12,7 @@
     ref="tableRef"
     :showToggleDraft="true"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="showQueueDialog = true"
   >
     <template #body-cell-hasDraft="props">
       <q-btn

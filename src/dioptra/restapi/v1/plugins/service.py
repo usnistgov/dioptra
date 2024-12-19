@@ -29,22 +29,17 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    QueryParameterNotUniqueError,
+    SortParameterValidationError,
+)
+from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-
-from .errors import (
-    PluginAlreadyExistsError,
-    PluginDoesNotExistError,
-    PluginFileAlreadyExistsError,
-    PluginFileDoesNotExistError,
-    PluginSortError,
-    PluginTaskInputParameterNameAlreadyExistsError,
-    PluginTaskNameAlreadyExistsError,
-    PluginTaskOutputParameterNameAlreadyExistsError,
-    PluginTaskParameterTypeNotFoundError,
-)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -105,13 +100,18 @@ class PluginService(object):
             The newly created plugin object.
 
         Raises:
-            PluginAlreadyExistsError: If a plugin with the given name already exists.
+            EntityExistsError: If a plugin with the given name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        if self._plugin_name_service.get(name, group_id=group_id, log=log) is not None:
-            log.debug("Plugin name already exists", name=name, group_id=group_id)
-            raise PluginAlreadyExistsError
+        duplicate = self._plugin_name_service.get(name, group_id=group_id, log=log)
+        if duplicate is not None:
+            raise EntityExistsError(
+                PLUGIN_RESOURCE_TYPE,
+                duplicate.resource_id,
+                name=name,
+                group_id=group_id,
+            )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
 
@@ -222,10 +222,7 @@ class PluginService(object):
                 sort_column = sort_column.asc()
             latest_plugins_stmt = latest_plugins_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in PLUGIN_SORTABLE_FIELDS:
-            log.debug(
-                f"sort_by_string: '{sort_by_string}' is not in PLUGIN_SORTABLE_FIELDS"
-            )
-            raise PluginSortError
+            raise SortParameterValidationError(PLUGIN_RESOURCE_TYPE, sort_by_string)
 
         plugins = db.session.scalars(latest_plugins_stmt).all()
 
@@ -327,7 +324,7 @@ class PluginIdService(object):
             The plugin object if found, otherwise None.
 
         Raises:
-            PluginDoesNotExistError: If the plugin is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the plugin is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -347,8 +344,7 @@ class PluginIdService(object):
 
         if plugin is None:
             if error_if_not_found:
-                log.debug("Plugin not found", plugin_id=plugin_id)
-                raise PluginDoesNotExistError
+                raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
             return None
 
@@ -403,9 +399,9 @@ class PluginIdService(object):
             The updated plugin object.
 
         Raises:
-            PluginDoesNotExistError: If the plugin is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the plugin is not found and `error_if_not_found`
                 is True.
-            PluginAlreadyExistsError: If the plugin name already exists.
+            EntityExistsError: If the plugin name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -420,13 +416,15 @@ class PluginIdService(object):
         plugin_files = plugin_dict["plugin_files"]
         group_id = plugin.resource.group_id
 
-        if (
-            name != plugin.name
-            and self._plugin_name_service.get(name, group_id=group_id, log=log)
-            is not None
-        ):
-            log.debug("Plugin name already exists", name=name, group_id=group_id)
-            raise PluginAlreadyExistsError
+        if name != plugin.name:
+            duplicate = self._plugin_name_service.get(name, group_id=group_id, log=log)
+            if duplicate is not None:
+                raise EntityExistsError(
+                    PLUGIN_RESOURCE_TYPE,
+                    duplicate.resource_id,
+                    name=name,
+                    group_id=group_id,
+                )
 
         new_plugin = models.Plugin(
             name=name,
@@ -466,7 +464,7 @@ class PluginIdService(object):
         plugin_resource = db.session.scalar(stmt)
 
         if plugin_resource is None:
-            raise PluginDoesNotExistError
+            raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
@@ -499,11 +497,9 @@ class PluginIdsService(object):
             A list of  plugin objects.
 
         Raises:
-            PluginDoesNotExistError: If the plugin is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the plugin is not found and `error_if_not_found`
                 is True.
         """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-
         latest_plugins_stmt = (
             select(models.Plugin)
             .join(models.Resource)
@@ -520,8 +516,9 @@ class PluginIdsService(object):
             plugin_ids_missing = set(plugin_ids) - set(
                 plugin.resource_id for plugin in plugins
             )
-            log.debug("Plugin not found", plugin_ids=list(plugin_ids_missing))
-            raise PluginDoesNotExistError
+            raise EntityDoesNotExistError(
+                PLUGIN_RESOURCE_TYPE, plugin_ids=list(plugin_ids_missing)
+            )
 
         # extract list of plugin ids
         plugin_ids = [plugin.resource_id for plugin in plugins]
@@ -609,7 +606,7 @@ class PluginNameService(object):
             The plugin object if found, otherwise None.
 
         Raises:
-            PluginDoesNotExistError: If the plugin is not found and `error_if_not_found`
+            EntityDoesNotExistError: If the plugin is not found and `error_if_not_found`
                 is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -630,8 +627,9 @@ class PluginNameService(object):
 
         if plugin is None:
             if error_if_not_found:
-                log.debug("Plugin not found", name=name)
-                raise PluginDoesNotExistError
+                raise EntityDoesNotExistError(
+                    PLUGIN_RESOURCE_TYPE, name=name, group_id=group_id
+                )
 
         return plugin
 
@@ -654,7 +652,7 @@ class PluginFileNameService(object):
             The plugin file object if found, otherwise None.
 
         Raises:
-            PluginFileDoesNotExistError: If the plugin is not found and
+            EntityDoesNotExistError: If the plugin is not found and
             `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -679,8 +677,9 @@ class PluginFileNameService(object):
 
         if plugin_file is None:
             if error_if_not_found:
-                log.debug("Plugin file not found", filename=filename)
-                raise PluginFileDoesNotExistError
+                raise EntityDoesNotExistError(
+                    PLUGIN_FILE_RESOURCE_TYPE, plugin_id=plugin_id, filename=filename
+                )
 
             return None
 
@@ -735,7 +734,7 @@ class PluginIdFileService(object):
             The newly created plugin file object.
 
         Raises:
-            PluginFileAlreadyExistsError: If a plugin file with the given filename
+            EntityExistsError: If a plugin file with the given filename
                 already exists.
         """
 
@@ -749,14 +748,16 @@ class PluginIdFileService(object):
         )
 
         # Validate that the proposed filename hasn't already been used in the plugin.
-        if (
-            self._plugin_file_name_service.get(filename, plugin_id=plugin_id, log=log)
-            is not None
-        ):
-            log.debug(
-                "Plugin filename already exists", filename=filename, plugin_id=plugin_id
+        duplicate = self._plugin_file_name_service.get(
+            filename, plugin_id=plugin_id, log=log
+        )
+        if duplicate is not None:
+            raise EntityExistsError(
+                PLUGIN_FILE_RESOURCE_TYPE,
+                duplicate.resource_id,
+                filename=filename,
+                plugin_id=plugin_id,
             )
-            raise PluginFileAlreadyExistsError
 
         # The owner of the PluginFile resource must match the owner of the Plugin
         # resource.
@@ -850,8 +851,7 @@ class PluginIdFileService(object):
         plugin = db.session.scalar(latest_plugin_stmt)
 
         if plugin is None:
-            log.debug("Plugin not found", plugin_id=plugin_id)
-            raise PluginDoesNotExistError
+            raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
         latest_plugin_files_count_stmt = (
             select(func.count(models.PluginFile.resource_id))
@@ -899,11 +899,9 @@ class PluginIdFileService(object):
                 sort_column = sort_column.asc()
             latest_plugin_files_stmt = latest_plugin_files_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in PLUGIN_FILE_SORTABLE_FIELDS:
-            log.debug(
-                f"sort_by_string: '{sort_by_string}' "
-                f"is not in PLUGIN_FILE_SORTABLE_FIELDS"
+            raise SortParameterValidationError(
+                PLUGIN_FILE_RESOURCE_TYPE, sort_by_string
             )
-            raise PluginSortError
 
         plugin_files_dict: dict[int, utils.PluginFileDict] = {
             plugin_file.resource_id: utils.PluginFileDict(
@@ -949,7 +947,7 @@ class PluginIdFileService(object):
         plugin_resource = db.session.scalar(stmt)
 
         if plugin_resource is None:
-            raise PluginDoesNotExistError
+            raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
         latest_plugin_files_stmt = (
             select(models.PluginFile)
@@ -1010,7 +1008,7 @@ class PluginIdFileIdService(object):
             The plugin object if found, otherwise None.
 
         Raises:
-            PluginDoesNotExistError: If the plugin or plugin file is not found and
+            EntityDoesNotExistError: If the plugin or plugin file is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -1032,8 +1030,7 @@ class PluginIdFileIdService(object):
 
         if plugin is None:
             if error_if_not_found:
-                log.debug("Plugin not found", plugin_id=plugin_id)
-                raise PluginDoesNotExistError
+                raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
             return None
 
@@ -1052,8 +1049,11 @@ class PluginIdFileIdService(object):
 
         if plugin_file is None:
             if error_if_not_found:
-                log.debug("Plugin file not found", plugin_file_id=plugin_file_id)
-                raise PluginFileDoesNotExistError
+                raise EntityDoesNotExistError(
+                    PLUGIN_FILE_RESOURCE_TYPE,
+                    plugin_id=plugin_id,
+                    plugin_file_id=plugin_file_id,
+                )
 
             return None
 
@@ -1102,7 +1102,7 @@ class PluginIdFileIdService(object):
             The updated plugin file object.
 
         Raises:
-            PluginDoesNotExistError: If the plugin or plugin file is not found and
+            EntityDoesNotExistError: If the plugin or plugin file is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -1120,17 +1120,17 @@ class PluginIdFileIdService(object):
         plugin = plugin_file_dict["plugin"]
         plugin_file = plugin_file_dict["plugin_file"]
 
-        if (
-            filename != plugin_file.filename
-            and self._plugin_file_name_service.get(
+        if filename != plugin_file.filename:
+            duplicate = self._plugin_file_name_service.get(
                 filename, plugin_id=plugin_id, log=log
             )
-            is not None
-        ):
-            log.debug(
-                "Plugin filename already exists", filename=filename, plugin_id=plugin_id
-            )
-            raise PluginFileAlreadyExistsError
+            if duplicate is not None:
+                raise EntityExistsError(
+                    PLUGIN_FILE_RESOURCE_TYPE,
+                    duplicate.resource_id,
+                    filename=filename,
+                    plugin_id=plugin_id,
+                )
 
         updated_plugin_file = models.PluginFile(
             filename=filename,
@@ -1173,7 +1173,7 @@ class PluginIdFileIdService(object):
 
         plugin_resource = db.session.scalar(stmt)
         if plugin_resource is None:
-            raise PluginDoesNotExistError
+            raise EntityDoesNotExistError(PLUGIN_RESOURCE_TYPE, plugin_id=plugin_id)
 
         plugin_file_stmt = (
             select(models.PluginFile)
@@ -1189,7 +1189,11 @@ class PluginIdFileIdService(object):
         plugin_file = db.session.scalar(plugin_file_stmt)
 
         if plugin_file is None:
-            raise PluginFileDoesNotExistError
+            raise EntityDoesNotExistError(
+                PLUGIN_FILE_RESOURCE_TYPE,
+                plugin_id=plugin_id,
+                plugin_file_id=plugin_file_id,
+            )
 
         plugin_file_id_to_return = plugin_file.resource_id  # to return to user
         db.session.add(
@@ -1214,27 +1218,21 @@ def _construct_plugin_task(
     parameter_types_id_to_orm: dict[int, models.PluginTaskParameterType],
     log: BoundLogger,
 ) -> models.PluginTask:
-    input_param_names = [x["name"] for x in task["input_params"]]
-    unique_input_param_names = set(input_param_names)
-
-    if len(unique_input_param_names) != len(input_param_names):
-        log.error(
-            "One or more input parameters have the same name",
+    duplicates = find_non_unique("name", task["input_params"])
+    if len(duplicates) > 0:
+        raise QueryParameterNotUniqueError(
+            "plugin task input parameter",
             plugin_task_name=task["name"],
-            input_param_names=input_param_names,
+            input_param_names=duplicates,
         )
-        raise PluginTaskInputParameterNameAlreadyExistsError
 
-    output_param_names = [x["name"] for x in task["output_params"]]
-    unique_output_param_names = set(output_param_names)
-
-    if len(unique_output_param_names) != len(output_param_names):
-        log.error(
-            "One or more output parameters have the same name",
+    duplicates = find_non_unique("name", task["output_params"])
+    if len(duplicates) > 0:
+        raise QueryParameterNotUniqueError(
+            "plugin task output parameter",
             plugin_task_name=task["name"],
-            output_param_names=output_param_names,
+            output_param_names=duplicates,
         )
-        raise PluginTaskOutputParameterNameAlreadyExistsError
 
     input_parameters_list = []
     for parameter_number, input_param in enumerate(task["input_params"]):
@@ -1306,13 +1304,12 @@ def _get_referenced_parameter_types(
     if not len(parameter_types) == len(parameter_type_ids):
         returned_parameter_type_ids = set([x.resource_id for x in parameter_types])
         ids_not_found = parameter_type_ids - returned_parameter_type_ids
-        log.error(
-            "One or more referenced plugin task parameter types were not found",
+        raise EntityDoesNotExistError(
+            "plugin task parameter types",
             num_expected=len(parameter_type_ids),
             num_found=len(parameter_types),
             ids_not_found=sorted(list(ids_not_found)),
         )
-        raise PluginTaskParameterTypeNotFoundError
 
     return {x.resource_id: x for x in parameter_types}
 
@@ -1323,12 +1320,9 @@ def _add_plugin_tasks(
     if not tasks:
         return None
 
-    task_names = [x["name"] for x in tasks]
-    unique_task_names = set(task_names)
-
-    if len(unique_task_names) != len(tasks):
-        log.error("One or more tasks have the same name", task_names=task_names)
-        raise PluginTaskNameAlreadyExistsError
+    duplicates = find_non_unique("name", tasks)
+    if len(duplicates) > 0:
+        raise QueryParameterNotUniqueError("plugin task", task_names=duplicates)
 
     parameter_types_id_to_orm = _get_referenced_parameter_types(tasks, log=log) or {}
     for task in tasks:

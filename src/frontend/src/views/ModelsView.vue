@@ -12,6 +12,7 @@
     ref="tableRef"
     @expand="getVersions"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="showAddEditDialog = true"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>
@@ -27,6 +28,7 @@
         :disableSelect="true"
         :hideEditBtn="true"
         :hideDeleteBtn="true"
+        :hideCreateBtn="true"
       >
         <template #body-cell-createdOn="props">
           <div>{{ formatDate(props.row.createdOn) }}</div>

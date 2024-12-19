@@ -20,75 +20,22 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the plugin parameter type entity. The tests ensure that the plugin
 parameter types can be submitted and retrieved as expected through the REST API.
 """
+from http import HTTPStatus
 from typing import Any
 
 import pytest
-from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.test import TestResponse
 
-from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE, V1_ROOT
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 
-from ..lib import actions, asserts, helpers
-
-# -- Actions ---------------------------------------------------------------------------
-
-
-def modify_plugin_parameter_type(
-    client: FlaskClient,
-    id: int,
-    new_name: str,
-    new_structure: dict[str, Any] | None = None,
-    new_description: str | None = None,
-) -> TestResponse:
-    """Rename a Plugin Parameter Type using the API.
-
-    Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to rename.
-        new_name: The new name to assign to the plugin parameter type.
-        new_structure: The new structure to assign to the plugin parameter type.
-        new_description: The new description to assign to the plugin parameter type.
-
-    Returns:
-        The response from the API.
-    """
-    json_payload = {"name": new_name}
-
-    if new_structure is not None:
-        json_payload["structure"] = new_structure
-
-    if new_description is not None:
-        json_payload["description"] = new_description
-
-    return client.put(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}",
-        json=json_payload,
-        follow_redirects=True,
-    )
-
-
-def delete_plugin_parameter_type_with_id(client: FlaskClient, id: int) -> TestResponse:
-    """Delete a plugin parameter type using the API.
-
-    Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to delete.
-
-    Returns:
-        The response from the API.
-    """
-    return client.delete(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}",
-        follow_redirects=True,
-    )
-
+from ..lib import helpers, routines
 
 # -- Assertions ------------------------------------------------------------------------
 
 
 def assert_retrieving_plugin_parameter_types_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     group_id: int | None = None,
     search: str | None = None,
@@ -111,28 +58,27 @@ def assert_retrieving_plugin_parameter_types_works(
     query_string: dict[str, Any] = {}
 
     if group_id is not None:
-        query_string["groupId"] = group_id
+        query_string["group_id"] = group_id
 
     if search is not None:
         query_string["search"] = search
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
+        query_string["page_length"] = paging_info["page_length"]
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    response = dioptra_client.plugin_parameter_types.get(**query_string)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_sorting_plugin_parameter_type_works(
-    client: FlaskClient,
-    sortBy: str,
-    descending: bool,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[str],
+    sort_by: str | None,
+    descending: bool | None,
+    group_id: int | None = None,
+    search: str | None = None,
+    paging_info: dict[str, Any] | None = None,
 ) -> None:
     """Assert that plugin parameter types can be sorted by column ascending/descending.
 
@@ -148,16 +94,24 @@ def assert_sorting_plugin_parameter_type_works(
 
     query_string: dict[str, Any] = {}
 
-    query_string["sortBy"] = sortBy
-    query_string["descending"] = descending
+    if descending is not None:
+        query_string["descending"] = descending
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
+    if sort_by is not None:
+        query_string["sort_by"] = sort_by
 
-    response_data = response.get_json()
+    if group_id is not None:
+        query_string["group_id"] = group_id
+
+    if search is not None:
+        query_string["search"] = search
+
+    if paging_info is not None:
+        query_string["index"] = paging_info["index"]
+        query_string["page_length"] = paging_info["page_length"]
+
+    response = dioptra_client.plugin_parameter_types.get(**query_string)
+    response_data = response.json()
     # remove plugin param types created by default before testing
     names_to_remove = ["any", "string", "integer", "number", "boolean", "null"]
     filtered_data = [
@@ -166,11 +120,13 @@ def assert_sorting_plugin_parameter_type_works(
 
     param_ids = [param["id"] for param in filtered_data]
 
-    assert response.status_code == 200 and param_ids == expected
+    assert response.status_code == HTTPStatus.OK and param_ids == expected
 
 
 def assert_retrieving_plugin_parameter_type_by_id_works(
-    client: FlaskClient, id: int, expected: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    id: int,
+    expected: dict[str, Any],
 ) -> None:
     """Assert that retrieving a plugin parameter type by id works.
 
@@ -183,14 +139,12 @@ def assert_retrieving_plugin_parameter_type_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.plugin_parameter_types.get_by_id(id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_plugin_parameter_type_name_matches_expected_name(
-    client: FlaskClient, id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol], id: int, expected_name: str
 ) -> None:
     """Assert that the name of a plugin parameter type matches the expected name.
 
@@ -203,35 +157,17 @@ def assert_plugin_parameter_type_name_matches_expected_name(
         AssertionError: If the response status code is not 200 or if the name of the
             experiment does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}",
-        follow_redirects=True,
+    response = dioptra_client.plugin_parameter_types.get_by_id(id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
-
-
-def assert_updating_plugin_parameter_type_works(
-    client: FlaskClient, id: int, expected: dict[str, Any]
-) -> None:
-    """Assert that updating a plugin parameter type by id works.
-
-    Args:
-        client: The Flask test client.
-        id: The id of the plugin parameter type to retrieve.
-        expected: The expected response from the API.
-
-    Raises:
-        AssertionError: If the response status code is not 200 or if the API response
-            does not match the expected response.
-    """
-    response = client.put(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
 
 
 def assert_deleting_plugin_parameter_type_by_id_works(
-    client: FlaskClient, id: int, expected: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    id: int,
+    expected: dict[str, Any],
 ) -> None:
     """Assert that deleting a plugin parameter type by id works.
 
@@ -244,13 +180,13 @@ def assert_deleting_plugin_parameter_type_by_id_works(
         AssertionError: If the response status code is not 404 or if the API response
             does not match the expected response.
     """
-    response = client.delete(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.plugin_parameter_types.delete_by_id(id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
-def assert_plugin_parameter_type_is_not_found(client: FlaskClient, id: int) -> None:
+def assert_plugin_parameter_type_is_not_found(
+    dioptra_client: DioptraClient[DioptraResponseProtocol], id: int
+) -> None:
     """Assert that a plugin parameter type is not found.
 
     Args:
@@ -260,15 +196,14 @@ def assert_plugin_parameter_type_is_not_found(client: FlaskClient, id: int) -> N
     Raises:
         AssertionError: If the response status code is not 404.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}",
-        follow_redirects=True,
-    )
-    assert response.status_code == 404
+    response = dioptra_client.plugin_parameter_types.get_by_id(id)
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def assert_cannot_rename_invalid_plugin_parameter_type(
-    client: FlaskClient, id: int, json_payload: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    id: int,
+    json_payload: dict[str, Any],
 ) -> None:
     """Assert that attempting to rename a Plugin Parameter Type with invalid
     parameters using the API fails.
@@ -281,16 +216,14 @@ def assert_cannot_rename_invalid_plugin_parameter_type(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = client.put(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}",
-        json=json_payload,
-        follow_redirects=True,
+    response = dioptra_client.plugin_parameter_types.modify_by_id(
+        plugin_parameter_type_id=id, **json_payload
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_cannot_create_invalid_plugin_parameter_type(
-    client: FlaskClient, json_payload: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol], json_payload: dict[str, Any]
 ) -> None:
     """Assert that attempting to create a Plugin Parameter Type with invalid
     parameters using the API fails.
@@ -302,16 +235,12 @@ def assert_cannot_create_invalid_plugin_parameter_type(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = client.post(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
-        json=json_payload,
-        follow_redirects=True,
-    )
-    assert response.status_code == 400
+    response = dioptra_client.plugin_parameter_types.create(**json_payload)
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_cannot_create_existing_plugin_parameter_type(
-    client: FlaskClient, name: str, group_id: int
+    dioptra_client: DioptraClient[DioptraResponseProtocol], name: str, group_id: int
 ) -> None:
     """Assert that attempting to create a Plugin Parameter Type with an existing
     name using the API fails.
@@ -324,14 +253,14 @@ def assert_cannot_create_existing_plugin_parameter_type(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = actions.register_plugin_parameter_type(
-        client, name=name, group_id=group_id, structure=dict(), description=""
+    response = dioptra_client.plugin_parameter_types.create(
+        group_id=group_id, name=name, description="", structure={}
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_cannot_rename_plugin_parameter_type_to_existing_name(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     id: int,
     existing_name: str,
     new_structure: dict[str, Any],
@@ -349,18 +278,17 @@ def assert_cannot_rename_plugin_parameter_type_to_existing_name(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = modify_plugin_parameter_type(
-        client,
-        id=id,
-        new_name=existing_name,
-        new_structure=new_structure,
-        new_description=new_description,
+    response = dioptra_client.plugin_parameter_types.modify_by_id(
+        plugin_parameter_type_id=id,
+        name=existing_name,
+        structure=new_structure,
+        description=new_description,
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.CONFLICT
 
 
 def assert_cannot_delete_invalid_plugin_parameter_type(
-    client: FlaskClient, id: Any, json_payload: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol], id: Any
 ) -> None:
     """Assert that attempting to delete a Plugin Parameter Type with invalid
     parameters using the API fails.
@@ -373,12 +301,10 @@ def assert_cannot_delete_invalid_plugin_parameter_type(
     Raises:
         AssertionError: If the response status code is not 400.
     """
-    response = client.delete(
-        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}/{id}",
-        json=json_payload,
-        follow_redirects=True,
+    response = dioptra_client.plugin_parameter_types.delete_by_id(
+        plugin_parameter_type_id=id
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_plugin_parameter_type_content_matches_expectations(
@@ -441,7 +367,7 @@ def assert_plugin_parameter_type_content_matches_expectations(
 
 
 def test_get_all_plugin_parameter_types(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -462,12 +388,12 @@ def test_get_all_plugin_parameter_types(
     """
     plugin_param_type_expected_list = list(registered_plugin_parameter_types.values())
     assert_retrieving_plugin_parameter_types_works(
-        client, expected=plugin_param_type_expected_list
+        dioptra_client=dioptra_client, expected=plugin_param_type_expected_list
     )
 
 
 @pytest.mark.parametrize(
-    "sortBy, descending , expected",
+    "sort_by, descending , expected",
     [
         (
             None,
@@ -497,11 +423,11 @@ def test_get_all_plugin_parameter_types(
     ],
 )
 def test_plugin_parameter_type_sort(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
-    sortBy: str,
+    sort_by: str | None,
     descending: bool,
     expected: list[str],
 ) -> None:
@@ -522,12 +448,12 @@ def test_plugin_parameter_type_sort(
         for expected_name in expected
     ]
     assert_sorting_plugin_parameter_type_works(
-        client, sortBy, descending, expected=expected_ids
+        dioptra_client, sort_by=sort_by, descending=descending, expected=expected_ids
     )
 
 
 def test_plugin_parameter_type_search_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -543,12 +469,12 @@ def test_plugin_parameter_type_search_query(
       during both submissions.
     """
     assert_retrieving_plugin_parameter_types_works(
-        client,
+        dioptra_client,
         expected=[registered_plugin_parameter_types["string"]],
         search="name:string",
     )
     assert_retrieving_plugin_parameter_types_works(
-        client,
+        dioptra_client,
         expected=[
             registered_plugin_parameter_types["plugin_param_type2"],
             registered_plugin_parameter_types["plugin_param_type3"],
@@ -557,12 +483,12 @@ def test_plugin_parameter_type_search_query(
     )
     plugin_param_type_expected_list = list(registered_plugin_parameter_types.values())
     assert_retrieving_plugin_parameter_types_works(
-        client, expected=plugin_param_type_expected_list, search="*"
+        dioptra_client, expected=plugin_param_type_expected_list, search="*"
     )
 
 
 def test_plugin_parameter_type_group_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -579,14 +505,16 @@ def test_plugin_parameter_type_group_query(
     """
     plugin_param_type_expected_list = list(registered_plugin_parameter_types.values())
     assert_retrieving_plugin_parameter_types_works(
-        client,
+        dioptra_client,
         expected=plugin_param_type_expected_list,
         group_id=auth_account["groups"][0]["id"],
     )
 
 
 def test_create_plugin_parameter_type(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
 ) -> None:
     """Test that Plugin Parameter Types can be created using the API.
 
@@ -608,13 +536,12 @@ def test_create_plugin_parameter_type(
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
     description = "This is a plugin parameter type"
-    plugin_param_type1_response = actions.register_plugin_parameter_type(
-        client,
-        name=name,
+    plugin_param_type1_response = dioptra_client.plugin_parameter_types.create(
         group_id=group_id,
+        name=name,
         description=description,
     )
-    plugin_param_type1_expected = plugin_param_type1_response.get_json()
+    plugin_param_type1_expected = plugin_param_type1_response.json()
     assert_plugin_parameter_type_content_matches_expectations(
         response=plugin_param_type1_expected,
         expected_contents={
@@ -626,27 +553,14 @@ def test_create_plugin_parameter_type(
         },
     )
     assert_retrieving_plugin_parameter_type_by_id_works(
-        client,
+        dioptra_client,
         id=plugin_param_type1_expected["id"],
         expected=plugin_param_type1_expected,
     )
 
-    # Error case (missing parameter)
-    assert_cannot_create_invalid_plugin_parameter_type(client, json_payload={})
-
-    # Error case (extra parameter)
-    assert_cannot_create_invalid_plugin_parameter_type(
-        client,
-        json_payload={
-            "name": "plugin_param_type_2",
-            "extra_param": "invalid",
-            "extra_param2": "invalid2",
-        },
-    )
-
     # Error case (wrong type)
     assert_cannot_create_invalid_plugin_parameter_type(
-        client,
+        dioptra_client,
         json_payload={
             "name": "plugin_param_type_1",
             "group_id": "invalid",
@@ -655,7 +569,7 @@ def test_create_plugin_parameter_type(
 
 
 def test_get_plugin_parameter_type(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -679,14 +593,14 @@ def test_get_plugin_parameter_type(
 
     # Get a Plugin Parameter Type using its ID
     assert_retrieving_plugin_parameter_type_by_id_works(
-        client,
+        dioptra_client,
         id=plugin_param_type1_expected["id"],
         expected=plugin_param_type1_expected,
     )
 
 
 def test_delete_plugin_parameter_type(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -710,14 +624,14 @@ def test_delete_plugin_parameter_type(
 
     # Delete a Plugin Parameter Type using its ID
     assert_retrieving_plugin_parameter_type_by_id_works(
-        client, id=plugin_param_type1["id"], expected=plugin_param_type1
+        dioptra_client, id=plugin_param_type1["id"], expected=plugin_param_type1
     )
-    delete_plugin_parameter_type_with_id(client, plugin_param_type1["id"])
-    assert_plugin_parameter_type_is_not_found(client, plugin_param_type1["id"])
+    dioptra_client.plugin_parameter_types.delete_by_id(plugin_param_type1["id"])
+    assert_plugin_parameter_type_is_not_found(dioptra_client, plugin_param_type1["id"])
 
 
 def test_modify_plugin_parameter_type(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -752,44 +666,28 @@ def test_modify_plugin_parameter_type(
 
     # Modify an Existing Plugin Parameter Type
     assert_plugin_parameter_type_name_matches_expected_name(
-        client, id=plugin_param_type1["id"], expected_name=start_name
+        dioptra_client, id=plugin_param_type1["id"], expected_name=start_name
     )
-    modify_plugin_parameter_type(
-        client,
-        id=plugin_param_type1["id"],
-        new_name=updated_name,
-        new_structure=updated_structure,
-        new_description=plugin_param_type1["description"],
+    dioptra_client.plugin_parameter_types.modify_by_id(
+        plugin_parameter_type_id=plugin_param_type1["id"],
+        name=updated_name,
+        description=plugin_param_type1["description"],
+        structure=updated_structure,
     )
     assert_plugin_parameter_type_name_matches_expected_name(
-        client, id=plugin_param_type1["id"], expected_name=updated_name
-    )
-
-    # Error case (missing parameter)
-    assert_cannot_rename_invalid_plugin_parameter_type(
-        client, id=plugin_param_type2["id"], json_payload={}
-    )
-
-    # Error case (extra parameter)
-    assert_cannot_rename_invalid_plugin_parameter_type(
-        client,
-        id=plugin_param_type2["id"],
-        json_payload={
-            "name": "param_name",
-            "extra_param": "invalid",
-        },
+        dioptra_client, id=plugin_param_type1["id"], expected_name=updated_name
     )
 
     # Error case (wrong type)
     assert_cannot_rename_invalid_plugin_parameter_type(
-        client,
+        dioptra_client,
         id=plugin_param_type2["id"],
-        json_payload={"name": 42, "structure": dict()},
+        json_payload={"name": 42, "description": None, "structure": dict()},
     )
 
     # Attempt to rename a Plugin Parameter Type to an existing name
     assert_cannot_rename_plugin_parameter_type_to_existing_name(
-        client,
+        dioptra_client,
         id=plugin_param_type1["id"],
         existing_name=plugin_param_type3["name"],
         new_structure=None,
@@ -798,7 +696,7 @@ def test_modify_plugin_parameter_type(
 
 
 def test_cannot_create_existing_plugin_parameter_type(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -813,14 +711,16 @@ def test_cannot_create_existing_plugin_parameter_type(
     existing_plugin_param_type = registered_plugin_parameter_types["plugin_param_type1"]
 
     assert_cannot_create_existing_plugin_parameter_type(
-        client,
+        dioptra_client,
         name=existing_plugin_param_type,
         group_id=auth_account["groups"][0]["id"],
     )
 
 
 def test_cannot_retrieve_nonexistent_plugin_parameter_type(
-    client: FlaskClient, db: SQLAlchemy, auth_account: dict[str, Any]
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
 ) -> None:
     """Test that retrieving an nonexistent Plugin Parameter Type produces an error.
 
@@ -828,11 +728,11 @@ def test_cannot_retrieve_nonexistent_plugin_parameter_type(
     - A user attempts to retrieve a plugin parameter type that doesn't exist.
     - This causes a 404 error to be returned.
     """
-    assert_plugin_parameter_type_is_not_found(client, id=42)
+    assert_plugin_parameter_type_is_not_found(dioptra_client, id=42)
 
 
 def test_manage_existing_plugin_parameter_type_draft(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -852,73 +752,47 @@ def test_manage_existing_plugin_parameter_type_draft(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     plugin_param_type = registered_plugin_parameter_types["plugin_param_type1"]
     name = "draft"
     new_name = "draft2"
     description = "description"
 
     # test creation
-    payload = {"name": name, "description": description, "structure": None}
-    expected = {
+    draft = {"name": name, "description": description, "structure": None}
+    draft_mod = {"name": new_name, "description": description, "structure": None}
+
+    # Expected responses
+    draft_expected = {
         "user_id": auth_account["id"],
         "group_id": plugin_param_type["group"]["id"],
         "resource_id": plugin_param_type["id"],
         "resource_snapshot_id": plugin_param_type["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft,
     }
-    response = actions.create_existing_resource_draft(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
-    asserts.assert_retrieving_draft_by_resource_id_works(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-        expected=response,
-    )
-    asserts.assert_creating_another_existing_draft_fails(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-    )
-
-    # test modification
-    payload = {"name": new_name, "description": description, "structure": None}
-    expected = {
+    draft_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": plugin_param_type["group"]["id"],
         "resource_id": plugin_param_type["id"],
         "resource_snapshot_id": plugin_param_type["snapshot"],
         "num_other_drafts": 0,
-        "payload": payload,
+        "payload": draft_mod,
     }
-    response = actions.modify_existing_resource_draft(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-        payload=payload,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(response, expected)
 
-    # test deletion
-    actions.delete_existing_resource_draft(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-    )
-    asserts.assert_existing_draft_is_not_found(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
+    # Run routine: existing resource drafts tests
+    routines.run_existing_resource_drafts_tests(
+        dioptra_client.plugin_parameter_types.modify_resource_drafts,
+        plugin_param_type["id"],
+        draft=draft,
+        draft_mod=draft_mod,
+        draft_expected=draft_expected,
+        draft_mod_expected=draft_mod_expected,
     )
 
 
 def test_manage_new_plugin_parameter_type_drafts(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -932,6 +806,7 @@ def test_manage_new_plugin_parameter_type_drafts(
     - The user attempts to retrieve information about the deleted draft.
     - The request fails with an appropriate error message and response code.
     """
+    # Requests data
     group_id = auth_account["groups"][0]["id"]
     drafts = {
         "draft1": {
@@ -945,86 +820,39 @@ def test_manage_new_plugin_parameter_type_drafts(
             "structure": None,
         },
     }
+    draft1_mod = {"name": "draft1", "description": "new description", "structure": None}
 
-    # test creation
+    # Expected responses
     draft1_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft1"],
     }
-    draft1_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft1"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft1_response, draft1_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        draft_id=draft1_response["id"],
-        expected=draft1_response,
-    )
     draft2_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": drafts["draft2"],
     }
-    draft2_response = actions.create_new_resource_draft(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        group_id=group_id,
-        payload=drafts["draft2"],
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        draft2_response, draft2_expected
-    )
-    asserts.assert_retrieving_draft_by_id_works(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        draft_id=draft2_response["id"],
-        expected=draft2_response,
-    )
-    asserts.assert_retrieving_drafts_works(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        expected=[draft1_response, draft2_response],
-    )
-
-    # test modification
-    draft1_mod = {"name": "draft1", "description": "new description", "structure": None}
     draft1_mod_expected = {
         "user_id": auth_account["id"],
         "group_id": group_id,
         "payload": draft1_mod,
     }
-    response = actions.modify_new_resource_draft(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        draft_id=draft1_response["id"],
-        payload=draft1_mod,
-    ).get_json()
-    asserts.assert_draft_response_contents_matches_expectations(
-        response, draft1_mod_expected
-    )
 
-    # test deletion
-    actions.delete_new_resource_draft(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        draft_id=draft1_response["id"],
-    )
-    asserts.assert_new_draft_is_not_found(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        draft_id=draft1_response["id"],
+    # Run routine: new resource drafts tests
+    routines.run_new_resource_drafts_tests(
+        dioptra_client.plugin_parameter_types.new_resource_drafts,
+        drafts=drafts,
+        draft1_mod=draft1_mod,
+        draft1_expected=draft1_expected,
+        draft2_expected=draft2_expected,
+        draft1_mod_expected=draft1_mod_expected,
+        group_id=group_id,
     )
 
 
 def test_manage_plugin_parameter_type_snapshots(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -1046,44 +874,23 @@ def test_manage_plugin_parameter_type_snapshots(
     plugin_param_type_to_rename = registered_plugin_parameter_types[
         "plugin_param_type1"
     ]
-    modified_plugin_param_type = modify_plugin_parameter_type(
-        client,
-        id=plugin_param_type_to_rename["id"],
-        new_name=plugin_param_type_to_rename["name"] + "modified",
-        new_description=plugin_param_type_to_rename["description"],
-        new_structure=plugin_param_type_to_rename["structure"],
-    ).get_json()
-    modified_plugin_param_type.pop("hasDraft")
-    plugin_param_type_to_rename.pop("hasDraft")
-    plugin_param_type_to_rename["latestSnapshot"] = False
-    plugin_param_type_to_rename["lastModifiedOn"] = modified_plugin_param_type[
-        "lastModifiedOn"
-    ]
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type_to_rename["id"],
-        snapshot_id=plugin_param_type_to_rename["snapshot"],
-        expected=plugin_param_type_to_rename,
-    )
-    asserts.assert_retrieving_snapshot_by_id_works(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=modified_plugin_param_type["id"],
-        snapshot_id=modified_plugin_param_type["snapshot"],
-        expected=modified_plugin_param_type,
-    )
-    expected_snapshots = [plugin_param_type_to_rename, modified_plugin_param_type]
-    asserts.assert_retrieving_snapshots_works(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type_to_rename["id"],
-        expected=expected_snapshots,
+    modified_plugin_param_type = dioptra_client.plugin_parameter_types.modify_by_id(
+        plugin_parameter_type_id=plugin_param_type_to_rename["id"],
+        name=plugin_param_type_to_rename["name"] + "modified",
+        description=plugin_param_type_to_rename["description"],
+        structure=plugin_param_type_to_rename["structure"],
+    ).json()
+
+    # Run routine: resource snapshots tests
+    routines.run_resource_snapshots_tests(
+        dioptra_client.plugin_parameter_types.snapshots,
+        resource_to_rename=plugin_param_type_to_rename,
+        modified_resource=modified_plugin_param_type,
     )
 
 
 def test_tag_plugin_parameter_type(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -1095,64 +902,11 @@ def test_tag_plugin_parameter_type(
     validates the following sequence of actions:
     """
     plugin_param_type = registered_plugin_parameter_types["plugin_param_type1"]
-    tags = [tag["id"] for tag in registered_tags.values()]
+    tag_ids = [tag["id"] for tag in registered_tags.values()]
 
-    # test append
-    response = actions.append_tags(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-        tag_ids=[tags[0], tags[1]],
+    # Run routine: resource tag tests
+    routines.run_resource_tag_tests(
+        dioptra_client.plugin_parameter_types.tags,
+        plugin_param_type["id"],
+        tag_ids=tag_ids,
     )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1]]
-    )
-    response = actions.append_tags(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[1], tags[2]]
-    )
-
-    # test remove
-    actions.remove_tag(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-        tag_id=tags[1],
-    )
-    response = actions.get_tags(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[0], tags[2]]
-    )
-
-    # test modify
-    response = actions.modify_tags(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-        tag_ids=[tags[1], tags[2]],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(
-        response.get_json(), [tags[1], tags[2]]
-    )
-
-    # test delete
-    response = actions.remove_tags(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-    )
-    response = actions.get_tags(
-        client,
-        resource_route=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
-        resource_id=plugin_param_type["id"],
-    )
-    asserts.assert_tags_response_contents_matches_expectations(response.get_json(), [])

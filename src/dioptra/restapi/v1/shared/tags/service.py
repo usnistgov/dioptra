@@ -25,8 +25,8 @@ from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import ResourceDoesNotExistError
-from dioptra.restapi.v1.tags.errors import TagDoesNotExistError
+from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.v1.tags.service import RESOURCE_TYPE as TAG_RESOURCE_TYPE
 from dioptra.restapi.v1.tags.service import TagIdService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -69,7 +69,7 @@ class ResourceTagsService(object):
             The list of tags if the resource is found, otherwise None.
 
         Raises:
-            ResourceDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the resource is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -100,7 +100,7 @@ class ResourceTagsService(object):
             The updated tag resource object.
 
         Raises:
-            ResourceDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the resource is not found and
                 `error_if_not_found` is True.
             TagDoesNotExistError: If one or more tags are not found.
         """
@@ -147,9 +147,9 @@ class ResourceTagsService(object):
             The updated tag resource object.
 
         Raises:
-            ResourceDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the resource is not found and
                 `error_if_not_found` is True.
-            TagDoesNotExistError: If one or more tags are not found.
+            EntityDoesNotExistError: If one or more tags are not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -232,7 +232,9 @@ class ResourceTagsIdService(object):
         current_tags = resource.tags
         tag_exists = tag_id in {tag.tag_id for tag in current_tags}
         if not tag_exists:
-            raise TagDoesNotExistError
+            raise EntityDoesNotExistError(
+                TAG_RESOURCE_TYPE, resource_id=resource_id, tag_id=tag_id
+            )
 
         resource.tags = [tag for tag in current_tags if tag.tag_id != tag_id]
 
@@ -259,7 +261,6 @@ class ResourceIdService(object):
         resource = db.session.scalar(stmt)
 
         if resource is None:
-            log.debug(f"{self._resource_type} not found", resource_id=resource_id)
-            raise ResourceDoesNotExistError
+            raise EntityDoesNotExistError(self._resource_type, resource_id=resource_id)
 
         return resource

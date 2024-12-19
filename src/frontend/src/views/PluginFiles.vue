@@ -7,10 +7,10 @@
     v-model:selected="selected"
     @edit="router.push(`/plugins/${route.params.id}/files/${selected[0].id}`)"
     @delete="showDeleteDialog = true"
-    :showExpand="true"
     @request="getFiles"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="router.push(`/plugins/${route.params.id}/files/new`)"
   >
     <template #body-cell-tasks="props">
       {{ props.row.tasks.length }}

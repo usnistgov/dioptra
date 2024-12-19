@@ -27,23 +27,23 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    QueryParameterNotUniqueError,
+    SortParameterValidationError,
+)
+from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.plugins.service import PluginIdsService
-from dioptra.restapi.v1.queues.errors import QueueDoesNotExistError
+from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
 from dioptra.restapi.v1.queues.service import QueueIdsService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
-from .errors import (
-    EntrypointAlreadyExistsError,
-    EntrypointDoesNotExistError,
-    EntrypointParameterNamesNotUniqueError,
-    EntrypointPluginDoesNotExistError,
-    EntrypointSortError,
-)
-
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+PLUGIN_RESOURCE_TYPE: Final[str] = "entry_point_plugin"
 
 RESOURCE_TYPE: Final[str] = "entry_point"
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
@@ -110,17 +110,15 @@ class EntrypointService(object):
             The newly created entrypoint object.
 
         Raises:
-            EntrypointAlreadyExistsError: If a entrypoint with the given name already
-                exists.
+            EntityExistsError: If a entrypoint with the given name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        if (
-            self._entrypoint_name_service.get(name, group_id=group_id, log=log)
-            is not None
-        ):
-            log.debug("Entrypoint name already exists", name=name, group_id=group_id)
-            raise EntrypointAlreadyExistsError
+        duplicate = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
+        if duplicate is not None:
+            raise EntityExistsError(
+                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+            )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
         queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
@@ -263,8 +261,7 @@ class EntrypointService(object):
                 sort_column = sort_column.asc()
             entrypoints_stmt = entrypoints_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
-            raise EntrypointSortError
+            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
 
         entrypoints = list(db.session.scalars(entrypoints_stmt).unique().all())
 
@@ -344,7 +341,7 @@ class EntrypointIdService(object):
             The entrypoint object if found, otherwise None.
 
         Raises:
-            EntrypointDoesNotExistError: If the entrypoint is not found and
+            EntityDoesNotExistError: If the entrypoint is not found and
             `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -364,8 +361,9 @@ class EntrypointIdService(object):
 
         if entrypoint is None:
             if error_if_not_found:
-                log.debug("Entrypoint not found", entrypoint_id=entrypoint_id)
-                raise EntrypointDoesNotExistError
+                raise EntityDoesNotExistError(
+                    RESOURCE_TYPE, entrypoint_id=entrypoint_id
+                )
 
             return None
 
@@ -420,15 +418,16 @@ class EntrypointIdService(object):
             The updated entrypoint object.
 
         Raises:
-            EntrypointDoesNotExistError: If the entrypoint is not found and
+            EntityDoesNotExistError: If the entrypoint is not found and
                 `error_if_not_found` is True.
-            EntrypointAlreadyExistsError: If the entrypoint name already exists.
+            EntityExistsError: If the entrypoint name already exists.
+            QueryParameterNotUniqueError: If the values for the "name" parameter in the
+                parameters list is not unique
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        parameter_names = [parameter["name"] for parameter in parameters]
-        if len(parameter_names) > len(set(parameter_names)):
-            raise EntrypointParameterNamesNotUniqueError
+        duplicates = find_non_unique("name", parameters)
+        if len(duplicates) > 0:
+            raise QueryParameterNotUniqueError(RESOURCE_TYPE, name=duplicates)
 
         entrypoint_dict = self.get(
             entrypoint_id, error_if_not_found=error_if_not_found, log=log
@@ -439,13 +438,14 @@ class EntrypointIdService(object):
 
         entrypoint = entrypoint_dict["entry_point"]
         group_id = entrypoint.resource.group_id
-        if (
-            name != entrypoint.name
-            and self._entrypoint_name_service.get(name, group_id=group_id, log=log)
-            is not None
-        ):
-            log.debug("Entrypoint name already exists", name=name, group_id=group_id)
-            raise EntrypointAlreadyExistsError
+        if name != entrypoint.name:
+            duplicate = self._entrypoint_name_service.get(
+                name, group_id=group_id, log=log
+            )
+            if duplicate is not None:
+                raise EntityExistsError(
+                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+                )
 
         queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
 
@@ -517,7 +517,7 @@ class EntrypointIdService(object):
         entrypoint_resource = db.session.scalars(stmt).first()
 
         if entrypoint_resource is None:
-            raise EntrypointDoesNotExistError
+            raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
@@ -567,7 +567,7 @@ class EntrypointIdPluginsService(object):
             The plugin snapshots for the entrypoint.
 
         Raises:
-            EntrypointDoesNotExistError: If the entrypoint is not found.
+            EntityDoesNotExistError: If the entrypoint is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
@@ -600,8 +600,8 @@ class EntrypointIdPluginsService(object):
             The updated entrypoint object.
 
         Raises:
-            EntrypointDoesNotExistError: If the entrypoint is not found.
-            EntrypointAlreadyExistsError: If the entrypoint name already exists.
+            EntityDoesNotExistError: If the entrypoint is not found.
+            EntityExistsError: If the entrypoint name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -642,7 +642,11 @@ class EntrypointIdPluginsService(object):
             for plugin_file in plugin["plugin_files"]
         ]
         existing_entry_point_plugin_files = [
-            entry_point_plugin_file
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_plugin_file.plugin,
+                plugin_file=entry_point_plugin_file.plugin_file,
+            )
             for entry_point_plugin_file in entrypoint.entry_point_plugin_files
             if entry_point_plugin_file.plugin.resource_id not in set(plugin_ids)
         ]
@@ -711,7 +715,7 @@ class EntrypointIdPluginsIdService(object):
             The plugin snapshots for the entrypoint.
 
         Raises:
-            EntrypointDoesNotExistError: If the entrypoint is not found.
+            EntityDoesNotExistError: If the entrypoint or plugin is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
@@ -728,7 +732,9 @@ class EntrypointIdPluginsIdService(object):
             for entry_point_plugin_file in entrypoint.entry_point_plugin_files
         }
         if plugin_id not in plugins:
-            raise EntrypointPluginDoesNotExistError
+            raise EntityDoesNotExistError(
+                PLUGIN_RESOURCE_TYPE, entrypoint_id=entrypoint_id, plugin_id=plugin_id
+            )
 
         plugin = utils.PluginWithFilesDict(
             plugin=plugins[plugin_id], plugin_files=[], has_draft=None
@@ -757,8 +763,7 @@ class EntrypointIdPluginsIdService(object):
             A dictionary reporting the status of the request.
 
         Raises:
-            EntrypointDoesNotExistError: If the entrypoint is not found.
-            EntrypointPluginDoesNotExistError: If the plugin is not found.
+            EntityDoesNotExistError: If the entrypoint or plugin is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -773,19 +778,34 @@ class EntrypointIdPluginsIdService(object):
             plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugin_files
         )
         if plugin_id not in plugin_ids:
-            raise EntrypointPluginDoesNotExistError
+            raise EntityDoesNotExistError(
+                PLUGIN_RESOURCE_TYPE, entrypoint_id=entrypoint_id, plugin_id=plugin_id
+            )
 
         # create a new snapshot with the plugin removed
+        entrypoint_parameters = [
+            models.EntryPointParameter(
+                name=param.name,
+                default_value=param.default_value,
+                parameter_type=param.parameter_type,
+                parameter_number=param.parameter_number,
+            )
+            for param in entrypoint.parameters
+        ]
         new_entrypoint = models.EntryPoint(
             name=entrypoint.name,
             description=entrypoint.description,
             task_graph=entrypoint.task_graph,
-            parameters=entrypoint.parameters,
+            parameters=entrypoint_parameters,
             resource=entrypoint.resource,
             creator=current_user,
         )
         new_entrypoint.entry_point_plugin_files = [
-            entry_point_plugin_file
+            models.EntryPointPluginFile(
+                entry_point=new_entrypoint,
+                plugin=entry_point_plugin_file.plugin,
+                plugin_file=entry_point_plugin_file.plugin_file,
+            )
             for entry_point_plugin_file in entrypoint.entry_point_plugin_files
             if entry_point_plugin_file.plugin.resource_id != plugin_id
         ]
@@ -830,7 +850,7 @@ class EntrypointIdsService(object):
             The entrypoint object if found, otherwise None.
 
         Raises:
-            EntrypointDoesNotExistError: If the entrypoint is not found and
+            EntityDoesNotExistError: If the entrypoint is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -852,10 +872,9 @@ class EntrypointIdsService(object):
             entrypoint_ids_missing = set(entrypoint_ids) - set(
                 entrypoint.resource_id for entrypoint in entrypoints
             )
-            log.debug(
-                "Entrypoint not found", entrypoint_ids=list(entrypoint_ids_missing)
+            raise EntityDoesNotExistError(
+                RESOURCE_TYPE, entrypoint_ids=list(entrypoint_ids_missing)
             )
-            raise EntrypointDoesNotExistError
 
         return entrypoints
 
@@ -896,7 +915,7 @@ class EntrypointIdQueuesService(object):
             The list of plugins.
 
         Raises:
-            EntrypointDoesNotExistError: If the entrypoint is not found and
+            EntityDoesNotExistError: If the entrypoint is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -933,9 +952,9 @@ class EntrypointIdQueuesService(object):
             The updated list of queues resource objects.
 
         Raises:
-            EntrypointDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the resource is not found and
                 `error_if_not_found` is True.
-            QueueDoesNotExistError: If one or more queues are not found.
+            EntityDoesNotExistError: If one or more queues are not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
@@ -960,11 +979,6 @@ class EntrypointIdQueuesService(object):
         new_queues = self._queue_ids_service.get(
             list(new_queue_ids), error_if_not_found=True, log=log
         )
-        if error_if_not_found and len(new_queues) != len(new_queue_ids):
-            found_queue_ids = set(queue.resource_id for queue in new_queues)
-            missing_queue_ids = new_queue_ids - found_queue_ids
-            log.debug(queue_ids=list(missing_queue_ids))
-            raise QueueDoesNotExistError
 
         entrypoint.children.extend([queue.resource for queue in new_queues])
 
@@ -995,9 +1009,9 @@ class EntrypointIdQueuesService(object):
             The updated queue resource object.
 
         Raises:
-            ResourceDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the resource is not found and
                 `error_if_not_found` is True.
-            QueueDoesNotExistError: If one or more queues are not found.
+            EntityDoesNotExistError: If one or more queues are not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -1109,7 +1123,7 @@ class EntrypointIdQueuesIdService(object):
         removed_queue = queue_resources.pop(queue_id, None)
 
         if removed_queue is None:
-            raise QueueDoesNotExistError
+            raise EntityDoesNotExistError(QUEUE_RESOURCE_TYPE, queue_id=queue_id)
 
         plugin_resources = [
             resource
@@ -1146,7 +1160,7 @@ class EntrypointNameService(object):
             The entrypoint object if found, otherwise None.
 
         Raises:
-            EntrypointDoesNotExistError: If the entrypoint is not found and
+            EntityDoesNotExistError: If the entrypoint is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -1167,8 +1181,9 @@ class EntrypointNameService(object):
 
         if entrypoint is None:
             if error_if_not_found:
-                log.debug("Entrypoint not found", name=name)
-                raise EntrypointDoesNotExistError
+                raise EntityDoesNotExistError(
+                    RESOURCE_TYPE, name=name, group_id=group_id
+                )
 
             return None
 

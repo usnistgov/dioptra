@@ -35,10 +35,13 @@ from redis import Redis
 from requests import ConnectionError
 from requests import Session as RequestsSession
 
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 from dioptra.restapi.db import db as restapi_db
 from dioptra.restapi.v1.shared.request_scope import request
 
 from .lib import db as libdb
+from .lib.client import DioptraFlaskClientSession
 from .lib.server import FlaskTestServer
 
 
@@ -138,6 +141,11 @@ def seed_database(db: SQLAlchemy):
 @pytest.fixture
 def client(app: Flask) -> FlaskClient:
     return app.test_client()
+
+
+@pytest.fixture
+def dioptra_client(client: FlaskClient) -> DioptraClient[DioptraResponseProtocol]:
+    return DioptraClient[DioptraResponseProtocol](DioptraFlaskClientSession(client))
 
 
 @pytest.fixture

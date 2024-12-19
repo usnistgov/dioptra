@@ -15,10 +15,12 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Test suite for group operations.
+
 This module contains a set of tests that validate the CRUD operations and additional
 functionalities for the group entity. The tests ensure that the groups can be
 registered, queried, and renamed as expected through the REST API.
 """
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -26,6 +28,8 @@ from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.test import TestResponse
 
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 from dioptra.restapi.routes import V1_GROUPS_ROUTE, V1_ROOT
 
 from ..lib import actions, helpers
@@ -123,7 +127,7 @@ def assert_group_response_contents_matches_expectations(
 
 
 def assert_retrieving_group_by_id_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     group_id: int,
     expected: dict[str, Any],
 ) -> None:
@@ -138,14 +142,12 @@ def assert_retrieving_group_by_id_works(
         AssertionError: If the response status code is not 200 or if the API response
             does not match the expected response.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{group_id}", follow_redirects=True
-    )
-    assert response.status_code == 200 and response.get_json() == expected
+    response = dioptra_client.groups.get_by_id(group_id)
+    assert response.status_code == HTTPStatus.OK and response.json() == expected
 
 
 def assert_retrieving_groups_works(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: list[dict[str, Any]],
     search: str | None = None,
     paging_info: dict[str, Any] | None = None,
@@ -170,14 +172,10 @@ def assert_retrieving_groups_works(
 
     if paging_info is not None:
         query_string["index"] = paging_info["index"]
-        query_string["pageLength"] = paging_info["page_length"]
+        query_string["page_length"] = paging_info["page_length"]
 
-    response = client.get(
-        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}",
-        query_string=query_string,
-        follow_redirects=True,
-    )
-    assert response.status_code == 200 and response.get_json()["data"] == expected
+    response = dioptra_client.groups.get(**query_string)
+    assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
 
 
 def assert_registering_existing_group_name_fails(
@@ -193,11 +191,13 @@ def assert_registering_existing_group_name_fails(
         AssertionError: If the response status code is not 400.
     """
     response = actions.register_group(client, name=name)
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_group_name_matches_expected_name(
-    client: FlaskClient, group_id: int, expected_name: str
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    group_id: int,
+    expected_name: str,
 ) -> None:
     """Assert that the name of a group matches the expected name.
 
@@ -210,11 +210,11 @@ def assert_group_name_matches_expected_name(
         AssertionError: If the response status code is not 200 or if the name of the
             group does not match the expected name.
     """
-    response = client.get(
-        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{group_id}",
-        follow_redirects=True,
+    response = dioptra_client.groups.get_by_id(group_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and response.json()["name"] == expected_name
     )
-    assert response.status_code == 200 and response.get_json()["name"] == expected_name
 
 
 def assert_cannot_rename_group_with_existing_name(
@@ -237,7 +237,7 @@ def assert_cannot_rename_group_with_existing_name(
         group_id=group_id,
         new_name=existing_name,
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 # -- Tests -----------------------------------------------------------------------------
@@ -246,6 +246,7 @@ def assert_cannot_rename_group_with_existing_name(
 @pytest.mark.v1_test
 def test_create_group(
     client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
 ) -> None:
@@ -272,12 +273,12 @@ def test_create_group(
         },
     )
     assert_retrieving_group_by_id_works(
-        client, group_id=group_expected["id"], expected=group_expected
+        dioptra_client, group_id=group_expected["id"], expected=group_expected
     )
 
 
 def test_group_get_all(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],
@@ -291,11 +292,11 @@ def test_group_get_all(
     - The returned list of groups matches the full list of registered groups.
     """
     group_expected_list = list(registered_groups.values())
-    assert_retrieving_groups_works(client, expected=group_expected_list)
+    assert_retrieving_groups_works(dioptra_client, expected=group_expected_list)
 
 
 def test_group_search_query(
-    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],
@@ -311,13 +312,15 @@ def test_group_search_query(
     """
     group_expected_list = [registered_groups["public"]]
     assert_retrieving_groups_works(
-        client, expected=group_expected_list, search="name:public"
+        dioptra_client, expected=group_expected_list, search="name:public"
     )
     assert_retrieving_groups_works(
-        client, expected=group_expected_list, search="public"
+        dioptra_client, expected=group_expected_list, search="public"
     )
-    assert_retrieving_groups_works(client, expected=group_expected_list, search="pub*")
-    assert_retrieving_groups_works(client, expected=[], search="name:pub")
+    assert_retrieving_groups_works(
+        dioptra_client, expected=group_expected_list, search="pub*"
+    )
+    assert_retrieving_groups_works(dioptra_client, expected=[], search="name:pub")
 
 
 @pytest.mark.v1_test
@@ -342,6 +345,7 @@ def test_cannot_register_existing_group_name(
 @pytest.mark.v1_test
 def test_rename_group(
     client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     db: SQLAlchemy,
     auth_account: dict[str, Any],
     registered_groups: dict[str, Any],
@@ -364,7 +368,7 @@ def test_rename_group(
 
     modify_group(client, group_id=group_to_rename["id"], new_name=updated_group_name)
     assert_group_name_matches_expected_name(
-        client, group_id=group_to_rename["id"], expected_name=updated_group_name
+        dioptra_client, group_id=group_to_rename["id"], expected_name=updated_group_name
     )
     assert_cannot_rename_group_with_existing_name(
         client,

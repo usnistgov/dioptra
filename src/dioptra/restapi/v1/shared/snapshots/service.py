@@ -25,7 +25,7 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
-from dioptra.restapi.errors import BackendDatabaseError, ResourceDoesNotExistError
+from dioptra.restapi.errors import BackendDatabaseError, EntityDoesNotExistError
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -74,7 +74,7 @@ class ResourceSnapshotsService(object):
                 None.
 
         Raises:
-            ResourceDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the resource is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -87,8 +87,9 @@ class ResourceSnapshotsService(object):
 
         if resource is None:
             if error_if_not_found:
-                log.debug("Resource not found", resource_id=resource_id)
-                raise ResourceDoesNotExistError
+                raise EntityDoesNotExistError(
+                    self._resource_type, resource_id=resource_id
+                )
 
             return None
 
@@ -176,7 +177,7 @@ class ResourceSnapshotsIdService(object):
             The requested snapshot the resource object if found, otherwise None.
 
         Raises:
-            ResourceDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the resource is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -189,8 +190,9 @@ class ResourceSnapshotsIdService(object):
 
         if resource is None:
             if error_if_not_found:
-                log.debug("Resource not found", resource_id=resource_id)
-                raise ResourceDoesNotExistError
+                raise EntityDoesNotExistError(
+                    self._resource_type, resource_id=resource_id
+                )
 
             return None
 
@@ -207,8 +209,9 @@ class ResourceSnapshotsIdService(object):
 
         if snapshot is None:
             if error_if_not_found:
-                log.debug("Resource snapshot not found", snapshot_id=snapshot_id)
-                raise ResourceDoesNotExistError
+                raise EntityDoesNotExistError(
+                    self._resource_type + "_snapshot", snapshot_id=snapshot_id
+                )
 
             return None
 

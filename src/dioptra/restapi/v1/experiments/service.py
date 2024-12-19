@@ -27,18 +27,19 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.db.models.constants import resource_lock_types
-from dioptra.restapi.errors import BackendDatabaseError
+from dioptra.restapi.errors import (
+    BackendDatabaseError,
+    EntityDoesNotExistError,
+    EntityExistsError,
+    SortParameterValidationError,
+)
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.entrypoints.errors import EntrypointDoesNotExistError
+from dioptra.restapi.v1.entrypoints.service import (
+    RESOURCE_TYPE as ENTRYPOINT_RESOURCE_TYPE,
+)
 from dioptra.restapi.v1.entrypoints.service import EntrypointIdsService
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-
-from .errors import (
-    ExperimentAlreadyExistsError,
-    ExperimentDoesNotExistError,
-    ExperimentSortError,
-)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -103,17 +104,16 @@ class ExperimentService(object):
             The newly created experiment object.
 
         Raises:
-            ExperimentAlreadyExistsError: If an experiment with the given name already
+            EntityExistsError: If an experiment with the given name already
                 exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        if (
-            self._experiment_name_service.get(name, group_id=group_id, log=log)
-            is not None
-        ):
-            log.debug("Experiment name already exists", name=name, group_id=group_id)
-            raise ExperimentAlreadyExistsError
+        duplicate = self._experiment_name_service.get(name, group_id=group_id, log=log)
+        if duplicate is not None:
+            raise EntityExistsError(
+                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+            )
 
         group = self._group_id_service.get(group_id, error_if_not_found=True)
         entrypoints = (
@@ -237,8 +237,7 @@ class ExperimentService(object):
                 sort_column = sort_column.asc()
             experiments_stmt = experiments_stmt.order_by(sort_column)
         elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            log.debug(f"sort_by_string: '{sort_by_string}' is not in SORTABLE_FIELDS")
-            raise ExperimentSortError
+            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
 
         experiments = list(db.session.scalars(experiments_stmt).all())
 
@@ -320,7 +319,7 @@ class ExperimentIdService(object):
             The experiment object if found, otherwise none.
 
         Raises:
-            ExperimentDoesNotExistError: If the experiment is not found and if
+            EntityDoesNotExistError: If the experiment is not found and if
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -340,8 +339,9 @@ class ExperimentIdService(object):
 
         if experiment is None:
             if error_if_not_found:
-                log.debug("Experiment not found", experiment_id=experiment_id)
-                raise ExperimentDoesNotExistError
+                raise EntityDoesNotExistError(
+                    RESOURCE_TYPE, experiment_id=experiment_id
+                )
 
             return None
 
@@ -398,9 +398,9 @@ class ExperimentIdService(object):
             The updated experiment object.
 
         Raises:
-            ExperimentDoesNotExistError: If the experiment is not found and
+            EntityDoesNotExistError: If the experiment is not found and
                 `error_if_not_found` is True.
-            ExperimentAlreadyExistsError: If the experiment name already exists.
+            EntityExistsError: If the experiment name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -413,13 +413,14 @@ class ExperimentIdService(object):
 
         experiment = experiment_dict["experiment"]
         group_id = experiment.resource.group_id
-        if (
-            name != experiment.name
-            and self._experiment_name_service.get(name, group_id=group_id, log=log)
-            is not None
-        ):
-            log.debug("Experiment name already exists", name=name, group_id=group_id)
-            raise ExperimentAlreadyExistsError
+        if name != experiment.name:
+            duplicate = self._experiment_name_service.get(
+                name, group_id=group_id, log=log
+            )
+            if duplicate is not None:
+                raise EntityExistsError(
+                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+                )
 
         entrypoints = self._entrypoint_ids_service.get(
             entrypoint_ids, error_if_not_found=True, log=log
@@ -466,7 +467,7 @@ class ExperimentIdService(object):
         experiment_resource = db.session.scalars(stmt).first()
 
         if experiment_resource is None:
-            raise ExperimentDoesNotExistError
+            raise EntityDoesNotExistError(RESOURCE_TYPE, experiment_id=experiment_id)
 
         deleted_resource_lock = models.ResourceLock(
             resource_lock_type=resource_lock_types.DELETE,
@@ -515,7 +516,7 @@ class ExperimentIdEntrypointsService(object):
             The list of plugins.
 
         Raises:
-            ExperimentDoesNotExistError: If the experiment is not found and
+            EntityDoesNotExistError: If the experiment is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -553,9 +554,9 @@ class ExperimentIdEntrypointsService(object):
             The updated list of entrypoints resource objects.
 
         Raises:
-            ExperimentDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the experiment is not found and
                 `error_if_not_found` is True.
-            EntrypointDoesNotExistError: If one or more entrypoints are not found.
+            EntityDoesNotExistError: If one or more entrypoints are not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
@@ -584,8 +585,9 @@ class ExperimentIdEntrypointsService(object):
                 entrypoint.resource_id for entrypoint in new_entrypoints
             )
             missing_entrypoint_ids = new_entrypoint_ids - found_entrypoint_ids
-            log.debug(entrypoint_ids=list(missing_entrypoint_ids))
-            raise EntrypointDoesNotExistError
+            raise EntityDoesNotExistError(
+                ENTRYPOINT_RESOURCE_TYPE, entrypoint_ids=list(missing_entrypoint_ids)
+            )
 
         experiment.children.extend(
             [entrypoint.resource for entrypoint in new_entrypoints]
@@ -620,9 +622,9 @@ class ExperimentIdEntrypointsService(object):
             The updated entrypoint resource object.
 
         Raises:
-            ResourceDoesNotExistError: If the resource is not found and
+            EntityDoesNotExistError: If the resource is not found and
                 `error_if_not_found` is True.
-            EntrypointDoesNotExistError: If one or more entrypoints are not found.
+            EntityDoesNotExistError: If one or more entrypoints are not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -727,7 +729,11 @@ class ExperimentIdEntrypointsIdService(object):
         removed_entrypoint = entrypoint_resources.pop(entrypoint_id, None)
 
         if removed_entrypoint is None:
-            raise EntrypointDoesNotExistError
+            raise EntityDoesNotExistError(
+                ENTRYPOINT_RESOURCE_TYPE,
+                experiment_id=experiment_id,
+                entrypoint_id=entrypoint_id,
+            )
 
         experiment.children = list(entrypoint_resources.values())
 
@@ -763,7 +769,7 @@ class ExperimentNameService(object):
             The experiment object if found, otherwise None.
 
         Raises:
-            ExperimentDoesNotExistError: If the experiment is not found and
+            EntityDoesNotExistError: If the experiment is not found and
                 `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -784,8 +790,9 @@ class ExperimentNameService(object):
 
         if experiment is None:
             if error_if_not_found:
-                log.debug("Experiment not found", name=name)
-                raise ExperimentDoesNotExistError
+                raise EntityDoesNotExistError(
+                    RESOURCE_TYPE, experiment_name=name, group_id=group_id
+                )
 
             return None
 

@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="showDialog" aria-labelledby="modalTitle">
+  <q-dialog v-model="showDialog" aria-labelledby="modalTitle" :persistent="persistent">
     <q-card style="width: 95%" flat >
       <q-form @submit="$emit('emitSubmit')">
         <q-card-section class="bg-primary text-white q-mb-md">
@@ -31,5 +31,5 @@
 <script setup>
   const showDialog = defineModel()
   defineEmits(['emitSubmit', 'emitCancel', 'emitSaveDraft'])
-  defineProps(['hideDraftBtn'])
+  const props = defineProps(['hideDraftBtn', 'persistent'])
 </script>

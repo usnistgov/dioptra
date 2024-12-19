@@ -14,28 +14,45 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Error handlers for the group endpoints."""
-from __future__ import annotations
+from typing import ClassVar, TypeVar
 
-from flask_restx import Api
+from .base import CollectionClient
 
-
-class GroupNameNotAvailableError(Exception):
-    """The group name is not available."""
+T = TypeVar("T")
 
 
-class GroupDoesNotExistError(Exception):
-    """The requested group does not exist."""
+class AuthCollectionClient(CollectionClient[T]):
+    """The client for managing Dioptra's /auth collection.
 
+    Attributes:
+        name: The name of the collection.
+    """
 
-def register_error_handlers(api: Api) -> None:
-    @api.errorhandler(GroupDoesNotExistError)
-    def handle_user_does_not_exist_error(error):
-        return {"message": "Not Found - The requested group does not exist"}, 404
+    name: ClassVar[str] = "auth"
 
-    @api.errorhandler(GroupNameNotAvailableError)
-    def handle_no_current_user_error(error):
-        return (
-            {"message": "Bad Request - The group name is not available"},
-            400,
+    def login(self, username: str, password: str) -> T:
+        """Send a login request to the Dioptra API.
+
+        Args:
+            username: The username of the user.
+            password: The password of the user.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.post(
+            self.url,
+            "login",
+            json_={"username": username, "password": password},
         )
+
+    def logout(self, everywhere: bool = False) -> T:
+        """Send a logout request to the Dioptra API.
+
+        Args:
+            everywhere: If True, log out from all sessions.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.post(self.url, "logout", params={"everywhere": everywhere})

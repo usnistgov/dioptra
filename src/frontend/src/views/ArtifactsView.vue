@@ -7,10 +7,10 @@
     v-model:selected="selected"
     @edit="editing = true; showAddEditDialog = true"
     @delete="showDeleteDialog = true"
-    :showExpand="true"
     @request="getArtifacts"
     ref="tableRef"
     :hideDeleteBtn="true"
+    :hideCreateBtn="true"
   >
     <template #body-cell-group="props">
       <div>{{ props.row.group.name }}</div>

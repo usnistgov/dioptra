@@ -10,6 +10,7 @@
     @request="getExperiments"
     ref="tableRef"
     @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
+    @create="router.push('/experiments/new')"
   >
     <template #body-cell-name="props">
       <RouterLink :to="`/experiments/${props.row.id}/jobs`">
