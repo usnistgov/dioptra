@@ -21,6 +21,7 @@ from http import HTTPStatus
 from typing import Any, cast
 
 import pytest
+import uuid
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy import SQLAlchemy
@@ -684,3 +685,38 @@ def registered_jobs(
         "job2": job2_response,
         "job3": job3_response,
     }
+
+
+@pytest.fixture
+def registered_mlflowrun(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> dict[str, Any]:
+    mlflowruns = {"job1": uuid.uuid4(), "job2": uuid.uuid4(), "job3": uuid.uuid4()}
+
+    responses = actions.post_mlflowruns(
+        client=client, mlflowruns=mlflowruns, registered_jobs=registered_jobs
+    )
+
+    return responses
+
+
+@pytest.fixture
+def registered_mlflowrun_incomplete(
+    client: FlaskClient,
+    db: SQLAlchemy,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+) -> dict[str, Any]:
+    mlflowruns = {
+        "job1": uuid.uuid4(),
+        "job2": uuid.uuid4(),
+    }  # leave job3 out so we can use that in test_mlflowrun()
+
+    responses = actions.post_mlflowruns(
+        client=client, mlflowruns=mlflowruns, registered_jobs=registered_jobs
+    )
+
+    return responses
