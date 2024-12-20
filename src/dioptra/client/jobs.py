@@ -20,7 +20,9 @@ from .base import CollectionClient, DioptraSession
 from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
 
+METRICS: Final[str] = "metrics"
 MLFLOW_RUN: Final[str] = "mlflowRun"
+SNAPSHOTS: Final[str] = "snapshots"
 STATUS: Final[str] = "status"
 
 T = TypeVar("T")
@@ -166,7 +168,7 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         return self._session.delete(self.url, str(job_id))
 
-    def get_mlflow_run_id(self, job_id: int) -> T:
+    def get_mlflow_run_id(self, job_id: str | int) -> T:
         """Gets the MLflow run id for a job.
 
         Args:
@@ -177,7 +179,7 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, str(job_id), MLFLOW_RUN)
 
-    def set_mlflow_run_id(self, job_id: int, mlflow_run_id: str) -> T:
+    def set_mlflow_run_id(self, job_id: str | int, mlflow_run_id: str) -> T:
         """Sets the MLflow run id for a job.
 
         Args:
@@ -193,7 +195,7 @@ class JobsCollectionClient(CollectionClient[T]):
 
         return self._session.post(self.url, str(job_id), MLFLOW_RUN, json_=json_)
 
-    def get_status(self, job_id: int) -> T:
+    def get_status(self, job_id: str | int) -> T:
         """Gets the status for a job.
 
         Args:
@@ -203,3 +205,68 @@ class JobsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.get(self.url, str(job_id), STATUS)
+
+    def get_metrics_by_id(self, job_id: str | int) -> T:
+        """Gets all the latest metrics for a job.
+
+        Args:
+            job_id: The job id, an integer.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(self.url, str(job_id), METRICS)
+
+    def append_metric_by_id(
+        self,
+        job_id: str | int,
+        metric_name: str,
+        metric_value: float,
+        metric_step: int | None = None,
+    ) -> T:
+        """Posts a new metric to a job.
+
+        Args:
+            job_id: The job id, an integer.
+            metric_name: The name of the metric.
+            metric_value: The value of the metric.
+            metric_step: The step number of the metric, optional.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        json_ = {
+            "name": metric_name,
+            "value": metric_value,
+        }
+
+        if metric_step is not None:
+            json_["step"] = metric_step
+
+        return self._session.post(self.url, str(job_id), METRICS, json_=json_)
+
+    def get_metrics_snapshots_by_id(
+        self,
+        job_id: str | int,
+        metric_name: str | int,
+        index: int = 0,
+        page_length: int = 10,
+    ) -> T:
+        """Gets the metric history for a job with a specific metric name.
+
+        Args:
+            job_id: The job id, an integer.
+            metric_name: The name of the metric.
+            index: The paging index. Optional, defaults to 0.
+            page_length: The maximum number of metrics to return in the paged
+                response. Optional, defaults to 10.
+        Returns:
+            The response from the Dioptra API.
+        """
+        params: dict[str, Any] = {
+            "index": index,
+            "pageLength": page_length,
+        }
+        return self._session.get(
+            self.url, str(job_id), METRICS, metric_name, SNAPSHOTS, params=params
+        )

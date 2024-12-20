@@ -31,6 +31,7 @@ from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
 
 ARTIFACTS: Final[str] = "artifacts"
+METRICS: Final[str] = "metrics"
 MLFLOW_RUN: Final[str] = "mlflowRun"
 STATUS: Final[str] = "status"
 
@@ -702,3 +703,47 @@ class ExperimentsCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.delete(self.url, str(experiment_id))
+
+    def get_metrics_by_id(
+        self,
+        experiment_id: str | int,
+        index: int = 0,
+        page_length: int = 10,
+        sort_by: str | None = None,
+        descending: bool | None = None,
+        search: str | None = None,
+    ) -> T:
+        """Get the metrics for the jobs in this experiment.
+
+        Args:
+            experiment_id: The experiment id, an integer.
+            index: The paging index. Optional, defaults to 0.
+            page_length: The maximum number of experiments to return in the paged
+                response. Optional, defaults to 10.
+            sort_by: The field to use to sort the returned list. Optional, defaults to
+                None.
+            descending: Sort the returned list in descending order. Optional, defaults
+                to None.
+            search: Search for jobs using the Dioptra API's query language.
+                Optional, defaults to None.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+
+        params: dict[str, Any] = {
+            "experiment_id": experiment_id,
+            "index": index,
+            "pageLength": page_length,
+        }
+
+        if sort_by is not None:
+            params["sortBy"] = sort_by
+
+        if descending is not None:
+            params["descending"] = descending
+
+        if search is not None:
+            params["search"] = search
+
+        return self._session.get(self.url, str(experiment_id), METRICS, params=params)

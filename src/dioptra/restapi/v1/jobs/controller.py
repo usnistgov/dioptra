@@ -48,10 +48,15 @@ from .schema import (
     JobPageSchema,
     JobSchema,
     JobStatusSchema,
+    MetricsSchema,
+    MetricsSnapshotPageSchema,
+    MetricsSnapshotsGetQueryParameters,
 )
 from .service import (
     RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    JobIdMetricsService,
+    JobIdMetricsSnapshotsService,
     JobIdMlflowrunService,
     JobIdService,
     JobIdStatusService,
@@ -201,7 +206,7 @@ class JobIdMlflowrunEndpoint(Resource):
         All arguments are provided via dependency injection.
 
         Args:
-            job_id_service: A JobIdStatusService object.
+            job_id_service: A JobIdMlflowrunService object.
         """
         self._job_id_mlflowrun_service = job_id_mlflowrun_service
         super().__init__(*args, **kwargs)
@@ -237,6 +242,123 @@ class JobIdMlflowrunEndpoint(Resource):
             mlflow_run_id=parsed_obj["mlflow_run_id"],
             error_if_not_found=True,
             log=log,
+        )
+
+
+@api.route("/<int:id>/metrics")
+@api.param("id", "ID for the Job resource.")
+class JobIdMetricsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        job_id_metrics_service: JobIdMetricsService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_metrics_service: A JobIdMetricsService object.
+        """
+        self._job_id_metrics_service = job_id_metrics_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=MetricsSchema(many=True), api=api)
+    def get(self, id: int):
+        """Gets a Job resource's latest metrics."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMetricsEndpoint",
+            request_type="GET",
+            job_id=id,
+        )
+
+        return self._job_id_metrics_service.get(
+            job_id=id, error_if_not_found=True, log=log
+        )
+
+    @login_required
+    @accepts(schema=MetricsSchema, api=api)
+    @responds(schema=MetricsSchema, api=api)
+    def post(self, id: int):
+        """Sets a metric for a Job"""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMetricsEndpoint",
+            request_type="POST",
+            job_id=id,
+        )
+        parsed_obj = request.parsed_obj  # type: ignore
+        return self._job_id_metrics_service.update(
+            job_id=id,
+            metric_name=parsed_obj["name"],
+            metric_value=parsed_obj["value"],
+            metric_step=parsed_obj["step"],
+            error_if_not_found=True,
+            log=log,
+        )
+
+
+@api.route("/<int:id>/metrics/<string:name>/snapshots")
+@api.param("id", "ID for the Job resource.")
+@api.param("name", "Name of the metric.")
+class JobIdMetricsSnapshotsEndpoint(Resource):
+    @inject
+    def __init__(
+        self,
+        job_id_metrics_snapshots_service: JobIdMetricsSnapshotsService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the jobs resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            job_id_metrics_snapshots_service: A JobIdMetricsSnapshotsService object.
+        """
+        self._job_id_metrics_snapshots_service = job_id_metrics_snapshots_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=MetricsSnapshotsGetQueryParameters, api=api)
+    @responds(schema=MetricsSnapshotPageSchema, api=api)
+    def get(self, id: int, name: str):
+        """Gets a Job resource's metric history."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobIdMetricsSnapshotsEndpoint",
+            request_type="GET",
+            job_id=id,
+            metric_name=name,
+        )
+        parsed_query_params = request.parsed_query_params  # type: ignore
+        page_index = parsed_query_params["index"]
+        page_length = parsed_query_params["page_length"]
+        metrics_page, total_num_metrics = self._job_id_metrics_snapshots_service.get(
+            job_id=id,
+            metric_name=name,
+            page_index=page_index,
+            page_length=page_length,
+            error_if_not_found=True,
+            log=log,
+        )
+
+        return utils.build_paging_envelope(
+            f"jobs/{id}/metrics/{name}/snapshots",
+            build_fn=utils.build_metrics_snapshots,
+            data=metrics_page,
+            group_id=None,
+            query=None,
+            draft_type=None,
+            index=page_index,
+            length=page_length,
+            total_num_elements=total_num_metrics,
+            sort_by=None,
+            descending=None,
         )
 
 
