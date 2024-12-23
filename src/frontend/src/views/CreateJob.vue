@@ -193,7 +193,7 @@
     </fieldset>
   </div>
 
-  <div :class="`${isMobile ? '' : 'q-mx-xl'} float-right q-mb-lg`">
+  <div :class="`float-right q-mb-lg`">
       <q-btn  
         :to="expJobOrAllJobs === 'allJobs' ? `/jobs` : `/experiments/${route.params.id}/jobs`"
         color="negative" 

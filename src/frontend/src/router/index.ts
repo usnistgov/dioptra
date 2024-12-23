@@ -54,7 +54,8 @@ const router = createRouter({
     },
     {
       path: '/experiments/:id',
-      component: () => import('../views/CreateExperiment.vue')
+      component: () => import('../views/CreateExperiment.vue'),
+      meta: { type: 'experiments' }
     },
     {
       path: '/groups',

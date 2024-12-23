@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="showDialog" aria-labelledby="modalTitle" :persistent="persistent">
-    <q-card flat style="min-width: 500px; max-width: 80%;">
+    <q-card flat :style="{ 'min-width': isMedium ? '50%' : '30%' }">
       <q-form @submit="$emit('emitSubmit')">
         <q-card-section class="bg-primary text-white q-mb-md">
           <div class="text-h6 row justify-between">
@@ -37,11 +37,13 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue'
+  import { inject } from 'vue'
   const showDialog = defineModel('showDialog')
   defineEmits(['emitSubmit', 'emitCancel', 'emitSaveDraft'])
   const props = defineProps(['hideDraftBtn', 'persistent', 'showHistoryToggle', 'disableConfirm'])
 
   const history = defineModel('history')
+
+  const isMedium = inject('isMedium')
 
 </script>

@@ -44,11 +44,13 @@ export const useLoginStore = defineStore('login', () => {
     files: {},
   })
   
+  const showRightDrawer = ref(false)
+  const selectedSnapshot = ref()
 
   // computed()'s are getters
 
   // function()'s are actions
   
 
-  return { loggedInUser, loggedInGroup, groups, users, savedForms };
+  return { loggedInUser, loggedInGroup, groups, users, savedForms, showRightDrawer, selectedSnapshot };
 })

@@ -1,8 +1,25 @@
 <template>
-  <PageTitle 
-    :title="title"
-  />
-  <div :class="`row ${isMedium ? '' : 'q-mx-xl'} q-my-lg`">
+  <div class="row">
+    <div>
+      <PageTitle 
+        :title="title"
+      />
+    </div>
+    <q-chip
+      v-if="route.params.id !== 'new'"
+      style="margin-top: 28px;"
+      class="q-ml-lg"
+    >
+      <q-toggle
+        v-model="store.showRightDrawer"
+        left-label
+        label="View History"
+        color="orange"
+      />
+    </q-chip>
+  </div>
+
+  <div :class="`row q-my-lg`">
     <div :class="`${isMobile ? 'col-12' : 'col-5'} q-mr-xl`">
       <fieldset>
         <legend>Basic Info</legend>
@@ -15,6 +32,7 @@
               :rules="[requiredRule]"
               class="q-mb-sm q-mt-md"
               aria-required="true"
+              :disable="history"
             >
               <template v-slot:before>
                 <label :class="`field-label`">Name:</label>
@@ -31,6 +49,7 @@
               dense
               :rules="[requiredRule]"
               aria-required="true"
+              :disable="history"
             >
               <template v-slot:before>
                 <div class="field-label">Group:</div>
@@ -42,6 +61,7 @@
               v-model.trim="experiment.description"
               class="q-mb-sm q-mt-sm"
               type="textarea"
+              :disable="history"
             >
               <template v-slot:before>
                 <label :class="`field-label`">Description:</label>
@@ -51,10 +71,11 @@
         </div>
       </fieldset>
     </div>
-    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`">
+    <fieldset :class="`${isMobile ? 'col-12 q-mt-lg' : 'col'}`" :disabled="history">
       <legend>Entrypoint</legend>
       <div class="q-ma-lg">
         <q-select
+          v-if="!history"
           outlined
           dense
           v-model="experiment.entrypoints"
@@ -68,24 +89,36 @@
           :options="entrypoints"
           @filter="getEntrypoints"
           class="q-mb-md"
+          :disable="history"
         >
           <template v-slot:before>
             <div class="field-label">Entrypoints:</div>
           </template>  
         </q-select>
 
-        <q-btn 
+        <q-btn
+          v-if="!history"
           color="primary"
           icon="add"
           label="Create new Entry Point"
           class="q-mt-lg"
           @click="router.push('/entrypoints/new')" 
         />
+
+        <div class="row items-center" v-if="history">
+          <q-icon
+            name="sym_o_info"
+            size="2.5em"
+            color="grey"
+            class="q-mr-sm"
+          />
+          <caption>Entrypoints are not part of Experiment snapshots</caption>
+        </div>
       </div>
     </fieldset>
   </div>
 
-  <div :class="`${isMobile ? '' : 'q-mx-xl'} float-right q-mb-lg`">
+  <div :class="`float-right`">
       <q-btn  
         to="/experiments"
         color="negative" 
@@ -97,6 +130,7 @@
         @click="submit()" 
         color="primary" 
         label="Submit Experiment"
+        :disable="history"
       />
     </div>
 
@@ -273,7 +307,7 @@
 
   onBeforeRouteLeave((to, from, next) => {
     toPath.value = to.path
-    if(confirmLeave.value || !valuesChanged.value) {
+    if(confirmLeave.value || !valuesChanged.value || history.value) {
       next(true)
     } else if(route.params.id === 'new') {
       leaveForm()
@@ -302,5 +336,21 @@
     confirmLeave.value = true
     router.push(toPath.value)
   }
+
+  const history = computed(() => {
+    return store.showRightDrawer
+  })
+
+  watch(() => store.selectedSnapshot, (newVal) => {
+    if(newVal) {
+      experiment.value = {
+        name: newVal.name,
+        group: newVal.group,
+        description: newVal.description
+      }
+    } else {
+      getExperiment()
+    }
+  })
 
 </script>
