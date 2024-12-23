@@ -291,7 +291,7 @@ def build_type(
 
     else:  # else, a simple type
         if super_type and not isinstance(super_type, types.SimpleType):
-            raise NonSimpleSuperTypeError(super_type_name)
+            raise NonSimpleSuperTypeError(cast(str, super_type_name))
 
         # Here, super_type must either be null or an instance of SimpleType
         # (the negation of the above if condition).  I.e. it satisfies
